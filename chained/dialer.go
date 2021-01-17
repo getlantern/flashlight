@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
-	"github.com/mitchellh/go-server-timing"
+	servertiming "github.com/mitchellh/go-server-timing"
 
 	"github.com/getlantern/bufconn"
 	"github.com/getlantern/errors"
@@ -135,11 +135,7 @@ func (p *proxy) DialContext(ctx context.Context, network, addr string) (conn net
 		return nil, err == errUpstream, err
 	}
 
-	conn = idletiming.Conn(p.withRateTracking(conn, addr, ctx), IdleTimeout, func() {
-		op := ops.BeginWithBeam("idle_close", ctx)
-		log.Debugf("Proxy connection to %s via %s idle for %v, closed", addr, conn.RemoteAddr(), IdleTimeout)
-		op.End()
-	})
+	conn = p.withRateTracking(conn, addr, ctx)
 	if network == balancer.NetworkConnect {
 		// only mark success if we did a CONNECT request because that involves a
 		// full round-trip to/from the proxy

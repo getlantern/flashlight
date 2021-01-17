@@ -22,6 +22,10 @@ const (
 	// Sentry Configurations
 	SentryTimeout         = time.Second * 30
 	SentryMaxMessageChars = 8000
+
+	// UpdateServerURL is the URL of the update server. Different applications
+	// hit the server on separate paths "/update/<AppName>".
+	UpdateServerURL = "https://update.getlantern.org/"
 )
 
 var (
@@ -39,7 +43,8 @@ var (
 
 	ProAPIHost = "api.getiantem.org"
 
-	ReplicaSearchAPIHost = "replica-search.lantern.io"
+	ReplicaSearchAPIHost   = "replica-search.lantern.io"
+	ReplicaThumbnailerHost = "replica-thumbnailer.lantern.io"
 
 	log = golog.LoggerFor("flashlight.common")
 
@@ -67,6 +72,7 @@ func initInternal() {
 	if Staging {
 		ProAPIHost = "api-staging.getiantem.org"
 		ReplicaSearchAPIHost = "replica-search-staging.lantern.io"
+		ReplicaThumbnailerHost = "replica-thumbnailer-staging.lantern.io"
 	}
 	forceAds, _ = strconv.ParseBool(os.Getenv("FORCEADS"))
 }

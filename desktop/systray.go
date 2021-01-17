@@ -151,8 +151,8 @@ func refreshSystray(language string) {
 }
 
 func refreshMenuItems() {
-	systray.SetTooltip(i18n.T(translationAppName))
 	menu.upgrade.SetTitle(i18n.T("TRAY_UPGRADE_TO_PRO"))
+	systray.SetTooltip(i18n.T(translationAppName))
 	menu.show.SetTitle(i18n.T("TRAY_SHOW", i18n.T(translationAppName)))
 	menu.quit.SetTitle(i18n.T("TRAY_QUIT", i18n.T(translationAppName)))
 }

@@ -46,7 +46,6 @@ func setUpdateURL(url string) {
 	if url == "" {
 		return
 	}
-	url = fmt.Sprintf("%s/%s/%s/%s", strings.TrimRight(url, "/"), "update", "getlantern", strings.ToLower(common.AppName))
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
 	updateServerURL = url
@@ -55,7 +54,7 @@ func setUpdateURL(url string) {
 func getUpdateURL() string {
 	cfgMutex.RLock()
 	defer cfgMutex.RUnlock()
-	return updateServerURL
+	return fmt.Sprintf("%s/%s/%s", strings.TrimRight(updateServerURL, "/"), "update", strings.ToLower(common.AppName))
 }
 
 func enableAutoupdate() {

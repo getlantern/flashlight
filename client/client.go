@@ -138,7 +138,7 @@ type Client struct {
 	lang              func() string
 	adSwapTargetURL   func() string
 
-	reverseDNS func(addr string) string
+	reverseDNS func(addr string) (string, error)
 
 	httpProxyIP   string
 	httpProxyPort string
@@ -164,7 +164,7 @@ func NewClient(
 	allowPrivateHosts func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
-	reverseDNS func(addr string) string,
+	reverseDNS func(addr string) (string, error),
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
 	rewriteLRU, err := lru.New(100)
@@ -509,7 +509,12 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 		HandleConnect: func(ctx context.Context, conn net.Conn, req *socks5.Request, replySuccess func(boundAddr net.Addr) error, replyError func(err error) error) error {
 			op, ctx := ops.BeginWithNewBeam("proxy", ctx)
 			defer op.End()
-			addr := client.reverseDNS(fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port))
+
+			host := fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port)
+			addr, err := client.reverseDNS(host)
+			if err != nil {
+				return op.FailIf(log.Errorf("Error performing reverseDNS for %v: %v", host, err))
+			}
 			errOnReply := replySuccess(nil)
 			if errOnReply != nil {
 				return op.FailIf(log.Errorf("Unable to reply success to SOCKS5 client: %v", errOnReply))
@@ -600,6 +605,21 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		return dialProxied(ctx, "whatever", addr)
 	}
 
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		host = addr
+	}
+	host = strings.ToLower(strings.TrimSpace(host))
+
+	routingRuleForDomain := domainrouting.RuleFor(host)
+
+	if routingRuleForDomain == domainrouting.MustProxy {
+		log.Tracef("Proxying to %v per domain routing rules (MustProxy)", addr)
+		op.Set("force_proxied", true)
+		op.Set("force_proxied_reason", "routingrule")
+		return dialProxied(ctx, "whatever", addr)
+	}
+
 	if err := client.allowSendingToProxy(addr); err != nil {
 		log.Debugf("%v, sending directly to %v", err, addr)
 		op.Set("force_direct", true)
@@ -614,30 +634,24 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		return dialProxied(ctx, "whatever", addr)
 	}
 
-	host, _, err := net.SplitHostPort(addr)
-	if err != nil {
-		host = addr
-	}
-	host = strings.ToLower(strings.TrimSpace(host))
-
-	switch domainrouting.RuleFor(host) {
-	case domainrouting.Direct:
-		log.Tracef("Directly dialing %v per domain routing rules", addr)
-		op.Set("force_direct", true)
-		op.Set("force_direct_reason", "routingrule")
-		return dialDirect(ctx, "tcp", addr)
-	case domainrouting.Proxy:
-		log.Tracef("Proxying to %v per domain routing rules", addr)
-		op.Set("force_proxied", true)
-		op.Set("force_proxied_reason", "routingrule")
-		return dialProxied(ctx, "whatever", addr)
-	}
-
 	dialDirectForShortcut := func(ctx context.Context, network, addr string, ip net.IP) (net.Conn, error) {
 		log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
 		op.Set("shortcut_direct", true)
 		op.Set("shortcut_direct_ip", ip)
 		return dialDirect(ctx, "tcp", addr)
+	}
+
+	switch domainrouting.RuleFor(host) {
+	case domainrouting.Direct:
+		log.Tracef("Directly dialing %v per domain routing rules (Direct)", addr)
+		op.Set("force_direct", true)
+		op.Set("force_direct_reason", "routingrule")
+		return dialDirect(ctx, "tcp", addr)
+	case domainrouting.Proxy:
+		log.Tracef("Proxying to %v per domain routing rules (Proxy)", addr)
+		op.Set("force_proxied", true)
+		op.Set("force_proxied_reason", "routingrule")
+		return dialProxied(ctx, "whatever", addr)
 	}
 
 	dl, _ := ctx.Deadline()

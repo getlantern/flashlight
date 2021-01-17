@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/golog"
 )
 
@@ -25,9 +26,10 @@ var (
 
 // Quota encapsulates information about the user's bandwidth quota.
 type Quota struct {
-	MiBAllowed uint64    `json:"mibAllowed"`
-	MiBUsed    uint64    `json:"mibUsed"`
-	AsOf       time.Time `json:"asOf"`
+	MiBAllowed uint64 `json:"mibAllowed"`
+	MiBUsed    uint64 `json:"mibUsed"`
+	AsOf       time.Time
+	TTLSeconds uint64
 }
 
 // GetQuota gets the most up to date bandwidth quota information and a bool
@@ -54,37 +56,43 @@ func Track(resp *http.Response) {
 	quotaTracked = true
 	mutex.Unlock()
 
-	xbq := resp.Header.Get("XBQ")
+	xbq := resp.Header.Get(common.XBQHeaderv2)
 	if xbq == "" {
-		log.Debugf("Response missing XBQ header, can't read bandwidth quota")
+		log.Tracef("Response missing XBQ header, can't read bandwidth quota")
 		return
 	}
-	// Remove the XBQ header to avoid leaking it to clients
-	resp.Header.Del("XBQ")
+	// Remove the XBQ headers to avoid leaking it to clients
+	resp.Header.Del(common.XBQHeader)
+	resp.Header.Del(common.XBQHeaderv2)
 	parts := strings.Split(xbq, "/")
-	if len(parts) != 3 {
-		log.Debugf("Malformed XBQ header %v, can't read bandwidth quota", xbq)
+	if len(parts) != 4 {
+		log.Debugf("Malformed XBQv2 header %v, can't read bandwidth quota", xbq)
 		return
 	}
 	used, err := strconv.ParseUint(parts[0], 10, 64)
 	if err != nil {
-		log.Debugf("Malformed XBQ header %v, can't parse used MiB: %v", err)
+		log.Debugf("Malformed XBQv2 header %v, can't parse used MiB: %v", err)
 		return
 	}
 	allowed, err := strconv.ParseUint(parts[1], 10, 64)
 	if err != nil {
-		log.Debugf("Malformed XBQ header %v, can't parse allowed MiB: %v", err)
+		log.Debugf("Malformed XBQv2 header %v, can't parse allowed MiB: %v", err)
 		return
 	}
 	asofInt, err := strconv.ParseInt(parts[2], 10, 64)
 	if err != nil {
-		log.Debugf("Malformed XBQ header %v, can't parse as of time: %v", err)
+		log.Debugf("Malformed XBQv2 header %v, can't parse as of time: %v", err)
 		return
 	}
 	asof := epoch.Add(time.Duration(asofInt) * time.Second)
+	ttlSeconds, err := strconv.ParseUint(parts[3], 10, 64)
+	if err != nil {
+		log.Debugf("Malformed XBQv2 header %v, can't parse TTL seconds: %v", err)
+		return
+	}
 	mutex.Lock()
 	if quota == nil || quota.AsOf.Before(asof) {
-		quota = &Quota{allowed, used, asof}
+		quota = &Quota{allowed, used, asof, ttlSeconds}
 		select {
 		case Updates <- quota:
 			// update submitted

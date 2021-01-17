@@ -11,10 +11,12 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
+	"github.com/getlantern/timezone"
 	"github.com/getlantern/uuid"
 	"github.com/getlantern/yaml"
 
@@ -279,7 +281,7 @@ func (s *Settings) setString(name SettingName, v interface{}) {
 // save saves settings to disk.
 func (s *Settings) save() {
 	s.saveDefault()
-	s.chrome.saveOnce(s.mapToSave)
+	//s.chrome.saveOnce(s.mapToSave)
 }
 
 // save saves settings to disk as yaml in the default lantern user settings directory.
@@ -394,6 +396,10 @@ func (s *Settings) SetLanguage(language string) {
 // GetLanguage returns the user language
 func (s *Settings) GetLanguage() string {
 	return s.getString(SNLanguage)
+}
+
+func (s *Settings) GetTimeZone() (string, error) {
+	return timezone.IANANameForTime(time.Now())
 }
 
 // SetLocalHTTPToken sets the local HTTP token, stored on disk because we've

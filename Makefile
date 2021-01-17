@@ -50,14 +50,16 @@ endef
 .PHONY: lantern beam update-icons vendor
 
 lantern: $(SOURCES)
-	BUILD_TAGS="$$BUILD_TAGS lantern" BINARY_NAME="lantern" make app
+	@$(call build-tags) && \
+	BUILD_TAGS="$$BUILD_TAGS lantern" BINARY_NAME="lantern" EXTRA_LDFLAGS=$$EXTRA_LDFLAGS make app
 
 beam: $(SOURCES)
-	BUILD_TAGS="$$BUILD_TAGS beam" BINARY_NAME="beam" make app
+	@$(call build-tags) && \
+	BUILD_TAGS="$$BUILD_TAGS beam" BINARY_NAME="beam" EXTRA_LDFLAGS=$$EXTRA_LDFLAGS make app
 
 windowscli: $(SOURCES)
 	@$(call build-tags) && \
-	BUILD_TAGS="$$BUILD_TAGS lantern" BINARY_NAME=$$BINARY_NAME-cli.exe make windows
+	BUILD_TAGS="$$BUILD_TAGS lantern" BINARY_NAME=$$BINARY_NAME-cli.exe EXTRA_LDFLAGS=$$EXTRA_LDFLAGS make windows
 
 windowsgui: $(SOURCES)
 	@$(call build-tags) && \
@@ -65,14 +67,14 @@ windowsgui: $(SOURCES)
 
 beam-windowscli: $(SOURCES)
 	@$(call build-tags) && \
-	BUILD_TAGS="$$BUILD_TAGS beam" BINARY_NAME="beam-cli.exe" make windows
+	BUILD_TAGS="$$BUILD_TAGS beam" BINARY_NAME="beam-cli.exe" EXTRA_LDFLAGS=$$EXTRA_LDFLAGS make windows
 
 beam-windowsgui: $(SOURCES)
 	@$(call build-tags) && \
 	BUILD_TAGS="$$BUILD_TAGS beam" BINARY_NAME="beam-gui.exe" EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -H=windowsgui" make windows
 
 windows:
-	GOOS=windows GOARCH=386 CXX=i686-w64-mingw32-g++ CC=i686-w64-mingw32-gcc CGO_LDFLAGS="-static" EXTRA_LDFLAGS="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" make app
+	GOOS=windows GOARCH=386 BUILD_RACE='' CXX=i686-w64-mingw32-g++ CC=i686-w64-mingw32-gcc CGO_LDFLAGS="-static" EXTRA_LDFLAGS="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" make app
 
 linux: $(SOURCES)
 	@$(call build-tags) && \
@@ -83,7 +85,7 @@ beam-linux: $(SOURCES)
 	HEADLESS=true GOOS=linux GOARCH=amd64 BINARY_NAME=beam-linux BUILD_TAGS="$$BUILD_TAGS headless" make app
 
 app:
-	GO111MODULE=on GOPRIVATE="github.com/getlantern" CGO_ENABLED=1 go build $(BUILD_RACE) -o $$BINARY_NAME -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s " github.com/getlantern/flashlight/main;
+	GO111MODULE=on GOPRIVATE="github.com/getlantern" CGO_ENABLED=1 go build $(BUILD_RACE) -v -o $(BINARY_NAME) -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s " github.com/getlantern/flashlight/main;
 
 # vendor installs vendored dependencies using go modules
 vendor:

@@ -8,14 +8,17 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
 	"golang.org/x/net/proxy"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/integrationtest"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type testProtector struct{}
@@ -35,24 +38,25 @@ func (c testSettings) TimeoutMillis() int       { return 15000 }
 func (c testSettings) GetHttpProxyHost() string { return "127.0.0.1" }
 func (c testSettings) GetHttpProxyPort() int    { return 49128 }
 
-func (c testSession) AfterStart()                   {}
-func (c testSession) BandwidthUpdate(int, int, int) {}
-func (c testSession) ConfigUpdate(bool)             {}
-func (c testSession) ShowSurvey(survey string)      {}
-func (c testSession) GetUserID() int64              { return 0 }
-func (c testSession) GetToken() string              { return "" }
-func (c testSession) GetForcedCountryCode() string  { return "" }
-func (c testSession) GetDNSServer() string          { return "8.8.8.8" }
-func (c testSession) SetStaging(bool)               {}
-func (c testSession) SetCountry(string)             {}
-func (c testSession) ProxyAll() bool                { return true }
-func (c testSession) GetDeviceID() string           { return "123456789" }
-func (c testSession) AccountId() string             { return "1234" }
-func (c testSession) Locale() string                { return "en-US" }
-func (c testSession) SetUserId(int64)               {}
-func (c testSession) SetToken(string)               {}
-func (c testSession) SetCode(string)                {}
-func (c testSession) IsProUser() bool               { return true }
+func (c testSession) AfterStart()                        {}
+func (c testSession) BandwidthUpdate(int, int, int, int) {}
+func (c testSession) ConfigUpdate(bool)                  {}
+func (c testSession) ShowSurvey(survey string)           {}
+func (c testSession) GetUserID() int64                   { return 0 }
+func (c testSession) GetToken() string                   { return "" }
+func (c testSession) GetForcedCountryCode() string       { return "" }
+func (c testSession) GetDNSServer() string               { return "8.8.8.8" }
+func (c testSession) SetStaging(bool)                    {}
+func (c testSession) SetCountry(string)                  {}
+func (c testSession) ProxyAll() bool                     { return true }
+func (c testSession) GetDeviceID() string                { return "123456789" }
+func (c testSession) AccountId() string                  { return "1234" }
+func (c testSession) Locale() string                     { return "en-US" }
+func (c testSession) GetTimeZone() string                { return "Americas/Chicago" }
+func (c testSession) SetUserId(int64)                    {}
+func (c testSession) SetToken(string)                    {}
+func (c testSession) SetCode(string)                     {}
+func (c testSession) IsProUser() bool                    { return true }
 
 func (c testSession) UpdateStats(string, string, string, int, int) {}
 
@@ -69,7 +73,7 @@ func TestProxying(t *testing.T) {
 		listenPort++
 		return fmt.Sprintf("localhost:%d", listenPort)
 	}
-	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
+	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
 	if assert.NoError(t, err, "Unable to create temp configDir") {
 		defer helper.Close()
 		result, err := Start(helper.ConfigDir, "en_US", testSettings{}, testSession{})
@@ -192,4 +196,32 @@ func TestInternalHeaders(t *testing.T) {
 		got := s.GetInternalHeaders()
 		assert.Equal(t, test.expected, got, "Headers did not decode as expected")
 	}
+}
+
+// This test requires the tag "lantern" to be set at testing time like:
+//
+//    go test -tags="lantern"
+//
+func TestAutoUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skip test in short mode")
+	}
+
+	updateCfg := buildUpdateCfg()
+	updateCfg.HTTPClient = &http.Client{}
+	updateCfg.CurrentVersion = "0.0.1"
+	updateCfg.OS = "android"
+	updateCfg.Arch = "arm"
+
+	// Update available
+	result, err := checkForUpdates(updateCfg)
+	require.NoError(t, err)
+	assert.Contains(t, result, "update_android_arm.bz2")
+	assert.Contains(t, result, strings.ToLower(common.AppName))
+
+	// No update available
+	updateCfg.CurrentVersion = "9999.9.9"
+	result, err = checkForUpdates(updateCfg)
+	require.NoError(t, err)
+	assert.Empty(t, result)
 }

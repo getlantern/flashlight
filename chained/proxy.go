@@ -181,8 +181,6 @@ func createImpl(configDir, name, addr, transport string, s *ChainedServerInfo, u
 		impl, err = newOBFS4Impl(name, addr, s, coreDialer)
 	case "lampshade":
 		impl, err = newLampshadeImpl(name, addr, s, reportDialCore)
-	case "quic":
-		impl, err = newQUIC0Impl(name, addr, s, reportDialCore)
 	case "quic_ietf", "oquic":
 		impl, err = newQUICImpl(name, addr, s, reportDialCore)
 	case "wss":

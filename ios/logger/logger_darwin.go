@@ -1,4 +1,4 @@
-package ios
+package logger
 
 // #include <os/log.h>
 //
@@ -33,7 +33,7 @@ func init() {
 func ConfigureFileLogging(fullLogFilePath string) error {
 	logFileDirectory, _ := filepath.Split(fullLogFilePath)
 	werr, wout := defaultLoggers()
-	return logging.EnableFileLoggingWith(werr, wout, logFileDirectory)
+	return logging.EnableFileLoggingWith(werr, wout, logFileDirectory, 10, 10)
 }
 
 func defaultLoggers() (io.WriteCloser, io.WriteCloser) {

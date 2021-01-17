@@ -24,3 +24,7 @@ func (conn *proxiedConn) OnRequest(req *http.Request) {
 	}
 	req.Header.Del("Connection")
 }
+
+func (conn *proxiedConn) Wrapped() net.Conn {
+	return conn.Conn
+}

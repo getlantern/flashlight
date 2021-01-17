@@ -24,9 +24,10 @@ const (
 
 var (
 	// Rules
-	None   = Rule("")
-	Direct = Rule("d")
-	Proxy  = Rule("p")
+	None      = Rule("")
+	Direct    = Rule("d")
+	Proxy     = Rule("p")
+	MustProxy = Rule("m")
 
 	// Requests to these domains require proxies for security purposes and to
 	// ensure that config-server requests in particular always go through a proxy
@@ -66,7 +67,7 @@ func Configure(rules Rules, proxiedSites *ProxiedSitesConfig) {
 
 	// There are certain domains that always require proxying no matter what, merge those in
 	for _, domain := range domainsRequiringProxy {
-		rules[domain] = Proxy
+		rules[domain] = MustProxy
 	}
 
 	newRules := buildTree(rules)

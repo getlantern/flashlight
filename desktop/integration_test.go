@@ -14,11 +14,13 @@ import (
 
 	bclient "github.com/getlantern/borda/client"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/golog/testlog"
 	"github.com/getlantern/ops"
 	"github.com/getlantern/waitforserver"
 
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/goroutines"
@@ -37,7 +39,10 @@ func TestProxying(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skip test in short mode")
 	}
+
 	golog.SetPrepender(logging.Timestamped)
+	defer testlog.Capture(t)()
+
 	onGeo := geolookup.OnRefresh()
 
 	chained.InsecureSkipVerifyTLSMasqOrigin = true
@@ -80,6 +85,7 @@ func TestProxying(t *testing.T) {
 			uptime := getVal("uptime")
 			assert.True(t, uptime > 0)
 			assert.True(t, uptime < 5000)
+			assert.Equal(t, strings.ToLower(common.AppName)+"-client", dimensions["app"])
 		case "traffic":
 			sent := getVal("client_bytes_sent")
 			recv := getVal("client_bytes_recv")
@@ -98,7 +104,7 @@ func TestProxying(t *testing.T) {
 		listenPort++
 		return fmt.Sprintf("localhost:%d", listenPort)
 	}
-	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
+	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -120,7 +126,6 @@ func TestProxying(t *testing.T) {
 				},
 			},
 		}
-
 		doRequest(t, client, "http://"+helper.HTTPServerAddr)
 		doRequest(t, client, "https://"+helper.HTTPSServerAddr)
 		goroutines.PrintProfile(10)
@@ -135,7 +140,6 @@ func TestProxying(t *testing.T) {
 		// utplampshade doesn't currently work for some reason
 		// "utplampshade",
 		"kcp",
-		"quic", // quic0 (legacy)
 		"oquic",
 		"quic_ietf",
 		"wss",
@@ -211,17 +215,21 @@ func TestProxying(t *testing.T) {
 	}
 
 	// now starts a new helper and application test multipath with all protocols
-	helper, err = integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
+	helper, err = integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
 	if !assert.NoError(t, err) {
 		return
 	}
 	defer helper.Close()
 
+	log.Debug("Starting app")
 	a, err = startApp(t, helper)
 	if !assert.NoError(t, err) {
 		return
 	}
-	defer a.Exit(nil)
+	defer func() {
+		log.Debug("Exiting app")
+		a.Exit(nil)
+	}()
 
 	proto := strings.Join(protocols, ",")
 	helper.SetProtocol(proto)
@@ -267,6 +275,7 @@ func startApp(t *testing.T, helper *integrationtest.Helper) (*App, error) {
 
 	go func() {
 		a.Run()
+		defer testlog.Capture(t)()
 		a.WaitForExit()
 	}()
 

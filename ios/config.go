@@ -52,6 +52,7 @@ type ConfigResult struct {
 // a proxies.yaml configuration that overrides whatever we fetch from the cloud.
 func Configure(configFolderPath string, userID int, proToken, deviceID string, refreshProxies bool, hardcodedProxies string) (*ConfigResult, error) {
 	log.Debugf("Configuring client for device '%v' at config path '%v'", deviceID, configFolderPath)
+	defer log.Debug("Finished configuring client")
 	cf := &configurer{
 		configFolderPath: configFolderPath,
 		hardcodedProxies: hardcodedProxies,
@@ -95,8 +96,10 @@ func (cf *configurer) configure(userID int, proToken string, refreshProxies bool
 	var globalUpdated, proxiesUpdated bool
 
 	setupFronting := func() error {
+		log.Debug("Setting up fronting")
+		defer log.Debug("Set up fronting")
 		if frontingErr := cf.configureFronting(global, shortFrontedAvailableTimeout); frontingErr != nil {
-			log.Errorf("Unable to configure fronting on first try, update global config directly from GitHub and try again")
+			log.Errorf("Unable to configure fronting on first try, update global config directly from GitHub and try again: %v", frontingErr)
 			global, globalUpdated = cf.updateGlobal(&http.Transport{}, global, globalEtag, "https://raw.githubusercontent.com/getlantern/lantern-binaries/master/cloud.yaml.gz")
 			return cf.configureFronting(global, longFrontedAvailableTimeout)
 		}
@@ -106,6 +109,7 @@ func (cf *configurer) configure(userID int, proToken string, refreshProxies bool
 	if frontingErr := setupFronting(); frontingErr != nil {
 		log.Errorf("Unable to configure fronting, sticking with embedded configuration: %v", err)
 	} else {
+		log.Debug("Refreshing geolookup")
 		geolookup.Refresh()
 
 		go func() {
@@ -122,9 +126,13 @@ func (cf *configurer) configure(userID int, proToken string, refreshProxies bool
 			}
 		}()
 
+		log.Debug("Updating global config")
 		global, globalUpdated = cf.updateGlobal(cf.rt, global, globalEtag, "https://globalconfig.flashlightproxy.com/global.yaml.gz")
+		log.Debug("Updated global config")
 		if refreshProxies {
+			log.Debug("Refreshing proxies")
 			proxies, proxiesUpdated = cf.updateProxies(proxies, proxiesEtag)
+			log.Debug("Refreshed proxies")
 		}
 
 		result.VPNNeedsReconfiguring = result.VPNNeedsReconfiguring || globalUpdated || proxiesUpdated
@@ -221,6 +229,7 @@ func (cf *configurer) openConfig(name string, cfg interface{}, embedded []byte) 
 }
 
 func (cf *configurer) configureFronting(global *config.Global, timeout time.Duration) error {
+	log.Debug("Configuring fronting")
 	certs, err := global.TrustedCACerts()
 	if err != nil {
 		return errors.New("Unable to read trusted CAs from global config, can't configure domain fronting: %v", err)
@@ -234,6 +243,7 @@ func (cf *configurer) configureFronting(global *config.Global, timeout time.Dura
 	}
 
 	cf.rt = rt
+	log.Debug("Configured fronting")
 	return nil
 }
 
@@ -254,6 +264,10 @@ func (cf *configurer) updateProxies(cfg map[string]*chained.ChainedServerInfo, e
 	didFetch, err := cf.updateFromWeb(cf.rt, proxiesYaml, etag, updated, "http://config.getiantem.org/proxies.yaml.gz")
 	if err != nil {
 		log.Error(err)
+	}
+	if len(updated) == 0 {
+		log.Error("Proxies returned by config server was empty, ignoring")
+		didFetch = false
 	}
 	if didFetch {
 		cfg = updated

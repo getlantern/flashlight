@@ -259,6 +259,23 @@ func TestNoCache(t *testing.T) {
 	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
 }
 
+func TestAllowCache(t *testing.T) {
+	s := getTestServer("some-token")
+
+	s.Handle("/cache-me",
+		http.HandlerFunc(
+			func(resp http.ResponseWriter, req *http.Request) {
+				resp.WriteHeader(http.StatusOK)
+			},
+		))
+
+	var rw httptest.ResponseRecorder
+	req, _ := http.NewRequest("GET", "/cache-me/", nil)
+
+	s.mux.ServeHTTP(&rw, req)
+	assert.Equal(t, "", rw.HeaderMap.Get("Cache-Control"))
+}
+
 func TestProAPI(t *testing.T) {
 	var rw httptest.ResponseRecorder
 	req, _ := http.NewRequest("GET", "/pro/user-data", nil)

@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSearchProxy(t *testing.T) {
+func TestProxy(t *testing.T) {
 	uc := common.NewUserConfigData("device", 0, "token", nil, "en-US")
 
 	m := &testutils.MockRoundTripper{Header: http.Header{}, Body: strings.NewReader("GOOD")}
@@ -26,7 +26,7 @@ func TestSearchProxy(t *testing.T) {
 	url := fmt.Sprintf("http://%s/replica/search", addr)
 	t.Logf("Test server listening at %s", url)
 
-	handler := searchHandler(uc)
+	handler := proxyHandler(uc, addr.String())
 	go http.Serve(l, handler)
 
 	{

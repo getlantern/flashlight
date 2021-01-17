@@ -11,9 +11,13 @@ import (
 
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/ws"
+	"github.com/getlantern/golog/testlog"
 )
 
 func TestEmailProxy(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	channel := ws.NewUIChannel()
 	s := httptest.NewServer(channel.Handler())
 	defer s.Close()

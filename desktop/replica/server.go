@@ -16,6 +16,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/anacrolix/torrent/storage"
+	sqliteStorage "github.com/anacrolix/torrent/storage/sqlite"
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
@@ -37,31 +39,54 @@ type HttpHandler struct {
 	confluence    confluence.Handler
 	torrentClient *torrent.Client
 	// Where to store torrent client data.
-	dataDir       string
-	uploadsDir    string
-	logger        golog.Logger
-	mux           http.ServeMux
-	replicaClient *replica.Client
-	searchProxy   http.Handler
-	gaSession     analytics.Session
+	dataDir          string
+	uploadsDir       string
+	logger           golog.Logger
+	mux              http.ServeMux
+	replicaClient    *replica.Client
+	searchProxy      http.Handler
+	thumbnailerProxy http.Handler
+	gaSession        analytics.Session
+	opts             NewHttpHandlerOpts
+	uploadStorage    storage.ClientImplCloser
+	defaultStorage   storage.ClientImplCloser
+}
+
+func DefaultNewHttpHandlerOpts() NewHttpHandlerOpts {
+	return NewHttpHandlerOpts{}
+}
+
+type NewHttpHandlerOpts struct {
+	AddUploadsToTorrentClient bool
+	StoreUploadsLocally       bool
 }
 
 // NewHTTPHandler creates a new http.Handler for calls to replica.
-func NewHTTPHandler(configDir string, uc common.UserConfig, replicaClient *replica.Client, gaSession analytics.Session) (_ *HttpHandler, exitFunc func(), err error) {
+func NewHTTPHandler(
+	configDir string,
+	uc common.UserConfig,
+	replicaClient *replica.Client,
+	gaSession analytics.Session,
+	opts NewHttpHandlerOpts,
+) (_ *HttpHandler, err error) {
+	logger := golog.LoggerFor("replica.server")
 	userCacheDir, err := os.UserCacheDir()
 	if err != nil {
-		err = fmt.Errorf("accessing the user cache dir: %w", err)
-		return
+		logger.Errorf("accessing the user cache dir, fallback to temp dir: %w", err)
+		userCacheDir = os.TempDir()
 	}
-
-	logger := golog.LoggerFor("replica.server")
 	const replicaDirElem = "replica"
-	replicaConfigDir := filepath.Join(configDir, replicaDirElem)
-	uploadsDir := filepath.Join(replicaConfigDir, "uploads")
-	replicaDataDir := filepath.Join(userCacheDir, replicaDirElem, "data")
+	replicaCacheDir := filepath.Join(userCacheDir, common.AppName, replicaDirElem)
+	_ = os.MkdirAll(replicaCacheDir, 0700)
+	uploadsDir := filepath.Join(configDir, replicaDirElem, "uploads")
+	_ = os.MkdirAll(uploadsDir, 0700)
+	replicaDataDir := filepath.Join(replicaCacheDir, "data")
+	_ = os.MkdirAll(replicaDataDir, 0700)
 	cfg := torrent.NewDefaultClientConfig()
 	cfg.DisableIPv6 = true
-	cfg.DataDir = replicaDataDir
+	// This should not be used, we're specifying our own storage for uploads and general views
+	// respectively.
+	cfg.DataDir = "\x00"
 	cfg.Seed = true
 	cfg.HeaderObfuscationPolicy.Preferred = true
 	cfg.HeaderObfuscationPolicy.RequirePreferred = true
@@ -69,13 +94,20 @@ func NewHTTPHandler(configDir string, uc common.UserConfig, replicaClient *repli
 	cfg.Logger = analog.Default.WithFilter(func(m analog.Msg) bool {
 		return !m.HasValue("upnp-discover")
 	})
-	// DHT disabled pending fixes to transaction query concurrency.	 Also using S3 as a
-	// fallback means we have a great tracker to rely on.
-	//cfg.NoDHT = true
-	// Household users may be behind a NAT/bad router, or on a limited device like a mobile. We
-	// don't want to overload their networks, so ensure the default connection tracking
-	// behaviour.
-	//cfg.ConnTracker = conntrack.NewInstance()
+	defaultStorage, err := sqliteStorage.NewPiecesStorage(sqliteStorage.NewPoolOpts{
+		Path:     filepath.Join(replicaCacheDir, "storage-cache.db"),
+		Capacity: 5 << 30,
+	})
+	if err != nil {
+		err = fmt.Errorf("creating torrent storage cache: %w", err)
+		return
+	}
+	defer func() {
+		if err != nil {
+			defaultStorage.Close()
+		}
+	}()
+	cfg.DefaultStorage = defaultStorage
 	torrentClient, err := torrent.NewClient(cfg)
 	if err != nil {
 		logger.Errorf("Error creating client: %v", err)
@@ -95,19 +127,27 @@ func NewHTTPHandler(configDir string, uc common.UserConfig, replicaClient *repli
 		confluence: confluence.Handler{
 			TC: torrentClient,
 			MetainfoCacheDir: func() *string {
-				s := filepath.Join(userCacheDir, replicaDirElem, "metainfos")
+				s := filepath.Join(replicaCacheDir, "metainfos")
 				return &s
 			}(),
 		},
-		torrentClient: torrentClient,
-		dataDir:       replicaDataDir,
-		logger:        logger,
-		uploadsDir:    uploadsDir,
-		replicaClient: replicaClient,
-		searchProxy:   http.StripPrefix("/search", searchHandler(uc)),
-		gaSession:     gaSession,
+		torrentClient:    torrentClient,
+		dataDir:          replicaDataDir,
+		logger:           logger,
+		uploadsDir:       uploadsDir,
+		replicaClient:    replicaClient,
+		searchProxy:      http.StripPrefix("/search", proxyHandler(uc, common.ReplicaSearchAPIHost)),
+		thumbnailerProxy: http.StripPrefix("/thumbnail", proxyHandler(uc, common.ReplicaThumbnailerHost)),
+		gaSession:        gaSession,
+		// I think the standard file-storage implementation is sufficient here because we guarantee
+		// unique info name/prefixes for uploads (which the default file implementation does not).
+		// There's another implementation that injects the infohash as a prefix to ensure uniqueness
+		// of final file names.
+		uploadStorage:  storage.NewFile(replicaDataDir),
+		defaultStorage: defaultStorage,
 	}
 	handler.mux.HandleFunc("/search", handler.wrapHandlerError("replica_search", handler.handleSearch))
+	handler.mux.HandleFunc("/thumbnail", handler.wrapHandlerError("replica_thumbnail", handler.handleThumbnail))
 	handler.mux.HandleFunc("/upload", handler.wrapHandlerError("replica_upload", handler.handleUpload))
 	handler.mux.HandleFunc("/uploads", handler.wrapHandlerError("replica_uploads", handler.handleUploads))
 	handler.mux.HandleFunc("/view", handler.wrapHandlerError("replica_view", handler.handleView))
@@ -127,31 +167,36 @@ func NewHTTPHandler(configDir string, uc common.UserConfig, replicaClient *repli
 	// routes, so this might go away soon.
 	handler.mux.Handle("/", &handler.confluence)
 
-	if err := handler.replicaClient.IterUploads(uploadsDir, func(iu replica.IteredUpload) {
-		if iu.Err != nil {
-			logger.Errorf("error while iterating uploads: %v", iu.Err)
-			return
+	if opts.AddUploadsToTorrentClient {
+		if err := handler.replicaClient.IterUploads(uploadsDir, func(iu replica.IteredUpload) {
+			if iu.Err != nil {
+				logger.Errorf("error while iterating uploads: %v", iu.Err)
+				return
+			}
+			err := handler.addUploadTorrent(iu.Metainfo.MetaInfo, true)
+			if err != nil {
+				logger.Errorf("error adding existing upload from %q to torrent client: %v", iu.FileInfo.Name(), err)
+			} else {
+				logger.Debugf("added previous upload %q to torrent client from file %q", iu.Metainfo.Upload, iu.FileInfo.Name())
+			}
+		}); err != nil {
+			handler.Close()
+			return nil, fmt.Errorf("iterating through uploads: %w", err)
 		}
-		err := handler.addTorrent(iu.Metainfo.MetaInfo, true)
-		if err != nil {
-			logger.Errorf("error adding existing upload from %q to torrent client: %v", iu.FileInfo.Name(), err)
-		} else {
-			logger.Debugf("added previous upload %q to torrent client from file %q", iu.Metainfo.Upload, iu.FileInfo.Name())
-		}
-	}); err != nil {
-		return nil, nil, fmt.Errorf("iterating through uploads: %w", err)
 	}
-
-	return handler, torrentClient.Close, nil
+	return handler, nil
 }
 
 func (me *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	me.logger.Debugf("replica server request path: %q", r.URL.Path)
-	// TODO(anacrolix): Check this is correct and secure. We might want to be given valid origins
-	// and apply them to appropriate routes, or only allow anything from localhost for example.
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "*")
+	common.ProcessCORS(w.Header(), r)
 	me.mux.ServeHTTP(w, r)
+}
+
+func (me *HttpHandler) Close() {
+	me.torrentClient.Close()
+	me.uploadStorage.Close()
+	me.defaultStorage.Close()
 }
 
 // handlerError is just a small wrapper around errors so that we can more easily
@@ -230,28 +275,36 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 	var cw replica.CountWriter
 	replicaUploadReader := io.TeeReader(scrubbedReader, &cw)
 
-	tmpFile, tmpFileErr := func() (*os.File, error) {
-		const forceTempFileFailure = false
-		if forceTempFileFailure {
-			return nil, errors.New("sike")
+	var (
+		tmpFile    *os.File
+		tmpFileErr error
+	)
+	if me.opts.StoreUploadsLocally {
+		tmpFile, tmpFileErr = func() (*os.File, error) {
+			// This is for testing temp file failures.
+			const forceTempFileFailure = false
+			if forceTempFileFailure {
+				return nil, errors.New("sike")
+			}
+			return ioutil.TempFile("", "")
+		}()
+		if tmpFileErr == nil {
+			defer os.Remove(tmpFile.Name())
+			defer tmpFile.Close()
+			replicaUploadReader = io.TeeReader(replicaUploadReader, tmpFile)
+		} else {
+			// This isn't good, but as long as we can add the torrent file metainfo to the local
+			// client, we can still spread the metadata, and S3 can take care of the data.
+			me.logger.Errorf("error creating temporary file: %v", tmpFileErr)
 		}
-		return ioutil.TempFile("", "")
-	}()
-	if tmpFileErr == nil {
-		defer os.Remove(tmpFile.Name())
-		defer tmpFile.Close()
-		replicaUploadReader = io.TeeReader(replicaUploadReader, tmpFile)
-	} else {
-		// This isn't good, but as long as we can add the torrent file metainfo to the local client,
-		// we can still spread the metadata, and S3 can take care of the data.
-		me.logger.Errorf("error creating temporary file: %v", tmpFileErr)
 	}
 
-	output, err := me.replicaClient.Upload(replicaUploadReader, r.URL.Query().Get("name"))
+	fileName := r.URL.Query().Get("name")
+	output, err := me.replicaClient.Upload(replicaUploadReader, fileName)
 	s3Prefix := output.Upload
 	me.logger.Debugf("uploaded replica key %q", s3Prefix)
 	rw.Op.Set("upload_s3_key", s3Prefix)
-	me.gaSession.Event("replica", "upload")
+	me.gaSession.EventWithLabel("replica", "upload", path.Ext(fileName))
 	me.logger.Debugf("uploaded %d bytes", cw.BytesWritten)
 	if err != nil {
 		return fmt.Errorf("uploading with replicaClient: %w", err)
@@ -266,7 +319,7 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 	if err != nil {
 		return fmt.Errorf("storing uploaded torrent: %w", err)
 	}
-	if tmpFileErr == nil {
+	if tmpFileErr == nil && me.opts.StoreUploadsLocally {
 		// Windoze might complain if we don't close the handle before moving the file, plus it's
 		// considered good practice to check for close errors after writing to a file. (I'm not
 		// closing it, but at least I'm flushing anything, if it's incomplete at this point, the
@@ -275,16 +328,18 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 		// Move the temporary file, which contains the upload body, to the data directory for the
 		// torrent client, in the location it expects.
 		dst := filepath.Join(append([]string{me.dataDir, s3Prefix.String()}, info.UpvertedFiles()[0].Path...)...)
-		os.MkdirAll(filepath.Dir(dst), 0700)
+		_ = os.MkdirAll(filepath.Dir(dst), 0700)
 		err = os.Rename(tmpFile.Name(), dst)
 		if err != nil {
 			// Not fatal: See above, we only really need the metainfo to be added to the torrent.
 			me.logger.Errorf("error renaming file: %v", err)
 		}
 	}
-	err = me.addTorrent(output.MetaInfo, true)
-	if err != nil {
-		return fmt.Errorf("adding torrent: %w", err)
+	if me.opts.AddUploadsToTorrentClient {
+		err = me.addUploadTorrent(output.MetaInfo, true)
+		if err != nil {
+			return fmt.Errorf("adding torrent: %w", err)
+		}
 	}
 	var oi objectInfo
 	err = oi.fromS3UploadMetaInfo(output.UploadMetainfo, time.Now())
@@ -294,11 +349,20 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 	return encodeJsonResponse(rw, oi)
 }
 
-func (me *HttpHandler) addTorrent(mi *metainfo.MetaInfo, concealUploaderIdentity bool) error {
-	t, err := me.torrentClient.AddTorrent(mi)
+func (me *HttpHandler) addUploadTorrent(mi *metainfo.MetaInfo, concealUploaderIdentity bool) error {
+	spec := torrent.TorrentSpecFromMetaInfo(mi)
+	spec.Storage = me.uploadStorage
+	t, new, err := me.torrentClient.AddTorrentSpec(spec)
 	if err != nil {
 		return err
 	}
+	if !new {
+		panic("adding an upload should always be a new torrent")
+	}
+	// I think we're trying to avoid touching the network at all here, including announces etc. This
+	// feature is currently supported in anacrolix/torrent? We could serve directly from the local
+	// filesystem instead of going through the torrent storage if that was more appropriate?
+	// TODO(anacrolix): Prevent network being touched at all, or bypass torrent client entirely.
 	if concealUploaderIdentity {
 		t.DisallowDataUpload()
 	} else {
@@ -332,7 +396,7 @@ func (me *HttpHandler) handleUploads(rw *ops.InstrumentedResponseWriter, r *http
 
 func (me *HttpHandler) handleDelete(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
 	link := r.URL.Query().Get("link")
-	m, err := metainfo.ParseMagnetURI(link)
+	m, err := metainfo.ParseMagnetUri(link)
 	if err != nil {
 		return handlerError{http.StatusBadRequest, fmt.Errorf("parsing magnet link: %v", err)}
 	}
@@ -369,6 +433,11 @@ func (me *HttpHandler) handleDelete(rw *ops.InstrumentedResponseWriter, r *http.
 	return nil
 }
 
+func (me *HttpHandler) handleThumbnail(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
+	me.thumbnailerProxy.ServeHTTP(rw, r)
+	return nil
+}
+
 func (me *HttpHandler) handleSearch(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
 	searchTerm := r.URL.Query().Get("s")
 
@@ -392,7 +461,7 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 
 	link := r.URL.Query().Get("link")
 
-	m, err := metainfo.ParseMagnetURI(link)
+	m, err := metainfo.ParseMagnetUri(link)
 	if err != nil {
 		return handlerError{http.StatusBadRequest, fmt.Errorf("parsing magnet link: %w", err)}
 	}
@@ -414,7 +483,7 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 	// the magnet link in the first tier, and our forcibly injected ones in the second.
 
 	// We're unnecessary parsing a Magnet here.
-	spec, err := torrent.TorrentSpecFromMagnetURI(link)
+	spec, err := torrent.TorrentSpecFromMagnetUri(link)
 	if err != nil {
 		return fmt.Errorf("getting spec from magnet URI: %w", err)
 	}
@@ -468,16 +537,21 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 		m.DisplayName,
 		t.Name(),
 	)
+	ext := path.Ext(filename)
+	if ext != "" {
+		filename = sanitize.BaseName(strings.TrimSuffix(filename, ext)) + ext
+	}
 	if filename != "" {
-		ext := path.Ext(filename)
-		if ext != "" {
-			filename = sanitize.BaseName(strings.TrimSuffix(filename, ext)) + ext
-		}
 		rw.Header().Set("Content-Disposition", inlineType+"; filename*=UTF-8''"+url.QueryEscape(filename))
 	}
 
 	rw.Op.Set("download_filename", filename)
-	me.gaSession.EventWithLabel("replica", "view", filename)
+	switch inlineType {
+	case "inline":
+		me.gaSession.EventWithLabel("replica", "view", ext)
+	case "attachment":
+		me.gaSession.EventWithLabel("replica", "download", ext)
+	}
 
 	torrentFile := t.Files()[selectOnly]
 	fileReader := torrentFile.NewReader()

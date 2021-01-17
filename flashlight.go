@@ -231,7 +231,7 @@ func New(
 	isPro func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
-	reverseDNS func(host string) string) (*Flashlight, error) {
+	reverseDNS func(host string) (string, error)) (*Flashlight, error) {
 
 	log.Debugf("Using configdir: %v", configDir)
 
@@ -278,7 +278,7 @@ func New(
 			}
 		}()
 
-		reverseDNS = func(addr string) string {
+		reverseDNS = func(addr string) (string, error) {
 			host, port, splitErr := net.SplitHostPort(addr)
 			if splitErr != nil {
 				host = addr
@@ -286,17 +286,18 @@ func New(
 			ip := net.ParseIP(host)
 			if ip == nil {
 				log.Debugf("Unable to parse IP %v, passing through address as is", host)
-				return addr
+				return addr, nil
 			}
-			updatedHost := grabber.ReverseLookup(ip)
-			if updatedHost == "" {
-				log.Debugf("Unable to reverse lookup %v, passing through address as is (this shouldn't happen much)", ip)
-				return addr
+			updatedHost, ok := grabber.ReverseLookup(ip)
+			if !ok {
+				// This means that the IP is one of our fake IPs (like 240.0.0.5) but dnsgrab doesn't know it. We cache dnsgrab entries
+				// on disk for 24 hours, so this should almost never happen.
+				return "", errors.New("Invalid IP address")
 			}
 			if splitErr != nil {
-				return updatedHost
+				return updatedHost, nil
 			}
-			return fmt.Sprintf("%v:%v", updatedHost, port)
+			return fmt.Sprintf("%v:%v", updatedHost, port), nil
 		}
 		f.vpnEnabled = true
 	}

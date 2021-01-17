@@ -2,8 +2,8 @@ package util
 
 import "net/http"
 
-// NoCacheHandler disables browser caching.
-func NoCacheHandler(h http.Handler) http.Handler {
+// NoCache disables browser caching.
+func NoCache(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate") // HTTP 1.1.
 		w.Header().Set("Pragma", "no-cache")                                   // HTTP 1.0.

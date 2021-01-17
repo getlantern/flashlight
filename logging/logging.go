@@ -1,4 +1,4 @@
-// package logging configures the golog subsystem for use with Lantern
+// Package logging configures the golog subsystem for use with Lantern
 // Import this to make sure golog is initialized before you log.
 package logging
 
@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/rotator"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/util"
 )
 
@@ -33,7 +35,13 @@ var (
 
 	actualLogDir   string
 	actualLogDirMx sync.RWMutex
+
+	resetLogs atomic.Value
 )
+
+func init() {
+	resetLogs.Store(func() {})
+}
 
 // RotatedLogsUnder creates rotated file logger under logdir.
 func RotatedLogsUnder(logdir string) (io.WriteCloser, error) {
@@ -50,7 +58,7 @@ func RotatedLogsUnder(logdir string) (io.WriteCloser, error) {
 		}
 	}
 
-	rotator := rotator.NewSizeRotator(filepath.Join(logdir, "lantern.log"))
+	rotator := rotator.NewSizeRotator(filepath.Join(logdir, strings.ToLower(common.AppName)+".log"))
 	// Set log files to 4 MB
 	rotator.RotationSize = 4 * 1024 * 1024
 	// Keep up to 5 log files
@@ -72,15 +80,15 @@ func Timestamped(w io.Writer) {
 // EnableFileLogging configures golog to write to rotated files under the
 // logdir, in addition to standard outputs.
 func EnableFileLogging(logdir string) {
-	err := EnableFileLoggingWith(os.Stdout, os.Stderr, logdir)
+	err := EnableFileLoggingWith(os.Stdout, os.Stderr, logdir, 100, 1000)
 	if err != nil {
 		log.Error(err)
 	}
 }
 
 // EnableFileLoggingWith is similar to EnableFileLogging but allows overriding
-// standard outputs.
-func EnableFileLoggingWith(werr io.WriteCloser, wout io.WriteCloser, logdir string) error {
+// standard outputs and setting buffer depths for error and debug log channels.
+func EnableFileLoggingWith(werr io.WriteCloser, wout io.WriteCloser, logdir string, debugBufferDepth, errorBufferDepth int) error {
 	golog.SetPrepender(Timestamped)
 	rotator, err := RotatedLogsUnder(logdir)
 	if err != nil {
@@ -88,9 +96,9 @@ func EnableFileLoggingWith(werr io.WriteCloser, wout io.WriteCloser, logdir stri
 	}
 
 	logFile = rotator
-	errorPWC = newPipedWriteCloser(NonStopWriteCloser(werr, logFile), 1000)
-	debugPWC = newPipedWriteCloser(NonStopWriteCloser(wout, logFile), 100)
-	golog.SetOutputs(errorPWC, debugPWC)
+	errorPWC = newPipedWriteCloser(NonStopWriteCloser(werr, logFile), errorBufferDepth)
+	debugPWC = newPipedWriteCloser(NonStopWriteCloser(wout, logFile), debugBufferDepth)
+	resetLogs.Store(golog.SetOutputs(errorPWC, debugPWC))
 	return nil
 }
 
@@ -100,18 +108,16 @@ type pipedWriteCloser struct {
 	w        io.WriteCloser
 	ch       chan []byte
 	chClosed chan struct{}
-	bufPool  sync.Pool // to reduce allocation as much as possible
 }
 
 func (w *pipedWriteCloser) Write(b []byte) (int, error) {
 	if atomic.LoadUint32(&w.closing) > 0 {
 		return len(b), nil
 	}
-	buf := w.bufPool.Get().([]byte)
+	buf := make([]byte, len(b))
 	// Have to copy the slice as the caller may reuse it before it's consumed
-	// by the write goroutine. Using append is a trick to grow the slice
-	// automatically.
-	buf = append(buf[:0], b...)
+	// by the write goroutine.
+	copy(buf, b)
 	select {
 	case w.ch <- buf:
 		skipped := atomic.LoadUint64(&w.nSkipped)
@@ -150,14 +156,10 @@ func newPipedWriteCloser(w io.WriteCloser, nPending int) io.WriteCloser {
 	pwc := &pipedWriteCloser{0, 0, w,
 		make(chan []byte, nPending),
 		make(chan struct{}),
-		sync.Pool{
-			New: func() interface{} { return make([]byte, 0, 256) },
-		},
 	}
 	go func() {
 		for b := range pwc.ch {
 			pwc.w.Write(b)
-			pwc.bufPool.Put(b)
 		}
 		close(pwc.chClosed)
 	}()
@@ -181,7 +183,7 @@ func ZipLogFiles(w io.Writer, underFolder string, maxBytes int64) error {
 func ZipLogFilesFrom(w io.Writer, maxBytes int64, dirs map[string]string) error {
 	globs := make(map[string]string, len(dirs))
 	for baseDir, dir := range dirs {
-		globs[baseDir] = fmt.Sprintf(filepath.Join(dir, "*.log*"))
+		globs[baseDir] = fmt.Sprintf(filepath.Join(dir, "*"))
 	}
 	return util.ZipFiles(w, util.ZipOptions{
 		Globs:    globs,
@@ -200,7 +202,9 @@ func Close() error {
 	if logFile != nil {
 		logFile.Close()
 	}
-	golog.ResetOutputs()
+
+	resetLogs.Load().(func())()
+
 	return nil
 }
 

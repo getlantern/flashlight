@@ -113,8 +113,8 @@ func (s *Server) attachHandlers() {
 		resp.WriteHeader(http.StatusOK)
 	}
 
-	s.Handle("/startup", http.HandlerFunc(startupHandler))
-	s.Handle("/", http.FileServer(fs))
+	s.Handle("/startup", util.NoCache(http.HandlerFunc(startupHandler)))
+	s.Handle("/", util.NoCache(http.FileServer(fs)))
 }
 
 // Handle directs the underlying server to handle the given pattern at both
@@ -128,12 +128,12 @@ func (s *Server) Handle(pattern string, handler http.Handler) {
 	if s.httpTokenRequestPathPrefix != "" {
 		// If the request path is empty this would panic on adding the same pattern
 		// twice.
-		s.mux.Handle(s.httpTokenRequestPathPrefix+pattern, util.NoCacheHandler(s.strippingHandler(handler)))
+		s.mux.Handle(s.httpTokenRequestPathPrefix+pattern, s.strippingHandler(handler))
 	}
 
 	// In the naked request cast, we need to verify the token is there in the
 	// referer header.
-	s.mux.Handle(pattern, checkRequestForToken(util.NoCacheHandler(handler), s.localHTTPToken))
+	s.mux.Handle(pattern, checkRequestForToken(handler, s.localHTTPToken))
 }
 
 // strippingHandler removes the secure request path from the URL so that the

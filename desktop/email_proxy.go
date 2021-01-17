@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/ws"
 	"github.com/getlantern/osversion"
@@ -71,7 +72,8 @@ func fillMandrillDefaults(msg *mandrillMessage) {
 	msg.Vars["userID"] = settings.GetUserID()
 	msg.Vars["deviceID"] = settings.GetDeviceID()
 	msg.Vars["proToken"] = settings.GetToken()
-	msg.Vars["version"] = fmt.Sprintf("%v (%v)",
+	msg.Vars["version"] = fmt.Sprintf("%v %v (%v)",
+		common.AppName,
 		settings.getString(SNVersion),
 		settings.getString(SNRevisionDate))
 	os, err := osversion.GetHumanReadable()

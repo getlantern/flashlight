@@ -1,5 +1,9 @@
 // This demo program allows testing the iOS packet forwarding functionality
-// on a desktop machine using a TUN device. There are two ways to run it.
+// on a desktop machine using a TUN device.
+//
+// Note - the demo currently doesn't support UDP.
+//
+// There are two ways to run the demo:
 //
 // To fetch configuration from the cloud, just like iOS does, run:
 //
@@ -17,8 +21,7 @@
 //
 // To have the demo program handle all your internet traffic, run:
 //
-// sudo route delete default
-// sudo route add default 10.0.0.2
+// sudo route delete default && sudo route add default 10.0.0.2
 //
 // If using a proxies.yaml, you'll also need to manually set up a direct route
 // for proxy traffic via the default gateway, like so:
@@ -29,12 +32,15 @@
 //
 // When you're finished, you can fix your routing table with:
 //
-// sudo route delete default
-// sudo route add default 102.168.1.1
+// sudo route delete default && sudo route add default 192.168.1.1
 //
 // If you added a manual route for the proxy, you'll want to remove that too:
 //
 // sudo route delete 67.205.172.79
+//
+// The utility scripts vpn.bash and direct.bash provide convenient ways to route traffic via the VPN
+// or go back to routing traffic directly. You'll need to change the settings in routes.bash to match
+// your system.
 //
 package main
 
@@ -50,12 +56,14 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"syscall"
 
+	"github.com/eycorsican/go-tun2socks/tun"
+
 	"github.com/getlantern/golog"
-	"github.com/getlantern/ipproxy"
 	"github.com/getlantern/uuid"
 
 	"github.com/getlantern/flashlight/ios"
@@ -63,10 +71,6 @@ import (
 
 var (
 	log = golog.LoggerFor("ios-demo")
-)
-
-const (
-	mtu = 65535
 )
 
 var (
@@ -81,6 +85,7 @@ var (
 	deviceID        = flag.String("deviceid", base64.StdEncoding.EncodeToString(uuid.NodeID()), "deviceid to report to server")
 	bypassThreads   = flag.Int("bypassthreads", 0, "number of threads to use for configuring bypass routes. If set to 0, we don't bypass.")
 	proxiesYaml     = flag.String("proxiesyaml", "", "if specified, use the proxies.yaml at this location to configure client")
+	mtu             = flag.Int("mtu", 1500, "mtu, defaults to 1500")
 )
 
 type fivetuple struct {
@@ -131,7 +136,7 @@ func main() {
 		}
 	}
 
-	dev, err := ipproxy.TUNDevice(*tunDevice, *tunAddr, *tunMask, 1500)
+	dev, err := tun.OpenTunDevice(*tunDevice, *tunAddr, *tunGW, *tunMask, []string{"8.8.8.8"}, false)
 	if err != nil {
 		log.Fatalf("Error opening TUN device: %v", err)
 	}
@@ -214,13 +219,14 @@ func main() {
 		}()
 	}
 
-	writer, err := ios.Client(&writerAdapter{dev}, tmpDir, mtu)
+	ios.SetProfilePath("/tmp/")
+	writer, err := ios.Client(&writerAdapter{dev}, &noopUDPDialer{}, &noopMemChecker{}, tmpDir, *mtu, "8.8.8.8", "8.8.4.4")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	log.Debug("Reading from TUN device")
-	b := make([]byte, mtu)
+	b := make([]byte, *mtu)
 	for {
 		n, err := dev.Read(b)
 		if n > 0 {
@@ -238,6 +244,15 @@ func main() {
 	}
 }
 
+type noopMemChecker struct{}
+
+func (c *noopMemChecker) BytesRemain() int {
+	memstats := &runtime.MemStats{}
+	runtime.ReadMemStats(memstats)
+	// This gives us a positive but not immensely large bytes remaining
+	return 8000000 - int(memstats.HeapInuse)
+}
+
 type writerAdapter struct {
 	Writer io.Writer
 }
@@ -246,3 +261,21 @@ func (wa *writerAdapter) Write(b []byte) bool {
 	_, err := wa.Writer.Write(b)
 	return err == nil
 }
+
+type noopUDPDialer struct{}
+
+func (d *noopUDPDialer) Dial(host string, port int) ios.UDPConn {
+	return &noopUDPConn{}
+}
+
+type noopUDPConn struct{}
+
+// RegisterCallbacks registers lifecycle callbacks for the connection. Clients of the UDPConn
+// must call this before trying to use WriteDatagram and ReceiveDatagram.
+func (conn *noopUDPConn) RegisterCallbacks(cb *ios.UDPCallbacks) {}
+
+func (conn *noopUDPConn) WriteDatagram([]byte) {}
+
+func (conn *noopUDPConn) ReceiveDatagram() {}
+
+func (conn *noopUDPConn) Close() {}
