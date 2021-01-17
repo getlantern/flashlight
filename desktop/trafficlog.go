@@ -10,7 +10,6 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/icons"
 	"github.com/getlantern/trafficlog"
@@ -85,10 +84,8 @@ func (app *App) configureTrafficLog(cfg *config.Global) {
 		// Use the most up-to-date binary in development.
 		opts.Reinstall = true
 		// Always try to install the traffic log in development.
-		lastFailedPath, err := common.InConfigDir("", trafficlogLastFailedInstallFile)
-		if err != nil {
-			log.Debugf("Failed to create path to traffic log install-last-failed file: %v", err)
-		} else if err := os.Remove(lastFailedPath); err != nil {
+		lastFailedPath := filepath.Join(app.ConfigDir, trafficlogLastFailedInstallFile)
+		if err := os.Remove(lastFailedPath); err != nil {
 			log.Debugf("Failed to remove traffic log install-last-failed file: %v", err)
 		}
 	}
@@ -144,10 +141,7 @@ func (app *App) tryTrafficLogInstall(installDir string, opts config.TrafficLogOp
 		}
 	}
 
-	lastFailedPath, err := common.InConfigDir("", trafficlogLastFailedInstallFile)
-	if err != nil {
-		return errors.New("failed to create path to traffic log install-last-failed file: %v", err)
-	}
+	lastFailedPath := filepath.Join(app.ConfigDir, trafficlogLastFailedInstallFile)
 	lastFailedRaw, err := ioutil.ReadFile(lastFailedPath)
 	if err != nil && !os.IsNotExist(err) {
 		return errors.New("unable to open traffic log install-last-failed file: %v", err)
