@@ -11,6 +11,7 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/icons"
 	"github.com/getlantern/i18n"
