@@ -3,7 +3,7 @@ module github.com/getlantern/flashlight
 go 1.12
 
 require (
-	cloud.google.com/go v0.74.0 // indirect
+	cloud.google.com/go v0.75.0 // indirect
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/confluence v1.6.2-0.20201116033747-ba09085bd120
@@ -12,7 +12,7 @@ require (
 	github.com/anacrolix/log v0.7.1-0.20200604014615-c244de44fd2d
 	github.com/anacrolix/tagflag v1.1.1-0.20200411025953-9bb5209d56c2
 	github.com/anacrolix/torrent v1.18.1-0.20201116053711-8ef37cb2e682
-	github.com/aws/aws-sdk-go v1.36.12 // indirect
+	github.com/aws/aws-sdk-go v1.36.28 // indirect
 	github.com/badoux/checkmail v1.2.1 // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
@@ -67,7 +67,7 @@ require (
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20201027015000-69ed0bd15259
 	github.com/getlantern/netx v0.0.0-20201229185957-3fadd2c8f5ba
-	github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b
+	github.com/getlantern/notifier v0.0.0-20210109042112-d57e696d0db9
 	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
 	github.com/getlantern/packetforward v0.0.0-20200421081927-11933f311913
@@ -85,6 +85,7 @@ require (
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
 	github.com/getlantern/systray v1.0.3-0.20200611154022-031edda14837
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
+	github.com/getlantern/timezone v0.0.0-20210104163318-083eaadcecbd
 	github.com/getlantern/tinywss v0.0.0-20200121221108-851921f95ad7
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
 	github.com/getlantern/tlsdialer v0.0.0-20200205115148-9bde2ed72c94
@@ -96,8 +97,8 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-20201221170049-bead8e34ee1c
-	github.com/getsentry/sentry-go v0.7.0
+	github.com/getlantern/yinbi-server v0.0.0-20201206225914-9e1e4f19c867 // indirect
+	github.com/getsentry/sentry-go v0.9.0
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/google/gopacket v1.1.17
 	github.com/gorilla/websocket v1.4.2
@@ -123,17 +124,23 @@ require (
 	github.com/rs/cors v1.7.0
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
-	github.com/stretchr/testify v1.6.1
+	github.com/stellar/go v0.0.0-20210119090801-9791cbfaaa0b // indirect
+	github.com/stretchr/testify v1.7.0
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	github.com/ulule/limiter/v3 v3.8.0 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
-	golang.org/x/net v0.0.0-20201216054612-986b41b23924
-	golang.org/x/sys v0.0.0-20201221093633-bc327ba9c2f0
+	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
+	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
+	golang.org/x/oauth2 v0.0.0-20210113205817-d3ed898aa8a3 // indirect
+	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a // indirect
+	golang.org/x/sys v0.0.0-20210113181707-4bcb84eeeb78
+	golang.org/x/text v0.3.5 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20201214200347-8c77b98c765d // indirect
-	google.golang.org/grpc v1.34.0 // indirect
+	google.golang.org/genproto v0.0.0-20210114201628-6edceaf6022f // indirect
+	google.golang.org/grpc v1.35.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 

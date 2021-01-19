@@ -10,6 +10,8 @@ const (
 	AppHeader                           = "X-Lantern-App"
 	VersionHeader                       = "X-Lantern-Version"
 	DeviceIdHeader                      = "X-Lantern-Device-Id"
+	SupportedDataCaps                   = "X-Lantern-Supported-Data-Caps"
+	TimeZoneHeader                      = "X-Lantern-Time-Zone"
 	TokenHeader                         = "X-Lantern-Auth-Token"
 	UserIdHeader                        = "X-Lantern-User-Id"
 	ProTokenHeader                      = "X-Lantern-Pro-Token"
@@ -23,6 +25,8 @@ const (
 	PlatformHeader                      = "X-Lantern-Platform"
 	ProxyDialTimeoutHeader              = "X-Lantern-Dial-Timeout"
 	ClientCountryHeader                 = "X-Lantern-Client-Country"
+	XBQHeader                           = "XBQ"
+	XBQHeaderv2                         = "XBQv2"
 )
 
 // AddCommonHeadersWithOptions sets standard http headers on a request bound
@@ -40,6 +44,15 @@ func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth
 
 	req.Header.Set(PlatformHeader, Platform)
 	req.Header.Set(AppHeader, AppName)
+	req.Header.Add(SupportedDataCaps, "monthly")
+	req.Header.Add(SupportedDataCaps, "weekly")
+	req.Header.Add(SupportedDataCaps, "daily")
+	tz, err := uc.GetTimeZone()
+	if err != nil {
+		log.Debugf("omitting timezone header because: %v", err)
+	} else {
+		req.Header.Set(TimeZoneHeader, tz)
+	}
 
 	if overwriteAuth || req.Header.Get(DeviceIdHeader) == "" {
 		if deviceID := uc.GetDeviceID(); deviceID != "" {

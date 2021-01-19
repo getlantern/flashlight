@@ -1,4 +1,58 @@
 
+<a name="lantern-6.3.2"></a>
+## [lantern-6.3.2](https://github.com/getlantern/flashlight/compare/lantern-6.3.1...lantern-6.3.2)
+
+> 2021-01-15
+
+### Reverts
+
+* Revert "Add the TTLS param to bandwidth updates"
+
+### Pull Requests
+
+* Merge pull request [#977](https://github.com/getlantern/flashlight/issues/977) from getlantern/ox/fix-android-timezone-2
+
+
+<a name="lantern-6.3.1"></a>
+## [lantern-6.3.1](https://github.com/getlantern/flashlight/compare/lantern-6.3.0...lantern-6.3.1)
+
+> 2021-01-13
+
+### Pull Requests
+
+* Merge pull request [#975](https://github.com/getlantern/flashlight/issues/975) from getlantern/ui-6.3.1
+
+
+<a name="lantern-6.3.0"></a>
+## [lantern-6.3.0](https://github.com/getlantern/flashlight/compare/lantern-6.2.10...lantern-6.3.0)
+
+> 2021-01-12
+
+### Reverts
+
+* Add the TTLS param to bandwidth updates
+
+### Pull Requests
+
+* Merge pull request [#974](https://github.com/getlantern/flashlight/issues/974) from getlantern/ui-6.3.0
+* Merge pull request [#973](https://github.com/getlantern/flashlight/issues/973) from getlantern/sentry-0.9.0
+* Merge pull request [#972](https://github.com/getlantern/flashlight/issues/972) from getlantern/ui-6.2.11
+* Merge pull request [#969](https://github.com/getlantern/flashlight/issues/969) from getlantern/markhor/issue4656
+* Merge pull request [#971](https://github.com/getlantern/flashlight/issues/971) from getlantern/ox/ignore-idle-errors
+* Merge pull request [#970](https://github.com/getlantern/flashlight/issues/970) from getlantern/notifier-plans-fix
+
+
+<a name="lantern-6.2.10"></a>
+## [lantern-6.2.10](https://github.com/getlantern/flashlight/compare/lantern-6.2.9...lantern-6.2.10)
+
+> 2021-01-06
+
+### Pull Requests
+
+* Merge pull request [#968](https://github.com/getlantern/flashlight/issues/968) from getlantern/ui-6.2.9
+* Merge pull request [#967](https://github.com/getlantern/flashlight/issues/967) from getlantern/modifier-open-nonenglish
+
+
 <a name="lantern-6.2.9"></a>
 ## [lantern-6.2.9](https://github.com/getlantern/flashlight/compare/lantern-6.2.8...lantern-6.2.9)
 

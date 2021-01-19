@@ -70,8 +70,9 @@ type Session interface {
 	UpdateStats(string, string, string, int, int)
 	SetStaging(bool)
 	ProxyAll() bool
-	BandwidthUpdate(int, int, int)
+	BandwidthUpdate(int, int, int, int)
 	Locale() string
+	GetTimeZone() string
 	Code() string
 	GetCountryCode() string
 	GetForcedCountryCode() string
@@ -95,10 +96,11 @@ type userConfig struct {
 	session Session
 }
 
-func (uc *userConfig) GetDeviceID() string { return uc.session.GetDeviceID() }
-func (uc *userConfig) GetUserID() int64    { return uc.session.GetUserID() }
-func (uc *userConfig) GetToken() string    { return uc.session.GetToken() }
-func (uc *userConfig) GetLanguage() string { return uc.session.Locale() }
+func (uc *userConfig) GetDeviceID() string          { return uc.session.GetDeviceID() }
+func (uc *userConfig) GetUserID() int64             { return uc.session.GetUserID() }
+func (uc *userConfig) GetToken() string             { return uc.session.GetToken() }
+func (uc *userConfig) GetLanguage() string          { return uc.session.Locale() }
+func (uc *userConfig) GetTimeZone() (string, error) { return uc.session.GetTimeZone(), nil }
 func (uc *userConfig) GetInternalHeaders() map[string]string {
 	h := make(map[string]string)
 
@@ -394,7 +396,8 @@ func run(configDir, locale string,
 func bandwidthUpdates(session Session) {
 	go func() {
 		for quota := range bandwidth.Updates {
-			session.BandwidthUpdate(getBandwidth(quota))
+			percent, remaining, allowed := getBandwidth(quota)
+			session.BandwidthUpdate(percent, remaining, allowed, int(quota.TTLSeconds))
 		}
 	}()
 }
@@ -425,7 +428,7 @@ func setBandwidth(session Session) {
 	quota, _ := bandwidth.GetQuota()
 	percent, remaining, allowed := getBandwidth(quota)
 	if percent != 0 && remaining != 0 {
-		session.BandwidthUpdate(percent, remaining, allowed)
+		session.BandwidthUpdate(percent, remaining, allowed, int(quota.TTLSeconds))
 	}
 }
 
