@@ -19,7 +19,7 @@ var (
 	proxyAll           = flag.Bool("proxyall", false, "set to true to proxy all traffic through Lantern network")
 	stickyConfig       = flag.Bool("stickyconfig", false, "set to true to only use the local config file")
 	authaddr           = flag.String("authaddr", "", "if specified, indicates the address to use for the Lantern auth server. Defaults to staging auth server https://auth-staging.lantern.network")
-	yinbiaddr          = flag.String("yinbiaddr", "", "if specified, indicates the address to use for the Yinbi server")
+	yinbiaddr          = flag.String("yinbiaddr", "", "if specified, indicates the address to use for the Yinbi server. Defaults to staging server https://may38fjstaging.yin.bi")
 	headless           = flag.Bool("headless", false, "if true, lantern will run with no ui")
 	startup            = flag.Bool("startup", false, "if true, Lantern was automatically run on system startup")
 	clearProxySettings = flag.Bool("clear-proxy-settings", false, "if true, Lantern removes proxy settings from the system.")
