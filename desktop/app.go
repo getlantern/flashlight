@@ -503,7 +503,7 @@ func (app *App) checkForYinbi(features map[string]bool) {
 		return
 	}
 
-	app.startYinbi.Do(app.uiServer().EnableYinbiRoutes())
+	app.startYinbi.Do(app.uiServer().EnableYinbiRoutes)
 }
 
 func (app *App) checkForReplica(features map[string]bool) {
