@@ -15,30 +15,6 @@ import (
 	"github.com/go-chi/chi"
 )
 
-const (
-	// top-level routes
-	pathPrefix      = "/wallet"
-	accountEndpoint = "/account"
-	paymentEndpoint = "/payment"
-	userEndpoint    = "/user"
-	walletEndpoint  = "/"
-
-	// wallet endpoints
-	importEndpoint          = "/import"
-	redeemCodesEndpoint     = "/redeem/codes"
-	redemptionCodesEndpoint = "/codes"
-
-	// user endpoints
-	// Request URL: http://localhost:16823/wallet/user/mnemonic
-
-	createAccountEndpoint  = "/account/new"
-	createMnemonicEndpoint = "/mnemonic"
-	saveAddressEndpoint    = "/address"
-
-	// payment endpoints
-	sendPaymentEndpoint = "/new"
-)
-
 var (
 	ErrInvalidMnemonic = errors.New("The provided words do not comprise a valid mnemonic")
 	log                = golog.LoggerFor("flashlight.ui.yinbi")
@@ -65,10 +41,10 @@ func (h YinbiHandler) ConfigureRoutes() http.Handler {
 	log.Debug("Configuring Yinbi routes")
 
 	routes := map[string]func() http.Handler{
-		accountEndpoint: h.accountHandler,
-		walletEndpoint:  h.walletHandler,
-		paymentEndpoint: h.paymentHandler,
-		userEndpoint:    h.userHandler,
+		"/account": h.accountHandler,
+		"/":        h.walletHandler,
+		"/payment": h.paymentHandler,
+		"/user":    h.userHandler,
 	}
 
 	r := handler.NewRouter()
@@ -82,7 +58,7 @@ func (h YinbiHandler) ConfigureRoutes() http.Handler {
 }
 
 func (h YinbiHandler) GetPathPrefix() string {
-	return pathPrefix
+	return "/wallet"
 }
 
 // New creates a new YinbiHandler instance
@@ -110,13 +86,13 @@ func (h YinbiHandler) walletHandler() http.Handler {
 	r := handler.NewRouter()
 	r.Group(func(r chi.Router) {
 		// redeemCodes
-		r.Get(redeemCodesEndpoint, func(w http.ResponseWriter, r *http.Request) {
-			url := h.GetAuthAddr(redeemCodesEndpoint)
+		r.Get("/redeem/codes", func(w http.ResponseWriter, r *http.Request) {
+			url := h.GetAuthAddr("/redeem/codes")
 			log.Debugf("Sending redeem codes request to %s", url)
 			h.ProxyHandler(url, r, w, nil)
 		})
 		// importWallet
-		r.Post(importEndpoint, func(w http.ResponseWriter, r *http.Request) {
+		r.Post("/import", func(w http.ResponseWriter, r *http.Request) {
 			// importWalletHandler is the handler used to import wallets
 			// of existing yin.bi users
 			var params client.ImportWalletParams
@@ -135,7 +111,7 @@ func (h YinbiHandler) walletHandler() http.Handler {
 			})
 		})
 		// fetch redemption codes
-		r.Get(redemptionCodesEndpoint, func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/codes", func(w http.ResponseWriter, r *http.Request) {
 			// getRedemptionCodes is the handler used to look up
 			// voucher codes belonging to a Yinbi user
 			log.Debugf("Looking up redemption codes")
@@ -184,7 +160,7 @@ func (h YinbiHandler) sendPaymentHandler(w http.ResponseWriter, r *http.Request)
 // paymentHandler setups Yinbi payment-related routes
 func (h YinbiHandler) paymentHandler() http.Handler {
 	paymentRouter := handler.NewRouter()
-	paymentRouter.Post(sendPaymentEndpoint, h.sendPaymentHandler)
+	paymentRouter.Post("/new", h.sendPaymentHandler)
 	return paymentRouter
 }
 
@@ -221,16 +197,16 @@ func (h YinbiHandler) userHandler() http.Handler {
 	// Yinbi asset
 
 	r.Group(func(r chi.Router) {
-		r.Post(createAccountEndpoint, h.createAccountHandler())
+		r.Post("/account/new", h.createAccountHandler())
 
-		r.Post(createMnemonicEndpoint, func(w http.ResponseWriter, r *http.Request) {
+		r.Post("/mnemonic", func(w http.ResponseWriter, r *http.Request) {
 			mnemonic := h.yinbiClient.CreateMnemonic()
 			handler.SuccessResponse(w, map[string]interface{}{
 				"mnemonic": mnemonic,
 			})
 		})
 
-		r.Post(saveAddressEndpoint, func(w http.ResponseWriter, r *http.Request) {
+		r.Post("/address", func(w http.ResponseWriter, r *http.Request) {
 			// saveAddressHandler is the handler used to save new account
 			// addresses for the given user
 			address := r.URL.Query().Get("address")
