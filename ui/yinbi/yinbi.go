@@ -48,9 +48,9 @@ func (h YinbiHandler) ConfigureRoutes() http.Handler {
 	}
 
 	r := handler.NewRouter()
-	r.Group(func(r chi.Router) {
+	r.Group(func(cr chi.Router) {
 		for endpoint, handler := range routes {
-			r.Mount(endpoint, handler())
+			cr.Mount(endpoint, handler())
 		}
 	})
 
@@ -83,8 +83,8 @@ func NewWithAuth(params api.APIParams,
 // walletHandler is the http.Handler used for Yinbi wallet related
 // UI routes
 func (h YinbiHandler) walletHandler() http.Handler {
-	r := handler.NewRouter()
-	r.Group(func(r chi.Router) {
+	router := handler.NewRouter()
+	router.Group(func(r chi.Router) {
 		// redeemCodes
 		r.Get("/redeem/codes", func(w http.ResponseWriter, r *http.Request) {
 			url := h.GetAuthAddr("/redeem/codes")
@@ -128,7 +128,7 @@ func (h YinbiHandler) walletHandler() http.Handler {
 		})
 
 	})
-	return r
+	return router
 }
 
 // sendPaymentHandler is the handler used to create Yinbi payments
