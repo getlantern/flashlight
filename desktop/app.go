@@ -574,7 +574,7 @@ func (app *App) SetLanguage(lang string) {
 // is missing, defaultValue is used
 func (app *App) GetStringFlag(name, defaultValue string) string {
 	if val, ok := app.Flags[name].(string); ok && val != "" {
-		return val.(string)
+		return val
 	}
 	return defaultValue
 }
