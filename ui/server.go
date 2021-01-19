@@ -77,6 +77,15 @@ type Server struct {
 	mux                        *chi.Mux
 	onceOpenExtURL             sync.Once
 
+	// The name of the application running (either Lantern or Beam)
+	appName string
+
+	// Auth server API address to use
+	authServerAddr string
+
+	// Yinbi server API address to use
+	yinbiServerAddr string
+
 	translations eventual.Value
 	standalone   bool
 }
@@ -129,18 +138,21 @@ func newServer(params ServerParams) *Server {
 			}
 			return "/" + localHTTPToken
 		}(),
-		mux:            chi.NewRouter(),
-		localHTTPToken: localHTTPToken,
-		translations:   eventual.NewValue(),
-		standalone:     params.Standalone,
+		mux:             chi.NewRouter(),
+		localHTTPToken:  localHTTPToken,
+		translations:    eventual.NewValue(),
+		standalone:      params.Standalone,
+		appName:         params.AppName,
+		authServerAddr:  params.AuthServerAddr,
+		yinbiServerAddr: params.YinbiServerAddr,
 	}
 
-	server.attachHandlers(params)
+	server.attachHandlers(params.Handlers)
 
 	return server
 }
 
-func (s *Server) attachHandlers(params ServerParams) {
+func (s *Server) attachHandlers(handlers []PathHandler) {
 
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
@@ -149,26 +161,8 @@ func (s *Server) attachHandlers(params ServerParams) {
 		resp.WriteHeader(http.StatusOK)
 	}
 
-	httpClient := createHTTPClient()
-
-	apiParams := api.NewAPIParams(params.AppName, params.AuthServerAddr,
-		params.YinbiServerAddr, httpClient)
-
-	authHandler := auth.New(apiParams)
-
-	handlers := []handler.UIHandler{
-		authHandler,
-		yinbi.NewWithAuth(apiParams, authHandler),
-	}
-
-	// configure UI handlers with routes setup internally
-	for _, h := range handlers {
-		prefix := h.GetPathPrefix()
-		s.Handle(prefix, h.ConfigureRoutes())
-	}
-
 	// configure routes passed with server params
-	for _, h := range params.Handlers {
+	for _, h := range handlers {
 		s.Handle(h.Pattern, util.NoCache(h.Handler))
 	}
 
@@ -190,6 +184,31 @@ func createHTTPClient() *http.Client {
 		Jar:       jar,
 		Transport: rt,
 	}
+}
+
+// EnableYinbiRoutes attaches the Yinbi and Auth UI handlers
+// This is called once we ascertain the Yinbi wallet and auth
+// features are enabled
+func (s *Server) EnableYinbiRoutes() {
+
+	httpClient := createHTTPClient()
+
+	apiParams := api.NewAPIParams(s.appName, s.authServerAddr,
+		s.yinbiServerAddr, httpClient)
+
+	authHandler := auth.New(apiParams)
+
+	handlers := []handler.UIHandler{
+		authHandler,
+		yinbi.NewWithAuth(apiParams, authHandler),
+	}
+
+	// configure UI handlers with routes setup internally
+	for _, h := range handlers {
+		prefix := h.GetPathPrefix()
+		s.Handle(prefix, h.ConfigureRoutes())
+	}
+
 }
 
 // Handle directs the underlying server to handle the given pattern at both

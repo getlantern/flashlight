@@ -100,6 +100,7 @@ type App struct {
 	chGlobalConfigChanged chan bool
 	flashlight            *flashlight.Flashlight
 	startReplica          sync.Once
+	startYinbi            sync.Once
 
 	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
 	// first. Keeping the order consistent avoids deadlocking.
@@ -313,6 +314,7 @@ func (app *App) startFeaturesService(chans ...<-chan bool) {
 					app.enableYinbiWallet(&features)
 					log.Debugf("EnabledFeatures: %v", features)
 					app.checkForReplica(features)
+					app.checkForYinbi(features)
 					select {
 					case service.Out <- features:
 						// ok
@@ -402,11 +404,12 @@ func (app *App) beforeStart(listenAddr string) {
 
 	log.Debugf("Starting client UI at %v", uiaddr)
 
-	standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
 	authaddr := app.GetStringFlag("authaddr", common.AuthServerAddr)
 	log.Debugf("Using auth server at %v", authaddr)
 	yinbiaddr := app.GetStringFlag("yinbiaddr", common.YinbiServerAddr)
 	log.Debugf("Using Yinbi server %s", yinbiaddr)
+
+	standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
 	// ui will handle empty uiaddr correctly
 	uiServer, err := ui.StartServer(ui.ServerParams{
 		AuthServerAddr:  authaddr,
@@ -489,42 +492,60 @@ func (app *App) beforeStart(listenAddr string) {
 	})
 }
 
-func (app *App) checkForReplica(features map[string]bool) {
-	if val, ok := features[config.FeatureReplica]; ok && val {
-		app.startReplica.Do(func() {
-			log.Debug("Starting replica from app")
-			replicaHandler, err := desktopReplica.NewHTTPHandler(
-				app.ConfigDir,
-				getSettings(),
-				&replica.Client{
-					HttpClient: &http.Client{
-						Transport: proxied.AsRoundTripper(
-							func(req *http.Request) (*http.Response, error) {
-								chained, err := proxied.ChainedNonPersistent("")
-								if err != nil {
-									return nil, fmt.Errorf("connecting to proxy: %w", err)
-								}
-								return chained.RoundTrip(req)
-							},
-						),
-					},
-					Endpoint: replica.DefaultEndpoint,
-				},
-				app.gaSession,
-				desktopReplica.DefaultNewHttpHandlerOpts(),
-			)
-			if err != nil {
-				log.Errorf("error creating replica http server: %v", err)
-				app.Exit(err)
-				return
-			}
-			app.AddExitFunc("cleanup replica http server", replicaHandler.Close)
+func (app *App) isFeatureEnabled(features map[string]bool, feature string) bool {
+	val, ok := features[feature]
+	return ok && val
+}
 
-			// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
-			// in their handlers.
-			app.uiServer().Handle("/replica/", http.StripPrefix("/replica", replicaHandler))
-		})
+func (app *App) checkForYinbi(features map[string]bool) {
+	if !app.isFeatureEnabled(features, config.FeatureAuth) ||
+		!app.isFeatureEnabled(features, config.FeatureYinbiWallet) {
+		return
 	}
+
+	app.startYinbi.Do(app.uiServer().EnableYinbiRoutes())
+}
+
+func (app *App) checkForReplica(features map[string]bool) {
+
+	if !app.isFeatureEnabled(features, config.FeatureReplica) {
+		return
+	}
+
+	app.startReplica.Do(func() {
+		log.Debug("Starting replica from app")
+		replicaHandler, err := desktopReplica.NewHTTPHandler(
+			app.ConfigDir,
+			getSettings(),
+			&replica.Client{
+				HttpClient: &http.Client{
+					Transport: proxied.AsRoundTripper(
+						func(req *http.Request) (*http.Response, error) {
+							chained, err := proxied.ChainedNonPersistent("")
+							if err != nil {
+								return nil, fmt.Errorf("connecting to proxy: %w", err)
+							}
+							return chained.RoundTrip(req)
+						},
+					),
+				},
+				Endpoint: replica.DefaultEndpoint,
+			},
+			app.gaSession,
+			desktopReplica.DefaultNewHttpHandlerOpts(),
+		)
+		if err != nil {
+			log.Errorf("error creating replica http server: %v", err)
+			app.Exit(err)
+			return
+		}
+		app.AddExitFunc("cleanup replica http server", replicaHandler.Close)
+
+		// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
+		// in their handlers.
+		app.uiServer().Handle("/replica/", http.StripPrefix("/replica", replicaHandler))
+	})
+
 }
 
 // Connect turns on proxying
