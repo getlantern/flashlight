@@ -311,8 +311,8 @@ func (app *App) startFeaturesService(chans ...<-chan bool) {
 				for range c {
 					features := app.flashlight.EnabledFeatures()
 					log.Debugf("EnabledFeatures: %v", features)
-					app.checkForReplica(features)
-					app.checkForYinbi(features)
+					app.startReplicaIfNecessary(features)
+					app.startYinbiIfNecessary(features)
 					select {
 					case service.Out <- features:
 						// ok
@@ -495,7 +495,7 @@ func (app *App) isFeatureEnabled(features map[string]bool, feature string) bool 
 	return ok && val
 }
 
-func (app *App) checkForYinbi(features map[string]bool) {
+func (app *App) startYinbiIfNecessary(features map[string]bool) {
 	if !app.isFeatureEnabled(features, config.FeatureAuth) ||
 		!app.isFeatureEnabled(features, config.FeatureYinbiWallet) {
 		return
@@ -504,7 +504,7 @@ func (app *App) checkForYinbi(features map[string]bool) {
 	app.startYinbi.Do(app.uiServer().EnableYinbiRoutes)
 }
 
-func (app *App) checkForReplica(features map[string]bool) {
+func (app *App) startReplicaIfNecessary(features map[string]bool) {
 
 	if !app.isFeatureEnabled(features, config.FeatureReplica) {
 		return
