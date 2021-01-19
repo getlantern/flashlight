@@ -573,14 +573,10 @@ func (app *App) SetLanguage(lang string) {
 // GetStringFlag gets the app flag with the given name. If the flag
 // is missing, defaultValue is used
 func (app *App) GetStringFlag(name, defaultValue string) string {
-	var val string
-	if app.Flags[name] != nil {
-		val = app.Flags[name].(string)
+	if val, ok := app.Flags[name].(string); ok && val != "" {
+		return val.(string)
 	}
-	if val == "" {
-		val = defaultValue
-	}
-	return val
+	return defaultValue
 }
 
 // OnSettingChange sets a callback cb to get called when attr is changed from UI.
