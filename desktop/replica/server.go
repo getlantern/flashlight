@@ -400,23 +400,35 @@ func (me *HttpHandler) handleDelete(rw *ops.InstrumentedResponseWriter, r *http.
 	if err != nil {
 		return handlerError{http.StatusBadRequest, fmt.Errorf("parsing magnet link: %v", err)}
 	}
-	// For simplicity, let's assume that all uploads are loaded in the local torrent client and have
-	// their info, which is true at the point of writing unless the initial upload failed to
-	// retrieve the object torrent and the torrent client hasn't already obtained the info on its
-	// own.
-	t, ok := me.torrentClient.Torrent(m.InfoHash)
-	if !ok {
-		return handlerError{http.StatusBadRequest, fmt.Errorf("torrent not in client")}
-	}
+
 	var s3Prefix replica.Upload
-	err = s3Prefix.FromMagnet(m)
-	if err != nil {
+	if err := s3Prefix.FromMagnet(m); err != nil {
 		me.logger.Errorf("error getting s3 prefix from magnet link %q: %v", m, err)
 		return handlerError{http.StatusBadRequest, fmt.Errorf("parsing replica uri: %w", err)}
 	}
 
+	metainfoFilePath := me.uploadMetainfoPath(s3Prefix)
+	metainfo_, err := metainfo.LoadFromFile(metainfoFilePath)
+	if os.IsNotExist(err) {
+		return handlerError{http.StatusForbidden, errors.New("upload metainfo not found")}
+	}
+	if err != nil {
+		return handlerError{
+			http.StatusInternalServerError,
+			fmt.Errorf("checking for upload's local metainfo file: %w", err)}
+	}
+	info, err := metainfo_.UnmarshalInfo()
+	if err != nil {
+		return handlerError{
+			http.StatusInternalServerError,
+			fmt.Errorf("extracting info from upload local metainfo: %w", err),
+		}
+	}
+
+	// TODO: DeleteUpload shouldn't error if files are already missing, so we don't get stuck if a
+	// delete is half-completed.
 	if errs := me.replicaClient.DeleteUpload(s3Prefix, func() (ret [][]string) {
-		for _, f := range t.Info().Files {
+		for _, f := range info.Files {
 			ret = append(ret, f.Path)
 		}
 		return
@@ -424,12 +436,16 @@ func (me *HttpHandler) handleDelete(rw *ops.InstrumentedResponseWriter, r *http.
 		for _, e := range errs {
 			me.logger.Errorf("error deleting prefix %q: %v", s3Prefix, e)
 		}
-
 		return fmt.Errorf("couldn't delete replica prefix")
 	}
-	t.Drop()
+
+	t, ok := me.torrentClient.Torrent(m.InfoHash)
+	if ok {
+		t.Drop()
+	}
+
 	os.RemoveAll(filepath.Join(me.dataDir, s3Prefix.String()))
-	os.Remove(me.uploadMetainfoPath(s3Prefix))
+	os.Remove(metainfoFilePath)
 	return nil
 }
 
