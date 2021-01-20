@@ -27,6 +27,10 @@ var _ AuthConfig = (*NullAuthConfig)(nil)
 // NullUserConfig is useful for testing
 type NullUserConfig struct{ NullAuthConfig }
 
+func (s NullUserConfig) GetTimeZone() (string, error) {
+	panic("implement me")
+}
+
 func (s NullUserConfig) GetLanguage() string                   { return "" }
 func (s NullUserConfig) GetInternalHeaders() map[string]string { return make(map[string]string) }
 
