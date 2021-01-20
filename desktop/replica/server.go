@@ -131,14 +131,24 @@ func NewHTTPHandler(
 				return &s
 			}(),
 		},
-		torrentClient:    torrentClient,
-		dataDir:          replicaDataDir,
-		logger:           logger,
-		uploadsDir:       uploadsDir,
-		replicaClient:    replicaClient,
-		searchProxy:      http.StripPrefix("/search", proxyHandler(uc, common.ReplicaSearchAPIHost)),
-		thumbnailerProxy: http.StripPrefix("/thumbnail", proxyHandler(uc, common.ReplicaThumbnailerHost)),
-		gaSession:        gaSession,
+		torrentClient: torrentClient,
+		dataDir:       replicaDataDir,
+		logger:        logger,
+		uploadsDir:    uploadsDir,
+		replicaClient: replicaClient,
+		searchProxy:   http.StripPrefix("/search", proxyHandler(uc, common.ReplicaSearchAPIHost, nil)),
+		thumbnailerProxy: http.StripPrefix(
+			"/thumbnail",
+			proxyHandler(uc, common.ReplicaThumbnailerHost,
+				func(res *http.Response) error {
+					if res.StatusCode/100 != 2 {
+						return nil
+					}
+					// One week
+					res.Header.Set("Cache-Control", "public, max-age=604800, immutable")
+					return nil
+				})),
+		gaSession: gaSession,
 		// I think the standard file-storage implementation is sufficient here because we guarantee
 		// unique info name/prefixes for uploads (which the default file implementation does not).
 		// There's another implementation that injects the infohash as a prefix to ensure uniqueness
@@ -212,7 +222,10 @@ type encoderWriterError struct {
 	error
 }
 
-func (me *HttpHandler) wrapHandlerError(opName string, handler func(*ops.InstrumentedResponseWriter, *http.Request) error) func(rw http.ResponseWriter, r *http.Request) {
+func (me *HttpHandler) wrapHandlerError(
+	opName string,
+	handler func(*ops.InstrumentedResponseWriter, *http.Request) error,
+) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		w := ops.InitInstrumentedResponseWriter(rw, opName)
 		defer w.Finish()
