@@ -94,10 +94,12 @@ func NewHTTPHandler(
 	cfg.Logger = analog.Default.WithFilter(func(m analog.Msg) bool {
 		return !m.HasValue("upnp-discover")
 	})
-	defaultStorage, err := sqliteStorage.NewPiecesStorage(sqliteStorage.NewPoolOpts{
-		Path:     filepath.Join(replicaCacheDir, "storage-cache.db"),
-		Capacity: 5 << 30,
-	})
+	defaultStorage, err := sqliteStorage.NewPiecesStorage(
+		sqliteStorage.NewPiecesStorageOpts{
+			NewPoolOpts: sqliteStorage.NewPoolOpts{
+				Path:     filepath.Join(replicaCacheDir, "storage-cache.db"),
+				Capacity: 5 << 30,
+			}})
 	if err != nil {
 		err = fmt.Errorf("creating torrent storage cache: %w", err)
 		return
@@ -108,6 +110,13 @@ func NewHTTPHandler(
 		}
 	}()
 	cfg.DefaultStorage = defaultStorage
+	cfg.Callbacks.ReceivedUsefulData = append(cfg.Callbacks.ReceivedUsefulData, func(event torrent.ReceivedUsefulDataEvent) {
+		op := ops.Begin("replica_torrent_peer_sent_data")
+		op.Set("remote_addr", event.Peer.RemoteAddr.String())
+		op.Set("remote_network", event.Peer.RemoteAddr.Network())
+		op.SetMetricSum("useful_bytes_count", float64(len(event.Message.Piece)))
+		op.End()
+	})
 	torrentClient, err := torrent.NewClient(cfg)
 	if err != nil {
 		logger.Errorf("Error creating client: %v", err)

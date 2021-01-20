@@ -7,10 +7,10 @@ require (
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/confluence v1.6.2-0.20201116033747-ba09085bd120
 	github.com/anacrolix/envpprof v1.1.1
-	github.com/anacrolix/go-libutp v1.0.3
+	github.com/anacrolix/go-libutp v1.0.4
 	github.com/anacrolix/log v0.7.1-0.20200604014615-c244de44fd2d
 	github.com/anacrolix/tagflag v1.1.1-0.20200411025953-9bb5209d56c2
-	github.com/anacrolix/torrent v1.18.1-0.20201116053711-8ef37cb2e682
+	github.com/anacrolix/torrent v1.21.1-0.20210120032325-fa423a9b0e87
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
@@ -113,11 +113,10 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
-	golang.org/x/net v0.0.0-20201021035429-f5854403a974
-	golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f
+	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
+	golang.org/x/sys v0.0.0-20210113181707-4bcb84eeeb78
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/appengine v1.6.2 // indirect
-	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
