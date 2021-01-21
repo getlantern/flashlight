@@ -323,6 +323,8 @@ github.com/getlantern/auth-server v0.0.0-20201221164456-bb1fa23a0264 h1:TJ/nW0jO
 github.com/getlantern/auth-server v0.0.0-20201221164456-bb1fa23a0264/go.mod h1:gBrtg42AJKjxbm1mJCnwXGcz3uvGLDl6+wxbWAgqpZI=
 github.com/getlantern/auth-server v0.0.0-20210121201843-ba7966fbccf5 h1:bESWlPtMVUz8o23VEXtzAHmhz7EM2fo1LzEbsdNOnNc=
 github.com/getlantern/auth-server v0.0.0-20210121201843-ba7966fbccf5/go.mod h1:gBrtg42AJKjxbm1mJCnwXGcz3uvGLDl6+wxbWAgqpZI=
+github.com/getlantern/auth-server v0.0.0-20210121205126-52b5e79c4839 h1:rgYFBolZhR5fQSUda00o5oRgME9RQXOCAHDjxfie6uA=
+github.com/getlantern/auth-server v0.0.0-20210121205126-52b5e79c4839/go.mod h1:gBrtg42AJKjxbm1mJCnwXGcz3uvGLDl6+wxbWAgqpZI=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99 h1:fnjb9PYZRMU6Tok5i3anP/bAqhUtG2kn9xgff3IlA+8=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99/go.mod h1:4rYfIUYagdnY0KCu5/zOBX5CIRIi+j+LHdQ+LmD/Lyg=
 github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0/go.mod h1:HMPEgWG0J3goTYFWoTohloqZ3BQywXMElZnd9EROxxU=
@@ -563,6 +565,8 @@ github.com/getlantern/yinbi-server v0.0.0-20210119152447-5359ff626676 h1:IIEIbLv
 github.com/getlantern/yinbi-server v0.0.0-20210119152447-5359ff626676/go.mod h1:d5rTd/q2y++nJ3mxt+me33wkc9Zayx7MD2LFuo4kChw=
 github.com/getlantern/yinbi-server v0.0.0-20210121202011-d9f06330f768 h1:Grype1MMioIjJrAYL9fKvvUvoQrhgy1wFXLR+MR8pT4=
 github.com/getlantern/yinbi-server v0.0.0-20210121202011-d9f06330f768/go.mod h1:xk5UZks5wPNFHQhalxuX853mAEy6P/V3zsmqPIoppJU=
+github.com/getlantern/yinbi-server v0.0.0-20210121205215-831b21ba63af h1:QJ7IoUEDkdwnXrU7SueUesk5R+zPYW/eQZW4gRXWx7g=
+github.com/getlantern/yinbi-server v0.0.0-20210121205215-831b21ba63af/go.mod h1:47sRJwQ/aH2E9txBaZ1hiHSrYu+pQT5Vcw/nce5zw7s=
 github.com/getlantern/zenodb v0.0.0-20191107150234-58f0e128172a/go.mod h1:/QuMPlUCcgfXRy+yAwXWcAkBegF2Nl1lw0nJ+kSWEsA=
 github.com/getlantern/zenodb v0.0.0-20200613184607-425f1dea9db1/go.mod h1:jttohOig8lld+9Dm2VsQXPNzRy3+dF6SZZSTn3SMttI=
 github.com/getsentry/raven-go v0.0.0-20160805001729-c9d3cc542ad1/go.mod h1:KungGk8q33+aIAZUIVWZDr2OfAEBsO49PX4NzFV5kcQ=
