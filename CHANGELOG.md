@@ -1,4 +1,15 @@
 
+<a name="lantern-6.3.5"></a>
+## [lantern-6.3.5](https://github.com/getlantern/flashlight/compare/lantern-6.3.4...lantern-6.3.5)
+
+> 2021-01-21
+
+### Pull Requests
+
+* Merge pull request [#988](https://github.com/getlantern/flashlight/issues/988) from getlantern/ox/hidedatacap
+* Merge pull request [#980](https://github.com/getlantern/flashlight/issues/980) from getlantern/cache-thumbnails
+
+
 <a name="lantern-6.3.4"></a>
 ## [lantern-6.3.4](https://github.com/getlantern/flashlight/compare/lantern-6.3.3...lantern-6.3.4)
 
