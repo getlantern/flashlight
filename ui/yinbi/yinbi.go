@@ -100,14 +100,14 @@ func (h YinbiHandler) walletHandler() http.Handler {
 			if err != nil {
 				return
 			}
-			pair, err := h.yinbiClient.ImportWallet(&params)
+			resp, err := h.yinbiClient.ImportWallet(&params)
 			if err != nil {
 				log.Errorf("Error sending import wallet request: %v", err)
-				handler.ErrorHandler(w, err, http.StatusBadRequest)
+				handler.ErrorHandler(w, err, resp.StatusCode)
 				return
 			}
 			handler.SuccessResponse(w, map[string]interface{}{
-				"address": pair.Address(),
+				"address": resp.Pair.Address(),
 			})
 		})
 		// fetch redemption codes

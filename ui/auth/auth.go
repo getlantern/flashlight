@@ -51,7 +51,7 @@ func (h AuthHandler) GetPathPrefix() string {
 	return pathPrefix
 }
 
-type AuthMethod func(params *models.UserParams) (*api.AuthResponse, error)
+type AuthMethod func(params *models.UserParams) (api.AuthResponse, error)
 
 // authHandler is the HTTP handler used by the login and
 // registration endpoints. It creates a new SRP client from
@@ -67,7 +67,7 @@ func (h AuthHandler) authHandler(authenticate AuthMethod) http.HandlerFunc {
 		}
 		authResp, err := authenticate(&params)
 		if err != nil {
-			handler.ErrorHandler(w, err, http.StatusBadRequest)
+			handler.ErrorHandler(w, err, authResp.StatusCode)
 		} else {
 			handler.SuccessResponse(w, authResp)
 		}
@@ -86,11 +86,12 @@ func (h AuthHandler) ConfigureRoutes() http.Handler {
 			// extract user credentials from HTTP request to send to AuthClient
 			err := handler.DecodeJSONRequest(w, r, &params)
 			if err != nil {
+				handler.ErrorHandler(w, err, http.StatusBadRequest)
 				return
 			}
-			_, err = h.authClient.SignOut(params.Username)
+			resp, err := h.authClient.SignOut(params.Username)
 			if err != nil {
-				handler.ErrorHandler(w, err, http.StatusBadRequest)
+				handler.ErrorHandler(w, err, resp.StatusCode)
 				return
 			}
 			log.Debugf("User %s successfully signed out", params.Username)
