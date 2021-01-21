@@ -1,4 +1,16 @@
 
+<a name="lantern-6.3.4"></a>
+## [lantern-6.3.4](https://github.com/getlantern/flashlight/compare/lantern-6.3.3...lantern-6.3.4)
+
+> 2021-01-20
+
+### Pull Requests
+
+* Merge pull request [#987](https://github.com/getlantern/flashlight/issues/987) from getlantern/ui-6.3.4
+* Merge pull request [#982](https://github.com/getlantern/flashlight/issues/982) from getlantern/fix-upload-delete
+* Merge pull request [#984](https://github.com/getlantern/flashlight/issues/984) from getlantern/ox/issue-ios-60
+
+
 <a name="lantern-6.3.3"></a>
 ## [lantern-6.3.3](https://github.com/getlantern/flashlight/compare/lantern-6.3.2...lantern-6.3.3)
 
