@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
@@ -27,6 +28,13 @@ var (
 	log                = golog.LoggerFor("flashlight.datacap")
 
 	translationAppName = strings.ToUpper(common.AppName)
+
+	uncapped = &bandwidth.Quota{
+		MiBAllowed: 0,
+		MiBUsed:    0,
+		AsOf:       time.Now(),
+		TTLSeconds: 0,
+	}
 )
 
 type dataCap struct {
@@ -39,6 +47,10 @@ type dataCap struct {
 func ServeDataCap(channel ws.UIChannel, iconURL func() string, clickURL func() string, isPro func() (bool, bool)) error {
 	helloFn := func(write func(interface{})) {
 		q, _ := bandwidth.GetQuota()
+		if q == nil {
+			// On client first connecting, if we don't have a datacap, assume we're uncapped
+			q = uncapped
+		}
 		log.Debugf("Sending current bandwidth quota to new client: %v", q)
 		write(q)
 	}
@@ -97,7 +109,7 @@ func (dc *dataCap) isFiftyOrMore(quota *bandwidth.Quota) bool {
 }
 
 func (dc *dataCap) isFull(quota *bandwidth.Quota) bool {
-	return (quota.MiBAllowed <= quota.MiBUsed)
+	return (quota.MiBUsed > 0 && quota.MiBAllowed <= quota.MiBUsed)
 }
 
 func (dc *dataCap) checkPercent(quota *bandwidth.Quota, percent float64) bool {
