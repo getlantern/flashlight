@@ -29,7 +29,7 @@ require (
 	github.com/getlantern/cmuxprivate v0.0.0-20200905032931-afb63438e40b
 	github.com/getlantern/common v1.1.1-0.20200824002646-ca4a48d3a74c
 	github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1
-	github.com/getlantern/dnsgrab v0.0.0-20201210181937-c9d055f15acc
+	github.com/getlantern/dnsgrab v0.0.0-20210120195910-d879cb272122
 	github.com/getlantern/domains v0.0.0-20200402172102-34a8db1e0e83
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
 	github.com/getlantern/enhttp v0.0.0-20190401024120-a974fa851e3c

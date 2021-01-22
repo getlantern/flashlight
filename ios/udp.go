@@ -214,9 +214,14 @@ func (h *directUDPHandler) ReceiveTo(downstream core.UDPConn, data []byte, addr 
 }
 
 func (h *directUDPHandler) receiveDNS(downstream core.UDPConn, data []byte, addr *net.UDPAddr) error {
-	response, err := h.grabber.ProcessQuery(data)
+	response, numAnswers, err := h.grabber.ProcessQuery(data)
 	if err != nil {
 		return log.Errorf("Unable to process dns query: %v", err)
+	}
+
+	if numAnswers == 0 {
+		// nothing to write
+		return nil
 	}
 
 	// MEMORY_OPTIMIZATION - use a threadLimitingUDPConn to limit the number of goroutines that are writing to LWIP
