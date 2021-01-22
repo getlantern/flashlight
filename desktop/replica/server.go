@@ -116,6 +116,7 @@ func NewHTTPHandler(
 		op.Set("remote_network", event.Peer.RemoteAddr.Network())
 		op.SetMetricSum("useful_bytes_count", float64(len(event.Message.Piece)))
 		op.End()
+		log.Debugf("reported %v bytes from %v over %v", len(event.Message.Piece), event.Peer.RemoteAddr.String(), event.Peer.RemoteAddr.Network())
 	})
 	torrentClient, err := torrent.NewClient(cfg)
 	if err != nil {
