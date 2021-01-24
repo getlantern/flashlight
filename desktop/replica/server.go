@@ -43,7 +43,7 @@ type HttpHandler struct {
 	uploadsDir       string
 	logger           golog.Logger
 	mux              http.ServeMux
-	replicaClient    *replica.Client
+	replicaClient    replica.Client
 	searchProxy      http.Handler
 	thumbnailerProxy http.Handler
 	gaSession        analytics.Session
@@ -65,7 +65,7 @@ type NewHttpHandlerOpts struct {
 func NewHTTPHandler(
 	configDir string,
 	uc common.UserConfig,
-	replicaClient *replica.Client,
+	replicaClient replica.Client,
 	gaSession analytics.Session,
 	opts NewHttpHandlerOpts,
 ) (_ *HttpHandler, err error) {
@@ -178,7 +178,7 @@ func NewHTTPHandler(
 	handler.mux.Handle("/", &handler.confluence)
 
 	if opts.AddUploadsToTorrentClient {
-		if err := handler.replicaClient.IterUploads(uploadsDir, func(iu replica.IteredUpload) {
+		if err := replica.IterUploads(uploadsDir, func(iu replica.IteredUpload) {
 			if iu.Err != nil {
 				logger.Errorf("error while iterating uploads: %v", iu.Err)
 				return
@@ -313,7 +313,9 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 	}
 
 	fileName := r.URL.Query().Get("name")
-	output, err := me.replicaClient.Upload(replicaUploadReader, fileName)
+
+	uploadConfig := replica.NewUUIDUploadConfig("", fileName)
+	output, err := me.replicaClient.Upload(replicaUploadReader, uploadConfig)
 	s3Prefix := output.Upload
 	me.logger.Debugf("uploaded replica key %q", s3Prefix)
 	rw.Op.Set("upload_s3_key", s3Prefix)
@@ -355,7 +357,7 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 		}
 	}
 	var oi objectInfo
-	err = oi.fromS3UploadMetaInfo(output.UploadMetainfo, time.Now())
+	err = oi.fromS3UploadMetaInfo(output, time.Now())
 	if err != nil {
 		return fmt.Errorf("getting objectInfo from s3 upload metainfo: %w", err)
 	}
@@ -386,7 +388,7 @@ func (me *HttpHandler) addUploadTorrent(mi *metainfo.MetaInfo, concealUploaderId
 
 func (me *HttpHandler) handleUploads(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
 	resp := []objectInfo{} // Ensure not nil: I don't like 'null' as a response.
-	err := me.replicaClient.IterUploads(me.uploadsDir, func(iu replica.IteredUpload) {
+	err := replica.IterUploads(me.uploadsDir, func(iu replica.IteredUpload) {
 		mi := iu.Metainfo
 		err := iu.Err
 		if err != nil {
