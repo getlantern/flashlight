@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	log                     = golog.LoggerFor("flashlight.replica.proxy")
-	httpClient *http.Client = genHTTPClient()
+	proxyLogger              = golog.LoggerFor("flashlight.replica.proxy")
+	httpClient  *http.Client = genHTTPClient()
 )
 
 func genHTTPClient() *http.Client {
@@ -53,7 +53,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	req.Header.Del("Origin")
 	resp, err = httpClient.Do(req)
 	if err != nil {
-		log.Errorf("Could not issue HTTP request: %v", err)
+		proxyLogger.Errorf("Could not issue HTTP request: %v", err)
 		return
 	}
 	return
