@@ -8,11 +8,9 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/proxied"
-	"github.com/getlantern/golog"
 )
 
 var (
-	log                     = golog.LoggerFor("flashlight.replica.proxy")
 	httpClient *http.Client = genHTTPClient()
 )
 

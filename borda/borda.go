@@ -44,6 +44,7 @@ var (
 		"youtube_view",
 		"replica_upload",
 		"replica_view",
+		"replica_torrent_peer_sent_data",
 		"install_mitm_cert"}
 
 	// LightweightOps are ops for which we record less than the full set of dimensions (e.g. omit error)
