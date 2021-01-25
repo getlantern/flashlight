@@ -113,13 +113,13 @@ func NewHTTPHandler(
 	cfg.Callbacks.ReceivedUsefulData = append(cfg.Callbacks.ReceivedUsefulData, func(event torrent.ReceivedUsefulDataEvent) {
 		op := ops.Begin("replica_torrent_peer_sent_data")
 		op.Set("remote_addr", event.Peer.RemoteAddr.String())
-		op.Set("remote_network", event.Peer.RemoteAddr.Network())
+		op.Set("remote_network", event.Peer.Network)
 		op.SetMetricSum("useful_bytes_count", float64(len(event.Message.Piece)))
 		op.End()
 		logger.Tracef("reported %v bytes from %v over %v",
 			len(event.Message.Piece),
 			event.Peer.RemoteAddr.String(),
-			event.Peer.RemoteAddr.Network())
+			event.Peer.Network)
 	})
 	torrentClient, err := torrent.NewClient(cfg)
 	if err != nil {
@@ -524,7 +524,7 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 	// will need a way to use the same list). As an ad-hoc practice, we'll use trackers provided via
 	// the magnet link in the first tier, and our forcibly injected ones in the second.
 
-	// We're unnecessary parsing a Magnet here.
+	// We're unnecessarily re-parsing a Magnet here.
 	spec, err := torrent.TorrentSpecFromMagnetUri(link)
 	if err != nil {
 		return fmt.Errorf("getting spec from magnet URI: %w", err)
