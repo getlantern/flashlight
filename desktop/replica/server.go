@@ -33,6 +33,10 @@ import (
 	"github.com/getlantern/replica"
 )
 
+var (
+	log = golog.LoggerFor("flashlight.desktop.replica")
+)
+
 type HttpHandler struct {
 	// Used to handle non-Replica specific routes. (Some of the hard work has been done!). This will
 	// probably go away soon, as I pick out the parts we actually need.
@@ -41,7 +45,6 @@ type HttpHandler struct {
 	// Where to store torrent client data.
 	dataDir          string
 	uploadsDir       string
-	logger           golog.Logger
 	mux              http.ServeMux
 	replicaClient    *replica.Client
 	searchProxy      http.Handler
@@ -69,10 +72,9 @@ func NewHTTPHandler(
 	gaSession analytics.Session,
 	opts NewHttpHandlerOpts,
 ) (_ *HttpHandler, err error) {
-	logger := golog.LoggerFor("replica.server")
 	userCacheDir, err := os.UserCacheDir()
 	if err != nil {
-		logger.Errorf("accessing the user cache dir, fallback to temp dir: %w", err)
+		log.Errorf("accessing the user cache dir, fallback to temp dir: %w", err)
 		userCacheDir = os.TempDir()
 	}
 	const replicaDirElem = "replica"
@@ -94,10 +96,12 @@ func NewHTTPHandler(
 	cfg.Logger = analog.Default.WithFilter(func(m analog.Msg) bool {
 		return !m.HasValue("upnp-discover")
 	})
-	defaultStorage, err := sqliteStorage.NewPiecesStorage(sqliteStorage.NewPoolOpts{
-		Path:     filepath.Join(replicaCacheDir, "storage-cache.db"),
-		Capacity: 5 << 30,
-	})
+	defaultStorage, err := sqliteStorage.NewPiecesStorage(
+		sqliteStorage.NewPiecesStorageOpts{
+			NewPoolOpts: sqliteStorage.NewPoolOpts{
+				Path:     filepath.Join(replicaCacheDir, "storage-cache.db"),
+				Capacity: 5 << 30,
+			}})
 	if err != nil {
 		err = fmt.Errorf("creating torrent storage cache: %w", err)
 		return
@@ -108,9 +112,20 @@ func NewHTTPHandler(
 		}
 	}()
 	cfg.DefaultStorage = defaultStorage
+	cfg.Callbacks.ReceivedUsefulData = append(cfg.Callbacks.ReceivedUsefulData, func(event torrent.ReceivedUsefulDataEvent) {
+		op := ops.Begin("replica_torrent_peer_sent_data")
+		op.Set("remote_addr", event.Peer.RemoteAddr.String())
+		op.Set("remote_network", event.Peer.Network)
+		op.SetMetricSum("useful_bytes_count", float64(len(event.Message.Piece)))
+		op.End()
+		log.Tracef("reported %v bytes from %v over %v",
+			len(event.Message.Piece),
+			event.Peer.RemoteAddr.String(),
+			event.Peer.Network)
+	})
 	torrentClient, err := torrent.NewClient(cfg)
 	if err != nil {
-		logger.Errorf("Error creating client: %v", err)
+		log.Errorf("Error creating client: %v", err)
 		if torrentClient != nil {
 			torrentClient.Close()
 		}
@@ -133,7 +148,6 @@ func NewHTTPHandler(
 		},
 		torrentClient: torrentClient,
 		dataDir:       replicaDataDir,
-		logger:        logger,
 		uploadsDir:    uploadsDir,
 		replicaClient: replicaClient,
 		searchProxy:   http.StripPrefix("/search", proxyHandler(uc, common.ReplicaSearchAPIHost, nil)),
@@ -180,14 +194,14 @@ func NewHTTPHandler(
 	if opts.AddUploadsToTorrentClient {
 		if err := handler.replicaClient.IterUploads(uploadsDir, func(iu replica.IteredUpload) {
 			if iu.Err != nil {
-				logger.Errorf("error while iterating uploads: %v", iu.Err)
+				log.Errorf("error while iterating uploads: %v", iu.Err)
 				return
 			}
 			err := handler.addUploadTorrent(iu.Metainfo.MetaInfo, true)
 			if err != nil {
-				logger.Errorf("error adding existing upload from %q to torrent client: %v", iu.FileInfo.Name(), err)
+				log.Errorf("error adding existing upload from %q to torrent client: %v", iu.FileInfo.Name(), err)
 			} else {
-				logger.Debugf("added previous upload %q to torrent client from file %q", iu.Metainfo.Upload, iu.FileInfo.Name())
+				log.Debugf("added previous upload %q to torrent client from file %q", iu.Metainfo.Upload, iu.FileInfo.Name())
 			}
 		}); err != nil {
 			handler.Close()
@@ -198,7 +212,7 @@ func NewHTTPHandler(
 }
 
 func (me *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	me.logger.Debugf("replica server request path: %q", r.URL.Path)
+	log.Debugf("replica server request path: %q", r.URL.Path)
 	common.ProcessCORS(w.Header(), r)
 	me.mux.ServeHTTP(w, r)
 }
@@ -230,7 +244,7 @@ func (me *HttpHandler) wrapHandlerError(
 		w := ops.InitInstrumentedResponseWriter(rw, opName)
 		defer w.Finish()
 		if err := handler(w, r); err != nil {
-			me.logger.Errorf("in replica handler: %v", err)
+			log.Errorf("in replica handler: %v", err)
 			w.Op.FailIf(err)
 
 			// we may want to only ultimately only report server errors here (ie >=500)
@@ -243,7 +257,7 @@ func (me *HttpHandler) wrapHandlerError(
 			// if it's an error during encoding+writing, don't attempt to
 			// write new headers and body
 			if e, ok := err.(encoderWriterError); ok {
-				me.logger.Errorf("error writing json: %v", e)
+				log.Errorf("error writing json: %v", e)
 				return
 			}
 
@@ -263,7 +277,7 @@ func (me *HttpHandler) wrapHandlerError(
 			writingEncodingErr = encodeJsonErrorResponse(rw, resp, statusCode)
 
 			if writingEncodingErr != nil {
-				me.logger.Errorf("error writing json error response: %v", writingEncodingErr)
+				log.Errorf("error writing json error response: %v", writingEncodingErr)
 			}
 		}
 	}
@@ -308,17 +322,17 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 		} else {
 			// This isn't good, but as long as we can add the torrent file metainfo to the local
 			// client, we can still spread the metadata, and S3 can take care of the data.
-			me.logger.Errorf("error creating temporary file: %v", tmpFileErr)
+			log.Errorf("error creating temporary file: %v", tmpFileErr)
 		}
 	}
 
 	fileName := r.URL.Query().Get("name")
 	output, err := me.replicaClient.Upload(replicaUploadReader, fileName)
 	s3Prefix := output.Upload
-	me.logger.Debugf("uploaded replica key %q", s3Prefix)
+	log.Debugf("uploaded replica key %q", s3Prefix)
 	rw.Op.Set("upload_s3_key", s3Prefix)
 	me.gaSession.EventWithLabel("replica", "upload", path.Ext(fileName))
-	me.logger.Debugf("uploaded %d bytes", cw.BytesWritten)
+	log.Debugf("uploaded %d bytes", cw.BytesWritten)
 	if err != nil {
 		return fmt.Errorf("uploading with replicaClient: %w", err)
 	}
@@ -345,7 +359,7 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 		err = os.Rename(tmpFile.Name(), dst)
 		if err != nil {
 			// Not fatal: See above, we only really need the metainfo to be added to the torrent.
-			me.logger.Errorf("error renaming file: %v", err)
+			log.Errorf("error renaming file: %v", err)
 		}
 	}
 	if me.opts.AddUploadsToTorrentClient {
@@ -390,19 +404,19 @@ func (me *HttpHandler) handleUploads(rw *ops.InstrumentedResponseWriter, r *http
 		mi := iu.Metainfo
 		err := iu.Err
 		if err != nil {
-			me.logger.Errorf("error iterating uploads: %v", err)
+			log.Errorf("error iterating uploads: %v", err)
 			return
 		}
 		var oi objectInfo
 		err = oi.fromS3UploadMetaInfo(mi, iu.FileInfo.ModTime())
 		if err != nil {
-			me.logger.Errorf("error parsing upload metainfo for %q: %v", iu.FileInfo.Name(), err)
+			log.Errorf("error parsing upload metainfo for %q: %v", iu.FileInfo.Name(), err)
 			return
 		}
 		resp = append(resp, oi)
 	})
 	if err != nil {
-		me.logger.Errorf("error walking uploads dir: %v", err)
+		log.Errorf("error walking uploads dir: %v", err)
 	}
 	return encodeJsonResponse(rw, resp)
 }
@@ -416,7 +430,7 @@ func (me *HttpHandler) handleDelete(rw *ops.InstrumentedResponseWriter, r *http.
 
 	var s3Prefix replica.Upload
 	if err := s3Prefix.FromMagnet(m); err != nil {
-		me.logger.Errorf("error getting s3 prefix from magnet link %q: %v", m, err)
+		log.Errorf("error getting s3 prefix from magnet link %q: %v", m, err)
 		return handlerError{http.StatusBadRequest, fmt.Errorf("parsing replica uri: %w", err)}
 	}
 
@@ -447,7 +461,7 @@ func (me *HttpHandler) handleDelete(rw *ops.InstrumentedResponseWriter, r *http.
 		return
 	}()...); len(errs) != 0 {
 		for _, e := range errs {
-			me.logger.Errorf("error deleting prefix %q: %v", s3Prefix, e)
+			log.Errorf("error deleting prefix %q: %v", s3Prefix, e)
 		}
 		return fmt.Errorf("couldn't delete replica prefix")
 	}
@@ -500,7 +514,7 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 	var s3Prefix replica.Upload
 	unwrapUploadSpecErr := s3Prefix.FromMagnet(m)
 	if unwrapUploadSpecErr != nil {
-		me.logger.Errorf("error getting s3 key from magnet: %v", unwrapUploadSpecErr)
+		log.Errorf("error getting s3 key from magnet: %v", unwrapUploadSpecErr)
 	}
 
 	t, _, release := me.confluence.GetTorrent(m.InfoHash)
@@ -511,7 +525,7 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 	// will need a way to use the same list). As an ad-hoc practice, we'll use trackers provided via
 	// the magnet link in the first tier, and our forcibly injected ones in the second.
 
-	// We're unnecessary parsing a Magnet here.
+	// We're unnecessarily re-parsing a Magnet here.
 	spec, err := torrent.TorrentSpecFromMagnetUri(link)
 	if err != nil {
 		return fmt.Errorf("getting spec from magnet URI: %w", err)
@@ -531,20 +545,20 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 			defer release()
 			tob, err := me.replicaClient.GetMetainfo(s3Prefix)
 			if err != nil {
-				me.logger.Errorf("error getting metainfo for %q from s3 API: %v", s3Prefix, err)
+				log.Errorf("error getting metainfo for %q from s3 API: %v", s3Prefix, err)
 				return
 			}
 			defer tob.Close()
 			mi, err := metainfo.Load(tob)
 			if err != nil {
-				me.logger.Errorf("error loading metainfo: %v", err)
+				log.Errorf("error loading metainfo: %v", err)
 				return
 			}
 			err = me.confluence.PutMetainfo(t, mi)
 			if err != nil {
-				me.logger.Errorf("error putting metainfo from s3: %v", err)
+				log.Errorf("error putting metainfo from s3: %v", err)
 			}
-			me.logger.Debugf("added metainfo for %q from s3 API", s3Prefix)
+			log.Debugf("added metainfo for %q from s3 API", s3Prefix)
 		}()
 	}
 
@@ -552,7 +566,7 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 	// Assume that it should be present, as it'll be added going forward where possible. When it's
 	// missing, zero is a perfectly adequate default for now.
 	if err != nil {
-		me.logger.Errorf("error parsing so field: %v", err)
+		log.Errorf("error parsing so field: %v", err)
 	}
 	select {
 	case <-r.Context().Done():
