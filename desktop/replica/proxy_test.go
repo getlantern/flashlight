@@ -9,10 +9,14 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/internal/testutils"
+	"github.com/getlantern/golog/testlog"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestProxy(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	uc := common.NewUserConfigData("device", 0, "token", nil, "en-US")
 
 	m := &testutils.MockRoundTripper{Header: http.Header{}, Body: strings.NewReader("GOOD")}

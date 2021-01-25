@@ -8,12 +8,10 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/proxied"
-	"github.com/getlantern/golog"
 )
 
 var (
-	proxyLogger              = golog.LoggerFor("flashlight.replica.proxy")
-	httpClient  *http.Client = genHTTPClient()
+	httpClient *http.Client = genHTTPClient()
 )
 
 func genHTTPClient() *http.Client {
@@ -53,7 +51,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	req.Header.Del("Origin")
 	resp, err = httpClient.Do(req)
 	if err != nil {
-		proxyLogger.Errorf("Could not issue HTTP request: %v", err)
+		log.Errorf("Could not issue HTTP request: %v", err)
 		return
 	}
 	return
