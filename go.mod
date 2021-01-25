@@ -133,7 +133,7 @@ replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-2019
 
 replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20201204183614-c95cc8f8f085
 
-// For https://github.com/getlantern/lantern-internal/issues/4277
-replace crawshaw.io/sqlite => github.com/getlantern/sqlite v0.3.3-0.20201015053730-228fbc4f607f
+// For https://github.com/crawshaw/sqlite/pull/112 and https://github.com/crawshaw/sqlite/pull/103.
+replace crawshaw.io/sqlite => github.com/getlantern/sqlite v0.3.3-0.20201117072544-3704b1343133
 
 replace github.com/eycorsican/go-tun2socks => github.com/getlantern/go-tun2socks v1.16.12-0.20201218023150-b68f09e5ae93
