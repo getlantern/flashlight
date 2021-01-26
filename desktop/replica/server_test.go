@@ -24,7 +24,8 @@ func TestUploadAndDelete(t *testing.T) {
 	handler, err := NewHTTPHandler(
 		dir,
 		&common.NullUserConfig{},
-		&replica.Client{
+		replica.Client{
+			Storage:  replica.S3Storage{},
 			Endpoint: replica.DefaultEndpoint,
 		},
 		&analytics.NullSession{},
@@ -55,7 +56,7 @@ func TestUploadAndDelete(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(files))
 	magnetLink := ""
-	err = handler.replicaClient.IterUploads(uploadsDir, func(iu replica.IteredUpload) {
+	err = replica.IterUploads(uploadsDir, func(iu replica.IteredUpload) {
 		mi := iu.Metainfo
 		err := iu.Err
 		if err != nil {
