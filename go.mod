@@ -6,6 +6,7 @@ require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/confluence v1.6.2-0.20201116033747-ba09085bd120
+	github.com/anacrolix/dht v1.0.1 // indirect
 	github.com/anacrolix/envpprof v1.1.1
 	github.com/anacrolix/go-libutp v1.0.4
 	github.com/anacrolix/log v0.7.1-0.20200604014615-c244de44fd2d
@@ -74,7 +75,7 @@ require (
 	github.com/getlantern/proxybench v0.0.0-20200806214955-5d56065f9f77
 	github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683
 	github.com/getlantern/quicwrapper v0.0.0-20201013170341-d27d67101f2d
-	github.com/getlantern/replica v0.3.1-0.20200623004346-367f62a981a7
+	github.com/getlantern/replica v0.4.2-0.20210125054121-f92837018fe8
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/safechannels v0.0.0-20201218194342-b4e5383e9627
@@ -95,6 +96,7 @@ require (
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
 	github.com/getlantern/yinbi-server v0.0.0-20210121205215-831b21ba63af
+	github.com/getlantern/zenodb v0.0.0-20200613184607-425f1dea9db1 // indirect
 	github.com/getsentry/sentry-go v0.9.0
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/google/gopacket v1.1.17
@@ -105,12 +107,15 @@ require (
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 // indirect
+	github.com/leanovate/gopter v0.2.9 // indirect
+	github.com/lib/pq v1.9.0 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/miekg/dns v1.1.35
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/go-server-timing v1.0.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/mitchellh/panicwrap v1.0.0
+	github.com/mozillazg/go-cos v0.13.0 // indirect
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/onsi/gomega v1.10.3 // indirect
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3

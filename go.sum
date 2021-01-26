@@ -616,6 +616,12 @@ github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c h1:IkjF+RwRs8B/R
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c/go.mod h1:kExwbqTx1krUnT9ohmXG3jayDTEBfxUKeoRzU6XucLw=
 github.com/getlantern/replica v0.3.1-0.20200623004346-367f62a981a7 h1:30aLGrAllhD4xUnqWvsCG1eZKSHqTZXBF3DJINWzY00=
 github.com/getlantern/replica v0.3.1-0.20200623004346-367f62a981a7/go.mod h1:yVPKsYdI/RSVBzFJhLg/IxANWx8Ec6So/rHTGx84TsQ=
+github.com/getlantern/replica v0.4.1 h1:IACrPpIcMXTYbh6RBvhrqteZv2rSA/vrjdI0NyglLIw=
+github.com/getlantern/replica v0.4.1/go.mod h1:J/BnfoU7TeGmjiWvcHKEFd5sZEV1GIaOlW8YdKPXG1o=
+github.com/getlantern/replica v0.4.2-0.20210108023428-10591498ac5b h1:VfLx9r3UAQgbSlYqccby876XzA/cMdKaewIaojRQZi4=
+github.com/getlantern/replica v0.4.2-0.20210108023428-10591498ac5b/go.mod h1:Ph27Svan65U/qe2m1CpEujM7VU86/fCrz+U66P4ZOe4=
+github.com/getlantern/replica v0.4.2-0.20210125054121-f92837018fe8 h1:Kzq7lcY7YD7tpHxM10QRAOoQxums4iOWqMsb9DzgK/c=
+github.com/getlantern/replica v0.4.2-0.20210125054121-f92837018fe8/go.mod h1:Ph27Svan65U/qe2m1CpEujM7VU86/fCrz+U66P4ZOe4=
 github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01 h1:JyXEChj4lHy5w3hlQVnYpcH4QrBXmhEJgkxb0FPkFlM=
 github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01/go.mod h1:mnw3NsM0/oiJdZDMujNx+Kg60o72UClHB1UNqrEWqOM=
 github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85 h1:+naZppl28oqpVs0J+wOsVeh61c02OD/G3JP+PemAMCU=
@@ -1069,6 +1075,7 @@ github.com/labstack/echo/v4 v4.1.17/go.mod h1:Tn2yRQL/UclUalpb5rPdXDevbkJ+lp/2sv
 github.com/labstack/gommon v0.3.0 h1:JEeO0bvc78PKdyHxloTKiF8BD5iGrH8T6MSeGvSgob0=
 github.com/labstack/gommon v0.3.0/go.mod h1:MULnywXg0yavhxWKc+lOruYdAhDwPK9wf0OL7NoOu+k=
 github.com/lann/builder v0.0.0-20140829050551-c603884a2c1f/go.mod h1:dXGbAdH5GtBTC4WfIxhKZfyBF/HBFgRZSWwZ9g/He9o=
+github.com/leanovate/gopter v0.2.9/go.mod h1:U2L/78B+KVFIx2VmW6onHJQzXtFb+p5y3y2Sh+Jxxv8=
 github.com/leodido/go-urn v1.2.0/go.mod h1:+8+nEpDfqqsY+g338gtMEUOtuK+4dEMhiQEgxpxOKII=
 github.com/lib/pq v1.0.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/lib/pq v1.1.1/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
@@ -1168,6 +1175,10 @@ github.com/montanaflynn/stats v0.5.0/go.mod h1:wL8QJuTMNUDYhXwkmfOly8iTdp5TEcJFW
 github.com/moul/http2curl v0.0.0-20161031194548-4e24498b31db/go.mod h1:8UbvGypXm98wA/IqH45anm5Y2Z6ep6O31QGOAZ3H0fQ=
 github.com/moul/http2curl v1.0.0 h1:dRMWoAtb+ePxMlLkrCbAqh4TlPHXvoGUSQ323/9Zahs=
 github.com/moul/http2curl v1.0.0/go.mod h1:8UbvGypXm98wA/IqH45anm5Y2Z6ep6O31QGOAZ3H0fQ=
+github.com/mozillazg/go-cos v0.13.0 h1:RylOpEESdWMLb13bl0ADhko12uMN3JmHqqwFu4OYGBY=
+github.com/mozillazg/go-cos v0.13.0/go.mod h1:Zp6DvvXn0RUOXGJ2chmWt2bLEqRAnJnS3DnAZsJsoaE=
+github.com/mozillazg/go-httpheader v0.2.1 h1:geV7TrjbL8KXSyvghnFm+NyTux/hxwueTSrwhe88TQQ=
+github.com/mozillazg/go-httpheader v0.2.1/go.mod h1:jJ8xECTlalr6ValeXYdOF8fFUISeBAdw6E61aqQma60=
 github.com/mschoch/smat v0.0.0-20160514031455-90eadee771ae/go.mod h1:qAyveg+e4CE+eKJXWVjKXM4ck2QobLqTDytGJbLLhJg=
 github.com/mschoch/smat v0.2.0 h1:8imxQsjDm8yFEAVBe7azKmKSgzSkZXDuKkSq9374khM=
 github.com/mschoch/smat v0.2.0/go.mod h1:kc9mz7DoBKqDyiRL7VZN8KvXQMWeTaVnttLRXOlotKw=
@@ -2062,6 +2073,9 @@ google.golang.org/genproto v0.0.0-20200729003335-053ba62fc06f/go.mod h1:FWY/as6D
 google.golang.org/genproto v0.0.0-20200804131852-c06518451d9c/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
 google.golang.org/genproto v0.0.0-20200825200019-8632dd797987/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
 google.golang.org/genproto v0.0.0-20200829155447-2bf3329a0021/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
+google.golang.org/genproto v0.0.0-20200904004341-0bd0a958aa1d/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
+google.golang.org/genproto v0.0.0-20201109203340-2640f1f9cdfb/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
+google.golang.org/genproto v0.0.0-20201201144952-b05cb90ed32e/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
 google.golang.org/genproto v0.0.0-20210108203827-ffc7fda8c3d7 h1:n7yjMkxUgbEahYENvAGVlxMUW8TF/KEavLez31znfDw=
 google.golang.org/genproto v0.0.0-20210108203827-ffc7fda8c3d7/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
 google.golang.org/grpc v1.14.0/go.mod h1:yo6s7OP7yaDglbqo1J04qKzAhqBH6lvTonzMVmEdcZw=
@@ -2084,6 +2098,7 @@ google.golang.org/grpc v1.29.1/go.mod h1:itym6AZVZYACWQqET3MqgPpjcuV5QH3BxFS3Iji
 google.golang.org/grpc v1.30.0/go.mod h1:N36X2cJ7JwdamYAgDz+s+rVMFjt3numwzf/HckM8pak=
 google.golang.org/grpc v1.31.0/go.mod h1:N36X2cJ7JwdamYAgDz+s+rVMFjt3numwzf/HckM8pak=
 google.golang.org/grpc v1.31.1/go.mod h1:N36X2cJ7JwdamYAgDz+s+rVMFjt3numwzf/HckM8pak=
+google.golang.org/grpc v1.33.2/go.mod h1:JMHMWHQWaTccqQQlmk3MJZS+GWXOdAesneDmEnv2fbc=
 google.golang.org/grpc v1.34.0 h1:raiipEjMOIC/TO2AvyTxP25XFdLxNIBwzDh3FM3XztI=
 google.golang.org/grpc v1.34.0/go.mod h1:WotjhfgOW/POjDeRt8vscBtXq+2VjORFy659qA51WJ8=
 google.golang.org/protobuf v0.0.0-20200109180630-ec00e32a8dfd/go.mod h1:DFci5gLYBciE7Vtevhsrf46CRTquxDuWsQurQQe4oz8=

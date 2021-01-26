@@ -520,18 +520,19 @@ func (app *App) startReplicaIfNecessary(features map[string]bool) {
 		replicaHandler, err := desktopReplica.NewHTTPHandler(
 			app.ConfigDir,
 			getSettings(),
-			&replica.Client{
-				HttpClient: &http.Client{
-					Transport: proxied.AsRoundTripper(
-						func(req *http.Request) (*http.Response, error) {
-							chained, err := proxied.ChainedNonPersistent("")
-							if err != nil {
-								return nil, fmt.Errorf("connecting to proxy: %w", err)
-							}
-							return chained.RoundTrip(req)
-						},
-					),
-				},
+			replica.Client{
+				Storage: &replica.S3Storage{
+					&http.Client{
+						Transport: proxied.AsRoundTripper(
+							func(req *http.Request) (*http.Response, error) {
+								chained, err := proxied.ChainedNonPersistent("")
+								if err != nil {
+									return nil, fmt.Errorf("connecting to proxy: %w", err)
+								}
+								return chained.RoundTrip(req)
+							},
+						),
+					}},
 				Endpoint: replica.DefaultEndpoint,
 			},
 			app.gaSession,

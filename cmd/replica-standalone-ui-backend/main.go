@@ -33,9 +33,9 @@ func mainCode(flags flags) int {
 	handler, err := desktopReplica.NewHTTPHandler(
 		appdir.General("ReplicaStandalone"),
 		uc,
-		&replica.Client{
-			HttpClient: http.DefaultClient,
-			Endpoint:   flags.Endpoint,
+		replica.Client{
+			Storage:  replica.S3Storage{},
+			Endpoint: flags.Endpoint,
 		},
 		&analytics.NullSession{},
 		desktopReplica.DefaultNewHttpHandlerOpts(),
