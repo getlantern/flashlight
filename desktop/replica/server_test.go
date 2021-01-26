@@ -11,12 +11,15 @@ import (
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/golog/testlog"
 	"github.com/getlantern/replica"
 	"github.com/stretchr/testify/assert"
 )
 
 // TestUploadAndDelete makes sure we can upload and then subsequently delete a given file.
 func TestUploadAndDelete(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
 
 	dir, err := ioutil.TempDir(os.TempDir(), "replicauploadtest")
 	assert.NoError(t, err)

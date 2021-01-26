@@ -46,7 +46,6 @@ import (
 	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui"
-	"github.com/getlantern/flashlight/util"
 	"github.com/getlantern/flashlight/ws"
 
 	desktopReplica "github.com/getlantern/flashlight/desktop/replica"
@@ -101,6 +100,7 @@ type App struct {
 	chGlobalConfigChanged chan bool
 	flashlight            *flashlight.Flashlight
 	startReplica          sync.Once
+	startYinbi            sync.Once
 
 	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
 	// first. Keeping the order consistent avoids deadlocking.
@@ -288,12 +288,25 @@ func (app *App) Run() {
 	}()
 }
 
+// enableYinbiWallet adds Yinbi wallet related features to the features map
+// sent back to the UI
+func (app *App) enableYinbiWallet(enabledFeatures *map[string]bool) {
+	if !common.EnableYinbiFeatures {
+		return
+	}
+	for _, feature := range []string{"replica", "yinbi", "yinbiwallet", "auth"} {
+		(*enabledFeatures)[feature] = true
+	}
+}
+
 // startFeaturesService starts a new features service that dispatches features to any relevant
 // listeners.
 func (app *App) startFeaturesService(chans ...<-chan bool) {
 	if service, err := app.ws.Register("features", func(write func(interface{})) {
-		log.Debugf("Sending features enabled to new client: %v", app.flashlight.EnabledFeatures())
-		write(app.flashlight.EnabledFeatures())
+		enabledFeatures := app.flashlight.EnabledFeatures()
+		app.enableYinbiWallet(&enabledFeatures)
+		log.Debugf("Sending features enabled to new client: %v", enabledFeatures)
+		write(enabledFeatures)
 	}); err != nil {
 		log.Errorf("Unable to serve enabled features to UI: %v", err)
 	} else {
@@ -301,8 +314,10 @@ func (app *App) startFeaturesService(chans ...<-chan bool) {
 			go func(c <-chan bool) {
 				for range c {
 					features := app.flashlight.EnabledFeatures()
+					app.enableYinbiWallet(&features)
 					log.Debugf("EnabledFeatures: %v", features)
-					app.checkForReplica(features)
+					app.startReplicaIfNecessary(features)
+					app.startYinbiIfNecessary(features)
 					select {
 					case service.Out <- features:
 						// ok
@@ -392,19 +407,30 @@ func (app *App) beforeStart(listenAddr string) {
 
 	log.Debugf("Starting client UI at %v", uiaddr)
 
+	authaddr := app.GetStringFlag("authaddr", common.AuthServerAddr)
+	log.Debugf("Using auth server at %v", authaddr)
+	yinbiaddr := app.GetStringFlag("yinbiaddr", common.YinbiServerAddr)
+	log.Debugf("Using Yinbi server %s", yinbiaddr)
+
 	standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
 	// ui will handle empty uiaddr correctly
-	uiServer, err := ui.StartServer(uiaddr,
-		startupURL,
-		app.localHttpToken(),
-		standalone,
-	)
+	uiServer, err := ui.StartServer(ui.ServerParams{
+		AuthServerAddr:  authaddr,
+		YinbiServerAddr: yinbiaddr,
+		ExtURL:          startupURL,
+		AppName:         common.AppName,
+		RequestedAddr:   uiaddr,
+		LocalHTTPToken:  app.localHttpToken(),
+		Standalone:      standalone,
+		Handlers: []ui.PathHandler{
+			ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
+			ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
+		},
+	})
 	if err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		return
 	}
-	uiServer.Handle("/pro/", util.NoCache(pro.APIHandler(settings)))
-	uiServer.Handle("/data", util.NoCache(app.ws.Handler()))
 
 	if app.ShouldShowUI() {
 		go func() {
@@ -469,43 +495,61 @@ func (app *App) beforeStart(listenAddr string) {
 	})
 }
 
-func (app *App) checkForReplica(features map[string]bool) {
-	if val, ok := features[config.FeatureReplica]; ok && val {
-		app.startReplica.Do(func() {
-			log.Debug("Starting replica from app")
-			replicaHandler, err := desktopReplica.NewHTTPHandler(
-				app.ConfigDir,
-				getSettings(),
-				replica.Client{
-					Storage: &replica.S3Storage{
-						&http.Client{
-							Transport: proxied.AsRoundTripper(
-								func(req *http.Request) (*http.Response, error) {
-									chained, err := proxied.ChainedNonPersistent("")
-									if err != nil {
-										return nil, fmt.Errorf("connecting to proxy: %w", err)
-									}
-									return chained.RoundTrip(req)
-								},
-							),
-						}},
-					Endpoint: replica.DefaultEndpoint,
-				},
-				app.gaSession,
-				desktopReplica.DefaultNewHttpHandlerOpts(),
-			)
-			if err != nil {
-				log.Errorf("error creating replica http server: %v", err)
-				app.Exit(err)
-				return
-			}
-			app.AddExitFunc("cleanup replica http server", replicaHandler.Close)
+func (app *App) isFeatureEnabled(features map[string]bool, feature string) bool {
+	val, ok := features[feature]
+	return ok && val
+}
 
-			// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
-			// in their handlers.
-			app.uiServer().Handle("/replica/", http.StripPrefix("/replica", replicaHandler))
-		})
+func (app *App) startYinbiIfNecessary(features map[string]bool) {
+	if !app.isFeatureEnabled(features, config.FeatureAuth) ||
+		!app.isFeatureEnabled(features, config.FeatureYinbiWallet) {
+		return
 	}
+
+	app.startYinbi.Do(app.uiServer().EnableYinbiRoutes)
+}
+
+func (app *App) startReplicaIfNecessary(features map[string]bool) {
+
+	if !app.isFeatureEnabled(features, config.FeatureReplica) {
+		return
+	}
+
+	app.startReplica.Do(func() {
+		log.Debug("Starting replica from app")
+		replicaHandler, err := desktopReplica.NewHTTPHandler(
+			app.ConfigDir,
+			getSettings(),
+			replica.Client{
+				Storage: &replica.S3Storage{
+					&http.Client{
+						Transport: proxied.AsRoundTripper(
+							func(req *http.Request) (*http.Response, error) {
+								chained, err := proxied.ChainedNonPersistent("")
+								if err != nil {
+									return nil, fmt.Errorf("connecting to proxy: %w", err)
+								}
+								return chained.RoundTrip(req)
+							},
+						),
+					}},
+				Endpoint: replica.DefaultEndpoint,
+			},
+			app.gaSession,
+			desktopReplica.DefaultNewHttpHandlerOpts(),
+		)
+		if err != nil {
+			log.Errorf("error creating replica http server: %v", err)
+			app.Exit(err)
+			return
+		}
+		app.AddExitFunc("cleanup replica http server", replicaHandler.Close)
+
+		// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
+		// in their handlers.
+		app.uiServer().Handle("/replica/", http.StripPrefix("/replica", replicaHandler))
+	})
+
 }
 
 // Connect turns on proxying
@@ -530,6 +574,15 @@ func (app *App) GetLanguage() string {
 // SetLanguage sets the user language
 func (app *App) SetLanguage(lang string) {
 	getSettings().SetLanguage(lang)
+}
+
+// GetStringFlag gets the app flag with the given name. If the flag
+// is missing, defaultValue is used
+func (app *App) GetStringFlag(name, defaultValue string) string {
+	if val, ok := app.Flags[name].(string); ok && val != "" {
+		return val
+	}
+	return defaultValue
 }
 
 // OnSettingChange sets a callback cb to get called when attr is changed from UI.
