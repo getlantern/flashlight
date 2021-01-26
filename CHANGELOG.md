@@ -1,4 +1,19 @@
 
+<a name="lantern-6.3.6"></a>
+## [lantern-6.3.6](https://github.com/getlantern/flashlight/compare/lantern-6.3.5...lantern-6.3.6)
+
+> 2021-01-26
+
+### Pull Requests
+
+* Merge pull request [#994](https://github.com/getlantern/flashlight/issues/994) from getlantern/ui-6.3.6
+* Merge pull request [#991](https://github.com/getlantern/flashlight/issues/991) from getlantern/replica-sqlite-cantopen-isdir
+* Merge pull request [#989](https://github.com/getlantern/flashlight/issues/989) from getlantern/update-replica
+* Merge pull request [#993](https://github.com/getlantern/flashlight/issues/993) from getlantern/fix-testutils-issue
+* Merge pull request [#878](https://github.com/getlantern/flashlight/issues/878) from getlantern/yinbi-wallet
+* Merge pull request [#979](https://github.com/getlantern/flashlight/issues/979) from getlantern/p2p-traffic-metric
+
+
 <a name="lantern-6.3.5"></a>
 ## [lantern-6.3.5](https://github.com/getlantern/flashlight/compare/lantern-6.3.4...lantern-6.3.5)
 
