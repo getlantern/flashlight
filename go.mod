@@ -7,6 +7,7 @@ require (
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/confluence v1.6.2-0.20201116033747-ba09085bd120
 	github.com/anacrolix/dht v1.0.1 // indirect
+	github.com/anacrolix/dht/v2 v2.8.0 // indirect
 	github.com/anacrolix/envpprof v1.1.1
 	github.com/anacrolix/go-libutp v1.0.4
 	github.com/anacrolix/log v0.7.1-0.20200604014615-c244de44fd2d
