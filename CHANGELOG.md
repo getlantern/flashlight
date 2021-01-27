@@ -1,4 +1,16 @@
 
+<a name="lantern-6.3.8"></a>
+## [lantern-6.3.8](https://github.com/getlantern/flashlight/compare/lantern-6.3.6...lantern-6.3.8)
+
+> 2021-01-26
+
+### Pull Requests
+
+* Merge pull request [#997](https://github.com/getlantern/flashlight/issues/997) from getlantern/ui-6.3.8
+* Merge pull request [#995](https://github.com/getlantern/flashlight/issues/995) from getlantern/dht-rate-limit-fix
+* Merge pull request [#996](https://github.com/getlantern/flashlight/issues/996) from getlantern/ui-6.3.7
+
+
 <a name="lantern-6.3.6"></a>
 ## [lantern-6.3.6](https://github.com/getlantern/flashlight/compare/lantern-6.3.5...lantern-6.3.6)
 
