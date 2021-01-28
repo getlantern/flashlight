@@ -1,7 +1,6 @@
 package desktop
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"io/ioutil"
 	"os"
@@ -10,8 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/getlantern/flashlight/desktop/deviceid"
 	"github.com/getlantern/golog/testlog"
-	"github.com/getlantern/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -102,7 +101,7 @@ func TestRead(t *testing.T) {
 	assert.Equal(t, s.GetSystemProxy(), false)
 	assert.Equal(t, s.IsAutoReport(), false)
 	assert.Equal(t, s.GetUserID(), uid)
-	assert.Equal(t, s.GetDeviceID(), base64.StdEncoding.EncodeToString(uuid.NodeID()))
+	assert.Equal(t, s.GetDeviceID(), deviceid.Get())
 	assert.Equal(t, s.GetLanguage(), "en-US")
 	assert.Equal(t, s.GetUIAddr(), "127.0.0.1:1234")
 	assert.Equal(t, s.GetLocalHTTPToken(), "0jafdjlka")
