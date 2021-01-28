@@ -289,10 +289,13 @@ func (s *Settings) saveDefault() {
 	s.log.Trace("Saving settings")
 	if f, err := os.Create(s.filePath); err != nil {
 		s.log.Errorf("Could not open settings file for writing: %v", err)
-	} else if _, err := s.writeTo(f); err != nil {
-		s.log.Errorf("Could not save settings file: %v", err)
 	} else {
-		s.log.Tracef("Saved settings to %s", s.filePath)
+		defer f.Close()
+		if _, err := s.writeTo(f); err != nil {
+			s.log.Errorf("Could not save settings file: %v", err)
+		} else {
+			s.log.Tracef("Saved settings to %s", s.filePath)
+		}
 	}
 }
 
