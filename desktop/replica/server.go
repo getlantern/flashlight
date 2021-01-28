@@ -171,6 +171,7 @@ func NewHTTPHandler(
 		defaultStorage: defaultStorage,
 	}
 	handler.mux.HandleFunc("/search", handler.wrapHandlerError("replica_search", handler.handleSearch))
+	handler.mux.HandleFunc("/search/serp_web", handler.wrapHandlerError("replica_search", handler.handleSearch))
 	handler.mux.HandleFunc("/thumbnail", handler.wrapHandlerError("replica_thumbnail", handler.handleThumbnail))
 	handler.mux.HandleFunc("/upload", handler.wrapHandlerError("replica_upload", handler.handleUpload))
 	handler.mux.HandleFunc("/uploads", handler.wrapHandlerError("replica_uploads", handler.handleUploads))
