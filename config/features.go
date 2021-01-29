@@ -54,24 +54,44 @@ func (o *PingProxiesOptions) fromMap(m map[string]interface{}) error {
 	return nil
 }
 
+// TrafficLogOptions represents options for github.com/getlantern/trafficlog-flashlight.
 type TrafficLogOptions struct {
-	// Size of the buffers for capturing packets in real time.
+	// Size of the traffic log's packet buffers (if enabled).
 	CaptureBytes int
-	// Size of the buffers for taking snapshots from live captures.
-	SaveBytes int
+	SaveBytes    int
+
+	// How far back to go when attaching packets to an issue report.
+	CaptureSaveDuration time.Duration
+
+	// Whether to overwrite the traffic log binary. This may result in users being re-prompted for
+	// their passwords. The binary will never be overwritten if the existing binary matches the
+	// embedded version.
+	Reinstall bool
+
+	// The minimum amount of time to wait before re-prompting the user since the last time we failed
+	// to install the traffic log. The most likely reason for a failed install is denial of
+	// permission by the user. A value of 0 means we never re-attempt installation.
+	WaitTimeSinceFailedInstall time.Duration
 }
 
 func (o *TrafficLogOptions) fromMap(m map[string]interface{}) error {
-	captureBytes, err := intFromMap(m, "capturebytes")
+	var err error
+	o.CaptureBytes, err = intFromMap(m, "capturebytes")
 	if err != nil {
 		return err
 	}
-	o.CaptureBytes = captureBytes
-	saveBytes, err := intFromMap(m, "savebytes")
+	o.SaveBytes, err = intFromMap(m, "savebytes")
 	if err != nil {
 		return err
 	}
-	o.SaveBytes = saveBytes
+	o.Reinstall, err = boolFromMap(m, "reinstall")
+	if err != nil {
+		return err
+	}
+	o.WaitTimeSinceFailedInstall, err = durationFromMap(m, "waittimesincefailedinstall")
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -193,6 +213,18 @@ func csvContains(csv, s string) bool {
 		}
 	}
 	return false
+}
+
+func boolFromMap(m map[string]interface{}, name string) (bool, error) {
+	v, exists := m[name]
+	if !exists {
+		return false, errAbsentOption
+	}
+	b, ok := v.(bool)
+	if !ok {
+		return false, errMalformedOption
+	}
+	return b, nil
 }
 
 func intFromMap(m map[string]interface{}, name string) (int, error) {

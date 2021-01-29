@@ -1,7 +1,6 @@
 package flashlight
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"path/filepath"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/getlantern/detour"
 	"github.com/getlantern/dnsgrab"
+	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
@@ -89,11 +89,11 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 func (f *Flashlight) reconfigurePingProxies() {
 	enabled := func() bool {
 		return common.InDevelopment() ||
-			(f.featureEnabled(config.FeaturePingProxies) && f.autoReport())
+			(f.FeatureEnabled(config.FeaturePingProxies) && f.autoReport())
 	}
 	var opts config.PingProxiesOptions
 	// ignore the error because the zero value means disabling it.
-	_ = f.featureOptions(config.FeaturePingProxies, &opts)
+	_ = f.FeatureOptions(config.FeaturePingProxies, &opts)
 	f.client.ConfigurePingProxies(enabled, opts.Interval)
 }
 
@@ -116,7 +116,9 @@ func (f *Flashlight) EnabledFeatures() map[string]bool {
 	return featuresEnabled
 }
 
-func (f *Flashlight) featureEnabled(feature string) bool {
+// FeatureEnabled returns true if the input feature is enabled for this flashlight instance. Feature
+// names are tracked in the config package.
+func (f *Flashlight) FeatureEnabled(feature string) bool {
 	f.mxGlobal.RLock()
 	global := f.global
 	f.mxGlobal.RUnlock()
@@ -145,7 +147,9 @@ func (f *Flashlight) calcFeature(global *config.Global, country, feature string)
 		country)
 }
 
-func (f *Flashlight) featureOptions(feature string, opts config.FeatureOptions) error {
+// FeatureOptions unmarshals options for the input feature. Feature names are tracked in the config
+// package.
+func (f *Flashlight) FeatureOptions(feature string, opts config.FeatureOptions) error {
 	f.mxGlobal.RLock()
 	global := f.global
 	f.mxGlobal.RUnlock()
@@ -180,7 +184,7 @@ func (f *Flashlight) applyProxyBench(cfg *config.Global) {
 	go func() {
 		// Wait a while for geolookup to happen before checking if we can turn on proxybench
 		geolookup.GetCountry(1 * time.Minute)
-		if f.featureEnabled(config.FeatureProxyBench) {
+		if f.FeatureEnabled(config.FeatureProxyBench) {
 			startProxyBenchOnce.Do(func() {
 				opts := &proxybench.Opts{
 					UpdateURL: "https://s3.amazonaws.com/lantern/proxybench.json",
@@ -201,7 +205,7 @@ func (f *Flashlight) applyBorda(cfg *config.Global) {
 			return false
 		}
 
-		if f.featureEnabled(config.FeatureNoBorda) {
+		if f.FeatureEnabled(config.FeatureNoBorda) {
 			// Borda is disabled by global config
 			return false
 		}
@@ -299,28 +303,28 @@ func New(
 	}
 
 	useShortcut := func() bool {
-		return !_proxyAll() && !f.featureEnabled(config.FeatureNoShortcut) && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !_proxyAll() && !f.FeatureEnabled(config.FeatureNoShortcut) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	useDetour := func() bool {
-		return !_proxyAll() && !f.featureEnabled(config.FeatureNoDetour) && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !_proxyAll() && !f.FeatureEnabled(config.FeatureNoDetour) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	proxyAll := func() bool {
 		useShortcutOrDetour := useShortcut() || useDetour()
-		return !useShortcutOrDetour && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !useShortcutOrDetour && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	cl, err := client.NewClient(
 		f.configDir,
 		disconnected,
-		func() bool { return !f.featureEnabled(config.FeatureNoProbeProxies) },
+		func() bool { return !f.FeatureEnabled(config.FeatureNoProbeProxies) },
 		proxyAll,
 		useShortcut,
 		shortcut.Allow,
 		useDetour,
-		func() bool { return !f.featureEnabled(config.FeatureNoHTTPSEverywhere) },
-		func() bool { return common.Platform != "android" && f.featureEnabled(config.FeatureTrackYouTube) },
+		func() bool { return !f.FeatureEnabled(config.FeatureNoHTTPSEverywhere) },
+		func() bool { return common.Platform != "android" && f.FeatureEnabled(config.FeatureTrackYouTube) },
 		userConfig,
 		statsTracker,
 		allowPrivateHosts,
