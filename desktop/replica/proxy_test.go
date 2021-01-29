@@ -9,10 +9,14 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/internal/testutils"
+	"github.com/getlantern/golog/testlog"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestProxy(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	uc := common.NewUserConfigData("device", 0, "token", nil, "en-US")
 
 	m := &testutils.MockRoundTripper{Header: http.Header{}, Body: strings.NewReader("GOOD")}
@@ -26,7 +30,9 @@ func TestProxy(t *testing.T) {
 	url := fmt.Sprintf("http://%s/replica/search", addr)
 	t.Logf("Test server listening at %s", url)
 
-	handler := proxyHandler(uc, addr.String())
+	handler := proxyHandler(uc, addr.String(), func(*http.Response) error {
+		return nil
+	})
 	go http.Serve(l, handler)
 
 	{

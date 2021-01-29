@@ -1,4 +1,86 @@
 
+<a name="lantern-6.4.0"></a>
+## [lantern-6.4.0](https://github.com/getlantern/flashlight/compare/lantern-6.3.9...lantern-6.4.0)
+
+> 2021-01-28
+
+### Pull Requests
+
+* Merge pull request [#1001](https://github.com/getlantern/flashlight/issues/1001) from getlantern/ui-6.4.0-2
+* Merge pull request [#1000](https://github.com/getlantern/flashlight/issues/1000) from getlantern/ui-6.4.0
+
+
+<a name="lantern-6.3.9"></a>
+## [lantern-6.3.9](https://github.com/getlantern/flashlight/compare/lantern-6.3.8...lantern-6.3.9)
+
+> 2021-01-27
+
+### Pull Requests
+
+* Merge pull request [#999](https://github.com/getlantern/flashlight/issues/999) from getlantern/ui-6.3.9-2
+* Merge pull request [#998](https://github.com/getlantern/flashlight/issues/998) from getlantern/ui-6.3.9
+
+
+<a name="lantern-6.3.8"></a>
+## [lantern-6.3.8](https://github.com/getlantern/flashlight/compare/lantern-6.3.6...lantern-6.3.8)
+
+> 2021-01-26
+
+### Pull Requests
+
+* Merge pull request [#997](https://github.com/getlantern/flashlight/issues/997) from getlantern/ui-6.3.8
+* Merge pull request [#995](https://github.com/getlantern/flashlight/issues/995) from getlantern/dht-rate-limit-fix
+* Merge pull request [#996](https://github.com/getlantern/flashlight/issues/996) from getlantern/ui-6.3.7
+
+
+<a name="lantern-6.3.6"></a>
+## [lantern-6.3.6](https://github.com/getlantern/flashlight/compare/lantern-6.3.5...lantern-6.3.6)
+
+> 2021-01-26
+
+### Pull Requests
+
+* Merge pull request [#994](https://github.com/getlantern/flashlight/issues/994) from getlantern/ui-6.3.6
+* Merge pull request [#991](https://github.com/getlantern/flashlight/issues/991) from getlantern/replica-sqlite-cantopen-isdir
+* Merge pull request [#989](https://github.com/getlantern/flashlight/issues/989) from getlantern/update-replica
+* Merge pull request [#993](https://github.com/getlantern/flashlight/issues/993) from getlantern/fix-testutils-issue
+* Merge pull request [#878](https://github.com/getlantern/flashlight/issues/878) from getlantern/yinbi-wallet
+* Merge pull request [#979](https://github.com/getlantern/flashlight/issues/979) from getlantern/p2p-traffic-metric
+
+
+<a name="lantern-6.3.5"></a>
+## [lantern-6.3.5](https://github.com/getlantern/flashlight/compare/lantern-6.3.4...lantern-6.3.5)
+
+> 2021-01-21
+
+### Pull Requests
+
+* Merge pull request [#988](https://github.com/getlantern/flashlight/issues/988) from getlantern/ox/hidedatacap
+* Merge pull request [#980](https://github.com/getlantern/flashlight/issues/980) from getlantern/cache-thumbnails
+
+
+<a name="lantern-6.3.4"></a>
+## [lantern-6.3.4](https://github.com/getlantern/flashlight/compare/lantern-6.3.3...lantern-6.3.4)
+
+> 2021-01-20
+
+### Pull Requests
+
+* Merge pull request [#987](https://github.com/getlantern/flashlight/issues/987) from getlantern/ui-6.3.4
+* Merge pull request [#982](https://github.com/getlantern/flashlight/issues/982) from getlantern/fix-upload-delete
+* Merge pull request [#984](https://github.com/getlantern/flashlight/issues/984) from getlantern/ox/issue-ios-60
+
+
+<a name="lantern-6.3.3"></a>
+## [lantern-6.3.3](https://github.com/getlantern/flashlight/compare/lantern-6.3.2...lantern-6.3.3)
+
+> 2021-01-19
+
+### Pull Requests
+
+* Merge pull request [#981](https://github.com/getlantern/flashlight/issues/981) from getlantern/ui-6.3.3
+
+
 <a name="lantern-6.3.2"></a>
 ## [lantern-6.3.2](https://github.com/getlantern/flashlight/compare/lantern-6.3.1...lantern-6.3.2)
 

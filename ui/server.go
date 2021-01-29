@@ -6,6 +6,7 @@ import (
 	"mime"
 	"net"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httputil"
 	"net/url"
 	"strconv"
@@ -22,9 +23,16 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/tarfs"
 
+	"github.com/getlantern/auth-server/api"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/stats"
+	"github.com/getlantern/flashlight/ui/auth"
+	"github.com/getlantern/flashlight/ui/handler"
+	"github.com/getlantern/flashlight/ui/yinbi"
 	"github.com/getlantern/flashlight/util"
+	"github.com/go-chi/chi"
+	"golang.org/x/net/publicsuffix"
 )
 
 // A set of ports that chrome considers restricted
@@ -66,46 +74,86 @@ type Server struct {
 	httpTokenRequestPathPrefix string
 	localHTTPToken             string
 	listener                   net.Listener
-	mux                        *http.ServeMux
+	mux                        *chi.Mux
 	onceOpenExtURL             sync.Once
+
+	// The name of the application running (either Lantern or Beam)
+	appName string
+
+	// Auth server API address to use
+	authServerAddr string
+
+	// Yinbi server API address to use
+	yinbiServerAddr string
 
 	translations eventual.Value
 	standalone   bool
 }
 
+// PathHandler contains a request path pattern and an HTTP handler for that
+// pattern.
+type PathHandler struct {
+	Pattern string
+	Handler http.Handler
+}
+
+// ServerParams specifies the parameters to use
+// when creating new UI server
+type ServerParams struct {
+	ExtURL          string
+	AuthServerAddr  string
+	YinbiServerAddr string
+	AppName         string
+	LocalHTTPToken  string
+	RequestedAddr   string
+	SkipTokenCheck  bool
+	Standalone      bool
+	HTTPClient      *http.Client
+	Handlers        []PathHandler
+}
+
+// Middleware
+type Middleware func(http.HandlerFunc) http.HandlerFunc
+
 // StartServer creates and starts a new UI server.
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func StartServer(requestedAddr, extURL, localHTTPToken string, standalone bool) (*Server, error) {
-	server := newServer(extURL, localHTTPToken, standalone)
-	if err := server.start(requestedAddr); err != nil {
+func StartServer(params ServerParams) (*Server, error) {
+	server := newServer(params)
+
+	if err := server.start(params.RequestedAddr); err != nil {
 		return nil, err
 	}
 	return server, nil
 }
 
-func newServer(extURL, localHTTPToken string, standalone bool) *Server {
+func newServer(params ServerParams) *Server {
+	localHTTPToken := params.LocalHTTPToken
 	server := &Server{
-		externalURL: overrideManotoURL(extURL),
+		externalURL: overrideManotoURL(params.ExtURL),
 		httpTokenRequestPathPrefix: func() string {
 			if localHTTPToken == "" {
 				return ""
 			}
 			return "/" + localHTTPToken
 		}(),
-		mux:            http.NewServeMux(),
-		localHTTPToken: localHTTPToken,
-		translations:   eventual.NewValue(),
-		standalone:     standalone,
+		mux:             chi.NewRouter(),
+		localHTTPToken:  localHTTPToken,
+		translations:    eventual.NewValue(),
+		standalone:      params.Standalone,
+		appName:         params.AppName,
+		authServerAddr:  params.AuthServerAddr,
+		yinbiServerAddr: params.YinbiServerAddr,
 	}
 
-	server.attachHandlers()
+	server.attachHandlers(params.Handlers)
 
 	return server
 }
 
-func (s *Server) attachHandlers() {
+func (s *Server) attachHandlers(handlers []PathHandler) {
+
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
 	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
@@ -113,8 +161,54 @@ func (s *Server) attachHandlers() {
 		resp.WriteHeader(http.StatusOK)
 	}
 
+	// configure routes passed with server params
+	for _, h := range handlers {
+		s.Handle(h.Pattern, util.NoCache(h.Handler))
+	}
+
 	s.Handle("/startup", util.NoCache(http.HandlerFunc(startupHandler)))
 	s.Handle("/", util.NoCache(http.FileServer(fs)))
+}
+
+// createHTTPClient creates a chained-then-fronted configured HTTP client
+// to be used by multiple UI handlers
+func createHTTPClient() *http.Client {
+	rt := proxied.ChainedThenFronted()
+	rt.SetMasqueradeTimeout(30 * time.Second)
+	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &http.Client{
+		Jar:       jar,
+		Transport: rt,
+	}
+}
+
+// EnableYinbiRoutes attaches the Yinbi and Auth UI handlers
+// This is called once we ascertain the Yinbi wallet and auth
+// features are enabled
+func (s *Server) EnableYinbiRoutes() {
+
+	httpClient := createHTTPClient()
+
+	apiParams := api.NewAPIParams(s.appName, s.authServerAddr,
+		s.yinbiServerAddr, httpClient)
+
+	authHandler := auth.New(apiParams)
+
+	handlers := []handler.UIHandler{
+		authHandler,
+		yinbi.NewWithAuth(apiParams, authHandler),
+	}
+
+	// configure UI handlers with routes setup internally
+	for _, h := range handlers {
+		prefix := h.GetPathPrefix()
+		s.Handle(prefix, h.ConfigureRoutes())
+	}
+
 }
 
 // Handle directs the underlying server to handle the given pattern at both
@@ -128,12 +222,14 @@ func (s *Server) Handle(pattern string, handler http.Handler) {
 	if s.httpTokenRequestPathPrefix != "" {
 		// If the request path is empty this would panic on adding the same pattern
 		// twice.
-		s.mux.Handle(s.httpTokenRequestPathPrefix+pattern, s.strippingHandler(handler))
+		s.mux.Mount(s.httpTokenRequestPathPrefix+pattern, s.strippingHandler(handler))
 	}
+
+	checkTokenHandler := checkRequestForToken(handler, s.localHTTPToken)
 
 	// In the naked request cast, we need to verify the token is there in the
 	// referer header.
-	s.mux.Handle(pattern, checkRequestForToken(handler, s.localHTTPToken))
+	s.mux.Mount(pattern, checkTokenHandler)
 }
 
 // strippingHandler removes the secure request path from the URL so that the

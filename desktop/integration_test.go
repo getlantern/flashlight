@@ -182,7 +182,7 @@ func TestProxying(t *testing.T) {
 			missingOps = make([]string, 0)
 			opsMx.RLock()
 			for _, op := range borda.FullyReportedOps {
-				if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" || op == "probe" || op == "proxy_rank" || op == "proxy_selection_stability" || op == "youtube_view" || op == "install_mitm_cert" || op == "replica_upload" || op == "replica_view" {
+				if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" || op == "probe" || op == "proxy_rank" || op == "proxy_selection_stability" || op == "youtube_view" || op == "install_mitm_cert" || op == "replica_upload" || op == "replica_view" || op == "replica_torrent_peer_sent_data" {
 					// ignore these, as we don't do them (reliably) during the integration test
 					continue
 				}

@@ -41,6 +41,8 @@ var (
 
 	Staging = false
 
+	AuthServerAddr = "https://auth-staging.lantern.network"
+
 	ProAPIHost = "api.getiantem.org"
 
 	ReplicaSearchAPIHost   = "replica-search.lantern.io"
@@ -70,10 +72,13 @@ func initInternal() {
 		return
 	}
 	if Staging {
+		AuthServerAddr = "https://auth-staging.lantern.network"
 		ProAPIHost = "api-staging.getiantem.org"
 		ReplicaSearchAPIHost = "replica-search-staging.lantern.io"
 		ReplicaThumbnailerHost = "replica-thumbnailer-staging.lantern.io"
 	}
+	// TEMP : use staging defaults for Yinbi. Will change after launch
+	useYinbiStaging()
 	forceAds, _ = strconv.ParseBool(os.Getenv("FORCEADS"))
 }
 

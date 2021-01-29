@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	FeatureAuth                 = "auth"
 	FeatureProxyBench           = "proxybench"
 	FeaturePingProxies          = "pingproxies"
 	FeatureTrafficLog           = "trafficlog"
@@ -24,6 +25,7 @@ const (
 	FeatureReplica              = "replica"
 	FeatureProxyWhitelistedOnly = "proxywhitelistedonly"
 	FeatureTrackYouTube         = "trackyoutube"
+	FeatureYinbiWallet          = "yinbiwallet"
 )
 
 var (

@@ -8,11 +8,9 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/proxied"
-	"github.com/getlantern/golog"
 )
 
 var (
-	log                     = golog.LoggerFor("flashlight.replica.proxy")
 	httpClient *http.Client = genHTTPClient()
 )
 
@@ -68,11 +66,12 @@ func prepareRequest(r *http.Request, uc common.UserConfig, host string) {
 	common.AddCommonHeaders(uc, r)
 }
 
-func proxyHandler(uc common.UserConfig, host string) http.Handler {
+func proxyHandler(uc common.UserConfig, host string, modifyResponse func(*http.Response) error) http.Handler {
 	return &httputil.ReverseProxy{
 		Transport: &proxyTransport{},
 		Director: func(r *http.Request) {
 			prepareRequest(r, uc, host)
 		},
+		ModifyResponse: modifyResponse,
 	}
 }
