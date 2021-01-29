@@ -31,11 +31,10 @@ const (
 	trafficlogLastFailedInstallFile = "tl_last_failed"
 )
 
-var (
-	// This prompt is only displayed when the traffic log needs to be installed.
-	translatedAppName       = i18n.T(strings.ToUpper(common.AppName))
-	trafficlogInstallPrompt = i18n.T("BACKEND_INSTALL_DIAGNOSTIC_TOOLS", translatedAppName, translatedAppName)
-)
+func trafficlogInstallPrompt() string {
+	translatedAppName := i18n.T(strings.ToUpper(common.AppName))
+	return i18n.T("BACKEND_INSTALL_DIAGNOSTIC_TOOLS", translatedAppName, translatedAppName)
+}
 
 // getCapturedPackets writes all packets captured during the input duration. The traffic log must be
 // enabled. The packets are written to w in pcapng format.
@@ -171,7 +170,7 @@ func (app *App) tryTrafficLogInstall(installDir string, opts config.TrafficLogOp
 	// Note that this is a no-op if the traffic log is already installed.
 	installOpts := tlproc.InstallOptions{Overwrite: opts.Reinstall}
 	installErr := tlproc.Install(
-		installDir, u.Username, trafficlogInstallPrompt, iconFile, &installOpts)
+		installDir, u.Username, trafficlogInstallPrompt(), iconFile, &installOpts)
 	if installErr != nil {
 		if b, err := time.Now().MarshalText(); err != nil {
 			log.Errorf("Failed to marshal time for traffic log install-last-failed file: %v", err)
