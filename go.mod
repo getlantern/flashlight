@@ -9,9 +9,9 @@ require (
 	github.com/anacrolix/dht/v2 v2.8.0 // indirect
 	github.com/anacrolix/envpprof v1.1.1
 	github.com/anacrolix/go-libutp v1.0.4
-	github.com/anacrolix/log v0.7.1-0.20200604014615-c244de44fd2d
+	github.com/anacrolix/log v0.8.0
 	github.com/anacrolix/tagflag v1.1.1-0.20200411025953-9bb5209d56c2
-	github.com/anacrolix/torrent v1.21.1-0.20210126104953-fbc9a77cd8f0
+	github.com/anacrolix/torrent v1.23.0
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
@@ -145,7 +145,7 @@ replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.0.
 
 replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20200903013459-0c02248f7ce1
 
-replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3-0.20190606045409-29ac0bf665ea
+replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3-0.20210202003624-785b5fda134e
 
 // git.apache.org isn't working at the moment, use mirror (should probably switch back once we can)
 replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110319-2566ecd5d999
