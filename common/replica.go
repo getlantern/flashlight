@@ -8,5 +8,5 @@ var (
 )
 
 func init() {
-	EnableReplicaFeatures, _ = strconv.ParseBool(EnableReplicaFeatures)
+	EnableReplica, _ = strconv.ParseBool(EnableReplicaFeatures)
 }
