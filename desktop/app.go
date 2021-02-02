@@ -312,12 +312,12 @@ func (app *App) enableReplica(enabledFeatures *map[string]bool) {
 
 // checkEnabledFeatures checks if Replica and Yinbi features are enabled
 // (based on the env vars at build time)
-func (app *App) checkEnabledFeatures(enabledFeatures *map[string]bool) {
+func (app *App) checkEnabledFeatures(enabledFeatures map[string]bool) {
 	if common.EnableYinbi {
-		app.enableYinbiWallet(enabledFeatures)
+		app.enableYinbiWallet(&enabledFeatures)
 	}
 	if common.EnableReplica {
-		app.enableReplica(enabledFeatures)
+		app.enableReplica(&enabledFeatures)
 	}
 	log.Debugf("Sending features enabled to new client: %v", enabledFeatures)
 	app.startReplicaIfNecessary(enabledFeatures)
@@ -337,7 +337,7 @@ func (app *App) startFeaturesService(chans ...<-chan bool) {
 			go func(c <-chan bool) {
 				for range c {
 					features := app.flashlight.EnabledFeatures()
-					app.checkEnabledFeatures(&features)
+					app.checkEnabledFeatures(features)
 					select {
 					case service.Out <- features:
 						// ok
