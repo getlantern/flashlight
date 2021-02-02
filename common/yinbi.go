@@ -4,8 +4,8 @@ import "strconv"
 
 var (
 	// Enable yinbi wallet related features via the YINBI env var
-	EnableYinbiFeature = "false"
-	EnableYinbi        = false
+	EnableYinbiFeatures = "false"
+	EnableYinbi         = false
 	// Default Stellar Horizon address to use
 	HorizonAddr        = "https://horizon.stellar.org"
 	NetworkName        = "public"
@@ -16,7 +16,7 @@ var (
 )
 
 func useYinbiStaging() {
-	EnableYinbi, _ = strconv.ParseBool(EnableYinbiFeature)
+	EnableYinbi, _ = strconv.ParseBool(EnableYinbiFeatures)
 
 	HorizonAddr = "https://horizon-testnet.stellar.org"
 	YinbiIssuerAccount = "GAH3ZXCVTOS6IHKCULBZD7KREA3URTPCDHZQZ7GQBF552PFR77ACCRUY"
