@@ -7,6 +7,7 @@ import (
 
 	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/getlantern/flashlight/common"
 )
@@ -96,25 +97,29 @@ featureoptions:
   trafficlog:
     capturebytes: 1
     savebytes: 2
+    capturesaveduration: 5m
     reinstall: true
     waittimesincefailedinstall: 24h
+    userdenialthreshold: 3
+    timebeforedenialreset: 2160h
   pingproxies:
     interval: 1h
 `
 	gl := NewGlobal()
-	if !assert.NoError(t, yaml.Unmarshal([]byte(yml), gl)) {
-		return
-	}
+	require.NoError(t, yaml.Unmarshal([]byte(yml), gl))
+
 	var opts TrafficLogOptions
-	err := gl.UnmarshalFeatureOptions(FeatureTrafficLog, &opts)
-	assert.NoError(t, err)
-	assert.Equal(t, 1, opts.CaptureBytes)
-	assert.Equal(t, 2, opts.SaveBytes)
-	assert.Equal(t, true, opts.Reinstall)
-	assert.Equal(t, 24*time.Hour, opts.WaitTimeSinceFailedInstall)
+	require.NoError(t, gl.UnmarshalFeatureOptions(FeatureTrafficLog, &opts))
+
+	require.Equal(t, 1, opts.CaptureBytes)
+	require.Equal(t, 2, opts.SaveBytes)
+	require.Equal(t, 5*time.Minute, opts.CaptureSaveDuration)
+	require.Equal(t, true, opts.Reinstall)
+	require.Equal(t, 24*time.Hour, opts.WaitTimeSinceFailedInstall)
+	require.Equal(t, 3, opts.UserDenialThreshold)
+	require.Equal(t, 2160*time.Hour, opts.TimeBeforeDenialReset)
 
 	var opts2 PingProxiesOptions
-	err = gl.UnmarshalFeatureOptions(FeaturePingProxies, &opts2)
-	assert.NoError(t, err)
-	assert.Equal(t, time.Hour, opts2.Interval)
+	require.NoError(t, gl.UnmarshalFeatureOptions(FeaturePingProxies, &opts2))
+	require.Equal(t, time.Hour, opts2.Interval)
 }
