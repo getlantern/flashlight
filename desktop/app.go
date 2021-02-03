@@ -57,6 +57,9 @@ var (
 	settingsMx sync.RWMutex
 
 	startTime = time.Now()
+
+	replicaFeatures = []string{"replica"}
+	yinbiFeatures   = []string{"yinbi", "yinbiwallet", "auth"}
 )
 
 func init() {
@@ -290,38 +293,33 @@ func (app *App) Run() {
 	}()
 }
 
-// enableReplica adds the features specified in toEnable to the features map
-// sent back to the UI
-func (app *App) enableFeatures(enabledFeatures map[string]bool, toEnable []string) {
-	for _, feature := range toEnable {
-		enabledFeatures[feature] = true
-	}
-}
-
 // enableYinbiWallet adds Yinbi wallet related features to the features map
 // sent back to the UI
-func (app *App) enableYinbiWallet(enabledFeatures map[string]bool) {
-	app.enableFeatures(enabledFeatures, []string{"yinbi", "yinbiwallet", "auth"})
+func (app *App) enableYinbiWalletFeatures() {
+	app.flashlight.EnableFeatures([]string{"yinbi", "yinbiwallet", "auth"})
 }
 
 // enableReplica adds Replica related features to the features map
 // sent back to the UI
-func (app *App) enableReplica(enabledFeatures map[string]bool) {
-	app.enableFeatures(enabledFeatures, []string{"replica"})
+func (app *App) enableReplicaFeatures() {
+	app.flashlight.EnableFeatures([]string{"replica"})
 }
 
 // checkEnabledFeatures checks if Replica and Yinbi features are enabled
 // (based on the env vars at build time)
-func (app *App) checkEnabledFeatures(enabledFeatures map[string]bool) {
+func (app *App) checkEnabledFeatures() map[string]bool {
 	if common.EnableYinbi {
-		app.enableYinbiWallet(enabledFeatures)
+		app.enableYinbiWalletFeatures()
 	}
 	if common.EnableReplica {
-		app.enableReplica(enabledFeatures)
+		app.enableReplicaFeatures()
 	}
+	enabledFeatures := app.flashlight.EnabledFeatures()
 	log.Debugf("Sending features enabled to new client: %v", enabledFeatures)
 	app.startReplicaIfNecessary(enabledFeatures)
 	app.startYinbiIfNecessary(enabledFeatures)
+
+	return enabledFeatures
 }
 
 // startFeaturesService starts a new features service that dispatches features to any relevant
@@ -336,8 +334,7 @@ func (app *App) startFeaturesService(chans ...<-chan bool) {
 		for _, ch := range chans {
 			go func(c <-chan bool) {
 				for range c {
-					features := app.flashlight.EnabledFeatures()
-					app.checkEnabledFeatures(features)
+					features := app.checkEnabledFeatures()
 					select {
 					case service.Out <- features:
 						// ok

@@ -66,6 +66,9 @@ type Flashlight struct {
 	client            *client.Client
 	vpnEnabled        bool
 	op                *fops.Op
+
+	featuresEnabled map[string]bool
+	featuresMu      sync.RWMutex
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
@@ -99,33 +102,63 @@ func (f *Flashlight) reconfigurePingProxies() {
 
 // EnabledFeatures gets all features enabled based on current conditions
 func (f *Flashlight) EnabledFeatures() map[string]bool {
-	featuresEnabled := make(map[string]bool)
-	f.mxGlobal.RLock()
-	if f.global == nil {
-		f.mxGlobal.RUnlock()
-		return featuresEnabled
+	global, err := f.GetGlobalConfig()
+	if err != nil {
+		return f.GetEnabledFeatures()
 	}
-	global := f.global
-	f.mxGlobal.RUnlock()
 	country := geolookup.GetCountry(0)
 	for feature := range global.FeaturesEnabled {
-		if f.calcFeature(global, country, feature) {
-			featuresEnabled[feature] = true
+		if f.calcFeature(country, feature) {
+			f.EnableFeature(feature)
 		}
 	}
-	return featuresEnabled
+	return f.GetEnabledFeatures()
+}
+
+// EnableFeature adds the given feature to the featuresEnabled map
+func (f *Flashlight) EnableFeature(feature string) {
+	f.featuresMu.Lock()
+	defer f.featuresMu.Unlock()
+	f.featuresEnabled[feature] = true
+}
+
+// GetEnabledFeatures returns the featuresEnabled map
+func (f *Flashlight) GetEnabledFeatures() map[string]bool {
+	f.featuresMu.Lock()
+	defer f.featuresMu.Unlock()
+	return f.featuresEnabled
+}
+
+// EnableFeatures adds the given array of features toEnable
+// to the featuresEnabled map
+func (f *Flashlight) EnableFeatures(toEnable []string) {
+	f.featuresMu.Lock()
+	defer f.featuresMu.Unlock()
+	for _, feature := range toEnable {
+		f.featuresEnabled[feature] = true
+	}
+}
+
+// GetGlobalConfig returns the current global config flashlight
+// is configured to use
+func (f *Flashlight) GetGlobalConfig() (*config.Global, error) {
+	f.mxGlobal.RLock()
+	defer f.mxGlobal.RUnlock()
+	global := f.global
+	if global == nil {
+		// just to be safe
+		return nil, errors.New("No global configuration")
+	}
+	return global, nil
 }
 
 // FeatureEnabled returns true if the input feature is enabled for this flashlight instance. Feature
 // names are tracked in the config package.
 func (f *Flashlight) FeatureEnabled(feature string) bool {
-	f.mxGlobal.RLock()
-	global := f.global
-	f.mxGlobal.RUnlock()
-	return f.calcFeature(global, geolookup.GetCountry(0), feature)
+	return f.calcFeature(geolookup.GetCountry(0), feature)
 }
 
-func (f *Flashlight) calcFeature(global *config.Global, country, feature string) bool {
+func (f *Flashlight) calcFeature(country, feature string) bool {
 	// Special case: Use defaults for blocking related features until geolookup is finished
 	// to avoid accidentally generating traffic that could trigger blocking.
 	enabled, blockingRelated := blockingRelevantFeatures[feature]
@@ -137,8 +170,8 @@ func (f *Flashlight) calcFeature(global *config.Global, country, feature string)
 		log.Debugf("Blocking related feature %v %v because geolookup has not yet finished", feature, enabledText)
 		return enabled
 	}
-	if global == nil {
-		log.Error("No global configuration!")
+	global, err := f.GetGlobalConfig()
+	if err != nil {
 		return enabled
 	}
 	return global.FeatureEnabled(feature,
@@ -150,12 +183,9 @@ func (f *Flashlight) calcFeature(global *config.Global, country, feature string)
 // FeatureOptions unmarshals options for the input feature. Feature names are tracked in the config
 // package.
 func (f *Flashlight) FeatureOptions(feature string, opts config.FeatureOptions) error {
-	f.mxGlobal.RLock()
-	global := f.global
-	f.mxGlobal.RUnlock()
-	if global == nil {
-		// just to be safe
-		return errors.New("No global configuration")
+	global, err := f.GetGlobalConfig()
+	if err != nil {
+		return err
 	}
 	return global.UnmarshalFeatureOptions(feature, opts)
 }
@@ -260,6 +290,7 @@ func New(
 		onBordaConfigured: make(chan bool, 1),
 		autoReport:        autoReport,
 		op:                fops.Begin("client_started"),
+		featuresEnabled:   make(map[string]bool),
 	}
 
 	var grabber dnsgrab.Server
