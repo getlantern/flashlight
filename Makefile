@@ -55,7 +55,12 @@ define build-tags
 	EXTRA_LDFLAGS=$$(echo $$EXTRA_LDFLAGS | xargs) && echo "Extra ldflags: $$EXTRA_LDFLAGS"
 endef
 
-.PHONY: lantern beam update-icons vendor
+.PHONY: lantern beam update-icons vendor git-lfs
+
+git-lfs:
+	@if [ "$(shell which git-lfs)" = "" ]; then \
+		echo "Missing Git LFS. See https://git-lfs.github.com" && exit 1; \
+	fi
 
 lantern: $(SOURCES)
 	@$(call build-tags) && \
@@ -92,11 +97,11 @@ beam-linux: $(SOURCES)
 	@$(call build-tags) && \
 	HEADLESS=true GOOS=linux GOARCH=amd64 BINARY_NAME=beam-linux BUILD_TAGS="$$BUILD_TAGS headless" make app
 
-app:
+app: | git-lfs
 	GO111MODULE=on GOPRIVATE="github.com/getlantern" CGO_ENABLED=1 go build $(BUILD_RACE) -v -o $(BINARY_NAME) -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s " github.com/getlantern/flashlight/main;
 
 # vendor installs vendored dependencies using go modules
-vendor:
+vendor: | git-lfs
 	GO111MODULE=on go mod vendor
 
 # test go-bindata dependency and update icons if up-to-date
