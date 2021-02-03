@@ -292,21 +292,21 @@ func (app *App) Run() {
 
 // enableReplica adds the features specified in toEnable to the features map
 // sent back to the UI
-func (app *App) enableFeatures(enabledFeatures *map[string]bool, toEnable []string) {
+func (app *App) enableFeatures(enabledFeatures map[string]bool, toEnable []string) {
 	for _, feature := range toEnable {
-		(*enabledFeatures)[feature] = true
+		enabledFeatures[feature] = true
 	}
 }
 
 // enableYinbiWallet adds Yinbi wallet related features to the features map
 // sent back to the UI
-func (app *App) enableYinbiWallet(enabledFeatures *map[string]bool) {
+func (app *App) enableYinbiWallet(enabledFeatures map[string]bool) {
 	app.enableFeatures(enabledFeatures, []string{"yinbi", "yinbiwallet", "auth"})
 }
 
 // enableReplica adds Replica related features to the features map
 // sent back to the UI
-func (app *App) enableReplica(enabledFeatures *map[string]bool) {
+func (app *App) enableReplica(enabledFeatures map[string]bool) {
 	app.enableFeatures(enabledFeatures, []string{"replica"})
 }
 
@@ -314,10 +314,10 @@ func (app *App) enableReplica(enabledFeatures *map[string]bool) {
 // (based on the env vars at build time)
 func (app *App) checkEnabledFeatures(enabledFeatures map[string]bool) {
 	if common.EnableYinbi {
-		app.enableYinbiWallet(&enabledFeatures)
+		app.enableYinbiWallet(enabledFeatures)
 	}
 	if common.EnableReplica {
-		app.enableReplica(&enabledFeatures)
+		app.enableReplica(enabledFeatures)
 	}
 	log.Debugf("Sending features enabled to new client: %v", enabledFeatures)
 	app.startReplicaIfNecessary(enabledFeatures)
