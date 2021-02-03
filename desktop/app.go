@@ -57,9 +57,6 @@ var (
 	settingsMx sync.RWMutex
 
 	startTime = time.Now()
-
-	replicaFeatures = []string{"replica"}
-	yinbiFeatures   = []string{"yinbi", "yinbiwallet", "auth"}
 )
 
 func init() {
