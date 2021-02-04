@@ -50,6 +50,14 @@ var (
 		config.FeatureNoHTTPSEverywhere:    true,
 		config.FeatureProxyWhitelistedOnly: true,
 	}
+
+	// envVarEnabledFeatures are features that can be enabled in development mode during
+	// build time using environment variables
+	envVarEnabledFeatures = map[string]bool{
+		config.FeatureAuth:        common.EnableYinbi,
+		config.FeatureReplica:     common.EnableReplica,
+		config.FeatureYinbiWallet: common.EnableYinbi,
+	}
 )
 
 type Flashlight struct {
@@ -102,31 +110,22 @@ func (f *Flashlight) reconfigurePingProxies() {
 
 // EnabledFeatures gets all features enabled based on current conditions
 func (f *Flashlight) EnabledFeatures() map[string]bool {
-	global, err := f.GetGlobalConfig()
+	global, err := f.getGlobalConfig()
 	if err != nil {
-		return f.GetEnabledFeatures()
+		return f.getEnabledFeatures()
 	}
 	country := geolookup.GetCountry(0)
 	for feature := range global.FeaturesEnabled {
 		if f.calcFeature(country, feature) {
-			f.EnableFeature(feature)
+			f.enableFeature(feature)
+		} else if !envVarEnabledFeatures[feature] {
+			// if a feature is enabled via an environment variable
+			// skip disabling it even if its disabled in the global
+			// config
+			f.disableFeature(feature)
 		}
 	}
-	return f.GetEnabledFeatures()
-}
-
-// EnableFeature adds the given feature to the featuresEnabled map
-func (f *Flashlight) EnableFeature(feature string) {
-	f.featuresMu.Lock()
-	defer f.featuresMu.Unlock()
-	f.featuresEnabled[feature] = true
-}
-
-// GetEnabledFeatures returns the featuresEnabled map
-func (f *Flashlight) GetEnabledFeatures() map[string]bool {
-	f.featuresMu.Lock()
-	defer f.featuresMu.Unlock()
-	return f.featuresEnabled
+	return f.getEnabledFeatures()
 }
 
 // EnableFeatures adds the given array of features toEnable
@@ -139,9 +138,33 @@ func (f *Flashlight) EnableFeatures(toEnable []string) {
 	}
 }
 
-// GetGlobalConfig returns the current global config flashlight
+// EnableFeature adds the given feature to the featuresEnabled map
+func (f *Flashlight) enableFeature(feature string) {
+	f.setEnabledFeature(feature, true)
+}
+
+// DisableFeature disables the given feature in the featuresEnabled map
+func (f *Flashlight) disableFeature(feature string) {
+	f.setEnabledFeature(feature, false)
+}
+
+// setEnabledFeature sets the given feature to val in the featuresEnabled map
+func (f *Flashlight) setEnabledFeature(feature string, val bool) {
+	f.featuresMu.Lock()
+	defer f.featuresMu.Unlock()
+	f.featuresEnabled[feature] = val
+}
+
+// getEnabledFeatures returns the featuresEnabled map
+func (f *Flashlight) getEnabledFeatures() map[string]bool {
+	f.featuresMu.Lock()
+	defer f.featuresMu.Unlock()
+	return f.featuresEnabled
+}
+
+// getGlobalConfig returns the current global config flashlight
 // is configured to use
-func (f *Flashlight) GetGlobalConfig() (*config.Global, error) {
+func (f *Flashlight) getGlobalConfig() (*config.Global, error) {
 	f.mxGlobal.RLock()
 	defer f.mxGlobal.RUnlock()
 	global := f.global
@@ -170,7 +193,7 @@ func (f *Flashlight) calcFeature(country, feature string) bool {
 		log.Debugf("Blocking related feature %v %v because geolookup has not yet finished", feature, enabledText)
 		return enabled
 	}
-	global, err := f.GetGlobalConfig()
+	global, err := f.getGlobalConfig()
 	if err != nil {
 		return enabled
 	}
@@ -183,7 +206,7 @@ func (f *Flashlight) calcFeature(country, feature string) bool {
 // FeatureOptions unmarshals options for the input feature. Feature names are tracked in the config
 // package.
 func (f *Flashlight) FeatureOptions(feature string, opts config.FeatureOptions) error {
-	global, err := f.GetGlobalConfig()
+	global, err := f.getGlobalConfig()
 	if err != nil {
 		return err
 	}
