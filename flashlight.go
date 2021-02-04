@@ -138,12 +138,12 @@ func (f *Flashlight) EnableFeatures(toEnable []string) {
 	}
 }
 
-// EnableFeature adds the given feature to the featuresEnabled map
+// enableFeature adds the given feature to the featuresEnabled map
 func (f *Flashlight) enableFeature(feature string) {
 	f.setEnabledFeature(feature, true)
 }
 
-// DisableFeature disables the given feature in the featuresEnabled map
+// disableFeature disables the given feature in the featuresEnabled map
 func (f *Flashlight) disableFeature(feature string) {
 	f.setEnabledFeature(feature, false)
 }
