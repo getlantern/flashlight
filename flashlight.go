@@ -75,6 +75,8 @@ type Flashlight struct {
 	vpnEnabled        bool
 	op                *fops.Op
 
+	// featuresEnabled is the superset of features enabled
+	// during build time and those enabled via the global config
 	featuresEnabled map[string]bool
 	featuresMu      sync.Mutex
 }
@@ -119,9 +121,8 @@ func (f *Flashlight) EnabledFeatures() map[string]bool {
 		if f.calcFeature(country, feature) {
 			f.enableFeature(feature)
 		} else if !buildTimeFeatures[feature] {
-			// if a feature is enabled via an environment variable
-			// skip disabling it even if its disabled in the global
-			// config
+			// if a feature is enabled at build time, skip disabling
+			// it even if its disabled in the global config
 			f.disableFeature(feature)
 		}
 	}
