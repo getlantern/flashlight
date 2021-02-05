@@ -159,7 +159,11 @@ func (f *Flashlight) setEnabledFeature(feature string, val bool) {
 func (f *Flashlight) getEnabledFeatures() map[string]bool {
 	f.featuresMu.Lock()
 	defer f.featuresMu.Unlock()
-	return f.featuresEnabled
+	m := make(map[string]bool)
+	for k, v := range s.featuresEnabled {
+		m[k] = v
+	}
+	return m
 }
 
 // getGlobalConfig returns the current global config flashlight
