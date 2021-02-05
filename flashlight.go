@@ -76,7 +76,7 @@ type Flashlight struct {
 	op                *fops.Op
 
 	featuresEnabled map[string]bool
-	featuresMu      sync.RWMutex
+	featuresMu      sync.Mutex
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
