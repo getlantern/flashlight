@@ -160,7 +160,7 @@ func (f *Flashlight) getEnabledFeatures() map[string]bool {
 	f.featuresMu.Lock()
 	defer f.featuresMu.Unlock()
 	m := make(map[string]bool)
-	for k, v := range s.featuresEnabled {
+	for k, v := range f.featuresEnabled {
 		m[k] = v
 	}
 	return m
