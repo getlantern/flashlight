@@ -52,7 +52,7 @@ var (
 	}
 
 	// buildTimeFeatures are features that can be enabled in development mode during
-	// build time using environment variables
+	// build time
 	buildTimeFeatures = map[string]bool{
 		config.FeatureAuth:        common.EnableYinbi,
 		config.FeatureReplica:     common.EnableReplica,
