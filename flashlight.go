@@ -51,9 +51,9 @@ var (
 		config.FeatureProxyWhitelistedOnly: true,
 	}
 
-	// envVarEnabledFeatures are features that can be enabled in development mode during
+	// buildTimeFeatures are features that can be enabled in development mode during
 	// build time using environment variables
-	envVarEnabledFeatures = map[string]bool{
+	buildTimeFeatures = map[string]bool{
 		config.FeatureAuth:        common.EnableYinbi,
 		config.FeatureReplica:     common.EnableReplica,
 		config.FeatureYinbiWallet: common.EnableYinbi,
@@ -118,7 +118,7 @@ func (f *Flashlight) EnabledFeatures() map[string]bool {
 	for feature := range global.FeaturesEnabled {
 		if f.calcFeature(country, feature) {
 			f.enableFeature(feature)
-		} else if !envVarEnabledFeatures[feature] {
+		} else if !buildTimeFeatures[feature] {
 			// if a feature is enabled via an environment variable
 			// skip disabling it even if its disabled in the global
 			// config
