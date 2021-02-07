@@ -2,7 +2,6 @@ package desktop
 
 import (
 	stderrors "errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -41,6 +40,9 @@ func yamlableNow() *yamlableTime {
 }
 
 func (yt *yamlableTime) GetYAML() (tag string, value interface{}) {
+	if yt == nil {
+		return "", time.Time(yamlableTime{}).Format(yamlableTimeFormat)
+	}
 	return "", time.Time(*yt).Format(yamlableTimeFormat)
 }
 
@@ -80,14 +82,17 @@ type tlInstallFailuresFile struct {
 	path string
 }
 
+// If the file does not exist, this function returns a default value, pointed at the input path.
 func openTLInstallFailuresFile(path string) (*tlInstallFailuresFile, error) {
 	f := new(tlInstallFailuresFile)
 	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read file: %w", err)
+	if stderrors.Is(err, os.ErrNotExist) {
+		return &tlInstallFailuresFile{&yamlableTime{}, &yamlableTime{}, 0, path}, nil
+	} else if err != nil {
+		return nil, errors.New("failed to read file: %v", err)
 	}
 	if err := yaml.Unmarshal(b, f); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal file: %w", err)
+		return nil, errors.New("failed to unmarshal file: %v", err)
 	}
 	f.path = path
 	return f, nil
@@ -97,10 +102,10 @@ func openTLInstallFailuresFile(path string) (*tlInstallFailuresFile, error) {
 func (f tlInstallFailuresFile) flushChanges() error {
 	b, err := yaml.Marshal(f)
 	if err != nil {
-		return fmt.Errorf("failed to marshal: %w", err)
+		return errors.New("failed to marshal: %v", err)
 	}
 	if err := ioutil.WriteFile(f.path, b, 0644); err != nil {
-		return fmt.Errorf("failed to write file: %w", err)
+		return errors.New("failed to write file: %v", err)
 	}
 	return nil
 }
@@ -223,9 +228,7 @@ func (app *App) tryTrafficLogInstall(installDir string, opts config.TrafficLogOp
 
 	failuresFilePath := filepath.Join(app.ConfigDir, tlInstallFailuresFilename)
 	failuresFile, err := openTLInstallFailuresFile(failuresFilePath)
-	if err != nil && stderrors.Is(err, os.ErrNotExist) {
-		failuresFile = &tlInstallFailuresFile{path: failuresFilePath}
-	} else if err != nil {
+	if err != nil {
 		return errors.New("unable to open traffic log install-failures file: %v", err)
 	}
 	defer func() { failuresFile.flushChanges() }()
