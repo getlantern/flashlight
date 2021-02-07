@@ -32,6 +32,8 @@ const (
 	yamlableTimeFormat = time.RFC3339
 )
 
+var errTrafficLogDisabled = errors.New("traffic log is disabled")
+
 type yamlableTime time.Time
 
 func yamlableNow() *yamlableTime {
@@ -123,6 +125,9 @@ func (app *App) getCapturedPackets(w io.Writer) error {
 	defer app.trafficLogLock.Unlock()
 	defer app.proxiesLock.RUnlock()
 
+	if app.trafficLog == nil {
+		return errTrafficLogDisabled
+	}
 	for _, p := range app.proxies {
 		if err := app.trafficLog.SaveCaptures(p.Addr(), app.captureSaveDuration); err != nil {
 			return errors.New("failed to save captures for %s: %v", p.Name(), err)

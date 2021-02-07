@@ -3,6 +3,7 @@ package desktop
 import (
 	"bytes"
 	"compress/gzip"
+	stderrors "errors"
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/diagnostics"
@@ -22,7 +23,7 @@ func (app *App) runDiagnostics() (reportYAML, gzippedPcapng []byte, err error) {
 		errs = append(errs, err)
 	}
 	gzippedPcapng, err = app.saveAndZipProxyTraffic()
-	if err != nil {
+	if err != nil && !stderrors.Is(err, errTrafficLogDisabled) {
 		errs = append(errs, err)
 	}
 	return reportYAML, gzippedPcapng, combineErrors(errs...)
