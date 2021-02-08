@@ -7,13 +7,14 @@ BINARY_NAME ?= lantern
 
 # The race detector leaks memory so we disable it in testing until
 # https://github.com/golang/go/issues/26813 is resolved
-BUILD_RACE ?= ''
+BUILD_RACE ?= '-x'
 REVISION_DATE := $(shell git log -1 --pretty=format:%ad --date=format:%Y%m%d.%H%M%S)
 BUILD_DATE := $(shell date -u +%Y%m%d.%H%M%S)
 
 ifeq ($(OS),Windows_NT)
 	  # Race detection is not supported by Go Windows 386, so disable it.
-		BUILD_RACE = ''
+	  # -x is just a placeholder
+		BUILD_RACE = '-x'
 endif
 
 define build-tags
