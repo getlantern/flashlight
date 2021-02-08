@@ -1,4 +1,15 @@
 
+<a name="lantern-6.4.0"></a>
+## [lantern-6.4.0](https://github.com/getlantern/flashlight/compare/lantern-6.3.9...lantern-6.4.0)
+
+> 2021-01-28
+
+### Pull Requests
+
+* Merge pull request [#1001](https://github.com/getlantern/flashlight/issues/1001) from getlantern/ui-6.4.0-2
+* Merge pull request [#1000](https://github.com/getlantern/flashlight/issues/1000) from getlantern/ui-6.4.0
+
+
 <a name="lantern-6.3.9"></a>
 ## [lantern-6.3.9](https://github.com/getlantern/flashlight/compare/lantern-6.3.8...lantern-6.3.9)
 

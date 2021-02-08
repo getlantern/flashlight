@@ -1,17 +1,16 @@
 module github.com/getlantern/flashlight
 
-go 1.12
+go 1.13
 
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/confluence v1.6.2-0.20201116033747-ba09085bd120
-	github.com/anacrolix/dht/v2 v2.8.0 // indirect
 	github.com/anacrolix/envpprof v1.1.1
 	github.com/anacrolix/go-libutp v1.0.4
-	github.com/anacrolix/log v0.7.1-0.20200604014615-c244de44fd2d
+	github.com/anacrolix/log v0.8.0
 	github.com/anacrolix/tagflag v1.1.1-0.20200411025953-9bb5209d56c2
-	github.com/anacrolix/torrent v1.21.1-0.20210126104953-fbc9a77cd8f0
+	github.com/anacrolix/torrent v1.23.0
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
@@ -27,6 +26,7 @@ require (
 	github.com/getlantern/cmuxprivate v0.0.0-20200905032931-afb63438e40b
 	github.com/getlantern/common v1.1.1-0.20200824002646-ca4a48d3a74c
 	github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1
+	github.com/getlantern/diagnostics v0.0.0-20190820054534-b2070abd5177
 	github.com/getlantern/dnsgrab v0.0.0-20210120195910-d879cb272122
 	github.com/getlantern/domains v0.0.0-20200402172102-34a8db1e0e83
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
@@ -91,6 +91,8 @@ require (
 	github.com/getlantern/tlsmasq v0.3.0
 	github.com/getlantern/tlsresumption v0.0.0-20200205020452-74fc6ea4e074
 	github.com/getlantern/tlsutil v0.2.0
+	github.com/getlantern/trafficlog v1.0.0
+	github.com/getlantern/trafficlog-flashlight v1.0.1
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
@@ -100,10 +102,11 @@ require (
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/google/gopacket v1.1.17
-	github.com/google/uuid v1.1.5
+	github.com/google/uuid v1.2.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/go-retryablehttp v0.6.8 // indirect
 	github.com/hashicorp/golang-lru v0.5.4
+	github.com/jackpal/gateway v1.0.6
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
 	github.com/kennygrant/sanitize v1.2.4
@@ -123,6 +126,7 @@ require (
 	github.com/rs/cors v1.7.0
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
+	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
 	github.com/stellar/go v0.0.0-20210121171558-d15f57e9c7bf // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
@@ -142,7 +146,7 @@ replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.0.
 
 replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20200903013459-0c02248f7ce1
 
-replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3-0.20190606045409-29ac0bf665ea
+replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3-0.20210202003624-785b5fda134e
 
 // git.apache.org isn't working at the moment, use mirror (should probably switch back once we can)
 replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110319-2566ecd5d999
