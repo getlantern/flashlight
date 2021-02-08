@@ -6,7 +6,6 @@ require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/confluence v1.6.2-0.20201116033747-ba09085bd120
-	github.com/anacrolix/dht/v2 v2.8.0 // indirect
 	github.com/anacrolix/envpprof v1.1.1
 	github.com/anacrolix/go-libutp v1.0.4
 	github.com/anacrolix/log v0.8.0
@@ -101,7 +100,9 @@ require (
 	github.com/getlantern/yinbi-server v0.0.0-20210121205215-831b21ba63af
 	github.com/getsentry/sentry-go v0.9.0
 	github.com/go-chi/chi v4.1.2+incompatible
+	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/google/gopacket v1.1.17
+	github.com/google/uuid v1.2.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/go-retryablehttp v0.6.8 // indirect
 	github.com/hashicorp/golang-lru v0.5.4
