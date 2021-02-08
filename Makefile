@@ -7,7 +7,7 @@ BINARY_NAME ?= lantern
 
 # The race detector leaks memory so we disable it in testing until
 # https://github.com/golang/go/issues/26813 is resolved
-BUILD_RACE ?= '-x'
+# BUILD_RACE ?= '-race'
 REVISION_DATE := $(shell git log -1 --pretty=format:%ad --date=format:%Y%m%d.%H%M%S)
 BUILD_DATE := $(shell date -u +%Y%m%d.%H%M%S)
 
@@ -94,7 +94,7 @@ beam-windowsgui: $(SOURCES)
 	BUILD_TAGS="$$BUILD_TAGS beam" BINARY_NAME="beam-gui.exe" EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -H=windowsgui" make windows
 
 windows:
-	GOOS=windows GOARCH=386 BUILD_RACE='' CXX=i686-w64-mingw32-g++ CC=i686-w64-mingw32-gcc CGO_LDFLAGS="-static" EXTRA_LDFLAGS="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" make app
+	GOOS=windows GOARCH=386 CXX=i686-w64-mingw32-g++ CC=i686-w64-mingw32-gcc CGO_LDFLAGS="-static" EXTRA_LDFLAGS="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" make app
 
 linux: $(SOURCES)
 	@$(call build-tags) && \
@@ -105,7 +105,7 @@ beam-linux: $(SOURCES)
 	HEADLESS=true GOOS=linux GOARCH=amd64 BINARY_NAME=beam-linux BUILD_TAGS="$$BUILD_TAGS headless" make app
 
 app: | git-lfs
-	GO111MODULE=on GOPRIVATE="github.com/getlantern" CGO_ENABLED=1 go build $(BUILD_RACE) -v -o $(BINARY_NAME) -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s " github.com/getlantern/flashlight/main;
+	GO111MODULE=on GOPRIVATE="github.com/getlantern" CGO_ENABLED=1 go build -v -o $(BINARY_NAME) -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s " github.com/getlantern/flashlight/main;
 
 # vendor installs vendored dependencies using go modules
 vendor: | git-lfs
@@ -128,14 +128,14 @@ test-and-cover: $(SOURCES)
 	CP=$$(echo $$TP | tr ' ', ',') && \
 	set -x && \
 	for pkg in $$TP; do \
-		GO111MODULE=on go test -race -v -tags="headless" -covermode=atomic -coverprofile=profile_tmp.cov -coverpkg "$$CP" $$pkg || exit 1; \
+		GO111MODULE=on go test -v -tags="headless" -covermode=atomic -coverprofile=profile_tmp.cov -coverpkg "$$CP" $$pkg || exit 1; \
 		tail -n +2 profile_tmp.cov >> profile.cov; \
 	done
 
 test: $(SOURCES)
 	@TP=$$(go list ./... | grep -v /vendor/) && \
 	for pkg in $$TP; do \
-		GO111MODULE=on go test -failfast -race -v -tags="headless" $$pkg || exit 1; \
+		GO111MODULE=on go test -failfast -v -tags="headless" $$pkg || exit 1; \
 	done
 
 clean:
