@@ -15,9 +15,11 @@ var (
 	YinbiServerAddr    = "https://api.yin.bi"
 )
 
-func useYinbiStaging() {
+func init() {
 	EnableYinbiFeatures, _ = strconv.ParseBool(EnableYinbi)
+}
 
+func useYinbiStaging() {
 	HorizonAddr = "https://horizon-testnet.stellar.org"
 	YinbiIssuerAccount = "GAH3ZXCVTOS6IHKCULBZD7KREA3URTPCDHZQZ7GQBF552PFR77ACCRUY"
 	NetworkName = "test"

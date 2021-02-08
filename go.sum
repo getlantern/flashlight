@@ -443,6 +443,8 @@ github.com/getlantern/auth-server v0.0.0-20210121205126-52b5e79c4839 h1:rgYFBolZ
 github.com/getlantern/auth-server v0.0.0-20210121205126-52b5e79c4839/go.mod h1:gBrtg42AJKjxbm1mJCnwXGcz3uvGLDl6+wxbWAgqpZI=
 github.com/getlantern/auth-server v0.0.0-20210126172403-5c93bb49366c h1:pVv4NIt7M8zywnfErp2k4XgWUqOfACzD445IHW47dK4=
 github.com/getlantern/auth-server v0.0.0-20210126172403-5c93bb49366c/go.mod h1:gBrtg42AJKjxbm1mJCnwXGcz3uvGLDl6+wxbWAgqpZI=
+github.com/getlantern/auth-server v0.0.0-20210208043250-83edf7912671 h1:exfbfrYneVSTGxfUrJoJoj29Y5+Pao2mgnuppj5/Do8=
+github.com/getlantern/auth-server v0.0.0-20210208043250-83edf7912671/go.mod h1:mb7WXXM1gb7EHYhtFu5pi6zsUbTaItvlAfM5ti6IXjQ=
 github.com/getlantern/authipc v0.2.0 h1:aAlYBn1tizjbBbXmknoalU7P+tlNqGAHroTptKvXMnk=
 github.com/getlantern/authipc v0.2.0/go.mod h1:nDXd7xyGPMbPwEi4QAL3PPMzvwSFYbQxzk4ipANL25M=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99 h1:fnjb9PYZRMU6Tok5i3anP/bAqhUtG2kn9xgff3IlA+8=
@@ -584,6 +586,8 @@ github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a h1:z7G1v79GB1
 github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a/go.mod h1:cGOfTjvllC9bcwS7cVW6tGT6fXc8Dki384uFjm7XBnw=
 github.com/getlantern/lantern-server v0.0.0-20201117145320-03d934ec00e0 h1:eGC/r+VgjMcPZ7xXjyVdykmu3jgZejn7gj037lfD788=
 github.com/getlantern/lantern-server v0.0.0-20201117145320-03d934ec00e0/go.mod h1:hh4us2ARyHRGmR0m1b3NUP7oQSLfasS9tYTmN7/kn6U=
+github.com/getlantern/lantern-server v0.0.0-20210208043156-a5a97a76684f h1:gj2Kv02jllNSSlFweANrzmKSTE51CBq+xrZBhQNcRT4=
+github.com/getlantern/lantern-server v0.0.0-20210208043156-a5a97a76684f/go.mod h1:hh4us2ARyHRGmR0m1b3NUP7oQSLfasS9tYTmN7/kn6U=
 github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894 h1:Gzf64TTHyKH4HEe1dgwnf7BOaq5rJZg25Hqz5TmogEI=
 github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894/go.mod h1:h57jtqyH1HCLYu53nnr3WTUntPozt5ztqQ9aN687VEY=
 github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358 h1:ZPe/LMCpCEuHtfBp2NP3/A9KRXQJbTxeSOVWmcBzXIc=
@@ -882,6 +886,8 @@ github.com/golang/snappy v0.0.1/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEW
 github.com/golang/snappy v0.0.2 h1:aeE13tS0IiQgFjYdoL8qN3K1N2bXXtI6Vi51/y7BpMw=
 github.com/golang/snappy v0.0.2/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=
 github.com/gomodule/redigo v1.7.1-0.20190724094224-574c33c3df38/go.mod h1:B4C85qUVwatsJoIUNIfCRsp7qO0iAmpGFZ4EELWSbC4=
+github.com/gomodule/redigo v1.8.3 h1:HR0kYDX2RJZvAup8CsiJwxB4dTCSC0AaUq6S4SiLwUc=
+github.com/gomodule/redigo v1.8.3/go.mod h1:P9dn9mFrCBvWhGE1wpxx6fgq7BAeLBk+UUUzlpkBYO0=
 github.com/gomodule/redigo v2.0.0+incompatible h1:K/R+8tc58AaqLkqG2Ol3Qk+DR/TlNuhuh457pBFPtt0=
 github.com/gomodule/redigo v2.0.0+incompatible/go.mod h1:B4C85qUVwatsJoIUNIfCRsp7qO0iAmpGFZ4EELWSbC4=
 github.com/gonum/blas v0.0.0-20180125090452-e7c5890b24cf h1:ukIp7SJ4RNEkyqdn8EZDzUTOsqWUbHnwPGU3d8pc7ok=
