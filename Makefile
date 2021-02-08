@@ -5,14 +5,15 @@ SHELL := /bin/bash
 SOURCES := $(shell find . -name '*[^_test].go')
 BINARY_NAME ?= lantern
 
-BUILD_RACE ?= '-race'
+# The race detector leaks memory so we disable it in testing until
+# https://github.com/golang/go/issues/26813 is resolved
+BUILD_RACE ?= ''
 REVISION_DATE := $(shell git log -1 --pretty=format:%ad --date=format:%Y%m%d.%H%M%S)
 BUILD_DATE := $(shell date -u +%Y%m%d.%H%M%S)
 
 ifeq ($(OS),Windows_NT)
-	  # Race detection is not supported by Go Windows 386, so disable it. The -x
-		# is just a hack to allow us to pass something in place of -race below.
-		BUILD_RACE = '-x'
+	  # Race detection is not supported by Go Windows 386, so disable it.
+		BUILD_RACE = ''
 endif
 
 define build-tags
