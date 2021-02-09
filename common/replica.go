@@ -3,7 +3,8 @@ package common
 import "strconv"
 
 var (
-	// Enable yinbi wallet related features via the YINBI env var
+	// Enable replica related features via the REPLICA build time
+	// variable
 	EnableReplicaFeatures = "false"
 	EnableReplica         = false
 )

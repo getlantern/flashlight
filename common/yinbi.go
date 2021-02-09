@@ -3,7 +3,8 @@ package common
 import "strconv"
 
 var (
-	// Enable yinbi wallet related features via the YINBI env var
+	// Enable yinbi wallet related features via the YINBI build time
+	// variable
 	EnableYinbiFeatures = "false"
 	EnableYinbi         = false
 	// Default Stellar Horizon address to use
