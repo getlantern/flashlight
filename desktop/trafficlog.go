@@ -79,7 +79,7 @@ func (yt *yamlableTime) timeSince() time.Duration {
 // A YAML file in which we store data about traffic log installation failures.
 type tlInstallFailuresFile struct {
 	LastFailed, LastDenial *yamlableTime
-	Denials                int
+	Failures, Denials      int
 
 	path string
 }
@@ -89,7 +89,7 @@ func openTLInstallFailuresFile(path string) (*tlInstallFailuresFile, error) {
 	f := new(tlInstallFailuresFile)
 	b, err := ioutil.ReadFile(path)
 	if stderrors.Is(err, os.ErrNotExist) {
-		return &tlInstallFailuresFile{&yamlableTime{}, &yamlableTime{}, 0, path}, nil
+		return &tlInstallFailuresFile{&yamlableTime{}, &yamlableTime{}, 0, 0, path}, nil
 	} else if err != nil {
 		return nil, errors.New("failed to read file: %v", err)
 	}
@@ -237,10 +237,21 @@ func (app *App) tryTrafficLogInstall(installDir string, opts config.TrafficLogOp
 		return errors.New("unable to open traffic log install-failures file: %v", err)
 	}
 	defer func() { failuresFile.flushChanges() }()
+	if !failuresFile.LastFailed.IsZero() &&
+		failuresFile.LastFailed.timeSince() > opts.TimeBeforeFailureReset {
+		failuresFile.Failures = 0
+		failuresFile.LastFailed.SetToZero()
+	}
 	if !failuresFile.LastDenial.IsZero() &&
 		failuresFile.LastDenial.timeSince() > opts.TimeBeforeDenialReset {
 		failuresFile.Denials = 0
 		failuresFile.LastDenial.SetToZero()
+	}
+	if failuresFile.Failures >= opts.FailuresThreshold {
+		return errors.New(
+			"failures (%d) already meets threshold (%d)",
+			failuresFile.Failures, opts.FailuresThreshold,
+		)
 	}
 	if failuresFile.Denials >= opts.UserDenialThreshold {
 		return errors.New(
@@ -265,6 +276,7 @@ func (app *App) tryTrafficLogInstall(installDir string, opts config.TrafficLogOp
 	err = tlproc.Install(installDir, u.Username, trafficlogInstallPrompt(), iconFile, &installOpts)
 	if err != nil {
 		failuresFile.LastFailed = yamlableNow()
+		failuresFile.Failures++
 		if stderrors.Is(err, tlproc.ErrPermissionDenied) {
 			failuresFile.Denials++
 			failuresFile.LastDenial = yamlableNow()

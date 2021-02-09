@@ -73,6 +73,13 @@ type TrafficLogOptions struct {
 	// permission by the user. A value of 0 means we never re-attempt installation.
 	WaitTimeSinceFailedInstall time.Duration
 
+	// The number of times installation can fail before we give up on this client.
+	FailuresThreshold int
+
+	// After this amount of time has elapsed, the failure count is reset and a user may be
+	// re-prompted to install the traffic log.
+	TimeBeforeFailureReset time.Duration
+
 	// The number of times a user must deny permission for the traffic log before we stop asking.
 	UserDenialThreshold int
 
