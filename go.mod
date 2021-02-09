@@ -13,7 +13,7 @@ require (
 	github.com/anacrolix/log v0.8.0
 	github.com/anacrolix/tagflag v1.1.1-0.20200411025953-9bb5209d56c2
 	github.com/anacrolix/torrent v1.23.0
-	github.com/aws/aws-sdk-go v1.37.6 // indirect
+	github.com/aws/aws-sdk-go v1.37.7 // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
@@ -100,7 +100,7 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-20210208054514-c50d22c9239c
+	github.com/getlantern/yinbi-server v0.0.0-20210209160519-f3ea46daec65 // indirect
 	github.com/getsentry/sentry-go v0.9.0
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/google/gopacket v1.1.17
@@ -131,7 +131,7 @@ require (
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
-	github.com/stellar/go v0.0.0-20210205190635-2cdd06243b46 // indirect
+	github.com/stellar/go v0.0.0-20210208222255-f071f3b0df9a // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	github.com/ulule/limiter/v3 v3.8.0 // indirect

@@ -97,8 +97,11 @@ func (h YinbiHandler) updateAccountTransactions(w http.ResponseWriter, r *http.R
 	var params client.AccountTransactionParams
 	err := handler.DecodeJSONRequest(w, r, &params)
 	if err != nil {
+		log.Errorf("Error decoding JSON request for account transactions: %v", err)
+		handler.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
+	log.Debugf("Looking up payments for account with address %s", params.Address)
 	resp, err := h.yinbiClient.GetPayments(&params)
 	if err != nil {
 		handler.ErrorHandler(w, err, resp.StatusCode)
