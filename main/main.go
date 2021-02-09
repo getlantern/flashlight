@@ -21,12 +21,15 @@ import (
 	"github.com/getlantern/i18n"
 	"github.com/mitchellh/panicwrap"
 
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/desktop"
+	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/sentry"
+	"github.com/getlantern/flashlight/trafficlog"
 )
 
 var (
@@ -151,6 +154,31 @@ func main() {
 		log.Debugf("Will force config fetches to pretend client country is: %v", *forceConfigCountry)
 		config.ForceCountry(*forceConfigCountry)
 	}
+
+	var (
+		cfgChan       = make(chan config.Global)
+		tlCfgChan     = make(chan trafficlog.ConfigUpdate)
+		tlProxiesChan = make(chan []balancer.Dialer)
+	)
+	go func() {
+		for cfg := range cfgChan {
+			tlCfgChan <- trafficlog.ConfigUpdate{
+				Enabled: cfg.FeatureEnabled(
+					config.FeatureTrafficLog,
+					a.Settings().GetUserID(),
+					a.IsPro(),
+					geolookup.GetCountry(0),
+				),
+				Config:     cfg,
+				InstallDir: a.ConfigDir,
+			}
+		}
+	}()
+	tl := trafficlog.New(tlCfgChan, tlProxiesChan)
+	defer tl.Close()
+
+	a.RegisterListeners([]chan<- config.Global{cfgChan}, []chan<- []balancer.Dialer{tlProxiesChan})
+	a.RegisterReqChannels(tl.PcapngRequestChannel())
 
 	if a.ShouldShowUI() {
 		i18nInit(a)

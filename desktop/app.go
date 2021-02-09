@@ -17,7 +17,7 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/browsers/simbrowser"
 	"github.com/getlantern/flashlight/proxied"
-	"github.com/getlantern/trafficlog-flashlight/tlproc"
+	"github.com/getlantern/flashlight/trafficlog"
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
@@ -101,22 +101,13 @@ type App struct {
 	startReplica          sync.Once
 	startYinbi            sync.Once
 
-	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
-	// first. Keeping the order consistent avoids deadlocking.
+	pcapReqChannel chan<- trafficlog.PcapngRequest
 
-	// Log of network traffic to and from the proxies. Used to attach packet capture files to
-	// reported issues. Nil if traffic logging is not enabled.
-	trafficLog     *tlproc.TrafficLogProcess
-	trafficLogLock sync.RWMutex
+	configListeners []chan<- config.Global
+	proxyListeners  []chan<- []balancer.Dialer
 
-	// Also protected by trafficLogLock.
-	captureSaveDuration time.Duration
-
-	// proxies are tracked by the application solely for data collection purposes. This value should
-	// not be changed, except by Flashlight.onProxiesUpdate. State-changing methods on the dialers
-	// should not be called. In short, this slice and its elements should be treated as read-only.
-	proxies     []balancer.Dialer
-	proxiesLock sync.RWMutex
+	currentProxies []balancer.Dialer
+	proxiesLock    sync.Mutex
 }
 
 // Init initializes the App's state
@@ -149,6 +140,17 @@ func (app *App) Init() {
 		app.statsTracker.SetHitDataCap(hitDataCap)
 	})
 	app.ws = ws.NewUIChannel()
+}
+
+// RegisterListeners should be called before app.Run. These channels should never block.
+func (app *App) RegisterListeners(configListeners []chan<- config.Global, proxyListeners []chan<- []balancer.Dialer) {
+	app.configListeners = configListeners
+	app.proxyListeners = proxyListeners
+}
+
+// RegisterReqChannels should be called before app.Run. These channels should never block.
+func (app *App) RegisterReqChannels(pcapReq chan<- trafficlog.PcapngRequest) {
+	app.pcapReqChannel = pcapReq
 }
 
 // loadSettings loads the initial settings at startup, either from disk or using defaults.
@@ -587,6 +589,11 @@ func (app *App) GetStringFlag(name, defaultValue string) string {
 	return defaultValue
 }
 
+// Settings for the app.
+func (app *App) Settings() *Settings {
+	return getSettings()
+}
+
 // OnSettingChange sets a callback cb to get called when attr is changed from UI.
 // When calling multiple times for same attr, only the last one takes effect.
 func (app *App) OnSettingChange(attr SettingName, cb func(interface{})) {
@@ -669,7 +676,9 @@ func (app *App) onConfigUpdate(cfg *config.Global, src config.Source) {
 			log.Errorf("failed to set browser market share data: %v", err)
 		}
 	}
-	go app.configureTrafficLog(cfg)
+	for _, channel := range app.configListeners {
+		channel <- *cfg
+	}
 	app.chGlobalConfigChanged <- true
 }
 
@@ -678,30 +687,18 @@ func (app *App) onProxiesUpdate(proxies []balancer.Dialer, src config.Source) {
 		app.gaSession.Event("config", "proxies-fetched")
 		atomic.StoreInt32(&app.fetchedProxiesConfig, 1)
 	}
-	app.trafficLogLock.Lock()
-	app.proxiesLock.Lock()
-	app.proxies = proxies
-	if app.trafficLog != nil {
-		proxyAddresses := []string{}
-		for _, p := range proxies {
-			proxyAddresses = append(proxyAddresses, p.Addr())
-		}
-		if err := app.trafficLog.UpdateAddresses(proxyAddresses); err != nil {
-			log.Errorf("failed to update traffic log addresses: %v", err)
-		}
+	for _, channel := range app.proxyListeners {
+		channel <- proxies
 	}
+	app.proxiesLock.Lock()
+	app.currentProxies = proxies
 	app.proxiesLock.Unlock()
-	app.trafficLogLock.Unlock()
 }
 
-// getProxies returns the currently configured proxies. State-changing methods on these dialers
-// should not be called. In short, the elements of this slice should be treated as read-only.
 func (app *App) getProxies() []balancer.Dialer {
-	app.proxiesLock.RLock()
-	copied := make([]balancer.Dialer, len(app.proxies))
-	copy(copied, app.proxies)
-	app.proxiesLock.RUnlock()
-	return copied
+	app.proxiesLock.Lock()
+	defer app.proxiesLock.Unlock()
+	return app.currentProxies
 }
 
 // showExistingUi triggers an existing Lantern running on the same system to

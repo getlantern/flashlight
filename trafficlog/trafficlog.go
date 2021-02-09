@@ -36,7 +36,8 @@ const (
 	yamlableTimeFormat = time.RFC3339
 )
 
-var errTrafficLogDisabled = errors.New("traffic log is disabled")
+// ErrDisabled is used to indicate that the traffic log is currently disabled.
+var ErrDisabled = errors.New("traffic log is disabled")
 
 type yamlableTime time.Time
 
@@ -131,6 +132,8 @@ type PcapngRequest struct {
 	// Error is used to communicate whether an error occurred saving the capture. A value is always
 	// sent on this channel; nil is sent on success. Ignoring this channel will create a goroutine
 	// leak. If communication is not needed, this channel should be nil.
+	//
+	// When the traffic log is disabled, a value of ErrDisabled will be sent.
 	Error chan<- error
 }
 
@@ -149,6 +152,7 @@ type TrafficLog struct {
 	pcapRequestChan chan PcapngRequest
 	currentProxies  []balancer.Dialer
 	opts            config.TrafficLogOptions
+	done            chan struct{}
 
 	// See ForceEnable().
 	forceEnable bool
@@ -156,30 +160,33 @@ type TrafficLog struct {
 	lock sync.Mutex
 }
 
-// New TrafficLog.
-func New(proxiesChan <-chan []balancer.Dialer, configChan <-chan ConfigUpdate) *TrafficLog {
+// New TrafficLog. The input channels should not be closed until the traffic log is closed.
+func New(configChan <-chan ConfigUpdate, proxiesChan <-chan []balancer.Dialer) *TrafficLog {
 	tl := &TrafficLog{
 		pcapRequestChan: make(chan PcapngRequest),
+		done:            make(chan struct{}),
 	}
 	go func() {
-		for cfg := range configChan {
-			tl.handleConfigUpdate(cfg)
-		}
-	}()
-	go func() {
-		for proxies := range proxiesChan {
-			tl.handleProxiesUpdate(proxies)
-		}
-	}()
-	go func() {
-		for req := range tl.pcapRequestChan {
-			go func(r PcapngRequest) {
-				if r.Error != nil {
-					r.Error <- tl.handlePcapRequest(r)
-				} else {
-					tl.handlePcapRequest(r)
-				}
-			}(req)
+		// If successive values come in quickly enough on one of the channels below, it is possible
+		// for the launched routines to enter a race and compete to update data structures. However,
+		// it is unlikely in practice that we receive multiple values so quickly.
+		for {
+			select {
+			case cfg := <-configChan:
+				go tl.handleConfigUpdate(cfg)
+			case proxies := <-proxiesChan:
+				go tl.handleProxiesUpdate(proxies)
+			case req := <-tl.pcapRequestChan:
+				go func(r PcapngRequest) {
+					if r.Error != nil {
+						r.Error <- tl.handlePcapRequest(r)
+					} else {
+						tl.handlePcapRequest(r)
+					}
+				}(req)
+			case <-tl.done:
+				return
+			}
 		}
 	}()
 	return tl
@@ -205,6 +212,20 @@ func (tl *TrafficLog) ForceEnable(installDir string) {
 	}
 }
 
+// Close the traffic log.
+func (tl *TrafficLog) Close() error {
+	tl.lock.Lock()
+	select {
+	case <-tl.done:
+	default:
+		close(tl.done)
+	}
+	tl.lock.Unlock()
+	return nil
+}
+
+// This function may trigger an install of the traffic log. In this case, this function may block
+// while waiting for user input.
 func (tl *TrafficLog) handleConfigUpdate(update ConfigUpdate) {
 	tl.lock.Lock()
 	defer tl.lock.Unlock()
@@ -315,7 +336,7 @@ func (tl *TrafficLog) handlePcapRequest(req PcapngRequest) error {
 	defer tl.lock.Unlock()
 
 	if tl.proc == nil {
-		return errTrafficLogDisabled
+		return ErrDisabled
 	}
 	for _, p := range tl.currentProxies {
 		if err := tl.proc.SaveCaptures(p.Addr(), tl.opts.CaptureSaveDuration); err != nil {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/diagnostics"
+	"github.com/getlantern/flashlight/trafficlog"
 	"github.com/getlantern/yaml"
 )
 
@@ -23,7 +24,7 @@ func (app *App) runDiagnostics() (reportYAML, gzippedPcapng []byte, err error) {
 		errs = append(errs, err)
 	}
 	gzippedPcapng, err = app.saveAndZipProxyTraffic()
-	if err != nil && !stderrors.Is(err, errTrafficLogDisabled) {
+	if err != nil && !stderrors.Is(err, trafficlog.ErrDisabled) {
 		errs = append(errs, err)
 	}
 	return reportYAML, gzippedPcapng, combineErrors(errs...)
@@ -31,9 +32,17 @@ func (app *App) runDiagnostics() (reportYAML, gzippedPcapng []byte, err error) {
 
 // Saves proxy traffic for captureSaveDuration and gzips the resulting pcapng.
 func (app *App) saveAndZipProxyTraffic() ([]byte, error) {
-	buf := new(bytes.Buffer)
-	gzipW := gzip.NewWriter(buf)
-	if err := app.getCapturedPackets(gzipW); err != nil {
+	var (
+		buf   = new(bytes.Buffer)
+		gzipW = gzip.NewWriter(buf)
+		errC  = make(chan error)
+		req   = trafficlog.PcapngRequest{
+			W:     gzipW,
+			Error: errC,
+		}
+	)
+	app.pcapReqChannel <- req
+	if err := <-errC; err != nil {
 		return nil, err
 	}
 	if err := gzipW.Close(); err != nil {
