@@ -163,7 +163,7 @@ func (app *App) configureTrafficLog(cfg *config.Global) {
 				SaveBytes:                  10 * 1024 * 1024,
 				CaptureSaveDuration:        5 * time.Minute,
 				Reinstall:                  true,
-				WaitTimeSinceFailedInstall: 1,
+				WaitTimeSinceFailedInstall: 24 * time.Hour,
 				UserDenialThreshold:        3,
 				TimeBeforeDenialReset:      24 * time.Hour,
 			}
