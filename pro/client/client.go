@@ -195,6 +195,16 @@ func (c *Client) ValidateDeviceLinkingCode(user common.UserConfig, deviceName, c
 	return resp, nil
 }
 
+// MigrateDeviceID migrates from the old device ID scheme to the new
+func (c *Client) MigrateDeviceID(user common.UserConfig, oldDeviceID string) error {
+	query := url.Values{
+		"oldDeviceID": {oldDeviceID},
+	}
+
+	resp := &BaseResponse{}
+	return c.execute(user, http.MethodPost, "migrate-device-id", query, resp)
+}
+
 func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 	var buf []byte
 	if req.Body != nil {
