@@ -1,4 +1,4 @@
-package desktop
+package trafficlog
 
 import (
 	"io/ioutil"
@@ -9,13 +9,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTLInstallFailuresFile(t *testing.T) {
+func TestInstallFailuresFile(t *testing.T) {
 	f, err := ioutil.TempFile("", "flashlight-TestTLInstallFailuresFile")
 	require.NoError(t, err)
 	defer os.Remove(f.Name())
 	f.Close()
 
-	failuresFile, err := openTLInstallFailuresFile(f.Name())
+	failuresFile, err := openInstallFailuresFile(f.Name())
 	require.NoError(t, err)
 	require.True(t, failuresFile.LastDenial.IsZero())
 	require.True(t, failuresFile.LastFailed.IsZero())
@@ -25,7 +25,7 @@ func TestTLInstallFailuresFile(t *testing.T) {
 	failuresFile.LastDenial = yamlableNow()
 	require.NoError(t, failuresFile.flushChanges())
 
-	failuresFile2, err := openTLInstallFailuresFile(f.Name())
+	failuresFile2, err := openInstallFailuresFile(f.Name())
 	require.NoError(t, err)
 	require.True(t, failuresFile2.LastFailed.IsZero())
 	require.Equal(t, failuresFile.Denials, failuresFile2.Denials)
