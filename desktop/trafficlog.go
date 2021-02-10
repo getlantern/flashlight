@@ -166,6 +166,8 @@ func (app *App) configureTrafficLog(cfg *config.Global) {
 				WaitTimeSinceFailedInstall: 24 * time.Hour,
 				UserDenialThreshold:        3,
 				TimeBeforeDenialReset:      24 * time.Hour,
+				FailuresThreshold:          3,
+				TimeBeforeFailureReset:     24 * time.Hour,
 			}
 		} else if err != nil {
 			log.Errorf("failed to unmarshal traffic log options: %v", err)
@@ -229,6 +231,14 @@ func (app *App) tryTrafficLogInstall(installDir string, opts config.TrafficLogOp
 			// Failed to save the icon file, just use no icon.
 			iconFile = ""
 		}
+	}
+
+	// Default for these options is to ask a single time.
+	if opts.FailuresThreshold == 0 {
+		opts.FailuresThreshold = 1
+	}
+	if opts.UserDenialThreshold == 0 {
+		opts.UserDenialThreshold = 1
 	}
 
 	failuresFilePath := filepath.Join(app.ConfigDir, tlInstallFailuresFilename)
