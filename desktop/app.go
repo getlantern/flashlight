@@ -292,7 +292,7 @@ func (app *App) Run() {
 
 // enableReplica adds the features specified in toEnable to the features map
 // sent back to the UI
-func (app *App) enableFeatures(enabledFeatures map[string]bool, toEnable []string) {
+func (app *App) enableFeatures(enabledFeatures map[string]bool, toEnable ...string) {
 	for _, feature := range toEnable {
 		enabledFeatures[feature] = true
 	}
@@ -301,13 +301,13 @@ func (app *App) enableFeatures(enabledFeatures map[string]bool, toEnable []strin
 // enableYinbiWallet adds Yinbi wallet related features to the features map
 // sent back to the UI
 func (app *App) enableYinbiWallet(enabledFeatures map[string]bool) {
-	app.enableFeatures(enabledFeatures, []string{"yinbi", "yinbiwallet", "auth"})
+	app.enableFeatures(enabledFeatures, "yinbi", "yinbiwallet", "auth")
 }
 
 // enableReplica adds Replica related features to the features map
 // sent back to the UI
 func (app *App) enableReplica(enabledFeatures map[string]bool) {
-	app.enableFeatures(enabledFeatures, []string{"replica"})
+	app.enableFeatures(enabledFeatures, "replica")
 }
 
 // checkEnabledFeatures checks if Replica and Yinbi features are enabled
