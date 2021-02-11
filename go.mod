@@ -99,7 +99,7 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-20210209160519-f3ea46daec65 // indirect
+	github.com/getlantern/yinbi-server v0.0.0-20210209160519-f3ea46daec65
 	github.com/getsentry/sentry-go v0.9.0
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-ole/go-ole v1.2.5 // indirect
