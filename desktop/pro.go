@@ -6,6 +6,7 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 
+	"github.com/getlantern/flashlight/desktop/deviceid"
 	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/pro/client"
 	"github.com/getlantern/flashlight/ws"
@@ -51,6 +52,29 @@ func servePro(channel ws.UIChannel) error {
 				}
 				settings.SetUserIDAndToken(user.Auth.ID, user.Auth.Token)
 			} else {
+				isPro, _ := pro.IsProUserFast(settings)
+				if isPro && userID != settings.GetMigratedDeviceIDForUserID() {
+					// If we've gotten here, that means this client may have previously used an old-style device ID. We don't know for sure,
+					// because it's possible that the user never used an old version of Lantern on this device. In either case, it's safe
+					// to request to migrate the device ID, as the server will know whether or not the old-style device ID was already associated
+					// with the current pro user.
+					oldStyleDeviceID := deviceid.OldStyleDeviceID()
+					if oldStyleDeviceID != settings.GetDeviceID() {
+						log.Debugf("Attempting to migrate device ID from %v to %v", oldStyleDeviceID, settings.GetDeviceID())
+						err := pro.MigrateDeviceID(settings, oldStyleDeviceID)
+						if err != nil {
+							errString := err.Error()
+							if errString == "old_device_id_not_found" {
+								log.Debugf("Could not migrate device id, not fatal: %v", err)
+							} else {
+								return log.Errorf("Could not migrate device id: %v", err)
+							}
+						} else {
+							log.Debug("Successfully migrated device ID")
+						}
+						settings.SetMigratedDeviceIDForUserID(userID)
+					}
+				}
 				_, err := pro.FetchUserData(settings)
 				if err != nil {
 					return errors.New("Could not get user data for %v: %v", userID, err)

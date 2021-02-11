@@ -1,7 +1,6 @@
 package desktop
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -17,9 +16,9 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/timezone"
-	"github.com/getlantern/uuid"
 	"github.com/getlantern/yaml"
 
+	"github.com/getlantern/flashlight/desktop/deviceid"
 	"github.com/getlantern/flashlight/ws"
 )
 
@@ -36,11 +35,12 @@ const (
 	SNLanguage       SettingName = "lang"
 	SNLocalHTTPToken SettingName = "localHTTPToken"
 
-	SNDeviceID          SettingName = "deviceID"
-	SNUserID            SettingName = "userID"
-	SNUserToken         SettingName = "userToken"
-	SNTakenSurveys      SettingName = "takenSurveys"
-	SNPastAnnouncements SettingName = "pastAnnouncements"
+	SNDeviceID                  SettingName = "deviceID"
+	SNUserID                    SettingName = "userID"
+	SNUserToken                 SettingName = "userToken"
+	SNMigratedDeviceIDForUserID SettingName = "migratedDeviceIDForUserID"
+	SNTakenSurveys              SettingName = "takenSurveys"
+	SNPastAnnouncements         SettingName = "pastAnnouncements"
 
 	SNAddr      SettingName = "addr"
 	SNSOCKSAddr SettingName = "socksAddr"
@@ -75,10 +75,11 @@ var settingMeta = map[SettingName]struct {
 	SNLocalHTTPToken: {stString, true, true},
 
 	// SNDeviceID: intentionally omit, to avoid setting it from UI
-	SNUserID:            {stNumber, true, true},
-	SNUserToken:         {stString, true, true},
-	SNTakenSurveys:      {stStringArray, true, true},
-	SNPastAnnouncements: {stStringArray, true, true},
+	SNUserID:                    {stNumber, true, true},
+	SNUserToken:                 {stString, true, true},
+	SNMigratedDeviceIDForUserID: {stNumber, true, true},
+	SNTakenSurveys:              {stStringArray, true, true},
+	SNPastAnnouncements:         {stStringArray, true, true},
 
 	SNAddr:      {stString, true, true},
 	SNSOCKSAddr: {stString, true, true},
@@ -122,9 +123,7 @@ func loadSettingsFrom(version, revisionDate, buildDate, path string, chrome chro
 	// old lantern persist settings with all lower case, convert them to camel cased.
 	toCamelCase(set)
 
-	// We always just set the device ID to the MAC address on the system. Note
-	// this ignores what's on disk, if anything.
-	set[SNDeviceID] = base64.StdEncoding.EncodeToString(uuid.NodeID())
+	set[SNDeviceID] = deviceid.Get()
 
 	// SNUserID may be unmarshalled as int, which causes panic when GetUserID().
 	// Make sure to store it as int64.
@@ -161,16 +160,17 @@ func toCamelCase(m map[SettingName]interface{}) {
 func newSettings(filePath string, chrome chromeExtension) *Settings {
 	return &Settings{
 		m: map[SettingName]interface{}{
-			SNUserID:         int64(0),
-			SNAutoReport:     true,
-			SNAutoLaunch:     true,
-			SNProxyAll:       false,
-			SNSystemProxy:    true,
-			SNDisconnected:   false,
-			SNLanguage:       "",
-			SNLocalHTTPToken: "",
-			SNUserToken:      "",
-			SNUIAddr:         "",
+			SNUserID:                    int64(0),
+			SNAutoReport:                true,
+			SNAutoLaunch:                true,
+			SNProxyAll:                  false,
+			SNSystemProxy:               true,
+			SNDisconnected:              false,
+			SNLanguage:                  "",
+			SNLocalHTTPToken:            "",
+			SNUserToken:                 "",
+			SNUIAddr:                    "",
+			SNMigratedDeviceIDForUserID: int64(0),
 		},
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
@@ -240,6 +240,15 @@ func (s *Settings) setBool(name SettingName, v interface{}) {
 	s.setVal(name, b)
 }
 
+func (s *Settings) setInt64(name SettingName, v interface{}) {
+	b, ok := v.(int64)
+	if !ok {
+		s.log.Errorf("Could not convert %s(%v) to int64", name, v)
+		return
+	}
+	s.setVal(name, b)
+}
+
 func (s *Settings) setNum(name SettingName, v interface{}) {
 	number, ok := v.(json.Number)
 	if !ok {
@@ -289,10 +298,13 @@ func (s *Settings) saveDefault() {
 	s.log.Trace("Saving settings")
 	if f, err := os.Create(s.filePath); err != nil {
 		s.log.Errorf("Could not open settings file for writing: %v", err)
-	} else if _, err := s.writeTo(f); err != nil {
-		s.log.Errorf("Could not save settings file: %v", err)
 	} else {
-		s.log.Tracef("Saved settings to %s", s.filePath)
+		defer f.Close()
+		if _, err := s.writeTo(f); err != nil {
+			s.log.Errorf("Could not save settings file: %v", err)
+		} else {
+			s.log.Tracef("Saved settings to %s", s.filePath)
+		}
 	}
 }
 
@@ -450,6 +462,16 @@ func (s *Settings) GetToken() string {
 	return s.getString(SNUserToken)
 }
 
+// GetMigratedDeviceIDForUserID returns the user ID (if any) for which the current device's ID has been migrated from the old style to the new style
+func (s *Settings) GetMigratedDeviceIDForUserID() int64 {
+	return s.getInt64(SNMigratedDeviceIDForUserID)
+}
+
+// SetMigratedDeviceIDForUserID stores the user ID (if any) for which the current device's ID has been migrated from the old style to the new style
+func (s *Settings) SetMigratedDeviceIDForUserID(userID int64) {
+	s.setInt64(SNMigratedDeviceIDForUserID, userID)
+}
+
 // GetInternalHeaders returns extra headers sent with requests to internal services
 func (s *Settings) GetInternalHeaders() map[string]string {
 	// stubbed
@@ -499,6 +521,9 @@ func (s *Settings) getInt64(name SettingName) int64 {
 	if val, err := s.getVal(name); err == nil {
 		if v, ok := val.(int64); ok {
 			return v
+		}
+		if v, ok := val.(int); ok {
+			return int64(v)
 		}
 	}
 	return int64(0)
