@@ -320,6 +320,7 @@ func (app *App) startFeaturesService(chans ...<-chan bool) {
 					log.Debugf("EnabledFeatures: %v", features)
 					app.startReplicaIfNecessary(features)
 					app.startYinbiIfNecessary(features)
+					go app.startTrafficlogIfNecessary()
 					select {
 					case service.Out <- features:
 						// ok
@@ -669,7 +670,6 @@ func (app *App) onConfigUpdate(cfg *config.Global, src config.Source) {
 			log.Errorf("failed to set browser market share data: %v", err)
 		}
 	}
-	go app.configureTrafficLog(cfg)
 	app.chGlobalConfigChanged <- true
 }
 

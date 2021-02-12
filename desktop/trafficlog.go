@@ -141,7 +141,7 @@ func (app *App) getCapturedPackets(w io.Writer) error {
 
 // This should be run in an independent routine as it may need to install and block for a
 // user-action granting permissions.
-func (app *App) configureTrafficLog(cfg *config.Global) {
+func (app *App) startTrafficlogIfNecessary() {
 	app.trafficLogLock.Lock()
 	app.proxiesLock.RLock()
 	defer app.trafficLogLock.Unlock()
@@ -169,13 +169,6 @@ func (app *App) configureTrafficLog(cfg *config.Global) {
 		} else if err != nil {
 			log.Errorf("failed to unmarshal traffic log options: %v", err)
 			return
-		}
-	}
-	if forceTrafficLog {
-		// Always try to install the traffic log in development.
-		failuresPath := filepath.Join(app.ConfigDir, tlInstallFailuresFilename)
-		if err := os.Remove(failuresPath); err != nil {
-			log.Debugf("Failed to remove traffic log install-last-failed file: %v", err)
 		}
 	}
 
