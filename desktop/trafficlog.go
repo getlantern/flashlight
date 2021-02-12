@@ -147,10 +147,7 @@ func (app *App) configureTrafficLog(cfg *config.Global) {
 	defer app.trafficLogLock.Unlock()
 	defer app.proxiesLock.RUnlock()
 
-	forceTrafficLog := false
-	if ftl, ok := app.Flags["force-traffic-log"]; ok {
-		forceTrafficLog = ftl.(bool)
-	}
+	forceTrafficLog := common.ForceEnableTrafficlogFeature
 	opts := new(config.TrafficLogOptions)
 	enableTrafficLog := app.flashlight.FeatureEnabled(config.FeatureTrafficLog) || forceTrafficLog
 	if enableTrafficLog {

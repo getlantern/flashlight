@@ -45,6 +45,8 @@ define build-tags
 	elif [[ ! -z "$$YINBI" ]]; then \
 		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/common.EnableYinbi=true"; \
 		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/config.GlobalURL=https://globalconfig.flashlightproxy.com/global-yinbi.yaml.gz"; \
+	elif [[ ! -z "$$TRAFFICLOG" ]]; then \
+		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/common.ForceEnableTrafficlog=true"; \
 	fi && \
 	if [[ ! -z "$$NOREPLICA" ]]; then \
 		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/common.GlobalURL=https://globalconfig.flashlightproxy.com/global-no-replica.yaml.gz"; \
@@ -91,6 +93,7 @@ beam-linux: $(SOURCES)
 	HEADLESS=true GOOS=linux GOARCH=amd64 BINARY_NAME=beam-linux BUILD_TAGS="$$BUILD_TAGS headless" make app
 
 app:
+	@echo LDFLAGS: $$EXTRA_LDFLAGS
 	GO111MODULE=on GOPRIVATE="github.com/getlantern" CGO_ENABLED=1 go build $(BUILD_RACE) -v -o $(BINARY_NAME) -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s " github.com/getlantern/flashlight/main;
 
 # vendor installs vendored dependencies using go modules
