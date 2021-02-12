@@ -3,7 +3,6 @@ module github.com/getlantern/flashlight
 go 1.13
 
 require (
-	cloud.google.com/go v0.76.0 // indirect
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/confluence v1.6.2-0.20201116033747-ba09085bd120
@@ -47,15 +46,15 @@ require (
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc // indirect
 	github.com/getlantern/hellosplitter v0.1.0
 	github.com/getlantern/hidden v0.0.0-20201229170000-e66e7f878730
-	github.com/getlantern/http-proxy-lantern/v2 v2.6.23
+	github.com/getlantern/http-proxy-lantern/v2 v2.6.32-0.20210212160215-bbb13b862e06
 	github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
 	github.com/getlantern/idletiming v0.0.0-20201229174729-33d04d220c4e
 	github.com/getlantern/ipproxy v0.0.0-20201020142114-ed7e3a8d5d87
 	github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42
 	github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644
-	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
-	github.com/getlantern/keyman v0.0.0-20200819205636-76fef27c39f1
+	github.com/getlantern/kcpwrapper v0.0.0-20201001150218-1427e1d39c25
+	github.com/getlantern/keyman v0.0.0-20200820153608-cfd0ee278507
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
 	github.com/getlantern/lantern-server v0.0.0-20210208142751-07601bac9c9e
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
@@ -70,10 +69,10 @@ require (
 	github.com/getlantern/notifier v0.0.0-20210109042112-d57e696d0db9
 	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
-	github.com/getlantern/packetforward v0.0.0-20200421081927-11933f311913
+	github.com/getlantern/packetforward v0.0.0-20201001150407-c68a447b0360
 	github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff
 	github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8
-	github.com/getlantern/proxy v0.0.0-20200828020017-9c052c8ea590
+	github.com/getlantern/proxy v0.0.0-20201001032732-eefd72879266
 	github.com/getlantern/proxybench v0.0.0-20200806214955-5d56065f9f77
 	github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683
 	github.com/getlantern/quicwrapper v0.0.0-20201013170341-d27d67101f2d
@@ -109,7 +108,6 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.6.8 // indirect
 	github.com/hashicorp/golang-lru v0.5.4
-	github.com/ipinfo/go-ipinfo v1.0.0 // indirect
 	github.com/jackpal/gateway v1.0.6
 	github.com/jmoiron/sqlx v1.3.1 // indirect
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
@@ -135,18 +133,15 @@ require (
 	github.com/stellar/go v0.0.0-20210208222255-f071f3b0df9a // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
-	github.com/ulule/limiter/v3 v3.8.0 // indirect
 	github.com/valyala/fasthttp v1.17.0 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
-	go.opencensus.io v0.22.6 // indirect
 	golang.org/x/net v0.0.0-20210119194325-5f4716e94777
-	golang.org/x/oauth2 v0.0.0-20210201163806-010130855d6c // indirect
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
-	google.golang.org/api v0.39.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20210207032614-bba0dbe2a9ea // indirect
+	google.golang.org/grpc v1.35.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
