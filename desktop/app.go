@@ -290,15 +290,38 @@ func (app *App) Run() {
 	}()
 }
 
+// enableReplica adds the features specified in toEnable to the features map
+// sent back to the UI
+func (app *App) enableFeatures(enabledFeatures map[string]bool, toEnable ...string) {
+	for _, feature := range toEnable {
+		enabledFeatures[feature] = true
+	}
+}
+
 // enableYinbiWallet adds Yinbi wallet related features to the features map
 // sent back to the UI
-func (app *App) enableYinbiWallet(enabledFeatures *map[string]bool) {
-	if !common.EnableYinbiFeatures {
-		return
+func (app *App) enableYinbiWallet(enabledFeatures map[string]bool) {
+	app.enableFeatures(enabledFeatures, "yinbi", "yinbiwallet", "auth")
+}
+
+// enableReplica adds Replica related features to the features map
+// sent back to the UI
+func (app *App) enableReplica(enabledFeatures map[string]bool) {
+	app.enableFeatures(enabledFeatures, "replica")
+}
+
+// checkEnabledFeatures checks if Replica and Yinbi features are enabled
+// (based on the env vars at build time)
+func (app *App) checkEnabledFeatures(enabledFeatures map[string]bool) {
+	if common.EnableYinbi {
+		app.enableYinbiWallet(enabledFeatures)
 	}
-	for _, feature := range []string{"replica", "yinbi", "yinbiwallet", "auth"} {
-		(*enabledFeatures)[feature] = true
+	if common.EnableReplica {
+		app.enableReplica(enabledFeatures)
 	}
+	log.Debugf("Sending features enabled to new client: %v", enabledFeatures)
+	app.startReplicaIfNecessary(enabledFeatures)
+	app.startYinbiIfNecessary(enabledFeatures)
 }
 
 // startFeaturesService starts a new features service that dispatches features to any relevant
@@ -306,8 +329,6 @@ func (app *App) enableYinbiWallet(enabledFeatures *map[string]bool) {
 func (app *App) startFeaturesService(chans ...<-chan bool) {
 	if service, err := app.ws.Register("features", func(write func(interface{})) {
 		enabledFeatures := app.flashlight.EnabledFeatures()
-		app.enableYinbiWallet(&enabledFeatures)
-		log.Debugf("Sending features enabled to new client: %v", enabledFeatures)
 		write(enabledFeatures)
 	}); err != nil {
 		log.Errorf("Unable to serve enabled features to UI: %v", err)
@@ -316,10 +337,7 @@ func (app *App) startFeaturesService(chans ...<-chan bool) {
 			go func(c <-chan bool) {
 				for range c {
 					features := app.flashlight.EnabledFeatures()
-					app.enableYinbiWallet(&features)
-					log.Debugf("EnabledFeatures: %v", features)
-					app.startReplicaIfNecessary(features)
-					app.startYinbiIfNecessary(features)
+					app.checkEnabledFeatures(features)
 					select {
 					case service.Out <- features:
 						// ok
