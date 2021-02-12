@@ -1,4 +1,15 @@
 
+<a name="lantern-6.4.2"></a>
+## [lantern-6.4.2](https://github.com/getlantern/flashlight/compare/lantern-6.4.1...lantern-6.4.2)
+
+> 2021-02-11
+
+### Pull Requests
+
+* Merge pull request [#1023](https://github.com/getlantern/flashlight/issues/1023) from getlantern/updates-use-yinbi-production-defaults
+* Merge pull request [#990](https://github.com/getlantern/flashlight/issues/990) from getlantern/ox/make-lantern-default
+
+
 <a name="lantern-6.4.1"></a>
 ## [lantern-6.4.1](https://github.com/getlantern/flashlight/compare/lantern-6.4.0...lantern-6.4.1)
 
