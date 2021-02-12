@@ -1,4 +1,4 @@
-// +build lantern
+// +build !beam
 
 package common
 

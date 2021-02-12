@@ -1,4 +1,28 @@
 
+<a name="lantern-6.4.2"></a>
+## [lantern-6.4.2](https://github.com/getlantern/flashlight/compare/lantern-6.4.1...lantern-6.4.2)
+
+> 2021-02-11
+
+### Pull Requests
+
+* Merge pull request [#1023](https://github.com/getlantern/flashlight/issues/1023) from getlantern/updates-use-yinbi-production-defaults
+* Merge pull request [#990](https://github.com/getlantern/flashlight/issues/990) from getlantern/ox/make-lantern-default
+
+
+<a name="lantern-6.4.1"></a>
+## [lantern-6.4.1](https://github.com/getlantern/flashlight/compare/lantern-6.4.0...lantern-6.4.1)
+
+> 2021-02-11
+
+### Pull Requests
+
+* Merge pull request [#1027](https://github.com/getlantern/flashlight/issues/1027) from getlantern/ui-6.4.1
+* Merge pull request [#1004](https://github.com/getlantern/flashlight/issues/1004) from getlantern/too-many-open-files-settings
+* Merge pull request [#1013](https://github.com/getlantern/flashlight/issues/1013) from getlantern/serp-web-results-2
+* Merge pull request [#1006](https://github.com/getlantern/flashlight/issues/1006) from getlantern/harry/require-git-lfs
+
+
 <a name="lantern-6.4.0"></a>
 ## [lantern-6.4.0](https://github.com/getlantern/flashlight/compare/lantern-6.3.9...lantern-6.4.0)
 
