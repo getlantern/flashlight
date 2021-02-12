@@ -25,7 +25,7 @@ type kcpImpl struct {
 	nopCloser
 	reportDialCore reportDialCoreFn
 	addr           string
-	dialKCP        func(ctx context.Context, network, addr string) (net.Conn, error)
+	dialKCP        func(ctx context.Context, addr string) (net.Conn, error)
 }
 
 func newKCPImpl(s *ChainedServerInfo, reportDialCore reportDialCoreFn) (proxyImpl, error) {
@@ -51,6 +51,6 @@ func newKCPImpl(s *ChainedServerInfo, reportDialCore reportDialCoreFn) (proxyImp
 
 func (impl *kcpImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return impl.reportDialCore(op, func() (net.Conn, error) {
-		return impl.dialKCP(ctx, "unused", impl.addr)
+		return impl.dialKCP(ctx, impl.addr)
 	})
 }
