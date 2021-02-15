@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"crawshaw.io/sqlite"
 	"github.com/anacrolix/torrent/storage"
 	sqliteStorage "github.com/anacrolix/torrent/storage/sqlite"
 	"github.com/getlantern/flashlight/analytics"
@@ -96,12 +97,30 @@ func NewHTTPHandler(
 	cfg.Logger = analog.Default.WithFilter(func(m analog.Msg) bool {
 		return !m.HasValue("upnp-discover")
 	})
+	attempt := 1
+createStorage:
 	defaultStorage, err := sqliteStorage.NewPiecesStorage(
 		sqliteStorage.NewPiecesStorageOpts{
 			NewPoolOpts: sqliteStorage.NewPoolOpts{
 				Path:     filepath.Join(replicaCacheDir, "storage-cache.db"),
 				Capacity: 5 << 30,
 			}})
+	var sqliteErr sqlite.Error
+	if errors.As(err, &sqliteErr) {
+		if sqliteErr.Code == sqlite.SQLITE_BUSY_RECOVERY {
+			// When creating pools of connections, activity on subsequent connections can fail if
+			// the first connection (or any other) triggers a recovery. crawshaw.io/sqlite doesn't
+			// seem to handle this case (maybe because it's a "busy" situation, instead of returning
+			// a retry/timeout per sqlite's architecture. Since the error occurs in creating a
+			// subsequent connection, this causes pool initialization to fail, which should close
+			// the connection that is doing the recovery.
+			if attempt < 2 {
+				time.Sleep(time.Second)
+				attempt++
+				goto createStorage
+			}
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("creating torrent storage cache: %w", err)
 		return
