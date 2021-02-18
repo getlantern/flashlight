@@ -290,7 +290,7 @@ func (app *App) Run() {
 	}()
 }
 
-// enableReplica adds the features specified in toEnable to the features map
+// enableFeatures adds the features specified in toEnable to the features map
 // sent back to the UI
 func (app *App) enableFeatures(enabledFeatures map[string]bool, toEnable ...string) {
 	for _, feature := range toEnable {
@@ -301,28 +301,45 @@ func (app *App) enableFeatures(enabledFeatures map[string]bool, toEnable ...stri
 // enableYinbiWallet adds Yinbi wallet related features to the features map
 // sent back to the UI
 func (app *App) enableYinbiWallet(enabledFeatures map[string]bool) {
-	app.enableFeatures(enabledFeatures, "yinbi", "yinbiwallet", "auth")
+	app.enableFeatures(enabledFeatures, config.FeatureYinbi, config.FeatureYinbiWallet, config.FeatureAuth)
 }
 
 // enableReplica adds Replica related features to the features map
 // sent back to the UI
 func (app *App) enableReplica(enabledFeatures map[string]bool) {
-	app.enableFeatures(enabledFeatures, "replica")
+	app.enableFeatures(enabledFeatures, config.FeatureReplica)
+}
+
+// enableReplica adds Replica related features to the features map
+// sent back to the UI
+func (app *App) enableTrafficLog(enabledFeatures map[string]bool) {
+	app.enableFeatures(enabledFeatures, config.FeatureTrafficLog)
 }
 
 // checkEnabledFeatures checks if Replica and Yinbi features are enabled
 // (based on the env vars at build time)
 func (app *App) checkEnabledFeatures(enabledFeatures map[string]bool) {
-	if common.EnableYinbi {
+	if config.EnableYinbi {
 		app.enableYinbiWallet(enabledFeatures)
 	}
-	if common.EnableReplica {
+	if config.EnableReplica {
 		app.enableReplica(enabledFeatures)
+	}
+	if config.EnableTrafficlog {
+		app.enableTrafficLog(enabledFeatures)
+		go app.startTrafficlogIfNecessary(enabledFeatures, config.ForcedTrafficLogOptions)
+	} else {
+		opts := new(config.TrafficLogOptions)
+		if err := app.flashlight.FeatureOptions(config.FeatureTrafficLog, opts); err != nil {
+			log.Errorf("failed to unmarshal traffic log options: %v", err)
+		} else {
+			go app.startTrafficlogIfNecessary(enabledFeatures, opts)
+		}
 	}
 	log.Debugf("Sending features enabled to new client: %v", enabledFeatures)
 	app.startReplicaIfNecessary(enabledFeatures)
 	app.startYinbiIfNecessary(enabledFeatures)
-	go app.startTrafficlogIfNecessary()
+
 }
 
 // startFeaturesService starts a new features service that dispatches features to any relevant

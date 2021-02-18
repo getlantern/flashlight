@@ -141,36 +141,13 @@ func (app *App) getCapturedPackets(w io.Writer) error {
 
 // This should be run in an independent routine as it may need to install and block for a
 // user-action granting permissions.
-func (app *App) startTrafficlogIfNecessary() {
+func (app *App) startTrafficlogIfNecessary(features map[string]bool, opts *config.TrafficLogOptions) {
 	app.trafficLogLock.Lock()
 	app.proxiesLock.RLock()
 	defer app.trafficLogLock.Unlock()
 	defer app.proxiesLock.RUnlock()
 
-	forceTrafficLog := common.ForceEnableTrafficlogFeature
-	opts := new(config.TrafficLogOptions)
-	enableTrafficLog := app.flashlight.FeatureEnabled(config.FeatureTrafficLog) || forceTrafficLog
-	if enableTrafficLog {
-		err := app.flashlight.FeatureOptions(config.FeatureTrafficLog, opts)
-		if err != nil && forceTrafficLog {
-			log.Errorf("failed to unmarshal traffic log options: %v", err)
-			log.Debug("setting default traffic log options for development")
-			opts = &config.TrafficLogOptions{
-				CaptureBytes:               10 * 1024 * 1024,
-				SaveBytes:                  10 * 1024 * 1024,
-				CaptureSaveDuration:        5 * time.Minute,
-				Reinstall:                  true,
-				WaitTimeSinceFailedInstall: 24 * time.Hour,
-				UserDenialThreshold:        3,
-				TimeBeforeDenialReset:      24 * time.Hour,
-				FailuresThreshold:          3,
-				TimeBeforeFailureReset:     24 * time.Hour,
-			}
-		} else if err != nil {
-			log.Errorf("failed to unmarshal traffic log options: %v", err)
-			return
-		}
-	}
+	enableTrafficLog := app.isFeatureEnabled(features, config.FeatureTrafficLog)
 
 	switch {
 	case enableTrafficLog && app.trafficLog == nil:
