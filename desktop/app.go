@@ -329,6 +329,7 @@ func (app *App) checkEnabledFeatures(enabledFeatures map[string]bool) {
 func (app *App) startFeaturesService(chans ...<-chan bool) {
 	if service, err := app.ws.Register("features", func(write func(interface{})) {
 		enabledFeatures := app.flashlight.EnabledFeatures()
+		app.checkEnabledFeatures(enabledFeatures)
 		write(enabledFeatures)
 	}); err != nil {
 		log.Errorf("Unable to serve enabled features to UI: %v", err)
