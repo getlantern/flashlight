@@ -299,19 +299,19 @@ func (app *App) enableFeatures(enabledFeatures map[string]bool, toEnable ...stri
 }
 
 // enableYinbiWallet adds Yinbi wallet related features to the features map
-// sent back to the UI
+// sent back to the UI and used for starting associated services.
 func (app *App) enableYinbiWallet(enabledFeatures map[string]bool) {
 	app.enableFeatures(enabledFeatures, config.FeatureYinbi, config.FeatureYinbiWallet, config.FeatureAuth)
 }
 
 // enableReplica adds Replica related features to the features map
-// sent back to the UI
+// sent back to the UI and used for starting associated services.
 func (app *App) enableReplica(enabledFeatures map[string]bool) {
 	app.enableFeatures(enabledFeatures, config.FeatureReplica)
 }
 
-// enableReplica adds Replica related features to the features map
-// sent back to the UI
+// enableTrafficLog adds traffic log related features to the features map
+// sent back to the UI and used for starting associated services.
 func (app *App) enableTrafficLog(enabledFeatures map[string]bool) {
 	app.enableFeatures(enabledFeatures, config.FeatureTrafficLog)
 }
@@ -327,19 +327,20 @@ func (app *App) checkEnabledFeatures(enabledFeatures map[string]bool) {
 	}
 	if config.EnableTrafficlog {
 		app.enableTrafficLog(enabledFeatures)
-		go app.startTrafficlogIfNecessary(enabledFeatures, config.ForcedTrafficLogOptions)
-	} else {
-		opts := new(config.TrafficLogOptions)
-		if err := app.flashlight.FeatureOptions(config.FeatureTrafficLog, opts); err != nil {
-			log.Errorf("failed to unmarshal traffic log options: %v", err)
-		} else {
-			go app.startTrafficlogIfNecessary(enabledFeatures, opts)
-		}
 	}
 	log.Debugf("Sending features enabled to new client: %v", enabledFeatures)
 	app.startReplicaIfNecessary(enabledFeatures)
 	app.startYinbiIfNecessary(enabledFeatures)
+	go app.startTrafficlogIfNecessary(enabledFeatures, app.trafficLogOpts())
+}
 
+func (app *App) trafficLogOpts() *config.TrafficLogOptions {
+	opts := new(config.TrafficLogOptions)
+	if err := app.flashlight.FeatureOptions(config.FeatureTrafficLog, opts); err != nil {
+		log.Errorf("failed to unmarshal traffic log options: %v", err)
+		return config.ForcedTrafficLogOptions
+	}
+	return opts
 }
 
 // startFeaturesService starts a new features service that dispatches features to any relevant
@@ -461,8 +462,8 @@ func (app *App) beforeStart(listenAddr string) {
 		LocalHTTPToken:  app.localHttpToken(),
 		Standalone:      standalone,
 		Handlers: []ui.PathHandler{
-			ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
-			ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
+			{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
+			{Pattern: "/data", Handler: app.ws.Handler()},
 		},
 	})
 	if err != nil {
