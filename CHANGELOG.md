@@ -1,4 +1,15 @@
 
+<a name="lantern-6.4.3"></a>
+## [lantern-6.4.3](https://github.com/getlantern/flashlight/compare/lantern-6.4.2...lantern-6.4.3)
+
+> 2021-02-18
+
+### Pull Requests
+
+* Merge pull request [#1033](https://github.com/getlantern/flashlight/issues/1033) from getlantern/check-enabled-features-start-service
+* Merge pull request [#1030](https://github.com/getlantern/flashlight/issues/1030) from getlantern/replica-sqlite-reorder-openconn-busy-timeout
+
+
 <a name="lantern-6.4.2"></a>
 ## [lantern-6.4.2](https://github.com/getlantern/flashlight/compare/lantern-6.4.1...lantern-6.4.2)
 
