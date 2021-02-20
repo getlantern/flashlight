@@ -337,16 +337,21 @@ func (app *App) checkEnabledFeatures(enabledFeatures map[string]bool) {
 	}
 	app.startReplicaIfNecessary(&syncedFeatures)
 	app.startYinbiIfNecessary(&syncedFeatures)
-	go app.startTrafficlogIfNecessary(&syncedFeatures, app.trafficLogOpts())
+	if opts, err := app.trafficLogOpts(); err == nil {
+		go app.startTrafficlogIfNecessary(&syncedFeatures, opts)
+	}
 }
 
-func (app *App) trafficLogOpts() *config.TrafficLogOptions {
+func (app *App) trafficLogOpts() (*config.TrafficLogOptions, error) {
 	opts := new(config.TrafficLogOptions)
 	if err := app.flashlight.FeatureOptions(config.FeatureTrafficLog, opts); err != nil {
 		log.Errorf("failed to unmarshal traffic log options: %v", err)
-		return config.ForcedTrafficLogOptions
+		if config.EnableTrafficlog {
+			return config.ForcedTrafficLogOptions, nil
+		}
+		return nil, err
 	}
-	return opts
+	return opts, nil
 }
 
 // startFeaturesService starts a new features service that dispatches features to any relevant
