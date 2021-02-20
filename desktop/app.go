@@ -328,13 +328,12 @@ func (app *App) checkEnabledFeatures(enabledFeatures map[string]bool) {
 	if config.EnableTrafficlog {
 		app.enableTrafficLog(enabledFeatures)
 	}
-	log.Debugf("Sending features enabled to new client: %#v", enabledFeatures)
-
+	log.Debugf("Starting enabled features: %v", enabledFeatures)
 	app.startReplicaIfNecessary(enabledFeatures)
 	app.startYinbiIfNecessary(enabledFeatures)
 	enableTrafficLog := app.isFeatureEnabled(enabledFeatures, config.FeatureTrafficLog)
 	if opts, err := app.trafficLogOpts(); err == nil {
-		go app.startTrafficlogIfNecessary(opts, enableTrafficLog)
+		go app.toggleTrafficLog(opts, enableTrafficLog)
 	}
 }
 
