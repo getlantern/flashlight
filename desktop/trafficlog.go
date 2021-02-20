@@ -8,7 +8,6 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/getlantern/appdir"
@@ -142,13 +141,11 @@ func (app *App) getCapturedPackets(w io.Writer) error {
 
 // This should be run in an independent routine as it may need to install and block for a
 // user-action granting permissions.
-func (app *App) startTrafficlogIfNecessary(features *sync.Map, opts *config.TrafficLogOptions) {
+func (app *App) toggleTrafficLog(opts *config.TrafficLogOptions, enableTrafficLog bool) {
 	app.trafficLogLock.Lock()
 	app.proxiesLock.RLock()
 	defer app.trafficLogLock.Unlock()
 	defer app.proxiesLock.RUnlock()
-
-	enableTrafficLog := app.isFeatureEnabled(features, config.FeatureTrafficLog)
 
 	switch {
 	case enableTrafficLog && app.trafficLog == nil:

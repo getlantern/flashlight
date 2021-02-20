@@ -330,15 +330,11 @@ func (app *App) checkEnabledFeatures(enabledFeatures map[string]bool) {
 	}
 	log.Debugf("Sending features enabled to new client: %#v", enabledFeatures)
 
-	// We use a sync map here to ensure that different goroutines don't collide on the map.
-	var syncedFeatures sync.Map
-	for k, v := range enabledFeatures {
-		syncedFeatures.Store(k, v)
-	}
-	app.startReplicaIfNecessary(&syncedFeatures)
-	app.startYinbiIfNecessary(&syncedFeatures)
+	app.startReplicaIfNecessary(enabledFeatures)
+	app.startYinbiIfNecessary(enabledFeatures)
+	enableTrafficLog := app.isFeatureEnabled(enabledFeatures, config.FeatureTrafficLog)
 	if opts, err := app.trafficLogOpts(); err == nil {
-		go app.startTrafficlogIfNecessary(&syncedFeatures, opts)
+		go app.startTrafficlogIfNecessary(opts, enableTrafficLog)
 	}
 }
 
@@ -545,16 +541,12 @@ func (app *App) beforeStart(listenAddr string) {
 	})
 }
 
-func (app *App) isFeatureEnabled(features *sync.Map, feature string) bool {
-	if val, ok := features.Load(feature); ok {
-		if b, ok := val.(bool); ok {
-			return b
-		}
-	}
-	return false
+func (app *App) isFeatureEnabled(features map[string]bool, feature string) bool {
+	val, ok := features[feature]
+	return ok && val
 }
 
-func (app *App) startYinbiIfNecessary(features *sync.Map) {
+func (app *App) startYinbiIfNecessary(features map[string]bool) {
 	if !app.isFeatureEnabled(features, config.FeatureAuth) ||
 		!app.isFeatureEnabled(features, config.FeatureYinbiWallet) {
 		return
@@ -563,7 +555,7 @@ func (app *App) startYinbiIfNecessary(features *sync.Map) {
 	app.startYinbi.Do(app.uiServer().EnableYinbiRoutes)
 }
 
-func (app *App) startReplicaIfNecessary(features *sync.Map) {
+func (app *App) startReplicaIfNecessary(features map[string]bool) {
 	if !app.isFeatureEnabled(features, config.FeatureReplica) {
 		return
 	}
