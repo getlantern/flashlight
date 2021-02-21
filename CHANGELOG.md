@@ -2,7 +2,7 @@
 <a name="lantern-6.4.3-yinbi"></a>
 ## [lantern-6.4.3-yinbi](https://github.com/getlantern/flashlight/compare/lantern-6.4.3...lantern-6.4.3-yinbi)
 
-> 2021-02-19
+> 2021-02-21
 
 
 <a name="lantern-6.4.3"></a>
