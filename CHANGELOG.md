@@ -1,4 +1,14 @@
 
+<a name="lantern-6.4.4-yinbi"></a>
+## [lantern-6.4.4-yinbi](https://github.com/getlantern/flashlight/compare/lantern-6.4.3-yinbi...lantern-6.4.4-yinbi)
+
+> 2021-02-22
+
+### Pull Requests
+
+* Merge pull request [#1036](https://github.com/getlantern/flashlight/issues/1036) from getlantern/ui-6.4.4-2
+
+
 <a name="lantern-6.4.3-yinbi"></a>
 ## [lantern-6.4.3-yinbi](https://github.com/getlantern/flashlight/compare/lantern-6.4.3...lantern-6.4.3-yinbi)
 
