@@ -26,6 +26,7 @@ const (
 	FeatureProxyWhitelistedOnly = "proxywhitelistedonly"
 	FeatureTrackYouTube         = "trackyoutube"
 	FeatureYinbiWallet          = "yinbiwallet"
+	FeatureYinbi                = "yinbi"
 )
 
 var (
