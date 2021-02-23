@@ -1,6 +1,7 @@
 package desktop
 
 import (
+	stderrors "errors"
 	"io"
 	"io/ioutil"
 	"os"
@@ -17,6 +18,7 @@ import (
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/trafficlog"
 	"github.com/getlantern/trafficlog-flashlight/tlproc"
+	"github.com/getlantern/yaml"
 )
 
 const (
@@ -24,12 +26,91 @@ const (
 	trafficlogRequestTimeout      = time.Second
 	trafficlogDefaultSaveDuration = 5 * time.Minute
 
-	// An asset in the icons package.
-	trafficlogInstallIcon = "connected_32.ico"
+	// This file, in the config directory, holds information about installation failures.
+	tlInstallFailuresFilename = "tl_install_failures.yaml"
 
-	// This file, in the config directory, holds a timestamp from the last failed installation.
-	trafficlogLastFailedInstallFile = "tl_last_failed"
+	yamlableTimeFormat = time.RFC3339
 )
+
+var errTrafficLogDisabled = errors.New("traffic log is disabled")
+
+type yamlableTime time.Time
+
+func yamlableNow() *yamlableTime {
+	yt := yamlableTime(time.Now())
+	return &yt
+}
+
+func (yt *yamlableTime) GetYAML() (tag string, value interface{}) {
+	if yt == nil {
+		return "", time.Time(yamlableTime{}).Format(yamlableTimeFormat)
+	}
+	return "", time.Time(*yt).Format(yamlableTimeFormat)
+}
+
+func (yt *yamlableTime) SetYAML(tag string, value interface{}) bool {
+	valueString, ok := value.(string)
+	if !ok {
+		return false
+	}
+	t, err := time.Parse(yamlableTimeFormat, valueString)
+	if err != nil {
+		return false
+	}
+	*yt = yamlableTime(t)
+	return true
+}
+
+func (yt *yamlableTime) IsZero() bool {
+	if yt == nil {
+		return true
+	}
+	return time.Time(*yt).IsZero()
+}
+
+func (yt *yamlableTime) SetToZero() {
+	*yt = yamlableTime{}
+}
+
+func (yt *yamlableTime) timeSince() time.Duration {
+	return time.Since(time.Time(*yt))
+}
+
+// A YAML file in which we store data about traffic log installation failures.
+type tlInstallFailuresFile struct {
+	LastFailed, LastDenial *yamlableTime
+	Failures, Denials      int
+
+	path string
+}
+
+// If the file does not exist, this function returns a default value, pointed at the input path.
+func openTLInstallFailuresFile(path string) (*tlInstallFailuresFile, error) {
+	f := new(tlInstallFailuresFile)
+	b, err := ioutil.ReadFile(path)
+	if stderrors.Is(err, os.ErrNotExist) {
+		return &tlInstallFailuresFile{&yamlableTime{}, &yamlableTime{}, 0, 0, path}, nil
+	} else if err != nil {
+		return nil, errors.New("failed to read file: %v", err)
+	}
+	if err := yaml.Unmarshal(b, f); err != nil {
+		return nil, errors.New("failed to unmarshal file: %v", err)
+	}
+	f.path = path
+	return f, nil
+}
+
+// Write changes to disk.
+func (f tlInstallFailuresFile) flushChanges() error {
+	b, err := yaml.Marshal(f)
+	if err != nil {
+		return errors.New("failed to marshal: %v", err)
+	}
+	if err := ioutil.WriteFile(f.path, b, 0644); err != nil {
+		return errors.New("failed to write file: %v", err)
+	}
+	return nil
+}
 
 func trafficlogInstallPrompt() string {
 	translatedAppName := i18n.T(strings.ToUpper(common.AppName))
@@ -44,6 +125,9 @@ func (app *App) getCapturedPackets(w io.Writer) error {
 	defer app.trafficLogLock.Unlock()
 	defer app.proxiesLock.RUnlock()
 
+	if app.trafficLog == nil {
+		return errTrafficLogDisabled
+	}
 	for _, p := range app.proxies {
 		if err := app.trafficLog.SaveCaptures(p.Addr(), app.captureSaveDuration); err != nil {
 			return errors.New("failed to save captures for %s: %v", p.Name(), err)
@@ -57,43 +141,11 @@ func (app *App) getCapturedPackets(w io.Writer) error {
 
 // This should be run in an independent routine as it may need to install and block for a
 // user-action granting permissions.
-func (app *App) configureTrafficLog(cfg *config.Global) {
+func (app *App) toggleTrafficLog(opts *config.TrafficLogOptions, enableTrafficLog bool) {
 	app.trafficLogLock.Lock()
 	app.proxiesLock.RLock()
 	defer app.trafficLogLock.Unlock()
 	defer app.proxiesLock.RUnlock()
-
-	forceTrafficLog := false
-	if ftl, ok := app.Flags["force-traffic-log"]; ok {
-		forceTrafficLog = ftl.(bool)
-	}
-	enableTrafficLog := false
-	enableTrafficLog = app.flashlight.FeatureEnabled(config.FeatureTrafficLog) || forceTrafficLog
-	opts := new(config.TrafficLogOptions)
-	if enableTrafficLog {
-		err := app.flashlight.FeatureOptions(config.FeatureTrafficLog, opts)
-		if err != nil && !forceTrafficLog {
-			log.Errorf("failed to unmarshal traffic log options: %v", err)
-			return
-		}
-	}
-	if forceTrafficLog {
-		// This flag is used in development to run the traffic log. We probably want to actually
-		// capture some packets if this flag is set.
-		if opts.CaptureBytes == 0 {
-			opts.CaptureBytes = 10 * 1024 * 1024
-		}
-		if opts.SaveBytes == 0 {
-			opts.SaveBytes = 10 * 1024 * 1024
-		}
-		// Use the most up-to-date binary in development.
-		opts.Reinstall = true
-		// Always try to install the traffic log in development.
-		lastFailedPath := filepath.Join(app.ConfigDir, trafficlogLastFailedInstallFile)
-		if err := os.Remove(lastFailedPath); err != nil {
-			log.Debugf("Failed to remove traffic log install-last-failed file: %v", err)
-		}
-	}
 
 	switch {
 	case enableTrafficLog && app.trafficLog == nil:
@@ -135,7 +187,7 @@ func (app *App) tryTrafficLogInstall(installDir string, opts config.TrafficLogOp
 	}
 
 	var iconFile string
-	icon, err := icons.Asset(trafficlogInstallIcon)
+	icon, err := icons.Asset(appIcon("connected"))
 	if err != nil {
 		log.Debugf("Unable to load prompt icon during traffic log install: %v", err)
 	} else {
@@ -146,38 +198,65 @@ func (app *App) tryTrafficLogInstall(installDir string, opts config.TrafficLogOp
 		}
 	}
 
-	lastFailedPath := filepath.Join(app.ConfigDir, trafficlogLastFailedInstallFile)
-	lastFailedRaw, err := ioutil.ReadFile(lastFailedPath)
-	if err != nil && !os.IsNotExist(err) {
-		return errors.New("unable to open traffic log install-last-failed file: %v", err)
+	// Default for these options is to ask a single time.
+	if opts.FailuresThreshold == 0 {
+		opts.FailuresThreshold = 1
 	}
-	if lastFailedRaw != nil {
+	if opts.UserDenialThreshold == 0 {
+		opts.UserDenialThreshold = 1
+	}
+
+	failuresFilePath := filepath.Join(app.ConfigDir, tlInstallFailuresFilename)
+	failuresFile, err := openTLInstallFailuresFile(failuresFilePath)
+	if err != nil {
+		return errors.New("unable to open traffic log install-failures file: %v", err)
+	}
+	defer func() { failuresFile.flushChanges() }()
+	if !failuresFile.LastFailed.IsZero() &&
+		failuresFile.LastFailed.timeSince() > opts.TimeBeforeFailureReset {
+		failuresFile.Failures = 0
+		failuresFile.LastFailed.SetToZero()
+	}
+	if !failuresFile.LastDenial.IsZero() &&
+		failuresFile.LastDenial.timeSince() > opts.TimeBeforeDenialReset {
+		failuresFile.Denials = 0
+		failuresFile.LastDenial.SetToZero()
+	}
+	if failuresFile.Failures >= opts.FailuresThreshold {
+		return errors.New(
+			"failures (%d) already meets threshold (%d)",
+			failuresFile.Failures, opts.FailuresThreshold,
+		)
+	}
+	if failuresFile.Denials >= opts.UserDenialThreshold {
+		return errors.New(
+			"user denials (%d) already meets threshold (%d)",
+			failuresFile.Denials, opts.UserDenialThreshold,
+		)
+	}
+	if !failuresFile.LastFailed.IsZero() {
 		if opts.WaitTimeSinceFailedInstall == 0 {
 			return errors.New("aborting: install previously failed")
 		}
-		lastFailed := new(time.Time)
-		if err := lastFailed.UnmarshalText(lastFailedRaw); err != nil {
-			return errors.New("failed to parse traffic log install-last-failed file: %v", err)
-		}
-		if time.Since(*lastFailed) < opts.WaitTimeSinceFailedInstall {
+		if failuresFile.LastFailed.timeSince() < opts.WaitTimeSinceFailedInstall {
 			return errors.New(
 				"aborting: last failed %v ago, wait time is %v",
-				time.Since(*lastFailed), opts.WaitTimeSinceFailedInstall,
+				failuresFile.LastFailed.timeSince(), opts.WaitTimeSinceFailedInstall,
 			)
 		}
 	}
 
 	// Note that this is a no-op if the traffic log is already installed.
 	installOpts := tlproc.InstallOptions{Overwrite: opts.Reinstall}
-	installErr := tlproc.Install(
-		installDir, u.Username, trafficlogInstallPrompt(), iconFile, &installOpts)
-	if installErr != nil {
-		if b, err := time.Now().MarshalText(); err != nil {
-			log.Errorf("Failed to marshal time for traffic log install-last-failed file: %v", err)
-		} else if err := ioutil.WriteFile(lastFailedPath, b, 0644); err != nil {
-			log.Errorf("Failed to write traffic log install-last-failed file: %v", err)
+	err = tlproc.Install(installDir, u.Username, trafficlogInstallPrompt(), iconFile, &installOpts)
+	if err != nil {
+		failuresFile.LastFailed = yamlableNow()
+		failuresFile.Failures++
+		if stderrors.Is(err, tlproc.ErrPermissionDenied) {
+			failuresFile.Denials++
+			failuresFile.LastDenial = yamlableNow()
 		}
-		return errors.New("failed to install traffic log: %v", installErr)
+		return errors.Wrap(err)
 	}
 	return nil
 }

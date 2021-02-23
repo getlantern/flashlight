@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -9,6 +8,7 @@ import (
 
 	"github.com/blang/semver"
 
+	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/common"
 )
 
@@ -26,6 +26,7 @@ const (
 	FeatureProxyWhitelistedOnly = "proxywhitelistedonly"
 	FeatureTrackYouTube         = "trackyoutube"
 	FeatureYinbiWallet          = "yinbiwallet"
+	FeatureYinbi                = "yinbi"
 )
 
 var (
@@ -72,25 +73,53 @@ type TrafficLogOptions struct {
 	// to install the traffic log. The most likely reason for a failed install is denial of
 	// permission by the user. A value of 0 means we never re-attempt installation.
 	WaitTimeSinceFailedInstall time.Duration
+
+	// The number of times installation can fail before we give up on this client. A value of zero
+	// is equivalent to a value of one.
+	FailuresThreshold int
+
+	// After this amount of time has elapsed, the failure count is reset and a user may be
+	// re-prompted to install the traffic log.
+	TimeBeforeFailureReset time.Duration
+
+	// The number of times a user must deny permission for the traffic log before we stop asking. A
+	// value of zero is equivalent to a value of one.
+	UserDenialThreshold int
+
+	// After this amount of time has elapsed, the user denial count is reset and a user may be
+	// re-prompted to install the traffic log.
+	TimeBeforeDenialReset time.Duration
 }
 
 func (o *TrafficLogOptions) fromMap(m map[string]interface{}) error {
 	var err error
 	o.CaptureBytes, err = intFromMap(m, "capturebytes")
 	if err != nil {
-		return err
+		return errors.New("error unmarshaling 'capturebytes': %v", err)
 	}
 	o.SaveBytes, err = intFromMap(m, "savebytes")
 	if err != nil {
-		return err
+		return errors.New("error unmarshaling 'savebytes': %v", err)
+	}
+	o.CaptureSaveDuration, err = durationFromMap(m, "capturesaveduration")
+	if err != nil {
+		return errors.New("error unmarshaling 'capturesaveduration': %v", err)
 	}
 	o.Reinstall, err = boolFromMap(m, "reinstall")
 	if err != nil {
-		return err
+		return errors.New("error unmarshaling 'reinstall': %v", err)
 	}
 	o.WaitTimeSinceFailedInstall, err = durationFromMap(m, "waittimesincefailedinstall")
 	if err != nil {
-		return err
+		return errors.New("error unmarshaling 'waittimesincefailedinstall': %v", err)
+	}
+	o.UserDenialThreshold, err = intFromMap(m, "userdenialthreshold")
+	if err != nil {
+		return errors.New("error unmarshaling 'userdenialthreshold': %v", err)
+	}
+	o.TimeBeforeDenialReset, err = durationFromMap(m, "timebeforedenialreset")
+	if err != nil {
+		return errors.New("error unmarshaling 'timebeforedenialreset': %v", err)
 	}
 	return nil
 }
