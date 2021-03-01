@@ -70,10 +70,11 @@ func (impl *httpsImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, er
 			}
 			return tcpConn, err
 		},
-		Timeout:         timeoutFor(ctx),
-		SendServerName:  impl.tlsConfig.ServerName != "",
-		Config:          impl.tlsConfig,
-		ClientHelloID:   currentHello.id,
+		Timeout:        timeoutFor(ctx),
+		SendServerName: impl.tlsConfig.ServerName != "",
+		Config:         impl.tlsConfig.Clone(),
+		ClientHelloID:  currentHello.id,
+		// TODO: clone currentHello.spec: https://github.com/getlantern/flashlight/issues/1038
 		ClientHelloSpec: currentHello.spec,
 	}
 	result, err := d.DialForTimings("tcp", impl.addr)

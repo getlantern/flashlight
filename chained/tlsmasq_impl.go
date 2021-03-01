@@ -178,12 +178,13 @@ func (h *utlsHandshaker) Handshake(conn net.Conn) (*ptlshs.HandshakeResult, erro
 	}
 
 	currentHello := r.current()
-	uconn := tls.UClient(conn, h.cfg, currentHello.id)
+	uconn := tls.UClient(conn, h.cfg.Clone(), currentHello.id)
 	res, err := func() (*ptlshs.HandshakeResult, error) {
 		if currentHello.id == tls.HelloCustom {
 			if currentHello.spec == nil {
 				return nil, errors.New("hello spec must be provided if HelloCustom is used")
 			}
+			// TODO: clone currentHello.spec: https://github.com/getlantern/flashlight/issues/1038
 			if err := uconn.ApplyPreset(currentHello.spec); err != nil {
 				return nil, fmt.Errorf("failed to set custom hello spec: %w", err)
 			}
