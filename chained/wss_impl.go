@@ -15,7 +15,7 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tinywss"
-	"github.com/getlantern/tlsdialer"
+	"github.com/getlantern/tlsdialer/v3"
 	tls "github.com/refraction-networking/utls"
 )
 

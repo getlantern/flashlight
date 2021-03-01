@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/tlsdialer"
+	"github.com/getlantern/tlsdialer/v3"
 	"github.com/getlantern/tlsresumption"
 	tls "github.com/refraction-networking/utls"
 	"github.com/stretchr/testify/assert"
