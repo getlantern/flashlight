@@ -24,7 +24,7 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
-	"github.com/getlantern/tlsdialer"
+	"github.com/getlantern/tlsdialer/v3"
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/balancer"
