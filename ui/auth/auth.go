@@ -12,19 +12,6 @@ import (
 	"github.com/go-chi/chi"
 )
 
-const (
-	userKey = iota
-
-	pathPrefix = "/user"
-
-	authEndpoint          = "/auth"
-	loginEndpoint         = "/login"
-	signOutEndpoint       = "/logout"
-	registrationEndpoint  = "/register"
-	balanceEndpoint       = "/balance"
-	createAccountEndpoint = "/account/new"
-)
-
 var (
 	ErrInvalidCredentials = errors.New("The supplied user credentials were invalid")
 	ErrBadRequest         = errors.New("The request parameters were invalid")
@@ -48,7 +35,16 @@ func New(params api.APIParams) AuthHandler {
 // GetPathPrefix returns the top-level route prefix used
 // by the AuthHandler
 func (h AuthHandler) GetPathPrefix() string {
-	return pathPrefix
+	return "/user"
+}
+
+// getUserParams is used to unmarshal JSON from the given request r into
+// the the user params type
+func getUserParams(w http.ResponseWriter, r *http.Request) (*models.UserParams, error) {
+	var params models.UserParams
+	// extract user credentials from HTTP request to send to AuthClient
+	err := handler.DecodeJSONRequest(w, r, &params)
+	return &params, err
 }
 
 type AuthMethod func(params *models.UserParams) (api.AuthResponse, error)
@@ -58,43 +54,49 @@ type AuthMethod func(params *models.UserParams) (api.AuthResponse, error)
 // the user params in the request
 func (h AuthHandler) authHandler(authenticate AuthMethod) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var params models.UserParams
-		// extract user credentials from HTTP request to send to AuthClient
-		err := handler.DecodeJSONRequest(w, r, &params)
+		params, err := getUserParams(w, r)
 		if err != nil {
-			log.Errorf("Couldn't decode user params: %v", err)
 			return
 		}
-		authResp, err := authenticate(&params)
-		if err != nil {
-			handler.ErrorHandler(w, err, authResp.StatusCode)
-		} else {
-			handler.SuccessResponse(w, authResp)
-		}
+		authResp, err := authenticate(params)
+		handleResponse(authResp, w, err)
 	})
+}
+
+// handleResponse returns the auth response to the client based on whether or not
+// err is nil
+func handleResponse(authResp api.AuthResponse, w http.ResponseWriter, err error) {
+	if err != nil {
+		handler.ErrorHandler(w, err, authResp.StatusCode)
+	} else {
+		handler.SuccessResponse(w, authResp)
+	}
 }
 
 // ConfigureRoutes returns an http.Handler for the auth-based routes
 func (h AuthHandler) ConfigureRoutes() http.Handler {
 	r := handler.NewRouter()
 	r.Group(func(r chi.Router) {
-
-		r.Post(loginEndpoint, h.authHandler(h.authClient.SignIn))
-		r.Post(registrationEndpoint, h.authHandler(h.authClient.Register))
-		r.Post(signOutEndpoint, func(w http.ResponseWriter, r *http.Request) {
-			var params models.UserParams
-			// extract user credentials from HTTP request to send to AuthClient
-			err := handler.DecodeJSONRequest(w, r, &params)
+		r.Post("/login", h.authHandler(h.authClient.SignIn))
+		r.Post("/register", h.authHandler(h.authClient.Register))
+		r.Get("/account/status", func(w http.ResponseWriter, r *http.Request) {
+			params, err := getUserParams(w, r)
 			if err != nil {
-				handler.ErrorHandler(w, err, http.StatusBadRequest)
 				return
 			}
-			resp, err := h.authClient.SignOut(params.Username)
+			authResp, err := h.authClient.AccountStatus(params.Email, params.UserID)
+			handleResponse(authResp, w, err)
+		})
+		r.Post("/logout", func(w http.ResponseWriter, r *http.Request) {
+			params, err := getUserParams(w, r)
 			if err != nil {
-				handler.ErrorHandler(w, err, resp.StatusCode)
 				return
 			}
-			log.Debugf("User %s successfully signed out", params.Username)
+			authResp, err := h.authClient.SignOut(params.Username)
+			if err != nil {
+				log.Debugf("User %s successfully signed out", params.Username)
+			}
+			handleResponse(authResp, w, err)
 		})
 	})
 	return r
