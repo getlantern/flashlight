@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -42,8 +43,20 @@ func (h AuthHandler) GetPathPrefix() string {
 // the the user params type
 func getUserParams(w http.ResponseWriter, r *http.Request) (*models.UserParams, error) {
 	var params models.UserParams
+	var err error
+	switch r.Method {
+	case http.MethodGet:
+		// marshal query args into JSON
+		b, err := json.Marshal(r.URL.Query())
+		if err != nil {
+			return nil, err
+		}
+		// now unmarshal target type user params
+		err = json.Unmarshal(b, &params)
+	default:
+		err = handler.DecodeJSONRequest(w, r, &params)
+	}
 	// extract user credentials from HTTP request to send to AuthClient
-	err := handler.DecodeJSONRequest(w, r, &params)
 	return &params, err
 }
 
@@ -83,7 +96,7 @@ func (h AuthHandler) ConfigureRoutes() http.Handler {
 			if err != nil {
 				return
 			}
-			authResp, err := h.authClient.AccountStatus(params.Email, params.UserID)
+			authResp, err := h.authClient.AccountStatus(params)
 			handleResponse(authResp, w, err)
 		})
 		r.Post("/logout", func(w http.ResponseWriter, r *http.Request) {
