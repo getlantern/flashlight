@@ -48,11 +48,10 @@ func (h YinbiHandler) ConfigureRoutes() http.Handler {
 	}
 
 	r := handler.NewRouter()
-	r.Group(func(cr chi.Router) {
-		for endpoint, handler := range routes {
-			cr.Mount(endpoint, handler())
-		}
-	})
+	for endpoint, handler := range routes {
+		log.Debugf("Adding sub-router with path %s", endpoint)
+		r.Mount(endpoint, handler())
+	}
 
 	return r
 }

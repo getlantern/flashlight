@@ -9,22 +9,14 @@ import (
 	"github.com/go-chi/chi"
 )
 
-const (
-	// account endpoints
-	accountDetailsEndpoint      = "/details"
-	accountTransactionsEndpoint = "/transactions"
-	accountRecoverEndpoint      = "/recover"
-	resetPasswordEndpoint       = "/password/reset"
-)
-
 // accountHandler is the http.Handler used for handling account-related requests
 func (h YinbiHandler) accountHandler() http.Handler {
 	r := handler.NewRouter()
 	r.Group(func(r chi.Router) {
-		r.Get(accountDetailsEndpoint, h.getAccountDetails)
-		r.Post(resetPasswordEndpoint, h.resetPassword)
-		r.Post(accountTransactionsEndpoint, h.updateAccountTransactions)
-		r.Post(accountRecoverEndpoint, h.recoverAccount)
+		r.Get("/details", h.getAccountDetails)
+		r.Post("/password/reset", h.resetPassword)
+		r.Post("/transactions", h.updateAccountTransactions)
+		r.Post("/recover", h.recoverAccount)
 	})
 	return r
 }
@@ -49,6 +41,7 @@ func (h YinbiHandler) resetPassword(w http.ResponseWriter, r *http.Request) {
 // recoverAccount is the http.Handler used for handling account recovery
 // requests
 func (h YinbiHandler) recoverAccount(w http.ResponseWriter, r *http.Request) {
+	log.Debug("Received new recover account request")
 	var params struct {
 		Words string `json:"words"`
 	}
@@ -56,7 +49,6 @@ func (h YinbiHandler) recoverAccount(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	log.Debug("Received new recover account request")
 	resp, err := h.yinbiClient.RecoverAccount(params.Words)
 	if err != nil {
 		handler.ErrorHandler(w, err, resp.StatusCode)
