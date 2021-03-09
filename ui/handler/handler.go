@@ -84,12 +84,12 @@ func GetQueryParam(r *http.Request, name string) string {
 }
 
 // GetParams is used to unmarshal JSON from the given request r into
-//  the target  type
+// the target type
 func GetParams(w http.ResponseWriter, r *http.Request, target interface{}) error {
 	var err error
 	switch r.Method {
 	case http.MethodGet:
-		// marshal query args into JSON
+		// if it's a GET request, marshal JSON from the query arguments
 		b, err := json.Marshal(r.URL.Query())
 		if err != nil {
 			return err
@@ -99,12 +99,11 @@ func GetParams(w http.ResponseWriter, r *http.Request, target interface{}) error
 	default:
 		err = DecodeJSONRequest(w, r, &target)
 	}
-	// extract user credentials from HTTP request to send to AuthClient
 	return err
 }
 
-// HandleAuthResponse returns the auth response to the client based on whether or not
-// err is nil
+// HandleAuthResponse handles the given auth response. If err is not nil, the error
+// handler is used; otherwise, a success response is sent
 func HandleAuthResponse(authResp api.AuthResponse, w http.ResponseWriter, err error) {
 	if err != nil {
 		ErrorHandler(w, err, authResp.StatusCode)
