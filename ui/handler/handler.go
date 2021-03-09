@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -80,6 +81,36 @@ func GetQueryParam(r *http.Request, name string) string {
 		return ""
 	}
 	return keys[0]
+}
+
+// GetParams is used to unmarshal JSON from the given request r into
+//  the target  type
+func GetParams(w http.ResponseWriter, r *http.Request, target interface{}) error {
+	var err error
+	switch r.Method {
+	case http.MethodGet:
+		// marshal query args into JSON
+		b, err := json.Marshal(r.URL.Query())
+		if err != nil {
+			return err
+		}
+		// now unmarshal target type user params
+		err = json.Unmarshal(b, &target)
+	default:
+		err = DecodeJSONRequest(w, r, &target)
+	}
+	// extract user credentials from HTTP request to send to AuthClient
+	return err
+}
+
+// HandleAuthResponse returns the auth response to the client based on whether or not
+// err is nil
+func HandleAuthResponse(authResp api.AuthResponse, w http.ResponseWriter, err error) {
+	if err != nil {
+		ErrorHandler(w, err, authResp.StatusCode)
+	} else {
+		SuccessResponse(w, authResp)
+	}
 }
 
 // DoHTTPRequest creates and sends a new HTTP request to the given url

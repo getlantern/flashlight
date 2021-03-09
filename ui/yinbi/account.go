@@ -26,16 +26,30 @@ func (h YinbiHandler) resetPassword(w http.ResponseWriter, r *http.Request) {
 	// resetPasswordHandler is the handler used to reset a user's
 	// wallet password
 	var params api.CreateAccountParams
-	err := handler.DecodeJSONRequest(w, r, &params)
+	err := handler.GetParams(w, r, &params)
 	if err != nil {
 		return
 	}
-	resp, err := h.yinbiClient.ResetPassword(&params)
+	pair, err := client.KeyPairFromMnemonic(params.Words)
 	if err != nil {
-		handler.ErrorHandler(w, err, resp.StatusCode)
-	} else {
-		handler.SuccessResponse(w, nil)
+		handler.ErrorHandler(w, err, http.StatusBadRequest)
+		return
 	}
+	resp, err := h.authClient.ResetPassword(params.UserParams)
+	if err != nil {
+		log.Errorf("Encountered error resetting user password: %v", err)
+		handler.ErrorHandler(w, err, resp.StatusCode)
+		return
+	}
+	log.Debug("Storing secret key in keystore with updated password")
+	err = h.yinbiClient.StoreKey(pair.Seed(), params.Username, params.Password)
+	if err != nil {
+		log.Errorf("Error saving key to keystore with updated password: %v", err)
+		handler.ErrorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
+	log.Debug("Successfully stored key with updated password in keystore")
+	handler.HandleAuthResponse(resp, w, nil)
 }
 
 // recoverAccount is the http.Handler used for handling account recovery

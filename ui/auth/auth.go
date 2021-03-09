@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -43,21 +42,7 @@ func (h AuthHandler) GetPathPrefix() string {
 // the the user params type
 func getUserParams(w http.ResponseWriter, r *http.Request) (*models.UserParams, error) {
 	var params models.UserParams
-	var err error
-	switch r.Method {
-	case http.MethodGet:
-		// marshal query args into JSON
-		b, err := json.Marshal(r.URL.Query())
-		if err != nil {
-			return nil, err
-		}
-		// now unmarshal target type user params
-		err = json.Unmarshal(b, &params)
-	default:
-		err = handler.DecodeJSONRequest(w, r, &params)
-	}
-	// extract user credentials from HTTP request to send to AuthClient
-	return &params, err
+	return &params, handler.GetParams(w, r, &params)
 }
 
 type AuthMethod func(params *models.UserParams) (api.AuthResponse, error)
@@ -71,18 +56,8 @@ func (h AuthHandler) authHandler(authenticate AuthMethod) http.HandlerFunc {
 			return
 		}
 		authResp, err := authenticate(params)
-		handleResponse(authResp, w, err)
+		handler.HandleAuthResponse(authResp, w, err)
 	})
-}
-
-// handleResponse returns the auth response to the client based on whether or not
-// err is nil
-func handleResponse(authResp api.AuthResponse, w http.ResponseWriter, err error) {
-	if err != nil {
-		handler.ErrorHandler(w, err, authResp.StatusCode)
-	} else {
-		handler.SuccessResponse(w, authResp)
-	}
 }
 
 // ConfigureRoutes returns an http.Handler for the auth-based routes
@@ -97,7 +72,7 @@ func (h AuthHandler) ConfigureRoutes() http.Handler {
 				return
 			}
 			authResp, err := h.authClient.AccountStatus(params)
-			handleResponse(authResp, w, err)
+			handler.HandleAuthResponse(authResp, w, err)
 		})
 		r.Post("/logout", func(w http.ResponseWriter, r *http.Request) {
 			params, err := getUserParams(w, r)
@@ -108,7 +83,7 @@ func (h AuthHandler) ConfigureRoutes() http.Handler {
 			if err != nil {
 				log.Debugf("User %s successfully signed out", params.Username)
 			}
-			handleResponse(authResp, w, err)
+			handler.HandleAuthResponse(authResp, w, err)
 		})
 	})
 	return r
