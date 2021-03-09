@@ -446,6 +446,8 @@ github.com/getlantern/auth-server v0.0.0-20210309152258-3fa5b73b3f87 h1:jz63rmWZ
 github.com/getlantern/auth-server v0.0.0-20210309152258-3fa5b73b3f87/go.mod h1:oZyCc29JOyS5OJ8Gg7OSL6j70hatAbHXlX6gpV5SI9c=
 github.com/getlantern/auth-server v0.0.0-20210309153113-73776d68cefa h1:zeb8UXIyMbLRDfgOXJXfsegbM2IKcc1OnXW1c3MXeGw=
 github.com/getlantern/auth-server v0.0.0-20210309153113-73776d68cefa/go.mod h1:oZyCc29JOyS5OJ8Gg7OSL6j70hatAbHXlX6gpV5SI9c=
+github.com/getlantern/auth-server v0.0.0-20210309160451-3b8534c5db44 h1:jlXTAVorOkQw6cj13viK0O5jNvfmHtRSo2DNehYRTVs=
+github.com/getlantern/auth-server v0.0.0-20210309160451-3b8534c5db44/go.mod h1:oZyCc29JOyS5OJ8Gg7OSL6j70hatAbHXlX6gpV5SI9c=
 github.com/getlantern/authipc v0.2.0 h1:aAlYBn1tizjbBbXmknoalU7P+tlNqGAHroTptKvXMnk=
 github.com/getlantern/authipc v0.2.0/go.mod h1:nDXd7xyGPMbPwEi4QAL3PPMzvwSFYbQxzk4ipANL25M=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99 h1:fnjb9PYZRMU6Tok5i3anP/bAqhUtG2kn9xgff3IlA+8=
