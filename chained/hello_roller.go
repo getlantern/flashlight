@@ -43,6 +43,7 @@ func (hs helloSpec) utlsSpec() (tls.ClientHelloID, *tls.ClientHelloSpec, error) 
 	return hs.id, spec, nil
 }
 
+// An error is only returned in the case of an invalid custom hello (as specified by hs.sample).
 func (hs helloSpec) uconn(transport net.Conn, cfg *tls.Config) (*tls.UConn, error) {
 	id, spec, err := hs.utlsSpec()
 	if err != nil {

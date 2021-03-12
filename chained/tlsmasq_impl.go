@@ -179,7 +179,7 @@ func (h *utlsHandshaker) Handshake(conn net.Conn) (*ptlshs.HandshakeResult, erro
 	currentHello := r.current()
 	uconn, err := currentHello.uconn(conn, h.cfg.Clone())
 	if err != nil {
-		// An error from tlsClientConn implies an invalid hello.
+		// An error from helloSpec.uconn implies an invalid hello.
 		log.Debugf("invalid custom hello; advancing roller: %v", err)
 		r.advance()
 		return nil, err
