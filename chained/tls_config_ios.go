@@ -5,10 +5,8 @@ package chained
 import (
 	"context"
 	"fmt"
-
-	tls "github.com/refraction-networking/utls"
 )
 
-func activelyObtainBrowserHello(configDir string, ctx context.Context) (*tls.ClientHelloSpec, error) {
+func activelyObtainBrowserHello(ctx context.Context, configDir string) (*hello, error) {
 	return nil, fmt.Errorf("activelyObtainBrowserHello not supported on iOS")
 }

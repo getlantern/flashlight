@@ -2,11 +2,8 @@ package chained
 
 import (
 	"context"
-	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
-	"path/filepath"
 	"runtime"
 
 	tls "github.com/refraction-networking/utls"
@@ -24,8 +21,8 @@ import (
 // first hello is the "ideal" one and the remaining hellos serve as backup in case something is
 // wrong with the previous hellos. There will always be at least one hello. For each hello, the
 // ClientHelloSpec will be non-nil if and only if the ClientHelloID is tls.HelloCustom.
-func tlsConfigForProxy(configDir string, ctx context.Context, name string, s *ChainedServerInfo, uc common.UserConfig) (
-	*tls.Config, []hello) {
+func tlsConfigForProxy(ctx context.Context, configDir, proxyName string, s *ChainedServerInfo, uc common.UserConfig) (
+	*tls.Config, []helloSpec) {
 
 	configuredHelloID := s.clientHelloID()
 	var ss *tls.ClientSessionState
@@ -43,13 +40,13 @@ func tlsConfigForProxy(configDir string, ctx context.Context, name string, s *Ch
 		}
 	}
 
-	var configuredHelloSpec *tls.ClientHelloSpec
+	configuredHelloSpec := helloSpec{configuredHelloID, nil}
 	if configuredHelloID == helloBrowser {
-		configuredHelloID, configuredHelloSpec = getBrowserHello(configDir, ctx, uc)
+		configuredHelloSpec = getBrowserHello(ctx, configDir, uc)
 	}
 
 	sessionTTL := simbrowser.ChooseForUser(ctx, uc).SessionTicketLifetime
-	sessionCache := newExpiringSessionCache(name, sessionTTL, ss)
+	sessionCache := newExpiringSessionCache(proxyName, sessionTTL, ss)
 	cipherSuites := orderedCipherSuitesFromConfig(s)
 
 	cfg := &tls.Config{
@@ -59,8 +56,8 @@ func tlsConfigForProxy(configDir string, ctx context.Context, name string, s *Ch
 		InsecureSkipVerify: true,
 		KeyLogWriter:       getTLSKeyLogWriter(),
 	}
-	hellos := []hello{
-		{configuredHelloID, configuredHelloSpec},
+	hellos := []helloSpec{
+		configuredHelloSpec,
 		{tls.HelloChrome_Auto, nil},
 		{tls.HelloGolang, nil},
 	}
@@ -72,7 +69,7 @@ func tlsConfigForProxy(configDir string, ctx context.Context, name string, s *Ch
 // few possible failure points in making this determination, e.g. a failure to obtain the default
 // browser or a failure to capture a hello from the browser. However, this function will always find
 // something reasonable to fall back on.
-func getBrowserHello(configDir string, ctx context.Context, uc common.UserConfig) (tls.ClientHelloID, *tls.ClientHelloSpec) {
+func getBrowserHello(ctx context.Context, configDir string, uc common.UserConfig) helloSpec {
 	// We have a number of ways to approximate the browser's ClientHello format. We begin with the
 	// most desirable, progressively falling back to less desirable options on failure.
 
@@ -80,15 +77,15 @@ func getBrowserHello(configDir string, ctx context.Context, uc common.UserConfig
 	op.Set("platform", runtime.GOOS)
 	defer op.End()
 
-	helloSpec, err := activelyObtainBrowserHello(configDir, ctx)
+	hello, err := activelyObtainBrowserHello(ctx, configDir)
 	if err == nil {
-		return tls.HelloCustom, helloSpec
+		return *hello
 	}
 	op.FailIf(err)
 	log.Debugf("failed to actively obtain browser hello: %v", err)
 
 	// Our last option is to simulate a browser choice for the user based on market share.
-	return simbrowser.ChooseForUser(ctx, uc).ClientHelloID, nil
+	return helloSpec{simbrowser.ChooseForUser(ctx, uc).ClientHelloID, nil}
 }
 
 func orderedCipherSuitesFromConfig(s *ChainedServerInfo) []uint16 {
@@ -112,26 +109,4 @@ func getTLSKeyLogWriter() io.Writer {
 		}
 	})
 	return tlsKeyLogWriter
-}
-
-type helloCacheFile string
-
-func helloCacheInConfigDir(configDir string, relativeFilename string) helloCacheFile {
-	return helloCacheFile(filepath.Join(configDir, relativeFilename))
-}
-
-func (f helloCacheFile) write(hello []byte) error {
-	return ioutil.WriteFile(string(f), hello, 0644)
-}
-
-func (f helloCacheFile) readAndParse() (*tls.ClientHelloSpec, error) {
-	hello, err := ioutil.ReadFile(string(f))
-	if err != nil {
-		return nil, fmt.Errorf("read failed: %w", err)
-	}
-	spec, err := tls.FingerprintClientHello(hello)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse file contents: %w", err)
-	}
-	return spec, nil
 }
