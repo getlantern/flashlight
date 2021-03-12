@@ -14,7 +14,6 @@ import (
 
 const helloCacheFilename = "hello-cache.active-capture"
 
-// TODO: look at why ios is separated out
 func activelyObtainBrowserHello(ctx context.Context, configDir string) (*helloSpec, error) {
 	const tlsRecordHeaderLen = 5
 
