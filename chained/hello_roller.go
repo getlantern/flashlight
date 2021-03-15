@@ -21,7 +21,7 @@ type helloSpec struct {
 
 // This function is guaranteed to return one of the following:
 //  - A non-custom client hello ID (i.e. not utls.ClientHelloCustom)
-//	- utls.ClientHelloCustom and a non-nil utls.ClientHelloSpec.
+//  - utls.ClientHelloCustom and a non-nil utls.ClientHelloSpec.
 //  - An error (if the above is not possible)
 func (hs helloSpec) utlsSpec() (tls.ClientHelloID, *tls.ClientHelloSpec, error) {
 	const tlsRecordHeaderLen = 5
