@@ -8,6 +8,7 @@ import (
 	"reflect"
 
 	"github.com/getlantern/auth-server/api"
+	. "github.com/getlantern/flashlight/common"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
 	"github.com/go-chi/chi"
@@ -60,7 +61,7 @@ func NewHandler(params api.APIParams) Handler {
 func NewRouter() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(BodyParser)
-	r.Use(common.CORSMiddleware)
+	r.Use(CORSMiddleware)
 	return r
 }
 
