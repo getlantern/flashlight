@@ -81,19 +81,22 @@ func AddCommonHeaders(uc UserConfig, req *http.Request) {
 // ProcessCORS processes CORS requests on localhost.
 func ProcessCORS(responseHeaders http.Header, r *http.Request) {
 	origin := r.Header.Get("origin")
-	if origin == "" {
-		log.Debugf("Request is not a CORS request")
-		return
-	}
-	// The origin can have include arbitrary ports, so we just make sure
-	// it's on localhost.
-	if strings.HasPrefix(origin, "http://localhost:") ||
-		strings.HasPrefix(origin, "http://127.0.0.1:") ||
-		strings.HasPrefix(origin, "http://[::1]:") {
-
+	if IsOriginAllowed(origin) {
 		responseHeaders.Set("Access-Control-Allow-Origin", origin)
 		responseHeaders.Add("Access-Control-Allow-Methods", "GET")
 		responseHeaders.Add("Access-Control-Allow-Methods", "POST")
 		responseHeaders.Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
 	}
+}
+
+// The origin can have include arbitrary ports, so we just make sure
+// it's on localhost.
+func IsOriginAllowed(origin string) bool {
+	if origin == "" {
+		log.Debug("Request is not a CORS request")
+		return false
+	}
+	return strings.HasPrefix(origin, "http://localhost:") ||
+		strings.HasPrefix(origin, "http://127.0.0.1:") ||
+		strings.HasPrefix(origin, "http://[::1]:")
 }

@@ -3,14 +3,9 @@ package handler
 import (
 	"net/http"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/rs/cors"
 )
-
-var corsOrigins = []string{
-	"http://localhost:2000",
-	"http://localhost:8080",
-	"https://localhost:2000",
-}
 
 var corsAllowedHeaders = []string{
 	"Origin",
@@ -22,7 +17,7 @@ var corsAllowedHeaders = []string{
 
 func CORSMiddleware(next http.Handler) http.Handler {
 	cors := cors.New(cors.Options{
-		AllowedOrigins:   corsOrigins,
+		AllowOriginFunc:  common.IsOriginAllowed,
 		AllowedHeaders:   corsAllowedHeaders,
 		AllowCredentials: true,
 		Debug:            true,
