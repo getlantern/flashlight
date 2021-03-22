@@ -60,7 +60,7 @@ func NewHandler(params api.APIParams) Handler {
 func NewRouter() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(BodyParser)
-	r.Use(CORSMiddleware)
+	r.Use(common.CORSMiddleware)
 	return r
 }
 
