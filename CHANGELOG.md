@@ -1,4 +1,17 @@
 
+<a name="lantern-6.4.5"></a>
+## [lantern-6.4.5](https://github.com/getlantern/flashlight/compare/lantern-6.4.4-yinbi...lantern-6.4.5)
+
+> 2021-03-08
+
+### Pull Requests
+
+* Merge pull request [#1045](https://github.com/getlantern/flashlight/issues/1045) from getlantern/ui-6.4.5
+* Merge pull request [#1040](https://github.com/getlantern/flashlight/issues/1040) from getlantern/harry/tlsdialer-upgrade
+* Merge pull request [#1037](https://github.com/getlantern/flashlight/issues/1037) from getlantern/harry/tlsmasq-9
+* Merge pull request [#1010](https://github.com/getlantern/flashlight/issues/1010) from getlantern/harry/2485-addendum
+
+
 <a name="lantern-6.4.4-yinbi"></a>
 ## [lantern-6.4.4-yinbi](https://github.com/getlantern/flashlight/compare/lantern-6.4.3-yinbi...lantern-6.4.4-yinbi)
 
