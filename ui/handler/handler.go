@@ -97,7 +97,7 @@ func GetParams(w http.ResponseWriter, r *http.Request, target interface{}) error
 		}
 		// now unmarshal target type user params
 		err = json.Unmarshal(b, &target)
-	default:
+	case http.MethodPost: // explicitly check for POST
 		err = DecodeJSONRequest(w, r, &target)
 	}
 	return err
