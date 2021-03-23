@@ -198,9 +198,9 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2020
 
 //replace github.com/getlantern/yinbi-server => ../yinbi-server
 
-replace github.com/getlantern/auth-server => ../auth-server
+//replace github.com/getlantern/auth-server => ../auth-server
 
-replace github.com/getlantern/lantern-server => ../lantern-server
+//replace github.com/getlantern/lantern-server => ../lantern-server
 
 // For https://github.com/crawshaw/sqlite/pull/112 and https://github.com/crawshaw/sqlite/pull/103.
 replace crawshaw.io/sqlite => github.com/getlantern/sqlite v0.3.3-0.20210215090556-4f83cf7731f0
