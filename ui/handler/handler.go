@@ -8,6 +8,7 @@ import (
 	"reflect"
 
 	"github.com/getlantern/auth-server/api"
+	. "github.com/getlantern/flashlight/common"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
 	"github.com/go-chi/chi"
