@@ -25,7 +25,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gavv/monotime v0.0.0-20190418164738-30dba4353424 // indirect
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
-	github.com/getlantern/auth-server v0.0.0-20210323190114-bf76c7337eb8 // indirect
+	github.com/getlantern/auth-server v0.0.0-20210323195126-24b3cd5d7ddd // indirect
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20200613191039-d7b1c2cc6021
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
@@ -62,7 +62,7 @@ require (
 	github.com/getlantern/kcpwrapper v0.0.0-20201001150218-1427e1d39c25
 	github.com/getlantern/keyman v0.0.0-20200820153608-cfd0ee278507
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
-	github.com/getlantern/lantern-server v0.0.0-20210208142751-07601bac9c9e // indirect
+	github.com/getlantern/lantern-server v0.0.0-20210321172000-b7182804bcc5 // indirect
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
@@ -104,6 +104,7 @@ require (
 	github.com/getlantern/wfilter v0.0.0-20160829163852-69cc8585ee9c // indirect
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
+	github.com/getlantern/yinbi-server v0.0.0-20210323191517-1852af4b8ee8 // indirect
 	github.com/getsentry/sentry-go v0.9.0
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-errors/errors v1.1.1 // indirect
