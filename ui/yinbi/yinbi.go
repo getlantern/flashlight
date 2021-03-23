@@ -29,7 +29,7 @@ type YinbiHandler struct {
 	// supports creating accounts and making payments
 	yinbiClient *client.YinbiClient
 
-	authClient *authclient.AuthClient
+	authClient authclient.AuthClient
 }
 
 type ImportWalletParams = client.ImportWalletParams

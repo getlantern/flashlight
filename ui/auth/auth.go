@@ -21,7 +21,7 @@ var (
 
 type AuthHandler struct {
 	handler.Handler
-	authClient *client.AuthClient
+	authClient client.AuthClient
 }
 
 // New creates a new auth handler
