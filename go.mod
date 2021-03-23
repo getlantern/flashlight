@@ -3,29 +3,23 @@ module github.com/getlantern/flashlight
 go 1.13
 
 require (
-	cloud.google.com/go v0.80.0 // indirect
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
-	github.com/ReneKroon/ttlcache v1.7.0 // indirect
 	github.com/anacrolix/confluence v1.6.2-0.20201116033747-ba09085bd120
 	github.com/anacrolix/envpprof v1.1.1
 	github.com/anacrolix/go-libutp v1.0.4
 	github.com/anacrolix/log v0.8.0
 	github.com/anacrolix/tagflag v1.1.1-0.20200411025953-9bb5209d56c2
 	github.com/anacrolix/torrent v1.23.0
-	github.com/aws/aws-lambda-go v1.18.0 // indirect
 	github.com/aws/aws-sdk-go v1.38.3 // indirect
-	github.com/badoux/checkmail v1.2.1 // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
-	github.com/cloudflare/cloudflare-go v0.11.5 // indirect
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff
 	github.com/fsnotify/fsnotify v1.4.9
-	github.com/gavv/monotime v0.0.0-20190418164738-30dba4353424 // indirect
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
-	github.com/getlantern/auth-server v0.0.0-20210323195126-24b3cd5d7ddd // indirect
+	github.com/getlantern/auth-server v0.0.0-20210323203545-18e348632f0a
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20200613191039-d7b1c2cc6021
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
@@ -62,7 +56,7 @@ require (
 	github.com/getlantern/kcpwrapper v0.0.0-20201001150218-1427e1d39c25
 	github.com/getlantern/keyman v0.0.0-20200820153608-cfd0ee278507
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
-	github.com/getlantern/lantern-server v0.0.0-20210208142751-07601bac9c9e // indirect
+	github.com/getlantern/lantern-server v0.0.0-20210208142751-07601bac9c9e
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
@@ -101,84 +95,56 @@ require (
 	github.com/getlantern/trafficlog-flashlight v1.0.1
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
-	github.com/getlantern/wfilter v0.0.0-20160829163852-69cc8585ee9c // indirect
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-20210323195504-45a2d74e067c // indirect
+	github.com/getlantern/yinbi-server v0.0.0-20210323195504-45a2d74e067c
 	github.com/getsentry/sentry-go v0.9.0
 	github.com/go-chi/chi v4.1.2+incompatible
-	github.com/go-errors/errors v1.1.1 // indirect
 	github.com/go-ole/go-ole v1.2.5 // indirect
-	github.com/go-redis/redis/v7 v7.2.0 // indirect
-	github.com/gobuffalo/envy v1.9.0 // indirect
-	github.com/gobuffalo/packd v1.0.0 // indirect
-	github.com/gobuffalo/packr v1.30.1 // indirect
-	github.com/google/go-cmp v0.5.5 // indirect
-	github.com/google/go-github/v28 v28.1.1 // indirect
+	github.com/golang/mock v1.5.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gopacket v1.1.17
 	github.com/google/uuid v1.2.0
-	github.com/gorilla/schema v1.2.0 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.6.8 // indirect
 	github.com/hashicorp/golang-lru v0.5.4
-	github.com/ipinfo/go-ipinfo v1.0.0 // indirect
-	github.com/jackc/pgproto3/v2 v2.0.7 // indirect
 	github.com/jackpal/gateway v1.0.6
-	github.com/jarcoal/httpmock v1.0.3 // indirect
-	github.com/jinzhu/gorm v1.9.16 // indirect
 	github.com/jinzhu/now v1.1.2 // indirect
 	github.com/jmoiron/sqlx v1.3.1 // indirect
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
 	github.com/kennygrant/sanitize v1.2.4
-	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 // indirect
-	github.com/magefile/mage v1.11.0 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/miekg/dns v1.1.35
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/go-server-timing v1.0.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/mitchellh/panicwrap v1.0.0
-	github.com/nleof/goyesql v1.0.1 // indirect
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/onsi/gomega v1.10.3 // indirect
-	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/refraction-networking/utls v0.0.0-20200729012536-186025ac7b77
-	github.com/robfig/cron v1.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
-	github.com/rs/cors v1.7.0
-	github.com/sebest/xff v0.0.0-20150611211316-7a36e3a787b5 // indirect
 	github.com/shirou/gopsutil v3.21.2+incompatible // indirect
-	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
 	github.com/stellar/go v0.0.0-20210323164617-ec5600bd6b2b // indirect
-	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/tklauser/go-sysconf v0.3.4 // indirect
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
-	github.com/ulule/limiter/v3 v3.8.0 // indirect
 	github.com/valyala/fasthttp v1.17.0 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
-	github.com/wealthsimple/goller v0.0.0-20161210163648-30a2682df1c4 // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
-	go.opencensus.io v0.23.0 // indirect
-	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2 // indirect
 	golang.org/x/net v0.0.0-20210323141857-08027d57d8cf
-	golang.org/x/oauth2 v0.0.0-20210323180902-22b0adad7558 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20210320140829-1e4c9ba3b0c4
-	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/grpc v1.36.0 // indirect
-	gopkg.in/gavv/httpexpect.v1 v1.0.0 // indirect
+	google.golang.org/genproto v0.0.0-20210323160006-e668133fea6a // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
