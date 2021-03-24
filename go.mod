@@ -10,7 +10,7 @@ require (
 	github.com/anacrolix/go-libutp v1.0.4
 	github.com/anacrolix/log v0.8.0
 	github.com/anacrolix/tagflag v1.1.1-0.20200411025953-9bb5209d56c2
-	github.com/anacrolix/torrent v1.23.0
+	github.com/anacrolix/torrent v1.25.1
 	github.com/aws/aws-sdk-go v1.38.3 // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
