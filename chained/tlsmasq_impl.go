@@ -7,7 +7,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/pem"
-	"fmt"
 	"net"
 	"strings"
 	"sync"
@@ -102,7 +101,7 @@ func newTLSMasqImpl(configDir, name, addr string, s *ChainedServerInfo, uc commo
 	pool := x509.NewCertPool()
 	pool.AddCert(cert)
 
-	pCfg, hellos := tlsConfigForProxy(configDir, ctx, name, s, uc)
+	pCfg, hellos := tlsConfigForProxy(ctx, configDir, name, s, uc)
 	pCfg.ServerName = sni
 	pCfg.InsecureSkipVerify = InsecureSkipVerifyTLSMasqOrigin
 
@@ -178,28 +177,22 @@ func (h *utlsHandshaker) Handshake(conn net.Conn) (*ptlshs.HandshakeResult, erro
 	}
 
 	currentHello := r.current()
-	uconn := tls.UClient(conn, h.cfg.Clone(), currentHello.id)
-	res, err := func() (*ptlshs.HandshakeResult, error) {
-		if currentHello.id == tls.HelloCustom {
-			if currentHello.spec == nil {
-				return nil, errors.New("hello spec must be provided if HelloCustom is used")
-			}
-			// TODO: clone currentHello.spec: https://github.com/getlantern/flashlight/issues/1038
-			if err := uconn.ApplyPreset(currentHello.spec); err != nil {
-				return nil, fmt.Errorf("failed to set custom hello spec: %w", err)
-			}
-		}
-		if err := uconn.Handshake(); err != nil {
-			return nil, err
-		}
-		return &ptlshs.HandshakeResult{
-			Version:     uconn.ConnectionState().Version,
-			CipherSuite: uconn.ConnectionState().CipherSuite,
-		}, nil
-	}()
-	if err != nil && isHelloErr(err) {
-		log.Debugf("got error likely related to bad hello; advancing roller: %v", err)
+	uconn, err := currentHello.uconn(conn, h.cfg.Clone())
+	if err != nil {
+		// An error from helloSpec.uconn implies an invalid hello.
+		log.Debugf("invalid custom hello; advancing roller: %v", err)
 		r.advance()
+		return nil, err
 	}
-	return res, err
+	if err = uconn.Handshake(); err != nil {
+		if isHelloErr(err) {
+			log.Debugf("got error likely related to bad hello; advancing roller: %v", err)
+			r.advance()
+		}
+		return nil, err
+	}
+	return &ptlshs.HandshakeResult{
+		Version:     uconn.ConnectionState().Version,
+		CipherSuite: uconn.ConnectionState().CipherSuite,
+	}, nil
 }

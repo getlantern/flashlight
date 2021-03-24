@@ -39,7 +39,7 @@ func newHTTPSImpl(configDir, name, addr string, s *ChainedServerInfo, uc common.
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", addr))
 	}
-	tlsConfig, hellos := tlsConfigForProxy(configDir, ctx, name, s, uc)
+	tlsConfig, hellos := tlsConfigForProxy(ctx, configDir, name, s, uc)
 	if len(hellos) == 0 {
 		return nil, log.Error(errors.New("expected at least one hello"))
 	}
@@ -59,6 +59,12 @@ func (impl *httpsImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, er
 	defer impl.roller.updateTo(r)
 
 	currentHello := r.current()
+	helloID, helloSpec, err := currentHello.utlsSpec()
+	if err != nil {
+		log.Debugf("failed to generate valid utls hello spec; advancing roller: %v", err)
+		r.advance()
+		return nil, errors.New("failed to generate valid utls hello spec: %v", err)
+	}
 	d := tlsdialer.Dialer{
 		DoDial: func(network, addr string, timeout time.Duration) (net.Conn, error) {
 			tcpConn, err := impl.dialCore(op, ctx, impl.addr)
@@ -70,12 +76,11 @@ func (impl *httpsImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, er
 			}
 			return tcpConn, err
 		},
-		Timeout:        timeoutFor(ctx),
-		SendServerName: impl.tlsConfig.ServerName != "",
-		Config:         impl.tlsConfig.Clone(),
-		ClientHelloID:  currentHello.id,
-		// TODO: clone currentHello.spec: https://github.com/getlantern/flashlight/issues/1038
-		ClientHelloSpec: currentHello.spec,
+		Timeout:         timeoutFor(ctx),
+		SendServerName:  impl.tlsConfig.ServerName != "",
+		Config:          impl.tlsConfig.Clone(),
+		ClientHelloID:   helloID,
+		ClientHelloSpec: helloSpec,
 	}
 	result, err := d.DialForTimings("tcp", impl.addr)
 	if err != nil {

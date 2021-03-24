@@ -1,32 +1,79 @@
 package chained
 
 import (
+	"net"
 	"sync"
 
+	"github.com/getlantern/errors"
 	tls "github.com/refraction-networking/utls"
 )
 
-type hello struct {
-	// Most users of a hello will ignore spec if id is not tls.HelloCustom.
-	id   tls.ClientHelloID
-	spec *tls.ClientHelloSpec
+type helloSpec struct {
+	// If id == tls.HelloCustom, sample must be non-nil. In this case, we will use
+	// tls.FingerprintClientHello to generate a tls.ClientHelloSpec based on sample.
+	//
+	// We do this rather than store a tls.ClientHelloSpec on the hello type because (i)
+	// tls.ClientHelloSpec instances cannot be re-used and (ii) it is easier to keep the sample
+	// hello around than to deep-copy the tls.ClientHelloSpec on each use.
+	id     tls.ClientHelloID
+	sample []byte
+}
+
+// This function is guaranteed to return one of the following:
+//  - A non-custom client hello ID (i.e. not utls.ClientHelloCustom)
+//  - utls.ClientHelloCustom and a non-nil utls.ClientHelloSpec.
+//  - An error (if the above is not possible)
+func (hs helloSpec) utlsSpec() (tls.ClientHelloID, *tls.ClientHelloSpec, error) {
+	const tlsRecordHeaderLen = 5
+
+	if hs.id != tls.HelloCustom {
+		return hs.id, nil, nil
+	}
+	if hs.sample == nil {
+		return hs.id, nil, errors.New("illegal combination of HelloCustom and nil sample hello")
+	}
+	if len(hs.sample) < tlsRecordHeaderLen {
+		return hs.id, nil, errors.New("sample hello is too small")
+	}
+
+	spec, err := tls.FingerprintClientHello(hs.sample[tlsRecordHeaderLen:])
+	if err != nil {
+		return hs.id, nil, errors.New("failed to fingerprint sample hello: %v", err)
+	}
+	return hs.id, spec, nil
+}
+
+// An error is only returned in the case of an invalid custom hello (as specified by hs.sample).
+func (hs helloSpec) uconn(transport net.Conn, cfg *tls.Config) (*tls.UConn, error) {
+	id, spec, err := hs.utlsSpec()
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	uconn := tls.UClient(transport, cfg, id)
+	if id != tls.HelloCustom {
+		return uconn, nil
+	}
+	if err := uconn.ApplyPreset(spec); err != nil {
+		return nil, errors.New("failed to apply custom hello: %v", err)
+	}
+	return uconn, nil
 }
 
 type helloRoller struct {
-	hellos          []hello
+	hellos          []helloSpec
 	index, advances int
 	sync.Mutex
 }
 
 // Not concurrency safe.
-func (hr *helloRoller) current() *hello {
+func (hr *helloRoller) current() helloSpec {
 	if len(hr.hellos) < 1 {
-		return nil
+		panic("empty hello roller is invalid")
 	}
 	if hr.index >= len(hr.hellos) {
 		hr.index = 0
 	}
-	return &hr.hellos[hr.index]
+	return hr.hellos[hr.index]
 }
 
 // Not concurrency safe.
@@ -53,7 +100,7 @@ func (hr *helloRoller) updateTo(other *helloRoller) {
 func (hr *helloRoller) getCopy() *helloRoller {
 	hr.Lock()
 	defer hr.Unlock()
-	hellos := make([]hello, len(hr.hellos))
+	hellos := make([]helloSpec, len(hr.hellos))
 	copy(hellos, hr.hellos)
 	return &helloRoller{hellos, hr.index, hr.advances, sync.Mutex{}}
 }
