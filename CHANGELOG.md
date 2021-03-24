@@ -1,4 +1,16 @@
 
+<a name="lantern-6.5.0"></a>
+## [lantern-6.5.0](https://github.com/getlantern/flashlight/compare/lantern-6.4.5...lantern-6.5.0)
+
+> 2021-03-24
+
+### Pull Requests
+
+* Merge pull request [#1049](https://github.com/getlantern/flashlight/issues/1049) from getlantern/ui-6.5.0
+* Merge pull request [#1046](https://github.com/getlantern/flashlight/issues/1046) from getlantern/harry/1038
+* Merge pull request [#1048](https://github.com/getlantern/flashlight/issues/1048) from getlantern/update-torrent
+
+
 <a name="lantern-6.4.5"></a>
 ## [lantern-6.4.5](https://github.com/getlantern/flashlight/compare/lantern-6.4.4-yinbi...lantern-6.4.5)
 
