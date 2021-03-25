@@ -2,11 +2,13 @@ package handler
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
 
 	"github.com/getlantern/auth-server/api"
+	. "github.com/getlantern/flashlight/common"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
 	"github.com/go-chi/chi"
@@ -80,6 +82,35 @@ func GetQueryParam(r *http.Request, name string) string {
 		return ""
 	}
 	return keys[0]
+}
+
+// GetParams is used to unmarshal JSON from the given request r into
+// the target type
+func GetParams(w http.ResponseWriter, r *http.Request, target interface{}) error {
+	var err error
+	switch r.Method {
+	case http.MethodGet:
+		// if it's a GET request, marshal JSON from the query arguments
+		b, err := json.Marshal(r.URL.Query())
+		if err != nil {
+			return err
+		}
+		// now unmarshal target type user params
+		err = json.Unmarshal(b, &target)
+	case http.MethodPost: // explicitly check for POST
+		err = DecodeJSONRequest(w, r, &target)
+	}
+	return err
+}
+
+// HandleAuthResponse handles the given auth response. If err is not nil, the error
+// handler is used; otherwise, a success response is sent
+func HandleAuthResponse(authResp api.AuthResponse, w http.ResponseWriter, err error) {
+	if err != nil {
+		ErrorHandler(w, err, authResp.StatusCode)
+	} else {
+		SuccessResponse(w, authResp)
+	}
 }
 
 // DoHTTPRequest creates and sends a new HTTP request to the given url

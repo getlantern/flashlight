@@ -9,22 +9,14 @@ import (
 	"github.com/go-chi/chi"
 )
 
-const (
-	// account endpoints
-	accountDetailsEndpoint      = "/details"
-	accountTransactionsEndpoint = "/transactions"
-	accountRecoverEndpoint      = "/recover"
-	resetPasswordEndpoint       = "/password/reset"
-)
-
 // accountHandler is the http.Handler used for handling account-related requests
 func (h YinbiHandler) accountHandler() http.Handler {
 	r := handler.NewRouter()
 	r.Group(func(r chi.Router) {
-		r.Get(accountDetailsEndpoint, h.getAccountDetails)
-		r.Post(resetPasswordEndpoint, h.resetPassword)
-		r.Post(accountTransactionsEndpoint, h.updateAccountTransactions)
-		r.Post(accountRecoverEndpoint, h.recoverAccount)
+		r.Get("/details", h.getAccountDetails)
+		r.Post("/password/reset", h.resetPassword)
+		r.Post("/transactions", h.updateAccountTransactions)
+		r.Post("/recover", h.recoverAccount)
 	})
 	return r
 }
@@ -34,21 +26,36 @@ func (h YinbiHandler) resetPassword(w http.ResponseWriter, r *http.Request) {
 	// resetPasswordHandler is the handler used to reset a user's
 	// wallet password
 	var params api.CreateAccountParams
-	err := handler.DecodeJSONRequest(w, r, &params)
+	err := handler.GetParams(w, r, &params)
 	if err != nil {
 		return
 	}
-	resp, err := h.yinbiClient.ResetPassword(&params)
+	pair, err := client.KeyPairFromMnemonic(params.Words)
 	if err != nil {
-		handler.ErrorHandler(w, err, resp.StatusCode)
-	} else {
-		handler.SuccessResponse(w, nil)
+		handler.ErrorHandler(w, err, http.StatusBadRequest)
+		return
 	}
+	resp, err := h.authClient.ResetPassword(params.UserParams)
+	if err != nil {
+		log.Errorf("Encountered error resetting user password: %v", err)
+		handler.ErrorHandler(w, err, resp.StatusCode)
+		return
+	}
+	log.Debug("Storing secret key in keystore with updated password")
+	err = h.yinbiClient.StoreKey(pair.Seed(), params.Username, params.Password)
+	if err != nil {
+		log.Errorf("Error saving key to keystore with updated password: %v", err)
+		handler.ErrorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
+	log.Debug("Successfully stored key with updated password in keystore")
+	handler.HandleAuthResponse(resp, w, nil)
 }
 
 // recoverAccount is the http.Handler used for handling account recovery
 // requests
 func (h YinbiHandler) recoverAccount(w http.ResponseWriter, r *http.Request) {
+	log.Debug("Received new recover account request")
 	var params struct {
 		Words string `json:"words"`
 	}
@@ -56,7 +63,6 @@ func (h YinbiHandler) recoverAccount(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	log.Debug("Received new recover account request")
 	resp, err := h.yinbiClient.RecoverAccount(params.Words)
 	if err != nil {
 		handler.ErrorHandler(w, err, resp.StatusCode)

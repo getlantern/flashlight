@@ -11,7 +11,7 @@ require (
 	github.com/anacrolix/log v0.8.0
 	github.com/anacrolix/tagflag v1.1.1-0.20200411025953-9bb5209d56c2
 	github.com/anacrolix/torrent v1.25.1
-	github.com/aws/aws-sdk-go v1.37.7 // indirect
+	github.com/aws/aws-sdk-go v1.38.3 // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
@@ -19,7 +19,7 @@ require (
 	github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
-	github.com/getlantern/auth-server v0.0.0-20210208143110-0653535afaa7
+	github.com/getlantern/auth-server v0.0.0-20210323215624-5ae3b1f8a9a4
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20200613191039-d7b1c2cc6021
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
@@ -97,10 +97,12 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-20210209160519-f3ea46daec65
+	github.com/getlantern/yinbi-server v0.0.0-20210323195504-45a2d74e067c
 	github.com/getsentry/sentry-go v0.9.0
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-ole/go-ole v1.2.5 // indirect
+	github.com/golang/mock v1.5.0 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gopacket v1.1.17
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/websocket v1.4.2
@@ -108,6 +110,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.6.8 // indirect
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/jackpal/gateway v1.0.6
+	github.com/jinzhu/now v1.1.2 // indirect
 	github.com/jmoiron/sqlx v1.3.1 // indirect
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
@@ -124,23 +127,24 @@ require (
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/refraction-networking/utls v0.0.0-20200729012536-186025ac7b77
-	github.com/rogpeppe/go-internal v1.7.0 // indirect
-	github.com/rs/cors v1.7.0
-	github.com/sirupsen/logrus v1.7.0 // indirect
+	github.com/rogpeppe/go-internal v1.8.0 // indirect
+	github.com/shirou/gopsutil v3.21.2+incompatible // indirect
+	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
-	github.com/stellar/go v0.0.0-20210208222255-f071f3b0df9a // indirect
+	github.com/stellar/go v0.0.0-20210323164617-ec5600bd6b2b // indirect
 	github.com/stretchr/testify v1.7.0
+	github.com/tklauser/go-sysconf v0.3.4 // indirect
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	github.com/valyala/fasthttp v1.17.0 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
-	golang.org/x/net v0.0.0-20210119194325-5f4716e94777
-	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c
+	golang.org/x/net v0.0.0-20210323141857-08027d57d8cf
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
+	golang.org/x/sys v0.0.0-20210320140829-1e4c9ba3b0c4
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20210207032614-bba0dbe2a9ea // indirect
-	google.golang.org/grpc v1.35.0 // indirect
+	google.golang.org/genproto v0.0.0-20210323160006-e668133fea6a // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
