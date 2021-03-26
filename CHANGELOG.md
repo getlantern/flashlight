@@ -1,4 +1,16 @@
 
+<a name="lantern-6.5.1"></a>
+## [lantern-6.5.1](https://github.com/getlantern/flashlight/compare/lantern-6.5.0...lantern-6.5.1)
+
+> 2021-03-26
+
+### Pull Requests
+
+* Merge pull request [#1050](https://github.com/getlantern/flashlight/issues/1050) from getlantern/ui-6.5.1
+* Merge pull request [#1044](https://github.com/getlantern/flashlight/issues/1044) from getlantern/atavism/updates-auth-handler
+* Merge pull request [#1047](https://github.com/getlantern/flashlight/issues/1047) from getlantern/atavism/updates-cors-middleware
+
+
 <a name="lantern-6.5.0"></a>
 ## [lantern-6.5.0](https://github.com/getlantern/flashlight/compare/lantern-6.4.5...lantern-6.5.0)
 
