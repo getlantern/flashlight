@@ -1,4 +1,10 @@
 
+<a name="lantern-6.5.1-yinbi"></a>
+## [lantern-6.5.1-yinbi](https://github.com/getlantern/flashlight/compare/lantern-6.5.1...lantern-6.5.1-yinbi)
+
+> 2021-03-26
+
+
 <a name="lantern-6.5.1"></a>
 ## [lantern-6.5.1](https://github.com/getlantern/flashlight/compare/lantern-6.5.0...lantern-6.5.1)
 
