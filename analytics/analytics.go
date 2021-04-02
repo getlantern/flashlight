@@ -2,6 +2,7 @@ package analytics
 
 import (
 	"bytes"
+	"github.com/getlantern/flashlight/analytics/engine"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -17,21 +18,18 @@ import (
 	"github.com/getlantern/flashlight/util"
 )
 
-const (
-	// endpoint is the endpoint to report GA data to.
-	endpoint = `https://ssl.google-analytics.com/collect`
-)
 
 var (
 	log = golog.LoggerFor("flashlight.analytics")
 
-	// GA ends an session after 30 minutes of inactivity. Prevent it by sending
+	// GA and Matomo ends a session after 30 minutes of inactivity. Prevent it by sending
 	// keepalive. Note that the session still ends at the midnight.  See
 	// https://support.google.com/analytics/answer/2731565?hl=en
+	// https://help.piwik.pro/support/questions/how-is-a-session-counted-in-piwik-pro/
 	keepaliveInterval = 25 * time.Minute
 )
 
-// Start starts the GA session with the given data.
+// Start starts the analytics session with the given data.
 func Start(deviceID, version string) *session {
 	s := newSession(deviceID, version, keepaliveInterval, proxied.ChainedThenFronted())
 	go s.keepalive()
@@ -58,51 +56,51 @@ type session struct {
 	rt                http.RoundTripper
 	keepaliveInterval time.Duration
 	chDoneTracking    chan struct{}
+	engine engine.Engine
 }
 
 func newSession(deviceID, version string, keepalive time.Duration, rt http.RoundTripper) *session {
+	eng := engine.New()
 	return &session{
-		vals:              sessionVals(version, deviceID),
+		vals:              eng.GetSessionValues(version, deviceID, getExecutableHash()),
 		rt:                rt,
 		keepaliveInterval: keepalive,
 		chDoneTracking:    make(chan struct{}),
+		engine: eng,
 	}
 }
 
 // SetIP sets the client IP for better analysis. The IP is always anonymized by
-// Google.
+// both Google and matomo engines
 func (s *session) SetIP(ip string) {
 	s.muVals.Lock()
-	s.vals.Set("uip", ip)
+	s.vals = s.engine.SetIP(s.vals, ip)
 	s.muVals.Unlock()
 	go s.track()
 }
 
-// EventWithLabel tells GA that some event happens in the current page with a label
+// EventWithLabel tells engine that some event happens in the current page with a label
 func (s *session) EventWithLabel(category, action, label string) {
 	s.muVals.Lock()
-	s.vals.Set("ec", category)
-	s.vals.Set("ea", action)
-	s.vals.Set("el", label)
-	s.vals.Set("t", "event")
+	s.vals = s.engine.SetEventWithLabel(s.vals, category, action, label)
 	s.muVals.Unlock()
 	go s.track()
 }
 
-// Event tells GA that some event happens in the current page.
+// Event tells engine that some event happens in the current page.
 func (s *session) Event(category, action string) {
 	s.EventWithLabel(category, action, "")
 }
 
-// End tells GA to force end the current session.
+// End tells engine to force end the current session.
 func (s *session) End() {
 	s.muVals.Lock()
-	s.vals.Add("sc", "end")
+	s.vals = s.engine.End(s.vals)
 	s.muVals.Unlock()
 	go s.track()
 }
 
-// keepalive keeps tracking session with the latest parameters to avoid GA from
+// keepalive keeps tracking session with the latest parameters to avoid engine from
 // ending the session.
 func (s *session) keepalive() {
 	keepaliveTimer := time.NewTimer(s.keepaliveInterval)
@@ -130,8 +128,7 @@ func (s *session) track() {
 		}
 	}()
 
-	r, err := http.NewRequest("POST", endpoint, bytes.NewBufferString(args))
-
+	r, err := http.NewRequest("POST", s.engine.GetEndpoint(), bytes.NewBufferString(args))
 	if err != nil {
 		log.Errorf("Error constructing GA request: %s", err)
 		return
@@ -157,29 +154,6 @@ func (s *session) track() {
 	}
 }
 
-func sessionVals(version, clientID string) url.Values {
-	vals := make(url.Values, 0)
-
-	vals.Add("v", "1")
-	vals.Add("cid", clientID)
-	vals.Add("tid", common.TrackingID)
-
-	// Make call to anonymize the user's IP address -- basically a policy thing
-	// where Google agrees not to store it.
-	vals.Add("aip", "1")
-
-	// Custom dimension for the Lantern version
-	vals.Add("cd1", version)
-
-	// Custom dimension for the hash of the executable. We combine the version
-	// to make it easier to interpret in GA.
-	vals.Add("cd2", version+"-"+getExecutableHash())
-
-	vals.Add("dp", "localhost")
-	vals.Add("t", "pageview")
-
-	return vals
-}
 
 // getExecutableHash returns the hash of the currently running executable.
 // If there's an error getting the hash, this returns
