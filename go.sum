@@ -214,8 +214,6 @@ github.com/anacrolix/torrent v1.11.0/go.mod h1:FwBai7SyOFlflvfEOaM88ag/jjcBWxTOq
 github.com/anacrolix/torrent v1.15.0/go.mod h1:MFc6KcbpAyfwGqOyRkdarUK9QnKA/FkVg0usFk1OQxU=
 github.com/anacrolix/torrent v1.15.1-0.20200513043326-587f28d2fa30/go.mod h1:QlOfgrCz5kbvhOz8M58dUwHY5SfZ9VbIvReZ0z0MdIk=
 github.com/anacrolix/torrent v1.18.1-0.20201108235645-e6da640bb2b5/go.mod h1:JnoMhFCq4Hq5Q/A1BmXljEnjHzKWD2auPqbqf/xwFHA=
-github.com/anacrolix/torrent v1.23.0 h1:uX2db8w5JzgPnUmvD17jtZG82u0BqLlBMG47o4E/frQ=
-github.com/anacrolix/torrent v1.23.0/go.mod h1:737rU+al1LBWEs3IHBystZvsbg24iSP+8Gb25Vc/s5U=
 github.com/anacrolix/torrent v1.25.1 h1:CWw5Kd1VGY3UUM82/xdn+JQBVfJZ8rDT29laKwRUIcI=
 github.com/anacrolix/torrent v1.25.1/go.mod h1:737rU+al1LBWEs3IHBystZvsbg24iSP+8Gb25Vc/s5U=
 github.com/anacrolix/upnp v0.1.1/go.mod h1:LXsbsp5h+WGN7YR+0A7iVXm5BL1LYryDev1zuJMWYQo=
@@ -431,8 +429,6 @@ github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da h1:T/pxF37Z9SIQC
 github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da/go.mod h1:3vR6+jQdWfWojZ77w+htCqEF5MO/Y2twJOpAvFuM9po=
 github.com/getlantern/auth-server v0.0.0-20210323195126-24b3cd5d7ddd h1:IQQh32ADPTMnkkBy7jIfd+Y0fNJb1pLmv1VBrQFzLlU=
 github.com/getlantern/auth-server v0.0.0-20210323195126-24b3cd5d7ddd/go.mod h1:CzHVx5RC/XdbG0EIWPDvRiOtF2bXY3AaFfKHnBcUuhQ=
-github.com/getlantern/auth-server v0.0.0-20210323203545-18e348632f0a h1:TKlfQbBopXFaapsFDm+5Q//Hvu6IgQQV2cirKN/B+rc=
-github.com/getlantern/auth-server v0.0.0-20210323203545-18e348632f0a/go.mod h1:CzHVx5RC/XdbG0EIWPDvRiOtF2bXY3AaFfKHnBcUuhQ=
 github.com/getlantern/auth-server v0.0.0-20210323215624-5ae3b1f8a9a4 h1:NLS4uxRAoJ2uUipSeWmspkgWsfoa0XnsoqPy2Ammjx8=
 github.com/getlantern/auth-server v0.0.0-20210323215624-5ae3b1f8a9a4/go.mod h1:7a1MurniM8poHSZCBCNogs7dfLg7NkYCDbYjb62IEAk=
 github.com/getlantern/authipc v0.2.0 h1:aAlYBn1tizjbBbXmknoalU7P+tlNqGAHroTptKvXMnk=
@@ -695,8 +691,8 @@ github.com/getlantern/tlsutil v0.4.0 h1:wvSKWfxSKFVpP3GgSq0wpLl+gFiiq8pDWgpuTxV3
 github.com/getlantern/tlsutil v0.4.0/go.mod h1:8v4sW+apnxSkhURB6IUpQ9zuf1r0+i+CywWSZHxXpzw=
 github.com/getlantern/trafficlog v1.0.0 h1:JYCcTptI7kKXjvppdE5JQPx31m/78Q1xbXpIM6X0rXc=
 github.com/getlantern/trafficlog v1.0.0/go.mod h1:oaj53OJ67FEPsiKbQBz2dpYCnh8Yq4bBbww3C6vMgAQ=
-github.com/getlantern/trafficlog-flashlight v1.0.1 h1:X46WCXEsqR6PtexP6DKsdwr2mo8aiS/ltXkYtzj1S30=
-github.com/getlantern/trafficlog-flashlight v1.0.1/go.mod h1:fMn3LcwRfIlD4COXKwZAhvsxgo+qIrbhvhHRff+dxxg=
+github.com/getlantern/trafficlog-flashlight v1.0.2 h1:B9RbETjrfLIf6vAYRU02Tb1JQgtu7B0IfuAWzJ5gDeI=
+github.com/getlantern/trafficlog-flashlight v1.0.2/go.mod h1:uf8+aFXgp03S+AGeKUM+8aYmdh7ZKbUdR/OsdjMiD7I=
 github.com/getlantern/utls v0.0.0-20191119185840-3db8c755b682 h1:gK0+CerB0oFReyfhHZhTDywm7YU7NIx/xrhRGDhgiK0=
 github.com/getlantern/utls v0.0.0-20191119185840-3db8c755b682/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
 github.com/getlantern/utls v0.0.0-20200903013459-0c02248f7ce1 h1:+Egmu6VMMPm8/FHz8TOtQ1Usn3zg0gkS7ZHrLFycyok=
