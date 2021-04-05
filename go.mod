@@ -3,6 +3,7 @@ module github.com/getlantern/flashlight
 go 1.13
 
 require (
+	cloud.google.com/go v0.81.0 // indirect
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/confluence v1.6.2-0.20201116033747-ba09085bd120
@@ -11,8 +12,9 @@ require (
 	github.com/anacrolix/log v0.8.0
 	github.com/anacrolix/tagflag v1.1.1-0.20200411025953-9bb5209d56c2
 	github.com/anacrolix/torrent v1.25.1
-	github.com/aws/aws-sdk-go v1.38.3 // indirect
+	github.com/aws/aws-sdk-go v1.38.12 // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
+	github.com/cloudflare/cloudflare-go v0.11.5 // indirect
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
@@ -97,10 +99,11 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-20210323195504-45a2d74e067c
+	github.com/getlantern/yinbi-server v0.0.0-20210405151232-397bee7e1674
 	github.com/getsentry/sentry-go v0.9.0
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-ole/go-ole v1.2.5 // indirect
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.5.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gopacket v1.1.17
@@ -109,6 +112,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.6.8 // indirect
 	github.com/hashicorp/golang-lru v0.5.4
+	github.com/ipinfo/go-ipinfo v1.0.0 // indirect
 	github.com/jackpal/gateway v1.0.6
 	github.com/jinzhu/now v1.1.2 // indirect
 	github.com/jmoiron/sqlx v1.3.1 // indirect
@@ -132,19 +136,22 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
-	github.com/stellar/go v0.0.0-20210323164617-ec5600bd6b2b // indirect
+	github.com/stellar/go v0.0.0-20210402164147-6145dda1700f // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/tklauser/go-sysconf v0.3.4 // indirect
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
+	github.com/ulule/limiter/v3 v3.8.0 // indirect
 	github.com/valyala/fasthttp v1.17.0 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
+	github.com/wealthsimple/goller v0.0.0-20161210163648-30a2682df1c4 // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
 	golang.org/x/net v0.0.0-20210331212208-0fccb6fa2b5c
+	golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20210403161142-5e06dd20ab57
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20210323160006-e668133fea6a // indirect
+	google.golang.org/genproto v0.0.0-20210405150802-d70529258950 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
@@ -162,11 +169,11 @@ replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-2019
 
 replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20201204183614-c95cc8f8f085
 
-replace github.com/getlantern/yinbi-server => ../yinbi-server
+//replace github.com/getlantern/yinbi-server => ../yinbi-server
 
-replace github.com/getlantern/auth-server => ../auth-server
+//replace github.com/getlantern/auth-server => ../auth-server
 
-replace github.com/getlantern/lantern-server => ../lantern-server
+//replace github.com/getlantern/lantern-server => ../lantern-server
 
 // For https://github.com/crawshaw/sqlite/pull/112 and https://github.com/crawshaw/sqlite/pull/103.
 replace crawshaw.io/sqlite => github.com/getlantern/sqlite v0.3.3-0.20210215090556-4f83cf7731f0
