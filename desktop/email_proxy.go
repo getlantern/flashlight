@@ -3,6 +3,7 @@ package desktop
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/email"
@@ -37,6 +38,7 @@ func (app *App) serveEmailProxy(channel ws.UIChannel) error {
 		for message := range service.In {
 			data, ok := message.(*mandrillMessage)
 			if !ok {
+				log.Errorf("<diagnostics testing> malformed message from UI: %v", message)
 				log.Errorf("Malformatted message %v", message)
 				continue
 			}
@@ -47,19 +49,30 @@ func (app *App) serveEmailProxy(channel ws.UIChannel) error {
 }
 
 func (app *App) handleMandrillMessage(service *ws.Service, data *mandrillMessage) {
+	log.Debugf("<diagnostics testing> message.WithSettings: %t", data.WithSettings)
+	log.Debugf("<diagnostics testing> message.RunDiagnostics: %t", data.RunDiagnostics)
+
 	fillMandrillDefaults(data)
 	if data.RunDiagnostics {
+		log.Debug("<diagnostics testing> running diagnostics")
+
 		var err error
 		data.DiagnosticsYAML, data.ProxyCapture, err = app.runDiagnostics()
 		if err != nil {
 			log.Errorf("error running diagnostics: %v", err)
 		}
 	}
-	if err := email.Send(&data.Message); err != nil {
-		service.Out <- err.Error()
-	} else {
-		service.Out <- "success"
-	}
+
+	// XXX: debugging; do not actually send email; always respond success to UI
+	log.Debug("<diagnostics testing> pretending to send email")
+	time.Sleep(2 * time.Second)
+
+	// if err := email.Send(&data.Message); err != nil {
+	// 	service.Out <- err.Error()
+	// } else {
+	// 	service.Out <- "success"
+	// }
+	service.Out <- "success"
 }
 
 func fillMandrillDefaults(msg *mandrillMessage) {

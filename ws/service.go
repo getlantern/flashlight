@@ -166,6 +166,8 @@ func (c *uiChannel) Unregister(t string) {
 
 func (c *uiChannel) readLoop() {
 	for b := range c.clients.in {
+		log.Debugf("<diagnostics testing> message from UI: %s", string(b))
+
 		// Determining message type.
 		var envType envelopeType
 		err := json.Unmarshal(b, &envType)
