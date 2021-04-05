@@ -72,7 +72,11 @@ func (h AuthHandler) ConfigureRoutes() http.Handler {
 				return
 			}
 			authResp, err := h.authClient.AccountStatus(params)
-			handler.HandleAuthResponse(authResp, w, err)
+			if err != nil {
+				handler.ErrorHandler(w, err, authResp.StatusCode)
+			} else {
+				handler.SuccessResponse(w)
+			}
 		})
 		r.Post("/logout", func(w http.ResponseWriter, r *http.Request) {
 			params, err := getUserParams(w, r)

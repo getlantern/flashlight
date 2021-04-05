@@ -6,11 +6,12 @@ import (
 	"net/http"
 
 	"github.com/getlantern/appdir"
-	"github.com/getlantern/auth-server/api"
+	authapi "github.com/getlantern/auth-server/api"
 	authclient "github.com/getlantern/auth-server/client"
 	"github.com/getlantern/flashlight/ui/auth"
 	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/yinbi-server/api"
 	"github.com/getlantern/yinbi-server/client"
 	"github.com/go-chi/chi"
 )
@@ -27,7 +28,7 @@ type YinbiHandler struct {
 
 	// yinbiClient is a client for the Yinbi API which
 	// supports creating accounts and making payments
-	yinbiClient *client.YinbiClient
+	yinbiClient client.YinbiClient
 
 	authClient authclient.AuthClient
 }
@@ -58,7 +59,7 @@ func (h YinbiHandler) GetPathPrefix() string {
 }
 
 // New creates a new YinbiHandler instance
-func New(params api.APIParams) YinbiHandler {
+func New(params authapi.APIParams) YinbiHandler {
 	appDir := appdir.General(params.AppName)
 	httpClient := params.HTTPClient
 	yinbiAddr := params.YinbiServerAddr
@@ -69,7 +70,7 @@ func New(params api.APIParams) YinbiHandler {
 	}
 }
 
-func NewWithAuth(params api.APIParams,
+func NewWithAuth(params authapi.APIParams,
 	authHandler auth.AuthHandler) YinbiHandler {
 	yinbiHandler := New(params)
 	yinbiHandler.AuthHandler = authHandler
@@ -115,7 +116,7 @@ func (h YinbiHandler) walletHandler() http.Handler {
 // The password included with the request is used to look up the
 // user's secret key in the Yinbi keystore.
 func (h YinbiHandler) sendPaymentHandler(w http.ResponseWriter, r *http.Request) {
-	var params client.PaymentParams
+	var params api.PaymentParams
 	err := handler.DecodeJSONRequest(w, r, &params)
 	if err != nil {
 		return
@@ -142,7 +143,7 @@ func (h YinbiHandler) sendPaymentHandler(w http.ResponseWriter, r *http.Request)
 func (h YinbiHandler) importWalletHandler(w http.ResponseWriter, r *http.Request) {
 	// importWalletHandler is the handler used to import wallets
 	// of existing yin.bi users
-	var params client.ImportWalletParams
+	var params api.ImportWalletParams
 	err := handler.DecodeJSONRequest(w, r, &params)
 	if err != nil {
 		return
@@ -156,13 +157,6 @@ func (h YinbiHandler) importWalletHandler(w http.ResponseWriter, r *http.Request
 	handler.SuccessResponse(w, map[string]interface{}{
 		"address": resp.Pair.Address(),
 	})
-}
-
-// paymentHandler setups Yinbi payment-related routes
-func (h YinbiHandler) paymentHandler() http.Handler {
-	paymentRouter := handler.NewRouter()
-	paymentRouter.Post("/new", h.sendPaymentHandler)
-	return paymentRouter
 }
 
 // createWalletHandler is the HTTP handler used to create new
@@ -191,6 +185,13 @@ func (h YinbiHandler) createWalletHandler() http.HandlerFunc {
 	})
 }
 
+// paymentHandler setups Yinbi payment-related routes
+func (h YinbiHandler) paymentHandler() http.Handler {
+	paymentRouter := handler.NewRouter()
+	paymentRouter.Post("/new", h.sendPaymentHandler)
+	return paymentRouter
+}
+
 // userHandler is the http.Handler used for Yinbi wallet user related
 // UI routes
 func (h YinbiHandler) userHandler() http.Handler {
@@ -209,7 +210,9 @@ func (h YinbiHandler) userHandler() http.Handler {
 			// saveAddressHandler is the handler used to save new account
 			// addresses for the given user
 			address := r.URL.Query().Get("address")
-			_, err := h.authClient.SaveAddress(address)
+			_, err := h.authClient.SaveWallet(&authapi.AddressParams{
+				Address: address,
+			})
 			if err != nil {
 				err = fmt.Errorf("Error saving user address: %v", err)
 				handler.ErrorHandler(w, err, http.StatusBadRequest)

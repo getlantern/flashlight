@@ -29,6 +29,12 @@ const (
 	XBQHeaderv2                         = "XBQv2"
 )
 
+var (
+	// List of methods the client is allowed to use with cross-domain requests
+	CORSAllowedMethods = []string{http.MethodGet, http.MethodPost, http.MethodOptions}
+	CORSAllowedOrigins = []string{}
+)
+
 // AddCommonHeadersWithOptions sets standard http headers on a request bound
 // for an internal service, representing auth and other configuration
 // metadata.  The caller may specify overwriteAuth=false to prevent overwriting
@@ -78,6 +84,15 @@ func AddCommonHeaders(uc UserConfig, req *http.Request) {
 	AddCommonHeadersWithOptions(uc, req, true)
 }
 
+// isOriginAllowed checks if the origin is authorized
+// for CORS requests. The origin can have include arbitrary
+// ports, so we just make sure it's on localhost.
+func isOriginAllowed(origin string) bool {
+	return strings.HasPrefix(origin, "http://localhost:") ||
+		strings.HasPrefix(origin, "http://127.0.0.1:") ||
+		strings.HasPrefix(origin, "http://[::1]:")
+}
+
 // ProcessCORS processes CORS requests on localhost.
 func ProcessCORS(responseHeaders http.Header, r *http.Request) {
 	origin := r.Header.Get("origin")
@@ -87,15 +102,13 @@ func ProcessCORS(responseHeaders http.Header, r *http.Request) {
 	}
 	// The origin can have include arbitrary ports, so we just make sure
 	// it's on localhost.
-	if strings.HasPrefix(origin, "http://localhost:") ||
-		strings.HasPrefix(origin, "http://127.0.0.1:") ||
-		strings.HasPrefix(origin, "http://[::1]:") {
-
+	if isOriginAllowed(origin) {
 		responseHeaders.Set("Access-Control-Allow-Origin", origin)
 		responseHeaders.Set("Vary", "Origin")
 		responseHeaders.Set("Access-Control-Allow-Credentials", "true")
-		responseHeaders.Add("Access-Control-Allow-Methods", "GET")
-		responseHeaders.Add("Access-Control-Allow-Methods", "POST")
+		for _, method := range CORSAllowedMethods {
+			responseHeaders.Add("Access-Control-Allow-Methods", method)
+		}
 		responseHeaders.Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
 	}
 }
