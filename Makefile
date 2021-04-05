@@ -63,6 +63,9 @@ git-lfs:
 	@if [ "$(shell which git-lfs)" = "" ]; then \
 		echo "Missing Git LFS. See https://git-lfs.github.com" && exit 1; \
 	fi
+	@if ! git config -l | grep -q "filter.lfs"; then \
+		echo "git-lfs installation is incomplete. Run 'git lfs install'." && exit 1; \
+	fi
 
 lantern: $(SOURCES)
 	@$(call build-tags) && \
