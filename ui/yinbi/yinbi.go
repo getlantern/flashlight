@@ -32,9 +32,6 @@ type YinbiHandler struct {
 	authClient authclient.AuthClient
 }
 
-type ImportWalletParams = client.ImportWalletParams
-type ImportWalletResponse = client.ImportWalletResponse
-
 // ConfigureRoutes returns an http.Handler for the Yinbi-related routes
 func (h YinbiHandler) ConfigureRoutes() http.Handler {
 
@@ -84,6 +81,7 @@ func NewWithAuth(params api.APIParams,
 func (h YinbiHandler) walletHandler() http.Handler {
 	router := handler.NewRouter()
 	router.Group(func(r chi.Router) {
+		r.Post("/", h.createWalletHandler())
 		// redeemCodes
 		r.Get("/redeem/codes", func(w http.ResponseWriter, r *http.Request) {
 			url := h.GetAuthAddr("/redeem/codes")
@@ -91,24 +89,7 @@ func (h YinbiHandler) walletHandler() http.Handler {
 			h.ProxyHandler(url, r, w, nil)
 		})
 		// importWallet
-		r.Post("/import", func(w http.ResponseWriter, r *http.Request) {
-			// importWalletHandler is the handler used to import wallets
-			// of existing yin.bi users
-			var params client.ImportWalletParams
-			err := handler.DecodeJSONRequest(w, r, &params)
-			if err != nil {
-				return
-			}
-			resp, err := h.yinbiClient.ImportWallet(&params)
-			if err != nil {
-				log.Errorf("Error sending import wallet request: %v", err)
-				handler.ErrorHandler(w, err, resp.StatusCode)
-				return
-			}
-			handler.SuccessResponse(w, map[string]interface{}{
-				"address": resp.Pair.Address(),
-			})
-		})
+		r.Post("/import", h.importWalletHandler)
 		// fetch redemption codes
 		r.Get("/codes", func(w http.ResponseWriter, r *http.Request) {
 			// getRedemptionCodes is the handler used to look up
@@ -156,6 +137,27 @@ func (h YinbiHandler) sendPaymentHandler(w http.ResponseWriter, r *http.Request)
 	})
 }
 
+// importWalletHandler is the handler used by exisitng yin.bi
+// users for importing and converting their accounts to wallets
+func (h YinbiHandler) importWalletHandler(w http.ResponseWriter, r *http.Request) {
+	// importWalletHandler is the handler used to import wallets
+	// of existing yin.bi users
+	var params client.ImportWalletParams
+	err := handler.DecodeJSONRequest(w, r, &params)
+	if err != nil {
+		return
+	}
+	resp, err := h.yinbiClient.ImportWallet(&params)
+	if err != nil {
+		log.Errorf("Error sending import wallet request: %v", err)
+		handler.ErrorHandler(w, err, resp.StatusCode)
+		return
+	}
+	handler.SuccessResponse(w, map[string]interface{}{
+		"address": resp.Pair.Address(),
+	})
+}
+
 // paymentHandler setups Yinbi payment-related routes
 func (h YinbiHandler) paymentHandler() http.Handler {
 	paymentRouter := handler.NewRouter()
@@ -163,7 +165,14 @@ func (h YinbiHandler) paymentHandler() http.Handler {
 	return paymentRouter
 }
 
-func (h YinbiHandler) createAccountHandler() http.HandlerFunc {
+// createWalletHandler is the HTTP handler used to create new
+// Yinbi accounts
+// First, the mnemonic is extracted from the request.
+// This returns a full keypair with signing capabilities
+// After the account has been created, we store the encrypted
+// secret key in the key store and create a trust line to the
+// Yinbi asset
+func (h YinbiHandler) createWalletHandler() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Debug("Received new create Yinbi account request")
 		var params api.CreateAccountParams
@@ -173,7 +182,7 @@ func (h YinbiHandler) createAccountHandler() http.HandlerFunc {
 			handler.ErrorHandler(w, err, http.StatusInternalServerError)
 			return
 		}
-		resp, err := h.yinbiClient.CreateAccount(&params)
+		resp, err := h.yinbiClient.CreateWallet(&params)
 		if err != nil {
 			handler.ErrorHandler(w, err, http.StatusInternalServerError)
 		} else {
@@ -187,16 +196,7 @@ func (h YinbiHandler) createAccountHandler() http.HandlerFunc {
 func (h YinbiHandler) userHandler() http.Handler {
 	r := handler.NewRouter()
 
-	// createAccountHandler is the HTTP handler used to create new
-	// Yinbi accounts
-	// First, the mnemonic is extracted from the request.
-	// This returns a full keypair with signing capabilities
-	// After the account has been created, we store the encrypted
-	// secret key in the key store and create a trust line to the
-	// Yinbi asset
-
 	r.Group(func(r chi.Router) {
-		r.Post("/account/new", h.createAccountHandler())
 
 		r.Post("/mnemonic", func(w http.ResponseWriter, r *http.Request) {
 			mnemonic := h.yinbiClient.CreateMnemonic()
