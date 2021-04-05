@@ -76,12 +76,16 @@ func (h Handler) GetYinbiAddr(uri string) string {
 }
 
 // GetQueryParam takes an HTTP request and returns the given query arg with name (if it exists)
-func GetQueryParam(r *http.Request, name string) string {
-	keys, ok := r.URL.Query()[name]
-	if !ok || len(keys[0]) < 1 {
-		return ""
+func GetQueryParams(r *http.Request, names ...string) map[string]string {
+	results := make(map[string]string, len(names))
+	for _, name := range names {
+		keys, ok := r.URL.Query()[name]
+		if !ok || len(keys[0]) < 1 {
+			continue
+		}
+		results[name] = keys[0]
 	}
-	return keys[0]
+	return results
 }
 
 // GetParams is used to unmarshal JSON from the given request r into

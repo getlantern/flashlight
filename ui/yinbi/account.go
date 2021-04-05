@@ -80,7 +80,8 @@ func (h YinbiHandler) recoverAccount(w http.ResponseWriter, r *http.Request) {
 // the balances and transaction history for a given Stellar
 // address
 func (h YinbiHandler) getAccountDetails(w http.ResponseWriter, r *http.Request) {
-	address := handler.GetQueryParam(r, "address")
+	results := handler.GetQueryParams(r, "address")
+	address := results["address"]
 	if address == "" {
 		log.Debug("No address provided. Ignoring get account details request")
 		return

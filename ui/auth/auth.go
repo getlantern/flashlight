@@ -2,7 +2,9 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/getlantern/auth-server/api"
 	"github.com/getlantern/auth-server/client"
@@ -60,24 +62,39 @@ func (h AuthHandler) authHandler(authenticate AuthMethod) http.HandlerFunc {
 	})
 }
 
+func (h AuthHandler) statusHandler(w http.ResponseWriter, r *http.Request) {
+	args := handler.GetQueryParams(r, "lanternUserID", "email")
+	var err error
+	email, lanternUserID := args["email"], args["lanternUserID"]
+	if lanternUserID == "" {
+		err = fmt.Errorf("Missing Lantern User ID")
+	} else if email == "" {
+		err = fmt.Errorf("Missing Lantern email")
+	}
+	if err != nil {
+		handler.ErrorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	userID, _ := strconv.ParseInt(lanternUserID, 10, 64)
+	_, err = h.authClient.AccountStatus(&models.UserParams{
+		LanternUserID: userID,
+		Email:         email,
+	})
+	if err != nil {
+		log.Errorf("Error retrieving account status: %v", err)
+		handler.ErrorHandler(w, err, http.StatusBadRequest)
+	} else {
+		handler.SuccessResponse(w)
+	}
+}
+
 // ConfigureRoutes returns an http.Handler for the auth-based routes
 func (h AuthHandler) ConfigureRoutes() http.Handler {
 	r := handler.NewRouter()
 	r.Group(func(r chi.Router) {
 		r.Post("/login", h.authHandler(h.authClient.SignIn))
 		r.Post("/register", h.authHandler(h.authClient.Register))
-		r.Get("/account/status", func(w http.ResponseWriter, r *http.Request) {
-			params, err := getUserParams(w, r)
-			if err != nil {
-				return
-			}
-			authResp, err := h.authClient.AccountStatus(params)
-			if err != nil {
-				handler.ErrorHandler(w, err, authResp.StatusCode)
-			} else {
-				handler.SuccessResponse(w)
-			}
-		})
+		r.Get("/account/status", h.statusHandler)
 		r.Post("/logout", func(w http.ResponseWriter, r *http.Request) {
 			params, err := getUserParams(w, r)
 			if err != nil {

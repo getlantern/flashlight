@@ -12,7 +12,7 @@ require (
 	github.com/anacrolix/log v0.8.0
 	github.com/anacrolix/tagflag v1.1.1-0.20200411025953-9bb5209d56c2
 	github.com/anacrolix/torrent v1.25.1
-	github.com/aws/aws-sdk-go v1.38.12 // indirect
+	github.com/aws/aws-sdk-go v1.38.13 // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudflare/cloudflare-go v0.11.5 // indirect
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
@@ -21,7 +21,7 @@ require (
 	github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
-	github.com/getlantern/auth-server v0.0.0-20210405144947-4535ce35048b
+	github.com/getlantern/auth-server v0.0.0-20210405195604-bf6fa05b734d
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20200613191039-d7b1c2cc6021
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
@@ -99,7 +99,7 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-20210405151232-397bee7e1674
+	github.com/getlantern/yinbi-server v0.0.0-20210405195857-efd7239bcddc
 	github.com/getsentry/sentry-go v0.9.0
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-ole/go-ole v1.2.5 // indirect
@@ -145,13 +145,13 @@ require (
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/wealthsimple/goller v0.0.0-20161210163648-30a2682df1c4 // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
-	golang.org/x/net v0.0.0-20210331212208-0fccb6fa2b5c
+	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
 	golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20210403161142-5e06dd20ab57
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20210405150802-d70529258950 // indirect
+	google.golang.org/genproto v0.0.0-20210405174219-a39eb2f71cb9 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
@@ -170,9 +170,7 @@ replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-2019
 replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20201204183614-c95cc8f8f085
 
 //replace github.com/getlantern/yinbi-server => ../yinbi-server
-
 //replace github.com/getlantern/auth-server => ../auth-server
-
 //replace github.com/getlantern/lantern-server => ../lantern-server
 
 // For https://github.com/crawshaw/sqlite/pull/112 and https://github.com/crawshaw/sqlite/pull/103.

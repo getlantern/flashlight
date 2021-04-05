@@ -277,6 +277,8 @@ github.com/aws/aws-sdk-go v1.38.3 h1:QCL/le04oAz2jELMRSuJVjGT7H+4hhoQc66eMPCfU/k
 github.com/aws/aws-sdk-go v1.38.3/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/aws/aws-sdk-go v1.38.12 h1:khtODkUna3iF53Cg3dCF4e6oWgrAEbZDU4x1aq+G0WY=
 github.com/aws/aws-sdk-go v1.38.12/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
+github.com/aws/aws-sdk-go v1.38.13 h1:ICZ8czsU+nrx6cOXfI/xA4ZZEOekCIZs2+nsaDWxw84=
+github.com/aws/aws-sdk-go v1.38.13/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/aws/aws-sdk-go-v2 v0.18.0 h1:qZ+woO4SamnH/eEbjM2IDLhRNwIwND/RQyVlBLp3Jqg=
 github.com/aws/aws-sdk-go-v2 v0.18.0/go.mod h1:JWVYvqSMppoMJC0x5wdwiImzgXTI9FuZwxzkQq9wy+g=
 github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible h1:Ppm0npCCsmuR9oQaBtRuZcmILVE74aXE+AmrJj8L2ns=
@@ -469,6 +471,8 @@ github.com/getlantern/auth-server v0.0.0-20210323215624-5ae3b1f8a9a4 h1:NLS4uxRA
 github.com/getlantern/auth-server v0.0.0-20210323215624-5ae3b1f8a9a4/go.mod h1:7a1MurniM8poHSZCBCNogs7dfLg7NkYCDbYjb62IEAk=
 github.com/getlantern/auth-server v0.0.0-20210405144947-4535ce35048b h1:Xt8lhh+bAEUAzvIz80SoiePJkT8HbTuq2W2GqBPGxto=
 github.com/getlantern/auth-server v0.0.0-20210405144947-4535ce35048b/go.mod h1:japiBkzvBbz7PV27QFEQ066BTnuE7GV2Uqjp87y3S3M=
+github.com/getlantern/auth-server v0.0.0-20210405195604-bf6fa05b734d h1:wuaS533fAVG7Lsso1Bv93KPdlg+5reGD/D96OckZtwA=
+github.com/getlantern/auth-server v0.0.0-20210405195604-bf6fa05b734d/go.mod h1:japiBkzvBbz7PV27QFEQ066BTnuE7GV2Uqjp87y3S3M=
 github.com/getlantern/authipc v0.2.0 h1:aAlYBn1tizjbBbXmknoalU7P+tlNqGAHroTptKvXMnk=
 github.com/getlantern/authipc v0.2.0/go.mod h1:nDXd7xyGPMbPwEi4QAL3PPMzvwSFYbQxzk4ipANL25M=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99 h1:fnjb9PYZRMU6Tok5i3anP/bAqhUtG2kn9xgff3IlA+8=
@@ -749,6 +753,8 @@ github.com/getlantern/yinbi-server v0.0.0-20210323195504-45a2d74e067c h1:ZnQROLv
 github.com/getlantern/yinbi-server v0.0.0-20210323195504-45a2d74e067c/go.mod h1:edRWBKN/qYz8yk+F4P5Y9ycTxXpRox5F1/oF/00q7NY=
 github.com/getlantern/yinbi-server v0.0.0-20210405151232-397bee7e1674 h1:mXPQGoXUtCiPqaYe0797t945AGcsWma9eGqTcb0YsZ8=
 github.com/getlantern/yinbi-server v0.0.0-20210405151232-397bee7e1674/go.mod h1:G4vKR0c1r4zvDVmXWmkEmS2qayHimTiZi5+G9NULyjE=
+github.com/getlantern/yinbi-server v0.0.0-20210405195857-efd7239bcddc h1:dqOFpXhhRD6gOTub0yhvwhHs1Rx3Ipn9ZefSNU6YhoE=
+github.com/getlantern/yinbi-server v0.0.0-20210405195857-efd7239bcddc/go.mod h1:lYmVT8j7jOe9oERH0M21j/5w64UtWY6ErK79BCDOSRo=
 github.com/getlantern/zenodb v0.0.0-20191107150234-58f0e128172a/go.mod h1:/QuMPlUCcgfXRy+yAwXWcAkBegF2Nl1lw0nJ+kSWEsA=
 github.com/getlantern/zenodb v0.0.0-20200613184607-425f1dea9db1 h1:2S3iHuoFuwfxMkeizLJZuTAPojoMJb3eP4iUZiciZVg=
 github.com/getlantern/zenodb v0.0.0-20200613184607-425f1dea9db1/go.mod h1:jttohOig8lld+9Dm2VsQXPNzRy3+dF6SZZSTn3SMttI=
@@ -2164,6 +2170,8 @@ golang.org/x/net v0.0.0-20210323141857-08027d57d8cf h1:sewfyKLWuY3ko6EI4hbFziQ8b
 golang.org/x/net v0.0.0-20210323141857-08027d57d8cf/go.mod h1:RBQZq4jEuRlivfhVLdyRGr576XBO4/greRjx4P4O3yc=
 golang.org/x/net v0.0.0-20210331212208-0fccb6fa2b5c h1:KHUzaHIpjWVlVVNh65G3hhuj3KB1HnjY6Cq5cTvRQT8=
 golang.org/x/net v0.0.0-20210331212208-0fccb6fa2b5c/go.mod h1:p54w0d4576C0XHj96bSt6lcn1PtDYWL6XObtHCRCNQM=
+golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 h1:4nGaVu0QrbjT/AK2PRLuQfQuh6DJve+pELhqTdAj3x0=
+golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4/go.mod h1:p54w0d4576C0XHj96bSt6lcn1PtDYWL6XObtHCRCNQM=
 golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be/go.mod h1:N/0e6XlmueqKjAGxoOufVs8QHGRruUQn6yWY3a++T0U=
 golang.org/x/oauth2 v0.0.0-20181017192945-9dcd33a902f4/go.mod h1:N/0e6XlmueqKjAGxoOufVs8QHGRruUQn6yWY3a++T0U=
 golang.org/x/oauth2 v0.0.0-20181203162652-d668ce993890/go.mod h1:N/0e6XlmueqKjAGxoOufVs8QHGRruUQn6yWY3a++T0U=
@@ -2464,6 +2472,8 @@ google.golang.org/genproto v0.0.0-20210323160006-e668133fea6a/go.mod h1:f2Bd7+2P
 google.golang.org/genproto v0.0.0-20210402141018-6c239bbf2bb1/go.mod h1:9lPAdzaEmUacj36I+k7YKbEc5CXzPIeORRgDAUOu28A=
 google.golang.org/genproto v0.0.0-20210405150802-d70529258950 h1:D16ZZyTNpO1PH1/TMWKe1HbQHGB51WjmL6AvdTR2+EI=
 google.golang.org/genproto v0.0.0-20210405150802-d70529258950/go.mod h1:P3QM42oQyzQSnHPnZ/vqoCdDmzH28fzWByN9asMeM8A=
+google.golang.org/genproto v0.0.0-20210405174219-a39eb2f71cb9 h1:Uga0hMhZnzB159cnlmhVPgEmZTwoZqwOb7e0pu+rlNI=
+google.golang.org/genproto v0.0.0-20210405174219-a39eb2f71cb9/go.mod h1:P3QM42oQyzQSnHPnZ/vqoCdDmzH28fzWByN9asMeM8A=
 google.golang.org/grpc v1.14.0/go.mod h1:yo6s7OP7yaDglbqo1J04qKzAhqBH6lvTonzMVmEdcZw=
 google.golang.org/grpc v1.16.0/go.mod h1:0JHn/cJsOMiMfNA9+DeHDlAU7KAAB5GDlYFpa9MZMio=
 google.golang.org/grpc v1.17.0/go.mod h1:6QZJwpn2B+Zp71q/5VxRsJ6NXXVCE5NRUHRo+f3cWCs=

@@ -134,7 +134,7 @@ func (h YinbiHandler) sendPaymentHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	handler.SuccessResponse(w, map[string]interface{}{
-		"tx_id": resp.Hash,
+		"tx_id": resp.Transaction.Hash,
 	})
 }
 
