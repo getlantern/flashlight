@@ -58,7 +58,11 @@ func (h AuthHandler) authHandler(authenticate AuthMethod) http.HandlerFunc {
 			return
 		}
 		authResp, err := authenticate(params)
-		handler.HandleAuthResponse(authResp, w, err)
+		if err != nil {
+			handler.ErrorHandler(w, err, http.StatusBadRequest)
+		} else {
+			handler.HandleAuthResponse(authResp, w, err)
+		}
 	})
 }
 
@@ -93,14 +97,7 @@ func (h AuthHandler) accountStatusHandler(w http.ResponseWriter, r *http.Request
 
 // signOutHandler is the handler used for destroying user sessions
 func (h AuthHandler) signOutHandler(w http.ResponseWriter, r *http.Request) {
-	params, err := getUserParams(w, r)
-	if err != nil {
-		return
-	}
-	authResp, err := h.authClient.SignOut(params.Username)
-	if err == nil {
-		log.Debugf("User %s successfully signed out", params.Username)
-	}
+	authResp, err := h.authClient.SignOut()
 	handler.HandleAuthResponse(authResp, w, err)
 }
 
