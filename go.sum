@@ -473,6 +473,8 @@ github.com/getlantern/auth-server v0.0.0-20210405144947-4535ce35048b h1:Xt8lhh+b
 github.com/getlantern/auth-server v0.0.0-20210405144947-4535ce35048b/go.mod h1:japiBkzvBbz7PV27QFEQ066BTnuE7GV2Uqjp87y3S3M=
 github.com/getlantern/auth-server v0.0.0-20210405195604-bf6fa05b734d h1:wuaS533fAVG7Lsso1Bv93KPdlg+5reGD/D96OckZtwA=
 github.com/getlantern/auth-server v0.0.0-20210405195604-bf6fa05b734d/go.mod h1:japiBkzvBbz7PV27QFEQ066BTnuE7GV2Uqjp87y3S3M=
+github.com/getlantern/auth-server v0.0.0-20210405235748-92135b00b410 h1:6Z2mej8mJk2wxiGIgUkH8Al4NMYcOD8h5t5KBolI33w=
+github.com/getlantern/auth-server v0.0.0-20210405235748-92135b00b410/go.mod h1:japiBkzvBbz7PV27QFEQ066BTnuE7GV2Uqjp87y3S3M=
 github.com/getlantern/authipc v0.2.0 h1:aAlYBn1tizjbBbXmknoalU7P+tlNqGAHroTptKvXMnk=
 github.com/getlantern/authipc v0.2.0/go.mod h1:nDXd7xyGPMbPwEi4QAL3PPMzvwSFYbQxzk4ipANL25M=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99 h1:fnjb9PYZRMU6Tok5i3anP/bAqhUtG2kn9xgff3IlA+8=
@@ -755,6 +757,8 @@ github.com/getlantern/yinbi-server v0.0.0-20210405151232-397bee7e1674 h1:mXPQGoX
 github.com/getlantern/yinbi-server v0.0.0-20210405151232-397bee7e1674/go.mod h1:G4vKR0c1r4zvDVmXWmkEmS2qayHimTiZi5+G9NULyjE=
 github.com/getlantern/yinbi-server v0.0.0-20210405195857-efd7239bcddc h1:dqOFpXhhRD6gOTub0yhvwhHs1Rx3Ipn9ZefSNU6YhoE=
 github.com/getlantern/yinbi-server v0.0.0-20210405195857-efd7239bcddc/go.mod h1:lYmVT8j7jOe9oERH0M21j/5w64UtWY6ErK79BCDOSRo=
+github.com/getlantern/yinbi-server v0.0.0-20210405235929-96b0e408e4f8 h1:fnKioAkfHKGmH1khoHGhFAYH9EIC+OfYe/PZvGREoJA=
+github.com/getlantern/yinbi-server v0.0.0-20210405235929-96b0e408e4f8/go.mod h1:c5gAETiliJCZzgpyFnb8QyOg6L/rYkfUGWOiOl18wsg=
 github.com/getlantern/zenodb v0.0.0-20191107150234-58f0e128172a/go.mod h1:/QuMPlUCcgfXRy+yAwXWcAkBegF2Nl1lw0nJ+kSWEsA=
 github.com/getlantern/zenodb v0.0.0-20200613184607-425f1dea9db1 h1:2S3iHuoFuwfxMkeizLJZuTAPojoMJb3eP4iUZiciZVg=
 github.com/getlantern/zenodb v0.0.0-20200613184607-425f1dea9db1/go.mod h1:jttohOig8lld+9Dm2VsQXPNzRy3+dF6SZZSTn3SMttI=
