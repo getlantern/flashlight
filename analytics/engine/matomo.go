@@ -40,7 +40,7 @@ func (ga matomo) End(vals url.Values) url.Values {
 }
 
 func (ga matomo) GetSessionValues(version, clientID, execHash string) url.Values {
-	vals := make(url.Values, 0)
+	vals := make(url.Values)
 
 	vals.Add("apiv", "1")
 	vals.Add("rec", "1")

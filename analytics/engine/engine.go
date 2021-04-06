@@ -2,7 +2,7 @@ package engine
 
 import "net/url"
 
-var useMatomo = false
+const useMatomo = false
 
 type Engine interface {
 	End(vals url.Values) url.Values

@@ -39,7 +39,7 @@ func (ga googleAnalytics) End(vals url.Values) url.Values {
 }
 
 func (ga googleAnalytics) GetSessionValues(version, clientID, execHash string) url.Values {
-	vals := make(url.Values, 0)
+	vals := make(url.Values)
 
 	vals.Add("v", "1")
 	vals.Add("cid", clientID)

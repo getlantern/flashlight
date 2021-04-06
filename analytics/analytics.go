@@ -130,7 +130,7 @@ func (s *session) track() {
 
 	r, err := http.NewRequest("POST", s.engine.GetEndpoint(), bytes.NewBufferString(args))
 	if err != nil {
-		log.Errorf("Error constructing GA request: %s", err)
+		_ = log.Errorf("Error constructing analytics request: %s", err)
 		return
 	}
 
@@ -145,15 +145,14 @@ func (s *session) track() {
 
 	resp, err := s.rt.RoundTrip(r)
 	if err != nil {
-		log.Errorf("Could not send HTTP request to GA: %s", err)
+		_ = log.Errorf("Could not send HTTP request to analytics: %s", err)
 		return
 	}
-	log.Debugf("Successfully sent request to GA: %s", resp.Status)
+	log.Debugf("Successfully sent request to analytics: %s", resp.Status)
 	if err := resp.Body.Close(); err != nil {
 		log.Debugf("Unable to close response body: %v", err)
 	}
 }
-
 
 // getExecutableHash returns the hash of the currently running executable.
 // If there's an error getting the hash, this returns
