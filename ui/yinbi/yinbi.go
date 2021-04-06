@@ -82,16 +82,13 @@ func NewWithAuth(params authapi.APIParams,
 func (h YinbiHandler) walletHandler() http.Handler {
 	router := handler.NewRouter()
 	router.Group(func(r chi.Router) {
-		r.Post("/", h.createWalletHandler())
-		// redeemCodes
+		r.Post("/", h.createWalletHandler)       // create wallet
+		r.Post("/import", h.importWalletHandler) // import wallet
 		r.Get("/redeem/codes", func(w http.ResponseWriter, r *http.Request) {
 			url := h.GetAuthAddr("/redeem/codes")
 			log.Debugf("Sending redeem codes request to %s", url)
 			h.ProxyHandler(url, r, w, nil)
-		})
-		// importWallet
-		r.Post("/import", h.importWalletHandler)
-		// fetch redemption codes
+		}) // redeemCodes
 		r.Get("/codes", func(w http.ResponseWriter, r *http.Request) {
 			// getRedemptionCodes is the handler used to look up
 			// voucher codes belonging to a Yinbi user
@@ -106,7 +103,7 @@ func (h YinbiHandler) walletHandler() http.Handler {
 			handler.SuccessResponse(w, map[string]interface{}{
 				"codes": codes,
 			})
-		})
+		}) // fetch redemption codes
 
 	})
 	return router
@@ -166,23 +163,21 @@ func (h YinbiHandler) importWalletHandler(w http.ResponseWriter, r *http.Request
 // After the account has been created, we store the encrypted
 // secret key in the key store and create a trust line to the
 // Yinbi asset
-func (h YinbiHandler) createWalletHandler() http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Debug("Received new create Yinbi account request")
-		var params api.CreateAccountParams
-		err := handler.DecodeJSONRequest(w, r, &params)
-		if err != nil {
-			err = fmt.Errorf("Error decoding create account request: %v", err)
-			handler.ErrorHandler(w, err, http.StatusInternalServerError)
-			return
-		}
-		resp, err := h.yinbiClient.CreateWallet(&params)
-		if err != nil {
-			handler.ErrorHandler(w, err, http.StatusInternalServerError)
-		} else {
-			handler.SuccessResponse(w, resp)
-		}
-	})
+func (h YinbiHandler) createWalletHandler(w http.ResponseWriter, r *http.Request) {
+	log.Debug("Received new create Yinbi account request")
+	var params api.CreateAccountParams
+	err := handler.DecodeJSONRequest(w, r, &params)
+	if err != nil {
+		err = fmt.Errorf("Error decoding create account request: %v", err)
+		handler.ErrorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
+	resp, err := h.yinbiClient.CreateWallet(&params)
+	if err != nil {
+		handler.ErrorHandler(w, err, http.StatusInternalServerError)
+	} else {
+		handler.SuccessResponse(w, resp)
+	}
 }
 
 // paymentHandler setups Yinbi payment-related routes
