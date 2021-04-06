@@ -3,7 +3,6 @@ module github.com/getlantern/flashlight
 go 1.13
 
 require (
-	cloud.google.com/go v0.81.0 // indirect
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/confluence v1.6.2-0.20201116033747-ba09085bd120
@@ -14,7 +13,6 @@ require (
 	github.com/anacrolix/torrent v1.25.1
 	github.com/aws/aws-sdk-go v1.38.13 // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
-	github.com/cloudflare/cloudflare-go v0.11.5 // indirect
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
@@ -114,7 +112,6 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/ipinfo/go-ipinfo v1.0.0 // indirect
 	github.com/jackpal/gateway v1.0.6
-	github.com/jinzhu/now v1.1.2 // indirect
 	github.com/jmoiron/sqlx v1.3.1 // indirect
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
@@ -126,8 +123,6 @@ require (
 	github.com/mitchellh/go-server-timing v1.0.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/mitchellh/panicwrap v1.0.0
-	github.com/onsi/ginkgo v1.14.2 // indirect
-	github.com/onsi/gomega v1.10.3 // indirect
 	github.com/pborman/uuid v1.2.0
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/refraction-networking/utls v0.0.0-20200729012536-186025ac7b77
@@ -141,9 +136,7 @@ require (
 	github.com/tklauser/go-sysconf v0.3.4 // indirect
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	github.com/ulule/limiter/v3 v3.8.0 // indirect
-	github.com/valyala/fasthttp v1.17.0 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
-	github.com/wealthsimple/goller v0.0.0-20161210163648-30a2682df1c4 // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
 	golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602 // indirect
