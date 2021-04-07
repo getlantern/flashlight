@@ -164,17 +164,21 @@ func (h YinbiHandler) importWalletHandler(w http.ResponseWriter, r *http.Request
 // secret key in the key store and create a trust line to the
 // Yinbi asset
 func (h YinbiHandler) createWalletHandler(w http.ResponseWriter, r *http.Request) {
-	log.Debug("Received new create Yinbi account request")
+	log.Debug("Received new create Yinbi wallet request")
 	var params api.CreateAccountParams
 	err := handler.DecodeJSONRequest(w, r, &params)
 	if err != nil {
-		err = fmt.Errorf("Error decoding create account request: %v", err)
+		err = fmt.Errorf("Error decoding create wallet request: %v", err)
 		handler.ErrorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
 	resp, err := h.yinbiClient.CreateWallet(&params)
 	if err != nil {
-		handler.ErrorHandler(w, err, http.StatusInternalServerError)
+		code := http.StatusInternalServerError
+		if resp != nil && resp.StatusCode != 0 {
+			code = resp.StatusCode
+		}
+		handler.ErrorHandler(w, err, code)
 	} else {
 		handler.SuccessResponse(w, resp)
 	}
