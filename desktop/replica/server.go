@@ -496,7 +496,6 @@ func (me *HttpHandler) handleDuration(rw *ops.InstrumentedResponseWriter, r *htt
 	if err != nil {
 		return err
 	}
-	log.Debugf("HERE: %s", m)
 	if fileIndex == "" {
 		fileIndex = "0"
 	}
