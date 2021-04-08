@@ -47,6 +47,7 @@ type HttpHandler struct {
 	uploadsDir       string
 	mux              http.ServeMux
 	replicaClient    replica.Client
+	metadataClient   replica.Client
 	searchProxy      http.Handler
 	thumbnailerProxy http.Handler
 	gaSession        analytics.Session
@@ -69,6 +70,7 @@ func NewHTTPHandler(
 	configDir string,
 	uc common.UserConfig,
 	replicaClient replica.Client,
+	metadataClient replica.Client,
 	gaSession analytics.Session,
 	opts NewHttpHandlerOpts,
 ) (_ *HttpHandler, err error) {
@@ -150,6 +152,7 @@ func NewHTTPHandler(
 		dataDir:       replicaDataDir,
 		uploadsDir:    uploadsDir,
 		replicaClient: replicaClient,
+		metadataClient: metadataClient,
 		searchProxy:   http.StripPrefix("/search", proxyHandler(uc, common.ReplicaSearchAPIHost, nil)),
 		thumbnailerProxy: http.StripPrefix(
 			"/thumbnail",
@@ -173,6 +176,7 @@ func NewHTTPHandler(
 	handler.mux.HandleFunc("/search", handler.wrapHandlerError("replica_search", handler.handleSearch))
 	handler.mux.HandleFunc("/search/serp_web", handler.wrapHandlerError("replica_search", handler.handleSearch))
 	handler.mux.HandleFunc("/thumbnail", handler.wrapHandlerError("replica_thumbnail", handler.handleThumbnail))
+	handler.mux.HandleFunc("/duration", handler.wrapHandlerError("replica_duration", handler.handleDuration))
 	handler.mux.HandleFunc("/upload", handler.wrapHandlerError("replica_upload", handler.handleUpload))
 	handler.mux.HandleFunc("/uploads", handler.wrapHandlerError("replica_uploads", handler.handleUploads))
 	handler.mux.HandleFunc("/view", handler.wrapHandlerError("replica_view", handler.handleView))
@@ -482,6 +486,26 @@ func (me *HttpHandler) handleDelete(rw *ops.InstrumentedResponseWriter, r *http.
 func (me *HttpHandler) handleThumbnail(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
 	me.thumbnailerProxy.ServeHTTP(rw, r)
 	return nil
+}
+
+func (me *HttpHandler) handleDuration(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
+	query := r.URL.Query()
+	replicaLink := query.Get("replicaLink")
+	fileIndex := query.Get("fileIndex")
+	m, err := metainfo.ParseMagnetURI(replicaLink)
+	if err != nil {
+		return err
+	}
+	if fileIndex == "" {
+		fileIndex = "0"
+	}
+	key := fmt.Sprintf("%s/duration/%s", m.InfoHash.HexString(), fileIndex)
+	duration, err := me.metadataClient.GetObject(key)
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(rw, duration)
+	return err
 }
 
 func (me *HttpHandler) handleSearch(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
