@@ -47,6 +47,7 @@ type HttpHandler struct {
 	uploadsDir       string
 	mux              http.ServeMux
 	replicaClient    replica.Client
+	metadataClient   replica.Client
 	searchProxy      http.Handler
 	thumbnailerProxy http.Handler
 	gaSession        analytics.Session
@@ -69,6 +70,7 @@ func NewHTTPHandler(
 	configDir string,
 	uc common.UserConfig,
 	replicaClient replica.Client,
+	metadataClient replica.Client,
 	gaSession analytics.Session,
 	opts NewHttpHandlerOpts,
 ) (_ *HttpHandler, err error) {
@@ -150,6 +152,7 @@ func NewHTTPHandler(
 		dataDir:       replicaDataDir,
 		uploadsDir:    uploadsDir,
 		replicaClient: replicaClient,
+		metadataClient: metadataClient,
 		searchProxy:   http.StripPrefix("/search", proxyHandler(uc, common.ReplicaSearchAPIHost, nil)),
 		thumbnailerProxy: http.StripPrefix(
 			"/thumbnail",
