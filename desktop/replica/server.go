@@ -490,12 +490,17 @@ func (me *HttpHandler) handleThumbnail(rw *ops.InstrumentedResponseWriter, r *ht
 
 func (me *HttpHandler) handleDuration(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
 	query := r.URL.Query()
-	infohash := query.Get("infohash")
-	index := query.Get("index")
-	if index == "" {
-		index = "0"
+	replicaLink := query.Get("replicaLink")
+	fileIndex := query.Get("fileIndex")
+	m, err := metainfo.ParseMagnetURI(replicaLink)
+	if err != nil {
+		return err
 	}
-	key := fmt.Sprintf("%s/duration/%s", infohash, index)
+	log.Debugf("HERE: %s", m)
+	if fileIndex == "" {
+		fileIndex = "0"
+	}
+	key := fmt.Sprintf("%s/duration/%s", m.InfoHash.HexString(), fileIndex)
 	duration, err := me.metadataClient.GetObject(key)
 	if err != nil {
 		return err
