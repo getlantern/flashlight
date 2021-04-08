@@ -16,6 +16,7 @@ type objectInfo struct {
 	MimeTypes    []string  `json:"mimeTypes"`
 	LastModified time.Time `json:"lastModified"`
 	DisplayName  string    `json:"displayName"`
+	InfoHash     string    `json:"infoHash"`
 }
 
 // Inits from a BitTorrent metainfo that must contain a valid info.
@@ -32,6 +33,7 @@ func (me *objectInfo) fromS3UploadMetaInfo(mi replica.UploadMetainfo, lastModifi
 			}
 			return []string{mime.TypeByExtension(path.Ext(filePath[len(filePath)-1]))}
 		}(),
+		InfoHash: mi.HashInfoBytes().HexString(),
 	}
 	return nil
 }
