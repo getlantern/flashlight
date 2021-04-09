@@ -17,8 +17,9 @@ import (
 )
 
 var (
-	ErrInvalidMnemonic = errors.New("The provided words do not comprise a valid mnemonic")
-	log                = golog.LoggerFor("flashlight.ui.yinbi")
+	ErrInvalidCredentials = errors.New("Invalid credentials")
+	ErrInvalidMnemonic    = errors.New("The provided words do not comprise a valid mnemonic")
+	log                   = golog.LoggerFor("flashlight.ui.yinbi")
 )
 
 // YinbiHandler is the group of handlers used for handling
@@ -148,7 +149,14 @@ func (h YinbiHandler) importWalletHandler(w http.ResponseWriter, r *http.Request
 	resp, err := h.yinbiClient.ImportWallet(&params)
 	if err != nil {
 		log.Errorf("Error sending import wallet request: %v", err)
-		handler.ErrorHandler(w, err, resp.StatusCode)
+		code := http.StatusBadRequest
+		if resp != nil {
+			if resp.Error != "" {
+				err = errors.New(resp.Error)
+			}
+			code = resp.StatusCode
+		}
+		handler.ErrorHandler(w, err, code)
 		return
 	}
 	handler.SuccessResponse(w, map[string]interface{}{
