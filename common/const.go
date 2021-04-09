@@ -41,9 +41,9 @@ var (
 
 	Staging = false
 
-	//AuthServerAddr = "https://auth4.lantern.network"
-	AuthServerAddr = "https://auth-staging.lantern.network"
-	ProAPIHost     = "api.getiantem.org"
+	AuthServerAddr = "https://auth4.lantern.network"
+
+	ProAPIHost = "api.getiantem.org"
 
 	ReplicaSearchAPIHost   = "replica-search.lantern.io"
 	ReplicaThumbnailerHost = "replica-thumbnailer.lantern.io"
@@ -55,7 +55,6 @@ var (
 
 func init() {
 	initInternal()
-	useYinbiStaging()
 }
 
 // ForceStaging forces staging mode.
