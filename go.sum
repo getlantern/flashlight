@@ -377,6 +377,8 @@ github.com/getlantern/auth-server v0.0.0-20210407181656-31fff74b5132 h1:sbPcR0LH
 github.com/getlantern/auth-server v0.0.0-20210407181656-31fff74b5132/go.mod h1:K888Tek0rTkEfrhlp7B1ZSlp48vlZmUi9rDtYyYI1w0=
 github.com/getlantern/auth-server v0.0.0-20210409142426-c00f9cbcf2f3 h1:M5+j0B0tHTmWklLCZvcq6yH/AMZ109hzzUHWojNvgag=
 github.com/getlantern/auth-server v0.0.0-20210409142426-c00f9cbcf2f3/go.mod h1:K888Tek0rTkEfrhlp7B1ZSlp48vlZmUi9rDtYyYI1w0=
+github.com/getlantern/auth-server v0.0.0-20210409175702-5e1420e2370b h1:TDDMubLD/5bwzY03UCRMFVZE5N5ptvj7a4JpBLfK9OE=
+github.com/getlantern/auth-server v0.0.0-20210409175702-5e1420e2370b/go.mod h1:K888Tek0rTkEfrhlp7B1ZSlp48vlZmUi9rDtYyYI1w0=
 github.com/getlantern/authipc v0.2.0/go.mod h1:nDXd7xyGPMbPwEi4QAL3PPMzvwSFYbQxzk4ipANL25M=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99 h1:fnjb9PYZRMU6Tok5i3anP/bAqhUtG2kn9xgff3IlA+8=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99/go.mod h1:4rYfIUYagdnY0KCu5/zOBX5CIRIi+j+LHdQ+LmD/Lyg=
@@ -662,6 +664,8 @@ github.com/getlantern/yinbi-server v0.0.0-20210409142710-d3682b836f54 h1:SA7upgc
 github.com/getlantern/yinbi-server v0.0.0-20210409142710-d3682b836f54/go.mod h1:qJJcSkWNYUD7pQrVjbalcH5BpNG6o/a+sHz8S+u7q4g=
 github.com/getlantern/yinbi-server v0.0.0-20210409150158-b41d76084079 h1:vDPI8CvWUdEjHWGw69/LQOsxAR0rEzUEEiIcEdNvpfE=
 github.com/getlantern/yinbi-server v0.0.0-20210409150158-b41d76084079/go.mod h1:qJJcSkWNYUD7pQrVjbalcH5BpNG6o/a+sHz8S+u7q4g=
+github.com/getlantern/yinbi-server v0.0.0-20210409175832-bcfaedd9f03a h1:ppoDtjCK8/kR9Hy8mvotl2LVCoRJoLFpgCaWPseDtB0=
+github.com/getlantern/yinbi-server v0.0.0-20210409175832-bcfaedd9f03a/go.mod h1:d6Cba1yRlQgcOsvNV0MZn+N6nhqhwpN6HhWLRc7oRaY=
 github.com/getlantern/zenodb v0.0.0-20191107150234-58f0e128172a/go.mod h1:/QuMPlUCcgfXRy+yAwXWcAkBegF2Nl1lw0nJ+kSWEsA=
 github.com/getlantern/zenodb v0.0.0-20200613184607-425f1dea9db1 h1:2S3iHuoFuwfxMkeizLJZuTAPojoMJb3eP4iUZiciZVg=
 github.com/getlantern/zenodb v0.0.0-20200613184607-425f1dea9db1/go.mod h1:jttohOig8lld+9Dm2VsQXPNzRy3+dF6SZZSTn3SMttI=

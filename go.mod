@@ -20,7 +20,7 @@ require (
 	github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
-	github.com/getlantern/auth-server v0.0.0-20210409142426-c00f9cbcf2f3
+	github.com/getlantern/auth-server v0.0.0-20210409175702-5e1420e2370b
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20200613191039-d7b1c2cc6021
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
@@ -98,7 +98,7 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-20210409150158-b41d76084079
+	github.com/getlantern/yinbi-server v0.0.0-20210409175832-bcfaedd9f03a
 	github.com/getsentry/sentry-go v0.9.0
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-ole/go-ole v1.2.5 // indirect

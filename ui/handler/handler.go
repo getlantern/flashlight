@@ -109,9 +109,13 @@ func GetParams(w http.ResponseWriter, r *http.Request, target interface{}) error
 
 // HandleAuthResponse handles the given auth response. If err is not nil, the error
 // handler is used; otherwise, a success response is sent
-func HandleAuthResponse(authResp api.AuthResponse, w http.ResponseWriter, err error) {
+func HandleAuthResponse(authResp *api.AuthResponse, w http.ResponseWriter, err error) {
 	if err != nil {
-		ErrorHandler(w, err, authResp.StatusCode)
+		code := http.StatusBadRequest
+		if authResp != nil && authResp.StatusCode != 0 {
+			code = authResp.StatusCode
+		}
+		ErrorHandler(w, err, code)
 	} else {
 		SuccessResponse(w, authResp)
 	}

@@ -47,7 +47,7 @@ func getUserParams(w http.ResponseWriter, r *http.Request) (*models.UserParams, 
 	return &params, handler.GetParams(w, r, &params)
 }
 
-type AuthMethod func(params *models.UserParams) (api.AuthResponse, error)
+type AuthMethod func(params *models.UserParams) (*api.AuthResponse, error)
 
 // authHandler is the HTTP handler used by the login and registration endpoints.
 // It creates a new SRP client from the user params in the request

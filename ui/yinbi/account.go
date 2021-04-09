@@ -57,22 +57,20 @@ func (h YinbiHandler) resetPassword(w http.ResponseWriter, r *http.Request) {
 // requests
 func (h YinbiHandler) recoverAccount(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Received new recover account request")
-	var params struct {
-		Words string `json:"words"`
-	}
-	err := handler.DecodeJSONRequest(w, r, &params)
+	var params api.AccountParams
+	err := handler.GetParams(w, r, &params)
 	if err != nil {
 		return
 	}
-	resp, err := h.yinbiClient.RecoverAccount(params.Words)
+	resp, err := h.yinbiClient.RecoverWallet(&params)
 	if err != nil {
 		handler.ErrorHandler(w, err, resp.StatusCode)
 		return
 	}
 	log.Debugf("Successfully recovered user %s's account using Yinbi key",
-		resp.User.Username)
+		resp.Username)
 	handler.SuccessResponse(w, map[string]interface{}{
-		"user": resp.User,
+		"user": resp.Username,
 	})
 }
 
