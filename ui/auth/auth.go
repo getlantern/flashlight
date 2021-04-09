@@ -95,6 +95,20 @@ func (h AuthHandler) accountStatusHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// sessionHandler is used to fetch the current Lantern user session
+func (h AuthHandler) sessionHandler(w http.ResponseWriter, r *http.Request) {
+	isAuthenticated, err := h.authClient.IsAuthenticated()
+	if err != nil || !isAuthenticated {
+		if err == nil {
+			err = fmt.Errorf("No active session")
+		}
+		log.Errorf("Error retrieving account status: %v", err)
+		handler.ErrorHandler(w, err, http.StatusUnauthorized)
+	} else {
+		handler.SuccessResponse(w)
+	}
+}
+
 // signOutHandler is the handler used for destroying user sessions
 func (h AuthHandler) signOutHandler(w http.ResponseWriter, r *http.Request) {
 	authResp, err := h.authClient.SignOut()
@@ -107,6 +121,7 @@ func (h AuthHandler) ConfigureRoutes() http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Post("/login", h.authHandler(h.authClient.SignIn))
 		r.Post("/register", h.authHandler(h.authClient.Register))
+		r.Get("/session", h.sessionHandler)
 		r.Get("/account/status", h.accountStatusHandler)
 		r.Post("/logout", h.signOutHandler)
 	})
