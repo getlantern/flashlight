@@ -94,15 +94,18 @@ func isOriginAllowed(origin string) bool {
 }
 
 // ProcessCORS processes CORS requests on localhost.
-func ProcessCORS(responseHeaders http.Header, r *http.Request) {
+// It returns true if the request is a valid CORS request
+// from an allowed origin and false otherwise.
+func ProcessCORS(responseHeaders http.Header, r *http.Request) bool {
 	origin := r.Header.Get("origin")
 	if origin == "" {
 		log.Debugf("Request is not a CORS request")
-		return
+		return false
 	}
 	// The origin can have include arbitrary ports, so we just make sure
 	// it's on localhost.
 	if isOriginAllowed(origin) {
+
 		responseHeaders.Set("Access-Control-Allow-Origin", origin)
 		responseHeaders.Set("Vary", "Origin")
 		responseHeaders.Set("Access-Control-Allow-Credentials", "true")
@@ -110,13 +113,18 @@ func ProcessCORS(responseHeaders http.Header, r *http.Request) {
 			responseHeaders.Add("Access-Control-Allow-Methods", method)
 		}
 		responseHeaders.Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
+		return true
 	}
+	return false
 }
 
 // CORSMiddleware is HTTP middleware used to process CORS requests on localhost
 func CORSMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		ProcessCORS(w.Header(), req)
+		if ok := ProcessCORS(w.Header(), req); ok && req.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 		next.ServeHTTP(w, req)
 	})
 }
