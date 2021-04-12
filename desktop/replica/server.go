@@ -43,17 +43,16 @@ type HttpHandler struct {
 	confluence    confluence.Handler
 	torrentClient *torrent.Client
 	// Where to store torrent client data.
-	dataDir          string
-	uploadsDir       string
-	mux              http.ServeMux
-	replicaClient    replica.Client
-	metadataClient   replica.Client
-	searchProxy      http.Handler
-	thumbnailerProxy http.Handler
-	gaSession        analytics.Session
-	opts             NewHttpHandlerOpts
-	uploadStorage    storage.ClientImplCloser
-	defaultStorage   storage.ClientImplCloser
+	dataDir        string
+	uploadsDir     string
+	mux            http.ServeMux
+	replicaClient  replica.Client
+	metadataClient replica.Client
+	searchProxy    http.Handler
+	gaSession      analytics.Session
+	opts           NewHttpHandlerOpts
+	uploadStorage  storage.ClientImplCloser
+	defaultStorage storage.ClientImplCloser
 }
 
 func DefaultNewHttpHandlerOpts() NewHttpHandlerOpts {
@@ -148,24 +147,13 @@ func NewHTTPHandler(
 				return &s
 			}(),
 		},
-		torrentClient: torrentClient,
-		dataDir:       replicaDataDir,
-		uploadsDir:    uploadsDir,
-		replicaClient: replicaClient,
+		torrentClient:  torrentClient,
+		dataDir:        replicaDataDir,
+		uploadsDir:     uploadsDir,
+		replicaClient:  replicaClient,
 		metadataClient: metadataClient,
-		searchProxy:   http.StripPrefix("/search", proxyHandler(uc, common.ReplicaSearchAPIHost, nil)),
-		thumbnailerProxy: http.StripPrefix(
-			"/thumbnail",
-			proxyHandler(uc, common.ReplicaThumbnailerHost,
-				func(res *http.Response) error {
-					if res.StatusCode/100 != 2 {
-						return nil
-					}
-					// One week
-					res.Header.Set("Cache-Control", "public, max-age=604800, immutable")
-					return nil
-				})),
-		gaSession: gaSession,
+		searchProxy:    http.StripPrefix("/search", proxyHandler(uc, common.ReplicaSearchAPIHost, nil)),
+		gaSession:      gaSession,
 		// I think the standard file-storage implementation is sufficient here because we guarantee
 		// unique info name/prefixes for uploads (which the default file implementation does not).
 		// There's another implementation that injects the infohash as a prefix to ensure uniqueness
@@ -175,8 +163,8 @@ func NewHTTPHandler(
 	}
 	handler.mux.HandleFunc("/search", handler.wrapHandlerError("replica_search", handler.handleSearch))
 	handler.mux.HandleFunc("/search/serp_web", handler.wrapHandlerError("replica_search", handler.handleSearch))
-	handler.mux.HandleFunc("/thumbnail", handler.wrapHandlerError("replica_thumbnail", handler.handleThumbnail))
-	handler.mux.HandleFunc("/duration", handler.wrapHandlerError("replica_duration", handler.handleDuration))
+	handler.mux.HandleFunc("/thumbnail", handler.wrapHandlerError("replica_thumbnail", handler.handleMetadata("thumbnail")))
+	handler.mux.HandleFunc("/duration", handler.wrapHandlerError("replica_duration", handler.handleMetadata("duration")))
 	handler.mux.HandleFunc("/upload", handler.wrapHandlerError("replica_upload", handler.handleUpload))
 	handler.mux.HandleFunc("/uploads", handler.wrapHandlerError("replica_uploads", handler.handleUploads))
 	handler.mux.HandleFunc("/view", handler.wrapHandlerError("replica_view", handler.handleView))
@@ -483,29 +471,27 @@ func (me *HttpHandler) handleDelete(rw *ops.InstrumentedResponseWriter, r *http.
 	return nil
 }
 
-func (me *HttpHandler) handleThumbnail(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
-	me.thumbnailerProxy.ServeHTTP(rw, r)
-	return nil
-}
+func (me *HttpHandler) handleMetadata(category string) func(*ops.InstrumentedResponseWriter, *http.Request) error {
+	return func(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
+		query := r.URL.Query()
+		replicaLink := query.Get("replicaLink")
+		fileIndex := query.Get("fileIndex")
+		m, err := metainfo.ParseMagnetURI(replicaLink)
+		if err != nil {
+			return err
+		}
+		if fileIndex == "" {
+			fileIndex = "0"
+		}
+		key := fmt.Sprintf("%s/%s/%s", m.InfoHash.HexString(), category, fileIndex)
+		metadata, err := me.metadataClient.GetObject(key)
+		if err != nil {
+			return err
+		}
+		_, err = io.Copy(rw, metadata)
+		return err
+	}
 
-func (me *HttpHandler) handleDuration(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
-	query := r.URL.Query()
-	replicaLink := query.Get("replicaLink")
-	fileIndex := query.Get("fileIndex")
-	m, err := metainfo.ParseMagnetURI(replicaLink)
-	if err != nil {
-		return err
-	}
-	if fileIndex == "" {
-		fileIndex = "0"
-	}
-	key := fmt.Sprintf("%s/duration/%s", m.InfoHash.HexString(), fileIndex)
-	duration, err := me.metadataClient.GetObject(key)
-	if err != nil {
-		return err
-	}
-	_, err = io.Copy(rw, duration)
-	return err
 }
 
 func (me *HttpHandler) handleSearch(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
