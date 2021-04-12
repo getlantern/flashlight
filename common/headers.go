@@ -31,8 +31,7 @@ const (
 
 var (
 	// List of methods the client is allowed to use with cross-domain requests
-	CORSAllowedMethods = []string{http.MethodGet, http.MethodPost, http.MethodOptions}
-	CORSAllowedOrigins = []string{}
+	corsAllowedMethods = []string{http.MethodGet, http.MethodPost, http.MethodOptions}
 )
 
 // AddCommonHeadersWithOptions sets standard http headers on a request bound
@@ -109,7 +108,7 @@ func ProcessCORS(responseHeaders http.Header, r *http.Request) bool {
 		responseHeaders.Set("Access-Control-Allow-Origin", origin)
 		responseHeaders.Set("Vary", "Origin")
 		responseHeaders.Set("Access-Control-Allow-Credentials", "true")
-		for _, method := range CORSAllowedMethods {
+		for _, method := range corsAllowedMethods {
 			responseHeaders.Add("Access-Control-Allow-Methods", method)
 		}
 		responseHeaders.Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
