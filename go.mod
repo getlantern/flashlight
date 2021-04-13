@@ -3,7 +3,6 @@ module github.com/getlantern/flashlight
 go 1.13
 
 require (
-	cloud.google.com/go v0.81.0 // indirect
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/confluence v1.6.2-0.20201116033747-ba09085bd120
@@ -118,7 +117,6 @@ require (
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 // indirect
-	github.com/labstack/echo/v4 v4.2.2 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/miekg/dns v1.1.35
 	github.com/mitchellh/go-ps v1.0.0
@@ -145,12 +143,10 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20210412220455-f1c623a9e750
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
-	google.golang.org/api v0.44.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20210406143921-e86de6bf7a46 // indirect
 	google.golang.org/grpc v1.37.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	gorm.io/gorm v1.21.7 // indirect
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
