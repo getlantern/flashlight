@@ -131,7 +131,6 @@ client:
           mandrillapp.com: mandrillapp.dsa.akamai.getiantem.org
           replica-search-staging.lantern.io: replica-search-staging.dsa.akamai.lantern.io
           replica-search.lantern.io: replica-search.dsa.akamai.lantern.io
-          replica-thumbnailer.lantern.io: replica-thumbnailer.dsa.akamai.lantern.io
           update.getlantern.org: update.dsa.akamai.getiantem.org
         testurl: https://fronted-ping.dsa.akamai.getiantem.org/ping
         validator:
@@ -2151,7 +2150,6 @@ client:
           mandrillapp.com: d2rh3u0miqci5a.cloudfront.net
           replica-search-staging.lantern.io: d36vwf34kviguu.cloudfront.net
           replica-search.lantern.io: d7kybcoknm3oo.cloudfront.net
-          replica-thumbnailer.lantern.io: d2b627m7r9v7iw.cloudfront.net
           update.getlantern.org: d2yl1zps97e5mx.cloudfront.net
         testurl: http://d157vud77ygy87.cloudfront.net/ping
         validator:
