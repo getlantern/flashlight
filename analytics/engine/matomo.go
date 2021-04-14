@@ -6,9 +6,9 @@ import (
 
 const (
 	// endpoint is the endpoint to report Matomo data to.
-	matomoEndpoint = `https://lantern.matomo.cloud/matomo.php` // - this should be in an env
+	matomoEndpoint = `https://analytics.lantern.io/matomo.php` // - this should be in an env
 	matomoIDSite = "1" // lantern.io - this should be in an env
-	matomoAuthToken = "06111c9cb3eb8b065d3f0af3d400ca8b" // this should be in an env
+	matomoAuthToken = "9da6ac71d684a0cc5dd3c36034699859" // this should be in an env
 )
 
 type matomo struct {}
