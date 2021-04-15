@@ -37,7 +37,15 @@ func mainCode(flags flags) int {
 			Storage:  replica.S3Storage{},
 			Endpoint: flags.Endpoint,
 		},
-		&analytics.NullSession{},
+		// TODO: make this configurable for Iran
+		replica.Client{
+			Storage: replica.S3Storage{},
+			Endpoint: replica.Endpoint{
+				StorageProvider: "s3",
+				BucketName:      "replica-metadata",
+				Region:          "ap-southeast-1",
+			}},
+&analytics.NullSession{},
 		desktopReplica.DefaultNewHttpHandlerOpts(),
 	)
 	if err != nil {
