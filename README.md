@@ -2,7 +2,7 @@
 
 ### Prerequisites
 
-* [Go 1.13](https://golang.org/dl/) is the minimum supported version of Go
+* [Go 1.15](https://golang.org/dl/) is the minimum supported version of Go
 * [GNU Make](https://www.gnu.org/software/make/) if you want to use the Makefile
 * Dependencies are managed with Go Modules.
 * Force git to use ssh instead of https by running
