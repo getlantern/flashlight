@@ -172,3 +172,5 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2020
 replace crawshaw.io/sqlite => github.com/getlantern/sqlite v0.3.3-0.20210215090556-4f83cf7731f0
 
 replace github.com/eycorsican/go-tun2socks => github.com/getlantern/go-tun2socks v1.16.12-0.20201218023150-b68f09e5ae93
+
+replace github.com/getlantern/replica => ./replica/

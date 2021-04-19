@@ -43,36 +43,38 @@ type HttpHandler struct {
 	confluence    confluence.Handler
 	torrentClient *torrent.Client
 	// Where to store torrent client data.
-	dataDir        string
-	uploadsDir     string
-	mux            http.ServeMux
-	replicaClient  replica.Client
-	metadataClient replica.Client
-	searchProxy    http.Handler
-	gaSession      analytics.Session
-	opts           NewHttpHandlerOpts
+	dataDir     string
+	uploadsDir  string
+	mux         http.ServeMux
+	searchProxy http.Handler
+	NewHttpHandlerInput
 	uploadStorage  storage.ClientImplCloser
 	defaultStorage storage.ClientImplCloser
 }
 
-func DefaultNewHttpHandlerOpts() NewHttpHandlerOpts {
-	return NewHttpHandlerOpts{}
-}
-
-type NewHttpHandlerOpts struct {
+type NewHttpHandlerInput struct {
+	ConfigDir                 string
+	UserConfig                common.UserConfig
+	ReplicaClient             replica.Client
+	MetadataClient            replica.Client
+	GaSession                 analytics.Session
 	AddUploadsToTorrentClient bool
 	StoreUploadsLocally       bool
 }
 
+func (me *NewHttpHandlerInput) SetDefaults() {
+	me.UserConfig = &common.NullUserConfig{}
+	storage := replica.S3Storage{}
+	me.ReplicaClient = replica.Client{Storage: storage, Endpoint: replica.DefaultEndpoint}
+	me.MetadataClient = replica.Client{Storage: storage, Endpoint: replica.DefaultMetadataEndpoint}
+	me.GaSession = &analytics.NullSession{}
+}
+
 // NewHTTPHandler creates a new http.Handler for calls to replica.
 func NewHTTPHandler(
-	configDir string,
-	uc common.UserConfig,
-	replicaClient replica.Client,
-	metadataClient replica.Client,
-	gaSession analytics.Session,
-	opts NewHttpHandlerOpts,
+	input NewHttpHandlerInput,
 ) (_ *HttpHandler, err error) {
+
 	userCacheDir, err := os.UserCacheDir()
 	if err != nil {
 		log.Errorf("accessing the user cache dir, fallback to temp dir: %w", err)
@@ -81,7 +83,7 @@ func NewHTTPHandler(
 	const replicaDirElem = "replica"
 	replicaCacheDir := filepath.Join(userCacheDir, common.AppName, replicaDirElem)
 	_ = os.MkdirAll(replicaCacheDir, 0700)
-	uploadsDir := filepath.Join(configDir, replicaDirElem, "uploads")
+	uploadsDir := filepath.Join(input.ConfigDir, replicaDirElem, "uploads")
 	_ = os.MkdirAll(uploadsDir, 0700)
 	replicaDataDir := filepath.Join(replicaCacheDir, "data")
 	_ = os.MkdirAll(replicaDataDir, 0700)
@@ -147,19 +149,18 @@ func NewHTTPHandler(
 				return &s
 			}(),
 		},
-		torrentClient:  torrentClient,
-		dataDir:        replicaDataDir,
-		uploadsDir:     uploadsDir,
-		replicaClient:  replicaClient,
-		metadataClient: metadataClient,
-		searchProxy:    http.StripPrefix("/search", proxyHandler(uc, common.ReplicaSearchAPIHost, nil)),
-		gaSession:      gaSession,
+		torrentClient: torrentClient,
+		dataDir:       replicaDataDir,
+		uploadsDir:    uploadsDir,
+		searchProxy:   http.StripPrefix("/search", proxyHandler(input.UserConfig, common.ReplicaSearchAPIHost, nil)),
 		// I think the standard file-storage implementation is sufficient here because we guarantee
 		// unique info name/prefixes for uploads (which the default file implementation does not).
 		// There's another implementation that injects the infohash as a prefix to ensure uniqueness
 		// of final file names.
 		uploadStorage:  storage.NewFile(replicaDataDir),
 		defaultStorage: defaultStorage,
+
+		NewHttpHandlerInput: input,
 	}
 	handler.mux.HandleFunc("/search", handler.wrapHandlerError("replica_search", handler.handleSearch))
 	handler.mux.HandleFunc("/search/serp_web", handler.wrapHandlerError("replica_search", handler.handleSearch))
@@ -184,7 +185,7 @@ func NewHTTPHandler(
 	// routes, so this might go away soon.
 	handler.mux.Handle("/", &handler.confluence)
 
-	if opts.AddUploadsToTorrentClient {
+	if input.AddUploadsToTorrentClient {
 		if err := replica.IterUploads(uploadsDir, func(iu replica.IteredUpload) {
 			if iu.Err != nil {
 				log.Errorf("error while iterating uploads: %v", iu.Err)
@@ -299,7 +300,7 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 		tmpFile    *os.File
 		tmpFileErr error
 	)
-	if me.opts.StoreUploadsLocally {
+	if me.StoreUploadsLocally {
 		tmpFile, tmpFileErr = func() (*os.File, error) {
 			// This is for testing temp file failures.
 			const forceTempFileFailure = false
@@ -322,11 +323,11 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 	fileName := r.URL.Query().Get("name")
 
 	uploadConfig := replica.NewUUIDUploadConfig("", fileName)
-	output, err := me.replicaClient.Upload(replicaUploadReader, uploadConfig)
+	output, err := me.ReplicaClient.Upload(replicaUploadReader, uploadConfig)
 	s3Prefix := output.Upload
 	log.Debugf("uploaded replica key %q", s3Prefix)
 	rw.Op.Set("upload_s3_key", s3Prefix)
-	me.gaSession.EventWithLabel("replica", "upload", path.Ext(fileName))
+	me.GaSession.EventWithLabel("replica", "upload", path.Ext(fileName))
 	log.Debugf("uploaded %d bytes", cw.BytesWritten)
 	if err != nil {
 		return fmt.Errorf("uploading with replicaClient: %w", err)
@@ -341,7 +342,7 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 	if err != nil {
 		return fmt.Errorf("storing uploaded torrent: %w", err)
 	}
-	if tmpFileErr == nil && me.opts.StoreUploadsLocally {
+	if tmpFileErr == nil && me.StoreUploadsLocally {
 		// Windoze might complain if we don't close the handle before moving the file, plus it's
 		// considered good practice to check for close errors after writing to a file. (I'm not
 		// closing it, but at least I'm flushing anything, if it's incomplete at this point, the
@@ -357,7 +358,7 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 			log.Errorf("error renaming file: %v", err)
 		}
 	}
-	if me.opts.AddUploadsToTorrentClient {
+	if me.AddUploadsToTorrentClient {
 		err = me.addUploadTorrent(output.MetaInfo, true)
 		if err != nil {
 			return fmt.Errorf("adding torrent: %w", err)
@@ -449,7 +450,7 @@ func (me *HttpHandler) handleDelete(rw *ops.InstrumentedResponseWriter, r *http.
 
 	// TODO: DeleteUpload shouldn't error if files are already missing, so we don't get stuck if a
 	// delete is half-completed.
-	if errs := me.replicaClient.DeleteUpload(s3Prefix, func() (ret [][]string) {
+	if errs := me.ReplicaClient.DeleteUpload(s3Prefix, func() (ret [][]string) {
 		for _, f := range info.Files {
 			ret = append(ret, f.Path)
 		}
@@ -484,7 +485,7 @@ func (me *HttpHandler) handleMetadata(category string) func(*ops.InstrumentedRes
 			fileIndex = "0"
 		}
 		key := fmt.Sprintf("%s/%s/%s", m.InfoHash.HexString(), category, fileIndex)
-		metadata, err := me.metadataClient.GetObject(key)
+		metadata, err := me.MetadataClient.GetObject(key)
 		if err != nil {
 			return err
 		}
@@ -498,7 +499,7 @@ func (me *HttpHandler) handleSearch(rw *ops.InstrumentedResponseWriter, r *http.
 	searchTerm := r.URL.Query().Get("s")
 
 	rw.Op.Set("search_term", searchTerm)
-	me.gaSession.EventWithLabel("replica", "search", searchTerm)
+	me.GaSession.EventWithLabel("replica", "search", searchTerm)
 
 	me.searchProxy.ServeHTTP(rw, r)
 	return nil
@@ -556,7 +557,7 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 		_, _, release := me.confluence.GetTorrent(m.InfoHash)
 		go func() {
 			defer release()
-			tob, err := me.replicaClient.GetMetainfo(s3Prefix)
+			tob, err := me.ReplicaClient.GetMetainfo(s3Prefix)
 			if err != nil {
 				log.Errorf("error getting metainfo for %q from s3 API: %v", s3Prefix, err)
 				return
@@ -604,9 +605,9 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 	rw.Op.Set("download_filename", filename)
 	switch inlineType {
 	case "inline":
-		me.gaSession.EventWithLabel("replica", "view", ext)
+		me.GaSession.EventWithLabel("replica", "view", ext)
 	case "attachment":
-		me.gaSession.EventWithLabel("replica", "download", ext)
+		me.GaSession.EventWithLabel("replica", "download", ext)
 	}
 
 	torrentFile := t.Files()[selectOnly]
