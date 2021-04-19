@@ -562,24 +562,33 @@ func (app *App) startReplicaIfNecessary(features map[string]bool) {
 
 	app.startReplica.Do(func() {
 		log.Debug("Starting replica from app")
+		s3Storage := &replica.S3Storage{
+			&http.Client{
+				Transport: proxied.AsRoundTripper(
+					func(req *http.Request) (*http.Response, error) {
+						chained, err := proxied.ChainedNonPersistent("")
+						if err != nil {
+							return nil, fmt.Errorf("connecting to proxy: %w", err)
+						}
+						return chained.RoundTrip(req)
+					},
+				),
+			}}
 		replicaHandler, err := desktopReplica.NewHTTPHandler(
 			app.ConfigDir,
 			getSettings(),
 			replica.Client{
-				Storage: &replica.S3Storage{
-					&http.Client{
-						Transport: proxied.AsRoundTripper(
-							func(req *http.Request) (*http.Response, error) {
-								chained, err := proxied.ChainedNonPersistent("")
-								if err != nil {
-									return nil, fmt.Errorf("connecting to proxy: %w", err)
-								}
-								return chained.RoundTrip(req)
-							},
-						),
-					}},
+				Storage:  s3Storage,
 				Endpoint: replica.DefaultEndpoint,
 			},
+			// TODO: make this configurable for Iran
+			replica.Client{
+				Storage: s3Storage,
+				Endpoint: replica.Endpoint{
+					StorageProvider: "s3",
+					BucketName:      "replica-metadata",
+					Region:          "ap-southeast-1",
+				}},
 			app.gaSession,
 			desktopReplica.DefaultNewHttpHandlerOpts(),
 		)
