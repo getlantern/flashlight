@@ -59,7 +59,13 @@ func (h AuthHandler) authHandler(authenticate AuthMethod) http.HandlerFunc {
 		}
 		authResp, err := authenticate(params)
 		if err != nil {
-			handler.ErrorHandler(w, err, http.StatusBadRequest)
+			var e interface{}
+			if authResp != nil && len(authResp.Errors) > 0 {
+				e = authResp.Errors
+			} else {
+				e = err
+			}
+			handler.ErrorHandler(w, e, http.StatusBadRequest)
 		} else {
 			handler.HandleAuthResponse(authResp, w, err)
 		}
