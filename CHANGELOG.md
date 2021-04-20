@@ -1,4 +1,18 @@
 
+<a name="lantern-6.5.8"></a>
+## [lantern-6.5.8](https://github.com/getlantern/flashlight/compare/lantern-6.5.7...lantern-6.5.8)
+
+> 2021-04-20
+
+### Pull Requests
+
+* Merge pull request [#1067](https://github.com/getlantern/flashlight/issues/1067) from getlantern/ui-6.5.8
+* Merge pull request [#1062](https://github.com/getlantern/flashlight/issues/1062) from getlantern/update-matomo-server-address
+* Merge pull request [#1061](https://github.com/getlantern/flashlight/issues/1061) from getlantern/thumbnail-overhaul
+* Merge pull request [#1060](https://github.com/getlantern/flashlight/issues/1060) from getlantern/durations
+* Merge pull request [#1055](https://github.com/getlantern/flashlight/issues/1055) from getlantern/add-support-for-matomo-analytics-engine
+
+
 <a name="lantern-6.5.7"></a>
 ## [lantern-6.5.7](https://github.com/getlantern/flashlight/compare/lantern-6.5.6...lantern-6.5.7)
 

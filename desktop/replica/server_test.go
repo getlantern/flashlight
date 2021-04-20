@@ -4,12 +4,9 @@ import (
 	"io/ioutil"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"strings"
 	"testing"
 
-	"github.com/getlantern/flashlight/analytics"
-	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog/testlog"
 	"github.com/getlantern/replica"
@@ -21,22 +18,13 @@ func TestUploadAndDelete(t *testing.T) {
 	stopCapture := testlog.Capture(t)
 	defer stopCapture()
 
-	dir, err := ioutil.TempDir(os.TempDir(), "replicauploadtest")
-	assert.NoError(t, err)
-	defer os.RemoveAll(dir)
-	handler, err := NewHTTPHandler(
-		dir,
-		&common.NullUserConfig{},
-		replica.Client{
-			Storage:  replica.S3Storage{},
-			Endpoint: replica.DefaultEndpoint,
-		},
-		&analytics.NullSession{},
-		DefaultNewHttpHandlerOpts(),
-	)
+	dir := t.TempDir()
+	input := NewHttpHandlerInput{}
+	input.SetDefaults()
+	input.ConfigDir = dir
+	handler, err := NewHTTPHandler(input)
 	if err != nil {
-		log.Errorf("error creating replica http server: %v", err)
-		return
+		t.Fatalf("creating replica http server: %v", err)
 	}
 	defer handler.Close()
 

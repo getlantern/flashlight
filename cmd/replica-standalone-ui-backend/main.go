@@ -7,7 +7,6 @@ import (
 	"github.com/anacrolix/log"
 	"github.com/anacrolix/tagflag"
 	"github.com/getlantern/appdir"
-	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/common"
 	desktopReplica "github.com/getlantern/flashlight/desktop/replica"
 	"github.com/getlantern/replica"
@@ -29,17 +28,17 @@ func main() {
 }
 
 func mainCode(flags flags) int {
-	uc := common.NewUserConfigData("replica-standalone", 0, "replica-standalone-token", nil, "en-US")
-	handler, err := desktopReplica.NewHTTPHandler(
-		appdir.General("ReplicaStandalone"),
-		uc,
-		replica.Client{
-			Storage:  replica.S3Storage{},
-			Endpoint: flags.Endpoint,
-		},
-		&analytics.NullSession{},
-		desktopReplica.DefaultNewHttpHandlerOpts(),
+	input := desktopReplica.NewHttpHandlerInput{}
+	input.SetDefaults()
+	input.ConfigDir = appdir.General("ReplicaStandalone")
+	input.UserConfig = common.NewUserConfigData(
+		"replica-standalone",
+		0,
+		"replica-standalone-token",
+		nil,
+		"en-US",
 	)
+	handler, err := desktopReplica.NewHTTPHandler(input)
 	if err != nil {
 		log.Printf("error creating replica http server: %v", err)
 		return 1
