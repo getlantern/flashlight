@@ -562,27 +562,28 @@ func (app *App) startReplicaIfNecessary(features map[string]bool) {
 
 	app.startReplica.Do(func() {
 		log.Debug("Starting replica from app")
-		replicaHandler, err := desktopReplica.NewHTTPHandler(
-			app.ConfigDir,
-			getSettings(),
-			replica.Client{
-				Storage: &replica.S3Storage{
-					&http.Client{
-						Transport: proxied.AsRoundTripper(
-							func(req *http.Request) (*http.Response, error) {
-								chained, err := proxied.ChainedNonPersistent("")
-								if err != nil {
-									return nil, fmt.Errorf("connecting to proxy: %w", err)
-								}
-								return chained.RoundTrip(req)
-							},
-						),
-					}},
-				Endpoint: replica.DefaultEndpoint,
+		s3Storage := &replica.S3Storage{
+			&http.Client{
+				Transport: proxied.AsRoundTripper(
+					func(req *http.Request) (*http.Response, error) {
+						chained, err := proxied.ChainedNonPersistent("")
+						if err != nil {
+							return nil, fmt.Errorf("connecting to proxy: %w", err)
+						}
+						return chained.RoundTrip(req)
+					},
+				),
 			},
-			app.gaSession,
-			desktopReplica.DefaultNewHttpHandlerOpts(),
-		)
+			// TODO: make this configurable for Iran
+		}
+		input := desktopReplica.NewHttpHandlerInput{}
+		input.SetDefaults()
+		// TODO: Configure replica Clients for Iran?
+		input.ReplicaClient.Storage = s3Storage
+		input.MetadataClient.Storage = s3Storage
+		input.ConfigDir = app.ConfigDir
+		input.UserConfig = getSettings()
+		replicaHandler, err := desktopReplica.NewHTTPHandler(input)
 		if err != nil {
 			log.Errorf("error creating replica http server: %v", err)
 			app.Exit(err)

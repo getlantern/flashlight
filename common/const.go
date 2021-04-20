@@ -47,7 +47,6 @@ var (
 	ProAPIHost = "api.getiantem.org"
 
 	ReplicaSearchAPIHost   = "replica-search.lantern.io"
-	ReplicaThumbnailerHost = "replica-thumbnailer.lantern.io"
 
 	log = golog.LoggerFor("flashlight.common")
 
@@ -77,7 +76,6 @@ func initInternal() {
 		AuthServerAddr = "https://auth-staging.lantern.network"
 		ProAPIHost = "api-staging.getiantem.org"
 		ReplicaSearchAPIHost = "replica-search-staging.lantern.io"
-		ReplicaThumbnailerHost = "replica-thumbnailer-staging.lantern.io"
 	}
 	forceAds, _ = strconv.ParseBool(os.Getenv("FORCEADS"))
 }
