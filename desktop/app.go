@@ -573,25 +573,17 @@ func (app *App) startReplicaIfNecessary(features map[string]bool) {
 						return chained.RoundTrip(req)
 					},
 				),
-			}}
-		replicaHandler, err := desktopReplica.NewHTTPHandler(
-			app.ConfigDir,
-			getSettings(),
-			replica.Client{
-				Storage:  s3Storage,
-				Endpoint: replica.DefaultEndpoint,
 			},
 			// TODO: make this configurable for Iran
-			replica.Client{
-				Storage: s3Storage,
-				Endpoint: replica.Endpoint{
-					StorageProvider: "s3",
-					BucketName:      "replica-metadata",
-					Region:          "ap-southeast-1",
-				}},
-			app.gaSession,
-			desktopReplica.DefaultNewHttpHandlerOpts(),
-		)
+		}
+		input := desktopReplica.NewHttpHandlerInput{}
+		input.SetDefaults()
+		// TODO: Configure replica Clients for Iran?
+		input.ReplicaClient.Storage = s3Storage
+		input.MetadataClient.Storage = s3Storage
+		input.ConfigDir = app.ConfigDir
+		input.UserConfig = getSettings()
+		replicaHandler, err := desktopReplica.NewHTTPHandler(input)
 		if err != nil {
 			log.Errorf("error creating replica http server: %v", err)
 			app.Exit(err)
