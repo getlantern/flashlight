@@ -76,7 +76,7 @@ require (
 	github.com/getlantern/proxybench v0.0.0-20200806214955-5d56065f9f77
 	github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683
 	github.com/getlantern/quicwrapper v0.0.0-20201013170341-d27d67101f2d
-	github.com/getlantern/replica v0.5.1-0.20210419024455-4b0e64f2c962
+	github.com/getlantern/replica v0.5.1-0.20210421055312-6713bb3b9c80
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/safechannels v0.0.0-20201218194342-b4e5383e9627
@@ -172,5 +172,3 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2020
 replace crawshaw.io/sqlite => github.com/getlantern/sqlite v0.3.3-0.20210215090556-4f83cf7731f0
 
 replace github.com/eycorsican/go-tun2socks => github.com/getlantern/go-tun2socks v1.16.12-0.20201218023150-b68f09e5ae93
-
-// replace github.com/getlantern/replica => ./replica/
