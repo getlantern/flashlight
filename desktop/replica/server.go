@@ -477,7 +477,7 @@ func (me *HttpHandler) handleDelete(rw *ops.InstrumentedResponseWriter, r *http.
 	}
 
 	uploadAuthFilePath := me.uploadTokenPath(upload)
-	authBytes, readAuthErr := os.ReadFile(uploadAuthFilePath)
+	authBytes, readAuthErr := ioutil.ReadFile(uploadAuthFilePath)
 
 	metainfoFilePath := me.uploadMetainfoPath(upload)
 	_, loadMetainfoErr := metainfo.LoadFromFile(metainfoFilePath)

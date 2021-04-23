@@ -647,6 +647,8 @@ github.com/getlantern/replica v0.5.1-0.20210419024455-4b0e64f2c962 h1:cIly60Qu8C
 github.com/getlantern/replica v0.5.1-0.20210419024455-4b0e64f2c962/go.mod h1:Ph27Svan65U/qe2m1CpEujM7VU86/fCrz+U66P4ZOe4=
 github.com/getlantern/replica v0.5.1-0.20210423002945-e12b26140cd1 h1:Pu3SAPns6mFtGh162gydFP9oVeH9WAfrJlLuJG0MMBU=
 github.com/getlantern/replica v0.5.1-0.20210423002945-e12b26140cd1/go.mod h1:zLNNp+A2rjHoTwkEkEvt7fNBrtWvwy2zr44pXyBfuQk=
+github.com/getlantern/replica v0.5.1-0.20210423035824-fc895cdcffcc h1:vuk0GBi91AhmjJQUn5rwDS+GLCtigNiIXDiFLMbayOs=
+github.com/getlantern/replica v0.5.1-0.20210423035824-fc895cdcffcc/go.mod h1:zLNNp+A2rjHoTwkEkEvt7fNBrtWvwy2zr44pXyBfuQk=
 github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01 h1:JyXEChj4lHy5w3hlQVnYpcH4QrBXmhEJgkxb0FPkFlM=
 github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01/go.mod h1:mnw3NsM0/oiJdZDMujNx+Kg60o72UClHB1UNqrEWqOM=
 github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85 h1:+naZppl28oqpVs0J+wOsVeh61c02OD/G3JP+PemAMCU=
