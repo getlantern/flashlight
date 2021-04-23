@@ -19,7 +19,7 @@ type objectInfo struct {
 }
 
 // Inits from a BitTorrent metainfo that must contain a valid info.
-func (me *objectInfo) fromS3UploadMetaInfo(mi replica.UploadMetainfo, lastModified time.Time) error {
+func (me *objectInfo) FromUploadMetainfo(mi replica.UploadMetainfo, lastModified time.Time) error {
 	filePath := mi.FilePath()
 	*me = objectInfo{
 		FileSize:     mi.TotalLength(),

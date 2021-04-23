@@ -1,6 +1,7 @@
 package common
 
 import (
+	"net/url"
 	"os"
 	"strconv"
 	"time"
@@ -45,7 +46,9 @@ var (
 
 	ProAPIHost = "api.getiantem.org"
 
-	ReplicaSearchAPIHost   = "replica-search.lantern.io"
+	ReplicaSearchAPIHost = "replica-search.lantern.io"
+
+	ReplicaServiceEndpoint = url.URL{Scheme: "https", Host: ReplicaSearchAPIHost}
 
 	log = golog.LoggerFor("flashlight.common")
 

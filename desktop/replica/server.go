@@ -53,20 +53,33 @@ type HttpHandler struct {
 }
 
 type NewHttpHandlerInput struct {
-	ConfigDir                 string
-	UserConfig                common.UserConfig
-	ReplicaClient             replica.Client
-	MetadataClient            replica.Client
-	GaSession                 analytics.Session
+	ConfigDir      string
+	UserConfig     common.UserConfig
+	ReplicaClient  replica.Client
+	MetadataClient replica.StorageClient
+	GaSession      analytics.Session
+	// Doing this might be a privacy concern, since users could be singled out for being the
+	// first/only uploader for content.
 	AddUploadsToTorrentClient bool
-	StoreUploadsLocally       bool
+	// Retain a copy of upload file data. This would save downloading our own uploaded content if we
+	// intend to seed it.
+	StoreUploadsLocally bool
 }
 
 func (me *NewHttpHandlerInput) SetDefaults() {
 	me.UserConfig = &common.NullUserConfig{}
 	storage := replica.S3Storage{}
-	me.ReplicaClient = replica.Client{Storage: storage, Endpoint: replica.DefaultEndpoint}
-	me.MetadataClient = replica.Client{Storage: storage, Endpoint: replica.DefaultMetadataEndpoint}
+	me.ReplicaClient = replica.Client{
+		replica.StorageClient{
+			Storage:  storage,
+			Endpoint: replica.DefaultEndpoint,
+		},
+		replica.ServiceClient{
+			ReplicaServiceEndpoint: &common.ReplicaServiceEndpoint,
+			HttpClient:             http.DefaultClient,
+		},
+	}
+	me.MetadataClient = replica.StorageClient{Storage: storage, Endpoint: replica.DefaultMetadataEndpoint}
 	me.GaSession = &analytics.NullSession{}
 }
 
@@ -217,8 +230,8 @@ func (me *HttpHandler) Close() {
 	me.defaultStorage.Close()
 }
 
-// handlerError is just a small wrapper around errors so that we can more easily
-// return them from handlers and then inspect them in our handler wrapper
+// handlerError is just a small wrapper around errors so that we can more easily return them from
+// handlers and then inspect them in our handler wrapper
 type handlerError struct {
 	statusCode int
 	error
@@ -277,15 +290,39 @@ func (me *HttpHandler) wrapHandlerError(
 	}
 }
 
+func (me *HttpHandler) writeNewUploadAuthTokenFile(auth string, prefix replica.Prefix) error {
+	tokenFilePath := me.uploadTokenPath(prefix)
+	f, err := os.OpenFile(
+		tokenFilePath,
+		os.O_WRONLY|os.O_CREATE|os.O_EXCL|os.O_TRUNC,
+		0440,
+	)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	_, err = f.WriteString(auth)
+	if err != nil {
+		return err
+	}
+	log.Debugf("wrote %q to %q", auth, tokenFilePath)
+	return f.Close()
+}
+
 func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
-	// Set status code to 204 to handle preflight cors check
+	// Set status code to 204 to handle preflight CORS check
 	if r.Method == "OPTIONS" {
 		rw.WriteHeader(http.StatusNoContent)
 		return nil
 	}
 
-	if r.Method != "POST" {
-		return handlerError{http.StatusMethodNotAllowed, fmt.Errorf("expected POST")}
+	switch r.Method {
+	default:
+		return handlerError{
+			http.StatusMethodNotAllowed,
+			fmt.Errorf("expected method supporting request body"),
+		}
+	case http.MethodPost, http.MethodPut:
 	}
 
 	scrubbedReader, err := metascrubber.GetScrubber(r.Body)
@@ -322,26 +359,31 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 
 	fileName := r.URL.Query().Get("name")
 
-	uploadConfig := replica.NewUUIDUploadConfig("", fileName)
-	output, err := me.ReplicaClient.Upload(replicaUploadReader, uploadConfig)
-	s3Prefix := output.Upload
-	log.Debugf("uploaded replica key %q", s3Prefix)
-	rw.Op.Set("upload_s3_key", s3Prefix)
+	output, err := me.ReplicaClient.Upload(replicaUploadReader, fileName)
 	me.GaSession.EventWithLabel("replica", "upload", path.Ext(fileName))
 	log.Debugf("uploaded %d bytes", cw.BytesWritten)
 	if err != nil {
 		return fmt.Errorf("uploading with replicaClient: %w", err)
 	}
-	info := output.Info
-	var metainfoBytes bytes.Buffer
-	err = output.MetaInfo.Write(&metainfoBytes)
-	if err != nil {
-		return fmt.Errorf("writing metainfo: %w", err)
+	upload := output.Upload
+	log.Debugf("uploaded replica key %q", upload)
+	rw.Op.Set("upload_s3_key", upload.PrefixString())
+
+	{
+		var metainfoBytes bytes.Buffer
+		err = output.MetaInfo.Write(&metainfoBytes)
+		if err != nil {
+			return fmt.Errorf("writing metainfo: %w", err)
+		}
+		err = storeUploadedTorrent(&metainfoBytes, me.uploadMetainfoPath(upload))
+		if err != nil {
+			return fmt.Errorf("storing uploaded torrent: %w", err)
+		}
 	}
-	err = storeUploadedTorrent(&metainfoBytes, me.uploadMetainfoPath(s3Prefix))
-	if err != nil {
-		return fmt.Errorf("storing uploaded torrent: %w", err)
+	if err := me.writeNewUploadAuthTokenFile(*output.AuthToken, upload.Prefix); err != nil {
+		log.Errorf("error writing upload auth token file: %v", err)
 	}
+
 	if tmpFileErr == nil && me.StoreUploadsLocally {
 		// Windoze might complain if we don't close the handle before moving the file, plus it's
 		// considered good practice to check for close errors after writing to a file. (I'm not
@@ -350,7 +392,7 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 		tmpFile.Close()
 		// Move the temporary file, which contains the upload body, to the data directory for the
 		// torrent client, in the location it expects.
-		dst := filepath.Join(append([]string{me.dataDir, s3Prefix.String()}, info.UpvertedFiles()[0].Path...)...)
+		dst := filepath.Join(append([]string{me.dataDir, upload.String()}, output.Info.UpvertedFiles()[0].Path...)...)
 		_ = os.MkdirAll(filepath.Dir(dst), 0700)
 		err = os.Rename(tmpFile.Name(), dst)
 		if err != nil {
@@ -365,9 +407,13 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 		}
 	}
 	var oi objectInfo
-	err = oi.fromS3UploadMetaInfo(output, time.Now())
+	err = oi.FromUploadMetainfo(output.UploadMetainfo, time.Now())
 	if err != nil {
-		return fmt.Errorf("getting objectInfo from s3 upload metainfo: %w", err)
+		return fmt.Errorf("getting objectInfo from upload metainfo: %w", err)
+	}
+	// We can clobber with what should be a superior link directly from the upload service endpoint.
+	if output.Link != nil {
+		oi.Link = *output.Link
 	}
 	return encodeJsonResponse(rw, oi)
 }
@@ -404,7 +450,7 @@ func (me *HttpHandler) handleUploads(rw *ops.InstrumentedResponseWriter, r *http
 			return
 		}
 		var oi objectInfo
-		err = oi.fromS3UploadMetaInfo(mi, iu.FileInfo.ModTime())
+		err = oi.FromUploadMetainfo(mi, iu.FileInfo.ModTime())
 		if err != nil {
 			log.Errorf("error parsing upload metainfo for %q: %v", iu.FileInfo.Name(), err)
 			return
@@ -417,59 +463,51 @@ func (me *HttpHandler) handleUploads(rw *ops.InstrumentedResponseWriter, r *http
 	return encodeJsonResponse(rw, resp)
 }
 
-func (me *HttpHandler) handleDelete(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
+func (me *HttpHandler) handleDelete(rw *ops.InstrumentedResponseWriter, r *http.Request) (err error) {
 	link := r.URL.Query().Get("link")
 	m, err := metainfo.ParseMagnetUri(link)
 	if err != nil {
 		return handlerError{http.StatusBadRequest, fmt.Errorf("parsing magnet link: %v", err)}
 	}
 
-	var s3Prefix replica.Upload
-	if err := s3Prefix.FromMagnet(m); err != nil {
-		log.Errorf("error getting s3 prefix from magnet link %q: %v", m, err)
+	var upload replica.Upload
+	if err := upload.FromMagnet(m); err != nil {
+		log.Errorf("error getting upload spec from magnet link %q: %v", m, err)
 		return handlerError{http.StatusBadRequest, fmt.Errorf("parsing replica uri: %w", err)}
 	}
 
-	metainfoFilePath := me.uploadMetainfoPath(s3Prefix)
-	metainfo_, err := metainfo.LoadFromFile(metainfoFilePath)
-	if os.IsNotExist(err) {
-		return handlerError{http.StatusForbidden, errors.New("upload metainfo not found")}
-	}
-	if err != nil {
-		return handlerError{
-			http.StatusInternalServerError,
-			fmt.Errorf("checking for upload's local metainfo file: %w", err)}
-	}
-	info, err := metainfo_.UnmarshalInfo()
-	if err != nil {
-		return handlerError{
-			http.StatusInternalServerError,
-			fmt.Errorf("extracting info from upload local metainfo: %w", err),
-		}
-	}
+	uploadAuthFilePath := me.uploadTokenPath(upload)
+	authBytes, readAuthErr := ioutil.ReadFile(uploadAuthFilePath)
 
-	// TODO: DeleteUpload shouldn't error if files are already missing, so we don't get stuck if a
-	// delete is half-completed.
-	if errs := me.ReplicaClient.DeleteUpload(s3Prefix, func() (ret [][]string) {
-		for _, f := range info.Files {
-			ret = append(ret, f.Path)
-		}
-		return
-	}()...); len(errs) != 0 {
-		for _, e := range errs {
-			log.Errorf("error deleting prefix %q: %v", s3Prefix, e)
-		}
-		return fmt.Errorf("couldn't delete replica prefix")
-	}
+	metainfoFilePath := me.uploadMetainfoPath(upload)
+	_, loadMetainfoErr := metainfo.LoadFromFile(metainfoFilePath)
 
-	t, ok := me.torrentClient.Torrent(m.InfoHash)
-	if ok {
-		t.Drop()
+	if readAuthErr == nil || loadMetainfoErr == nil {
+		log.Debugf("deleting %q (auth=%q, haveMetainfo=%t)", upload.Prefix, string(authBytes), loadMetainfoErr == nil && os.IsNotExist(readAuthErr))
+		err := me.ReplicaClient.DeleteUpload(
+			upload.Prefix,
+			string(authBytes),
+			loadMetainfoErr == nil && os.IsNotExist(readAuthErr),
+		)
+		if err != nil {
+			// It could be possible to unpack the service response status code and relay that.
+			return fmt.Errorf("deleting upload: %w", err)
+		}
+		t, ok := me.torrentClient.Torrent(m.InfoHash)
+		if ok {
+			t.Drop()
+		}
+		os.RemoveAll(filepath.Join(me.dataDir, upload.String()))
+		os.Remove(metainfoFilePath)
+		os.Remove(uploadAuthFilePath)
 	}
-
-	os.RemoveAll(filepath.Join(me.dataDir, s3Prefix.String()))
-	os.Remove(metainfoFilePath)
-	return nil
+	if os.IsNotExist(loadMetainfoErr) && os.IsNotExist(readAuthErr) {
+		return handlerError{http.StatusGone, errors.New("no upload tokens found")}
+	}
+	if !os.IsNotExist(readAuthErr) {
+		return readAuthErr
+	}
+	return loadMetainfoErr
 }
 
 func (me *HttpHandler) handleMetadata(category string) func(*ops.InstrumentedResponseWriter, *http.Request) error {
@@ -646,8 +684,12 @@ func storeUploadedTorrent(r io.Reader, path string) error {
 	return f.Close()
 }
 
-func (me *HttpHandler) uploadMetainfoPath(s3Prefix replica.Upload) string {
-	return filepath.Join(me.uploadsDir, s3Prefix.String()+".torrent")
+func (me *HttpHandler) uploadMetainfoPath(upload replica.Upload) string {
+	return filepath.Join(me.uploadsDir, upload.String()+".torrent")
+}
+
+func (me *HttpHandler) uploadTokenPath(prefix replica.Prefix) string {
+	return filepath.Join(me.uploadsDir, prefix.PrefixString()+".token")
 }
 
 func encodeJsonResponse(rw http.ResponseWriter, resp interface{}) error {
