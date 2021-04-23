@@ -56,7 +56,7 @@ type NewHttpHandlerInput struct {
 	ConfigDir      string
 	UserConfig     common.UserConfig
 	ReplicaClient  replica.Client
-	MetadataClient replica.Client
+	MetadataClient replica.StorageClient
 	GaSession      analytics.Session
 	// Doing this might be a privacy concern, since users could be singled out for being the
 	// first/only uploader for content.
@@ -70,12 +70,16 @@ func (me *NewHttpHandlerInput) SetDefaults() {
 	me.UserConfig = &common.NullUserConfig{}
 	storage := replica.S3Storage{}
 	me.ReplicaClient = replica.Client{
-		Storage:                storage,
-		Endpoint:               replica.DefaultEndpoint,
-		ReplicaServiceEndpoint: &common.ReplicaServiceEndpoint,
-		HttpClient:             http.DefaultClient,
+		replica.StorageClient{
+			Storage:  storage,
+			Endpoint: replica.DefaultEndpoint,
+		},
+		replica.ServiceClient{
+			ReplicaServiceEndpoint: &common.ReplicaServiceEndpoint,
+			HttpClient:             http.DefaultClient,
+		},
 	}
-	me.MetadataClient = replica.Client{Storage: storage, Endpoint: replica.DefaultMetadataEndpoint}
+	me.MetadataClient = replica.StorageClient{Storage: storage, Endpoint: replica.DefaultMetadataEndpoint}
 	me.GaSession = &analytics.NullSession{}
 }
 
