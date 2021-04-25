@@ -322,9 +322,26 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 			fmt.Errorf("expected method supporting request body"),
 		}
 	case http.MethodPost, http.MethodPut:
+		// Maybe we can differentiate form handling based on the method.
 	}
 
-	scrubbedReader, err := metascrubber.GetScrubber(r.Body)
+	fileName := r.URL.Query().Get("name")
+	var fileReader io.Reader
+	{
+		// There are streaming ways and helpers for temporary files for this if size becomes an issue.
+		formFile, fileHeader, err := r.FormFile("file")
+		if err == nil {
+			fileReader = formFile
+			if fileName == "" {
+				fileName = fileHeader.Filename
+			}
+		} else {
+			log.Debugf("error getting upload file as form file: %v", err)
+			fileReader = r.Body
+		}
+	}
+
+	scrubbedReader, err := metascrubber.GetScrubber(fileReader)
 	if err != nil {
 		return fmt.Errorf("getting metascrubber: %w", err)
 	}
@@ -355,8 +372,6 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 			log.Errorf("error creating temporary file: %v", tmpFileErr)
 		}
 	}
-
-	fileName := r.URL.Query().Get("name")
 
 	output, err := me.DefaultReplicaClient.Upload(replicaUploadReader, fileName)
 	me.GaSession.EventWithLabel("replica", "upload", path.Ext(fileName))
@@ -581,8 +596,9 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 	var uploadSpec replica.Upload
 	unwrapUploadSpecErr := uploadSpec.FromMagnet(m)
 	if unwrapUploadSpecErr == nil {
-		// Add things we can infer from the endpoint, duplicates should matter as the torrent client
-		// will handle this (not to mention we do this business everytime the handler is invoked).
+		// Add things we can infer from the endpoint, duplicates shouldn't matter as the torrent
+		// client will handle this (not to mention we do this business everytime the handler is
+		// invoked).
 
 		spec.Webseeds = append(spec.Webseeds, uploadSpec.WebseedUrls()...)
 		spec.Sources = append(spec.Sources, uploadSpec.MetainfoUrls()...)
