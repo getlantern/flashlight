@@ -250,7 +250,7 @@ func (me *HttpHandler) wrapHandlerError(
 		w := ops.InitInstrumentedResponseWriter(rw, opName)
 		defer w.Finish()
 		if err := handler(w, r); err != nil {
-			log.Errorf("in replica handler: %v", err)
+			log.Errorf("in %q handler: %v", opName, err)
 			w.Op.FailIf(err)
 
 			// we may want to only ultimately only report server errors here (ie >=500)
@@ -533,7 +533,7 @@ func (me *HttpHandler) handleMetadata(category string) func(*ops.InstrumentedRes
 		query := r.URL.Query()
 		replicaLink := query.Get("replicaLink")
 		fileIndex := query.Get("fileIndex")
-		m, err := metainfo.ParseMagnetURI(replicaLink)
+		m, err := metainfo.ParseMagnetUri(replicaLink)
 		if err != nil {
 			return err
 		}
