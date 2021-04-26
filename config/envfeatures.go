@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"strconv"
 	"time"
 )
@@ -44,14 +45,21 @@ var (
 )
 
 func init() {
-	enableFeature := func(featureEnabled string) bool {
-		if enable, err := strconv.ParseBool(featureEnabled); err == nil {
-			return enable
+	enableFeature := func(featureEnabled, envVarName string) bool {
+		enabled := func(val string) bool {
+			if enable, err := strconv.ParseBool(val); err == nil {
+				return enable
+			}
+			return false
 		}
-		return false
+		envVal := os.Getenv(envVarName)
+		if envVal != "" {
+			return enabled(envVal)
+		}
+		return enabled(featureEnabled)
 	}
 
-	EnableTrafficlog = enableFeature(EnableTrafficlogFeatures)
-	EnableReplica = enableFeature(EnableReplicaFeatures)
-	EnableYinbi = enableFeature(EnableYinbiFeatures)
+	EnableTrafficlog = enableFeature(EnableTrafficlogFeatures, "TRAFFICLOG")
+	EnableReplica = enableFeature(EnableReplicaFeatures, "REPLICA")
+	EnableYinbi = enableFeature(EnableYinbiFeatures, "YINBI")
 }
