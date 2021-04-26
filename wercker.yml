@@ -4,7 +4,7 @@
 # Read more about containers on our dev center
 # http://devcenter.wercker.com/docs/containers/index.html
 box:
-  id: golang:1.15.6
+  id: golang:1.15
   username: $DOCKERHUB_USERNAME
   password: $DOCKERHUB_PASSWORD
 # This is the build pipeline. Pipelines are the core of wercker
