@@ -169,7 +169,7 @@ func (app *App) LogPanicAndExit(msg string) {
 		})
 
 		sentry.CaptureMessage(msg)
-		if result := sentry.Flush(common.SentryTimeout); result == false {
+		if result := sentry.Flush(common.SentryTimeout); !result {
 			log.Error("Flushing to Sentry timed out")
 		}
 	}
@@ -817,7 +817,7 @@ func (app *App) doExit(err error) {
 			})
 
 			sentry.CaptureException(err)
-			if result := sentry.Flush(common.SentryTimeout); result == false {
+			if result := sentry.Flush(common.SentryTimeout); !result {
 				log.Error("Flushing to Sentry timed out")
 			}
 		}
@@ -898,7 +898,7 @@ func (app *App) ProxyAddrReachable(ctx context.Context) error {
 
 func recordStopped() {
 	ops.Begin("client_stopped").
-		SetMetricSum("uptime", time.Now().Sub(startTime).Seconds()).
+		SetMetricSum("uptime", time.Since(startTime).Seconds()).
 		End()
 }
 
