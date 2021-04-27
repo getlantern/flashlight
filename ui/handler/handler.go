@@ -75,15 +75,15 @@ func (h Handler) GetYinbiAddr(uri string) string {
 	return fmt.Sprintf("%s%s", h.yinbiAddr, uri)
 }
 
-// GetQueryParam takes an HTTP request and returns the given query arg with name (if it exists)
+// GetQueryParams takes an HTTP request and returns the given query arg with name (if it exists)
 func GetQueryParams(r *http.Request, names ...string) map[string]string {
 	results := make(map[string]string, len(names))
 	for _, name := range names {
-		keys, ok := r.URL.Query()[name]
-		if !ok || len(keys[0]) < 1 {
+		val := r.URL.Query().Get(name)
+		if len(val) < 1 {
 			continue
 		}
-		results[name] = keys[0]
+		results[name] = val
 	}
 	return results
 }
@@ -91,7 +91,6 @@ func GetQueryParams(r *http.Request, names ...string) map[string]string {
 // GetParams is used to unmarshal JSON from the given request r into
 // the target type
 func GetParams(w http.ResponseWriter, r *http.Request, target interface{}) error {
-	var err error
 	switch r.Method {
 	case http.MethodGet:
 		// if it's a GET request, marshal JSON from the query arguments
@@ -100,11 +99,11 @@ func GetParams(w http.ResponseWriter, r *http.Request, target interface{}) error
 			return err
 		}
 		// now unmarshal target type user params
-		err = json.Unmarshal(b, &target)
+		return json.Unmarshal(b, &target)
 	case http.MethodPost: // explicitly check for POST
-		err = DecodeJSONRequest(w, r, &target)
+		return DecodeJSONRequest(w, r, &target)
 	}
-	return err
+	return fmt.Errorf("unexpected request method: %s", r.Method)
 }
 
 // HandleAuthResponse handles the given auth response. If err is not nil, the error
@@ -172,13 +171,13 @@ func SuccessResponse(w http.ResponseWriter, vargs ...interface{}) {
 // encoded JSON response to the client
 func ErrorHandler(w http.ResponseWriter, err interface{}, errorCode int) {
 	var resp api.ApiResponse
-	switch err.(type) {
+	switch er := err.(type) {
 	case string:
-		resp.Error = err.(string)
+		resp.Error = er
 	case error:
-		resp.Error = err.(error).Error()
+		resp.Error = er.Error()
 	case api.Errors:
-		resp.Errors = err.(api.Errors)
+		resp.Errors = er
 	}
 	log.Errorf("Unable to process HTTP request: %v", resp)
 	common.WriteJSON(w, errorCode, &resp)

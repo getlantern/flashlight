@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	ErrInvalidCredentials = errors.New("Invalid credentials")
-	ErrInvalidMnemonic    = errors.New("The provided words do not comprise a valid mnemonic")
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrInvalidMnemonic    = errors.New("the provided words do not comprise a valid mnemonic")
 	log                   = golog.LoggerFor("flashlight.ui.yinbi")
 )
 
@@ -176,7 +176,7 @@ func (h YinbiHandler) createWalletHandler(w http.ResponseWriter, r *http.Request
 	var params api.CreateAccountParams
 	err := handler.DecodeJSONRequest(w, r, &params)
 	if err != nil {
-		err = fmt.Errorf("Error decoding create wallet request: %v", err)
+		err = fmt.Errorf("error decoding create wallet request: %v", err)
 		handler.ErrorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
@@ -221,7 +221,7 @@ func (h YinbiHandler) userHandler() http.Handler {
 				Address: address,
 			})
 			if err != nil {
-				err = fmt.Errorf("Error saving user address: %v", err)
+				err = fmt.Errorf("error saving user address: %v", err)
 				handler.ErrorHandler(w, err, http.StatusBadRequest)
 			} else {
 				log.Debug("Successfully saved address")
