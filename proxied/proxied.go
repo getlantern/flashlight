@@ -49,7 +49,7 @@ var (
 )
 
 func success(resp *http.Response) bool {
-	return resp.StatusCode > 199 && resp.StatusCode < 500
+	return resp.StatusCode > 199 && resp.StatusCode < 400
 }
 
 // changeUserAgent prepends app version and OSARCH to the User-Agent header
