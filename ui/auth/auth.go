@@ -81,9 +81,9 @@ func (h AuthHandler) accountStatusHandler(w http.ResponseWriter, r *http.Request
 	email := vals.Get("email")
 	lanternUserID := vals.Get("lanternUserID")
 	if lanternUserID == "" {
-		err = fmt.Errorf("Missing Lantern User ID")
+		err = fmt.Errorf("missing Lantern User ID")
 	} else if email == "" {
-		err = fmt.Errorf("Missing Lantern email")
+		err = fmt.Errorf("missing Lantern email")
 	}
 	if err != nil {
 		handler.ErrorHandler(w, err, http.StatusBadRequest)
@@ -107,7 +107,7 @@ func (h AuthHandler) sessionHandler(w http.ResponseWriter, r *http.Request) {
 	isAuthenticated, err := h.authClient.IsAuthenticated()
 	if err != nil || !isAuthenticated {
 		if err == nil {
-			err = fmt.Errorf("No active session")
+			err = fmt.Errorf("no active session")
 		}
 		log.Errorf("Error retrieving account status: %v", err)
 		handler.ErrorHandler(w, err, http.StatusUnauthorized)
