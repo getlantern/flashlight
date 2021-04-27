@@ -76,9 +76,10 @@ func (h AuthHandler) authHandler(authenticate AuthMethod) http.HandlerFunc {
 // user already has an existing Lantern user account given an email and
 // lantern user ID. If so, a success response is returned.
 func (h AuthHandler) accountStatusHandler(w http.ResponseWriter, r *http.Request) {
-	args := handler.GetQueryParams(r, "lanternUserID", "email")
 	var err error
-	email, lanternUserID := args["email"], args["lanternUserID"]
+	vals := r.URL.Query()
+	email := vals.Get("email")
+	lanternUserID := vals.Get("lanternUserID")
 	if lanternUserID == "" {
 		err = fmt.Errorf("Missing Lantern User ID")
 	} else if email == "" {
