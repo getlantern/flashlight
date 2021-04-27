@@ -588,7 +588,13 @@ func (app *App) startReplicaIfNecessary(features map[string]bool) {
 				ReplicaServiceEndpoint: &common.ReplicaServiceEndpoint,
 			},
 		}
-		input.MetadataStorageClient = replica.NewS3StorageClient(replica.DefaultBucket, replica.DefaultRegion, httpClient)
+		var err error
+		input.MetadataStorageClient, err = replica.StorageClientForEndpoint(
+			replica.DefaultMetadataEndpoint,
+			replica.AnyStorageClientParams{HttpClient: httpClient})
+		if err != nil {
+			log.Errorf("creating metadata storage client: %v", err)
+		}
 		replicaHandler, err := desktopReplica.NewHTTPHandler(input)
 		if err != nil {
 			log.Errorf("error creating replica http server: %v", err)
