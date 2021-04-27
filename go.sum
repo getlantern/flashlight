@@ -564,10 +564,6 @@ github.com/getlantern/quicwrapper v0.0.0-20201013170341-d27d67101f2d h1:0MtPatkh
 github.com/getlantern/quicwrapper v0.0.0-20201013170341-d27d67101f2d/go.mod h1:az7dh9l/ly3BPl1MgZZqvDroynMbemZ208hX3c7E+zo=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c h1:IkjF+RwRs8B/RsuD638eUFO2K/227OO2B1FLXGp17Ro=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c/go.mod h1:kExwbqTx1krUnT9ohmXG3jayDTEBfxUKeoRzU6XucLw=
-github.com/getlantern/replica v0.5.1-0.20210419024455-4b0e64f2c962 h1:cIly60Qu8Cqu3gDdq8JAZwI78kmDGekGu/zo3Ac8hXo=
-github.com/getlantern/replica v0.5.1-0.20210419024455-4b0e64f2c962/go.mod h1:Ph27Svan65U/qe2m1CpEujM7VU86/fCrz+U66P4ZOe4=
-github.com/getlantern/replica v0.5.1-0.20210423002945-e12b26140cd1 h1:Pu3SAPns6mFtGh162gydFP9oVeH9WAfrJlLuJG0MMBU=
-github.com/getlantern/replica v0.5.1-0.20210423002945-e12b26140cd1/go.mod h1:zLNNp+A2rjHoTwkEkEvt7fNBrtWvwy2zr44pXyBfuQk=
 github.com/getlantern/replica v0.5.1-0.20210423035824-fc895cdcffcc h1:vuk0GBi91AhmjJQUn5rwDS+GLCtigNiIXDiFLMbayOs=
 github.com/getlantern/replica v0.5.1-0.20210423035824-fc895cdcffcc/go.mod h1:zLNNp+A2rjHoTwkEkEvt7fNBrtWvwy2zr44pXyBfuQk=
 github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01 h1:JyXEChj4lHy5w3hlQVnYpcH4QrBXmhEJgkxb0FPkFlM=
@@ -643,8 +639,9 @@ github.com/getlantern/zenodb v0.0.0-20191107150234-58f0e128172a/go.mod h1:/QuMPl
 github.com/getlantern/zenodb v0.0.0-20200613184607-425f1dea9db1 h1:2S3iHuoFuwfxMkeizLJZuTAPojoMJb3eP4iUZiciZVg=
 github.com/getlantern/zenodb v0.0.0-20200613184607-425f1dea9db1/go.mod h1:jttohOig8lld+9Dm2VsQXPNzRy3+dF6SZZSTn3SMttI=
 github.com/getsentry/raven-go v0.0.0-20160805001729-c9d3cc542ad1/go.mod h1:KungGk8q33+aIAZUIVWZDr2OfAEBsO49PX4NzFV5kcQ=
-github.com/getsentry/sentry-go v0.9.0 h1:KIfpY/D9hX3gWAEd3d8z6ImuHNWtqEsjlpdF8zXFsHM=
-github.com/getsentry/sentry-go v0.9.0/go.mod h1:kELm/9iCblqUYh+ZRML7PNdCvEuw24wBvJPYyi86cws=
+github.com/getsentry/sentry-go v0.10.0 h1:6gwY+66NHKqyZrdi6O2jGdo7wGdo9b3B69E01NFgT5g=
+github.com/getsentry/sentry-go v0.10.0/go.mod h1:kELm/9iCblqUYh+ZRML7PNdCvEuw24wBvJPYyi86cws=
+github.com/ghodss/yaml v1.0.0 h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3/go.mod h1:VJ0WA2NBN22VlZ2dKZQPAPnyWw5XTlK1KymzLKsr59s=
 github.com/gin-contrib/sse v0.1.0/go.mod h1:RHrZQHXnP2xjPF+u1gW/2HnVO7nvIa9PG3Gm+fLHvGI=
