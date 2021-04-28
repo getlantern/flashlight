@@ -217,6 +217,7 @@ func (f *Flashlight) applyBorda(cfg *config.Global) {
 
 // New creates a client proxy.
 func New(
+	appName string,
 	configDir string,
 	enableVPN bool,
 	disconnected func() bool,
@@ -246,7 +247,7 @@ func New(
 	if common.InDevelopment() {
 		log.Debugf("You can query for this device's activity in borda under device id: %v", deviceID)
 	}
-	fops.InitGlobalContext(deviceID, isPro, func() string { return geolookup.GetCountry(0) })
+	fops.InitGlobalContext(appName, deviceID, isPro, func() string { return geolookup.GetCountry(0) })
 	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 
 	f := &Flashlight{
@@ -417,7 +418,9 @@ func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 			f.op.End()
 		})
 
-		afterStart(f.client)
+		if afterStart != nil {
+			afterStart(f.client)
+		}
 	})
 	if err != nil {
 		log.Errorf("Error running client proxy: %v", err)

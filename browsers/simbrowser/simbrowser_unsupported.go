@@ -1,4 +1,4 @@
-// +build !darwin,!windows darwin,ios
+// +build !darwin,!windows darwin,iosapp
 
 package simbrowser
 

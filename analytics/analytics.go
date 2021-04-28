@@ -174,3 +174,21 @@ func getExecutableHash() string {
 		}
 	}
 }
+
+// AddCampaign adds Google Analytics campaign tracking to a URL and returns
+// that URL.
+func AddCampaign(urlStr, campaign, content, medium string) (string, error) {
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		log.Errorf("Could not parse click URL: %v", err)
+		return "", err
+	}
+
+	q := u.Query()
+	q.Set("utm_source", common.Platform)
+	q.Set("utm_medium", medium)
+	q.Set("utm_campaign", campaign)
+	q.Set("utm_content", content)
+	u.RawQuery = q.Encode()
+	return u.String(), nil
+}
