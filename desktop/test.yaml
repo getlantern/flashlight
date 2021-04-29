@@ -2,6 +2,7 @@ autoLaunch: true
 autoReport: true
 lang: en
 localHTTPToken: ""
+migratedDeviceIDForUserID: 0
 proxyAll: false
 systemProxy: true
 uiAddr: ""

@@ -46,6 +46,10 @@ const (
 
 	oquicKey = "tAqXDihxfJDqyHy35k2NhImetkzKmoC7MFEELrYi6LI="
 
+	shadowsocksSecret   = "foobarbaz"
+	shadowsocksUpstream = "example.com:443"
+	shadowsocksCipher   = "chacha20-ietf-poly1305"
+
 	tlsmasqSNI          = "test.com"
 	tlsmasqSuites       = "0xcca9,0x1301" // TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_AES_128_GCM_SHA256
 	tlsmasqMinVersion   = "0x0303"        // TLS 1.2
@@ -77,26 +81,28 @@ func init() {
 // Helper is a helper for running integration tests that provides its own web,
 // proxy and config servers.
 type Helper struct {
-	protocol                    atomic.Value
-	t                           *testing.T
-	ConfigDir                   string
-	HTTPSProxyServerAddr        string
-	HTTPSUTPAddr                string
-	OBFS4ProxyServerAddr        string
-	OBFS4UTPProxyServerAddr     string
-	LampshadeProxyServerAddr    string
-	LampshadeUTPProxyServerAddr string
-	QUICIETFProxyServerAddr     string
-	OQUICProxyServerAddr        string
-	WSSProxyServerAddr          string
-	TLSMasqProxyServerAddr      string
-	HTTPSSmuxProxyServerAddr    string
-	HTTPSPsmuxProxyServerAddr   string
-	HTTPServerAddr              string
-	HTTPSServerAddr             string
-	ConfigServerAddr            string
-	tlsMasqOriginAddr           string
-	listeners                   []net.Listener
+	protocol                      atomic.Value
+	t                             *testing.T
+	ConfigDir                     string
+	HTTPSProxyServerAddr          string
+	HTTPSUTPAddr                  string
+	OBFS4ProxyServerAddr          string
+	OBFS4UTPProxyServerAddr       string
+	LampshadeProxyServerAddr      string
+	LampshadeUTPProxyServerAddr   string
+	QUICIETFProxyServerAddr       string
+	OQUICProxyServerAddr          string
+	WSSProxyServerAddr            string
+	ShadowsocksProxyServerAddr    string
+	ShadowsocksmuxProxyServerAddr string
+	TLSMasqProxyServerAddr        string
+	HTTPSSmuxProxyServerAddr      string
+	HTTPSPsmuxProxyServerAddr     string
+	HTTPServerAddr                string
+	HTTPSServerAddr               string
+	ConfigServerAddr              string
+	tlsMasqOriginAddr             string
+	listeners                     []net.Listener
 }
 
 // NewHelper prepares a new integration test helper including a web server for
@@ -104,7 +110,7 @@ type Helper struct {
 // also enables ForceProxying on the client package to make sure even localhost
 // origins are served through the proxy. Make sure to close the Helper with
 // Close() when finished with the test.
-func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string, oquicAddr string, wssAddr string, tlsmasqAddr string, httpsUTPAddr string, obfs4UTPAddr string, lampshadeUTPAddr string, httpsSmuxAddr string, httpsPsmuxAddr string) (*Helper, error) {
+func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string, oquicAddr string, wssAddr string, tlsmasqAddr string, httpsUTPAddr string, obfs4UTPAddr string, lampshadeUTPAddr string, httpsSmuxAddr string, httpsPsmuxAddr string, shadowsocksAddr string, shadowsocksMuxAddr string) (*Helper, error) {
 	ConfigDir, err := ioutil.TempDir("", "integrationtest_helper")
 	log.Debugf("ConfigDir is %v", ConfigDir)
 	if err != nil {
@@ -112,20 +118,22 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 	}
 
 	helper := &Helper{
-		t:                           t,
-		ConfigDir:                   ConfigDir,
-		HTTPSProxyServerAddr:        httpsAddr,
-		HTTPSUTPAddr:                httpsUTPAddr,
-		OBFS4ProxyServerAddr:        obfs4Addr,
-		OBFS4UTPProxyServerAddr:     obfs4UTPAddr,
-		LampshadeProxyServerAddr:    lampshadeAddr,
-		LampshadeUTPProxyServerAddr: lampshadeUTPAddr,
-		QUICIETFProxyServerAddr:     quicAddr,
-		OQUICProxyServerAddr:        oquicAddr,
-		WSSProxyServerAddr:          wssAddr,
-		TLSMasqProxyServerAddr:      tlsmasqAddr,
-		HTTPSSmuxProxyServerAddr:    httpsSmuxAddr,
-		HTTPSPsmuxProxyServerAddr:   httpsPsmuxAddr,
+		t:                             t,
+		ConfigDir:                     ConfigDir,
+		HTTPSProxyServerAddr:          httpsAddr,
+		HTTPSUTPAddr:                  httpsUTPAddr,
+		OBFS4ProxyServerAddr:          obfs4Addr,
+		OBFS4UTPProxyServerAddr:       obfs4UTPAddr,
+		LampshadeProxyServerAddr:      lampshadeAddr,
+		LampshadeUTPProxyServerAddr:   lampshadeUTPAddr,
+		QUICIETFProxyServerAddr:       quicAddr,
+		OQUICProxyServerAddr:          oquicAddr,
+		WSSProxyServerAddr:            wssAddr,
+		ShadowsocksProxyServerAddr:    shadowsocksAddr,
+		ShadowsocksmuxProxyServerAddr: shadowsocksMuxAddr,
+		TLSMasqProxyServerAddr:        tlsmasqAddr,
+		HTTPSSmuxProxyServerAddr:      httpsSmuxAddr,
+		HTTPSPsmuxProxyServerAddr:     httpsPsmuxAddr,
 	}
 	helper.SetProtocol("https")
 	client.ForceProxying()
@@ -222,18 +230,21 @@ func (helper *Helper) startProxyServer() error {
 	oqDefaults := quicwrapper.DefaultOQuicConfig([]byte(""))
 
 	s1 := &proxy.Proxy{
-		TestingLocal:      true,
-		HTTPAddr:          helper.HTTPSProxyServerAddr,
-		HTTPMultiplexAddr: helper.HTTPSSmuxProxyServerAddr,
-		HTTPUTPAddr:       helper.HTTPSUTPAddr,
-		Obfs4Addr:         helper.OBFS4ProxyServerAddr,
-		Obfs4UTPAddr:      helper.OBFS4UTPProxyServerAddr,
-		Obfs4Dir:          filepath.Join(helper.ConfigDir, obfs4SubDir),
-		LampshadeAddr:     helper.LampshadeProxyServerAddr,
-		LampshadeUTPAddr:  helper.LampshadeUTPProxyServerAddr,
-		QUICIETFAddr:      helper.QUICIETFProxyServerAddr,
-		WSSAddr:           helper.WSSProxyServerAddr,
-		TLSMasqAddr:       helper.TLSMasqProxyServerAddr,
+		TestingLocal:             true,
+		HTTPAddr:                 helper.HTTPSProxyServerAddr,
+		HTTPMultiplexAddr:        helper.HTTPSSmuxProxyServerAddr,
+		HTTPUTPAddr:              helper.HTTPSUTPAddr,
+		Obfs4Addr:                helper.OBFS4ProxyServerAddr,
+		Obfs4UTPAddr:             helper.OBFS4UTPProxyServerAddr,
+		Obfs4Dir:                 filepath.Join(helper.ConfigDir, obfs4SubDir),
+		LampshadeAddr:            helper.LampshadeProxyServerAddr,
+		LampshadeUTPAddr:         helper.LampshadeUTPProxyServerAddr,
+		QUICIETFAddr:             helper.QUICIETFProxyServerAddr,
+		WSSAddr:                  helper.WSSProxyServerAddr,
+		TLSMasqAddr:              helper.TLSMasqProxyServerAddr,
+		ShadowsocksAddr:          helper.ShadowsocksProxyServerAddr,
+		ShadowsocksMultiplexAddr: helper.ShadowsocksmuxProxyServerAddr,
+		ShadowsocksSecret:        shadowsocksSecret,
 
 		OQUICAddr:              helper.OQUICProxyServerAddr,
 		OQUICKey:               oquicKey,
@@ -479,6 +490,23 @@ func (helper *Helper) buildProxies(proto string) (map[string]*chained.ChainedSer
 				"tlsmasq_suites":        tlsmasqSuites,
 				"tlsmasq_tlsminversion": tlsmasqMinVersion,
 				"tlsmasq_secret":        tlsmasqServerSecret,
+			}
+		} else if proto == "shadowsocks" {
+			srv.Addr = helper.ShadowsocksProxyServerAddr
+			srv.PluggableTransport = "shadowsocks"
+			srv.PluggableTransportSettings = map[string]string{
+				"shadowsocks_secret":   shadowsocksSecret,
+				"shadowsocks_upstream": shadowsocksUpstream,
+				"shadowsocks_cipher":   shadowsocksCipher,
+			}
+		} else if proto == "shadowsocks-mux" {
+			srv.Addr = "multiplexed"
+			srv.MultiplexedAddr = helper.ShadowsocksmuxProxyServerAddr
+			srv.PluggableTransport = "shadowsocks"
+			srv.PluggableTransportSettings = map[string]string{
+				"shadowsocks_secret":   shadowsocksSecret,
+				"shadowsocks_upstream": shadowsocksUpstream,
+				"shadowsocks_cipher":   shadowsocksCipher,
 			}
 		} else if proto == "https+smux" {
 			srv.Addr = "multiplexed"
