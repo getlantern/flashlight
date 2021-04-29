@@ -3,7 +3,6 @@ package desktop
 import (
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -99,12 +98,8 @@ func TestProxying(t *testing.T) {
 		}
 	}
 	config.ForceProxyConfigPollInterval = 1 * time.Second
-	listenPort := 23000
-	nextListenAddr := func() string {
-		listenPort++
-		return fmt.Sprintf("localhost:%d", listenPort)
-	}
-	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
+	baseListenPort := 23000
+	helper, err := integrationtest.NewHelper(t, baseListenPort)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -143,6 +138,8 @@ func TestProxying(t *testing.T) {
 		"oquic",
 		"quic_ietf",
 		"wss",
+		"shadowsocks",
+		"shadowsocks+mux",
 		"tlsmasq",
 		"https+smux",
 		"https+psmux",
@@ -215,7 +212,7 @@ func TestProxying(t *testing.T) {
 	}
 
 	// now starts a new helper and application test multipath with all protocols
-	helper, err = integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
+	helper, err = integrationtest.NewHelper(t, baseListenPort+1000)
 	if !assert.NoError(t, err) {
 		return
 	}

@@ -183,6 +183,8 @@ func createImpl(configDir, name, addr, transport string, s *ChainedServerInfo, u
 		impl, err = newLampshadeImpl(name, addr, s, reportDialCore)
 	case "quic_ietf", "oquic":
 		impl, err = newQUICImpl(name, addr, s, reportDialCore)
+	case "shadowsocks":
+		impl, err = newShadowsocksImpl(name, addr, s, reportDialCore)
 	case "wss":
 		impl, err = newWSSImpl(addr, s, reportDialCore)
 	case "tlsmasq":
