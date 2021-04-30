@@ -333,21 +333,7 @@ func (app *App) checkEnabledFeatures(enabledFeatures map[string]bool) {
 	app.startReplicaIfNecessary(enabledFeatures)
 	app.startYinbiIfNecessary(enabledFeatures)
 	enableTrafficLog := app.isFeatureEnabled(enabledFeatures, config.FeatureTrafficLog)
-	if opts, err := app.trafficLogOpts(); err == nil {
-		go app.toggleTrafficLog(opts, enableTrafficLog)
-	}
-}
-
-func (app *App) trafficLogOpts() (*config.TrafficLogOptions, error) {
-	opts := new(config.TrafficLogOptions)
-	if err := app.flashlight.FeatureOptions(config.FeatureTrafficLog, opts); err != nil {
-		log.Errorf("failed to unmarshal traffic log options: %v", err)
-		if config.EnableTrafficlog {
-			return config.ForcedTrafficLogOptions, nil
-		}
-		return nil, err
-	}
-	return opts, nil
+	go app.toggleTrafficLog(enableTrafficLog)
 }
 
 // startFeaturesService starts a new features service that dispatches features to any relevant
