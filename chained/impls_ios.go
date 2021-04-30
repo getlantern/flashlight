@@ -1,4 +1,4 @@
-// +build ios
+// +build iosapp
 
 package chained
 

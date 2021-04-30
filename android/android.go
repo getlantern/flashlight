@@ -267,13 +267,6 @@ func AddLoggingMetadata(key, value string) {
 	//logging.SetExtraLogglyInfo(key, value)
 }
 
-// Exit is used to immediately stop Lantern; it's called when the
-// the service Lantern is running in receives a signal to
-// stop (such as when a user s on another VPN)
-func Exit() {
-	os.Exit(0)
-}
-
 // EnableLogging enables logging.
 func EnableLogging(configDir string) {
 	logging.EnableFileLogging(configDir)
@@ -340,7 +333,9 @@ func run(configDir, locale string,
 		config.ForceCountry(forcedCountryCode)
 	}
 
-	runner, err := flashlight.New(configDir, // place to store lantern configuration
+	runner, err := flashlight.New(
+		common.AppName,
+		configDir,                    // place to store lantern configuration
 		false,                        // don't enable vpn mode for Android (VPN is handled in Java layer)
 		func() bool { return false }, // always connected
 		session.ProxyAll,

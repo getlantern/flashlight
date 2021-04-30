@@ -139,16 +139,40 @@ func (app *App) getCapturedPackets(w io.Writer) error {
 	return nil
 }
 
+func (app *App) trafficLogOpts() (*config.TrafficLogOptions, error) {
+	opts := new(config.TrafficLogOptions)
+	if err := app.flashlight.FeatureOptions(config.FeatureTrafficLog, opts); err != nil {
+		log.Errorf("failed to unmarshal traffic log options: %v", err)
+		if config.EnableTrafficlog {
+			log.Debug("using forced traffic log options")
+			return config.ForcedTrafficLogOptions, nil
+		}
+		return nil, err
+	}
+	return opts, nil
+}
+
 // This should be run in an independent routine as it may need to install and block for a
 // user-action granting permissions.
-func (app *App) toggleTrafficLog(opts *config.TrafficLogOptions, enableTrafficLog bool) {
+func (app *App) toggleTrafficLog(enable bool) {
 	app.trafficLogLock.Lock()
 	app.proxiesLock.RLock()
 	defer app.trafficLogLock.Unlock()
 	defer app.proxiesLock.RUnlock()
 
+	var (
+		opts *config.TrafficLogOptions
+		err  error
+	)
+	if enable {
+		opts, err = app.trafficLogOpts()
+		if err != nil {
+			return
+		}
+	}
+
 	switch {
-	case enableTrafficLog && app.trafficLog == nil:
+	case enable && app.trafficLog == nil:
 		installDir := appdir.General("Lantern")
 		log.Debugf("Installing traffic log if necessary in %s", installDir)
 		if err := app.tryTrafficLogInstall(installDir, *opts); err != nil {
@@ -164,13 +188,13 @@ func (app *App) toggleTrafficLog(opts *config.TrafficLogOptions, enableTrafficLo
 			app.captureSaveDuration = trafficlogDefaultSaveDuration
 		}
 
-	case enableTrafficLog && app.trafficLog != nil:
+	case enable && app.trafficLog != nil:
 		err := app.trafficLog.UpdateBufferSizes(opts.CaptureBytes, opts.SaveBytes)
 		if err != nil {
 			log.Debugf("Failed to update traffic log buffer sizes: %v", err)
 		}
 
-	case !enableTrafficLog && app.trafficLog != nil:
+	case !enable && app.trafficLog != nil:
 		log.Debug("Turning traffic log off")
 		if err := app.trafficLog.Close(); err != nil {
 			log.Errorf("Failed to close traffic log (this will create a memory leak): %v", err)

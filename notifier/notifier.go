@@ -8,7 +8,6 @@ import (
 	notify "github.com/getlantern/notifier"
 
 	"github.com/getlantern/flashlight/analytics"
-	"github.com/getlantern/flashlight/ui"
 )
 
 const (
@@ -44,7 +43,7 @@ func ShowNotification(note *notify.Notification, campaign string) bool {
 }
 
 func normalizeClickURL(note *notify.Notification, campaign string) error {
-	ga, err := ui.AddCampaign(note.ClickURL, campaign, note.Title+"-"+note.Message, "notification")
+	ga, err := analytics.AddCampaign(note.ClickURL, campaign, note.Title+"-"+note.Message, "notification")
 	if err != nil {
 		return err
 	}
