@@ -6,18 +6,20 @@ import (
 	"net/http"
 
 	"github.com/getlantern/appdir"
-	"github.com/getlantern/auth-server/api"
+	authapi "github.com/getlantern/auth-server/api"
 	authclient "github.com/getlantern/auth-server/client"
 	"github.com/getlantern/flashlight/ui/auth"
 	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/yinbi-server/api"
 	"github.com/getlantern/yinbi-server/client"
 	"github.com/go-chi/chi"
 )
 
 var (
-	ErrInvalidMnemonic = errors.New("The provided words do not comprise a valid mnemonic")
-	log                = golog.LoggerFor("flashlight.ui.yinbi")
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrInvalidMnemonic    = errors.New("the provided words do not comprise a valid mnemonic")
+	log                   = golog.LoggerFor("flashlight.ui.yinbi")
 )
 
 // YinbiHandler is the group of handlers used for handling
@@ -27,13 +29,10 @@ type YinbiHandler struct {
 
 	// yinbiClient is a client for the Yinbi API which
 	// supports creating accounts and making payments
-	yinbiClient *client.YinbiClient
+	yinbiClient client.YinbiClient
 
 	authClient authclient.AuthClient
 }
-
-type ImportWalletParams = client.ImportWalletParams
-type ImportWalletResponse = client.ImportWalletResponse
 
 // ConfigureRoutes returns an http.Handler for the Yinbi-related routes
 func (h YinbiHandler) ConfigureRoutes() http.Handler {
@@ -61,7 +60,7 @@ func (h YinbiHandler) GetPathPrefix() string {
 }
 
 // New creates a new YinbiHandler instance
-func New(params api.APIParams) YinbiHandler {
+func New(params authapi.APIParams) YinbiHandler {
 	appDir := appdir.General(params.AppName)
 	httpClient := params.HTTPClient
 	yinbiAddr := params.YinbiServerAddr
@@ -72,7 +71,7 @@ func New(params api.APIParams) YinbiHandler {
 	}
 }
 
-func NewWithAuth(params api.APIParams,
+func NewWithAuth(params authapi.APIParams,
 	authHandler auth.AuthHandler) YinbiHandler {
 	yinbiHandler := New(params)
 	yinbiHandler.AuthHandler = authHandler
@@ -84,32 +83,13 @@ func NewWithAuth(params api.APIParams,
 func (h YinbiHandler) walletHandler() http.Handler {
 	router := handler.NewRouter()
 	router.Group(func(r chi.Router) {
-		// redeemCodes
+		r.Post("/", h.createWalletHandler)       // create wallet
+		r.Post("/import", h.importWalletHandler) // import wallet
 		r.Get("/redeem/codes", func(w http.ResponseWriter, r *http.Request) {
 			url := h.GetAuthAddr("/redeem/codes")
 			log.Debugf("Sending redeem codes request to %s", url)
 			h.ProxyHandler(url, r, w, nil)
-		})
-		// importWallet
-		r.Post("/import", func(w http.ResponseWriter, r *http.Request) {
-			// importWalletHandler is the handler used to import wallets
-			// of existing yin.bi users
-			var params client.ImportWalletParams
-			err := handler.DecodeJSONRequest(w, r, &params)
-			if err != nil {
-				return
-			}
-			resp, err := h.yinbiClient.ImportWallet(&params)
-			if err != nil {
-				log.Errorf("Error sending import wallet request: %v", err)
-				handler.ErrorHandler(w, err, resp.StatusCode)
-				return
-			}
-			handler.SuccessResponse(w, map[string]interface{}{
-				"address": resp.Pair.Address(),
-			})
-		})
-		// fetch redemption codes
+		}) // redeemCodes
 		r.Get("/codes", func(w http.ResponseWriter, r *http.Request) {
 			// getRedemptionCodes is the handler used to look up
 			// voucher codes belonging to a Yinbi user
@@ -124,7 +104,7 @@ func (h YinbiHandler) walletHandler() http.Handler {
 			handler.SuccessResponse(w, map[string]interface{}{
 				"codes": codes,
 			})
-		})
+		}) // fetch redemption codes
 
 	})
 	return router
@@ -134,7 +114,7 @@ func (h YinbiHandler) walletHandler() http.Handler {
 // The password included with the request is used to look up the
 // user's secret key in the Yinbi keystore.
 func (h YinbiHandler) sendPaymentHandler(w http.ResponseWriter, r *http.Request) {
-	var params client.PaymentParams
+	var params api.PaymentParams
 	err := handler.DecodeJSONRequest(w, r, &params)
 	if err != nil {
 		return
@@ -152,8 +132,64 @@ func (h YinbiHandler) sendPaymentHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	handler.SuccessResponse(w, map[string]interface{}{
-		"tx_id": resp.Hash,
+		"tx_id": resp.Transaction.Hash,
 	})
+}
+
+// importWalletHandler is the handler used by exisitng yin.bi
+// users for importing and converting their accounts to wallets
+func (h YinbiHandler) importWalletHandler(w http.ResponseWriter, r *http.Request) {
+	// importWalletHandler is the handler used to import wallets
+	// of existing yin.bi users
+	var params api.ImportWalletParams
+	err := handler.DecodeJSONRequest(w, r, &params)
+	if err != nil {
+		return
+	}
+	resp, err := h.yinbiClient.ImportWallet(&params)
+	if err != nil {
+		log.Errorf("Error sending import wallet request: %v", err)
+		code := http.StatusBadRequest
+		if resp != nil {
+			if resp.Error != "" {
+				err = errors.New(resp.Error)
+			}
+			code = resp.StatusCode
+		}
+		handler.ErrorHandler(w, err, code)
+		return
+	}
+	handler.SuccessResponse(w, map[string]interface{}{
+		"address": resp.Pair.Address(),
+	})
+}
+
+// createWalletHandler is the HTTP handler used to create new
+// Yinbi accounts
+// First, the mnemonic is extracted from the request.
+// This returns a full keypair with signing capabilities
+// After the account has been created, we store the encrypted
+// secret key in the key store and create a trust line to the
+// Yinbi asset
+func (h YinbiHandler) createWalletHandler(w http.ResponseWriter, r *http.Request) {
+	log.Debug("Received new create Yinbi wallet request")
+	var params api.CreateAccountParams
+	err := handler.DecodeJSONRequest(w, r, &params)
+	if err != nil {
+		err = fmt.Errorf("error decoding create wallet request: %v", err)
+		handler.ErrorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
+	resp, err := h.yinbiClient.CreateWallet(&params)
+	if err != nil {
+		code := http.StatusInternalServerError
+		if resp != nil && resp.StatusCode != 0 {
+			code = resp.StatusCode
+		}
+		handler.ErrorHandler(w, err, code)
+	} else {
+		handler.SuccessResponse(w, resp)
+	}
 }
 
 // paymentHandler setups Yinbi payment-related routes
@@ -163,40 +199,12 @@ func (h YinbiHandler) paymentHandler() http.Handler {
 	return paymentRouter
 }
 
-func (h YinbiHandler) createAccountHandler() http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Debug("Received new create Yinbi account request")
-		var params api.CreateAccountParams
-		err := handler.DecodeJSONRequest(w, r, &params)
-		if err != nil {
-			err = fmt.Errorf("Error decoding create account request: %v", err)
-			handler.ErrorHandler(w, err, http.StatusInternalServerError)
-			return
-		}
-		resp, err := h.yinbiClient.CreateAccount(&params)
-		if err != nil {
-			handler.ErrorHandler(w, err, http.StatusInternalServerError)
-		} else {
-			handler.SuccessResponse(w, resp)
-		}
-	})
-}
-
 // userHandler is the http.Handler used for Yinbi wallet user related
 // UI routes
 func (h YinbiHandler) userHandler() http.Handler {
 	r := handler.NewRouter()
 
-	// createAccountHandler is the HTTP handler used to create new
-	// Yinbi accounts
-	// First, the mnemonic is extracted from the request.
-	// This returns a full keypair with signing capabilities
-	// After the account has been created, we store the encrypted
-	// secret key in the key store and create a trust line to the
-	// Yinbi asset
-
 	r.Group(func(r chi.Router) {
-		r.Post("/account/new", h.createAccountHandler())
 
 		r.Post("/mnemonic", func(w http.ResponseWriter, r *http.Request) {
 			mnemonic := h.yinbiClient.CreateMnemonic()
@@ -209,9 +217,11 @@ func (h YinbiHandler) userHandler() http.Handler {
 			// saveAddressHandler is the handler used to save new account
 			// addresses for the given user
 			address := r.URL.Query().Get("address")
-			_, err := h.authClient.SaveAddress(address)
+			_, err := h.authClient.SaveWallet(&authapi.AddressParams{
+				Address: address,
+			})
 			if err != nil {
-				err = fmt.Errorf("Error saving user address: %v", err)
+				err = fmt.Errorf("error saving user address: %v", err)
 				handler.ErrorHandler(w, err, http.StatusBadRequest)
 			} else {
 				log.Debug("Successfully saved address")

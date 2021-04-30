@@ -3,8 +3,9 @@ package yinbi
 import (
 	"net/http"
 
-	"github.com/getlantern/auth-server/api"
+	authapi "github.com/getlantern/auth-server/api"
 	"github.com/getlantern/flashlight/ui/handler"
+	"github.com/getlantern/yinbi-server/api"
 	"github.com/getlantern/yinbi-server/client"
 	"github.com/go-chi/chi"
 )
@@ -25,7 +26,7 @@ func (h YinbiHandler) accountHandler() http.Handler {
 func (h YinbiHandler) resetPassword(w http.ResponseWriter, r *http.Request) {
 	// resetPasswordHandler is the handler used to reset a user's
 	// wallet password
-	var params api.CreateAccountParams
+	var params authapi.CreateAccountParams
 	err := handler.GetParams(w, r, &params)
 	if err != nil {
 		return
@@ -56,22 +57,20 @@ func (h YinbiHandler) resetPassword(w http.ResponseWriter, r *http.Request) {
 // requests
 func (h YinbiHandler) recoverAccount(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Received new recover account request")
-	var params struct {
-		Words string `json:"words"`
-	}
-	err := handler.DecodeJSONRequest(w, r, &params)
+	var params api.AccountParams
+	err := handler.GetParams(w, r, &params)
 	if err != nil {
 		return
 	}
-	resp, err := h.yinbiClient.RecoverAccount(params.Words)
+	resp, err := h.yinbiClient.RecoverWallet(&params)
 	if err != nil {
 		handler.ErrorHandler(w, err, resp.StatusCode)
 		return
 	}
 	log.Debugf("Successfully recovered user %s's account using Yinbi key",
-		resp.User.Username)
+		resp.Username)
 	handler.SuccessResponse(w, map[string]interface{}{
-		"user": resp.User,
+		"user": resp.Username,
 	})
 }
 
@@ -79,7 +78,7 @@ func (h YinbiHandler) recoverAccount(w http.ResponseWriter, r *http.Request) {
 // the balances and transaction history for a given Stellar
 // address
 func (h YinbiHandler) getAccountDetails(w http.ResponseWriter, r *http.Request) {
-	address := handler.GetQueryParam(r, "address")
+	address := r.URL.Query().Get("address")
 	if address == "" {
 		log.Debug("No address provided. Ignoring get account details request")
 		return
@@ -100,7 +99,7 @@ func (h YinbiHandler) getAccountDetails(w http.ResponseWriter, r *http.Request) 
 // updateAccountTransactions looks up the transaction
 // history on the Stellar network for the given account
 func (h YinbiHandler) updateAccountTransactions(w http.ResponseWriter, r *http.Request) {
-	var params client.AccountTransactionParams
+	var params api.AccountTransactionParams
 	err := handler.DecodeJSONRequest(w, r, &params)
 	if err != nil {
 		log.Errorf("Error decoding JSON request for account transactions: %v", err)
