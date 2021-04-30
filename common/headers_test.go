@@ -35,6 +35,7 @@ var testHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) 
 
 func assertHeaders(t *testing.T, resHeaders http.Header, expHeaders map[string]string) {
 	for _, name := range allHeaders {
+		sort.Strings(resHeaders[name])
 		got := strings.Join(resHeaders[name], ", ")
 		want := expHeaders[name]
 		if got != want {
@@ -67,7 +68,7 @@ func TestCORSMiddleware(t *testing.T) {
 			},
 			map[string]string{
 				"Vary":                             "Origin",
-				"Access-Control-Allow-Methods":     strings.Join([]string{"GET", "POST"}, ", "),
+				"Access-Control-Allow-Methods":     strings.Join([]string{"GET", "OPTIONS", "POST"}, ", "),
 				"Access-Control-Allow-Credentials": "true",
 				"Access-Control-Allow-Origin":      uiAddr,
 			},
@@ -102,7 +103,7 @@ func TestProcessCORS(t *testing.T) {
 	assert.Equal(t, origin, resp.Header.Get("Access-Control-Allow-Origin"))
 	methods := resp.Header.Values("Access-Control-Allow-Methods")
 	sort.Strings(methods)
-	assert.EqualValues(t, []string{"GET", "POST"}, methods)
+	assert.EqualValues(t, []string{"GET", "OPTIONS", "POST"}, methods)
 
 	// CORS headers in response to 127.0.0.1 origin
 	resp = &http.Response{Header: http.Header{}}
@@ -115,7 +116,7 @@ func TestProcessCORS(t *testing.T) {
 	assert.Equal(t, origin, resp.Header.Get("Access-Control-Allow-Origin"))
 	methods = resp.Header.Values("Access-Control-Allow-Methods")
 	sort.Strings(methods)
-	assert.Equal(t, []string{"GET", "POST"}, methods)
+	assert.Equal(t, []string{"GET", "OPTIONS", "POST"}, methods)
 
 	// No CORS headers in response to public origin
 	resp = &http.Response{Header: http.Header{}}

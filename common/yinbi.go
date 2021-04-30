@@ -12,7 +12,7 @@ var (
 
 func useYinbiStaging() {
 	HorizonAddr = "https://horizon-testnet.stellar.org"
-	YinbiIssuerAccount = "GAH3ZXCVTOS6IHKCULBZD7KREA3URTPCDHZQZ7GQBF552PFR77ACCRUY"
+	YinbiIssuerAccount = "GCFK6UXOZJ7WRRLO4FRRHGLW7L7JLCSPCHT6M3WULZNGK4C7HGWE7NHY"
 	NetworkName = "test"
 	YinbiServerAddr = "https://may38fjstaging.yin.bi"
 }

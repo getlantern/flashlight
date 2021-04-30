@@ -172,7 +172,7 @@ func (s *Server) attachHandlers(handlers []PathHandler) {
 // createHTTPClient creates a chained-then-fronted configured HTTP client
 // to be used by multiple UI handlers
 func createHTTPClient() *http.Client {
-	rt := proxied.ChainedThenFronted()
+	rt := proxied.ChainedThenFrontedWith("")
 	rt.SetMasqueradeTimeout(30 * time.Second)
 	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	if err != nil {
