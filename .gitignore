@@ -41,3 +41,7 @@ cloud.yaml.tmpl
 ios/demo/demo
 ios/ios.test
 Ios.framework
+*.aar
+*.jar
+.vscode
+LanternSDK.framework

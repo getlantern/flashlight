@@ -1,4 +1,4 @@
-// +build !windows,!darwin darwin,ios
+// +build !windows,!darwin darwin,iosapp
 
 package browsers
 

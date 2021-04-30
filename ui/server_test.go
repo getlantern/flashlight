@@ -331,14 +331,3 @@ func TestLanternLogoWithToken(t *testing.T) {
 	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
 }
 
-func TestAddCampaign(t *testing.T) {
-	startURL := "https://test.com"
-	campaignURL, err := AddCampaign(startURL, "test-campaign", "test-content", "test-medium")
-	assert.NoError(t, err, "unexpected error")
-	assert.Equal(t, "https://test.com?utm_campaign=test-campaign&utm_content=test-content&utm_medium=test-medium&utm_source="+common.Platform, campaignURL)
-
-	// Now test a URL that will produce an error
-	startURL = ":"
-	_, err = AddCampaign(startURL, "test-campaign", "test-content", "test-medium")
-	assert.Error(t, err)
-}

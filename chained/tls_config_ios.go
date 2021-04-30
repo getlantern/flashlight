@@ -1,4 +1,4 @@
-// +build ios
+// +build iosapp
 
 package chained
 
@@ -7,6 +7,6 @@ import (
 	"fmt"
 )
 
-func activelyObtainBrowserHello(ctx context.Context, configDir string) (*hello, error) {
+func activelyObtainBrowserHello(ctx context.Context, configDir string) (*helloSpec, error) {
 	return nil, fmt.Errorf("activelyObtainBrowserHello not supported on iOS")
 }
