@@ -10,6 +10,8 @@ import (
 
 	"golang.org/x/net/proxy"
 
+	"github.com/getlantern/fdcount"
+	"github.com/getlantern/grtrack"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,12 +20,23 @@ func TestProxying(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(configDir)
 
+	_, fdc, err := fdcount.Matching("TCP")
+	goroutines := grtrack.Start()
+
 	result, err := Start("lanternSDKtest", configDir, "en_US", 10000)
-	require.NoError(t, err, "Should have been able to start lantern")
+	require.NoError(t, err, "should be able to start lantern")
 	newResult, err := Start("lanternSDKtest", "testapp", "en_US", 10000)
-	require.NoError(t, err, "Should have been able to start lantern twice")
+	require.NoError(t, err, "should be able to start lantern twice")
 	require.Equal(t, result.HTTPAddr, newResult.HTTPAddr, "2nd start should have resulted in the same address")
 	testProxiedRequest(t, result.HTTPAddr, false)
+	require.NoError(t, Stop(), "should be able to stop lantern")
+	require.NoError(t, Stop(), "should be able to stop lantern twice")
+
+	if false {
+		// TODO: we have a LOT of goroutines that keep running right now
+		goroutines.CheckAfter(t, 40*time.Second)
+	}
+	require.NoError(t, fdc.AssertDeltaWait(0, 5*time.Second), "all created file descriptors should have been closed after stopping Lantern")
 }
 
 func testProxiedRequest(t *testing.T, proxyAddr string, socks bool) {

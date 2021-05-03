@@ -44,25 +44,33 @@ func (client *Client) ConfigurePingProxies(enabled func() bool, interval time.Du
 	client.chPingProxiesConf <- pingProxiesConf{enabled, int64(interval)}
 }
 
-func (client *Client) pingProxiesLoop() {
+func (client *Client) pingProxiesLoop() func() {
+	stopCh := make(chan interface{})
 	var conf pingProxiesConf
 	t := time.NewTimer(forever)
 	resetTimer := func() {
 		next := time.Duration(conf.interval/2 + rand.Int63n(conf.interval))
 		t.Reset(next)
 	}
-	for {
-		select {
-		case <-t.C:
-			if conf.enabled() {
-				client.bal.PingProxies()
+	go func() {
+		for {
+			select {
+			case <-stopCh:
+				return
+			case <-t.C:
+				if conf.enabled() {
+					client.bal.PingProxies()
+				}
+				resetTimer()
+			case conf = <-client.chPingProxiesConf:
+				if !t.Stop() {
+					<-t.C
+				}
+				resetTimer()
 			}
-			resetTimer()
-		case conf = <-client.chPingProxiesConf:
-			if !t.Stop() {
-				<-t.C
-			}
-			resetTimer()
 		}
+	}()
+	return func() {
+		close(stopCh)
 	}
 }

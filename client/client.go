@@ -88,6 +88,8 @@ var (
 	errLanternOff = fmt.Errorf("Lantern is off")
 
 	forceProxying int64
+
+	rewriteToHTTPS = httpseverywhere.Default()
 )
 
 // ForceProxying forces everything to get proxied (useful for testing)
@@ -117,7 +119,8 @@ type Client struct {
 
 	proxy proxy.Proxy
 
-	l net.Listener
+	httpListener  net.Listener
+	socksListener net.Listener
 
 	disconnected         func() bool
 	allowProbes          func() bool
@@ -128,8 +131,7 @@ type Client struct {
 	allowHTTPSEverywhere func() bool
 	user                 common.UserConfig
 
-	rewriteToHTTPS httpseverywhere.Rewrite
-	rewriteLRU     *lru.Cache
+	rewriteLRU *lru.Cache
 
 	statsTracker stats.Tracker
 
@@ -183,7 +185,6 @@ func NewClient(
 		useDetour:            useDetour,
 		allowHTTPSEverywhere: allowHTTPSEverywhere,
 		user:                 userConfig,
-		rewriteToHTTPS:       httpseverywhere.Default(),
 		rewriteLRU:           rewriteLRU,
 		statsTracker:         statsTracker,
 		allowPrivateHosts:    allowPrivateHosts,
@@ -396,12 +397,14 @@ func NewClient(
 	if mitmErr != nil {
 		log.Errorf("Unable to initialize MITM: %v", mitmErr)
 	}
-	client.reportProxyLocationLoop()
+	stopReportProxyLocation := client.reportProxyLocationLoop()
+	defer stopReportProxyLocation()
 	client.iptool, err = iptool.New()
 	if err != nil {
 		return nil, errors.New("Unable to initialize iptool: %v", err)
 	}
-	go client.pingProxiesLoop()
+	stopPingProxies := client.pingProxiesLoop()
+	defer stopPingProxies()
 	return client, nil
 }
 
@@ -409,23 +412,31 @@ func (client *Client) GetBalancer() *balancer.Balancer {
 	return client.bal
 }
 
-func (client *Client) reportProxyLocationLoop() {
+func (client *Client) reportProxyLocationLoop() func() {
+	stopCh := make(chan interface{})
 	ch := client.bal.OnActiveDialer()
 	var activeProxy string
 	go func() {
 		for {
-			proxy := <-ch
-			if proxy.Name() == activeProxy {
-				continue
+			select {
+			case <-stopCh:
+				return
+			case proxy := <-ch:
+				if proxy.Name() == activeProxy {
+					continue
+				}
+				countryCode, country, city := proxyLoc(proxy)
+				client.statsTracker.SetActiveProxyLocation(
+					city,
+					country,
+					countryCode,
+				)
 			}
-			countryCode, country, city := proxyLoc(proxy)
-			client.statsTracker.SetActiveProxyLocation(
-				city,
-				country,
-				countryCode,
-			)
 		}
 	}()
+	return func() {
+		close(stopCh)
+	}
 }
 
 // Addr returns the address at which the client is listening with HTTP, blocking
@@ -471,7 +482,7 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 		}
 	}
 
-	client.l = l
+	client.httpListener = l
 	listenAddr := l.Addr().String()
 	addr.Set(listenAddr)
 	client.httpProxyIP, client.httpProxyPort, _ = net.SplitHostPort(listenAddr)
@@ -502,6 +513,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 		return fmt.Errorf("Unable to listen: %q", err)
 	}
 	l = &optimisticListener{l}
+	client.socksListener = l
 	listenAddr := l.Addr().String()
 	socksAddr.Set(listenAddr)
 
@@ -549,7 +561,15 @@ func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo) [
 // Stop is called when the client is no longer needed. It closes the
 // client listener and underlying dialer connection pool
 func (client *Client) Stop() error {
-	return client.l.Close()
+	err := client.httpListener.Close()
+	if client.socksListener != nil {
+		socksErr := client.socksListener.Close()
+		if err == nil {
+			err = socksErr
+		}
+	}
+	client.bal.Close()
+	return err
 }
 
 func (client *Client) dial(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {

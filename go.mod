@@ -36,6 +36,7 @@ require (
 	github.com/getlantern/errors v1.0.1
 	github.com/getlantern/event v0.0.0-20170919023932-f16a5563f52e
 	github.com/getlantern/eventual v1.0.0
+	github.com/getlantern/fdcount v0.0.0-20210503151800-5decd65b3731 // indirect
 	github.com/getlantern/filepersist v0.0.0-20160317154340-c5f0cd24e799
 	github.com/getlantern/fronted v0.0.0-20201229165541-138879ce456e
 	github.com/getlantern/geolookup v0.0.0-20200121184643-02217082e50f
@@ -44,6 +45,7 @@ require (
 	github.com/getlantern/go-update v0.0.0-20190510022740-79c495ab728c // indirect
 	github.com/getlantern/golog v0.0.0-20201105130739-9586b8bde3a9
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc // indirect
+	github.com/getlantern/grtrack v0.0.0-20160824195228-cbf67d3fa0fd // indirect
 	github.com/getlantern/hellosplitter v0.1.0
 	github.com/getlantern/hidden v0.0.0-20201229170000-e66e7f878730
 	github.com/getlantern/http-proxy-lantern/v2 v2.6.32-0.20210212160215-bbb13b862e06

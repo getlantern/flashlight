@@ -98,7 +98,7 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 	} else {
 		if client.allowHTTPSEverywhere() {
 			log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
-			if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
+			if httpsURL, changed := rewriteToHTTPS(req.URL); changed {
 				// Don't redirect CORS requests as it means the HTML pages that
 				// initiate the requests were not HTTPS redirected. Redirecting
 				// them adds few benefits, but may break some sites.

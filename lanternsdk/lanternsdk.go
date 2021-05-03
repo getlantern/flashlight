@@ -19,10 +19,10 @@ import (
 )
 
 var (
-	log     = golog.LoggerFor("lantern")
-	runMx   sync.Mutex
-	running bool
-	cl      = eventual.NewValue()
+	log    = golog.LoggerFor("lantern")
+	runMx  sync.Mutex
+	flight *flashlight.Flashlight
+	cl     = eventual.NewValue()
 )
 
 // StartResult provides information about the started Lantern
@@ -37,6 +37,9 @@ type StartResult struct {
 // appName is a unique name for the application using the lanternsdk. It is used
 // on the back-end for various purposes, including proxy assignment and performance telemetry
 //
+// configDir is the full path to a folder in which Lantern can save config files and
+// other resources.
+//
 // Note - this does not wait for the entire initialization sequence to finish,
 // just for the proxy to be listening. Once the proxy is listening, one can
 // start to use it, even as it finishes its initialization sequence. However,
@@ -49,11 +52,10 @@ func Start(appName, configDir, deviceID string, startTimeoutMillis int) (*StartR
 	runMx.Lock()
 	defer runMx.Unlock()
 
-	if !running {
+	if flight == nil {
 		if err := start(appName, configDir, deviceID); err != nil {
 			return nil, log.Errorf("unable to start Lantern: %v", err)
 		}
-		running = true
 	}
 
 	startTimeout := time.Duration(startTimeoutMillis) * time.Millisecond
@@ -65,6 +67,19 @@ func Start(appName, configDir, deviceID string, startTimeoutMillis int) (*StartR
 	log.Debugf("Started HTTP proxy at %v", addr)
 
 	return &StartResult{addr.(string)}, nil
+}
+
+// Stop stops the currently running Lantern if and only if it's running.
+func Stop() error {
+	runMx.Lock()
+	defer runMx.Unlock()
+
+	if flight == nil {
+		return nil
+	}
+	err := flight.Stop()
+	flight = nil
+	return err
 }
 
 func start(appName, configDir, deviceID string) error {
@@ -89,7 +104,8 @@ func start(appName, configDir, deviceID string) error {
 		Language: "en_US", // specific language doesn't really matter since we're not handling UI
 	}
 
-	runner, err := flashlight.New(
+	var err error
+	flight, err = flashlight.New(
 		appName,
 		configDir,                    // place to store lantern configuration
 		false,                        // don't use VPN mode
@@ -101,7 +117,7 @@ func start(appName, configDir, deviceID string) error {
 		nil, // onConfigUpdate
 		nil, // onProxiesUpdate
 		userConfig,
-		stats.NewTracker(),
+		stats.NoopTracker,            // noop stats tracker
 		func() bool { return false }, // isPro
 		func() string { return "" },  // lang, only used for desktop
 		func() string { return "" },  // adSwapTargetURL, only used for desktop
@@ -110,11 +126,12 @@ func start(appName, configDir, deviceID string) error {
 	if err != nil {
 		return errors.New("Failed to start flashlight: %v", err)
 	}
-	go runner.Run(
+	go flight.Run(
 		"127.0.0.1:0", // listen for HTTP on random address
-		"127.0.0.1:0", // listen for SOCKS on random address
+		"",            // don't listen for SOCKS
 		nil,           // afterStart
 		nil,           // onError
 	)
+
 	return nil
 }
