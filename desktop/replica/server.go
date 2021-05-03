@@ -514,15 +514,18 @@ func (me *HttpHandler) handleMetadata(category string) func(*ops.InstrumentedRes
 	return func(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
 		query := r.URL.Query()
 		replicaLink := query.Get("replicaLink")
-		fileIndex := query.Get("fileIndex")
 		m, err := metainfo.ParseMagnetURI(replicaLink)
 		if err != nil {
 			return err
 		}
-		if fileIndex == "" {
-			fileIndex = "0"
+		so := m.Params.Get("so")
+		fileIndex, err := strconv.ParseUint(so, 10, 0)
+		if err != nil {
+			err = fmt.Errorf("parsing so field: %w", err)
+			log.Errorf("error %v", err)
+			fileIndex = 0
 		}
-		key := fmt.Sprintf("%s/%s/%s", m.InfoHash.HexString(), category, fileIndex)
+		key := fmt.Sprintf("%s/%s/%d", m.InfoHash.HexString(), category, fileIndex)
 		metadata, err := me.MetadataClient.GetObject(key)
 		if err != nil {
 			return err
