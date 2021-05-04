@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"os"
 	"reflect"
 	"strings"
 	"sync"
@@ -16,7 +13,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/timezone"
-	"github.com/getlantern/yaml"
+	"github.com/spf13/viper"
 
 	"github.com/getlantern/flashlight/desktop/deviceid"
 	"github.com/getlantern/flashlight/ws"
@@ -51,131 +48,88 @@ const (
 	SNRevisionDate SettingName = "revisionDate"
 )
 
-type settingType byte
-
-const (
-	stBool settingType = iota
-	stNumber
-	stString
-	stStringArray
-)
-
-var settingMeta = map[SettingName]struct {
-	sType     settingType
-	persist   bool
-	omitempty bool
-}{
-	SNAutoReport:   {stBool, true, false},
-	SNAutoLaunch:   {stBool, true, false},
-	SNProxyAll:     {stBool, true, false},
-	SNSystemProxy:  {stBool, true, false},
-	SNDisconnected: {stBool, false, false},
-
-	SNLanguage:       {stString, true, true},
-	SNLocalHTTPToken: {stString, true, true},
-
-	// SNDeviceID: intentionally omit, to avoid setting it from UI
-	SNUserID:                    {stNumber, true, true},
-	SNUserToken:                 {stString, true, true},
-	SNMigratedDeviceIDForUserID: {stNumber, true, true},
-	SNTakenSurveys:              {stStringArray, true, true},
-	SNPastAnnouncements:         {stStringArray, true, true},
-
-	SNAddr:      {stString, true, true},
-	SNSOCKSAddr: {stString, true, true},
-	SNUIAddr:    {stString, true, true},
-
-	SNVersion:      {stString, false, false},
-	SNBuildDate:    {stString, false, false},
-	SNRevisionDate: {stString, false, false},
-}
-
 // Settings is a struct of all settings unique to this particular Lantern instance.
 type Settings struct {
 	muNotifiers     sync.RWMutex
 	changeNotifiers map[SettingName][]func(interface{})
 	wsOut           chan<- interface{}
-
-	m map[SettingName]interface{}
 	sync.RWMutex
 	filePath string
 
 	log golog.Logger
 
 	chrome chromeExtension
+	config *viper.Viper
 }
 
 func loadSettingsFrom(version, revisionDate, buildDate, path string, chrome chromeExtension) *Settings {
 	// Create default settings that may or may not be overridden from an existing file
 	// on disk.
 	sett := newSettings(path, chrome)
-	set := sett.m
 
-	// Use settings from disk if they're available.
-	if bytes, err := ioutil.ReadFile(path); err != nil {
-		sett.log.Debugf("Could not read file %v", err)
-	} else if err := yaml.Unmarshal(bytes, set); err != nil {
-		sett.log.Errorf("Could not load yaml %v", err)
-		// Just keep going with the original settings not from disk.
-	} else {
-		sett.log.Debugf("Loaded settings from %v", path)
-	}
 	// old lantern persist settings with all lower case, convert them to camel cased.
-	toCamelCase(set)
-
-	set[SNDeviceID] = deviceid.Get()
-
-	// SNUserID may be unmarshalled as int, which causes panic when GetUserID().
-	// Make sure to store it as int64.
-	switch id := set[SNUserID].(type) {
-	case int:
-		set[SNUserID] = int64(id)
-	case int64:
-		set[SNUserID] = id
-	}
+	// toCamelCase(set)
+	sett.setVal(SNDeviceID, deviceid.Get())
 
 	// Always just sync the auto-launch configuration on startup.
 	go launcher.CreateLaunchFile(sett.IsAutoLaunch())
 
 	// always override below 3 attributes as they are not meant to be persisted across versions
-	set[SNVersion] = version
-	set[SNBuildDate] = buildDate
-	set[SNRevisionDate] = revisionDate
+	sett.setVals(map[SettingName]interface{}{
+		SNVersion:      version,
+		SNBuildDate:    buildDate,
+		SNRevisionDate: revisionDate,
+	})
 
 	// Disable for now to prevent performance issue particularly on Windows 7
 	// go chrome.save(sett.mapToSave)
 	return sett
 }
 
-func toCamelCase(m map[SettingName]interface{}) {
-	for k := range settingMeta {
-		lowerCased := SettingName(strings.ToLower(string(k)))
-		if v, exists := m[lowerCased]; exists {
-			delete(m, lowerCased)
-			m[k] = v
-		}
-	}
-}
+// func toCamelCase(m map[SettingName]interface{}) {
+// 	for k := range settingMeta {
+// 		lowerCased := SettingName(strings.ToLower(string(k)))
+// 		if v, exists := m[lowerCased]; exists {
+// 			delete(m, lowerCased)
+// 			m[k] = v
+// 		}
+// 	}
+// }
 
 func newSettings(filePath string, chrome chromeExtension) *Settings {
+	log := golog.LoggerFor("app.settings")
+	config := viper.New()
+	config.SetConfigFile(filePath)
+	config.SetConfigType("yaml")
+	config.SetEnvPrefix("LANTERN")
+	config.AutomaticEnv()
+	config.SetDefault(string(SNUserID), int64(0))
+	config.SetDefault(string(SNAutoReport), true)
+	config.SetDefault(string(SNAutoLaunch), true)
+	config.SetDefault(string(SNProxyAll), false)
+	config.SetDefault(string(SNSystemProxy), true)
+	config.SetDefault(string(SNDisconnected), false)
+	config.SetDefault(string(SNLanguage), "")
+	config.SetDefault(string(SNLocalHTTPToken), "")
+	config.SetDefault(string(SNUserToken), "")
+	config.SetDefault(string(SNUIAddr), "")
+	config.SetDefault(string(SNMigratedDeviceIDForUserID), int64(0))
+	config.SetDefault(string(SNDeviceID), "")
+	config.SetDefault(string(SNTakenSurveys), []string(nil))
+	config.SetTypeByDefaultValue(true)
+
+	// Use settings from disk if they're available.
+	if err := config.ReadInConfig(); err != nil {
+		log.Debugf("Could not load settings %w", err)
+	} else {
+		log.Debugf("Loaded settings from %v", filePath)
+	}
 	return &Settings{
-		m: map[SettingName]interface{}{
-			SNUserID:                    int64(0),
-			SNAutoReport:                true,
-			SNAutoLaunch:                true,
-			SNProxyAll:                  false,
-			SNSystemProxy:               true,
-			SNDisconnected:              false,
-			SNLanguage:                  "",
-			SNLocalHTTPToken:            "",
-			SNUserToken:                 "",
-			SNUIAddr:                    "",
-			SNMigratedDeviceIDForUserID: int64(0),
-		},
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
-		log:             golog.LoggerFor("app.settings"),
+		log:             log,
 		chrome:          chrome,
+		config:          config,
 	}
 }
 
@@ -199,6 +153,9 @@ func (s *Settings) StartService(channel ws.UIChannel) error {
 }
 
 func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
+	s.RLock()
+	m := s.config.AllSettings()
+	s.RUnlock()
 	s.log.Debugf("Start reading settings messages!!")
 	for message := range in {
 		s.log.Debugf("Read settings message %v", message)
@@ -209,22 +166,11 @@ func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
 		}
 
 		for k, v := range data {
-			name := SettingName(k)
-			t, exists := settingMeta[name]
-			if !exists {
+			if _, exists := m[strings.ToLower(k)]; !exists || k == string(SNDeviceID) {
 				s.log.Errorf("Unknown settings name %s", k)
 				continue
 			}
-			switch t.sType {
-			case stBool:
-				s.setBool(name, v)
-			case stString:
-				s.setString(name, v)
-			case stNumber:
-				s.setNum(name, v)
-			case stStringArray:
-				s.setStringArray(name, v)
-			}
+			s.setVal(SettingName(k), v)
 		}
 
 		out <- s.uiMap()
@@ -295,78 +241,23 @@ func (s *Settings) save() {
 
 // save saves settings to disk as yaml in the default lantern user settings directory.
 func (s *Settings) saveDefault() {
-	s.log.Trace("Saving settings")
-	if f, err := os.Create(s.filePath); err != nil {
-		s.log.Errorf("Could not open settings file for writing: %v", err)
-	} else {
-		defer f.Close()
-		if _, err := s.writeTo(f); err != nil {
-			s.log.Errorf("Could not save settings file: %v", err)
-		} else {
-			s.log.Tracef("Saved settings to %s", s.filePath)
-		}
-	}
-}
-
-func (s *Settings) writeTo(w io.Writer) (int, error) {
-	toBeSaved := s.mapToSave()
-	if bytes, err := yaml.Marshal(toBeSaved); err != nil {
-		return 0, err
-	} else {
-		return w.Write(bytes)
-	}
-}
-
-func (s *Settings) mapToSave() map[string]interface{} {
-	m := make(map[string]interface{})
 	s.RLock()
 	defer s.RUnlock()
-	for k, v := range s.m {
-		if settingMeta[k].persist {
-			m[string(k)] = v
-		}
+
+	s.log.Trace("Saving settings")
+	if err := s.config.WriteConfig(); err != nil {
+		s.log.Errorf("Could not save settings file: %v", err)
+	} else {
+		s.log.Tracef("Saved settings to %s", s.filePath)
 	}
-	return m
 }
 
 // uiMap makes a copy of our map for the UI with support for omitting empty
 // values.
 func (s *Settings) uiMap() map[string]interface{} {
-	m := make(map[string]interface{})
 	s.RLock()
 	defer s.RUnlock()
-	for key, v := range s.m {
-		meta := settingMeta[key]
-		k := string(key)
-		// This mimics https://golang.org/pkg/encoding/json/ for what are considered
-		// empty values.
-		if !meta.omitempty {
-			m[k] = v
-		} else {
-			if v == nil {
-				continue
-			}
-			switch meta.sType {
-			case stBool:
-				if v.(bool) {
-					m[k] = v
-				}
-			case stString:
-				if v != "" {
-					m[k] = v
-				}
-			case stStringArray:
-				if a, ok := v.([]string); ok {
-					m[k] = a
-				}
-			case stNumber:
-				if v != 0 {
-					m[k] = v
-				}
-			}
-		}
-	}
-	return m
+	return s.config.AllSettings()
 }
 
 // GetTakenSurveys returns the IDs of surveys the user has already taken.
@@ -533,11 +424,7 @@ func (s *Settings) getVal(name SettingName) (interface{}, error) {
 	s.log.Tracef("Getting value for %v", name)
 	s.RLock()
 	defer s.RUnlock()
-	if val, ok := s.m[name]; ok {
-		return val, nil
-	}
-	s.log.Errorf("Could not get value for %s", name)
-	return nil, fmt.Errorf("No value for %v", name)
+	return s.config.Get(string(name)), nil
 }
 
 func (s *Settings) setVal(name SettingName, val interface{}) {
@@ -545,10 +432,14 @@ func (s *Settings) setVal(name SettingName, val interface{}) {
 }
 
 func (s *Settings) setVals(vals map[SettingName]interface{}) {
-	s.log.Debugf("Setting %v in %v", vals, s.m)
+	s.log.Debugf("Setting %v", vals)
 	s.Lock()
 	for name, val := range vals {
-		s.m[name] = val
+		v := val
+		if jn, ok := val.(json.Number); ok {
+			v, _ = jn.Int64()
+		}
+		s.config.Set(strings.ToLower(string(name)), v)
 	}
 	// Need to unlock here because s.save() will lock again.
 	s.Unlock()

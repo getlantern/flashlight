@@ -132,24 +132,23 @@ func TestSetNum(t *testing.T) {
 	stopCapture := testlog.Capture(t)
 	defer stopCapture()
 
-	snTest := SettingName("test")
 	set := newSet("/dev/null")
 	var val json.Number = "4809"
 	var expected int64 = 4809
-	set.setNum(snTest, val)
-	assert.Equal(t, expected, set.m[snTest])
+	set.setNum(SNUserID, val)
+	assert.EqualValues(t, expected, set.GetUserID())
 
-	set.setString(snTest, val)
+	set.setString(SNUserID, val)
 
 	// The above should not have worked since it's not a string -- should
 	// still be an int64
-	assert.Equal(t, expected, set.m[snTest])
+	assert.EqualValues(t, expected, set.GetUserID())
 
-	set.setBool(snTest, val)
+	set.setBool(SNUserID, val)
 
 	// The above should not have worked since it's not a bool -- should
 	// still be an int64
-	assert.Equal(t, expected, set.m[snTest])
+	assert.EqualValues(t, expected, set.GetUserID())
 }
 
 func TestStringArray(t *testing.T) {
@@ -176,6 +175,19 @@ func newSet(path string) *Settings {
 	return newSettings(path, newChromeExtension())
 }
 
+func TestEnv(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+	settings := newSet("/dev/null")
+	assert.Empty(t, settings.GetDeviceID())
+
+	os.Setenv("LANTERN_DEVICEID", "test")
+	defer os.Unsetenv("LANTERN_DEVICEID")
+
+	settings = newSet("/dev/null")
+	assert.Equal(t, "test", settings.GetDeviceID())
+}
+
 func TestPersistAndLoad(t *testing.T) {
 	stopCapture := testlog.Capture(t)
 	defer stopCapture()
@@ -185,9 +197,10 @@ func TestPersistAndLoad(t *testing.T) {
 	buildDate := "1970-1-1"
 	yamlFile := "./test.yaml"
 	set := loadSettingsFrom(version, revisionDate, buildDate, yamlFile, newChromeExtension())
-	assert.Equal(t, version, set.m["version"], "Should be set to version")
-	assert.Equal(t, revisionDate, set.m["revisionDate"], "Should be set to revisionDate")
-	assert.Equal(t, buildDate, set.m["buildDate"], "Should be set to buildDate")
+	m := set.uiMap()
+	assert.Equal(t, version, m["version"], "Should be set to version")
+	assert.Equal(t, revisionDate, m["revisiondate"], "Should be set to revisionDate")
+	assert.Equal(t, buildDate, m["builddate"], "Should be set to buildDate")
 	assert.Equal(t, "en", set.GetLanguage(), "Should load language from file")
 	assert.Equal(t, int64(1), set.GetUserID(), "Should load user id from file")
 

@@ -1,7 +1,6 @@
 package desktop
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/getlantern/flashlight/common"
@@ -83,12 +82,12 @@ func fillMandrillDefaults(msg *mandrillMessage) {
 		msg.Vars["os"] = os
 	}
 	if msg.WithSettings {
-		buf := &bytes.Buffer{}
-		_, err := settings.writeTo(buf)
-		if err != nil {
-			log.Errorf("Unable to serialize settings: %v", err)
-			return
-		}
-		msg.SettingsData = buf.Bytes()
+		// buf := &bytes.Buffer{}
+		// _, err := settings.writeTo(buf)
+		// if err != nil {
+		// 	log.Errorf("Unable to serialize settings: %v", err)
+		// 	return
+		// }
+		// msg.SettingsData = buf.Bytes()
 	}
 }
