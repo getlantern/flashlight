@@ -131,8 +131,6 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
-	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.7.1
 	github.com/stellar/go v0.0.0-20210412175112-1eb8f04750d6 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/tklauser/go-sysconf v0.3.4 // indirect

@@ -27,8 +27,6 @@ import (
 	"github.com/getlantern/flashlight/desktop"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/sentry"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 )
 
 var (
@@ -42,12 +40,18 @@ func main() {
 	// Since Go 1.6, panic prints only the stack trace of current goroutine by
 	// default, which may not reveal the root cause. Switch to all goroutines.
 	debug.SetTraceback("all")
-	flags := parseFlags()
+	parseFlags()
+
+	if *help {
+		flag.Usage()
+		log.Fatal("Wrong arguments")
+	}
 
 	cdir := configDir()
+
 	a := &desktop.App{
 		ConfigDir: cdir,
-		Flags:     flags,
+		Flags:     flagsAsMap(),
 	}
 	a.Init()
 
@@ -127,11 +131,11 @@ func main() {
 
 	golog.SetPrepender(logging.Timestamped)
 
-	if viper.GetString("pprofAddr") != "" {
+	if *pprofAddr != "" {
 		go func() {
-			log.Debugf("Starting pprof page at http://%s/debug/pprof", viper.GetString("pprofAddr"))
+			log.Debugf("Starting pprof page at http://%s/debug/pprof", *pprofAddr)
 			srv := &http.Server{
-				Addr: viper.GetString("pprofAddr"),
+				Addr: *pprofAddr,
 			}
 			if err := srv.ListenAndServe(); err != nil {
 				log.Error(err)
@@ -139,18 +143,18 @@ func main() {
 		}()
 	}
 
-	if viper.GetString("forceProxyAddr") != "" {
-		chained.ForceProxy(viper.GetString("forceProxyAddr"), viper.GetString("forceAuthToken"))
+	if *forceProxyAddr != "" {
+		chained.ForceProxy(*forceProxyAddr, *forceAuthToken)
 	}
 
-	if viper.GetString("forceConfigCountry") != "" {
-		log.Debugf("Will force config fetches to pretend client country is: %v", viper.GetString("forceConfigCountry"))
-		config.ForceCountry(viper.GetString("forceConfigCountry"))
+	if *forceConfigCountry != "" {
+		log.Debugf("Will force config fetches to pretend client country is: %v", *forceConfigCountry)
+		config.ForceCountry(*forceConfigCountry)
 	}
 
 	if a.ShouldShowUI() {
 		i18nInit(a)
-		desktop.RunOnSystrayReady(viper.GetBool("standalone"), a, func() {
+		desktop.RunOnSystrayReady(*standalone, a, func() {
 			runApp(a)
 		})
 	} else {
@@ -167,7 +171,7 @@ func main() {
 }
 
 func configDir() string {
-	cdir := viper.GetString("configdir")
+	cdir := *configdir
 	if cdir == "" {
 		cdir = appdir.General(common.AppName)
 	}
@@ -208,7 +212,7 @@ func i18nInit(a *desktop.App) {
 	}
 }
 
-func parseFlags() map[string]interface{} {
+func parseFlags() {
 	args := os.Args[1:]
 	// On OS X, the first time that the program is run after download it is
 	// quarantined.  OS X will ask the user whether or not it's okay to run the
@@ -222,22 +226,6 @@ func parseFlags() map[string]interface{} {
 	// Note - we can ignore the returned error because CommandLine.Parse() will
 	// exit if it fails.
 	_ = flag.CommandLine.Parse(args)
-
-	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
-	pflag.Parse()
-	viper.AutomaticEnv()
-	_ = viper.BindPFlags(pflag.CommandLine)
-
-	if viper.GetBool("help") {
-		flag.Usage()
-		log.Fatal("Wrong arguments")
-	}
-
-	// viper's AllSettings returns time.Duration as a string for some reason. Convert it.
-	flags := viper.AllSettings()
-	parsedTimeout, _ := time.ParseDuration(flags["timeout"].(string)) // error is ignored since flag already checks validity
-	flags["timeout"] = parsedTimeout
-	return flags
 }
 
 // Handle system signals for clean exit
@@ -256,5 +244,5 @@ func handleSignals(a *desktop.App) {
 }
 
 func disablePanicWrap() bool {
-	return viper.GetBool("headless") || viper.GetBool("initialize") || viper.GetDuration("timeout") > 0
+	return *headless || *initialize || *timeout > 0
 }

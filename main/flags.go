@@ -34,3 +34,21 @@ var (
 	initialize         = flag.Bool("initialize", false, "silently initialize Lantern to a state of having working proxy and exit, typically during installation.")
 	timeout            = flag.Duration("timeout", 0, "force stop Lantern with an exit status of -1 after the timeout.")
 )
+
+// flagsAsMap returns a map of all flags that were provided at runtime
+func flagsAsMap() map[string]interface{} {
+	flags := make(map[string]interface{})
+	flag.VisitAll(func(f *flag.Flag) {
+		switch fl := f.Value.(type) {
+		case flag.Getter:
+			flags[f.Name] = fl.Get()
+		default:
+			log.Debugf("Received unexpected flag: %v", f)
+		}
+	})
+	// Some properties should always be included
+	flags["cpuprofile"] = *cpuprofile
+	flags["memprofile"] = *memprofile
+
+	return flags
+}
