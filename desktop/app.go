@@ -17,6 +17,7 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/browsers/simbrowser"
 	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/replica"
 	"github.com/getlantern/trafficlog-flashlight/tlproc"
 
 	"github.com/getlantern/golog"
@@ -48,7 +49,6 @@ import (
 	"github.com/getlantern/flashlight/ws"
 
 	desktopReplica "github.com/getlantern/flashlight/desktop/replica"
-	"github.com/getlantern/replica"
 )
 
 var (
@@ -560,15 +560,28 @@ func (app *App) startReplicaIfNecessary(features map[string]bool) {
 				},
 			),
 		}
-		s3Storage := &replica.S3Storage{HttpClient: httpClient}
+		replica.DefaultHttpClient = httpClient
 		input := desktopReplica.NewHttpHandlerInput{}
 		input.SetDefaults()
 		// TODO: Configure replica Clients for Iran?
-		input.ReplicaClient.Storage = s3Storage
-		input.ReplicaClient.HttpClient = httpClient
-		input.MetadataClient.Storage = s3Storage
 		input.ConfigDir = app.ConfigDir
 		input.UserConfig = getSettings()
+		input.HttpClient = httpClient
+		input.DefaultReplicaClient = replica.Client{
+			StorageClient: replica.NewS3StorageClient(replica.DefaultBucket, replica.DefaultRegion, httpClient),
+			Endpoint:      replica.NewS3Endpoint(replica.DefaultBucket, replica.DefaultRegion),
+			ServiceClient: replica.ServiceClient{
+				HttpClient:             httpClient,
+				ReplicaServiceEndpoint: &common.ReplicaServiceEndpoint,
+			},
+		}
+		var err error
+		input.MetadataStorageClient, err = replica.StorageClientForEndpoint(
+			replica.DefaultMetadataEndpoint,
+			replica.AnyStorageClientParams{HttpClient: httpClient})
+		if err != nil {
+			log.Errorf("creating metadata storage client: %v", err)
+		}
 		replicaHandler, err := desktopReplica.NewHTTPHandler(input)
 		if err != nil {
 			log.Errorf("error creating replica http server: %v", err)

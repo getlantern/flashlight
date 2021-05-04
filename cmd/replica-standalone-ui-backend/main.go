@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/anacrolix/log"
@@ -13,12 +14,12 @@ import (
 )
 
 type flags struct {
-	replica.Endpoint
+	ReplicaServiceUrl *url.URL
 }
 
 func main() {
 	flags := flags{
-		Endpoint: replica.DefaultEndpoint,
+		ReplicaServiceUrl: replica.DefaultServiceUrl,
 	}
 	tagflag.Parse(&flags)
 	code := mainCode(flags)
@@ -30,6 +31,7 @@ func main() {
 func mainCode(flags flags) int {
 	input := desktopReplica.NewHttpHandlerInput{}
 	input.SetDefaults()
+	input.DefaultReplicaClient.ReplicaServiceEndpoint = flags.ReplicaServiceUrl
 	input.ConfigDir = appdir.General("ReplicaStandalone")
 	input.UserConfig = common.NewUserConfigData(
 		"replica-standalone",

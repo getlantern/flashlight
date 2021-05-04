@@ -26,7 +26,7 @@ func TestUploadAndDelete(t *testing.T) {
 		// I'm not sure about letting a unit test connect directly to a prod server, but we *are*
 		// deleting the content afterward, so we don't really make any changes overall (assuming the
 		// test passes). This connects to a local instance of replica-rust instead.
-		input.ReplicaClient.ReplicaServiceEndpoint = &url.URL{Scheme: "http", Host: "localhost:8080"}
+		input.DefaultReplicaClient.ReplicaServiceEndpoint = &url.URL{Scheme: "http", Host: "localhost:8080"}
 	}
 	input.ConfigDir = dir
 	handler, err := NewHTTPHandler(input)

@@ -574,6 +574,12 @@ github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c h1:IkjF+RwRs8B/R
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c/go.mod h1:kExwbqTx1krUnT9ohmXG3jayDTEBfxUKeoRzU6XucLw=
 github.com/getlantern/replica v0.5.1-0.20210423035824-fc895cdcffcc h1:vuk0GBi91AhmjJQUn5rwDS+GLCtigNiIXDiFLMbayOs=
 github.com/getlantern/replica v0.5.1-0.20210423035824-fc895cdcffcc/go.mod h1:zLNNp+A2rjHoTwkEkEvt7fNBrtWvwy2zr44pXyBfuQk=
+github.com/getlantern/replica v0.5.1-0.20210424055326-e42ecee3fefd h1:tD4HgBWIOlyj5jE3Gse4Nc990eb/EAillIhPhEQHlB0=
+github.com/getlantern/replica v0.5.1-0.20210424055326-e42ecee3fefd/go.mod h1:zLNNp+A2rjHoTwkEkEvt7fNBrtWvwy2zr44pXyBfuQk=
+github.com/getlantern/replica v0.5.1-0.20210425070256-050296eeb8e9 h1:zOH5Yw+VagFTJqlq31rKxP4Xykp3Pk4MrT2wiAVwlMg=
+github.com/getlantern/replica v0.5.1-0.20210425070256-050296eeb8e9/go.mod h1:zLNNp+A2rjHoTwkEkEvt7fNBrtWvwy2zr44pXyBfuQk=
+github.com/getlantern/replica v0.5.1-0.20210426235346-a3c27e425bf9 h1:N8JjGLka1UTAWxTirooo/y7/r9zgVJvlZc/jmfMxFK0=
+github.com/getlantern/replica v0.5.1-0.20210426235346-a3c27e425bf9/go.mod h1:zLNNp+A2rjHoTwkEkEvt7fNBrtWvwy2zr44pXyBfuQk=
 github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01 h1:JyXEChj4lHy5w3hlQVnYpcH4QrBXmhEJgkxb0FPkFlM=
 github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01/go.mod h1:mnw3NsM0/oiJdZDMujNx+Kg60o72UClHB1UNqrEWqOM=
 github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85 h1:+naZppl28oqpVs0J+wOsVeh61c02OD/G3JP+PemAMCU=
