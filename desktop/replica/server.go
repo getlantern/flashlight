@@ -53,11 +53,17 @@ type HttpHandler struct {
 }
 
 type NewHttpHandlerInput struct {
-	ConfigDir      string
-	UserConfig     common.UserConfig
-	ReplicaClient  replica.Client
-	MetadataClient replica.StorageClient
-	GaSession      analytics.Session
+	ConfigDir  string
+	UserConfig common.UserConfig
+	// Used to initialize storage clients for arbitrary endpoints.
+	replica.AnyStorageClientParams
+	// For uploads or any activity without a prescribed Replica endpoint.
+	DefaultReplicaClient replica.Client
+	// For now there's only a single instance of metadata? I don't think we interpret for region
+	// etc. But that would be easy to add, emulating how the replica.Client is used, or folding
+	// metadata into that.
+	MetadataStorageClient replica.StorageClient
+	GaSession             analytics.Session
 	// Doing this might be a privacy concern, since users could be singled out for being the
 	// first/only uploader for content.
 	AddUploadsToTorrentClient bool
@@ -67,20 +73,13 @@ type NewHttpHandlerInput struct {
 }
 
 func (me *NewHttpHandlerInput) SetDefaults() {
+	// Why don't we set ConfigDir?
+
 	me.UserConfig = &common.NullUserConfig{}
-	storage := replica.S3Storage{}
-	me.ReplicaClient = replica.Client{
-		replica.StorageClient{
-			Storage:  storage,
-			Endpoint: replica.DefaultEndpoint,
-		},
-		replica.ServiceClient{
-			ReplicaServiceEndpoint: &common.ReplicaServiceEndpoint,
-			HttpClient:             http.DefaultClient,
-		},
-	}
-	me.MetadataClient = replica.StorageClient{Storage: storage, Endpoint: replica.DefaultMetadataEndpoint}
+	me.DefaultReplicaClient = replica.DefaultClient
+	me.MetadataStorageClient = replica.DefaultMetadataStorageClient
 	me.GaSession = &analytics.NullSession{}
+	me.HttpClient = replica.DefaultHttpClient
 }
 
 // NewHTTPHandler creates a new http.Handler for calls to replica.
@@ -251,7 +250,7 @@ func (me *HttpHandler) wrapHandlerError(
 		w := ops.InitInstrumentedResponseWriter(rw, opName)
 		defer w.Finish()
 		if err := handler(w, r); err != nil {
-			log.Errorf("in replica handler: %v", err)
+			log.Errorf("in %q handler: %v", opName, err)
 			w.Op.FailIf(err)
 
 			// we may want to only ultimately only report server errors here (ie >=500)
@@ -323,9 +322,26 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 			fmt.Errorf("expected method supporting request body"),
 		}
 	case http.MethodPost, http.MethodPut:
+		// Maybe we can differentiate form handling based on the method.
 	}
 
-	scrubbedReader, err := metascrubber.GetScrubber(r.Body)
+	fileName := r.URL.Query().Get("name")
+	var fileReader io.Reader
+	{
+		// There are streaming ways and helpers for temporary files for this if size becomes an issue.
+		formFile, fileHeader, err := r.FormFile("file")
+		if err == nil {
+			fileReader = formFile
+			if fileName == "" {
+				fileName = fileHeader.Filename
+			}
+		} else {
+			log.Debugf("error getting upload file as form file: %v", err)
+			fileReader = r.Body
+		}
+	}
+
+	scrubbedReader, err := metascrubber.GetScrubber(fileReader)
 	if err != nil {
 		return fmt.Errorf("getting metascrubber: %w", err)
 	}
@@ -357,13 +373,11 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 		}
 	}
 
-	fileName := r.URL.Query().Get("name")
-
-	output, err := me.ReplicaClient.Upload(replicaUploadReader, fileName)
+	output, err := me.DefaultReplicaClient.Upload(replicaUploadReader, fileName)
 	me.GaSession.EventWithLabel("replica", "upload", path.Ext(fileName))
 	log.Debugf("uploaded %d bytes", cw.BytesWritten)
 	if err != nil {
-		return fmt.Errorf("uploading with replicaClient: %w", err)
+		return fmt.Errorf("uploading with replica client: %w", err)
 	}
 	upload := output.Upload
 	log.Debugf("uploaded replica key %q", upload)
@@ -483,8 +497,12 @@ func (me *HttpHandler) handleDelete(rw *ops.InstrumentedResponseWriter, r *http.
 	_, loadMetainfoErr := metainfo.LoadFromFile(metainfoFilePath)
 
 	if readAuthErr == nil || loadMetainfoErr == nil {
-		log.Debugf("deleting %q (auth=%q, haveMetainfo=%t)", upload.Prefix, string(authBytes), loadMetainfoErr == nil && os.IsNotExist(readAuthErr))
-		err := me.ReplicaClient.DeleteUpload(
+		log.Debugf("deleting %q (auth=%q, haveMetainfo=%t)",
+			upload.Prefix,
+			string(authBytes),
+			loadMetainfoErr == nil && os.IsNotExist(readAuthErr))
+		// We're not inferring the endpoint from the link, should we?
+		err := me.DefaultReplicaClient.DeleteUpload(
 			upload.Prefix,
 			string(authBytes),
 			loadMetainfoErr == nil && os.IsNotExist(readAuthErr),
@@ -514,7 +532,7 @@ func (me *HttpHandler) handleMetadata(category string) func(*ops.InstrumentedRes
 	return func(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
 		query := r.URL.Query()
 		replicaLink := query.Get("replicaLink")
-		m, err := metainfo.ParseMagnetURI(replicaLink)
+		m, err := metainfo.ParseMagnetUri(replicaLink)
 		if err != nil {
 			return err
 		}
@@ -526,7 +544,7 @@ func (me *HttpHandler) handleMetadata(category string) func(*ops.InstrumentedRes
 			fileIndex = 0
 		}
 		key := fmt.Sprintf("%s/%s/%d", m.InfoHash.HexString(), category, fileIndex)
-		metadata, err := me.MetadataClient.GetObject(key)
+		metadata, err := me.MetadataStorageClient.Get(key)
 		if err != nil {
 			return err
 		}
@@ -566,27 +584,31 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 
 	rw.Op.Set("info_hash", m.InfoHash)
 
-	var s3Prefix replica.Upload
-	unwrapUploadSpecErr := s3Prefix.FromMagnet(m)
-	if unwrapUploadSpecErr != nil {
-		log.Errorf("error getting s3 key from magnet: %v", unwrapUploadSpecErr)
-	}
-
 	t, _, release := me.confluence.GetTorrent(m.InfoHash)
 	defer release()
-
-	// The trackers for a torrent should overlap with those used by replica-peer. Also
-	// replica-search might provide this dynamically via the magnet links (except that uploaders
-	// will need a way to use the same list). As an ad-hoc practice, we'll use trackers provided via
-	// the magnet link in the first tier, and our forcibly injected ones in the second.
 
 	// We're unnecessarily re-parsing a Magnet here.
 	spec, err := torrent.TorrentSpecFromMagnetUri(link)
 	if err != nil {
 		return fmt.Errorf("getting spec from magnet URI: %w", err)
 	}
-	// Override the use of "xs", as this is replica-specific here.
+	// Override the use of "xs" as a source, as we have a replica-specific use for that field.
+	// Instead we only use the "as" field as a source.
 	spec.Sources = m.Params["as"]
+
+	var uploadSpec replica.Upload
+	unwrapUploadSpecErr := uploadSpec.FromMagnet(m)
+	if unwrapUploadSpecErr == nil {
+		// Add things we can infer from the endpoint, duplicates shouldn't matter as the torrent
+		// client will handle this (not to mention we do this business everytime the handler is
+		// invoked).
+
+		spec.Webseeds = append(spec.Webseeds, uploadSpec.WebseedUrls()...)
+		spec.Sources = append(spec.Sources, uploadSpec.MetainfoUrls()...)
+	} else {
+		log.Errorf("getting s3 key from magnet: %v", unwrapUploadSpecErr)
+	}
+
 	if err := t.MergeSpec(spec); err != nil {
 		return fmt.Errorf("merging spec: %w", err)
 	}
@@ -598,9 +620,14 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 		_, _, release := me.confluence.GetTorrent(m.InfoHash)
 		go func() {
 			defer release()
-			tob, err := me.ReplicaClient.GetMetainfo(s3Prefix)
+			replicaStorageClient, err := replica.StorageClientForEndpoint(uploadSpec.Endpoint, me.AnyStorageClientParams)
 			if err != nil {
-				log.Errorf("error getting metainfo for %q from s3 API: %v", s3Prefix, err)
+				log.Errorf("getting storage client for endpoint %q: %v", uploadSpec.Endpoint, err)
+				return
+			}
+			tob, err := replicaStorageClient.Get(uploadSpec.TorrentKey())
+			if err != nil {
+				log.Errorf("error getting metainfo for %q from s3 API: %v", uploadSpec, err)
 				return
 			}
 			defer tob.Close()
@@ -613,7 +640,7 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 			if err != nil {
 				log.Errorf("error putting metainfo from s3: %v", err)
 			}
-			log.Debugf("added metainfo for %q from s3 API", s3Prefix)
+			log.Debugf("added metainfo for %q from s3 API", uploadSpec)
 		}()
 	}
 

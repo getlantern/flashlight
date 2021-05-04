@@ -76,7 +76,7 @@ require (
 	github.com/getlantern/proxybench v0.0.0-20200806214955-5d56065f9f77
 	github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683
 	github.com/getlantern/quicwrapper v0.0.0-20201013170341-d27d67101f2d
-	github.com/getlantern/replica v0.5.1-0.20210423035824-fc895cdcffcc
+	github.com/getlantern/replica v0.5.1-0.20210426235346-a3c27e425bf9
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/safechannels v0.0.0-20201218194342-b4e5383e9627
@@ -131,6 +131,8 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
+	github.com/spf13/pflag v1.0.5
+	github.com/spf13/viper v1.7.1
 	github.com/stellar/go v0.0.0-20210412175112-1eb8f04750d6 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/tklauser/go-sysconf v0.3.4 // indirect
