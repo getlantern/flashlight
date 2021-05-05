@@ -24,30 +24,39 @@ type proxyTransport struct {
 	// Satisfies http.RoundTripper
 }
 
+func (pt *proxyTransport) processOptions(req *http.Request) *http.Response {
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Header: http.Header{
+			"Connection": {"keep-alive"},
+			"Via":        {"Lantern Client"},
+		},
+		Body: ioutil.NopCloser(strings.NewReader("preflight complete")),
+	}
+	if !common.ProcessCORS(resp.Header, req) {
+		return &http.Response{
+			StatusCode: http.StatusForbidden,
+		}
+	}
+	return resp
+}
+
 func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	if req.Method == "OPTIONS" {
 		// No need to proxy the OPTIONS request.
-		resp = &http.Response{
-			StatusCode: http.StatusOK,
-			Header: http.Header{
-				"Connection": {"keep-alive"},
-				"Via":        {"Lantern Client"},
-			},
-			Body: ioutil.NopCloser(strings.NewReader("preflight complete")),
-		}
-	} else {
-		origin := req.Header.Get("Origin")
-		// Workaround for https://github.com/getlantern/pro-server/issues/192
-		req.Header.Del("Origin")
-		resp, err = GetHTTPClient().Do(req)
-		if err != nil {
-			log.Errorf("Could not issue HTTP request? %v", err)
-			return
-		}
-
-		// Put the header back for subsequent CORS processing.
-		req.Header.Set("Origin", origin)
+		return pt.processOptions(req), nil
 	}
+	origin := req.Header.Get("Origin")
+	// Workaround for https://github.com/getlantern/pro-server/issues/192
+	req.Header.Del("Origin")
+	resp, err = GetHTTPClient().Do(req)
+	if err != nil {
+		log.Errorf("Could not issue HTTP request? %v", err)
+		return
+	}
+
+	// Put the header back for subsequent CORS processing.
+	req.Header.Set("Origin", origin)
 	common.ProcessCORS(resp.Header, req)
 	if req.URL.Path != "/user-data" || resp.StatusCode != http.StatusOK {
 		return
@@ -87,7 +96,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	user := client.User{}
 	readErr = json.NewDecoder(br).Decode(&user)
 	if readErr != nil {
-		log.Errorf("Error decode JSON: %v", readErr)
+		log.Errorf("Error decoding JSON: %v", readErr)
 		return
 	}
 	log.Debugf("Updating user data implicitly for user %v", userID)
