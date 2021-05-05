@@ -24,7 +24,7 @@ type proxyTransport struct {
 	// Satisfies http.RoundTripper
 }
 
-func (pt *proxyTransport) processOptions(req *http.Request) (r *http.Response, err error) {
+func (pt *proxyTransport) processOptions(req *http.Request) *http.Response {
 	resp := &http.Response{
 		StatusCode: http.StatusOK,
 		Header: http.Header{
@@ -36,15 +36,15 @@ func (pt *proxyTransport) processOptions(req *http.Request) (r *http.Response, e
 	if !common.ProcessCORS(resp.Header, req) {
 		return &http.Response{
 			StatusCode: http.StatusForbidden,
-		}, nil
+		}
 	}
-	return resp, nil
+	return resp
 }
 
 func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	if req.Method == "OPTIONS" {
 		// No need to proxy the OPTIONS request.
-		return pt.processOptions(req)
+		return pt.processOptions(req), nil
 	}
 	origin := req.Header.Get("Origin")
 	// Workaround for https://github.com/getlantern/pro-server/issues/192
