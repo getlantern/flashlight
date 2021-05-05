@@ -433,15 +433,13 @@ func (app *App) beforeStart(listenAddr string) {
 
 	log.Debugf("Starting client UI at %v", uiaddr)
 
-	authaddr := app.Flags.GetAuthAddr()
-	log.Debugf("Using auth server at %v", authaddr)
-	yinbiaddr := app.Flags.GetYinbiAddr()
-	log.Debugf("Using Yinbi server %s", yinbiaddr)
+	log.Debugf("Using auth server at %v", app.Flags.AuthAddr)
+	log.Debugf("Using Yinbi server %s", app.Flags.YinbiAddr)
 
 	// ui will handle empty uiaddr correctly
 	uiServer, err := ui.StartServer(ui.ServerParams{
-		AuthServerAddr:  authaddr,
-		YinbiServerAddr: yinbiaddr,
+		AuthServerAddr:  app.Flags.AuthAddr,
+		YinbiServerAddr: app.Flags.YinbiAddr,
 		ExtURL:          startupURL,
 		AppName:         common.AppName,
 		RequestedAddr:   uiaddr,

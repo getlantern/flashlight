@@ -19,15 +19,15 @@ type Flags struct {
 	CloudConfig        string        `flag:"cloudconfig" help:"optional http(s) URL to a cloud-based source for configuration updates"`
 	CloudConfigCA      string        `flag:"cloudconfigca" help:"optional PEM encoded certificate used to verify TLS connections to fetch cloudconfig"`
 	RegisterAt         string        `flag:"registerat" help:"base URL for peer DNS registry at which to register (e.g. https://peerscanner.getiantem.org)"`
-	Country            string        `help:"2 digit country code under which to report stats. Defaults to xx." default:"xx"`
-	ClearProxySettings bool          `flag:"clear-proxy-settings" default:"false" help:"if true, Lantern removes proxy settings from the system."`
+	Country            string        `help:"2 digit country code under which to report stats"`
+	ClearProxySettings bool          `flag:"clear-proxy-settings" help:"if true, Lantern removes proxy settings from the system."`
 	CpuProfile         string        `flag:"cpuprofile" help:"write cpu profile to given file"`
 	MemProfile         string        `flag:"memprofile" help:"write heap profile to given file"`
 	UIAddr             string        `flag:"uiaddr"  help:"if specified, indicates host:port the UI HTTP server should be started on"`
 	ProxyAll           bool          `flag:"proxyall"  help:"set to true to proxy all traffic through Lantern network"`
 	StickyConfig       bool          `flag:"stickyconfig" help:"set to true to only use the local config file"`
-	AuthAddr           string        `flag:"authaddr" help:"if specified, indicates the address to use for the Lantern auth server. Defaults to staging auth server https://auth-staging.lantern.network"`
-	YinbiAddr          string        `flag:"yinbiaddr" help:"if specified, indicates the address to use for the Yinbi server. Defaults to staging server https://may38fjstaging.yin.bi"`
+	AuthAddr           string        `flag:"authaddr" help:"if specified, indicates the address to use for the Lantern auth server"`
+	YinbiAddr          string        `flag:"yinbiaddr" help:"if specified, indicates the address to use for the Yinbi server"`
 	Headless           bool          `help:"if true, lantern will run with no ui"`
 	Startup            bool          `help:"if true, Lantern was automatically run on system startup"`
 	PprofAddr          string        `flag:"pprofaddr" help:"pprof address to listen on, not activate pprof if empty"`
@@ -40,21 +40,7 @@ type Flags struct {
 	Standalone         bool          `flag:"standalone" help:"run Lantern in its own browser window (doesn't rely on system browser)"`
 	Initialize         bool          `flag:"initialize" help:"silently initialize Lantern to a state of having working proxy and exit, typically during installation."`
 	Timeout            time.Duration `flag:"timeout" help:"force stop Lantern with an exit status of -1 after the timeout."`
-	Staging            bool
-}
-
-func (f Flags) GetYinbiAddr() string {
-	if f.YinbiAddr == "" {
-		return common.YinbiServerAddr
-	}
-	return f.YinbiAddr
-}
-
-func (f Flags) GetAuthAddr() string {
-	if f.AuthAddr == "" {
-		return common.AuthServerAddr
-	}
-	return f.AuthAddr
+	Staging            bool          `flag:"-"`
 }
 
 func (f Flags) AsMap() map[string]interface{} {
@@ -92,8 +78,14 @@ func ParseFlags() Flags {
 		args = []string{}
 	}
 
-	var cfg Flags
+	// here we can define default values
+	cfg := Flags{
+		Country:   "xx",
+		YinbiAddr: common.YinbiServerAddr,
+		AuthAddr:  common.AuthServerAddr,
+	}
 
+	// the following will error on invalid arguments and take env variables starting with LANTERN_ into consideration
 	err := commandeer.LoadArgsEnv(&flagSet{flag.CommandLine}, &cfg, args, "LANTERN_", nil)
 	if err != nil {
 		log.Fatal(err)
