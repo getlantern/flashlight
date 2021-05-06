@@ -113,6 +113,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/ipinfo/go-ipinfo v1.0.0 // indirect
 	github.com/jackpal/gateway v1.0.6
+	github.com/jaffee/commandeer v0.5.0
 	github.com/jmoiron/sqlx v1.3.3 // indirect
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
@@ -133,8 +134,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
-	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.7.1
+	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stellar/go v0.0.0-20210412175112-1eb8f04750d6 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/tklauser/go-sysconf v0.3.4 // indirect

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	bclient "github.com/getlantern/borda/client"
+	"github.com/getlantern/flashlight"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/golog/testlog"
 	"github.com/getlantern/ops"
@@ -236,26 +237,20 @@ func TestProxying(t *testing.T) {
 
 func startApp(t *testing.T, helper *integrationtest.Helper) (*App, error) {
 	configURL := "http://" + helper.ConfigServerAddr
-	flags := map[string]interface{}{
-		"cloudconfig":             configURL,
-		"frontedconfig":           configURL,
-		"addr":                    LocalProxyAddr,
-		"socksaddr":               SocksProxyAddr,
-		"headless":                true,
-		"proxyall":                true,
-		"configdir":               helper.ConfigDir,
-		"initialize":              false,
-		"vpn":                     false,
-		"stickyconfig":            false,
-		"clear-proxy-settings":    false,
-		"readableconfig":          true,
-		"uiaddr":                  "127.0.0.1:16823",
-		"borda-report-interval":   5 * time.Minute,
-		"borda-sample-percentage": 0.0, // this is 0 to disable random sampling, allowing us to test fully reported ops
-		"ui-domain":               "ui.lantern.io",
-		"force-traffic-log":       false,
-		"tl-mtu-limit":            1500,
-		"timeout":                 time.Duration(0),
+	flags := flashlight.Flags{
+		CloudConfig:        configURL,
+		Addr:               LocalProxyAddr,
+		SocksAddr:          SocksProxyAddr,
+		Headless:           true,
+		ProxyAll:           true,
+		ConfigDir:          helper.ConfigDir,
+		Initialize:         false,
+		VPN:                false,
+		StickyConfig:       false,
+		ClearProxySettings: false,
+		ReadableConfig:     true,
+		UIAddr:             "127.0.0.1:16823",
+		Timeout:            time.Duration(0),
 	}
 
 	a := &App{

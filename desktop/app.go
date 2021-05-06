@@ -84,7 +84,7 @@ type App struct {
 	fetchedGlobalConfig  int32
 	fetchedProxiesConfig int32
 
-	Flags        map[string]interface{}
+	Flags        flashlight.Flags
 	ConfigDir    string
 	exited       eventual.Value
 	gaSession    analytics.Session
@@ -125,7 +125,7 @@ func (app *App) Init() {
 
 	log.Debugf("Using configdir: %v", app.ConfigDir)
 
-	app.Flags["staging"] = common.Staging
+	app.Flags.Staging = common.Staging
 
 	app.uiServerCh = make(chan *ui.Server, 1)
 	app.chrome = newChromeExtension()
@@ -199,12 +199,12 @@ func (app *App) Run() {
 	// for the first time. User can still quit Lantern through systray menu when it happens.
 	go func() {
 		log.Debug(app.Flags)
-		if app.Flags["proxyall"].(bool) {
+		if app.Flags.ProxyAll {
 			// If proxyall flag was supplied, force proxying of all
 			settings.SetProxyAll(true)
 		}
 
-		listenAddr := app.Flags["addr"].(string)
+		listenAddr := app.Flags.Addr
 		if listenAddr == "" {
 			listenAddr = settings.getString(SNAddr)
 		}
@@ -212,7 +212,7 @@ func (app *App) Run() {
 			listenAddr = defaultHTTPProxyAddress
 		}
 
-		socksAddr := app.Flags["socksaddr"].(string)
+		socksAddr := app.Flags.SocksAddr
 		if socksAddr == "" {
 			socksAddr = settings.getString(SNSOCKSAddr)
 		}
@@ -220,16 +220,16 @@ func (app *App) Run() {
 			socksAddr = defaultSOCKSProxyAddress
 		}
 
-		if timeout := app.Flags["timeout"].(time.Duration); timeout > 0 {
+		if app.Flags.Timeout > 0 {
 			go func() {
-				time.AfterFunc(timeout, func() {
+				time.AfterFunc(app.Flags.Timeout, func() {
 					app.Exit(errors.New("No succeeding proxy got after running for %v, global config fetched: %v, proxies fetched: %v",
-						timeout, atomic.LoadInt32(&app.fetchedGlobalConfig) == 1, atomic.LoadInt32(&app.fetchedProxiesConfig) == 1))
+						app.Flags.Timeout, atomic.LoadInt32(&app.fetchedGlobalConfig) == 1, atomic.LoadInt32(&app.fetchedProxiesConfig) == 1))
 				})
 			}()
 		}
 
-		if app.Flags["initialize"].(bool) {
+		if app.Flags.Initialize {
 			app.statsTracker.AddListener(func(newStats stats.Stats) {
 				if newStats.HasSucceedingProxy {
 					log.Debug("Finished initialization")
@@ -242,12 +242,12 @@ func (app *App) Run() {
 		app.flashlight, err = flashlight.New(
 			common.AppName,
 			app.ConfigDir,
-			app.Flags["vpn"].(bool),
+			app.Flags.VPN,
 			func() bool { return settings.getBool(SNDisconnected) }, // check whether we're disconnected
 			settings.GetProxyAll,
 			func() bool { return false }, // on desktop, we do not allow private hosts
 			settings.IsAutoReport,
-			app.Flags,
+			app.Flags.AsMap(),
 			app.onConfigUpdate,
 			app.onProxiesUpdate,
 			settings,
@@ -366,16 +366,9 @@ func (app *App) startFeaturesService(chans ...<-chan bool) {
 
 func (app *App) beforeStart(listenAddr string) {
 	log.Debug("Got first config")
-	var cpuProf, memProf string
-	if cpu, cok := app.Flags["cpuprofile"]; cok {
-		cpuProf = cpu.(string)
-	}
-	if mem, cok := app.Flags["memprofile"]; cok {
-		memProf = mem.(string)
-	}
-	if cpuProf != "" || memProf != "" {
-		log.Debugf("Start profiling with cpu file %s and mem file %s", cpuProf, memProf)
-		finishProfiling := profiling.Start(cpuProf, memProf)
+	if app.Flags.CpuProfile != "" || app.Flags.MemProfile != "" {
+		log.Debugf("Start profiling with cpu file %s and mem file %s", app.Flags.CpuProfile, app.Flags.MemProfile)
+		finishProfiling := profiling.Start(app.Flags.CpuProfile, app.Flags.MemProfile)
 		app.AddExitFunc("finish profiling", finishProfiling)
 	}
 
@@ -392,7 +385,7 @@ func (app *App) beforeStart(listenAddr string) {
 	}
 
 	settings := getSettings()
-	uiaddr := app.Flags["uiaddr"].(string)
+	uiaddr := app.Flags.UIAddr
 	if uiaddr == "" {
 		// stick with the last one if not specified from command line.
 		if uiaddr = settings.GetUIAddr(); uiaddr != "" {
@@ -411,7 +404,7 @@ func (app *App) beforeStart(listenAddr string) {
 		}
 	}
 
-	if app.Flags["clear-proxy-settings"].(bool) {
+	if app.Flags.ClearProxySettings {
 		// This is a workaround that attempts to fix a Windows-only problem where
 		// Lantern was unable to clean the system's proxy settings before logging
 		// off.
@@ -440,21 +433,18 @@ func (app *App) beforeStart(listenAddr string) {
 
 	log.Debugf("Starting client UI at %v", uiaddr)
 
-	authaddr := app.GetStringFlag("authaddr", common.AuthServerAddr)
-	log.Debugf("Using auth server at %v", authaddr)
-	yinbiaddr := app.GetStringFlag("yinbiaddr", common.YinbiServerAddr)
-	log.Debugf("Using Yinbi server %s", yinbiaddr)
+	log.Debugf("Using auth server at %v", app.Flags.AuthAddr)
+	log.Debugf("Using Yinbi server %s", app.Flags.YinbiAddr)
 
-	standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
 	// ui will handle empty uiaddr correctly
 	uiServer, err := ui.StartServer(ui.ServerParams{
-		AuthServerAddr:  authaddr,
-		YinbiServerAddr: yinbiaddr,
+		AuthServerAddr:  app.Flags.AuthAddr,
+		YinbiServerAddr: app.Flags.YinbiAddr,
 		ExtURL:          startupURL,
 		AppName:         common.AppName,
 		RequestedAddr:   uiaddr,
 		LocalHTTPToken:  app.localHttpToken(),
-		Standalone:      standalone,
+		Standalone:      app.Flags.Standalone,
 		Handlers: []ui.PathHandler{
 			{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
 			{Pattern: "/data", Handler: app.ws.Handler()},
@@ -621,15 +611,6 @@ func (app *App) SetLanguage(lang string) {
 	getSettings().SetLanguage(lang)
 }
 
-// GetStringFlag gets the app flag with the given name. If the flag
-// is missing, defaultValue is used
-func (app *App) GetStringFlag(name, defaultValue string) string {
-	if val, ok := app.Flags[name].(string); ok && val != "" {
-		return val
-	}
-	return defaultValue
-}
-
 // OnSettingChange sets a callback cb to get called when attr is changed from UI.
 // When calling multiple times for same attr, only the last one takes effect.
 func (app *App) OnSettingChange(attr SettingName, cb func(interface{})) {
@@ -669,14 +650,14 @@ func (app *App) afterStart(cl *client.Client) {
 
 	app.AddExitFunc("turning off system proxy", sysproxyOff)
 	app.AddExitFunc("flushing to borda", borda.Flush)
-	if app.ShouldShowUI() && !app.Flags["startup"].(bool) {
+	if app.ShouldShowUI() && !app.Flags.Startup {
 		// Launch a browser window with Lantern but only after the pac
 		// URL and the proxy server are all up and running to avoid
 		// race conditions where we change the proxy setup while the
 		// UI server and proxy server are still coming up.
 		app.uiServer().ShowRoot("startup", common.AppName, app.statsTracker)
 	} else {
-		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
+		log.Debugf("Not opening browser. Startup is: %v", app.Flags.Startup)
 	}
 
 	settings := getSettings()
@@ -891,7 +872,7 @@ func recordStopped() {
 
 // ShouldShowUI determines if we should show the UI or not.
 func (app *App) ShouldShowUI() bool {
-	return !app.Flags["headless"].(bool) && !app.Flags["initialize"].(bool)
+	return !app.Flags.Headless && !app.Flags.Initialize
 }
 
 // ShouldReportToSentry determines if we should report errors/panics to Sentry
@@ -927,7 +908,7 @@ func (app *App) GetTranslations(filename string) ([]byte, error) {
 }
 
 func (app *App) localHttpToken() string {
-	if v, ok := app.Flags["noUiHttpToken"]; ok && v.(bool) {
+	if app.Flags.NoUiHttpToken {
 		return ""
 	}
 	return localHTTPToken(getSettings())
