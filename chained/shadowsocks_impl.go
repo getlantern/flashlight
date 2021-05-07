@@ -6,13 +6,12 @@ import (
 	"context"
 	crand "crypto/rand"
 	"encoding/binary"
-	"errors"
+	goerrors "errors"
 	"fmt"
 	"io"
 	mrand "math/rand"
 	"net"
 	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/getlantern/errors"
@@ -125,7 +124,7 @@ func ssTranslateError(err error) error {
 		return nil
 	}
 
-	if errors.Is(err, net.ErrClosed) {
+	if goerrors.Is(err, net.ErrClosed) {
 		return io.EOF
 	}
 
