@@ -7,9 +7,11 @@ import (
 	crand "crypto/rand"
 	"encoding/binary"
 	"fmt"
+	"io"
 	mrand "math/rand"
 	"net"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/getlantern/errors"
@@ -72,7 +74,11 @@ func (impl *shadowsocksImpl) close() {
 
 func (impl *shadowsocksImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return impl.reportDialCore(op, func() (net.Conn, error) {
-		return impl.client.DialTCP(nil, impl.generateUpstream())
+		conn, err := impl.client.DialTCP(nil, impl.generateUpstream())
+		if err != nil {
+			return nil, err
+		}
+		return &ssWrapConn{conn}, nil
 	})
 }
 
@@ -94,4 +100,38 @@ func (impl *shadowsocksImpl) generateUpstream() string {
 		b[i] = letters[impl.rng.Intn(len(letters))]
 	}
 	return fmt.Sprintf("%s.%s:443", string(b), impl.upstream)
+}
+
+// this is a helper to smooth out error bumps
+// that the rest of lantern doesn't really expect, but happen
+// in the shadowsocks impl when closing.
+type ssWrapConn struct {
+	net.Conn
+}
+
+func (c *ssWrapConn) Write(b []byte) (int, error) {
+	n, err := c.Conn.Write(b)
+	return n, ssTranslateError(err)
+}
+
+func (c *ssWrapConn) Read(b []byte) (int, error) {
+	n, err := c.Conn.Read(b)
+	return n, ssTranslateError(err)
+}
+
+func ssTranslateError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	// in go 1.16, this error is called net.ErrClosed and
+	// this could become errors.Is(err, net.ErrClosed).
+	// See a decade of discussion here:
+	// https://github.com/golang/go/issues/4373
+	// here it's just treated as io.EOF
+	if strings.Contains(err.Error(), "use of closed network connection") {
+		return io.EOF
+	}
+
+	return err
 }

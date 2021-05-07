@@ -57,9 +57,9 @@ require (
 	github.com/getlantern/keyman v0.0.0-20200820153608-cfd0ee278507
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
 	github.com/getlantern/lantern-server v0.0.0-20210407181427-9a90764f4f5d
-	github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210505161321-68719b2c3018
+	github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210506211859-28c0ec3912e8
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
-	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
+	github.com/getlantern/measured v0.0.0-20210507000559-ec5307b2b8be
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
 	github.com/getlantern/meta-scrubber v0.0.1
 	github.com/getlantern/mitm v0.0.0-20200517210030-e913809c7038
