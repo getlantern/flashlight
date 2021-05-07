@@ -506,6 +506,8 @@ github.com/getlantern/lantern-server v0.0.0-20210407181427-9a90764f4f5d h1:x6ovc
 github.com/getlantern/lantern-server v0.0.0-20210407181427-9a90764f4f5d/go.mod h1:79eFp8g3KPOOg1rnoDxKa4BilQ756gxNdxFzVItMaiY=
 github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210505161321-68719b2c3018 h1:KHEg+elE5y/YVBB3Y9ktuCHbo+3d3Ryb54lj9wBsSgY=
 github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210505161321-68719b2c3018/go.mod h1:JludU10BDqs/5iHmTlQF4+ToAouyyIK868mA6Okrqco=
+github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210506211859-28c0ec3912e8 h1:9zuaoCFpJQ97VnF5KUnJbWecpsYeEOX0gbVuEO5uFNA=
+github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210506211859-28c0ec3912e8/go.mod h1:JludU10BDqs/5iHmTlQF4+ToAouyyIK868mA6Okrqco=
 github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894 h1:Gzf64TTHyKH4HEe1dgwnf7BOaq5rJZg25Hqz5TmogEI=
 github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894/go.mod h1:h57jtqyH1HCLYu53nnr3WTUntPozt5ztqQ9aN687VEY=
 github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358 h1:ZPe/LMCpCEuHtfBp2NP3/A9KRXQJbTxeSOVWmcBzXIc=
@@ -513,6 +515,8 @@ github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358/go.mod h1:koTn
 github.com/getlantern/measured v0.0.0-20170302221919-0582bf799783/go.mod h1:5OW2WJitCKExpSw2bploW2fM7PjOd6QnLqyp+IqToqU=
 github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198 h1:J0CxRQc8J4iDyMTeSqXa338ZLDpAFf4jLZHBzw+iCMs=
 github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198/go.mod h1:5OW2WJitCKExpSw2bploW2fM7PjOd6QnLqyp+IqToqU=
+github.com/getlantern/measured v0.0.0-20210507000559-ec5307b2b8be h1:rfdOTeKew6zcpf5BQ566WInLINdZARimtWVLcgP/a4I=
+github.com/getlantern/measured v0.0.0-20210507000559-ec5307b2b8be/go.mod h1:QG6d9+nAxD1PjVjgGLUUHPZBQUp20/h7j8a3kxd/8Rc=
 github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231 h1:E8kVrX/zRmoiNf1U4SKgtKBLzLOEQRT0V/U/T+fJwxM=
 github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231/go.mod h1:bcE9B93SzvnTI0AJM+138sfvio7WK9e0NTAI8ba0l5Q=
 github.com/getlantern/meta-scrubber v0.0.1 h1:WknyffbSpb5kEwDQ6lrN9+KohCGnqhs5zQfGk4sFRGo=
