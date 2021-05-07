@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"mime"
 	"net/http"
 	"net/url"
 	"os"
@@ -183,7 +182,6 @@ func NewHTTPHandler(
 	handler.mux.HandleFunc("/uploads", handler.wrapHandlerError("replica_uploads", handler.handleUploads))
 	handler.mux.HandleFunc("/view", handler.wrapHandlerError("replica_view", handler.handleView))
 	handler.mux.HandleFunc("/download", handler.wrapHandlerError("replica_view", handler.handleDownload))
-	handler.mux.HandleFunc("/info", handler.wrapHandlerError("replica_info", handler.handleInfo))
 	handler.mux.HandleFunc("/delete", handler.wrapHandlerError("replica_delete", handler.handleDelete))
 	handler.mux.HandleFunc("/debug/dht", func(w http.ResponseWriter, r *http.Request) {
 		for _, ds := range torrentClient.DhtServers() {
@@ -578,6 +576,7 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 	rw.Op.Set("inline_type", inlineType)
 
 	link := r.URL.Query().Get("link")
+
 	m, err := metainfo.ParseMagnetUri(link)
 	if err != nil {
 		return handlerError{http.StatusBadRequest, fmt.Errorf("parsing magnet link: %w", err)}
@@ -670,6 +669,9 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 	if filename != "" {
 		rw.Header().Set("Content-Disposition", inlineType+"; filename*=UTF-8''"+url.QueryEscape(filename))
 	}
+	rw.Header().Add("X-Creation-Date",
+		time.Unix(t.Metainfo().CreationDate, 0).Format(time.RFC3339Nano))
+	rw.Header().Add("Access-Control-Expose-Headers", "X-Creation-Date")
 
 	rw.Op.Set("download_filename", filename)
 	switch inlineType {
@@ -683,109 +685,6 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 	fileReader := torrentFile.NewReader()
 	confluence.ServeTorrentReader(rw, r, fileReader, torrentFile.Path())
 	return nil
-}
-
-func (me *HttpHandler) handleInfo(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
-	query := r.URL.Query()
-	replicaLink := query.Get("replicaLink")
-	m, err := metainfo.ParseMagnetUri(replicaLink)
-	if err != nil {
-		return handlerError{http.StatusBadRequest, fmt.Errorf("parsing magnet link: %w", err)}
-	}
-	// TODO: reduce duplication with handleViewWith
-	t, _, release := me.confluence.GetTorrent(m.InfoHash)
-	defer release()
-
-	// We're unnecessarily re-parsing a Magnet here.
-	spec, err := torrent.TorrentSpecFromMagnetUri(replicaLink)
-	if err != nil {
-		return fmt.Errorf("getting spec from magnet URI: %w", err)
-	}
-	// Override the use of "xs" as a source, as we have a replica-specific use for that field.
-	// Instead we only use the "as" field as a source.
-	spec.Sources = m.Params["as"]
-
-	var uploadSpec replica.Upload
-	unwrapUploadSpecErr := uploadSpec.FromMagnet(m)
-	if unwrapUploadSpecErr == nil {
-		// Add things we can infer from the endpoint, duplicates shouldn't matter as the torrent
-		// client will handle this (not to mention we do this business everytime the handler is
-		// invoked).
-
-		spec.Webseeds = append(spec.Webseeds, uploadSpec.WebseedUrls()...)
-		spec.Sources = append(spec.Sources, uploadSpec.MetainfoUrls()...)
-	} else {
-		log.Errorf("getting s3 key from magnet: %v", unwrapUploadSpecErr)
-	}
-
-	if err := t.MergeSpec(spec); err != nil {
-		return fmt.Errorf("merging spec: %w", err)
-	}
-
-	me.addImplicitTrackers(t)
-
-	if t.Info() == nil && unwrapUploadSpecErr == nil {
-		// Get another reference to the torrent that lasts until we're done fetching the metainfo.
-		_, _, release := me.confluence.GetTorrent(m.InfoHash)
-		go func() {
-			defer release()
-			replicaStorageClient, err := replica.StorageClientForEndpoint(uploadSpec.Endpoint, me.AnyStorageClientParams)
-			if err != nil {
-				log.Errorf("getting storage client for endpoint %q: %v", uploadSpec.Endpoint, err)
-				return
-			}
-			tob, err := replicaStorageClient.Get(uploadSpec.TorrentKey())
-			if err != nil {
-				log.Errorf("error getting metainfo for %q from s3 API: %v", uploadSpec, err)
-				return
-			}
-			defer tob.Close()
-			mi, err := metainfo.Load(tob)
-			if err != nil {
-				log.Errorf("error loading metainfo: %v", err)
-				return
-			}
-			err = me.confluence.PutMetainfo(t, mi)
-			if err != nil {
-				log.Errorf("error putting metainfo from s3: %v", err)
-			}
-			log.Debugf("added metainfo for %q from s3 API", uploadSpec)
-		}()
-	}
-
-	selectOnly, err := strconv.ParseUint(m.Params.Get("so"), 10, 0)
-	// Assume that it should be present, as it'll be added going forward where possible. When it's
-	// missing, zero is a perfectly adequate default for now.
-	if err != nil {
-		log.Errorf("error parsing so field: %v", err)
-	}
-	select {
-	case <-r.Context().Done():
-		return nil
-	case <-t.GotInfo():
-	}
-	filename := firstNonEmptyString(
-		// Note that serving the torrent implies waiting for the info, and we could get a better
-		// name for it after that. Torrent.Name will also allow us to reuse previously given 'dn'
-		// values, if we don't have one now.
-		m.DisplayName,
-		t.Name(),
-	)
-	ext := path.Ext(filename)
-	if ext != "" {
-		filename = sanitize.BaseName(strings.TrimSuffix(filename, ext)) + ext
-	}
-	torrentFile := t.Files()[selectOnly]
-	oi := objectInfo{
-		Link:         replicaLink,
-		DisplayName:  filename,
-		FileSize:     torrentFile.Length(),
-		// I think this is wrong, it looks like it returns the current date
-		LastModified: time.Unix(t.Metainfo().CreationDate, 0),
-		// This is insufficient for some files that don't have extensions but are valid media
-		MimeTypes:    []string{mime.TypeByExtension(ext)},
-	}
-	return encodeJsonResponse(rw, oi)
 }
 
 // What a bad language.
