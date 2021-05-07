@@ -1,4 +1,29 @@
 
+<a name="lantern-6.6.0"></a>
+## [lantern-6.6.0](https://github.com/getlantern/flashlight/compare/lantern-6.5.9...lantern-6.6.0)
+
+> 2021-05-07
+
+### Pull Requests
+
+* Merge pull request [#1089](https://github.com/getlantern/flashlight/issues/1089) from getlantern/ui-6.6.0
+* Merge pull request [#1087](https://github.com/getlantern/flashlight/issues/1087) from getlantern/fix_ss_connected
+* Merge pull request [#1085](https://github.com/getlantern/flashlight/issues/1085) from getlantern/reflog/flag_rework
+* Merge pull request [#1077](https://github.com/getlantern/flashlight/issues/1077) from getlantern/shadowsocks
+* Merge pull request [#1084](https://github.com/getlantern/flashlight/issues/1084) from getlantern/cors-preflight-fix
+* Merge pull request [#1082](https://github.com/getlantern/flashlight/issues/1082) from getlantern/fileIndex-rework
+* Merge pull request [#1071](https://github.com/getlantern/flashlight/issues/1071) from getlantern/use-providers
+* Merge pull request [#1079](https://github.com/getlantern/flashlight/issues/1079) from getlantern/feature/viper
+* Merge pull request [#1078](https://github.com/getlantern/flashlight/issues/1078) from getlantern/netstack-build-fix
+* Merge pull request [#1058](https://github.com/getlantern/flashlight/issues/1058) from getlantern/atavism/yinbi-client-updates
+* Merge pull request [#1066](https://github.com/getlantern/flashlight/issues/1066) from getlantern/harry/shush-noisy-tl-errors
+* Merge pull request [#1076](https://github.com/getlantern/flashlight/issues/1076) from getlantern/ox/issue1074
+* Merge pull request [#1075](https://github.com/getlantern/flashlight/issues/1075) from getlantern/myles/yinbi-client-updates-suggestions
+* Merge pull request [#1073](https://github.com/getlantern/flashlight/issues/1073) from getlantern/envvar-features
+* Merge pull request [#1072](https://github.com/getlantern/flashlight/issues/1072) from getlantern/sentry-v0.10.0
+* Merge pull request [#1068](https://github.com/getlantern/flashlight/issues/1068) from getlantern/new-replica-upload-endpoint
+
+
 <a name="lantern-6.5.9"></a>
 ## [lantern-6.5.9](https://github.com/getlantern/flashlight/compare/lantern-6.5.8...lantern-6.5.9)
 
