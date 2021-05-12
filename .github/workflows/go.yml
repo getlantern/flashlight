@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install libpcap
-      run: sudo apt-get install libpcap-dev libappindicator3-dev libwebkit2gtk-4.0-dev
+      run: sudo apt-get install libpcap-dev libappindicator3-1
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
