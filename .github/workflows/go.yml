@@ -20,12 +20,9 @@ jobs:
         go-version: 1.16
     - name: Granting private modules access
       run: |
-          git config --global url."https://${{ secrets.GITHUB_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://${{ secrets.GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
     - name: Build
       run: HEADLESS=true make lantern
-
-    #- name: Test
-     # run: go test -v ./...
 
     - name: Run Unit tests
       run: |
@@ -38,5 +35,5 @@ jobs:
 
     - name: Send coverage
       env:
-        COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_TOKEN: ${{ secrets.GH_TOKEN }}
       run: goveralls -coverprofile=profile.cov -service=github
