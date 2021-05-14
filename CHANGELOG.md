@@ -1,4 +1,15 @@
 
+<a name="lantern-6.6.1"></a>
+## [lantern-6.6.1](https://github.com/getlantern/flashlight/compare/lantern-6.6.0...lantern-6.6.1)
+
+> 2021-05-14
+
+### Pull Requests
+
+* Merge pull request [#1086](https://github.com/getlantern/flashlight/issues/1086) from getlantern/jm/replica-link-info-endpoint
+* Merge pull request [#1090](https://github.com/getlantern/flashlight/issues/1090) from getlantern/myles-github-actions-ci
+
+
 <a name="lantern-6.6.0"></a>
 ## [lantern-6.6.0](https://github.com/getlantern/flashlight/compare/lantern-6.5.9...lantern-6.6.0)
 
