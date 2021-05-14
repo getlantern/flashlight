@@ -183,6 +183,7 @@ func NewHTTPHandler(
 	handler.mux.HandleFunc("/view", handler.wrapHandlerError("replica_view", handler.handleView))
 	handler.mux.HandleFunc("/download", handler.wrapHandlerError("replica_view", handler.handleDownload))
 	handler.mux.HandleFunc("/delete", handler.wrapHandlerError("replica_delete", handler.handleDelete))
+	handler.mux.HandleFunc("/object_info", handler.wrapHandlerError("replica_object_info", handler.handleObjectInfo))
 	handler.mux.HandleFunc("/debug/dht", func(w http.ResponseWriter, r *http.Request) {
 		for _, ds := range torrentClient.DhtServers() {
 			ds.WriteStatus(w)
@@ -682,6 +683,28 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 	fileReader := torrentFile.NewReader()
 	confluence.ServeTorrentReader(rw, r, fileReader, torrentFile.Path())
 	return nil
+}
+
+func (me *HttpHandler) handleObjectInfo(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
+	query := r.URL.Query()
+	replicaLink := query.Get("replicaLink")
+	m, err := metainfo.ParseMagnetUri(replicaLink)
+	if err != nil {
+		return handlerError{http.StatusBadRequest, fmt.Errorf("parsing magnet link: %w", err)}
+	}
+	source := m.Params.Get("as")
+	resp, err := me.DefaultReplicaClient.HttpClient.Get(source)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	mi, err := metainfo.Load(resp.Body)
+	if err != nil {
+		return err
+	}
+	date := time.Unix(mi.CreationDate, 0).Format(time.RFC3339Nano)
+	rw.Header().Set("Cache-Control", "immutable")
+	return encodeJsonResponse(rw, map[string]interface{}{"creationDate": date})
 }
 
 // What a bad language.
