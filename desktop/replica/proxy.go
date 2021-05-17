@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"strings"
 
 	"github.com/getlantern/flashlight/common"
@@ -57,20 +58,28 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	return
 }
 
-func prepareRequest(r *http.Request, uc common.UserConfig, host string) {
-	r.URL.Scheme = "http"
-	r.URL.Host = host
-	r.Host = r.URL.Host
+func prepareRequest(r *http.Request, uc common.UserConfig, serviceUrl *url.URL) {
+	// The Iran region endpoint tries to redirect to https, and our proxy handler doesn't follow
+	// redirects. I'm not sure why we were clobbering to "http" before. We need to make sure this
+	// works regardless of region.
+	log.Debugf("request url: %#v", r.URL)
+	log.Debugf("request url path: %q", r.URL.Path)
+
+	r.URL = serviceUrl.ResolveReference(&url.URL{
+		Path:     r.URL.Path,
+		RawQuery: r.URL.RawQuery,
+	})
+	log.Debugf("final request url: %q", r.URL)
 	r.RequestURI = "" // http: Request.RequestURI can't be set in client requests.
 
 	common.AddCommonHeaders(uc, r)
 }
 
-func proxyHandler(uc common.UserConfig, host string, modifyResponse func(*http.Response) error) http.Handler {
+func proxyHandler(uc common.UserConfig, serviceUrl *url.URL, modifyResponse func(*http.Response) error) http.Handler {
 	return &httputil.ReverseProxy{
 		Transport: &proxyTransport{},
 		Director: func(r *http.Request) {
-			prepareRequest(r, uc, host)
+			prepareRequest(r, uc, serviceUrl)
 		},
 		ModifyResponse: modifyResponse,
 	}
