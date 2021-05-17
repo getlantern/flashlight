@@ -169,6 +169,8 @@ func TestIsAddressProxyable(t *testing.T) {
 		"address should not be proxyable if it's a plain hostname")
 	assert.Error(t, client.isAddressProxyable("something.local:80"),
 		"address should not be proxyable if it ends in .local")
+	assert.Error(t, client.isAddressProxyable("something.onion:80"),
+		"address should not be proxyable if it ends in .onion")
 	assert.NoError(t, client.isAddressProxyable("anysite.com:80"),
 		"address should be proxyable if it's not an IP address, not a plain hostname and does not end in .local")
 }
