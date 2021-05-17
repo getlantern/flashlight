@@ -36,10 +36,11 @@ type Flags struct {
 	ForceConfigCountry string        `flag:"force-config-country" help:"if specified, force config fetches to pretend they're coming from this 2 letter country-code"`
 	ReadableConfig     bool          `flag:"readableconfig" help:"if specified, disables obfuscation of the config yaml so that it remains human readable"`
 	Help               bool          `flag:"help" help:"Get usage help"`
-	NoUiHttpToken      bool          `flag:"noUiHttpToken" help:"don't require a HTTP token from the UI"`
+	NoUiHttpToken      bool          `flag:"no-ui-http-token" help:"don't require a HTTP token from the UI"`
 	Standalone         bool          `flag:"standalone" help:"run Lantern in its own browser window (doesn't rely on system browser)"`
 	Initialize         bool          `flag:"initialize" help:"silently initialize Lantern to a state of having working proxy and exit, typically during installation."`
 	Timeout            time.Duration `flag:"timeout" help:"force stop Lantern with an exit status of -1 after the timeout."`
+	ReplicaIran        bool          `flag:"replica-iran" help:"configure Replica to work for Iran"`
 	Staging            bool          `flag:"-"`
 }
 

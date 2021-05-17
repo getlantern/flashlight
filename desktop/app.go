@@ -550,24 +550,33 @@ func (app *App) startReplicaIfNecessary(features map[string]bool) {
 				},
 			),
 		}
-		replica.DefaultHttpClient = httpClient
 		input := desktopReplica.NewHttpHandlerInput{}
 		input.SetDefaults()
-		// TODO: Configure replica Clients for Iran?
 		input.ConfigDir = app.ConfigDir
 		input.UserConfig = getSettings()
 		input.HttpClient = httpClient
+		regionParams := &replica.GlobalChinaRegionParams
+		if app.Flags.ReplicaIran {
+			regionParams = &replica.IranRegionParams
+		}
+		uploadClient, err := replica.StorageClientForEndpoint(
+			regionParams.UploadEndpoint,
+			replica.AnyStorageClientParams{
+				HttpClient: httpClient,
+			})
+		if err != nil {
+			log.Errorf("creating upload client: %v", err)
+		}
 		input.DefaultReplicaClient = replica.Client{
-			StorageClient: replica.NewS3StorageClient(replica.DefaultBucket, replica.DefaultRegion, httpClient),
-			Endpoint:      replica.NewS3Endpoint(replica.DefaultBucket, replica.DefaultRegion),
+			StorageClient: uploadClient,
+			Endpoint:      regionParams.UploadEndpoint,
 			ServiceClient: replica.ServiceClient{
 				HttpClient:             httpClient,
-				ReplicaServiceEndpoint: &common.ReplicaServiceEndpoint,
+				ReplicaServiceEndpoint: regionParams.ServiceUrl,
 			},
 		}
-		var err error
 		input.MetadataStorageClient, err = replica.StorageClientForEndpoint(
-			replica.DefaultMetadataEndpoint,
+			regionParams.MetadataEndpoint,
 			replica.AnyStorageClientParams{HttpClient: httpClient})
 		if err != nil {
 			log.Errorf("creating metadata storage client: %v", err)

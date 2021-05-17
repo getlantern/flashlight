@@ -76,10 +76,8 @@ func (me *NewHttpHandlerInput) SetDefaults() {
 	// Why don't we set ConfigDir?
 
 	me.UserConfig = &common.NullUserConfig{}
-	me.DefaultReplicaClient = replica.DefaultClient
-	me.MetadataStorageClient = replica.DefaultMetadataStorageClient
 	me.GaSession = &analytics.NullSession{}
-	me.HttpClient = replica.DefaultHttpClient
+	me.HttpClient = http.DefaultClient
 }
 
 // NewHTTPHandler creates a new http.Handler for calls to replica.
@@ -164,7 +162,10 @@ func NewHTTPHandler(
 		torrentClient: torrentClient,
 		dataDir:       replicaDataDir,
 		uploadsDir:    uploadsDir,
-		searchProxy:   http.StripPrefix("/search", proxyHandler(input.UserConfig, common.ReplicaSearchAPIHost, nil)),
+		searchProxy: http.StripPrefix("/search", proxyHandler(
+			input.UserConfig,
+			input.DefaultReplicaClient.ReplicaServiceEndpoint,
+			nil)),
 		// I think the standard file-storage implementation is sufficient here because we guarantee
 		// unique info name/prefixes for uploads (which the default file implementation does not).
 		// There's another implementation that injects the infohash as a prefix to ensure uniqueness
