@@ -3,6 +3,7 @@ package desktopReplica
 import (
 	"encoding/json"
 	"io/ioutil"
+	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog/testlog"
+	"github.com/getlantern/replica"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,6 +24,10 @@ func TestUploadAndDelete(t *testing.T) {
 	dir := t.TempDir()
 	input := NewHttpHandlerInput{}
 	input.SetDefaults()
+	input.DefaultReplicaClient.ServiceClient = replica.ServiceClient{
+		ReplicaServiceEndpoint: replica.GlobalChinaRegionParams.ServiceUrl,
+		HttpClient:             http.DefaultClient,
+	}
 	if false {
 		// I'm not sure about letting a unit test connect directly to a prod server, but we *are*
 		// deleting the content afterward, so we don't really make any changes overall (assuming the

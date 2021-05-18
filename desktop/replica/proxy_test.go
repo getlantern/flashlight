@@ -1,9 +1,9 @@
 package desktopReplica
 
 import (
-	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -27,16 +27,23 @@ func TestProxy(t *testing.T) {
 		return
 	}
 	addr := l.Addr()
-	url := fmt.Sprintf("http://%s/replica/search", addr)
-	t.Logf("Test server listening at %s", url)
+	url_ := url.URL{
+		Scheme: "http",
+		Host:   addr.String(),
+		Path:   "/replica/search",
+	}
+	t.Logf("Test server listening at %v", url_)
 
-	handler := proxyHandler(uc, addr.String(), func(*http.Response) error {
+	handler := proxyHandler(uc, &url.URL{
+		Scheme: "http",
+		Host:   addr.String(),
+	}, func(*http.Response) error {
 		return nil
 	})
 	go http.Serve(l, handler)
 
 	{
-		req, err := http.NewRequest("OPTIONS", url, nil)
+		req, err := http.NewRequest("OPTIONS", url_.String(), nil)
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -51,7 +58,7 @@ func TestProxy(t *testing.T) {
 	}
 
 	{
-		req, err := http.NewRequest("GET", url, nil)
+		req, err := http.NewRequest("GET", url_.String(), nil)
 		if !assert.NoError(t, err) {
 			return
 		}
