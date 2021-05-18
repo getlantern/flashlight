@@ -3,6 +3,8 @@ package ui
 import (
 	"bytes"
 	"fmt"
+	"io/fs"
+	"io/ioutil"
 	"mime"
 	"net"
 	"net/http"
@@ -14,13 +16,11 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/skratchdot/open-golang/open"
-	"golang.org/x/xerrors"
-
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/tarfs"
+	"github.com/skratchdot/open-golang/open"
+	"golang.org/x/xerrors"
 
 	"github.com/getlantern/auth-server/api"
 	"github.com/getlantern/flashlight/analytics"
@@ -53,12 +53,12 @@ func init() {
 	_ = mime.AddExtensionType(".css", "text/css")
 	_ = mime.AddExtensionType(".js", "application/javascript")
 
-	unpackUI()
+	subFS, _ := fs.Sub(st, "frontend/locale/translation")
+	translations.Set(subFS)
 }
 
 var (
 	log          = golog.LoggerFor("flashlight.ui")
-	fs           *tarfs.FileSystem
 	translations = eventual.NewValue()
 )
 
@@ -150,7 +150,6 @@ func newServer(params ServerParams) *Server {
 
 	return server
 }
-
 func (s *Server) attachHandlers(handlers []PathHandler) {
 
 	// This allows a second Lantern running on the system to trigger the existing
@@ -166,7 +165,8 @@ func (s *Server) attachHandlers(handlers []PathHandler) {
 	}
 
 	s.Handle("/startup", util.NoCache(http.HandlerFunc(startupHandler)))
-	s.Handle("/", util.NoCache(http.FileServer(fs)))
+	frontEndFS, _ := fs.Sub(st, "frontend")
+	s.Handle("/", util.NoCache(http.FileServer(http.FS(frontEndFS))))
 }
 
 // createHTTPClient creates a chained-then-fronted configured HTTP client
@@ -483,17 +483,6 @@ func overrideManotoURL(u string) string {
 	return u
 }
 
-func unpackUI() {
-	var err error
-	fs, err = tarfs.New(Resources, "")
-	if err != nil {
-		// Panicking here because this shouldn't happen at runtime unless the
-		// resources were incorrectly embedded.
-		panic(fmt.Errorf("Unable to open tarfs filesystem: %v", err))
-	}
-	translations.Set(fs.SubDir("locale/translation"))
-}
-
 // Translations returns the translations for a given locale file.
 func Translations(filename string) ([]byte, error) {
 	log.Tracef("Accessing translations %v", filename)
@@ -501,5 +490,9 @@ func Translations(filename string) ([]byte, error) {
 	if !ok || tr == nil {
 		return nil, fmt.Errorf("Could not get traslation for file name: %v", filename)
 	}
-	return tr.(*tarfs.FileSystem).Get(filename)
+	f, err := tr.(fs.FS).Open(filename)
+	if err != nil {
+		return nil, fmt.Errorf("Could not get traslation for file name: %v, %w", filename, err)
+	}
+	return ioutil.ReadAll(f)
 }
