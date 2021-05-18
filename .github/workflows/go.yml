@@ -21,6 +21,8 @@ jobs:
     - name: Granting private modules access
       run: |
           git config --global url."https://${{ secrets.GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+    - name: Update git submodules
+      run: git submodule update --init
     - name: Build
       run: HEADLESS=true make lantern
 
