@@ -549,6 +549,7 @@ func (me *HttpHandler) handleMetadata(category string) func(*ops.InstrumentedRes
 		if err != nil {
 			return err
 		}
+		rw.Header().Set("Cache-Control", "public, max-age=604800, immutable")
 		_, err = io.Copy(rw, metadata)
 		return err
 	}
@@ -681,6 +682,7 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 
 	torrentFile := t.Files()[selectOnly]
 	fileReader := torrentFile.NewReader()
+	rw.Header().Set("Cache-Control", "public, max-age=604800, immutable")
 	confluence.ServeTorrentReader(rw, r, fileReader, torrentFile.Path())
 	return nil
 }
@@ -703,7 +705,7 @@ func (me *HttpHandler) handleObjectInfo(rw *ops.InstrumentedResponseWriter, r *h
 		return err
 	}
 	date := time.Unix(mi.CreationDate, 0).Format(time.RFC3339Nano)
-	rw.Header().Set("Cache-Control", "immutable")
+	rw.Header().Set("Cache-Control", "public, max-age=604800, immutable")
 	return encodeJsonResponse(rw, map[string]interface{}{"creationDate": date})
 }
 
