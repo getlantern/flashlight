@@ -4,11 +4,15 @@ package integrationtest
 
 import (
 	"compress/gzip"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -54,6 +58,8 @@ const (
 	tlsmasqSuites       = "0xcca9,0x1301" // TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_AES_128_GCM_SHA256
 	tlsmasqMinVersion   = "0x0303"        // TLS 1.2
 	tlsmasqServerSecret = "d0cd0e2e50eb2ac7cb1dc2c94d1bc8871e48369970052ff866d1e7e876e77a13246980057f70d64a2bdffb545330279f69bce5fd"
+
+	osshKeyword = "ossh-keyword"
 )
 
 var (
@@ -84,6 +90,7 @@ type Helper struct {
 	protocol                      atomic.Value
 	t                             *testing.T
 	ConfigDir                     string
+	TestResourcesDir              string
 	HTTPSProxyServerAddr          string
 	HTTPSUTPAddr                  string
 	OBFS4ProxyServerAddr          string
@@ -96,6 +103,7 @@ type Helper struct {
 	ShadowsocksProxyServerAddr    string
 	ShadowsocksmuxProxyServerAddr string
 	TLSMasqProxyServerAddr        string
+	OSSHServerAddr                string
 	HTTPSSmuxProxyServerAddr      string
 	HTTPSPsmuxProxyServerAddr     string
 	HTTPServerAddr                string
@@ -111,10 +119,14 @@ type Helper struct {
 // origins are served through the proxy. Make sure to close the Helper with
 // Close() when finished with the test.
 func NewHelper(t *testing.T, basePort int) (*Helper, error) {
-	ConfigDir, err := ioutil.TempDir("", "integrationtest_helper")
-	log.Debugf("ConfigDir is %v", ConfigDir)
+	configDir, err := ioutil.TempDir("", "integrationtest_helper")
+	log.Debugf("ConfigDir is %v", configDir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create config dir: %w", err)
+	}
+	resourcesDir, err := ioutil.TempDir("", "integrationtest_resources")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create resources dir: %w", err)
 	}
 
 	nextPort := basePort
@@ -126,7 +138,8 @@ func NewHelper(t *testing.T, basePort int) (*Helper, error) {
 
 	helper := &Helper{
 		t:                             t,
-		ConfigDir:                     ConfigDir,
+		ConfigDir:                     configDir,
+		TestResourcesDir:              resourcesDir,
 		HTTPSProxyServerAddr:          nextListenAddr(),
 		HTTPSUTPAddr:                  nextListenAddr(),
 		OBFS4ProxyServerAddr:          nextListenAddr(),
@@ -139,6 +152,7 @@ func NewHelper(t *testing.T, basePort int) (*Helper, error) {
 		ShadowsocksProxyServerAddr:    nextListenAddr(),
 		ShadowsocksmuxProxyServerAddr: nextListenAddr(),
 		TLSMasqProxyServerAddr:        nextListenAddr(),
+		OSSHServerAddr:                nextListenAddr(),
 		HTTPSSmuxProxyServerAddr:      nextListenAddr(),
 		HTTPSPsmuxProxyServerAddr:     nextListenAddr(),
 	}
@@ -191,6 +205,7 @@ func NewHelper(t *testing.T, basePort int) (*Helper, error) {
 func (helper *Helper) Close() {
 	client.StopForcingProxying()
 	os.RemoveAll(helper.ConfigDir)
+	os.RemoveAll(helper.TestResourcesDir)
 	for _, l := range helper.listeners {
 		l.Close()
 	}
@@ -223,15 +238,14 @@ func serveContent(resp http.ResponseWriter, req *http.Request) {
 }
 
 func (helper *Helper) startProxyServer() error {
-	kcpConfFile, err := ioutil.TempFile("", "")
+	kcpConfFile, err := helper.createKCPConfFile()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create KCP configuration file: %w", err)
 	}
 
-	err = json.NewEncoder(kcpConfFile).Encode(kcpConf)
-	kcpConfFile.Close()
+	osshKeyFile, err := helper.createOSSHKeyFile()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create OSSH host key file: %w", err)
 	}
 
 	oqDefaults := quicwrapper.DefaultOQuicConfig([]byte(""))
@@ -249,9 +263,14 @@ func (helper *Helper) startProxyServer() error {
 		QUICIETFAddr:             helper.QUICIETFProxyServerAddr,
 		WSSAddr:                  helper.WSSProxyServerAddr,
 		TLSMasqAddr:              helper.TLSMasqProxyServerAddr,
+		TLSMasqSecret:            tlsmasqServerSecret,
+		TLSMasqOriginAddr:        helper.tlsMasqOriginAddr,
 		ShadowsocksAddr:          helper.ShadowsocksProxyServerAddr,
 		ShadowsocksMultiplexAddr: helper.ShadowsocksmuxProxyServerAddr,
 		ShadowsocksSecret:        shadowsocksSecret,
+		OSSHAddr:                 helper.OSSHServerAddr,
+		OSSHKeyword:              osshKeyword,
+		OSSHKeyFile:              osshKeyFile,
 
 		OQUICAddr:              helper.OQUICProxyServerAddr,
 		OQUICKey:               oquicKey,
@@ -259,9 +278,6 @@ func (helper *Helper) startProxyServer() error {
 		OQUICAggressivePadding: uint64(oqDefaults.AggressivePadding),
 		OQUICMaxPaddingHint:    uint64(oqDefaults.MaxPaddingHint),
 		OQUICMinPadded:         uint64(oqDefaults.MinPadded),
-
-		TLSMasqSecret:     tlsmasqServerSecret,
-		TLSMasqOriginAddr: helper.tlsMasqOriginAddr,
 
 		Token:       Token,
 		KeyFile:     KeyFile,
@@ -274,7 +290,7 @@ func (helper *Helper) startProxyServer() error {
 	s2 := &proxy.Proxy{
 		TestingLocal: true,
 		HTTPAddr:     "127.0.0.1:0",
-		KCPConf:      kcpConfFile.Name(),
+		KCPConf:      kcpConfFile,
 		Token:        Token,
 		KeyFile:      KeyFile,
 		CertFile:     CertFile,
@@ -669,4 +685,38 @@ var kcpConf = map[string]interface{}{
 	"keepalive":   10,
 	"listen":      "127.0.0.1:8975",
 	"remoteaddr":  "127.0.0.1:8975",
+}
+
+func (h *Helper) createKCPConfFile() (string, error) {
+
+	f, err := os.CreateTemp(h.TestResourcesDir, "kcp-conf.json")
+	if err != nil {
+		return "", fmt.Errorf("failed to create file: %w", err)
+	}
+	defer f.Close()
+
+	if err := json.NewEncoder(f).Encode(kcpConf); err != nil {
+		return "", fmt.Errorf("failed to encode KCP configuration as JSON: %w", err)
+	}
+	return f.Name(), nil
+}
+
+func (h *Helper) createOSSHKeyFile() (string, error) {
+	key, err := rsa.GenerateKey(rand.Reader, 1024)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate RSA key: %w", err)
+	}
+
+	keyFile, err := os.CreateTemp(h.TestResourcesDir, "ossh-host-file.pem")
+	if err != nil {
+		return "", fmt.Errorf("failed to create file: %w", err)
+	}
+	defer keyFile.Close()
+
+	hostKeyDER := x509.MarshalPKCS1PrivateKey(key)
+	err = pem.Encode(keyFile, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: hostKeyDER})
+	if err != nil {
+		return "", fmt.Errorf("failed to PEM-encode key: %w", err)
+	}
+	return keyFile.Name(), nil
 }

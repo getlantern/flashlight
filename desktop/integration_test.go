@@ -144,6 +144,7 @@ func TestProxying(t *testing.T) {
 		"tlsmasq",
 		"https+smux",
 		"https+psmux",
+		"ossh",
 	}
 
 	for i, proto := range protocols {

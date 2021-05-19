@@ -189,6 +189,8 @@ func createImpl(configDir, name, addr, transport string, s *ChainedServerInfo, u
 		impl, err = newWSSImpl(addr, s, reportDialCore)
 	case "tlsmasq":
 		impl, err = newTLSMasqImpl(configDir, name, addr, s, uc, reportDialCore)
+	case "ossh":
+		impl, err = newOSSHImpl(addr, s, reportDialCore)
 	default:
 		err = errors.New("Unknown transport: %v", transport).With("addr", addr).With("plugabble-transport", transport)
 	}
@@ -204,7 +206,7 @@ func createImpl(configDir, name, addr, transport string, s *ChainedServerInfo, u
 
 	if s.MultiplexedAddr != "" || transport == "utphttp" ||
 		transport == "utphttps" || transport == "utpobfs4" ||
-		transport == "tlsmasq" {
+		transport == "tlsmasq" || transport == "ossh" {
 		impl, err = multiplexed(impl, name, s)
 		if err != nil {
 			return nil, err
