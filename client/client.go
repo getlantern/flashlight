@@ -754,6 +754,9 @@ func (client *Client) isAddressProxyable(addr string) error {
 			if strings.HasSuffix(host, ".local") {
 				return fmt.Errorf("%v ends in .local, considering private", host)
 			}
+			if strings.HasSuffix(host, ".onion") {
+				return fmt.Errorf("%v ends in .onion, considering private", host)
+			}
 		}
 		// assuming non-private
 		return nil
