@@ -78,12 +78,9 @@ func (h AuthHandler) authHandler(authenticate AuthMethod) http.HandlerFunc {
 func (h AuthHandler) accountStatusHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 	vals := r.URL.Query()
-	email := vals.Get("email")
 	lanternUserID := vals.Get("lanternUserID")
 	if lanternUserID == "" {
 		err = fmt.Errorf("missing Lantern User ID")
-	} else if email == "" {
-		err = fmt.Errorf("missing Lantern email")
 	}
 	if err != nil {
 		handler.ErrorHandler(w, err, http.StatusBadRequest)
@@ -92,7 +89,6 @@ func (h AuthHandler) accountStatusHandler(w http.ResponseWriter, r *http.Request
 	userID, _ := strconv.ParseInt(lanternUserID, 10, 64)
 	_, err = h.authClient.AccountStatus(&models.UserParams{
 		LanternUserID: userID,
-		Email:         email,
 	})
 	if err != nil {
 		log.Errorf("Error retrieving account status: %v", err)
