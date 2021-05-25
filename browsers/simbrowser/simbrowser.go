@@ -5,6 +5,7 @@ import (
 	"context"
 	"time"
 
+	lcommon "github.com/getlantern/common"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/deterministic"
 	"github.com/getlantern/flashlight/geolookup"
@@ -20,7 +21,7 @@ var log = golog.LoggerFor("simbrowser")
 
 // Browser represents a specific web browser, e.g. Chrome or Firefox.
 type Browser struct {
-	Type                  BrowserType
+	Type                  lcommon.BrowserType
 	SessionTicketLifetime time.Duration
 	ClientHelloID         tls.ClientHelloID
 }

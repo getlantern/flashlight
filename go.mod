@@ -25,7 +25,7 @@ require (
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
 	github.com/getlantern/cmux/v2 v2.0.0-20200905031936-c55b16ee8462
 	github.com/getlantern/cmuxprivate v0.0.0-20200905032931-afb63438e40b
-	github.com/getlantern/common v1.1.1-0.20200824002646-ca4a48d3a74c
+	github.com/getlantern/common v1.1.1-0.20210525012356-1479f0aeae14
 	github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1
 	github.com/getlantern/diagnostics v0.0.0-20190820054534-b2070abd5177
 	github.com/getlantern/dnsgrab v0.0.0-20210120195910-d879cb272122

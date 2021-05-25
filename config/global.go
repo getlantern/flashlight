@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/getlantern/flashlight/browsers/simbrowser"
+	"github.com/getlantern/common"
 	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/keyman"
@@ -56,8 +56,8 @@ type Global struct {
 	FeatureOptions map[string]map[string]interface{}
 
 	// Market share data used by the simbrowser package when picking a browser to simulate.
-	GlobalBrowserMarketShareData   simbrowser.MarketShareData
-	RegionalBrowserMarketShareData map[simbrowser.CountryCode]simbrowser.MarketShareData
+	GlobalBrowserMarketShareData   common.MarketShareData
+	RegionalBrowserMarketShareData map[common.CountryCode]common.MarketShareData
 }
 
 // NewGlobal creates a new global config with otherwise nil values set.

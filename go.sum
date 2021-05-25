@@ -394,6 +394,10 @@ github.com/getlantern/cmuxprivate v0.0.0-20200905032931-afb63438e40b h1:yBspzs66
 github.com/getlantern/cmuxprivate v0.0.0-20200905032931-afb63438e40b/go.mod h1:WIunQ/nFvkQAP89tY2CX4R5kj9A1OJhjA3KmP6nj4o4=
 github.com/getlantern/common v1.1.1-0.20200824002646-ca4a48d3a74c h1:xX9DLw9nESMA5aMyDeMMeYcyBf9ZDA+RXk74W08KaLY=
 github.com/getlantern/common v1.1.1-0.20200824002646-ca4a48d3a74c/go.mod h1:UTgpUrzCbisgRr4N5FkJubou6LsSpbrFjHcVM+1iF4w=
+github.com/getlantern/common v1.1.1-0.20210525011450-8c8a122435ee h1:bw7fdebtBev+gR8NIZlrQizmccP+drKGTmqbvU+Cch0=
+github.com/getlantern/common v1.1.1-0.20210525011450-8c8a122435ee/go.mod h1:UTgpUrzCbisgRr4N5FkJubou6LsSpbrFjHcVM+1iF4w=
+github.com/getlantern/common v1.1.1-0.20210525012356-1479f0aeae14 h1:GoSH+qffxboxp/7tsRLBQU4A9kobsfdq76nK4XjRhjA=
+github.com/getlantern/common v1.1.1-0.20210525012356-1479f0aeae14/go.mod h1:UTgpUrzCbisgRr4N5FkJubou6LsSpbrFjHcVM+1iF4w=
 github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 h1:NRUJuo3v3WGC/g5YiyF790gut6oQr5f3FBI88Wv0dx4=
 github.com/getlantern/context v0.0.0-20190109183933-c447772a6520/go.mod h1:L+mq6/vvYHKjCX2oez0CgEAJmbq1fbb/oNJIWQkBybY=
 github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1 h1:7Iij6/WnGBryEpBuhLEOwWFX61ubsx3ann4fRHKJTlY=
