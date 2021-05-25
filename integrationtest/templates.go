@@ -1,4 +1,6 @@
-version: 11
+package integrationtest
+
+const globalCfg = `version: 11
 cloudconfig: http://config.getiantem.org/cloud.yaml.gz
 cloudconfigca: ""
 frontedcloudconfig: ""
@@ -10228,3 +10230,13 @@ trustedcas:
     CERTIFICATE-----\n"
 globalconfigpollinterval: 1s
 proxyconfigpollinterval: 1s
+`
+
+const proxiesTemplate = `addr:
+pipelined: false
+cert: ""
+authtoken:
+weight: 1000000
+qos: 10
+trusted: true
+`

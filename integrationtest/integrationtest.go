@@ -58,25 +58,8 @@ const (
 
 var (
 	log               = golog.LoggerFor("testsupport")
-	globalCfg         []byte
-	proxiesTemplate   []byte
 	tlsmasqOriginAddr string
 )
-
-func init() {
-	bytes, err := ioutil.ReadFile("../integrationtest/global-template.yaml")
-	if err != nil {
-		panic(fmt.Sprintf("Could not read global-template.yaml %v", err))
-	}
-	globalCfg = bytes
-
-	bytes, err = ioutil.ReadFile("../integrationtest/proxies-template.yaml")
-	if err != nil {
-		panic(fmt.Sprintf("Could not read proxies-template.yaml %v", err))
-	}
-	proxiesTemplate = bytes
-
-}
 
 // Helper is a helper for running integration tests that provides its own web,
 // proxy and config servers.
@@ -363,7 +346,7 @@ func (helper *Helper) writeGlobalConfig(resp http.ResponseWriter, req *http.Requ
 	resp.WriteHeader(http.StatusOK)
 
 	w := gzip.NewWriter(resp)
-	_, err := w.Write(globalCfg)
+	_, err := w.Write([]byte(globalCfg))
 	if err != nil {
 		helper.t.Error(err)
 	}
@@ -435,7 +418,7 @@ func (helper *Helper) buildProxies(proto string) (map[string]*chained.ChainedSer
 		return proxies, nil
 	}
 	var srv chained.ChainedServerInfo
-	err := yaml.Unmarshal(proxiesTemplate, &srv)
+	err := yaml.Unmarshal([]byte(proxiesTemplate), &srv)
 	if err != nil {
 		return nil, fmt.Errorf("Could not unmarshal config %v", err)
 	}
