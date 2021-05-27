@@ -424,7 +424,6 @@ github.com/getlantern/eventual v0.0.0-20180125201821-84b02499361b/go.mod h1:O8T3
 github.com/getlantern/eventual v1.0.0 h1:q56jlZhiDeWvdrc0QJ12AaWqcu/Z67wDDjdAUKGnYqc=
 github.com/getlantern/eventual v1.0.0/go.mod h1:xL9T/pQI7i44INFSsKf4zDNz5bXA7P18j1cNd5qy/yI=
 github.com/getlantern/fdcount v0.0.0-20170105153814-6a6cb5839bc5/go.mod h1:XZwE+iIlAgr64OFbXKFNCllBwV4wEipPx8Hlo2gZdbM=
-github.com/getlantern/fdcount v0.0.0-20190912142506-f89afd7367c4 h1:JdD4XSaT6/j6InM7MT1E4WRvzR8gurxfq53A3ML3B/Q=
 github.com/getlantern/fdcount v0.0.0-20190912142506-f89afd7367c4/go.mod h1:XZwE+iIlAgr64OFbXKFNCllBwV4wEipPx8Hlo2gZdbM=
 github.com/getlantern/fdcount v0.0.0-20210503151800-5decd65b3731 h1:v+vJ3LgV4nW4xRPZo+xkADDflXLpRbG+Lv69XKWFjTQ=
 github.com/getlantern/fdcount v0.0.0-20210503151800-5decd65b3731/go.mod h1:XZwE+iIlAgr64OFbXKFNCllBwV4wEipPx8Hlo2gZdbM=
@@ -504,7 +503,6 @@ github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a h1:z7G1v79GB1
 github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a/go.mod h1:cGOfTjvllC9bcwS7cVW6tGT6fXc8Dki384uFjm7XBnw=
 github.com/getlantern/lantern-server v0.0.0-20210407181427-9a90764f4f5d h1:x6ovc4/7v3Iana8X+j3l8ABBv+2A5IoeGeXD+5v/IGE=
 github.com/getlantern/lantern-server v0.0.0-20210407181427-9a90764f4f5d/go.mod h1:79eFp8g3KPOOg1rnoDxKa4BilQ756gxNdxFzVItMaiY=
-github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210505161321-68719b2c3018 h1:KHEg+elE5y/YVBB3Y9ktuCHbo+3d3Ryb54lj9wBsSgY=
 github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210505161321-68719b2c3018/go.mod h1:JludU10BDqs/5iHmTlQF4+ToAouyyIK868mA6Okrqco=
 github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210506211859-28c0ec3912e8 h1:9zuaoCFpJQ97VnF5KUnJbWecpsYeEOX0gbVuEO5uFNA=
 github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210506211859-28c0ec3912e8/go.mod h1:JludU10BDqs/5iHmTlQF4+ToAouyyIK868mA6Okrqco=
@@ -513,7 +511,6 @@ github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894/go.mod h1:h57j
 github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358 h1:ZPe/LMCpCEuHtfBp2NP3/A9KRXQJbTxeSOVWmcBzXIc=
 github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358/go.mod h1:koTn6wUik25tksKttA96OEY4cU+qJnBAMKKPYBddkT8=
 github.com/getlantern/measured v0.0.0-20170302221919-0582bf799783/go.mod h1:5OW2WJitCKExpSw2bploW2fM7PjOd6QnLqyp+IqToqU=
-github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198 h1:J0CxRQc8J4iDyMTeSqXa338ZLDpAFf4jLZHBzw+iCMs=
 github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198/go.mod h1:5OW2WJitCKExpSw2bploW2fM7PjOd6QnLqyp+IqToqU=
 github.com/getlantern/measured v0.0.0-20210507000559-ec5307b2b8be h1:rfdOTeKew6zcpf5BQ566WInLINdZARimtWVLcgP/a4I=
 github.com/getlantern/measured v0.0.0-20210507000559-ec5307b2b8be/go.mod h1:QG6d9+nAxD1PjVjgGLUUHPZBQUp20/h7j8a3kxd/8Rc=
@@ -622,8 +619,10 @@ github.com/getlantern/tlsutil v0.4.0 h1:wvSKWfxSKFVpP3GgSq0wpLl+gFiiq8pDWgpuTxV3
 github.com/getlantern/tlsutil v0.4.0/go.mod h1:8v4sW+apnxSkhURB6IUpQ9zuf1r0+i+CywWSZHxXpzw=
 github.com/getlantern/trafficlog v1.0.0 h1:JYCcTptI7kKXjvppdE5JQPx31m/78Q1xbXpIM6X0rXc=
 github.com/getlantern/trafficlog v1.0.0/go.mod h1:oaj53OJ67FEPsiKbQBz2dpYCnh8Yq4bBbww3C6vMgAQ=
-github.com/getlantern/trafficlog-flashlight v1.0.2 h1:B9RbETjrfLIf6vAYRU02Tb1JQgtu7B0IfuAWzJ5gDeI=
-github.com/getlantern/trafficlog-flashlight v1.0.2/go.mod h1:uf8+aFXgp03S+AGeKUM+8aYmdh7ZKbUdR/OsdjMiD7I=
+github.com/getlantern/trafficlog-flashlight v1.0.3-0.20210527114643-e5e88acb4635 h1:Z5cbtBljX4XLempQ90v/NhwFP2dagl+6XUvGG5tReA0=
+github.com/getlantern/trafficlog-flashlight v1.0.3-0.20210527114643-e5e88acb4635/go.mod h1:uf8+aFXgp03S+AGeKUM+8aYmdh7ZKbUdR/OsdjMiD7I=
+github.com/getlantern/trafficlog-flashlight v1.0.3 h1:8qiAJfUBlt2v5u033vRn2BO+d/6oFSpjlMByGEXfjD0=
+github.com/getlantern/trafficlog-flashlight v1.0.3/go.mod h1:uf8+aFXgp03S+AGeKUM+8aYmdh7ZKbUdR/OsdjMiD7I=
 github.com/getlantern/utls v0.0.0-20191119185840-3db8c755b682 h1:gK0+CerB0oFReyfhHZhTDywm7YU7NIx/xrhRGDhgiK0=
 github.com/getlantern/utls v0.0.0-20191119185840-3db8c755b682/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
 github.com/getlantern/utls v0.0.0-20200903013459-0c02248f7ce1 h1:+Egmu6VMMPm8/FHz8TOtQ1Usn3zg0gkS7ZHrLFycyok=
@@ -1025,7 +1024,6 @@ github.com/json-iterator/go v1.1.7/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/u
 github.com/json-iterator/go v1.1.8/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
 github.com/json-iterator/go v1.1.9/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
 github.com/json-iterator/go v1.1.10/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
-github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024 h1:rBMNdlhTLzJjJSDIjNEXX1Pz3Hmwmz91v+zycvx9PJc=
 github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1:6v2b51hI/fHJwM22ozAgKL4VKDeJcHhJFhtBdhmNjmU=
 github.com/jstemmer/go-junit-report v0.9.1/go.mod h1:Brl9GWCQeLvo8nXZwPNNblvFj/XSXhF0NWZEnDohbsk=
 github.com/jtolds/gls v4.2.1+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
@@ -1360,7 +1358,6 @@ github.com/prometheus/client_golang v0.9.3/go.mod h1:/TN21ttK/J9q6uSwhBd54HahCDf
 github.com/prometheus/client_golang v1.0.0/go.mod h1:db9x61etRT2tGnBNRi70OPL5FsnadC4Ky3P0J6CfImo=
 github.com/prometheus/client_golang v1.1.0/go.mod h1:I1FGZT9+L76gKKOs5djB6ezCbFQP1xR9D75/vuwEF3g=
 github.com/prometheus/client_golang v1.3.0/go.mod h1:hJaj2vgQTGQmVCsAACORcieXFeDPbaTKGT+JTgUa3og=
-github.com/prometheus/client_golang v1.5.1 h1:bdHYieyGlH+6OLEk2YQha8THib30KP0/yD0YH9m6xcA=
 github.com/prometheus/client_golang v1.5.1/go.mod h1:e9GMxYsXl05ICDXkRhurwBS4Q3OK1iX/F2sw+iXX5zU=
 github.com/prometheus/client_golang v1.7.1 h1:NTGy1Ja9pByO+xAeH/qiWnLrKtr3hJPNjaVUwnjpdpA=
 github.com/prometheus/client_golang v1.7.1/go.mod h1:PY5Wy2awLA44sXw4AOSfFBetzPP4j5+D6mVACh+pe2M=
@@ -1378,7 +1375,6 @@ github.com/prometheus/common v0.4.0/go.mod h1:TNfzLD0ON7rHzMJeJkieUDPYmFC7Snx/y8
 github.com/prometheus/common v0.4.1/go.mod h1:TNfzLD0ON7rHzMJeJkieUDPYmFC7Snx/y86RQel1bk4=
 github.com/prometheus/common v0.6.0/go.mod h1:eBmuwkDJBwy6iBfxCBob6t6dR6ENT/y+J+Zk0j9GMYc=
 github.com/prometheus/common v0.7.0/go.mod h1:DjGbpBbp5NYNiECxcL/VnbXCCaQpKd3tt26CguLLsqA=
-github.com/prometheus/common v0.9.1 h1:KOMtN28tlbam3/7ZKEYKHhKoJZYYj3gMH4uc62x7X7U=
 github.com/prometheus/common v0.9.1/go.mod h1:yhUN8i9wzaXS3w1O07YhxHEBxD+W35wd8bs7vj7HSQ4=
 github.com/prometheus/common v0.10.0 h1:RyRA7RzGXQZiW+tGMr7sxa85G1z0yOpM1qq5c8lNawc=
 github.com/prometheus/common v0.10.0/go.mod h1:Tlit/dnDKsSWFlCLTWaA1cyBgKHSMdTB80sz/V91rCo=
@@ -1389,7 +1385,6 @@ github.com/prometheus/procfs v0.0.0-20190507164030-5867b95ac084/go.mod h1:TjEm7z
 github.com/prometheus/procfs v0.0.2/go.mod h1:TjEm7ze935MbeOT/UhFTIMYKhuLP4wbCsTZCD3I8kEA=
 github.com/prometheus/procfs v0.0.3/go.mod h1:4A/X28fw3Fc593LaREMrKMqOKvUAntwMDaekg4FpcdQ=
 github.com/prometheus/procfs v0.0.8/go.mod h1:7Qr8sr6344vo1JqZ6HhLceV9o3AJ1Ff+GxbHq6oeK9A=
-github.com/prometheus/procfs v0.0.11 h1:DhHlBtkHWPYi8O2y31JkK0TF+DGM+51OopZjH/Ia5qI=
 github.com/prometheus/procfs v0.0.11/go.mod h1:lV6e/gmhEcM9IjHGsFOCxxuZ+z1YqCvr4OA4YeYWdaU=
 github.com/prometheus/procfs v0.1.3 h1:F0+tqvhOksq22sc6iCHF5WGlWjdwj92p0udFh1VFBS8=
 github.com/prometheus/procfs v0.1.3/go.mod h1:lV6e/gmhEcM9IjHGsFOCxxuZ+z1YqCvr4OA4YeYWdaU=
@@ -1943,7 +1938,6 @@ golang.org/x/sys v0.0.0-20210331175145-43e1dd70ce54/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20210412220455-f1c623a9e750 h1:ZBu6861dZq7xBnG1bn5SRU0vA8nx42at4+kP07FMTog=
 golang.org/x/sys v0.0.0-20210412220455-f1c623a9e750/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/term v0.0.0-20201117132131-f5c789dd3221/go.mod h1:Nr5EML6q2oocZ2LXRh80K7BxOlk5/8JxuGnuhpl+muw=
-golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 h1:v+OssWQX+hTHEmOBgwxdZxK4zHq3yOs8F9J7mk0PY8E=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
