@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"runtime/pprof"
 	"testing"
 	"time"
 
@@ -26,6 +27,16 @@ var (
 )
 
 var tempConfigDir string
+
+// debugging
+func init() {
+	go func() {
+		for {
+			time.Sleep(10 * time.Second)
+			pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+		}
+	}()
+}
 
 func TestMain(m *testing.M) {
 	tempConfigDir, err := ioutil.TempDir("", "chained_test")

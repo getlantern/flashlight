@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
+	"runtime/pprof"
 	"strings"
 	"sync"
 	"testing"
@@ -34,6 +36,16 @@ const (
 	LocalProxyAddr = "localhost:18345"
 	SocksProxyAddr = "localhost:18346"
 )
+
+// debugging
+func init() {
+	go func() {
+		for {
+			time.Sleep(10 * time.Second)
+			pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+		}
+	}()
+}
 
 func TestProxying(t *testing.T) {
 	if testing.Short() {
@@ -130,8 +142,8 @@ func TestProxying(t *testing.T) {
 	protocols := []string{
 		"https",
 		"utphttps",
-		"obfs4",
-		"utpobfs4",
+		// "obfs4",
+		// "utpobfs4",
 		"lampshade",
 		// utplampshade doesn't currently work for some reason
 		// "utplampshade",
