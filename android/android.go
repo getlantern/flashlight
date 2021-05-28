@@ -147,6 +147,8 @@ func ProtectConnections(protector SocketProtector, dnsServer string) {
 	netx.OverrideResolve(p.ResolveTCP)
 	netx.OverrideResolveUDP(p.ResolveUDP)
 	netx.OverrideListenUDP(p.ListenUDP)
+	netx.OverrideDialTCP(p.DialTCP)
+	netx.OverrideResolveIPAddr(p.ResolveIP)
 	bal := GetBalancer(0)
 	if bal != nil {
 		log.Debug("Protected after balancer already created, force redial")
