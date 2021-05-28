@@ -506,6 +506,10 @@ github.com/getlantern/lantern-server v0.0.0-20210407181427-9a90764f4f5d/go.mod h
 github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210505161321-68719b2c3018/go.mod h1:JludU10BDqs/5iHmTlQF4+ToAouyyIK868mA6Okrqco=
 github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210506211859-28c0ec3912e8 h1:9zuaoCFpJQ97VnF5KUnJbWecpsYeEOX0gbVuEO5uFNA=
 github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210506211859-28c0ec3912e8/go.mod h1:JludU10BDqs/5iHmTlQF4+ToAouyyIK868mA6Okrqco=
+github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210528034040-5d7e1d03f373 h1:iKlJRKDF5DwWUtpDDtUGPVivqz86tc6idpZfgspx4Z0=
+github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210528034040-5d7e1d03f373/go.mod h1:lrD4ZP7UbueQyszP9U+ZWTaqo8ypUv4ubLVHg8MRWUA=
+github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210528202805-3df18d838166 h1:e1eqxhbKJT3XRfknMNqUm3/WaL9HyKzIRP8CrN4X3X0=
+github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210528202805-3df18d838166/go.mod h1:lrD4ZP7UbueQyszP9U+ZWTaqo8ypUv4ubLVHg8MRWUA=
 github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894 h1:Gzf64TTHyKH4HEe1dgwnf7BOaq5rJZg25Hqz5TmogEI=
 github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894/go.mod h1:h57jtqyH1HCLYu53nnr3WTUntPozt5ztqQ9aN687VEY=
 github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358 h1:ZPe/LMCpCEuHtfBp2NP3/A9KRXQJbTxeSOVWmcBzXIc=
@@ -538,6 +542,8 @@ github.com/getlantern/netstack v0.0.0-20210430190606-84f1a4e5b695/go.mod h1:Cqo5
 github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd/go.mod h1:wKdY0ikOgzrWSeB9UyBVKPRhjXQ+vTb+BPeJuypUuNE=
 github.com/getlantern/netx v0.0.0-20201229185957-3fadd2c8f5ba h1:nbXBFlsbvYMU2v+unTqErG3Pq+0vUBHlC7j7IvYjS9o=
 github.com/getlantern/netx v0.0.0-20201229185957-3fadd2c8f5ba/go.mod h1:g7yY/ImU8M+7lS09wVG3GTsxNvtPMTvkeWZVfxowtMo=
+github.com/getlantern/netx v0.0.0-20210528033736-40a081680b7d h1:e0kYogqdTasHtC4Y4BRekeTxy4GgLkR/sUxVuWzYEzM=
+github.com/getlantern/netx v0.0.0-20210528033736-40a081680b7d/go.mod h1:g7yY/ImU8M+7lS09wVG3GTsxNvtPMTvkeWZVfxowtMo=
 github.com/getlantern/notifier v0.0.0-20210109042112-d57e696d0db9 h1:1VXPQUOfvXayX766RuzJ854RaFmaQztEOpqQ6JhTozc=
 github.com/getlantern/notifier v0.0.0-20210109042112-d57e696d0db9/go.mod h1:8hWwZg+ROrvRlE/QHMOCRUzjKSObVv8FEOP6A5F6N0s=
 github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
@@ -560,6 +566,8 @@ github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff h1:q5GcvgoGNR
 github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff/go.mod h1:eHf4vTrd0oaXLtbz+zM28cfsX4ylva7hbM2zt4+axZo=
 github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8 h1:T8WNx5V/ZqnL7LSBQGkhGVJ7PYzQfzkrExu0y8mCJXA=
 github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8/go.mod h1:jzXXCfnGwdKwsqIY4kZmkX5Bsb6gahmyEsCVTOa8gNA=
+github.com/getlantern/protected v0.0.0-20210528043104-c9d5a0025abb h1:PCjwNxdwEDoWPw9/GvrOAlu1qCETZyf4ibiw8Vvqhl0=
+github.com/getlantern/protected v0.0.0-20210528043104-c9d5a0025abb/go.mod h1:jzXXCfnGwdKwsqIY4kZmkX5Bsb6gahmyEsCVTOa8gNA=
 github.com/getlantern/proxy v0.0.0-20200302081518-0bb851d75e72/go.mod h1:40zgzXJCOqbq4JVe1geITEbgVJsPUgOIsQmaMoQsN2I=
 github.com/getlantern/proxy v0.0.0-20201001032732-eefd72879266 h1:+N2/1s3zbpekscxTJrikOius0bwq8k6ZCwpH8VdTUXI=
 github.com/getlantern/proxy v0.0.0-20201001032732-eefd72879266/go.mod h1:MF04hsRYe81kXjjvdyAkKbXWmg4uUwe2LjWMfP7wHE0=

@@ -57,7 +57,7 @@ require (
 	github.com/getlantern/keyman v0.0.0-20200820153608-cfd0ee278507
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
 	github.com/getlantern/lantern-server v0.0.0-20210407181427-9a90764f4f5d
-	github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210506211859-28c0ec3912e8
+	github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210528202805-3df18d838166
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20210507000559-ec5307b2b8be
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
@@ -66,13 +66,13 @@ require (
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20201027015000-69ed0bd15259
-	github.com/getlantern/netx v0.0.0-20201229185957-3fadd2c8f5ba
+	github.com/getlantern/netx v0.0.0-20210528033736-40a081680b7d
 	github.com/getlantern/notifier v0.0.0-20210109042112-d57e696d0db9
 	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
 	github.com/getlantern/packetforward v0.0.0-20201001150407-c68a447b0360
 	github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff
-	github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8
+	github.com/getlantern/protected v0.0.0-20210528043104-c9d5a0025abb
 	github.com/getlantern/proxy v0.0.0-20201001032732-eefd72879266
 	github.com/getlantern/proxybench v0.0.0-20200806214955-5d56065f9f77
 	github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683
