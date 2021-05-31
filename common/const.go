@@ -42,7 +42,8 @@ var (
 
 	Staging = false
 
-	AuthServerAddr = "https://auth4.lantern.network"
+	//AuthServerAddr = "https://auth4.lantern.network"
+	AuthServerAddr = "https://auth-staging.lantern.network"
 
 	ProAPIHost = "api.getiantem.org"
 
@@ -57,6 +58,7 @@ var (
 
 func init() {
 	initInternal()
+	useYinbiStaging()
 }
 
 // ForceStaging forces staging mode.

@@ -505,6 +505,7 @@ func chained(rootCA string, persistent bool) (http.RoundTripper, error) {
 		TLSClientConfig: &tls.Config{
 			// Cache TLS sessions for faster connection
 			ClientSessionCache: clientSessionCache,
+			InsecureSkipVerify: true,
 		},
 	}
 	if persistent {

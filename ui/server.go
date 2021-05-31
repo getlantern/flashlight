@@ -178,7 +178,6 @@ func createHTTPClient() *http.Client {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	return &http.Client{
 		Jar:       jar,
 		Transport: rt,
