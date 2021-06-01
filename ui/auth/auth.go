@@ -60,7 +60,8 @@ func (h AuthHandler) authHandler(authenticate AuthMethod) http.HandlerFunc {
 		authResp, err := authenticate(params)
 		if err != nil {
 			var e interface{}
-			if authResp != nil && len(authResp.Errors) > 0 {
+			if authResp != nil && authResp.Errors != nil &&
+				len(authResp.Errors) > 0 {
 				e = authResp.Errors
 			} else {
 				e = err
