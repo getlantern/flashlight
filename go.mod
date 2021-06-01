@@ -19,7 +19,7 @@ require (
 	github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
-	github.com/getlantern/auth-server v0.0.0-20210520151009-d5582a957315
+	github.com/getlantern/auth-server v0.0.0-20210601131837-8242d7c88b72
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20200613191039-d7b1c2cc6021
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
@@ -122,6 +122,7 @@ require (
 	github.com/labstack/echo/v4 v4.3.0 // indirect
 	github.com/lib/pq v1.10.2 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
+	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/miekg/dns v1.1.35
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/go-server-timing v1.0.0
@@ -145,10 +146,10 @@ require (
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a // indirect
-	golang.org/x/net v0.0.0-20210510120150-4163338589ed
+	golang.org/x/net v0.0.0-20210525063256-abc453219eb5
 	golang.org/x/oauth2 v0.0.0-20210413134643-5e61552d6c78 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20210514084401-e8d321eab015
+	golang.org/x/sys v0.0.0-20210601080250-7ecdf8ef093b
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20210406143921-e86de6bf7a46 // indirect

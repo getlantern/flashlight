@@ -371,6 +371,8 @@ github.com/getlantern/auth-server v0.0.0-20210520143339-551c6b28d989 h1:NzUtfAlr
 github.com/getlantern/auth-server v0.0.0-20210520143339-551c6b28d989/go.mod h1:K888Tek0rTkEfrhlp7B1ZSlp48vlZmUi9rDtYyYI1w0=
 github.com/getlantern/auth-server v0.0.0-20210520151009-d5582a957315 h1:cfPiqhhF/VHQUt/HiNEFRDdzbwH2PAFuDahVaFg/1RU=
 github.com/getlantern/auth-server v0.0.0-20210520151009-d5582a957315/go.mod h1:UFDBA2mervrM8cnYB8U2OPW+jTzCgUlWJVBGcHAPhfY=
+github.com/getlantern/auth-server v0.0.0-20210601131837-8242d7c88b72 h1:/Mp0zQbh0tlehrjpPmxnfwZr1Ezr/khece0ZZ4eYkgM=
+github.com/getlantern/auth-server v0.0.0-20210601131837-8242d7c88b72/go.mod h1:UFDBA2mervrM8cnYB8U2OPW+jTzCgUlWJVBGcHAPhfY=
 github.com/getlantern/authipc v0.2.0/go.mod h1:nDXd7xyGPMbPwEi4QAL3PPMzvwSFYbQxzk4ipANL25M=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99 h1:fnjb9PYZRMU6Tok5i3anP/bAqhUtG2kn9xgff3IlA+8=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99/go.mod h1:4rYfIUYagdnY0KCu5/zOBX5CIRIi+j+LHdQ+LmD/Lyg=
@@ -507,6 +509,8 @@ github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a h1:z7G1v79GB1
 github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a/go.mod h1:cGOfTjvllC9bcwS7cVW6tGT6fXc8Dki384uFjm7XBnw=
 github.com/getlantern/lantern-server v0.0.0-20210407181427-9a90764f4f5d h1:x6ovc4/7v3Iana8X+j3l8ABBv+2A5IoeGeXD+5v/IGE=
 github.com/getlantern/lantern-server v0.0.0-20210407181427-9a90764f4f5d/go.mod h1:79eFp8g3KPOOg1rnoDxKa4BilQ756gxNdxFzVItMaiY=
+github.com/getlantern/lantern-server v0.0.0-20210520144053-991d6dc1eb44 h1:cAQFWrzwMlY5WZErNGDqqI4uzL2xOa26brmVCRqxPtw=
+github.com/getlantern/lantern-server v0.0.0-20210520144053-991d6dc1eb44/go.mod h1:78VIMMo3DNiaRZlo8mInpLgn1H3ISbIw4rw6DMbK67k=
 github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210505161321-68719b2c3018/go.mod h1:JludU10BDqs/5iHmTlQF4+ToAouyyIK868mA6Okrqco=
 github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210506211859-28c0ec3912e8 h1:9zuaoCFpJQ97VnF5KUnJbWecpsYeEOX0gbVuEO5uFNA=
 github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210506211859-28c0ec3912e8/go.mod h1:JludU10BDqs/5iHmTlQF4+ToAouyyIK868mA6Okrqco=
@@ -1136,6 +1140,8 @@ github.com/mattn/go-isatty v0.0.9/go.mod h1:YNRxwqDuOph6SZLI9vUUz6OYw3QyUt7WiY2y
 github.com/mattn/go-isatty v0.0.10/go.mod h1:qgIWMr58cqv1PHHyhnkY9lrL7etaEgOFcMEpPG5Rm84=
 github.com/mattn/go-isatty v0.0.12 h1:wuysRhFDzyxgEmMf5xjvJ2M9dZoWAXNNr5LSBS7uHXY=
 github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
+github.com/mattn/go-isatty v0.0.13 h1:qdl+GuBjcsKKDco5BsxPJlId98mSWNKqYA+Co0SC1yA=
+github.com/mattn/go-isatty v0.0.13/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
 github.com/mattn/go-runewidth v0.0.2/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
 github.com/mattn/go-sqlite3 v1.7.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/mattn/go-sqlite3 v1.9.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
@@ -1838,6 +1844,8 @@ golang.org/x/net v0.0.0-20210410081132-afb366fc7cd1 h1:4qWs8cYYH6PoEFy4dfhDFgoMG
 golang.org/x/net v0.0.0-20210410081132-afb366fc7cd1/go.mod h1:9tjilg8BloeKEkVJvy7fQ90B1CfIiPueXVOjqfkSzI8=
 golang.org/x/net v0.0.0-20210510120150-4163338589ed h1:p9UgmWI9wKpfYmgaV/IZKGdXc5qEK45tDwwwDyjS26I=
 golang.org/x/net v0.0.0-20210510120150-4163338589ed/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
+golang.org/x/net v0.0.0-20210525063256-abc453219eb5 h1:wjuX4b5yYQnEQHzd+CBcrcC6OVR2J1CN6mUy0oSxIPo=
+golang.org/x/net v0.0.0-20210525063256-abc453219eb5/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be/go.mod h1:N/0e6XlmueqKjAGxoOufVs8QHGRruUQn6yWY3a++T0U=
 golang.org/x/oauth2 v0.0.0-20181017192945-9dcd33a902f4/go.mod h1:N/0e6XlmueqKjAGxoOufVs8QHGRruUQn6yWY3a++T0U=
 golang.org/x/oauth2 v0.0.0-20181203162652-d668ce993890/go.mod h1:N/0e6XlmueqKjAGxoOufVs8QHGRruUQn6yWY3a++T0U=
@@ -1952,6 +1960,8 @@ golang.org/x/sys v0.0.0-20210412220455-f1c623a9e750/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20210423082822-04245dca01da/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210514084401-e8d321eab015 h1:hZR0X1kPW+nwyJ9xRxqZk1vx5RUObAPBdKVvXPDUH/E=
 golang.org/x/sys v0.0.0-20210514084401-e8d321eab015/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.0.0-20210601080250-7ecdf8ef093b h1:qh4f65QIVFjq9eBURLEYWqaEXmOyqdUyiBSgaXWccWk=
+golang.org/x/sys v0.0.0-20210601080250-7ecdf8ef093b/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/term v0.0.0-20201117132131-f5c789dd3221/go.mod h1:Nr5EML6q2oocZ2LXRh80K7BxOlk5/8JxuGnuhpl+muw=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
