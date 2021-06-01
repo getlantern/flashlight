@@ -19,7 +19,7 @@ require (
 	github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
-	github.com/getlantern/auth-server v0.0.0-20210531214820-583ceebe48c8
+	github.com/getlantern/auth-server v0.0.0-20210601131837-8242d7c88b72
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20200613191039-d7b1c2cc6021
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
@@ -149,7 +149,7 @@ require (
 	golang.org/x/net v0.0.0-20210525063256-abc453219eb5
 	golang.org/x/oauth2 v0.0.0-20210413134643-5e61552d6c78 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20210531080801-fdfd190a6549
+	golang.org/x/sys v0.0.0-20210601080250-7ecdf8ef093b
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20210406143921-e86de6bf7a46 // indirect
