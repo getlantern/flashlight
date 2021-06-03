@@ -1,4 +1,4 @@
-name: Go
+name: Update Global Config
 
 on:
   schedule:
