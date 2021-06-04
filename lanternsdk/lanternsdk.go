@@ -13,6 +13,7 @@ import (
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/golog"
@@ -57,6 +58,7 @@ func Start(appName, configDir, deviceID string, startTimeoutMillis int) (*StartR
 	}
 
 	startTimeout := time.Duration(startTimeoutMillis) * time.Millisecond
+	startDeadline := time.Now().Add(startTimeout)
 
 	addr, ok := client.Addr(startTimeout)
 	if !ok {
@@ -64,7 +66,13 @@ func Start(appName, configDir, deviceID string, startTimeoutMillis int) (*StartR
 	}
 	log.Debugf("Started HTTP proxy at %v", addr)
 
-	return &StartResult{addr.(string)}, nil
+	remainingTimeout := startDeadline.Sub(time.Now())
+	select {
+	case <-geolookup.OnRefresh():
+		return &StartResult{addr.(string)}, nil
+	case <-time.After(remainingTimeout):
+		return nil, fmt.Errorf("Failed to get successful geolookup within %v timeout", remainingTimeout)
+	}
 }
 
 func start(appName, configDir, deviceID string) error {
@@ -94,7 +102,7 @@ func start(appName, configDir, deviceID string) error {
 		configDir,                    // place to store lantern configuration
 		false,                        // don't use VPN mode
 		func() bool { return false }, // always connected
-		func() bool { return false }, // don't proxy all
+		func() bool { return true },  // always proxy all
 		func() bool { return false }, // do not proxy private hosts
 		func() bool { return true },  // auto report
 		flags,
