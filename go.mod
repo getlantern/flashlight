@@ -42,7 +42,7 @@ require (
 	github.com/getlantern/go-ping v0.0.0-20191213124541-9d4b7e6e7de6
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
 	github.com/getlantern/go-update v0.0.0-20190510022740-79c495ab728c // indirect
-	github.com/getlantern/golog v0.0.0-20201105130739-9586b8bde3a9
+	github.com/getlantern/golog v0.0.0-20210606115803-bce9f9fe5a5f
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc // indirect
 	github.com/getlantern/hellosplitter v0.1.0
 	github.com/getlantern/hidden v0.0.0-20201229170000-e66e7f878730
