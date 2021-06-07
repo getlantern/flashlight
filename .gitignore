@@ -45,3 +45,10 @@ Ios.framework
 *.jar
 .vscode
 LanternSDK.framework
+
+/confluence/
+/torrent/
+/replica/
+/missinggo/
+/log/
+/envpprof/
