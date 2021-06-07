@@ -6,9 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/getlantern/flashlight/common"
 	"github.com/jaffee/commandeer"
 	"github.com/mitchellh/mapstructure"
+
+	"github.com/getlantern/flashlight/common"
 )
 
 type Flags struct {
@@ -40,8 +41,10 @@ type Flags struct {
 	Standalone         bool          `flag:"standalone" help:"run Lantern in its own browser window (doesn't rely on system browser)"`
 	Initialize         bool          `flag:"initialize" help:"silently initialize Lantern to a state of having working proxy and exit, typically during installation."`
 	Timeout            time.Duration `flag:"timeout" help:"force stop Lantern with an exit status of -1 after the timeout."`
-	ReplicaIran        bool          `flag:"replica-iran" help:"configure Replica to work for Iran"`
-	Staging            bool          `flag:"-"`
+	// TODO: Remove this flag when this can be specified directly as a country-selected feature, or
+	// overriden via a config file?
+	ReplicaIran bool `flag:"replica-iran" help:"configure Replica to work for Iran"`
+	Staging     bool `flag:"-"`
 }
 
 func (f Flags) AsMap() map[string]interface{} {

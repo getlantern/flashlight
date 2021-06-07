@@ -2,11 +2,13 @@ package desktopReplica
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -55,21 +57,18 @@ type HttpHandler struct {
 type NewHttpHandlerInput struct {
 	ConfigDir  string
 	UserConfig common.UserConfig
-	// Used to initialize storage clients for arbitrary endpoints.
-	replica.AnyStorageClientParams
+	HttpClient *http.Client
 	// For uploads or any activity without a prescribed Replica endpoint.
-	DefaultReplicaClient replica.Client
-	// For now there's only a single instance of metadata? I don't think we interpret for region
-	// etc. But that would be easy to add, emulating how the replica.Client is used, or folding
-	// metadata into that.
-	MetadataStorageClient replica.StorageClient
-	GaSession             analytics.Session
+	DefaultReplicaClient replica.ServiceClient
+	GaSession            analytics.Session
 	// Doing this might be a privacy concern, since users could be singled out for being the
 	// first/only uploader for content.
 	AddUploadsToTorrentClient bool
 	// Retain a copy of upload file data. This would save downloading our own uploaded content if we
 	// intend to seed it.
 	StoreUploadsLocally bool
+
+	GlobalConfig *GlobalConfig
 }
 
 func (me *NewHttpHandlerInput) SetDefaults() {
@@ -545,15 +544,94 @@ func (me *HttpHandler) handleMetadata(category string) func(*ops.InstrumentedRes
 			fileIndex = 0
 		}
 		key := fmt.Sprintf("%s/%s/%d", m.InfoHash.HexString(), category, fileIndex)
-		metadata, err := me.MetadataStorageClient.Get(key)
+		resp, err := doFirst(r, me.HttpClient, func(r *http.Response) bool {
+			return r.StatusCode/100 == 2
+		}, func() (ret []string) {
+			for _, s := range me.GlobalConfig.MetadataBaseUrls {
+				ret = append(ret, s+key)
+			}
+			return
+		}())
 		if err != nil {
 			return err
 		}
+		defer resp.Body.Close()
+		// TODO: Should we filter for successful response here?
 		rw.Header().Set("Cache-Control", "public, max-age=604800, immutable")
-		_, err = io.Copy(rw, metadata)
+
+		for h, vv := range resp.Header {
+			for _, v := range vv {
+				rw.Header().Add(h, v)
+			}
+		}
+		rw.WriteHeader(resp.StatusCode)
+		_, err = io.Copy(rw, resp.Body)
 		return err
 	}
+}
 
+// Returns the first response for which the filter returns true. Otherwise a result is selected at
+// random.
+func doFirst(
+	req *http.Request,
+	client *http.Client,
+	filter func(*http.Response) bool,
+	urls []string,
+) (*http.Response, error) {
+	type result struct {
+		urlIndex int
+		*http.Response
+		error
+	}
+	results := make(chan result, len(urls))
+	contextCancels := make([]func(), 0, len(urls))
+	for i, url_ := range urls {
+		ctx, cancel := context.WithCancel(req.Context())
+		contextCancels = append(contextCancels, cancel)
+		go func(i int, url_ string) {
+			resp, err := func() (_ *http.Response, err error) {
+				u, err := url.Parse(url_)
+				if err != nil {
+					return
+				}
+				req := req.Clone(ctx)
+				req.RequestURI = ""
+				req.URL = u
+				req.Host = ""
+				return client.Do(req)
+			}()
+			results <- result{i, resp, err}
+		}(i, url_)
+	}
+	retChan := make(chan result)
+	go func() {
+		var rejected []result
+		gotOne := false
+		for range urls {
+			res := <-results
+			if !gotOne && res.error == nil && filter(res.Response) {
+				retChan <- res
+				gotOne = true
+			} else {
+				rejected = append(rejected, res)
+			}
+		}
+		if !gotOne {
+			i := rand.Intn(len(rejected))
+			retChan <- rejected[i]
+			rejected[i] = rejected[len(rejected)-1]
+			rejected = rejected[:len(rejected)-1]
+		}
+		for _, res := range rejected {
+			contextCancels[res.urlIndex]()
+			if res.error == nil {
+				res.Body.Close()
+			}
+		}
+	}()
+	ret := <-retChan
+	close(retChan)
+	return ret.Response, ret.error
 }
 
 func (me *HttpHandler) handleSearch(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
@@ -589,61 +667,27 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 	t, _, release := me.confluence.GetTorrent(m.InfoHash)
 	defer release()
 
-	// We're unnecessarily re-parsing a Magnet here.
-	spec, err := torrent.TorrentSpecFromMagnetUri(link)
-	if err != nil {
-		return fmt.Errorf("getting spec from magnet URI: %w", err)
+	spec := &torrent.TorrentSpec{
+		Trackers:    [][]string{me.GlobalConfig.Trackers},
+		InfoHash:    m.InfoHash,
+		DisplayName: m.DisplayName,
+		Webseeds:    me.GlobalConfig.WebseedUrls(m.InfoHash.HexString()),
+		PeerAddrs:   me.GlobalConfig.StaticPeerAddrs,
+		Sources:     me.GlobalConfig.MetainfoUrls(m.InfoHash.HexString()),
 	}
-	// Override the use of "xs" as a source, as we have a replica-specific use for that field.
-	// Instead we only use the "as" field as a source.
-	spec.Sources = m.Params["as"]
 
+	// TODO: Remove this when infohash prefixing is used throughout.
 	var uploadSpec replica.Upload
 	unwrapUploadSpecErr := uploadSpec.FromMagnet(m)
 	if unwrapUploadSpecErr == nil {
-		// Add things we can infer from the endpoint, duplicates shouldn't matter as the torrent
-		// client will handle this (not to mention we do this business everytime the handler is
-		// invoked).
-
-		spec.Webseeds = append(spec.Webseeds, uploadSpec.WebseedUrls()...)
-		spec.Sources = append(spec.Sources, uploadSpec.MetainfoUrls()...)
+		spec.Sources = append(spec.Sources, me.GlobalConfig.MetainfoUrls(uploadSpec.PrefixString())...)
+		spec.Webseeds = append(spec.Webseeds, me.GlobalConfig.WebseedUrls(uploadSpec.PrefixString())...)
 	} else {
-		log.Errorf("getting s3 key from magnet: %v", unwrapUploadSpecErr)
+		log.Debugf("unwrapping upload spec from magnet link: %v", unwrapUploadSpecErr)
 	}
 
 	if err := t.MergeSpec(spec); err != nil {
 		return fmt.Errorf("merging spec: %w", err)
-	}
-
-	me.addImplicitTrackers(t)
-
-	if t.Info() == nil && unwrapUploadSpecErr == nil {
-		// Get another reference to the torrent that lasts until we're done fetching the metainfo.
-		_, _, release := me.confluence.GetTorrent(m.InfoHash)
-		go func() {
-			defer release()
-			replicaStorageClient, err := replica.StorageClientForEndpoint(uploadSpec.Endpoint, me.AnyStorageClientParams)
-			if err != nil {
-				log.Errorf("getting storage client for endpoint %q: %v", uploadSpec.Endpoint, err)
-				return
-			}
-			tob, err := replicaStorageClient.Get(uploadSpec.TorrentKey())
-			if err != nil {
-				log.Errorf("error getting metainfo for %q from s3 API: %v", uploadSpec, err)
-				return
-			}
-			defer tob.Close()
-			mi, err := metainfo.Load(tob)
-			if err != nil {
-				log.Errorf("error loading metainfo: %v", err)
-				return
-			}
-			err = me.confluence.PutMetainfo(t, mi)
-			if err != nil {
-				log.Errorf("error putting metainfo from s3: %v", err)
-			}
-			log.Debugf("added metainfo for %q from s3 API", uploadSpec)
-		}()
 	}
 
 	selectOnly, err := strconv.ParseUint(m.Params.Get("so"), 10, 0)
@@ -766,8 +810,5 @@ func encodeJsonErrorResponse(rw http.ResponseWriter, resp interface{}, statusCod
 }
 
 func (me *HttpHandler) addImplicitTrackers(t *torrent.Torrent) {
-	t.AddTrackers([][]string{
-		nil,
-		replica.Trackers(),
-	})
+	t.AddTrackers([][]string{me.GlobalConfig.Trackers})
 }

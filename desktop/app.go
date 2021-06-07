@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sync"
@@ -550,37 +551,44 @@ func (app *App) startReplicaIfNecessary(features map[string]bool) {
 				},
 			),
 		}
+		// TODO: Get this directly from the global config.
+		globalConfig := &desktopReplica.GlobalConfig{
+			WebseedBaseUrls: []string{
+				"https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/",
+				"https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/",
+				"https://replica-search-cdn.lantern.io/",
+			},
+			Trackers: []string{
+				"https://tracker.gbitt.info:443/announce",
+				"http://tracker.opentrackr.org:1337/announce",
+				"udp://tracker.leechers-paradise.org:6969/announce",
+			},
+			StaticPeerAddrs: nil,
+			MetadataBaseUrls: []string{
+				"https://s3-ap-southeast-1.amazonaws.com/replica-metadata/",
+				// TODO: What is the endpoint for the metadata CDN for Frankfurt? This value is the
+				// virtual-hosted path which is the most likely to succeed otherwise.
+				"https://replica-metadata-frankfurt.s3-eu-central-1.amazonaws.com/",
+			},
+			ReplicaServiceEndpoint: "https://replica-search.lantern.io/",
+		}
+		if app.Flags.ReplicaIran {
+			globalConfig.ReplicaServiceEndpoint = "https://replica-search-aws.lantern.io/"
+		}
+		rse, err := url.Parse(globalConfig.ReplicaServiceEndpoint)
+		if err != nil {
+			panic(err)
+		}
 		input := desktopReplica.NewHttpHandlerInput{}
 		input.SetDefaults()
 		input.ConfigDir = app.ConfigDir
 		input.UserConfig = getSettings()
 		input.HttpClient = httpClient
-		regionParams := &replica.GlobalChinaRegionParams
-		if app.Flags.ReplicaIran {
-			regionParams = &replica.IranRegionParams
+		input.DefaultReplicaClient = replica.ServiceClient{
+			HttpClient:             httpClient,
+			ReplicaServiceEndpoint: rse,
 		}
-		uploadClient, err := replica.StorageClientForEndpoint(
-			regionParams.UploadEndpoint,
-			replica.AnyStorageClientParams{
-				HttpClient: httpClient,
-			})
-		if err != nil {
-			log.Errorf("creating upload client: %v", err)
-		}
-		input.DefaultReplicaClient = replica.Client{
-			StorageClient: uploadClient,
-			Endpoint:      regionParams.UploadEndpoint,
-			ServiceClient: replica.ServiceClient{
-				HttpClient:             httpClient,
-				ReplicaServiceEndpoint: regionParams.ServiceUrl,
-			},
-		}
-		input.MetadataStorageClient, err = replica.StorageClientForEndpoint(
-			regionParams.MetadataEndpoint,
-			replica.AnyStorageClientParams{HttpClient: httpClient})
-		if err != nil {
-			log.Errorf("creating metadata storage client: %v", err)
-		}
+		input.GlobalConfig = globalConfig
 		replicaHandler, err := desktopReplica.NewHTTPHandler(input)
 		if err != nil {
 			log.Errorf("error creating replica http server: %v", err)
