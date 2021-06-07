@@ -109,12 +109,11 @@ func NewHTTPHandler(
 	cfg.Logger = analog.Default.WithFilter(func(m analog.Msg) bool {
 		return !m.HasValue("upnp-discover")
 	})
-	defaultStorage, err := sqliteStorage.NewPiecesStorage(
-		sqliteStorage.NewPiecesStorageOpts{
-			NewPoolOpts: sqliteStorage.NewPoolOpts{
-				Path:     filepath.Join(replicaCacheDir, "storage-cache.db"),
-				Capacity: 5 << 30,
-			}})
+	var opts sqliteStorage.NewDirectStorageOpts
+	opts.Path = filepath.Join(replicaCacheDir, "storage-cache.db")
+	os.Remove(opts.Path)
+	opts.Capacity = 5 << 30
+	defaultStorage, err := sqliteStorage.NewDirectStorage(opts)
 	if err != nil {
 		err = fmt.Errorf("creating torrent storage cache: %w", err)
 		return
