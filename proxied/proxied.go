@@ -147,12 +147,11 @@ func newDualFetcherWithTimeout(cf *chainedAndFronted, masqueradeTimeout time.Dur
 // chainedAndFronted fetches HTTP data in parallel using both chained and fronted
 // servers.
 type chainedAndFronted struct {
-	insecureSkipVerify bool
-	parallel           bool
-	_fetcher           http.RoundTripper
-	mu                 sync.RWMutex
-	rootCA             string
-	masqueradeTimeout  time.Duration
+	parallel          bool
+	_fetcher          http.RoundTripper
+	mu                sync.RWMutex
+	rootCA            string
+	masqueradeTimeout time.Duration
 }
 
 func (cf *chainedAndFronted) getFetcher() http.RoundTripper {
@@ -205,12 +204,6 @@ func (cf *chainedAndFronted) SetMasqueradeTimeout(masqueradeTimeout time.Duratio
 	if isDual {
 		cf._fetcher = newDualFetcherWithTimeout(cf, masqueradeTimeout)
 	}
-	cf.mu.Unlock()
-}
-
-func (cf *chainedAndFronted) SetInsecureSkipVerify(insecureSkipVerify bool) {
-	cf.mu.Lock()
-	cf.insecureSkipVerify = insecureSkipVerify
 	cf.mu.Unlock()
 }
 
@@ -516,7 +509,7 @@ func chained(rootCA string, persistent bool) (http.RoundTripper, error) {
 		TLSClientConfig: &tls.Config{
 			// Cache TLS sessions for faster connection
 			ClientSessionCache: clientSessionCache,
-			InsecureSkipVerify: insecureSkipVerify,
+			InsecureSkipVerify: true,
 		},
 	}
 	if persistent {

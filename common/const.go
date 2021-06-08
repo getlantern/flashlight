@@ -43,12 +43,13 @@ var (
 	// This is set by the linker using -ldflags
 	StagingMode = "false"
 
-	environment string
+	// Environment this instance of flashlight is configured for
+	environment = ""
 
 	Staging = false
 
-	AuthAPIHost        = "https://auth4.lantern.network"
-	AuthStagingAPIHost = "https://auth-staging.lantern.network"
+	AuthServerAddr        = "https://auth4.lantern.network"
+	AuthServerStagingAddr = "https://auth-staging.lantern.network"
 
 	ProAPIHost        = "api.getiantem.org"
 	ProStagingAPIHost = "api-staging.getiantem.org"
@@ -74,20 +75,21 @@ func ForceStaging() {
 	initInternal()
 }
 
-func isDevEnvironment() bool {
+func IsDevEnvironment() bool {
 	return environment == DevEnvironment
 }
 
 func initInternal() {
 	var err error
 	log.Debugf("****************************** stagingMode: %v", StagingMode)
+	log.Debugf("****************************** environment: %v", environment)
 	Staging, err = strconv.ParseBool(StagingMode)
 	if err != nil {
 		log.Errorf("Error parsing boolean flag: %v", err)
 		return
 	}
-	if Staging || isDevEnvironment() {
-		AuthServerAddr = AuthStagingAPIHost
+	if Staging || IsDevEnvironment() {
+		AuthServerAddr = AuthServerStagingAddr
 		ReplicaSearchAPIHost = ReplicaSearchStagingAPIHost
 		useYinbiStaging()
 	} else if Staging {
