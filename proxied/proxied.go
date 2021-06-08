@@ -87,10 +87,6 @@ type RoundTripper interface {
 	// SetMasqueradeTimeout specifies how long we're willing to wait for a valid
 	// fronting masquerade before failing.
 	SetMasqueradeTimeout(time.Duration)
-
-	// SetInsecureSkipVerify is used to update the tls.Config of the RoundTripper
-	// transport to set InsecureSkipVerify to true
-	SetInsecureSkipVerify(bool)
 }
 
 // ParallelPreferChained creates a new http.RoundTripper that attempts to send
@@ -509,6 +505,7 @@ func chained(rootCA string, persistent bool) (http.RoundTripper, error) {
 		TLSClientConfig: &tls.Config{
 			// Cache TLS sessions for faster connection
 			ClientSessionCache: clientSessionCache,
+			// Temporary change for testing to connect to staging auth server
 			InsecureSkipVerify: true,
 		},
 	}
