@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
-	gitlab.com/yawning/obfs4.git v0.0.0-20180421031126-89c21805c212
+	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/confluence v1.6.2-0.20201116033747-ba09085bd120
 	github.com/anacrolix/envpprof v1.1.1
 	github.com/anacrolix/go-libutp v1.0.4
