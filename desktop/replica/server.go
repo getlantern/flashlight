@@ -762,6 +762,7 @@ func (me *HttpHandler) handleObjectInfo(rw *ops.InstrumentedResponseWriter, r *h
 	if err != nil {
 		return handlerError{http.StatusBadRequest, fmt.Errorf("parsing magnet link: %w", err)}
 	}
+	// TODO: Update this to be the same as how handleViewWith does it.
 	source := m.Params.Get("as")
 	resp, err := me.ReplicaServiceClient.HttpClient.Get(source)
 	if err != nil {
