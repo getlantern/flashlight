@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Install libpcap libappindicator3-1
-      run: sudo apt-get install libpcap-dev libappindicator3-1
+    - name: Install libpcap
+      run: sudo apt-get install libpcap-dev
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
@@ -21,18 +21,13 @@ jobs:
     - name: Granting private modules access
       run: |
           git config --global url."https://${{ secrets.GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-    - name: Build
-      run: HEADLESS=true make lantern
-
     - name: Run Unit tests
       run: |
         go test -failfast -tags="headless" -coverprofile=profile.cov ./...
-
     - name: Install goveralls
       env:
         GO111MODULE: off
       run: go get github.com/mattn/goveralls
-
     - name: Send coverage
       env:
         COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}

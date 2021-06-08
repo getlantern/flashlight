@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/internal/testutils"
+	"github.com/getlantern/flashlight/testutils"
 	"github.com/getlantern/flashlight/pro/client"
 )
 

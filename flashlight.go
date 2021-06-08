@@ -31,7 +31,6 @@ import (
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/stats"
-	"github.com/getlantern/flashlight/vpn"
 )
 
 var (
@@ -64,7 +63,6 @@ type Flashlight struct {
 	onBordaConfigured chan bool
 	autoReport        func() bool
 	client            *client.Client
-	vpnEnabled        bool
 	op                *fops.Op
 }
 
@@ -300,7 +298,6 @@ func New(
 			}
 			return fmt.Sprintf("%v:%v", updatedHost, port), nil
 		}
-		f.vpnEnabled = true
 	}
 
 	useShortcut := func() bool {
@@ -381,16 +378,6 @@ func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 				log.Errorf("Unable to start SOCKS5 proxy: %v", err)
 			}
 		}()
-
-		if f.vpnEnabled {
-			log.Debug("Enabling VPN mode")
-			closeVPN, vpnErr := vpn.Enable(socksProxyAddr, "192.168.1.1", "", "10.0.0.2", "255.255.255.0")
-			if vpnErr != nil {
-				log.Error(vpnErr)
-			} else {
-				defer closeVPN()
-			}
-		}
 	}
 
 	log.Debug("Starting client HTTP proxy")
