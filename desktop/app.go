@@ -563,7 +563,13 @@ func (app *App) startReplicaIfNecessary(features map[string]bool) {
 				"http://tracker.opentrackr.org:1337/announce",
 				"udp://tracker.leechers-paradise.org:6969/announce",
 			},
-			StaticPeerAddrs: nil,
+			StaticPeerAddrs: []string{
+				"3.112.217.157:42069",
+				"13.113.135.83:42069",
+				"42.192.75.165:42069",
+				"81.70.83.22:42069",
+				"81.71.42.162:42069",
+			},
 			MetadataBaseUrls: []string{
 				"https://s3-ap-southeast-1.amazonaws.com/replica-metadata/",
 				// TODO: What is the endpoint for the metadata CDN for Frankfurt? This value is the
