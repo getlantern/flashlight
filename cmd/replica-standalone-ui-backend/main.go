@@ -19,7 +19,7 @@ type flags struct {
 
 func main() {
 	flags := flags{
-		ReplicaServiceUrl: replica.GlobalChinaRegionParams.ServiceUrl,
+		ReplicaServiceUrl: replica.GlobalChinaDefaultServiceUrl,
 	}
 	tagflag.Parse(&flags)
 	code := mainCode(flags)

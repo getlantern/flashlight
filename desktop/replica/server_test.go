@@ -25,7 +25,7 @@ func TestUploadAndDelete(t *testing.T) {
 	input := NewHttpHandlerInput{}
 	input.SetDefaults()
 	input.DefaultReplicaClient = replica.ServiceClient{
-		ReplicaServiceEndpoint: replica.GlobalChinaRegionParams.ServiceUrl,
+		ReplicaServiceEndpoint: replica.GlobalChinaDefaultServiceUrl,
 		HttpClient:             http.DefaultClient,
 	}
 	if false {
