@@ -58,8 +58,9 @@ type NewHttpHandlerInput struct {
 	ConfigDir  string
 	UserConfig common.UserConfig
 	HttpClient *http.Client
-	// For uploads or any activity without a prescribed Replica endpoint.
-	DefaultReplicaClient replica.ServiceClient
+	// For uploads, deletes, and other behaviour serviced by replica-rust using an API in the
+	// replica repo.
+	ReplicaServiceClient replica.ServiceClient
 	GaSession            analytics.Session
 	// Doing this might be a privacy concern, since users could be singled out for being the
 	// first/only uploader for content.
@@ -162,7 +163,7 @@ func NewHTTPHandler(
 		uploadsDir:    uploadsDir,
 		searchProxy: http.StripPrefix("/search", proxyHandler(
 			input.UserConfig,
-			input.DefaultReplicaClient.ReplicaServiceEndpoint,
+			input.ReplicaServiceClient.ReplicaServiceEndpoint,
 			nil)),
 		// I think the standard file-storage implementation is sufficient here because we guarantee
 		// unique info name/prefixes for uploads (which the default file implementation does not).
@@ -373,7 +374,7 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 		}
 	}
 
-	output, err := me.DefaultReplicaClient.Upload(replicaUploadReader, fileName)
+	output, err := me.ReplicaServiceClient.Upload(replicaUploadReader, fileName)
 	me.GaSession.EventWithLabel("replica", "upload", path.Ext(fileName))
 	log.Debugf("uploaded %d bytes", cw.BytesWritten)
 	if err != nil {
@@ -502,7 +503,7 @@ func (me *HttpHandler) handleDelete(rw *ops.InstrumentedResponseWriter, r *http.
 			string(authBytes),
 			loadMetainfoErr == nil && os.IsNotExist(readAuthErr))
 		// We're not inferring the endpoint from the link, should we?
-		err := me.DefaultReplicaClient.DeleteUpload(
+		err := me.ReplicaServiceClient.DeleteUpload(
 			upload.Prefix,
 			string(authBytes),
 			loadMetainfoErr == nil && os.IsNotExist(readAuthErr),
@@ -762,7 +763,7 @@ func (me *HttpHandler) handleObjectInfo(rw *ops.InstrumentedResponseWriter, r *h
 		return handlerError{http.StatusBadRequest, fmt.Errorf("parsing magnet link: %w", err)}
 	}
 	source := m.Params.Get("as")
-	resp, err := me.DefaultReplicaClient.HttpClient.Get(source)
+	resp, err := me.ReplicaServiceClient.HttpClient.Get(source)
 	if err != nil {
 		return err
 	}

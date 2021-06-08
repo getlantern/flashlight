@@ -31,7 +31,7 @@ func main() {
 func mainCode(flags flags) int {
 	input := desktopReplica.NewHttpHandlerInput{}
 	input.SetDefaults()
-	input.DefaultReplicaClient.ReplicaServiceEndpoint = flags.ReplicaServiceUrl
+	input.ReplicaServiceClient.ReplicaServiceEndpoint = flags.ReplicaServiceUrl
 	input.ConfigDir = appdir.General("ReplicaStandalone")
 	input.UserConfig = common.NewUserConfigData(
 		"replica-standalone",

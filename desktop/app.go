@@ -584,7 +584,7 @@ func (app *App) startReplicaIfNecessary(features map[string]bool) {
 		input.ConfigDir = app.ConfigDir
 		input.UserConfig = getSettings()
 		input.HttpClient = httpClient
-		input.DefaultReplicaClient = replica.ServiceClient{
+		input.ReplicaServiceClient = replica.ServiceClient{
 			HttpClient:             httpClient,
 			ReplicaServiceEndpoint: rse,
 		}
