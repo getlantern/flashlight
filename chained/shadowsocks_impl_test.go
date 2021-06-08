@@ -31,14 +31,8 @@ func TestGenerateUpstream(t *testing.T) {
 	}
 
 	runs := 10000
-	names := make(chan string, runs)
 	for i := 0; i < runs; i++ {
-		go func() {
-			names <- ng.generateUpstream()
-		}()
-	}
-	for i := 0; i < runs; i++ {
-		up := <-names
+		up := ng.generateUpstream()
 		host, _, err := net.SplitHostPort(up)
 		assert.Nil(t, err, "result address did not have a host and port")
 		assert.True(t, strings.HasSuffix(host, ".test"), "Unexpected suffix %s", up)
