@@ -19,7 +19,7 @@ require (
 	github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
-	github.com/getlantern/auth-server v0.0.0-20210608145419-432c69c3cca9
+	github.com/getlantern/auth-server v0.0.0-20210413141251-d7ab3c6fa18a
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20200613191039-d7b1c2cc6021
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
@@ -42,7 +42,7 @@ require (
 	github.com/getlantern/go-ping v0.0.0-20191213124541-9d4b7e6e7de6
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
 	github.com/getlantern/go-update v0.0.0-20190510022740-79c495ab728c // indirect
-	github.com/getlantern/golog v0.0.0-20210606115803-bce9f9fe5a5f
+	github.com/getlantern/golog v0.0.0-20201105130739-9586b8bde3a9
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc // indirect
 	github.com/getlantern/hellosplitter v0.1.0
 	github.com/getlantern/hidden v0.0.0-20201229170000-e66e7f878730
@@ -56,7 +56,7 @@ require (
 	github.com/getlantern/kcpwrapper v0.0.0-20201001150218-1427e1d39c25
 	github.com/getlantern/keyman v0.0.0-20200820153608-cfd0ee278507
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
-	github.com/getlantern/lantern-server v0.0.0-20210520144053-991d6dc1eb44
+	github.com/getlantern/lantern-server v0.0.0-20210407181427-9a90764f4f5d
 	github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210506211859-28c0ec3912e8
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20210507000559-ec5307b2b8be
@@ -120,7 +120,6 @@ require (
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
-	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/miekg/dns v1.1.35
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/go-server-timing v1.0.0
@@ -143,11 +142,10 @@ require (
 	github.com/ulule/limiter/v3 v3.8.0 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
-	golang.org/x/net v0.0.0-20210525063256-abc453219eb5
+	golang.org/x/net v0.0.0-20210410081132-afb366fc7cd1
 	golang.org/x/oauth2 v0.0.0-20210413134643-5e61552d6c78 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20210608053332-aa57babbf139
-	golang.org/x/time v0.0.0-20210608053304-ed9ce3a009e4 // indirect
+	golang.org/x/sys v0.0.0-20210412220455-f1c623a9e750
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20210406143921-e86de6bf7a46 // indirect
