@@ -617,20 +617,29 @@ func doFirst(
 			}
 		}
 		if !gotOne {
+			// Return a randomly rejected result, and remove it from the slice.
 			i := rand.Intn(len(rejected))
 			retChan <- rejected[i]
 			rejected[i] = rejected[len(rejected)-1]
 			rejected = rejected[:len(rejected)-1]
 		}
+		// Cancel and close out all unused results.
 		for _, res := range rejected {
-			contextCancels[res.urlIndex]()
 			if res.error == nil {
 				res.Body.Close()
 			}
 		}
 	}()
 	ret := <-retChan
-	close(retChan)
+	go func() {
+		close(retChan)
+		// Cancel everything we're not using
+		for i, f := range contextCancels {
+			if i != ret.urlIndex {
+				f()
+			}
+		}
+	}()
 	return ret.Response, ret.error
 }
 
