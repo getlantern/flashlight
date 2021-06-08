@@ -543,8 +543,22 @@ func (me *HttpHandler) handleMetadata(category string) func(*ops.InstrumentedRes
 			log.Errorf("error %v", err)
 			fileIndex = 0
 		}
+		mr := &http.Request{
+			Method: http.MethodGet,
+			Header: make(http.Header),
+		}
+		for _, h := range []string{
+			"Accept",
+			"Accept-Encoding",
+			"Accept-Language",
+			"Range",
+		} {
+			for _, v := range r.Header[h] {
+				mr.Header.Add(h, v)
+			}
+		}
 		key := fmt.Sprintf("%s/%s/%d", m.InfoHash.HexString(), category, fileIndex)
-		resp, err := doFirst(r, me.HttpClient, func(r *http.Response) bool {
+		resp, err := doFirst(mr, me.HttpClient, func(r *http.Response) bool {
 			return r.StatusCode/100 == 2
 		}, func() (ret []string) {
 			for _, s := range me.GlobalConfig.MetadataBaseUrls {
