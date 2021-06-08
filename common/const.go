@@ -14,6 +14,9 @@ const (
 	// with HTTPS and because we only support falling back to direct domain
 	// fronting through the local proxy for HTTP.
 
+	// Lantern environment types
+	DevEnvironment = "development"
+
 	// ProxiesURL is the URL for fetching the per user proxy config.
 	ProxiesURL = "http://config.getiantem.org/proxies.yaml.gz"
 
@@ -40,13 +43,18 @@ var (
 	// This is set by the linker using -ldflags
 	StagingMode = "false"
 
+	environment string
+
 	Staging = false
 
-	AuthServerAddr = "https://auth4.lantern.network"
+	AuthAPIHost        = "https://auth4.lantern.network"
+	AuthStagingAPIHost = "https://auth-staging.lantern.network"
 
-	ProAPIHost = "api.getiantem.org"
+	ProAPIHost        = "api.getiantem.org"
+	ProStagingAPIHost = "api-staging.getiantem.org"
 
-	ReplicaSearchAPIHost = "replica-search.lantern.io"
+	ReplicaSearchAPIHost        = "replica-search.lantern.io"
+	ReplicaSearchStagingAPIHost = "replica-search-staging.lantern.io"
 
 	ReplicaServiceEndpoint = url.URL{Scheme: "https", Host: ReplicaSearchAPIHost}
 
@@ -56,6 +64,7 @@ var (
 )
 
 func init() {
+	environment = os.Getenv("ENVIRONMENT")
 	initInternal()
 }
 
@@ -63,6 +72,10 @@ func init() {
 func ForceStaging() {
 	StagingMode = "true"
 	initInternal()
+}
+
+func isDevEnvironment() bool {
+	return environment == DevEnvironment
 }
 
 func initInternal() {
@@ -73,10 +86,12 @@ func initInternal() {
 		log.Errorf("Error parsing boolean flag: %v", err)
 		return
 	}
-	if Staging {
-		AuthServerAddr = "https://auth-staging.lantern.network"
-		ProAPIHost = "api-staging.getiantem.org"
-		ReplicaSearchAPIHost = "replica-search-staging.lantern.io"
+	if Staging || isDevEnvironment() {
+		AuthServerAddr = AuthStagingAPIHost
+		ReplicaSearchAPIHost = ReplicaSearchStagingAPIHost
+		useYinbiStaging()
+	} else if Staging {
+		ProAPIHost = ProStagingAPIHost
 	}
 	forceAds, _ = strconv.ParseBool(os.Getenv("FORCEADS"))
 }
