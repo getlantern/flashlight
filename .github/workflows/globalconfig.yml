@@ -1,8 +1,10 @@
 name: Update Global Config
 
 on:
-  schedule:
-    - cron:  '22 2 * * *'
+  push:
+    branches: [ devel ]
+  pull_request:
+    branches: [ devel ]
 
 jobs:
 
