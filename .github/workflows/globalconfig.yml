@@ -24,3 +24,9 @@ jobs:
     - name: Execute refreshGlobalConfig script
       run: |
         ./scripts/refreshGlobalConfig.bash
+    - name: Commit & Push changes
+      uses: actions-js/push@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        message: "pushing auto-generated embedded global config"
+        branch: "HEAD"
