@@ -11,9 +11,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Install libpcap libappindicator3-1
-      run: sudo apt-get install libpcap-dev libappindicator3-1
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
@@ -21,12 +18,17 @@ jobs:
     - name: Granting private modules access
       run: |
           git config --global url."https://${{ secrets.GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-    - name: Execute refreshGlobalConfig script
+    - uses: actions/checkout@v2
       run: |
-        ./scripts/refreshGlobalConfig.bash
-    - name: Commit & Push changes
-      uses: actions-js/push@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        message: "pushing auto-generated embedded global config"
-        branch: "HEAD"
+        curl https://globalconfig.flashlightproxy.com/global.yaml.gz | gunzip >> yaml-temp
+        echo 'package generated' > ./config/generated/embeddedGlobal.go
+        echo '' >> ./config/generated/embeddedGlobal.go
+        echo 'var GlobalConfig = []byte(`' >> ./config/generated/embeddedGlobal.go
+        cat yaml-temp >> ./config/generated/embeddedGlobal.go
+        echo '`)' >> ./config/generated/embeddedGlobal.go
+        rm yaml-temp
+        cd ./config
+        go test -run TestGlobal
+        git add generated/embeddedGlobal.go
+        git commit -m "pushing auto-generated embedded global config"
+        git push
