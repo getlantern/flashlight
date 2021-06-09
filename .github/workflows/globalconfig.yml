@@ -31,6 +31,8 @@ jobs:
         go test -run TestGlobal
         git config user.name github-actions
         git config user.email github-actions@github.com
+        git checkout devel
+        git pull
         git add generated/embeddedGlobal.go
         git commit -m "pushing auto-generated embedded global config"
         git push origin HEAD:devel
