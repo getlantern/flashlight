@@ -22,7 +22,7 @@ rm yaml-temp
 cd ./config || die "Could not change directories"
 go test -run TestGlobal || die "Global test failed"
 
-#git add generated/embeddedGlobal.go || die "Could not add resources?"
-#git commit -m "pushing auto-generated embedded global config" && git push origin devel
+git add generated/embeddedGlobal.go || die "Could not add resources?"
+git commit -m "pushing auto-generated embedded global config" && git push origin HEAD
 
 echo "Finished generating resources and added embeddedGlobal.go."
