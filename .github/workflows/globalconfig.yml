@@ -19,7 +19,7 @@ jobs:
       run: |
           git config --global url."https://${{ secrets.GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
     - uses: actions/checkout@v2
-      run: |
+    - run: |
         curl https://globalconfig.flashlightproxy.com/global.yaml.gz | gunzip >> yaml-temp
         echo 'package generated' > ./config/generated/embeddedGlobal.go
         echo '' >> ./config/generated/embeddedGlobal.go
