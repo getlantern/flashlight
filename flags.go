@@ -6,10 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/jaffee/commandeer"
 	"github.com/mitchellh/mapstructure"
-
-	"github.com/getlantern/flashlight/common"
 )
 
 type Flags struct {
