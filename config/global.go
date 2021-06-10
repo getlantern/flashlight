@@ -9,7 +9,6 @@ import (
 	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/keyman"
-	desktopReplica "github.com/getlantern/flashlight/desktop/replica"
 )
 
 // Global contains general configuration for Lantern either set globally via
@@ -60,7 +59,7 @@ type Global struct {
 	GlobalBrowserMarketShareData   simbrowser.MarketShareData
 	RegionalBrowserMarketShareData map[simbrowser.CountryCode]simbrowser.MarketShareData
 
-	Replica *desktopReplica.GlobalConfig
+	Replica *ReplicaConfig
 }
 
 // NewGlobal creates a new global config with otherwise nil values set.
