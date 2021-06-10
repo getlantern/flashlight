@@ -11,6 +11,7 @@ type ReplicaConfig struct {
 	StaticPeerAddrs []string
 	// Merged with the webseed URLs when the metadata and data buckets are merged.
 	MetadataBaseUrls       []string
+	// This will vary by region in the future
 	ReplicaServiceEndpoint string
 }
 
