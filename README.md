@@ -30,13 +30,3 @@ go-mobile automatically sets the `ios` build tag when building for iOS. In our c
 ### Architecture
 
 ![Overview](https://user-images.githubusercontent.com/1143966/117667942-72c80a80-b173-11eb-8c0d-829f2ccd8cde.png)
-
-### Running CI Locally
-
-You can run CI locally with the following:
-
-```
-brew tap wercker/wercker
-brew install wercker-cli
-wercker build
-```
