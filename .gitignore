@@ -46,9 +46,3 @@ Ios.framework
 .vscode
 LanternSDK.framework
 
-/confluence/
-/torrent/
-/replica/
-/missinggo/
-/log/
-/envpprof/

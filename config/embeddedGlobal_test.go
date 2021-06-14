@@ -21,5 +21,4 @@ func TestGlobal(t *testing.T) {
 	assert.Containsf(t, gl.Client.Fronted.Providers["cloudfront"].HostAliases, "replica-search.lantern.io", "embedded global config does not contain replica-search cloudfront fronted provider")
 	assert.Containsf(t, gl.Client.Fronted.Providers["akamai"].HostAliases, "replica-search.lantern.io", "embedded global config does not contain replica-search akamai fronted provider")
 	assert.Len(t, gl.Replica.Trackers, 3)
-
 }
