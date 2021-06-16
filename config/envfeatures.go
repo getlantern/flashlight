@@ -10,7 +10,7 @@ var (
 	// EnableReplicaFeatures enables replica related features via the REPLICA build time variable.
 	EnableReplicaFeatures = "false"
 
-	// EnableReplica is true when we shuld force replica to be enabled regardless of other configuration.
+	// EnableReplica is true when we should force replica to be enabled regardless of other configuration.
 	EnableReplica = false
 
 	// EnableYinbiFeatures enables yinbi wallet related features via the YINBI build time variable

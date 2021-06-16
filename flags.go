@@ -36,11 +36,15 @@ type Flags struct {
 	ForceConfigCountry string        `flag:"force-config-country" help:"if specified, force config fetches to pretend they're coming from this 2 letter country-code"`
 	ReadableConfig     bool          `flag:"readableconfig" help:"if specified, disables obfuscation of the config yaml so that it remains human readable"`
 	Help               bool          `flag:"help" help:"Get usage help"`
-	NoUiHttpToken      bool          `flag:"noUiHttpToken" help:"don't require a HTTP token from the UI"`
+	NoUiHttpToken      bool          `flag:"no-ui-http-token" help:"don't require a HTTP token from the UI"`
 	Standalone         bool          `flag:"standalone" help:"run Lantern in its own browser window (doesn't rely on system browser)"`
 	Initialize         bool          `flag:"initialize" help:"silently initialize Lantern to a state of having working proxy and exit, typically during installation."`
 	Timeout            time.Duration `flag:"timeout" help:"force stop Lantern with an exit status of -1 after the timeout."`
-	Staging            bool          `flag:"-"`
+	// TODO: Remove this flag when this can be specified directly as a country-selected feature, or
+	// overriden via a config file?
+	ReplicaIran      bool `flag:"replica-iran" help:"use the replica-rust service in Frankfurt"`
+	ReplicaDevConfig bool `flag:"replica-dev-config" help:"use the hard-coded replica global config"`
+	Staging          bool `flag:"-"`
 }
 
 func (f Flags) AsMap() map[string]interface{} {

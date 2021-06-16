@@ -58,6 +58,8 @@ type Global struct {
 	// Market share data used by the simbrowser package when picking a browser to simulate.
 	GlobalBrowserMarketShareData   simbrowser.MarketShareData
 	RegionalBrowserMarketShareData map[simbrowser.CountryCode]simbrowser.MarketShareData
+
+	Replica *ReplicaConfig
 }
 
 // NewGlobal creates a new global config with otherwise nil values set.
