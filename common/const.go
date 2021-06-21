@@ -42,7 +42,8 @@ var (
 	Staging = false
 
 	//AuthServerAddr = "https://auth4.lantern.network"
-	AuthServerAddr = "https://auth-staging.lantern.network"
+	AuthServerAddr       = "https://auth-staging.lantern.network"
+	ReplicaSearchAPIHost = "replica-search-staging.lantern.io"
 
 	ProAPIHost = "api.getiantem.org"
 
