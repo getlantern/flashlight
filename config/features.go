@@ -25,6 +25,7 @@ const (
 	FeatureReplica              = "replica"
 	FeatureProxyWhitelistedOnly = "proxywhitelistedonly"
 	FeatureTrackYouTube         = "trackyoutube"
+	FeatureGoogleSearchAds      = "googlesearchads"
 	FeatureYinbiWallet          = "yinbiwallet"
 	FeatureYinbi                = "yinbi"
 )

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
-
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 	"time"
@@ -61,7 +61,11 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 	}
 
 	trackYoutubeWatches(req)
-
+	if strings.Contains(strings.ToLower(req.Host), ".google.") && req.Method == "GET" && req.URL.Path == "/search" {
+		req.Host = "127.0.0.1:5555"
+		d, _ := httputil.DumpRequest(req, true)
+		log.Debugf("-=------>\n%q\n",d)
+	}
 	// Add the scheme back for CONNECT requests. It is cleared
 	// intentionally by the standard library, see
 	// https://golang.org/src/net/http/request.go#L938. The easylist

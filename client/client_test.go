@@ -95,6 +95,7 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 		func() bool { return true },
 		func() bool { return true },
 		func() bool { return false },
+		func() bool { return false },
 		newTestUserConfig(),
 		mockStatsTracker{},
 		func() bool { return true },

@@ -42,6 +42,7 @@ var (
 	// default enabled status (until we know the country)
 	blockingRelevantFeatures = map[string]bool{
 		config.FeatureProxyBench:           false,
+		config.FeatureGoogleSearchAds:      false,
 		config.FeaturePingProxies:          false,
 		config.FeatureNoBorda:              true,
 		config.FeatureNoProbeProxies:       true,
@@ -327,8 +328,17 @@ func New(
 		useShortcut,
 		shortcut.Allow,
 		useDetour,
-		func() bool { return !f.FeatureEnabled(config.FeatureNoHTTPSEverywhere) },
-		func() bool { return common.Platform != "android" && f.FeatureEnabled(config.FeatureTrackYouTube) },
+		func() bool {
+			return !f.FeatureEnabled(config.FeatureNoHTTPSEverywhere)
+		},
+		func() bool {
+			return true
+			//common.Platform != "android" && (f.FeatureEnabled(config.FeatureTrackYouTube) || f.FeatureEnabled(config.FeatureGoogleSearchAds))
+		},
+		func() bool {
+			return true
+			//			return f.FeatureEnabled(config.FeatureGoogleSearchAds)
+		},
 		userConfig,
 		statsTracker,
 		allowPrivateHosts,
