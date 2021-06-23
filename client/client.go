@@ -144,6 +144,7 @@ type Client struct {
 	httpProxyPort string
 
 	chPingProxiesConf chan pingProxiesConf
+	googleAdsFilter   bool
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -190,6 +191,7 @@ func NewClient(
 		allowPrivateHosts:    allowPrivateHosts,
 		lang:                 lang,
 		adSwapTargetURL:      adSwapTargetURL,
+		googleAdsFilter:      allowGoogleSearchAds(),
 		reverseDNS:           reverseDNS,
 		chPingProxiesConf:    make(chan pingProxiesConf, 1),
 	}
@@ -404,7 +406,6 @@ func NewClient(
 				strings.Contains(userAgent, "Edge") || // Microsoft Edge
 				strings.Contains(userAgent, "QQBrowser") || // QQ
 				strings.Contains(userAgent, "360Browser") || strings.Contains(userAgent, "360SE") || strings.Contains(userAgent, "360EE") // 360
-			log.Debugf("------> should %v", shouldMITM)
 			return shouldMITM
 		},
 	})

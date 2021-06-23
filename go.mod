@@ -5,12 +5,13 @@ go 1.15
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
+	github.com/PuerkitoBio/goquery v1.7.0
 	github.com/anacrolix/envpprof v1.1.1 // indirect
 	github.com/anacrolix/go-libutp v1.0.4
 	github.com/anacrolix/log v0.8.0 // indirect
 	github.com/anacrolix/mmsg v1.0.0 // indirect
 	github.com/anacrolix/sync v0.2.0 // indirect
-	github.com/andybalholm/brotli v1.0.3 // indirect
+	github.com/andybalholm/brotli v1.0.3
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
