@@ -1,16 +1,18 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/andybalholm/brotli"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/proxy/filters"
 
@@ -61,11 +63,6 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 	}
 
 	trackYoutubeWatches(req)
-	if strings.Contains(strings.ToLower(req.Host), ".google.") && req.Method == "GET" && req.URL.Path == "/search" {
-		req.Host = "127.0.0.1:5555"
-		d, _ := httputil.DumpRequest(req, true)
-		log.Debugf("-=------>\n%q\n",d)
-	}
 	// Add the scheme back for CONNECT requests. It is cleared
 	// intentionally by the standard library, see
 	// https://golang.org/src/net/http/request.go#L938. The easylist
@@ -121,7 +118,19 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
 	}
 
-	return next(ctx, req)
+	resp, ctx, err := next(ctx, req)
+	if strings.Contains(strings.ToLower(req.Host), ".google.") && req.Method == "GET" && req.URL.Path == "/search" {
+		body := bytes.NewBuffer(nil)
+		io.Copy(body, brotli.NewReader(resp.Body))
+		resp.Body.Close()
+		bodyString := body.String()
+		bodyString = strings.Replace(bodyString, "Wikipedia", "Oxpedia", -1)
+		bodyBytes := bytes.NewBuffer([]byte(bodyString))
+		resp.Header.Del("Content-Encoding")
+		resp.Body = io.NopCloser(bodyBytes)
+	}
+
+	return resp, ctx, err
 }
 
 func (client *Client) isHTTPProxyPort(r *http.Request) bool {
