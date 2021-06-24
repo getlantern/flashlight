@@ -95,6 +95,7 @@ func start(appName, configDir, deviceID string) error {
 		false,                        // don't use VPN mode
 		func() bool { return false }, // always connected
 		func() bool { return false }, // don't proxy all
+		func() bool { return false }, // don't inject google ads
 		func() bool { return false }, // do not proxy private hosts
 		func() bool { return true },  // auto report
 		flags,
