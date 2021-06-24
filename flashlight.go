@@ -341,10 +341,10 @@ func New(
 			return !f.FeatureEnabled(config.FeatureNoHTTPSEverywhere)
 		},
 		func() bool {
-			return true //common.Platform != "android" && (f.FeatureEnabled(config.FeatureTrackYouTube) || f.FeatureEnabled(config.FeatureGoogleSearchAds))
+			return common.Platform != "android" && (f.FeatureEnabled(config.FeatureTrackYouTube) || f.FeatureEnabled(config.FeatureGoogleSearchAds))
 		},
 		func() bool {
-			return true && _googleAds() // f.FeatureEnabled(config.FeatureGoogleSearchAds)
+			return _googleAds() && f.FeatureEnabled(config.FeatureGoogleSearchAds)
 		},
 		userConfig,
 		statsTracker,
