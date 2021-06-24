@@ -155,7 +155,6 @@ func (ads PartnerAds) String() string {
 			%s
 			<div style="float:right;margin-bottom:10px">
 			  <a href="https://ads.lantern.io/about">Lantern Ads</a>
-			  <a href="http://localhost:8888/disable_ads">Disable</a>
 		    </div>
 		</div>
 	`, builder.String())
