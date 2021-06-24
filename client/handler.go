@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/getlantern/flashlight/config"
 	"io"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -161,7 +162,6 @@ func (ads PartnerAds) String() string {
 }
 
 func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords []string) string {
-	now := time.Now()
 	ads := PartnerAds{}
 	for _, partner := range opts.Partners {
 		// check if any keywords match
@@ -176,12 +176,9 @@ func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords 
 			}
 		}
 		if found {
-			// first check how long ago we injected this partners ad
-			if ts, ok := client.googleAdsShowMap.Load(partner.Name); ok {
-				// not the time yet, skip
-				if now.Before(ts.(time.Time).Add(partner.Frequency)) {
-					continue
-				}
+			// randomly skip the injection based on probability specified in config
+			if rand.Float32() < partner.Probability {
+				continue
 			}
 
 			ads = append(ads, PartnerAd{
@@ -189,7 +186,6 @@ func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords 
 				Url:         partner.URL,
 				Description: partner.Description,
 			})
-			client.googleAdsShowMap.Store(partner.Name, now)
 		}
 
 	}

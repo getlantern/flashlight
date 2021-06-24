@@ -149,7 +149,6 @@ type Client struct {
 	googleAdsFilter      func() bool
 	googleAdsOptionsLock sync.RWMutex
 	googleAdsOptions     *config.GoogleSearchAdsOptions
-	googleAdsShowMap     sync.Map // timestamp of the last injection per partner
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -201,7 +200,6 @@ func NewClient(
 		chPingProxiesConf:    make(chan pingProxiesConf, 1),
 		googleAdsOptions:     nil,
 		googleAdsOptionsLock: sync.RWMutex{},
-		googleAdsShowMap:     sync.Map{},
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second

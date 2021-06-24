@@ -54,23 +54,11 @@ type Partner struct {
 	URL         string
 	Description string
 	Keywords    []string
-	Frequency   time.Duration
+	Probability float32
 }
 
 func (o *GoogleSearchAdsOptions) fromMap(m map[string]interface{}) error {
-	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		DecodeHook:       mapstructure.StringToTimeDurationHookFunc(),
-		WeaklyTypedInput: true,
-		Result:           o,
-	})
-	if err != nil {
-		return err
-	}
-
-	if err = dec.Decode(m); err != nil {
-		return err
-	}
-	return nil
+	return mapstructure.Decode(m, o)
 }
 
 type PingProxiesOptions struct {
