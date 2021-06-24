@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/mitchellh/mapstructure"
 	"math/rand"
 	"strings"
 	"time"
@@ -41,6 +42,35 @@ var (
 // FeatureOptions is an interface implemented by all feature options
 type FeatureOptions interface {
 	fromMap(map[string]interface{}) error
+}
+
+type GoogleSearchAdsOptions struct {
+	Pattern  string
+	Partners []Partner
+}
+
+type Partner struct {
+	Name        string
+	URL         string
+	Description string
+	Keywords    []string
+	Frequency   time.Duration
+}
+
+func (o *GoogleSearchAdsOptions) fromMap(m map[string]interface{}) error {
+	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		DecodeHook:       mapstructure.StringToTimeDurationHookFunc(),
+		WeaklyTypedInput: true,
+		Result:           o,
+	})
+	if err != nil {
+		return err
+	}
+
+	if err = dec.Decode(m); err != nil {
+		return err
+	}
+	return nil
 }
 
 type PingProxiesOptions struct {

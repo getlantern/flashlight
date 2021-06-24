@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/getlantern/flashlight/config"
 	"io"
 	"net"
 	"net/http"
@@ -120,15 +121,11 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
 	}
 
-	resp, ctx, err := next(ctx, req)
-
-	// if Google Ads filter is enabled, read the request, send the search keywords to our parnter ad server and replace the ads in the page with new results
-
-	if err == nil && client.googleAdsFilter && strings.Contains(strings.ToLower(req.Host), ".google.") && req.Method == "GET" && req.URL.Path == "/search" {
-		client.patchGoogleSearchAds(req, resp)
+	if client.googleAdsFilter() && strings.Contains(strings.ToLower(req.Host), ".google.") && req.Method == "GET" && req.URL.Path == "/search" {
+		return client.divertGoogleSearchAds(ctx, req, next)
 	}
 
-	return resp, ctx, err
+	return next(ctx, req)
 }
 
 type PartnerAd struct {
@@ -144,56 +141,106 @@ func (ad PartnerAd) String() string {
 type PartnerAds []PartnerAd
 
 func (ads PartnerAds) String() string {
+	if len(ads) == 0 {
+		return ""
+	}
 	builder := strings.Builder{}
 
 	for _, ad := range ads {
 		builder.WriteString(ad.String())
 	}
-	return fmt.Sprintf(`<div style="padding: 10px; border: 1px solid grey">%s</div>`, builder.String())
+	return fmt.Sprintf(`
+		<div style="padding: 10px; border: 1px solid grey">
+			%s
+			<div style="float:right;margin-bottom:10px">
+			  <a href="https://ads.lantern.io/about">Lantern Ads</a>
+			  <a href="http://localhost:8888/disable_ads">Disable</a>
+		    </div>
+		</div>
+	`, builder.String())
 }
 
-func (client *Client) patchGoogleSearchAds(req *http.Request, resp *http.Response) {
-	body := bytes.NewBuffer(nil)
-	if _, err := io.Copy(body, brotli.NewReader(resp.Body)); err != nil {
-		return
+func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords []string) string {
+	now := time.Now()
+	ads := PartnerAds{}
+	for _, partner := range opts.Partners {
+		// check if any keywords match
+		found := false
+	out:
+		for _, query := range keywords {
+			for _, kw := range partner.Keywords {
+				if strings.ToLower(query) == strings.ToLower(kw) {
+					found = true
+					break out
+				}
+			}
+		}
+		if found {
+			// first check how long ago we injected this partners ad
+			if ts, ok := client.googleAdsShowMap.Load(partner.Name); ok {
+				// not the time yet, skip
+				if now.Before(ts.(time.Time).Add(partner.Frequency)) {
+					continue
+				}
+			}
+
+			ads = append(ads, PartnerAd{
+				Title:       partner.Name,
+				Url:         partner.URL,
+				Description: partner.Description,
+			})
+			client.googleAdsShowMap.Store(partner.Name, now)
+		}
+
 	}
-	_ = resp.Body.Close()
+	return ads.String()
+}
+func (client *Client) divertGoogleSearchAds(initialContext filters.Context, req *http.Request, next filters.Next) (resp *http.Response, ctx filters.Context, err error) {
+	client.googleAdsOptionsLock.RLock()
+	opts := client.googleAdsOptions
+	client.googleAdsOptionsLock.RUnlock()
+	resp, ctx, err = next(initialContext, req)
 
-	doc, err := goquery.NewDocumentFromReader(body)
-	if err != nil {
-		return
+	// if both requests succeed, extract partner ads and inject them
+	if err == nil && opts != nil {
+		body := bytes.NewBuffer(nil)
+		if _, err = io.Copy(body, brotli.NewReader(resp.Body)); err != nil {
+			return
+		}
+		_ = resp.Body.Close()
+
+		var doc *goquery.Document
+		doc, err = goquery.NewDocumentFromReader(body)
+		if err != nil {
+			return
+		}
+
+		// find existing ads based on the pattern in config
+		adNode := doc.Find(opts.Pattern)
+		if len(adNode.Nodes) == 0 {
+			return
+		}
+
+		// extract search query
+		var query string
+		query, err = url.QueryUnescape(req.URL.Query().Get("q"))
+		if err != nil {
+			return
+		}
+		// inject new ads
+		adNode.ReplaceWithHtml(client.generateAds(opts, strings.Split(query, " ")))
+
+		// serialize DOM to string
+		var htmlResult string
+		htmlResult, err = doc.Html()
+		if err != nil {
+			return
+		}
+
+		resp.Header.Del("Content-Encoding")
+		resp.Body = io.NopCloser(bytes.NewBufferString(htmlResult))
 	}
-
-	// 1. find existing ads
-	adNode := doc.Find("#taw")
-	if len(adNode.Nodes) == 0 {
-		return
-	}
-
-	// 2. extract keywords
-	// args := req.URL.Query()
-
-	// 3. fetch new ads
-	// TODO: issue request to an ad service inside the proxy to get partner results, below is the example output
-	//newAds := PartnerAds{
-	//	PartnerAd{
-	//		Title: "Lantern",
-	//		Url:         "http://www.getlantern.org",
-	//		Description: "Get Lantern!",
-	//	},
-	//}
-	newAds := PartnerAds{}
-	// 4. inject new ads
-	adNode.ReplaceWithHtml(newAds.String())
-
-	// serialize DOM to string
-	htmlResult, err := doc.Html()
-	if err != nil {
-		return
-	}
-
-	resp.Header.Del("Content-Encoding")
-	resp.Body = io.NopCloser(bytes.NewBufferString(htmlResult))
+	return
 }
 
 func (client *Client) isHTTPProxyPort(r *http.Request) bool {

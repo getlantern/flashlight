@@ -89,6 +89,14 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	}
 	f.onConfigUpdate(cfg, src)
 	f.reconfigurePingProxies()
+	f.reconfigureGoogleAds()
+}
+
+func (f *Flashlight) reconfigureGoogleAds() {
+	var opts config.GoogleSearchAdsOptions
+	if err := f.FeatureOptions(config.FeatureGoogleSearchAds, &opts); err == nil {
+		f.client.ConfigureGoogleAds(opts)
+	}
 }
 
 func (f *Flashlight) reconfigurePingProxies() {
@@ -227,6 +235,7 @@ func New(
 	enableVPN bool,
 	disconnected func() bool,
 	_proxyAll func() bool,
+	_googleAds func() bool,
 	allowPrivateHosts func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
@@ -332,10 +341,10 @@ func New(
 			return !f.FeatureEnabled(config.FeatureNoHTTPSEverywhere)
 		},
 		func() bool {
-			return common.Platform != "android" && (f.FeatureEnabled(config.FeatureTrackYouTube) || f.FeatureEnabled(config.FeatureGoogleSearchAds))
+			return true //common.Platform != "android" && (f.FeatureEnabled(config.FeatureTrackYouTube) || f.FeatureEnabled(config.FeatureGoogleSearchAds))
 		},
 		func() bool {
-			return f.FeatureEnabled(config.FeatureGoogleSearchAds)
+			return true && _googleAds() // f.FeatureEnabled(config.FeatureGoogleSearchAds)
 		},
 		userConfig,
 		statsTracker,
