@@ -4,6 +4,7 @@ package email
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"math"
 	"net/http"
@@ -12,12 +13,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/keighl/mandrill"
-
 	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	pops "github.com/getlantern/ops"
 	"github.com/getlantern/yaml"
+	"github.com/keighl/mandrill"
 
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
@@ -28,8 +28,11 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.email")
 
-	// Only allowed to call /send_template
-	MandrillAPIKey = "fmYlUdjEpGGonI4NDx9xeA"
+	// Only allowed to call /send_template. Just make it more annoying
+	// to determine the key by examining the binary by breaking it up and
+	// encoding it in hex.
+	mkey1          = "5279526e5338564"
+	MandrillAPIKey = ""
 	// Number of runes(code points - characters of variable length bytes depending on encoding) allowed in fileName length
 	maxNameLength uint = 60
 	// Number of bytes allowed in file attachment (8 mb)
@@ -37,7 +40,17 @@ var (
 	defaultRecipient string
 	httpClient       = &http.Client{}
 	mu               sync.RWMutex
+	mkey2            = mkey1 + "4704f6f7031477"
 )
+
+func init() {
+	key, err := hex.DecodeString(mkey2 + "06f56796e435a41")
+	if err != nil {
+		log.Errorf("Could not get key: %v", err)
+	} else {
+		MandrillAPIKey = string(key)
+	}
+}
 
 // SetDefaultRecipient configures the email address that will receive emails
 func SetDefaultRecipient(address string) {
@@ -139,7 +152,7 @@ func sendTemplate(msg *Message) error {
 	}
 	mmsg := &mandrill.Message{
 		FromEmail: msg.From,
-		To:        []*mandrill.To{&mandrill.To{Email: recipient}},
+		To:        []*mandrill.To{{Email: recipient}},
 		Subject:   msg.Subject,
 	}
 	if msg.CC != "" {
