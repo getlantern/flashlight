@@ -45,8 +45,10 @@ type FeatureOptions interface {
 }
 
 type GoogleSearchAdsOptions struct {
-	Pattern  string
-	Partners []Partner
+	Pattern     string
+	BlockFormat string
+	AdFormat    string
+	Partners    []Partner
 }
 
 type Partner struct {

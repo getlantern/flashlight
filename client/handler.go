@@ -135,29 +135,25 @@ type PartnerAd struct {
 	Description string `json:"description"`
 }
 
-func (ad PartnerAd) String() string {
-	return fmt.Sprintf(`<a href="%s">%s</a><p>%s</p>`, ad.Url, ad.Title, ad.Description)
+func (ad PartnerAd) String(opts *config.GoogleSearchAdsOptions) string {
+	link := strings.Replace(opts.AdFormat, "@LINK", ad.Url, 1)
+	link = strings.Replace(link, "@TITLE", ad.Title, 1)
+	link = strings.Replace(link, "@DESCRIPTION", ad.Description, 1)
+	return link
 }
 
 type PartnerAds []PartnerAd
 
-func (ads PartnerAds) String() string {
+func (ads PartnerAds) String(opts *config.GoogleSearchAdsOptions) string {
 	if len(ads) == 0 {
 		return ""
 	}
 	builder := strings.Builder{}
 
 	for _, ad := range ads {
-		builder.WriteString(ad.String())
+		builder.WriteString(ad.String(opts))
 	}
-	return fmt.Sprintf(`
-		<div style="padding: 10px; border: 1px solid grey">
-			%s
-			<div style="float:right;margin-bottom:10px">
-			  <a href="https://ads.lantern.io/about">Lantern Ads</a>
-		    </div>
-		</div>
-	`, builder.String())
+	return strings.Replace(opts.BlockFormat, "@LINKS", builder.String(), 1)
 }
 
 func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords []string) string {
@@ -188,8 +184,9 @@ func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords 
 		}
 
 	}
-	return ads.String()
+	return ads.String(opts)
 }
+
 func (client *Client) divertGoogleSearchAds(initialContext filters.Context, req *http.Request, next filters.Next) (resp *http.Response, ctx filters.Context, err error) {
 	client.googleAdsOptionsLock.RLock()
 	opts := client.googleAdsOptions
