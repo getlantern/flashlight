@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	email.SetDefaultRecipient("getlantern@inbox.groovehq.com")
+	email.SetDefaultRecipient("support@lantern.jitbit.com")
 
 	go func() {
 		log.Debug("Getting fronted transport to use for submitting issues")
