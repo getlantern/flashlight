@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/getlantern/flashlight/config"
 	"io/ioutil"
 	"math"
 	"net"
@@ -12,6 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -143,7 +145,10 @@ type Client struct {
 	httpProxyIP   string
 	httpProxyPort string
 
-	chPingProxiesConf chan pingProxiesConf
+	chPingProxiesConf    chan pingProxiesConf
+	googleAdsFilter      func() bool
+	googleAdsOptionsLock sync.RWMutex
+	googleAdsOptions     *config.GoogleSearchAdsOptions
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -159,6 +164,7 @@ func NewClient(
 	useDetour func() bool,
 	allowHTTPSEverywhere func() bool,
 	allowMITM func() bool,
+	allowGoogleSearchAds func() bool,
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	allowPrivateHosts func() bool,
@@ -189,8 +195,11 @@ func NewClient(
 		allowPrivateHosts:    allowPrivateHosts,
 		lang:                 lang,
 		adSwapTargetURL:      adSwapTargetURL,
+		googleAdsFilter:      allowGoogleSearchAds,
 		reverseDNS:           reverseDNS,
 		chPingProxiesConf:    make(chan pingProxiesConf, 1),
+		googleAdsOptions:     nil,
+		googleAdsOptionsLock: sync.RWMutex{},
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -198,6 +207,29 @@ func NewClient(
 	var mitmOpts *mitm.Opts
 	if allowMITM() {
 		log.Debug("Enabling MITM")
+
+		domains := []string{
+			// Currently don't bother MITM'ing ad sites since we're not doing ad swapping
+			// "*.doubleclick.net",
+			// "*.g.doubleclick.net",
+			// "adservice.google.com",
+			// "adservice.google.com.hk",
+			// "adservice.google.co.jp",
+			// "adservice.google.nl",
+			// "*.googlesyndication.com",
+			// "*.googletagservices.com",
+			// "googleadservices.com",
+		}
+		// MITM YouTube domains to track statistics on watched videos (list obtained by running ../cmd/youtubescanner/youtubescanner.go)
+		for _, suffix := range MITMSuffixes {
+			domains = append(domains, "*.youtube."+suffix)
+		}
+		// MITM Google search domains to strip the ads/inject relevant data
+		if allowGoogleSearchAds() {
+			for _, suffix := range MITMSuffixes {
+				domains = append(domains, "*.google."+suffix)
+			}
+		}
 		mitmOpts = &mitm.Opts{
 			PKFile:             filepath.Join(configDir, "mitmkey.pem"),
 			CertFile:           filepath.Join(configDir, "mitmcert.pem"),
@@ -214,163 +246,7 @@ func NewClient(
 				}
 				op.End()
 			},
-			Domains: []string{
-				// Currently don't bother MITM'ing ad sites since we're not doing ad swapping
-				// "*.doubleclick.net",
-				// "*.g.doubleclick.net",
-				// "adservice.google.com",
-				// "adservice.google.com.hk",
-				// "adservice.google.co.jp",
-				// "adservice.google.nl",
-				// "*.googlesyndication.com",
-				// "*.googletagservices.com",
-				// "googleadservices.com",
-				// MITM YouTube domains to track statistics on watched videos (list obtained by running ../cmd/youtubescanner/youtubescanner.go)
-				"*.youtube.ae",
-				"*.youtube.co.ae",
-				"*.youtube.com.ar",
-				"*.youtube.at",
-				"*.youtube.co.at",
-				"*.youtube.com.au",
-				"*.youtube.az",
-				"*.youtube.com.az",
-				"*.youtube.ba",
-				"*.youtube.be",
-				"*.youtube.bg",
-				"*.youtube.bh",
-				"*.youtube.com.bh",
-				"*.youtube.bo",
-				"*.youtube.com.bo",
-				"*.youtube.com.br",
-				"*.youtube.com.by",
-				"*.youtube.by",
-				"*.youtube.ca",
-				"*.youtube.cat",
-				"*.youtube.ch",
-				"*.youtube.cl",
-				"*.youtube.co",
-				"*.youtube.com.co",
-				"*.youtube.com",
-				"*.youtube.cr",
-				"*.youtube.co.cr",
-				"*.youtube.cz",
-				"*.youtube.de",
-				"*.youtube.dk",
-				"*.youtube.com.do",
-				"*.youtube.com.ec",
-				"*.youtube.ee",
-				"*.youtube.com.ee",
-				"*.youtube.com.eg",
-				"*.youtube.es",
-				"*.youtube.com.es",
-				"*.youtube.fi",
-				"*.youtube.fr",
-				"*.youtube.ge",
-				"*.youtube.com.gh",
-				"*.youtube.gr",
-				"*.youtube.com.gr",
-				"*.youtube.gt",
-				"*.youtube.com.gt",
-				"*.youtube.hk",
-				"*.youtube.com.hk",
-				"*.youtube.com.hn",
-				"*.youtube.hr",
-				"*.youtube.com.hr",
-				"*.youtube.hu",
-				"*.youtube.co.hu",
-				"*.youtube.co.id",
-				"*.youtube.ie",
-				"*.youtube.co.il",
-				"*.youtube.in",
-				"*.youtube.co.in",
-				"*.youtube.iq",
-				"*.youtube.is",
-				"*.youtube.it",
-				"*.youtube.com.jm",
-				"*.youtube.com.jo",
-				"*.youtube.jo",
-				"*.youtube.jp",
-				"*.youtube.co.jp",
-				"*.youtube.co.ke",
-				"*.youtube.kr",
-				"*.youtube.co.kr",
-				"*.youtube.com.kw",
-				"*.youtube.kz",
-				"*.youtube.com.lb",
-				"*.youtube.lk",
-				"*.youtube.lt",
-				"*.youtube.lu",
-				"*.youtube.lv",
-				"*.youtube.com.lv",
-				"*.youtube.ly",
-				"*.youtube.com.ly",
-				"*.youtube.co.ma",
-				"*.youtube.ma",
-				"*.youtube.me",
-				"*.youtube.com.mk",
-				"*.youtube.mk",
-				"*.youtube.com.mt",
-				"*.youtube.mx",
-				"*.youtube.com.mx",
-				"*.youtube.my",
-				"*.youtube.com.my",
-				"*.youtube.ng",
-				"*.youtube.com.ng",
-				"*.youtube.ni",
-				"*.youtube.com.ni",
-				"*.youtube.nl",
-				"*.youtube.no",
-				"*.youtube.co.nz",
-				"*.youtube.com.om",
-				"*.youtube.pa",
-				"*.youtube.com.pa",
-				"*.youtube.pe",
-				"*.youtube.com.pe",
-				"*.youtube.ph",
-				"*.youtube.com.ph",
-				"*.youtube.pk",
-				"*.youtube.com.pk",
-				"*.youtube.pl",
-				"*.youtube.pr",
-				"*.youtube.pt",
-				"*.youtube.com.pt",
-				"*.youtube.qa",
-				"*.youtube.com.py",
-				"*.youtube.com.qa",
-				"*.youtube.ro",
-				"*.youtube.com.ro",
-				"*.youtube.rs",
-				"*.youtube.ru",
-				"*.youtube.sa",
-				"*.youtube.com.sa",
-				"*.youtube.se",
-				"*.youtube.sg",
-				"*.youtube.com.sg",
-				"*.youtube.si",
-				"*.youtube.sk",
-				"*.youtube.sn",
-				"*.youtube.sv",
-				"*.youtube.com.sv",
-				"*.youtube.co.th",
-				"*.youtube.tn",
-				"*.youtube.com.tn",
-				"*.youtube.com.tr",
-				"*.youtube.com.tw",
-				"*.youtube.co.tz",
-				"*.youtube.ua",
-				"*.youtube.com.ua",
-				"*.youtube.ug",
-				"*.youtube.co.ug",
-				"*.youtube.co.uk",
-				"*.youtube.com.uy",
-				"*.youtube.uy",
-				"*.youtube.com.ve",
-				"*.youtube.co.ve",
-				"*.youtube.vn",
-				"*.youtube.voto",
-				"*.youtube.co.za",
-				"*.youtube.co.zw",
-			},
+			Domains: domains,
 		}
 	}
 	var mitmErr error
@@ -386,6 +262,7 @@ func NewClient(
 			// Only MITM certain browsers
 			// See http://useragentstring.com/pages/useragentstring.php
 			shouldMITM := strings.Contains(userAgent, "Chrome/") || // Chrome
+				strings.Contains(userAgent, "Firefox/") || // Firefox
 				strings.Contains(userAgent, "MSIE") || strings.Contains(userAgent, "Trident") || // Internet Explorer
 				strings.Contains(userAgent, "Edge") || // Microsoft Edge
 				strings.Contains(userAgent, "QQBrowser") || // QQ
@@ -814,4 +691,10 @@ func errorResponse(ctx filters.Context, req *http.Request, read bool, err error)
 		Body:       ioutil.NopCloser(bytes.NewBuffer(htmlerr)),
 		StatusCode: http.StatusServiceUnavailable,
 	}
+}
+
+func (client *Client) ConfigureGoogleAds(opts config.GoogleSearchAdsOptions) {
+	client.googleAdsOptionsLock.Lock()
+	client.googleAdsOptions = &opts
+	client.googleAdsOptionsLock.Unlock()
 }

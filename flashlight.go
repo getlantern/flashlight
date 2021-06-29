@@ -42,6 +42,7 @@ var (
 	// default enabled status (until we know the country)
 	blockingRelevantFeatures = map[string]bool{
 		config.FeatureProxyBench:           false,
+		config.FeatureGoogleSearchAds:      false,
 		config.FeaturePingProxies:          false,
 		config.FeatureNoBorda:              true,
 		config.FeatureNoProbeProxies:       true,
@@ -88,6 +89,14 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	}
 	f.onConfigUpdate(cfg, src)
 	f.reconfigurePingProxies()
+	f.reconfigureGoogleAds()
+}
+
+func (f *Flashlight) reconfigureGoogleAds() {
+	var opts config.GoogleSearchAdsOptions
+	if err := f.FeatureOptions(config.FeatureGoogleSearchAds, &opts); err == nil {
+		f.client.ConfigureGoogleAds(opts)
+	}
 }
 
 func (f *Flashlight) reconfigurePingProxies() {
@@ -226,6 +235,7 @@ func New(
 	enableVPN bool,
 	disconnected func() bool,
 	_proxyAll func() bool,
+	_googleAds func() bool,
 	allowPrivateHosts func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
@@ -327,8 +337,15 @@ func New(
 		useShortcut,
 		shortcut.Allow,
 		useDetour,
-		func() bool { return !f.FeatureEnabled(config.FeatureNoHTTPSEverywhere) },
-		func() bool { return common.Platform != "android" && f.FeatureEnabled(config.FeatureTrackYouTube) },
+		func() bool {
+			return !f.FeatureEnabled(config.FeatureNoHTTPSEverywhere)
+		},
+		func() bool {
+			return common.Platform != "android" && (f.FeatureEnabled(config.FeatureTrackYouTube) || f.FeatureEnabled(config.FeatureGoogleSearchAds))
+		},
+		func() bool {
+			return _googleAds() && f.FeatureEnabled(config.FeatureGoogleSearchAds)
+		},
 		userConfig,
 		statsTracker,
 		allowPrivateHosts,

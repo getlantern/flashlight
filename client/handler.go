@@ -1,15 +1,22 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"math/rand"
 	"net"
-
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/getlantern/flashlight/config"
+
+	"github.com/PuerkitoBio/goquery"
+	"github.com/andybalholm/brotli"
 
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/proxy/filters"
@@ -61,7 +68,6 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 	}
 
 	trackYoutubeWatches(req)
-
 	// Add the scheme back for CONNECT requests. It is cleared
 	// intentionally by the standard library, see
 	// https://golang.org/src/net/http/request.go#L938. The easylist
@@ -117,7 +123,119 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
 	}
 
+	if client.googleAdsFilter() && strings.Contains(strings.ToLower(req.Host), ".google.") && req.Method == "GET" && req.URL.Path == "/search" {
+		return client.divertGoogleSearchAds(ctx, req, next)
+	}
+
 	return next(ctx, req)
+}
+
+type PartnerAd struct {
+	Title       string `json:"title"`
+	Url         string `json:"url"`
+	Description string `json:"description"`
+}
+
+func (ad PartnerAd) String(opts *config.GoogleSearchAdsOptions) string {
+	link := strings.Replace(opts.AdFormat, "@LINK", ad.Url, 1)
+	link = strings.Replace(link, "@TITLE", ad.Title, 1)
+	link = strings.Replace(link, "@DESCRIPTION", ad.Description, 1)
+	return link
+}
+
+type PartnerAds []PartnerAd
+
+func (ads PartnerAds) String(opts *config.GoogleSearchAdsOptions) string {
+	if len(ads) == 0 {
+		return ""
+	}
+	builder := strings.Builder{}
+
+	for _, ad := range ads {
+		builder.WriteString(ad.String(opts))
+	}
+	return strings.Replace(opts.BlockFormat, "@LINKS", builder.String(), 1)
+}
+
+func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords []string) string {
+	ads := PartnerAds{}
+	for _, partner_ads := range opts.Partners {
+		for _, ad := range partner_ads {
+			// check if any keywords match
+			found := false
+		out:
+			for _, query := range keywords {
+				for _, kw := range ad.Keywords {
+					if strings.ToLower(query) == strings.ToLower(kw) {
+						found = true
+						break out
+					}
+				}
+			}
+			if found {
+				// randomly skip the injection based on probability specified in config
+				if rand.Float32() < ad.Probability {
+					continue
+				}
+
+				ads = append(ads, PartnerAd{
+					Title:       ad.Name,
+					Url:         ad.URL,
+					Description: ad.Description,
+				})
+			}
+
+		}
+	}
+	return ads.String(opts)
+}
+
+func (client *Client) divertGoogleSearchAds(initialContext filters.Context, req *http.Request, next filters.Next) (resp *http.Response, ctx filters.Context, err error) {
+	client.googleAdsOptionsLock.RLock()
+	opts := client.googleAdsOptions
+	client.googleAdsOptionsLock.RUnlock()
+	resp, ctx, err = next(initialContext, req)
+
+	// if both requests succeed, extract partner ads and inject them
+	if err == nil && opts != nil {
+		body := bytes.NewBuffer(nil)
+		if _, err = io.Copy(body, brotli.NewReader(resp.Body)); err != nil {
+			return
+		}
+		_ = resp.Body.Close()
+
+		var doc *goquery.Document
+		doc, err = goquery.NewDocumentFromReader(body)
+		if err != nil {
+			return
+		}
+
+		// find existing ads based on the pattern in config
+		adNode := doc.Find(opts.Pattern)
+		if len(adNode.Nodes) == 0 {
+			return
+		}
+
+		// extract search query
+		var query string
+		query, err = url.QueryUnescape(req.URL.Query().Get("q"))
+		if err != nil {
+			return
+		}
+		// inject new ads
+		adNode.ReplaceWithHtml(client.generateAds(opts, strings.Split(query, " ")))
+
+		// serialize DOM to string
+		var htmlResult string
+		htmlResult, err = doc.Html()
+		if err != nil {
+			return
+		}
+
+		resp.Header.Del("Content-Encoding")
+		resp.Body = io.NopCloser(bytes.NewBufferString(htmlResult))
+	}
+	return
 }
 
 func (client *Client) isHTTPProxyPort(r *http.Request) bool {

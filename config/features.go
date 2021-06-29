@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
+
 	"github.com/blang/semver"
 
 	"github.com/getlantern/errors"
@@ -25,6 +27,7 @@ const (
 	FeatureReplica              = "replica"
 	FeatureProxyWhitelistedOnly = "proxywhitelistedonly"
 	FeatureTrackYouTube         = "trackyoutube"
+	FeatureGoogleSearchAds      = "googlesearchads"
 	FeatureYinbiWallet          = "yinbiwallet"
 	FeatureYinbi                = "yinbi"
 )
@@ -40,6 +43,26 @@ var (
 // FeatureOptions is an interface implemented by all feature options
 type FeatureOptions interface {
 	fromMap(map[string]interface{}) error
+}
+
+type GoogleSearchAdsOptions struct {
+	Pattern     string
+	BlockFormat string
+	AdFormat    string
+	Partners    map[string][]PartnerAd
+}
+
+type PartnerAd struct {
+	Name        string
+	URL         string
+	Campaign    string
+	Description string
+	Keywords    []string
+	Probability float32
+}
+
+func (o *GoogleSearchAdsOptions) fromMap(m map[string]interface{}) error {
+	return mapstructure.Decode(m, o)
 }
 
 type PingProxiesOptions struct {
