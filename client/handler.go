@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/getlantern/flashlight/config"
 	"io"
 	"math/rand"
 	"net"
@@ -13,6 +12,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/getlantern/flashlight/config"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/andybalholm/brotli"
@@ -158,31 +159,33 @@ func (ads PartnerAds) String(opts *config.GoogleSearchAdsOptions) string {
 
 func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords []string) string {
 	ads := PartnerAds{}
-	for _, partner := range opts.Partners {
-		// check if any keywords match
-		found := false
-	out:
-		for _, query := range keywords {
-			for _, kw := range partner.Keywords {
-				if strings.ToLower(query) == strings.ToLower(kw) {
-					found = true
-					break out
+	for _, partner_ads := range opts.Partners {
+		for _, ad := range partner_ads {
+			// check if any keywords match
+			found := false
+		out:
+			for _, query := range keywords {
+				for _, kw := range ad.Keywords {
+					if strings.ToLower(query) == strings.ToLower(kw) {
+						found = true
+						break out
+					}
 				}
 			}
-		}
-		if found {
-			// randomly skip the injection based on probability specified in config
-			if rand.Float32() < partner.Probability {
-				continue
+			if found {
+				// randomly skip the injection based on probability specified in config
+				if rand.Float32() < ad.Probability {
+					continue
+				}
+
+				ads = append(ads, PartnerAd{
+					Title:       ad.Name,
+					Url:         ad.URL,
+					Description: ad.Description,
+				})
 			}
 
-			ads = append(ads, PartnerAd{
-				Title:       partner.Name,
-				Url:         partner.URL,
-				Description: partner.Description,
-			})
 		}
-
 	}
 	return ads.String(opts)
 }

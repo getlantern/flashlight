@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
-	"github.com/mitchellh/mapstructure"
 	"math/rand"
 	"strings"
 	"time"
+
+	"github.com/mitchellh/mapstructure"
 
 	"github.com/blang/semver"
 
@@ -48,12 +49,13 @@ type GoogleSearchAdsOptions struct {
 	Pattern     string
 	BlockFormat string
 	AdFormat    string
-	Partners    []Partner
+	Partners    map[string][]PartnerAd
 }
 
-type Partner struct {
+type PartnerAd struct {
 	Name        string
 	URL         string
+	Campaign    string
 	Description string
 	Keywords    []string
 	Probability float32
