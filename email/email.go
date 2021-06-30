@@ -37,18 +37,14 @@ var (
 	mu               sync.RWMutex
 )
 
-const (
-	// Only allowed to call /send_template. Just make it more annoying
-	// to determine the key by examining the binary by breaking it up and
-	// encoding it in hex. Just thwart casual attackers for a relatively
-	// low value key.
-	r1 = "5279526e5338564"
-	r2 = "4704f6f7031477"
-)
+// Only allowed to call /send_template. Just make it more annoying
+// to determine the key by examining the binary by encoding it in hex.
+// Just thwart casual attackers for a relatively low value key.
+var Key = "5279526e53385644704f6f703147706f56796e435a41"
 
-func mustDecode() string {
-	api, _ := hex.DecodeString(r1 + r2 + "06f56796e435a41")
-	return string(api)
+func init() {
+	b, _ := hex.DecodeString(Key)
+	Key = string(b)
 }
 
 // SetDefaultRecipient configures the email address that will receive emails
@@ -140,7 +136,7 @@ func Send(msg *Message) error {
 }
 
 func sendTemplate(msg *Message) error {
-	client := mandrill.ClientWithKey(mustDecode())
+	client := mandrill.ClientWithKey(Key)
 	client.HTTPClient = getHTTPClient()
 	recipient := msg.To
 	if recipient == "" {
