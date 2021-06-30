@@ -1,8 +1,17 @@
 package client
 
 import (
+	"context"
+	"github.com/andybalholm/brotli"
+	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/proxy/filters"
+	"github.com/getlantern/yaml"
+	"github.com/stretchr/testify/require"
+	"io"
 	"net"
 	"net/http"
+	"net/http/httptest"
+	"regexp"
 	"testing"
 	"time"
 
@@ -143,4 +152,137 @@ func TestVideoForYoutubeURL(t *testing.T) {
 	assert.Empty(t, getVideo("https://www.youtube.com/watch?v=ixmjlbXvi3"), "video too short")
 	assert.Empty(t, getVideo("https://www.youtube.com/watch?vy=ixmjlbXvi30"), "wrong parameter name")
 	assert.Empty(t, getVideo("https://www.ytube.com/watch?v=ixmjlbXvi30"), "wrong domain")
+}
+
+func newClientForDiversion() *Client {
+	client, _ := NewClient(
+		tempConfigDir,
+		func() bool { return false },
+		func() bool { return true },
+		func() bool { return false },
+		func() bool { return false },
+		func(ctx context.Context, addr string) (bool, net.IP) {
+			return false, nil
+		},
+		func() bool { return true },
+		func() bool { return true },
+		func() bool { return false },
+		func() bool { return true },
+		newTestUserConfig(),
+		mockStatsTracker{},
+		func() bool { return true },
+		func() string { return "en" },
+		func() string { return "" },
+		func(host string) (string, error) { return host, nil },
+	)
+	return client
+}
+
+func TestPartnerParsing(t *testing.T) {
+	yml := `
+featureoptions:
+  googlesearchads:
+    pattern: "#taw"
+    block_format: >
+        <div style="padding: 10px; border: 1px solid grey">
+          @LINKS
+          <div style="float:right;margin-bottom:10px">
+            <a href="https://ads.lantern.io/about">Lantern Ads</a>
+          </div>
+        </div>
+    ad_format: '<a href="@LINK">@TITLE</a><p>@DESCRIPTION</p>'
+    partners:
+      uagm:
+        - name: "Ad 1"
+          url: "http://usagm.gov"
+          description: "Go Here Instead!"
+          keywords: ["usagm", "lantern"]
+          probability: 0.5
+          campaign: live
+        - name: "Ad 2"
+          url: "http://usagm.gov/link2"
+          description: "Go Here Instead2!"
+          keywords: ["usagm.*", "lantern"]
+          probability: 0.8
+      another_partner:
+        - name: "Another Partner Ad"
+          url: "http://partner.com"
+          description: "No, Go Here!"
+          keywords: ["superdooper"]
+          probability: 0.1
+
+`
+	gl := config.NewGlobal()
+	require.NoError(t, yaml.Unmarshal([]byte(yml), gl))
+
+	var opts config.GoogleSearchAdsOptions
+	require.NoError(t, gl.UnmarshalFeatureOptions(config.FeatureGoogleSearchAds, &opts))
+
+	require.Equal(t, "#taw", opts.Pattern)
+	require.Len(t, opts.Partners, 2)
+	require.Equal(t, "Another Partner Ad", opts.Partners["another_partner"][0].Name)
+
+}
+func TestAdDiversion(t *testing.T) {
+	NotAGooglePage := "<html><body>Hello World!</body></html>"
+	TestGooglePage := `<html><body><div id="taw">Some Ads For You</div></body></html>`
+	ExpectedAd1 := `<html><head></head><body><div><a href="url">name</a><p>descr</p></div></body></html>`
+	ExpectedAd2 := `<html><head></head><body><div><a href="url">name2</a><p>descr</p></div></body></html>`
+	c := newClientForDiversion()
+	c.googleAdsOptions = &config.GoogleSearchAdsOptions{
+		Pattern:     "#taw",
+		BlockFormat: "<div>@LINKS</div>",
+		AdFormat:    `<a href="@LINK">@TITLE</a><p>@DESCRIPTION</p>`,
+		Partners: map[string][]config.PartnerAd{
+			"Partner": {
+				config.PartnerAd{
+					Name:        "name",
+					URL:         "url",
+					Campaign:    "campaign",
+					Description: "descr",
+					Keywords:    []*regexp.Regexp{regexp.MustCompile("wo.*")},
+					Probability: 0,
+				},
+				config.PartnerAd{
+					Name:        "name2",
+					URL:         "url",
+					Campaign:    "campaign",
+					Description: "descr",
+					Keywords:    []*regexp.Regexp{regexp.MustCompile("key")},
+					Probability: 0,
+				},
+			},
+		},
+	}
+	handlerForVar := func(v string) func(w http.ResponseWriter, r *http.Request) {
+		return func(w http.ResponseWriter, r *http.Request) {
+			bw := brotli.NewWriter(w)
+			bw.Write([]byte(v))
+			bw.Close()
+		}
+	}
+
+	nextForVar := func(v string) func(ctx filters.Context, req *http.Request) (*http.Response, filters.Context, error) {
+		return func(ctx filters.Context, req *http.Request) (*http.Response, filters.Context, error) {
+			w := httptest.NewRecorder()
+			handlerForVar(v)(w, req)
+			resp := w.Result()
+			return resp, nil, nil
+		}
+	}
+
+	resp, _, _ := c.divertGoogleSearchAds(nil, httptest.NewRequest("GET", "http://example.com/foo", nil), nextForVar(NotAGooglePage))
+	require.NotNil(t, resp)
+	body, _ := io.ReadAll(resp.Body)
+	require.Equal(t, NotAGooglePage, string(body)) // when we can't detect ads - it should return the result untouched
+
+	resp, _, _ = c.divertGoogleSearchAds(nil, httptest.NewRequest("GET", "http://example.com/foo?q=some+word", nil), nextForVar(TestGooglePage))
+	require.NotNil(t, resp)
+	body, _ = io.ReadAll(resp.Body)
+	require.Equal(t, ExpectedAd1, string(body)) // first keyword matched by regex, show first ad
+
+	resp, _, _ = c.divertGoogleSearchAds(nil, httptest.NewRequest("GET", "http://example.com/foo?q=key_stuff", nil), nextForVar(TestGooglePage))
+	require.NotNil(t, resp)
+	body, _ = io.ReadAll(resp.Body)
+	require.Equal(t, ExpectedAd2, string(body)) // second keyword, second ad
 }

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -159,14 +160,14 @@ func (ads PartnerAds) String(opts *config.GoogleSearchAdsOptions) string {
 
 func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords []string) string {
 	ads := PartnerAds{}
-	for _, partner_ads := range opts.Partners {
-		for _, ad := range partner_ads {
+	for _, partnerAds := range opts.Partners {
+		for _, ad := range partnerAds {
 			// check if any keywords match
 			found := false
 		out:
 			for _, query := range keywords {
 				for _, kw := range ad.Keywords {
-					if strings.ToLower(query) == strings.ToLower(kw) {
+					if kw.MatchString(query) {
 						found = true
 						break out
 					}
@@ -203,7 +204,7 @@ func (client *Client) divertGoogleSearchAds(initialContext filters.Context, req 
 			return
 		}
 		_ = resp.Body.Close()
-
+		resp.Body = ioutil.NopCloser(bytes.NewBufferString(body.String())) // restore the body, since we consumed it. In case we don't modify anything
 		var doc *goquery.Document
 		doc, err = goquery.NewDocumentFromReader(body)
 		if err != nil {
