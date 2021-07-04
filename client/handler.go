@@ -181,7 +181,7 @@ func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords 
 
 				ads = append(ads, PartnerAd{
 					Title:       ad.Name,
-					Url:         ad.URL,
+					Url:         client.getTrackAdUrl(ad.URL, ad.Campaign),
 					Description: ad.Description,
 				})
 			}
@@ -189,6 +189,22 @@ func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords 
 		}
 	}
 	return ads.String(opts)
+}
+
+// getTrackAdUrl takes original URL and passes it to the analytics tracker
+// once the click event is logged, we redirect to the actual ad
+func (client *Client) getTrackAdUrl(originalUrl string, campaign string) string {
+	newUrl, err := url.Parse(client.adTrackUrl())
+	if err != nil {
+		return originalUrl
+	}
+	q := newUrl.Query()
+	q.Set("ad_url", originalUrl)
+	if campaign != "" {
+		q.Set("ad_campaign", campaign)
+	}
+	newUrl.RawQuery = q.Encode()
+	return newUrl.String()
 }
 
 func (client *Client) divertGoogleSearchAds(initialContext filters.Context, req *http.Request, next filters.Next) (resp *http.Response, ctx filters.Context, err error) {

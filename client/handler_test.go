@@ -174,6 +174,7 @@ func newClientForDiversion() *Client {
 		func() string { return "en" },
 		func() string { return "" },
 		func(host string) (string, error) { return host, nil },
+		func() string { return "https://tracker/ads" },
 	)
 	return client
 }
@@ -226,8 +227,8 @@ featureoptions:
 func TestAdDiversion(t *testing.T) {
 	NotAGooglePage := "<html><body>Hello World!</body></html>"
 	TestGooglePage := `<html><body><div id="taw">Some Ads For You</div></body></html>`
-	ExpectedAd1 := `<html><head></head><body><div><a href="url">name</a><p>descr</p></div></body></html>`
-	ExpectedAd2 := `<html><head></head><body><div><a href="url">name2</a><p>descr</p></div></body></html>`
+	ExpectedAd1 := `<html><head></head><body><div><a href="https://tracker/ads?ad_campaign=campaign&amp;ad_url=url">name</a><p>descr</p></div></body></html>`
+	ExpectedAd2 := `<html><head></head><body><div><a href="https://tracker/ads?ad_campaign=campaign&amp;ad_url=url2">name2</a><p>descr</p></div></body></html>`
 	c := newClientForDiversion()
 	c.googleAdsOptions = &config.GoogleSearchAdsOptions{
 		Pattern:     "#taw",
@@ -245,7 +246,7 @@ func TestAdDiversion(t *testing.T) {
 				},
 				config.PartnerAd{
 					Name:        "name2",
-					URL:         "url",
+					URL:         "url2",
 					Campaign:    "campaign",
 					Description: "descr",
 					Keywords:    []*regexp.Regexp{regexp.MustCompile("key")},
