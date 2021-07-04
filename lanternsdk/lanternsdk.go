@@ -107,6 +107,7 @@ func start(appName, configDir, deviceID string) error {
 		func() string { return "" },  // lang, only used for desktop
 		func() string { return "" },  // adSwapTargetURL, only used for desktop
 		func(addr string) (string, error) { return addr, nil }, // no dnsgrab reverse lookups on external sdk
+		func() string { return "" },                            // ad url, only used for desktop
 	)
 	if err != nil {
 		return errors.New("Failed to start flashlight: %v", err)
