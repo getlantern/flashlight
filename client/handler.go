@@ -173,12 +173,8 @@ func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords 
 					}
 				}
 			}
-			if found {
-				// randomly skip the injection based on probability specified in config
-				if rand.Float32() < ad.Probability {
-					continue
-				}
-
+			// we randomly skip the injection based on probability specified in config
+			if found && rand.Float32() < ad.Probability {
 				ads = append(ads, PartnerAd{
 					Title:       ad.Name,
 					Url:         client.getTrackAdUrl(ad.URL, ad.Campaign),
