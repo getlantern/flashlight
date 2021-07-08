@@ -174,6 +174,7 @@ func newClientForDiversion() *Client {
 		func() string { return "en" },
 		func() string { return "" },
 		func(host string) (string, error) { return host, nil },
+		func() string { return "https://tracker/ads" },
 	)
 	return client
 }
@@ -226,8 +227,9 @@ featureoptions:
 func TestAdDiversion(t *testing.T) {
 	NotAGooglePage := "<html><body>Hello World!</body></html>"
 	TestGooglePage := `<html><body><div id="taw">Some Ads For You</div></body></html>`
-	ExpectedAd1 := `<html><head></head><body><div><a href="url">name</a><p>descr</p></div></body></html>`
-	ExpectedAd2 := `<html><head></head><body><div><a href="url">name2</a><p>descr</p></div></body></html>`
+	ExpectedAd1 := `<html><head></head><body><div><a href="https://tracker/ads?ad_campaign=campaign&amp;ad_url=url">name</a><p>descr</p></div></body></html>`
+	ExpectedAd2 := `<html><head></head><body><div><a href="https://tracker/ads?ad_campaign=campaign&amp;ad_url=url2">name2</a><p>descr</p></div></body></html>`
+	ExpectedNoAd := "<html><head></head><body></body></html>"
 	c := newClientForDiversion()
 	c.googleAdsOptions = &config.GoogleSearchAdsOptions{
 		Pattern:     "#taw",
@@ -241,15 +243,23 @@ func TestAdDiversion(t *testing.T) {
 					Campaign:    "campaign",
 					Description: "descr",
 					Keywords:    []*regexp.Regexp{regexp.MustCompile("wo.*")},
-					Probability: 0,
+					Probability: 1.0,
 				},
 				config.PartnerAd{
 					Name:        "name2",
-					URL:         "url",
+					URL:         "url2",
 					Campaign:    "campaign",
 					Description: "descr",
 					Keywords:    []*regexp.Regexp{regexp.MustCompile("key")},
-					Probability: 0,
+					Probability: 1.0,
+				},
+				config.PartnerAd{
+					Name:        "name3",
+					URL:         "url3",
+					Campaign:    "campaign",
+					Description: "descr",
+					Keywords:    []*regexp.Regexp{regexp.MustCompile("noway")},
+					Probability: 0.0,
 				},
 			},
 		},
@@ -285,4 +295,9 @@ func TestAdDiversion(t *testing.T) {
 	require.NotNil(t, resp)
 	body, _ = io.ReadAll(resp.Body)
 	require.Equal(t, ExpectedAd2, string(body)) // second keyword, second ad
+
+	resp, _, _ = c.divertGoogleSearchAds(nil, httptest.NewRequest("GET", "http://example.com/foo?q=noway", nil), nextForVar(TestGooglePage))
+	require.NotNil(t, resp)
+	body, _ = io.ReadAll(resp.Body)
+	require.Equal(t, ExpectedNoAd, string(body)) // third keyword, no ad since probability is 0
 }

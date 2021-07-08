@@ -48,10 +48,10 @@ type FeatureOptions interface {
 }
 
 type GoogleSearchAdsOptions struct {
-	Pattern     string
-	BlockFormat string
-	AdFormat    string
-	Partners    map[string][]PartnerAd
+	Pattern     string                 `mapstructure:"pattern"`
+	BlockFormat string                 `mapstructure:"block_format"`
+	AdFormat    string                 `mapstructure:"ad_format"`
+	Partners    map[string][]PartnerAd `mapstructure:"partners"`
 }
 
 type PartnerAd struct {
