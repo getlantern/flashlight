@@ -18,9 +18,9 @@ func TestProxying(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(configDir)
 
-	result, err := Start("lanternSDKtest", configDir, "en_US", 10000)
+	result, err := Start("lanternSDKtest", configDir, "en_US", true, 10000)
 	require.NoError(t, err, "Should have been able to start lantern")
-	newResult, err := Start("lanternSDKtest", "testapp", "en_US", 10000)
+	newResult, err := Start("lanternSDKtest", "testapp", "en_US", true, 10000)
 	require.NoError(t, err, "Should have been able to start lantern twice")
 	require.Equal(t, result.HTTPAddr, newResult.HTTPAddr, "2nd start should have resulted in the same address")
 	testProxiedRequest(t, result.HTTPAddr, false)

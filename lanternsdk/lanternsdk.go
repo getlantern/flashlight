@@ -2,7 +2,6 @@
 package lanternsdk
 
 import (
-	"fmt"
 	"os"
 	"sync"
 	"time"
@@ -13,6 +12,7 @@ import (
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/golog"
@@ -37,6 +37,9 @@ type StartResult struct {
 // appName is a unique name for the application using the lanternsdk. It is used
 // on the back-end for various purposes, including proxy assignment and performance telemetry
 //
+// If proxyAll is true, Lantern will proxy all traffic. If false, it will only proxy whitelisted
+// domains or traffic to domains that appear to be blocked.
+//
 // Note - this does not wait for the entire initialization sequence to finish,
 // just for the proxy to be listening. Once the proxy is listening, one can
 // start to use it, even as it finishes its initialization sequence. However,
@@ -45,29 +48,39 @@ type StartResult struct {
 //
 // Note - this method gets bound to a native method in Java and Swift, so the signature
 // must meet the constraints of gobind (see https://pkg.go.dev/golang.org/x/mobile/cmd/gobind).
-func Start(appName, configDir, deviceID string, startTimeoutMillis int) (*StartResult, error) {
+func Start(appName, configDir, deviceID string, proxyAll bool, startTimeoutMillis int) (*StartResult, error) {
 	runMx.Lock()
 	defer runMx.Unlock()
 
+	startTime := time.Now()
+	remainingTimeout := func() time.Duration {
+		return time.Now().Add(time.Duration(startTimeoutMillis) * time.Millisecond).Sub(startTime)
+	}
+
 	if !running {
-		if err := start(appName, configDir, deviceID); err != nil {
+		if err := start(appName, configDir, deviceID, proxyAll); err != nil {
 			return nil, log.Errorf("unable to start Lantern: %v", err)
 		}
 		running = true
 	}
 
-	startTimeout := time.Duration(startTimeoutMillis) * time.Millisecond
-
-	addr, ok := client.Addr(startTimeout)
+	addr, ok := client.Addr(remainingTimeout())
 	if !ok {
-		return nil, fmt.Errorf("HTTP Proxy didn't start within %v timeout", startTimeout)
+		return nil, log.Error("HTTP Proxy didn't start in time")
 	}
 	log.Debugf("Started HTTP proxy at %v", addr)
+
+	// wait for geolookup to complete so that we don't run into
+	// "proxywhitelistedonly enabled because geolookup has not yet finished"
+	country := geolookup.GetCountry(remainingTimeout())
+	if country == "" {
+		return nil, log.Error("failed to complete geolookup in time")
+	}
 
 	return &StartResult{addr.(string)}, nil
 }
 
-func start(appName, configDir, deviceID string) error {
+func start(appName, configDir, deviceID string, proxyAll bool) error {
 	logging.EnableFileLogging(configDir)
 	appdir.SetHomeDir(configDir)
 
@@ -91,13 +104,13 @@ func start(appName, configDir, deviceID string) error {
 
 	runner, err := flashlight.New(
 		appName,
-		configDir,                    // place to store lantern configuration
-		false,                        // don't use VPN mode
-		func() bool { return false }, // always connected
-		func() bool { return false }, // don't proxy all
-		func() bool { return false }, // don't inject google ads
-		func() bool { return false }, // do not proxy private hosts
-		func() bool { return true },  // auto report
+		configDir,                       // place to store lantern configuration
+		false,                           // don't use VPN mode
+		func() bool { return false },    // always connected
+		func() bool { return proxyAll }, // whetther to proxy all
+		func() bool { return false },    // don't inject google ads
+		func() bool { return false },    // do not proxy private hosts
+		func() bool { return true },     // auto report
 		flags,
 		nil, // onConfigUpdate
 		nil, // onProxiesUpdate

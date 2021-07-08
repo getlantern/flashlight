@@ -87,5 +87,23 @@ test: $(SOURCES)
 		GO111MODULE=on go test -failfast -race -v -tags="headless" $$pkg || exit 1; \
 	done
 
+define prep-for-mobile
+	go mod vendor && \
+	GO111MODULE=off go get -u golang.org/x/mobile/cmd/gomobile && \
+	GO111MODULE=off go get -u golang.org/x/mobile/cmd/gobind
+endef
+
+lanternsdk-android.aar: $(SOURCES)
+	@$(call build-tags) && \
+	$(call prep-for-mobile) && \
+	echo "Running gomobile with `which gomobile` version `GO111MODULE=off gomobile version` ..." && \
+	GO111MODULE=off gomobile bind -o=lanternsdk-android.aar -target=android -tags='headless publicsdk' -ldflags="$$EXTRA_LDFLAGS -s -w" github.com/getlantern/flashlight/lanternsdk
+
+LanternSDK.framework: $(SOURCES)
+	@$(call build-tags) && \
+	$(call prep-for-mobile) && \
+	echo "Running gomobile with `which gomobile` version `GO111MODULE=off gomobile version` ..." && \
+	GO111MODULE=off gomobile bind -o=LanternSDK.framework -target=ios -tags='headless publicsdk' -ldflags="$$EXTRA_LDFLAGS -s -w" github.com/getlantern/flashlight/lanternsdk
+
 clean:
-	rm -rf vendor
+	rm -rf lanternsdk-android.aar LanternSDK.framework vendor
