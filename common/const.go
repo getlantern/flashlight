@@ -69,7 +69,6 @@ func initInternal() {
 		return
 	}
 	if Staging {
-		AuthServerAddr = "https://auth-staging.lantern.network"
 		ProAPIHost = "api-staging.getiantem.org"
 	}
 	forceAds, _ = strconv.ParseBool(os.Getenv("FORCEADS"))
