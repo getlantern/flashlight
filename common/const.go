@@ -41,8 +41,6 @@ var (
 
 	Staging = false
 
-	AuthServerAddr = "https://auth4.lantern.network"
-
 	ProAPIHost = "api.getiantem.org"
 
 	log = golog.LoggerFor("flashlight.common")
