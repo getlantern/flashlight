@@ -52,6 +52,17 @@ func success(resp *http.Response) bool {
 	return resp.StatusCode > 199 && resp.StatusCode < 400
 }
 
+// clientError checks if the given HTTP response has a
+// 400 or 401 response code; if so, the response is passed
+// as is. Note: we don't treat all 4xx client errors this way
+// because our fronted servers return some 403 Forbidden
+// whenever use a masquerade host on which domain
+// fronting doesn't work
+func clientError(resp *http.Response) bool {
+	return resp.StatusCode == http.StatusUnauthorized ||
+		resp.StatusCode == http.StatusBadRequest
+}
+
 // changeUserAgent prepends app version and OSARCH to the User-Agent header
 // of req to facilitate debugging on server side.
 func changeUserAgent(req *http.Request) {
@@ -282,6 +293,10 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 			return resp, nil
 		} else if success(resp) {
 			log.Debugf("Got successful HTTP call!")
+			responses <- resp
+			return resp, nil
+		} else if clientError(resp) {
+			log.Debugf("Got HTTP response with client error (%d status code). Passing response as is", resp.StatusCode)
 			responses <- resp
 			return resp, nil
 		}
