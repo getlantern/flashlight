@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/geolookup"
 
 	lru "github.com/hashicorp/golang-lru"
 
@@ -242,11 +243,14 @@ func NewClient(
 		return nil, errors.New("Unable to initialize iptool: %v", err)
 	}
 	go client.pingProxiesLoop()
+	go func() {
+		for <-geolookup.OnRefresh() {
+			if err := client.proxy.ApplyMITMOptions(client.MITMOptions()); err != nil {
+				log.Errorf("Unable to initialize MITM: %v", err)
+			}
+		}
+	}()
 	return client, nil
-}
-
-func (c *Client) ApplyMITMOptions() error {
-	return c.proxy.ApplyMITMOptions(c.MITMOptions())
 }
 
 func (c *Client) MITMOptions() *mitm.Opts {

@@ -129,10 +129,6 @@ func (f *Flashlight) EnabledFeatures() map[string]bool {
 	return featuresEnabled
 }
 
-func (f *Flashlight) ReconfigureMITM() error {
-	return f.client.ApplyMITMOptions()
-}
-
 // FeatureEnabled returns true if the input feature is enabled for this flashlight instance. Feature
 // names are tracked in the config package.
 func (f *Flashlight) FeatureEnabled(feature string) bool {
