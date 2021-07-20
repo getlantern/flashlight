@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/getlantern/flashlight/config"
 	"io/ioutil"
 	"math"
 	"net"
@@ -16,6 +15,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/getlantern/flashlight/config"
 
 	lru "github.com/hashicorp/golang-lru"
 
@@ -150,6 +151,8 @@ type Client struct {
 	googleAdsOptionsLock sync.RWMutex
 	googleAdsOptions     *config.GoogleSearchAdsOptions
 	adTrackUrl           func() string
+	allowGoogleSearchAds func() bool
+	allowMITM            func() bool
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -203,55 +206,12 @@ func NewClient(
 		googleAdsOptions:     nil,
 		googleAdsOptionsLock: sync.RWMutex{},
 		adTrackUrl:           adTrackUrl,
+		allowGoogleSearchAds: allowGoogleSearchAds,
+		allowMITM:            allowMITM,
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
 
-	var mitmOpts *mitm.Opts
-	if allowMITM() {
-		log.Debug("Enabling MITM")
-
-		domains := []string{
-			// Currently don't bother MITM'ing ad sites since we're not doing ad swapping
-			// "*.doubleclick.net",
-			// "*.g.doubleclick.net",
-			// "adservice.google.com",
-			// "adservice.google.com.hk",
-			// "adservice.google.co.jp",
-			// "adservice.google.nl",
-			// "*.googlesyndication.com",
-			// "*.googletagservices.com",
-			// "googleadservices.com",
-		}
-		// MITM YouTube domains to track statistics on watched videos (list obtained by running ../cmd/youtubescanner/youtubescanner.go)
-		for _, suffix := range MITMSuffixes {
-			domains = append(domains, "*.youtube."+suffix)
-		}
-		// MITM Google search domains to strip the ads/inject relevant data
-		if allowGoogleSearchAds() {
-			for _, suffix := range MITMSuffixes {
-				domains = append(domains, "*.google."+suffix)
-			}
-		}
-		mitmOpts = &mitm.Opts{
-			PKFile:             filepath.Join(configDir, "mitmkey.pem"),
-			CertFile:           filepath.Join(configDir, "mitmcert.pem"),
-			Organization:       "Lantern",
-			InstallCert:        true,
-			InstallPrompt:      i18n.T("BACKEND_MITM_INSTALL_CERT", i18n.T(translationAppName)),
-			WindowsPromptTitle: i18n.T("BACKEND_MITM_INSTALL_CERT", i18n.T(translationAppName)),
-			WindowsPromptBody:  i18n.T("BACKEND_MITM_INSTALL_CERT_WINDOWS_BODY", "certimporter.exe"),
-			InstallCertResult: func(installErr error) {
-				op := ops.Begin("install_mitm_cert")
-				op.FailIf(installErr)
-				if installErr == nil {
-					log.Debug("Successfully installed MITM cert")
-				}
-				op.End()
-			},
-			Domains: domains,
-		}
-	}
 	var mitmErr error
 	client.proxy, mitmErr = proxy.New(&proxy.Opts{
 		IdleTimeout:  keepAliveIdleTimeout,
@@ -259,7 +219,7 @@ func NewClient(
 		Filter:       filters.FilterFunc(client.filter),
 		OnError:      errorResponse,
 		Dial:         client.dial,
-		MITMOpts:     mitmOpts,
+		MITMOpts:     client.MITMOptions(),
 		ShouldMITM: func(req *http.Request, upstreamAddr string) bool {
 			userAgent := req.Header.Get("User-Agent")
 			// Only MITM certain browsers
@@ -283,6 +243,58 @@ func NewClient(
 	}
 	go client.pingProxiesLoop()
 	return client, nil
+}
+
+func (c *Client) ApplyMITMOptions() error {
+	return c.proxy.ApplyMITMOptions(c.MITMOptions())
+}
+
+func (c *Client) MITMOptions() *mitm.Opts {
+	if c.allowMITM() {
+		log.Debug("Enabling MITM")
+
+		domains := []string{
+			// Currently don't bother MITM'ing ad sites since we're not doing ad swapping
+			// "*.doubleclick.net",
+			// "*.g.doubleclick.net",
+			// "adservice.google.com",
+			// "adservice.google.com.hk",
+			// "adservice.google.co.jp",
+			// "adservice.google.nl",
+			// "*.googlesyndication.com",
+			// "*.googletagservices.com",
+			// "googleadservices.com",
+		}
+		// MITM YouTube domains to track statistics on watched videos (list obtained by running ../cmd/youtubescanner/youtubescanner.go)
+		for _, suffix := range MITMSuffixes {
+			domains = append(domains, "*.youtube."+suffix)
+		}
+		// MITM Google search domains to strip the ads/inject relevant data
+		if c.allowGoogleSearchAds() {
+			for _, suffix := range MITMSuffixes {
+				domains = append(domains, "*.google."+suffix)
+			}
+		}
+		return &mitm.Opts{
+			PKFile:             filepath.Join(c.configDir, "mitmkey.pem"),
+			CertFile:           filepath.Join(c.configDir, "mitmcert.pem"),
+			Organization:       "Lantern",
+			InstallCert:        true,
+			InstallPrompt:      i18n.T("BACKEND_MITM_INSTALL_CERT", i18n.T(translationAppName)),
+			WindowsPromptTitle: i18n.T("BACKEND_MITM_INSTALL_CERT", i18n.T(translationAppName)),
+			WindowsPromptBody:  i18n.T("BACKEND_MITM_INSTALL_CERT_WINDOWS_BODY", "certimporter.exe"),
+			InstallCertResult: func(installErr error) {
+				op := ops.Begin("install_mitm_cert")
+				op.FailIf(installErr)
+				if installErr == nil {
+					log.Debug("Successfully installed MITM cert")
+				}
+				op.End()
+			},
+			Domains: domains,
+		}
+	}
+	return nil
 }
 
 func (client *Client) GetBalancer() *balancer.Balancer {
