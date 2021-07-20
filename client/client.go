@@ -55,8 +55,6 @@ var (
 		80, 443,
 		// SSH for those who know how to configure it
 		22,
-		// SMTP and encrypted SMTP
-		25, 465,
 		// POP and encrypted POP
 		110, 995,
 		// IMAP and encrypted IMAP
