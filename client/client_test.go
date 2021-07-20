@@ -546,7 +546,6 @@ func (d *testDialer) Stop() {
 	d.stopped = true
 }
 
-func (d *testDialer) Ping()                {}
 func (d *testDialer) WriteStats(io.Writer) {}
 
 func roundTrip(client *Client, req *http.Request) (*response, error) {

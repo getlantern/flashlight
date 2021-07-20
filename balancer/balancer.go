@@ -128,9 +128,6 @@ type Dialer interface {
 	// Stop stops background processing for this Dialer.
 	Stop()
 
-	// Ping performs an ICMP ping of the proxy used by this dialer
-	Ping()
-
 	WriteStats(w io.Writer)
 }
 
@@ -698,14 +695,6 @@ func (b *Balancer) KeepLookingForSucceedingDialer() {
 		case <-b.closeCh:
 			return
 		}
-	}
-}
-
-// PingProxies pings the client's proxies.
-func (bal *Balancer) PingProxies() {
-	dialers := bal.copyOfDialers()
-	for _, dialer := range dialers {
-		go dialer.Ping()
 	}
 }
 
