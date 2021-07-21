@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/getlantern/flashlight/config"
 	"io/ioutil"
 	"math"
 	"net"
@@ -16,6 +15,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/geolookup"
 
 	lru "github.com/hashicorp/golang-lru"
 
@@ -55,8 +57,6 @@ var (
 		80, 443,
 		// SSH for those who know how to configure it
 		22,
-		// SMTP and encrypted SMTP
-		25, 465,
 		// POP and encrypted POP
 		110, 995,
 		// IMAP and encrypted IMAP
@@ -150,6 +150,8 @@ type Client struct {
 	googleAdsOptionsLock sync.RWMutex
 	googleAdsOptions     *config.GoogleSearchAdsOptions
 	adTrackUrl           func() string
+	allowGoogleSearchAds func() bool
+	allowMITM            func() bool
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -203,12 +205,55 @@ func NewClient(
 		googleAdsOptions:     nil,
 		googleAdsOptionsLock: sync.RWMutex{},
 		adTrackUrl:           adTrackUrl,
+		allowGoogleSearchAds: allowGoogleSearchAds,
+		allowMITM:            allowMITM,
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
 
-	var mitmOpts *mitm.Opts
-	if allowMITM() {
+	var mitmErr error
+	client.proxy, mitmErr = proxy.New(&proxy.Opts{
+		IdleTimeout:  keepAliveIdleTimeout,
+		BufferSource: buffers.Pool,
+		Filter:       filters.FilterFunc(client.filter),
+		OnError:      errorResponse,
+		Dial:         client.dial,
+		MITMOpts:     client.MITMOptions(),
+		ShouldMITM: func(req *http.Request, upstreamAddr string) bool {
+			userAgent := req.Header.Get("User-Agent")
+			// Only MITM certain browsers
+			// See http://useragentstring.com/pages/useragentstring.php
+			shouldMITM := strings.Contains(userAgent, "Chrome/") || // Chrome
+				strings.Contains(userAgent, "Firefox/") || // Firefox
+				strings.Contains(userAgent, "MSIE") || strings.Contains(userAgent, "Trident") || // Internet Explorer
+				strings.Contains(userAgent, "Edge") || // Microsoft Edge
+				strings.Contains(userAgent, "QQBrowser") || // QQ
+				strings.Contains(userAgent, "360Browser") || strings.Contains(userAgent, "360SE") || strings.Contains(userAgent, "360EE") // 360
+			return shouldMITM
+		},
+	})
+	if mitmErr != nil {
+		log.Errorf("Unable to initialize MITM: %v", mitmErr)
+	}
+	client.reportProxyLocationLoop()
+	client.iptool, _ = iptool.New()
+	go client.pingProxiesLoop()
+	go func() {
+		for {
+			if geolookup.GetCountry(0) != "" {
+				if err := client.proxy.ApplyMITMOptions(client.MITMOptions()); err != nil {
+					log.Errorf("Unable to initialize MITM: %v", err)
+				}
+				return
+			}
+			<-geolookup.OnRefresh()
+		}
+	}()
+	return client, nil
+}
+
+func (c *Client) MITMOptions() *mitm.Opts {
+	if c.allowMITM() {
 		log.Debug("Enabling MITM")
 
 		domains := []string{
@@ -228,14 +273,14 @@ func NewClient(
 			domains = append(domains, "*.youtube."+suffix)
 		}
 		// MITM Google search domains to strip the ads/inject relevant data
-		if allowGoogleSearchAds() {
+		if c.allowGoogleSearchAds() {
 			for _, suffix := range MITMSuffixes {
 				domains = append(domains, "*.google."+suffix)
 			}
 		}
-		mitmOpts = &mitm.Opts{
-			PKFile:             filepath.Join(configDir, "mitmkey.pem"),
-			CertFile:           filepath.Join(configDir, "mitmcert.pem"),
+		return &mitm.Opts{
+			PKFile:             filepath.Join(c.configDir, "mitmkey.pem"),
+			CertFile:           filepath.Join(c.configDir, "mitmcert.pem"),
 			Organization:       "Lantern",
 			InstallCert:        true,
 			InstallPrompt:      i18n.T("BACKEND_MITM_INSTALL_CERT", i18n.T(translationAppName)),
@@ -252,37 +297,7 @@ func NewClient(
 			Domains: domains,
 		}
 	}
-	var mitmErr error
-	client.proxy, mitmErr = proxy.New(&proxy.Opts{
-		IdleTimeout:  keepAliveIdleTimeout,
-		BufferSource: buffers.Pool,
-		Filter:       filters.FilterFunc(client.filter),
-		OnError:      errorResponse,
-		Dial:         client.dial,
-		MITMOpts:     mitmOpts,
-		ShouldMITM: func(req *http.Request, upstreamAddr string) bool {
-			userAgent := req.Header.Get("User-Agent")
-			// Only MITM certain browsers
-			// See http://useragentstring.com/pages/useragentstring.php
-			shouldMITM := strings.Contains(userAgent, "Chrome/") || // Chrome
-				strings.Contains(userAgent, "Firefox/") || // Firefox
-				strings.Contains(userAgent, "MSIE") || strings.Contains(userAgent, "Trident") || // Internet Explorer
-				strings.Contains(userAgent, "Edge") || // Microsoft Edge
-				strings.Contains(userAgent, "QQBrowser") || // QQ
-				strings.Contains(userAgent, "360Browser") || strings.Contains(userAgent, "360SE") || strings.Contains(userAgent, "360EE") // 360
-			return shouldMITM
-		},
-	})
-	if mitmErr != nil {
-		log.Errorf("Unable to initialize MITM: %v", mitmErr)
-	}
-	client.reportProxyLocationLoop()
-	client.iptool, err = iptool.New()
-	if err != nil {
-		return nil, errors.New("Unable to initialize iptool: %v", err)
-	}
-	go client.pingProxiesLoop()
-	return client, nil
+	return nil
 }
 
 func (client *Client) GetBalancer() *balancer.Balancer {
