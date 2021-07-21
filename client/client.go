@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/getlantern/flashlight/config"
 	"io/ioutil"
 	"math"
 	"net"
@@ -16,6 +15,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/getlantern/flashlight/config"
 
 	lru "github.com/hashicorp/golang-lru"
 
@@ -275,10 +276,7 @@ func NewClient(
 		log.Errorf("Unable to initialize MITM: %v", mitmErr)
 	}
 	client.reportProxyLocationLoop()
-	client.iptool, err = iptool.New()
-	if err != nil {
-		return nil, errors.New("Unable to initialize iptool: %v", err)
-	}
+	client.iptool, _ = iptool.New()
 	go client.pingProxiesLoop()
 	return client, nil
 }
