@@ -41,8 +41,6 @@ var (
 
 	Staging = false
 
-	AuthServerAddr = "https://auth4.lantern.network"
-
 	ProAPIHost = "api.getiantem.org"
 
 	log = golog.LoggerFor("flashlight.common")
@@ -69,7 +67,6 @@ func initInternal() {
 		return
 	}
 	if Staging {
-		AuthServerAddr = "https://auth-staging.lantern.network"
 		ProAPIHost = "api-staging.getiantem.org"
 	}
 	forceAds, _ = strconv.ParseBool(os.Getenv("FORCEADS"))

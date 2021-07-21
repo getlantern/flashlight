@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/getlantern/flashlight/common"
 	"github.com/jaffee/commandeer"
 	"github.com/mitchellh/mapstructure"
 )
@@ -84,9 +83,7 @@ func ParseFlags() Flags {
 
 	// here we can define default values
 	cfg := Flags{
-		Country:   "xx",
-		YinbiAddr: common.YinbiServerAddr,
-		AuthAddr:  common.AuthServerAddr,
+		Country: "xx",
 	}
 
 	// the following will error on invalid arguments and take env variables starting with LANTERN_ into consideration
