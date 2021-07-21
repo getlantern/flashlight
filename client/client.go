@@ -57,8 +57,6 @@ var (
 		80, 443,
 		// SSH for those who know how to configure it
 		22,
-		// SMTP and encrypted SMTP
-		25, 465,
 		// POP and encrypted POP
 		110, 995,
 		// IMAP and encrypted IMAP
@@ -238,10 +236,7 @@ func NewClient(
 		log.Errorf("Unable to initialize MITM: %v", mitmErr)
 	}
 	client.reportProxyLocationLoop()
-	client.iptool, err = iptool.New()
-	if err != nil {
-		return nil, errors.New("Unable to initialize iptool: %v", err)
-	}
+	client.iptool, _ = iptool.New()
 	go client.pingProxiesLoop()
 	go func() {
 		for {
