@@ -135,12 +135,14 @@ type PartnerAd struct {
 	Title       string `json:"title"`
 	Url         string `json:"url"`
 	Description string `json:"description"`
+	BaseUrl     string
 }
 
 func (ad PartnerAd) String(opts *config.GoogleSearchAdsOptions) string {
-	link := strings.Replace(opts.AdFormat, "@LINK", ad.Url, 1)
-	link = strings.Replace(link, "@TITLE", ad.Title, 1)
-	link = strings.Replace(link, "@DESCRIPTION", ad.Description, 1)
+	link := strings.ReplaceAll(opts.AdFormat, "@ADLINK", ad.BaseUrl)
+	link = strings.ReplaceAll(link, "@LINK", ad.Url)
+	link = strings.ReplaceAll(link, "@TITLE", ad.Title)
+	link = strings.ReplaceAll(link, "@DESCRIPTION", ad.Description)
 	return link
 }
 
@@ -152,7 +154,11 @@ func (ads PartnerAds) String(opts *config.GoogleSearchAdsOptions) string {
 	}
 	builder := strings.Builder{}
 
-	for _, ad := range ads {
+	for i, ad := range ads {
+		// Do not include more than a few ads.
+		if i >= 2 {
+			break
+		}
 		builder.WriteString(ad.String(opts))
 	}
 	return strings.Replace(opts.BlockFormat, "@LINKS", builder.String(), 1)
@@ -179,12 +185,23 @@ func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords 
 					Title:       ad.Name,
 					Url:         client.getTrackAdUrl(ad.URL, ad.Campaign),
 					Description: ad.Description,
+					BaseUrl:     client.getBaseUrl(ad.URL),
 				})
 			}
 
 		}
 	}
 	return ads.String(opts)
+}
+
+// getBaseUrl returns the URL for the base domain of an ad without the full path, query string,
+// etc.
+func (client *Client) getBaseUrl(originalUrl string) string {
+	url, err := url.Parse(originalUrl)
+	if err != nil {
+		return originalUrl
+	}
+	return url.Scheme + "://" + url.Host
 }
 
 // getTrackAdUrl takes original URL and passes it to the analytics tracker
@@ -204,6 +221,7 @@ func (client *Client) getTrackAdUrl(originalUrl string, campaign string) string 
 }
 
 func (client *Client) divertGoogleSearchAds(initialContext filters.Context, req *http.Request, next filters.Next) (resp *http.Response, ctx filters.Context, err error) {
+	log.Debug("Processing google search ads")
 	client.googleAdsOptionsLock.RLock()
 	opts := client.googleAdsOptions
 	client.googleAdsOptionsLock.RUnlock()
