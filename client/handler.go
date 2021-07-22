@@ -154,6 +154,10 @@ func (ads PartnerAds) String(opts *config.GoogleSearchAdsOptions) string {
 	}
 	builder := strings.Builder{}
 
+	// Randomize the ads so we don't always show the same ones.
+	rand.Shuffle(len(ads), func(i, j int) {
+		ads[i], ads[j] = ads[j], ads[i]
+	})
 	for i, ad := range ads {
 		// Do not include more than a few ads.
 		if i >= 2 {
