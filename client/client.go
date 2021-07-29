@@ -18,6 +18,7 @@ import (
 
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getsentry/sentry-go"
 
 	lru "github.com/hashicorp/golang-lru"
 
@@ -234,6 +235,7 @@ func NewClient(
 	})
 	if mitmErr != nil {
 		log.Errorf("Unable to initialize MITM: %v", mitmErr)
+		sentry.CaptureException(mitmErr)
 	}
 	client.reportProxyLocationLoop()
 	client.iptool, _ = iptool.New()
