@@ -19,7 +19,7 @@ You can build an SDK for use by external applications either for Android or for 
 make lanternsdk-android.aar
 
 ### iOS SDK
-make LanternSDK.framework
+make Lanternsdk.xcframework
 
 ## A note on iOS and memory usage
 The iOS application needs to run as a background process on iOS, meaning that it's severely memory restricted. Because of this, we disable a lot of protocols and extra features using `// +build !iosapp` in order to conserve memory.

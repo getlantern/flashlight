@@ -44,5 +44,5 @@ Ios.framework
 *.aar
 *.jar
 .vscode
-LanternSDK.framework
+Lanternsdk*framework
 
