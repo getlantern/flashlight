@@ -21,6 +21,51 @@ make lanternsdk-android.aar
 ### iOS SDK
 make Lanternsdk.xcframework
 
+#### iOS SDK Usage
+
+```swift
+
+import Lanternsdk
+
+...
+
+// Lantern needs a folder in which to store configuration, caches, etc
+let configDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(".lantern")
+// Lantern needs to be able to uniquely identify the user's device
+let deviceID = UIDevice.current.identifierForVendor!.uuidString
+
+var error: NSError?
+let startResult = Lanternsdk.LanternsdkStart("TestApp",
+                            configDir.path,
+                            deviceID,
+                            true, // proxyAll
+                            60000, // startTimeoutMillis
+                            &error)
+if let err = error {
+    throw err
+}
+
+if let host = startResult?.httpHost {
+    if let port = startResult?.httpPort {
+        let proxyConfig = URLSessionConfiguration.default
+        // see https://stackoverflow.com/questions/42617582/how-to-use-urlsession-with-proxy-in-swift-3#42731010
+        proxyConfig.connectionProxyDictionary = [AnyHashable: Any]()
+        proxyConfig.connectionProxyDictionary?[kCFNetworkProxiesHTTPEnable as String] = 1
+        proxyConfig.connectionProxyDictionary?[kCFNetworkProxiesHTTPProxy as String] = host
+        proxyConfig.connectionProxyDictionary?[kCFNetworkProxiesHTTPPort as String] = port
+        proxyConfig.connectionProxyDictionary?[kCFStreamPropertyHTTPSProxyHost as String] = host
+        proxyConfig.connectionProxyDictionary?[kCFStreamPropertyHTTPSProxyPort as String] = port
+
+        let session = URLSession.init(configuration: proxyConfig)
+    }
+}
+
+```
+
+#### TestApp
+
+lanternsdk/TestApp contains a test iOS application demonstrating use of the lanternsdk on iOS.
+
 ## A note on iOS and memory usage
 The iOS application needs to run as a background process on iOS, meaning that it's severely memory restricted. Because of this, we disable a lot of protocols and extra features using `// +build !iosapp` in order to conserve memory.
 
