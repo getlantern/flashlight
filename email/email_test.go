@@ -75,7 +75,7 @@ func TestSubmitIssue(t *testing.T) {
 			return
 		}
 
-		fronted.Configure(pool, cfg.Client.FrontedProviders(), config.CloudfrontProviderID, filepath.Join(tempConfigDir, "masquerade_cache"))
+		fronted.Configure(pool, cfg.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(tempConfigDir, "masquerade_cache"))
 		SetHTTPClient(proxied.DirectThenFrontedClient(5 * time.Second))
 		defer SetHTTPClient(&http.Client{})
 

@@ -126,7 +126,6 @@ func parseGlobal(bytes []byte) {
 	// Clear out high cardinality data before marshaling
 	cfg.ProxiedSites = nil
 	cfg.DomainRoutingRules = nil
-	cfg.Client.MasqueradeSets = nil
 	cfg.Client.Fronted.Providers = nil
 
 	out, err := yaml.Marshal(cfg)
