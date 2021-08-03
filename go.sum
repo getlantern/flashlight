@@ -338,6 +338,8 @@ github.com/getlantern/netx v0.0.0-20201229185957-3fadd2c8f5ba h1:nbXBFlsbvYMU2v+
 github.com/getlantern/netx v0.0.0-20201229185957-3fadd2c8f5ba/go.mod h1:g7yY/ImU8M+7lS09wVG3GTsxNvtPMTvkeWZVfxowtMo=
 github.com/getlantern/netx v0.0.0-20210728072623-d1c76cf49e72 h1:5uymdw5F+OzNbmTRA7AlvEFd7ajQmYDz/tXgWt8f7c0=
 github.com/getlantern/netx v0.0.0-20210728072623-d1c76cf49e72/go.mod h1:g7yY/ImU8M+7lS09wVG3GTsxNvtPMTvkeWZVfxowtMo=
+github.com/getlantern/netx v0.0.0-20210803075350-eb4fa6261e47 h1:k3PZ5qr/0WBnJiWCHm4WJBtRYrgzgkkpNtDRLF3BGxs=
+github.com/getlantern/netx v0.0.0-20210803075350-eb4fa6261e47/go.mod h1:g7yY/ImU8M+7lS09wVG3GTsxNvtPMTvkeWZVfxowtMo=
 github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
 github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6 h1:QthAQCekS1YOeYWSvoHI6ZatlG4B+GBDLxV/2ZkBsTA=
 github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
@@ -358,6 +360,8 @@ github.com/getlantern/proxy v0.0.0-20200302081518-0bb851d75e72/go.mod h1:40zgzXJ
 github.com/getlantern/proxy v0.0.0-20201001032732-eefd72879266/go.mod h1:MF04hsRYe81kXjjvdyAkKbXWmg4uUwe2LjWMfP7wHE0=
 github.com/getlantern/proxy v0.0.0-20210720145356-ea11431b13db h1:EeFAk4rH8vgWuvpGDsQc8d2op7UyQXAy3kBMU4fPDRM=
 github.com/getlantern/proxy v0.0.0-20210720145356-ea11431b13db/go.mod h1:MF04hsRYe81kXjjvdyAkKbXWmg4uUwe2LjWMfP7wHE0=
+github.com/getlantern/proxy v0.0.0-20210803075509-4c27ebc33baf h1:sOOIqdzZg6I1wJXLYt+nrybO3rY9ikSh0/++rwN04Cc=
+github.com/getlantern/proxy v0.0.0-20210803075509-4c27ebc33baf/go.mod h1:4PqzplHSCsUD0Q0imm3liQJYVgkaPKmjXOLaR2zNPUc=
 github.com/getlantern/proxybench v0.0.0-20200806214955-5d56065f9f77 h1:cEuNxkIYbIt2YfI3xoeJokBY4uUfuIvv/5IqNJcgbo4=
 github.com/getlantern/proxybench v0.0.0-20200806214955-5d56065f9f77/go.mod h1:0q8eYDExExu4OEUGbKFbitxZ3UXbGHzewQ9o/ywIJaE=
 github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683 h1:Asfm7ajzavuSZC+5b+tPwXwyvlw188NM9hKM7wNMNGg=
