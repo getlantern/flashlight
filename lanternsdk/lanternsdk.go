@@ -2,7 +2,9 @@
 package lanternsdk
 
 import (
+	"net"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -28,6 +30,8 @@ var (
 // StartResult provides information about the started Lantern
 type StartResult struct {
 	HTTPAddr string
+	HTTPHost string
+	HTTPPort int
 }
 
 // Start starts an HTTP proxy at a random address. It blocks until the given timeout
@@ -77,12 +81,27 @@ func Start(appName, configDir, deviceID string, proxyAll bool, startTimeoutMilli
 		return nil, log.Error("failed to complete geolookup in time")
 	}
 
-	return &StartResult{addr.(string)}, nil
+	httpAddr := addr.(string)
+	host, portString, err := net.SplitHostPort(httpAddr)
+	if err != nil {
+		return nil, log.Errorf("failed to split host:port from %v: %v", httpAddr, err)
+	}
+	port, err := strconv.Atoi(portString)
+	if err != nil {
+		return nil, log.Errorf("failed to parse integer from port %v: %v", portString)
+	}
+
+	return &StartResult{
+		HTTPAddr: httpAddr,
+		HTTPHost: host,
+		HTTPPort: port,
+	}, nil
 }
 
 func start(appName, configDir, deviceID string, proxyAll bool) error {
 	logging.EnableFileLogging(configDir)
 	appdir.SetHomeDir(configDir)
+	increaseFilesLimit()
 
 	log.Debugf("Starting lantern: configDir %s", configDir)
 	flags := map[string]interface{}{
