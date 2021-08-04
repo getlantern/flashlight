@@ -10,7 +10,7 @@ const (
 	highFileLimit = 16384
 )
 
-// on iOS, the default file descriptor limit for the process is too low to accomodate Lantern, bump it up
+// on iOS, the default file descriptor limit for the process is too low to accommodate Lantern, bump it up
 func increaseFilesLimit() {
 	var rLimit syscall.Rlimit
 	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
