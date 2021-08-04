@@ -46,4 +46,4 @@ Ios.framework
 *.jar
 .vscode
 Lanternsdk*framework*
-
+xcuserdata
