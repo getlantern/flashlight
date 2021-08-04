@@ -18,9 +18,12 @@ func increaseFilesLimit() {
 		log.Errorf("unable to get current RLIMIT_NOFILE: %v", err)
 		return
 	}
-	rLimit.Cur = highFileLimit
-	err = syscall.Setrlimit(syscall.RLIMIT_NOFILE, &rLimit)
-	if err != nil {
-		log.Errorf("unable to set RLIMIT_NOFILE: %v", err)
+	if rLimit.Cur < highFileLimit {
+		log.Debugf("Increasing RLIMIT_NOFILE to %v", highFileLimit)
+		rLimit.Cur = highFileLimit
+		err = syscall.Setrlimit(syscall.RLIMIT_NOFILE, &rLimit)
+		if err != nil {
+			log.Errorf("unable to set RLIMIT_NOFILE: %v", err)
+		}
 	}
 }
