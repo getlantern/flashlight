@@ -69,6 +69,7 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 	}
 
 	trackYoutubeWatches(req)
+	client.trackSearches(req)
 	// Add the scheme back for CONNECT requests. It is cleared
 	// intentionally by the standard library, see
 	// https://golang.org/src/net/http/request.go#L938. The easylist
@@ -148,7 +149,7 @@ func (ad PartnerAd) String(opts *config.GoogleSearchAdsOptions) string {
 
 type PartnerAds []PartnerAd
 
-func (ads PartnerAds) String(opts *config.GoogleSearchAdsOptions) string {
+func (ads PartnerAds) String(client *Client, opts *config.GoogleSearchAdsOptions) string {
 	if len(ads) == 0 {
 		return ""
 	}
@@ -163,6 +164,7 @@ func (ads PartnerAds) String(opts *config.GoogleSearchAdsOptions) string {
 		if i >= 2 {
 			break
 		}
+		client.eventWithLabel("google_search_ads", "ad_injected", ad.Url)
 		builder.WriteString(ad.String(opts))
 	}
 	return strings.Replace(opts.BlockFormat, "@LINKS", builder.String(), 1)
@@ -178,6 +180,8 @@ func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords 
 			for _, query := range keywords {
 				for _, kw := range ad.Keywords {
 					if kw.MatchString(query) {
+						client.eventWithLabel("google_search_ads", "keyword_match", kw.String())
+
 						found = true
 						break out
 					}
@@ -195,7 +199,7 @@ func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords 
 
 		}
 	}
-	return ads.String(opts)
+	return ads.String(client, opts)
 }
 
 // getBaseUrl returns the URL for the base domain of an ad without the full path, query string,
@@ -376,6 +380,42 @@ func (client *Client) redirectAdSwap(ctx filters.Context, req *http.Request, adS
 	}
 	resp.Header.Set("Location", adSwapURL)
 	return filters.ShortCircuit(ctx, req, resp)
+}
+
+type SearchEngine struct {
+	host string
+	path string
+}
+
+var SearchEnginesToTrack = map[string]SearchEngine{
+	"google": {
+		host: "google.com",
+		path: "/search",
+	},
+	"bing": {
+		host: "bing.com",
+		path: "/search",
+	},
+	"baidu": {
+		host: "baidu.com",
+		path: "/s",
+	},
+}
+
+func (s *SearchEngine) Matches(req *http.Request) bool {
+	if !strings.Contains(strings.ToLower(req.Host), s.host) && !strings.Contains(strings.ToLower(req.URL.Host), s.host) {
+		return false
+	}
+	return strings.Contains(strings.ToLower(req.URL.Path), s.path)
+}
+
+func (client *Client) trackSearches(req *http.Request) {
+	for engine, params := range SearchEnginesToTrack {
+		if params.Matches(req) {
+			client.eventWithLabel("search", "search_performed", engine)
+			break
+		}
+	}
 }
 
 func trackYoutubeWatches(req *http.Request) {
