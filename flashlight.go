@@ -248,6 +248,7 @@ func New(
 	adSwapTargetURL func() string,
 	reverseDNS func(host string) (string, error),
 	adTrackUrl func() string,
+	eventWithLabel func(category, action, label string),
 ) (*Flashlight, error) {
 
 	log.Debugf("Using configdir: %v", configDir)
@@ -355,6 +356,7 @@ func New(
 		adSwapTargetURL,
 		reverseDNS,
 		adTrackUrl,
+		eventWithLabel,
 	)
 	if err != nil {
 		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)

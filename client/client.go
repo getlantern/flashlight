@@ -152,6 +152,7 @@ type Client struct {
 	adTrackUrl           func() string
 	allowGoogleSearchAds func() bool
 	allowMITM            func() bool
+	eventWithLabel       func(category, action, label string)
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -175,6 +176,7 @@ func NewClient(
 	adSwapTargetURL func() string,
 	reverseDNS func(addr string) (string, error),
 	adTrackUrl func() string,
+	eventWithLabel func(category, action, label string),
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
 	rewriteLRU, err := lru.New(100)
@@ -207,6 +209,7 @@ func NewClient(
 		adTrackUrl:           adTrackUrl,
 		allowGoogleSearchAds: allowGoogleSearchAds,
 		allowMITM:            allowMITM,
+		eventWithLabel:       eventWithLabel,
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second

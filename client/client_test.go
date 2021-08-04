@@ -103,6 +103,7 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 		func() string { return adSwapTargetURL },
 		func(host string) (string, error) { return host, nil },
 		func() string { return "https://tracker/ads" },
+		func(category, action, label string) {},
 	)
 	return client
 }

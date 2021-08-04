@@ -2,11 +2,6 @@ package client
 
 import (
 	"context"
-	"github.com/andybalholm/brotli"
-	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/proxy/filters"
-	"github.com/getlantern/yaml"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net"
 	"net/http"
@@ -14,6 +9,12 @@ import (
 	"regexp"
 	"testing"
 	"time"
+
+	"github.com/andybalholm/brotli"
+	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/proxy/filters"
+	"github.com/getlantern/yaml"
+	"github.com/stretchr/testify/require"
 
 	"github.com/getlantern/httpseverywhere"
 	"github.com/stretchr/testify/assert"
@@ -175,6 +176,7 @@ func newClientForDiversion() *Client {
 		func() string { return "" },
 		func(host string) (string, error) { return host, nil },
 		func() string { return "https://tracker/ads" },
+		func(category, action, label string) {},
 	)
 	return client
 }
