@@ -105,6 +105,7 @@ Lanternsdk.xcframework: $(SOURCES)
 	rm -rf /tmp/amd64 ; mkdir /tmp/amd64 && \
 	GO111MODULE=off gomobile bind -o=LanternSDK.framework -target=ios/arm64 -o /tmp/arm64/Lanternsdk.framework -tags='headless publicsdk' -ldflags="$$EXTRA_LDFLAGS -s -w" github.com/getlantern/flashlight/lanternsdk && \
 	GO111MODULE=off gomobile bind -o=LanternSDK.framework -target=ios/amd64 -o /tmp/amd64/Lanternsdk.framework -tags='headless publicsdk' -ldflags="$$EXTRA_LDFLAGS -s -w" github.com/getlantern/flashlight/lanternsdk && \
+	rm -Rf Lanternsdk.xcframework && \
 	xcodebuild -create-xcframework -framework /tmp/arm64/Lanternsdk.framework/ -framework /tmp/amd64/Lanternsdk.framework -output Lanternsdk.xcframework
 
 clean:
