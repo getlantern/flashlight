@@ -35,7 +35,7 @@ require (
 	github.com/getlantern/errors v1.0.1
 	github.com/getlantern/event v0.0.0-20170919023932-f16a5563f52e
 	github.com/getlantern/eventual v1.0.0
-	github.com/getlantern/fronted v0.0.0-20201229165541-138879ce456e
+	github.com/getlantern/fronted v0.0.0-20210806163345-971f7e536246
 	github.com/getlantern/geolookup v0.0.0-20200121184643-02217082e50f
 	github.com/getlantern/go-ping v0.0.0-20191213124541-9d4b7e6e7de6
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
