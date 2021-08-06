@@ -178,6 +178,7 @@ func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords 
 			found := false
 		out:
 			for _, query := range keywords {
+				client.eventWithLabel("google_search", "keyword", query)
 				for _, kw := range ad.Keywords {
 					if kw.MatchString(query) {
 						client.eventWithLabel("google_search_ads", "keyword_match", kw.String())
