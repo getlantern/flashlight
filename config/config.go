@@ -85,6 +85,9 @@ type options struct {
 	// embeddedData is the data for embedded configs, using tarfs.
 	embeddedData []byte
 
+	// ForceUseEmbeddedConfigs forces the uses of 'embeddedData'
+	forceUseEmbeddedConfigs bool
+
 	// sleep the time to sleep between config fetches.
 	sleep func() time.Duration
 
@@ -134,17 +137,29 @@ func pipeConfig(opts *options) (stop func()) {
 	log.Tracef("Obfuscating %v", opts.obfuscate)
 	conf := newConfig(configPath, opts)
 
-	if saved, proxyErr := conf.saved(); proxyErr != nil {
-		log.Debugf("Could not load stored config %v", proxyErr)
-		if embedded, errr := conf.embedded(opts.embeddedData); errr != nil {
-			log.Errorf("Could not load embedded config %v", errr)
-		} else {
-			log.Debugf("Sending embedded config for %v", opts.name)
-			dispatch(embedded, Embedded)
+	// If ForceUseEmbeddedConfigs is on, always try the embedded configurations
+	if opts.forceUseEmbeddedConfigs {
+		log.Debugf("opts.forceUseEmbeddedConfigs is true: using embedded configs...\n")
+		embedded, err := conf.embedded(opts.embeddedData)
+		if err != nil {
+			// XXX Panic here since this will only occur in development
+			panic(fmt.Sprintf("opts.forceUseEmbeddedConfigs == true (most probably from a CLI flag), but failed to fetch embedded config: %v", err))
 		}
+		dispatch(embedded, Embedded)
 	} else {
-		log.Debugf("Sending saved config for %v", opts.name)
-		dispatch(saved, Saved)
+		// Else, try saved configurations, then embedded, then fetch remote
+		if saved, err := conf.saved(); err != nil {
+			log.Debugf("Could not load stored config %v", err)
+			if embedded, err := conf.embedded(opts.embeddedData); err != nil {
+				log.Errorf("Could not load embedded config %v", err)
+			} else {
+				log.Debugf("Sending embedded config for %v", opts.name)
+				dispatch(embedded, Embedded)
+			}
+		} else {
+			log.Debugf("Sending saved config for %v", opts.name)
+			dispatch(saved, Saved)
+		}
 	}
 
 	// Now continually poll for new configs and pipe them back to the dispatch
