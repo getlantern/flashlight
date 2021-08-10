@@ -11,7 +11,6 @@ import (
 )
 
 type Flags struct {
-	ReplicaDevConfig bool   `flag:"replica-dev-config" help:"use the hard-coded replica global config"`
 	Addr                         string        `flag:"addr" help:"ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https"`
 	SocksAddr                    string        `flag:"socksaddr" help:"ip:port on which to listen for SOCKS5 proxy requests."`
 	ConfigDir                    string        `flag:"configdir" help:"directory in which to store configuration. Defaults to platform-specific directories."`
