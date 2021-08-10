@@ -70,7 +70,10 @@ type Flashlight struct {
 func (f *Flashlight) ReplicaConfig() *config.ReplicaConfig {
 	f.mxGlobal.RLock()
 	defer f.mxGlobal.RUnlock()
-	return f.global.Replica
+	if f.global != nil {
+		return f.global.Replica
+	}
+	return nil
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {

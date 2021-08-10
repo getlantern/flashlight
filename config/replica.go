@@ -10,9 +10,9 @@ type ReplicaConfig struct {
 	Trackers        []string
 	StaticPeerAddrs []string
 	// Merged with the webseed URLs when the metadata and data buckets are merged.
-	MetadataBaseUrls       []string
-	// This will vary by region in the future
-	ReplicaServiceEndpoint string
+	MetadataBaseUrls []string
+	// map of region to endpoint url
+	ReplicaRustEndpoints map[string]string
 }
 
 func (gc *ReplicaConfig) MetainfoUrls(prefix string) (ret []string) {

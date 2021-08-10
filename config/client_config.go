@@ -29,7 +29,8 @@ var (
 		"update.getlantern.org":            "d2yl1zps97e5mx.cloudfront.net",
 		"github.com":                       "d2yl1zps97e5mx.cloudfront.net",
 		"github-production-release-asset-2e65be.s3.amazonaws.com": "d37kom4pw4aa7b.cloudfront.net",
-		"mandrillapp.com":                   "d2rh3u0miqci5a.cloudfront.net",
+		"mandrillapp.com": "d2rh3u0miqci5a.cloudfront.net",
+		"replica-search-aws.lantern.io": "d380ddt46en4sh.cloudfront.net	",
 		"replica-search.lantern.io":         "d7kybcoknm3oo.cloudfront.net",
 		"replica-search-staging.lantern.io": "d36vwf34kviguu.cloudfront.net",
 	}
