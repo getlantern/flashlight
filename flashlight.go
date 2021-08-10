@@ -120,7 +120,7 @@ func (f *Flashlight) EnabledFeatures() map[string]bool {
 	}
 	global := f.global
 	f.mxGlobal.RUnlock()
-	country := geolookup.GetCountry(0)
+	country := geolookup.DefaultInstance.GetCountry(0)
 	for feature := range global.FeaturesEnabled {
 		if f.calcFeature(global, country, feature) {
 			featuresEnabled[feature] = true
@@ -135,19 +135,20 @@ func (f *Flashlight) FeatureEnabled(feature string) bool {
 	f.mxGlobal.RLock()
 	global := f.global
 	f.mxGlobal.RUnlock()
-	return f.calcFeature(global, geolookup.GetCountry(0), feature)
+	return f.calcFeature(global, geolookup.DefaultInstance.GetCountry(0), feature)
 }
 
 func (f *Flashlight) calcFeature(global *config.Global, country, feature string) bool {
-	// Special case: Use defaults for blocking related features until geolookup is finished
-	// to avoid accidentally generating traffic that could trigger blocking.
+	// Special case: Use defaults for blocking related features until
+	// geolookup.DefaultInstance is finished to avoid accidentally generating
+	// traffic that could trigger blocking.
 	enabled, blockingRelated := blockingRelevantFeatures[feature]
 	if country == "" && blockingRelated {
 		enabledText := "disabled"
 		if enabled {
 			enabledText = "enabled"
 		}
-		log.Debugf("Blocking related feature %v %v because geolookup has not yet finished", feature, enabledText)
+		log.Debugf("Blocking related feature %v %v because geolookup.DefaultInstance has not yet finished", feature, enabledText)
 		return enabled
 	}
 	if global == nil {
@@ -195,8 +196,8 @@ func (f *Flashlight) startConfigFetch() func() {
 
 func (f *Flashlight) applyProxyBench(cfg *config.Global) {
 	go func() {
-		// Wait a while for geolookup to happen before checking if we can turn on proxybench
-		geolookup.GetCountry(1 * time.Minute)
+		// Wait a while for geolookup.DefaultInstance to happen before checking if we can turn on proxybench
+		geolookup.DefaultInstance.GetCountry(1 * time.Minute)
 		if f.FeatureEnabled(config.FeatureProxyBench) {
 			startProxyBenchOnce.Do(func() {
 				opts := &proxybench.Opts{
@@ -264,7 +265,7 @@ func New(
 	if common.InDevelopment() {
 		log.Debugf("You can query for this device's activity in borda under device id: %v", deviceID)
 	}
-	fops.InitGlobalContext(appName, deviceID, isPro, func() string { return geolookup.GetCountry(0) })
+	fops.InitGlobalContext(appName, deviceID, isPro, func() string { return geolookup.DefaultInstance.GetCountry(0) })
 	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 
 	f := &Flashlight{
@@ -386,14 +387,14 @@ func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 	log.Debug("Preparing to start client proxy")
 	stop := f.startConfigFetch()
 	defer stop()
-	onGeo := geolookup.OnRefresh()
-	geolookup.Refresh()
+	onGeo := geolookup.DefaultInstance.OnRefresh()
+	geolookup.DefaultInstance.Refresh()
 
 	// Until we know our country, default to IR which has all detection rules
 	log.Debug("Defaulting detour country to IR until real country is known")
 	detour.SetCountry("IR")
 	go func() {
-		country := geolookup.GetCountry(eventual.Forever)
+		country := geolookup.DefaultInstance.GetCountry(eventual.Forever)
 		log.Debugf("Setting detour country to %v", country)
 		detour.SetCountry(country)
 	}()
