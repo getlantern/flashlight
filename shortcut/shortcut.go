@@ -27,8 +27,8 @@ var (
 
 func init() {
 	go func() {
-		for <-geolookup.OnRefresh() {
-			configure(geolookup.GetCountry(0))
+		for <-geolookup.DefaultInstance.OnRefresh() {
+			configure(geolookup.DefaultInstance.GetCountry(0))
 		}
 	}()
 }

@@ -122,7 +122,7 @@ func Send(msg *Message) error {
 				Set("issue_type", msg.Vars["issue"]).
 				Set("issue_note", msg.Vars["report"])
 		}
-		msg.Vars["country"] = geolookup.GetCountry(0)
+		msg.Vars["country"] = geolookup.DefaultInstance.GetCountry(0)
 		log.Debug("Reporting issue")
 	} else {
 		op = ops.Begin("send_email").Set("template", msg.Template)

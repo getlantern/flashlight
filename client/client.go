@@ -243,13 +243,13 @@ func NewClient(
 	go client.pingProxiesLoop()
 	go func() {
 		for {
-			if geolookup.GetCountry(0) != "" {
+			if geolookup.DefaultInstance.GetCountry(0) != "" {
 				if err := client.proxy.ApplyMITMOptions(client.MITMOptions()); err != nil {
 					log.Errorf("Unable to initialize MITM: %v", err)
 				}
 				return
 			}
-			<-geolookup.OnRefresh()
+			<-geolookup.DefaultInstance.OnRefresh()
 		}
 	}()
 	return client, nil

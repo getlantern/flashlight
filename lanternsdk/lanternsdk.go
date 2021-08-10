@@ -72,7 +72,7 @@ func Start(appName, configDir, deviceID string, proxyAll bool, startTimeoutMilli
 
 	// wait for geolookup to complete so that we don't run into
 	// "proxywhitelistedonly enabled because geolookup has not yet finished"
-	country := geolookup.GetCountry(remainingTimeout())
+	country := geolookup.DefaultInstance.GetCountry(remainingTimeout())
 	if country == "" {
 		return nil, log.Error("failed to complete geolookup in time")
 	}

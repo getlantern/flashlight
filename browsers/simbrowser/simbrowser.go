@@ -55,7 +55,7 @@ func ChooseForUser(ctx context.Context, uc common.UserConfig) Browser {
 
 	geolookupTimeout := longTimeout
 	if deadline, ok := ctx.Deadline(); ok {
-		// A timeout of 0 tells geolookup to return immediately.
+		// A timeout of 0 tells geolookup.DefaultInstance to return immediately.
 		geolookupTimeout = max(deadline.Sub(time.Now()), 0)
 	}
 
@@ -67,7 +67,7 @@ func ChooseForUser(ctx context.Context, uc common.UserConfig) Browser {
 
 	countryCodeC := make(chan CountryCode, 1)
 	go func() {
-		if cc := geolookup.GetCountry(geolookupTimeout); cc != "" {
+		if cc := geolookup.DefaultInstance.GetCountry(geolookupTimeout); cc != "" {
 			countryCodeC <- CountryCode(cc)
 		}
 	}()
