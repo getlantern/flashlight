@@ -66,7 +66,7 @@ func startConfigServer(t *testing.T, config interface{}) (u string, reqCount fun
 	}
 	go func() {
 		if err = hs.Serve(l); err != nil {
-			t.Fatalf("Unable to serve: %v", err)
+			t.Errorf("Unable to serve: %v", err)
 		}
 	}()
 
