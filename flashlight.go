@@ -285,7 +285,7 @@ func New(
 	if enableVPN {
 		grabber, grabberErr = dnsgrab.Listen(50000,
 			"127.0.0.1:53",
-			"8.8.8.8")
+			func() string { return "8.8.8.8" })
 		if grabberErr != nil {
 			log.Errorf("dnsgrab unable to listen: %v", grabberErr)
 		}
