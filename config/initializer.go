@@ -101,14 +101,15 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 
 	// These are the options for fetching the per-user proxy config.
 	proxyOptions := &options{
-		saveDir:      configDir,
-		obfuscate:    obfuscate(flags),
-		name:         "proxies.yaml",
-		originURL:    proxyURL,
-		userConfig:   userConfig,
-		unmarshaler:  newProxiesUnmarshaler(),
-		dispatch:     proxiesDispatch,
-		embeddedData: generated.EmbeddedProxies,
+		saveDir:                 configDir,
+		obfuscate:               obfuscate(flags),
+		name:                    "proxies.yaml",
+		originURL:               proxyURL,
+		userConfig:              userConfig,
+		unmarshaler:             newProxiesUnmarshaler(),
+		dispatch:                proxiesDispatch,
+		embeddedData:            generated.EmbeddedProxies,
+		forceUseEmbeddedConfigs: shouldForceUseEmbeddedProxies(flags),
 		sleep: func() time.Duration {
 			mx.RLock()
 			defer mx.RUnlock()
@@ -122,14 +123,15 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 
 	// These are the options for fetching the global config.
 	globalOptions := &options{
-		saveDir:      configDir,
-		obfuscate:    obfuscate(flags),
-		name:         "global.yaml",
-		originURL:    globalURL,
-		userConfig:   userConfig,
-		unmarshaler:  newGlobalUnmarshaler(flags),
-		dispatch:     globalDispatch,
-		embeddedData: generated.GlobalConfig,
+		saveDir:                 configDir,
+		obfuscate:               obfuscate(flags),
+		name:                    "global.yaml",
+		originURL:               globalURL,
+		userConfig:              userConfig,
+		unmarshaler:             newGlobalUnmarshaler(flags),
+		dispatch:                globalDispatch,
+		embeddedData:            generated.GlobalConfig,
+		forceUseEmbeddedConfigs: shouldForceUseEmbeddedGlobalConfig(flags),
 		sleep: func() time.Duration {
 			mx.RLock()
 			defer mx.RUnlock()
@@ -185,6 +187,14 @@ func isStaging(flags map[string]interface{}) bool {
 
 func isSticky(flags map[string]interface{}) bool {
 	return checkBool(flags, "stickyconfig")
+}
+
+func shouldForceUseEmbeddedGlobalConfig(flags map[string]interface{}) bool {
+	return checkBool(flags, "force-use-embedded-globalconfig")
+}
+
+func shouldForceUseEmbeddedProxies(flags map[string]interface{}) bool {
+	return checkBool(flags, "force-use-embedded-proxies")
 }
 
 func checkBool(flags map[string]interface{}, key string) bool {
