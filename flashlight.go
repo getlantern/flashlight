@@ -14,6 +14,7 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
+	"github.com/getlantern/netx"
 	"github.com/getlantern/ops"
 	"github.com/getlantern/proxybench"
 
@@ -51,6 +52,10 @@ var (
 		config.FeatureProxyWhitelistedOnly: true,
 	}
 )
+
+func init() {
+	netx.EnableNAT64AutoDiscovery()
+}
 
 type Flashlight struct {
 	configDir         string
