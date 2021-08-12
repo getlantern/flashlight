@@ -47,6 +47,35 @@ type FeatureOptions interface {
 	fromMap(map[string]interface{}) error
 }
 
+type ReplicaOptions struct {
+	// Use infohash and old-style prefixing simultaneously for now. Later, the old-style can be removed.
+	WebseedBaseUrls []string
+	Trackers        []string
+	StaticPeerAddrs []string
+	// Merged with the webseed URLs when the metadata and data buckets are merged.
+	MetadataBaseUrls []string
+	// map of region to endpoint url
+	ReplicaRustEndpoints map[string]string
+}
+
+func (gc *ReplicaOptions) MetainfoUrls(prefix string) (ret []string) {
+	for _, s := range gc.WebseedBaseUrls {
+		ret = append(ret, fmt.Sprintf("%s%s/torrent", s, prefix))
+	}
+	return
+}
+
+func (gc *ReplicaOptions) WebseedUrls(prefix string) (ret []string) {
+	for _, s := range gc.WebseedBaseUrls {
+		ret = append(ret, fmt.Sprintf("%s%s/data/", s, prefix))
+	}
+	return
+}
+
+func (ro *ReplicaOptions) fromMap(m map[string]interface{}) error {
+	return mapstructure.Decode(m, &ro)
+}
+
 type GoogleSearchAdsOptions struct {
 	Pattern     string                 `mapstructure:"pattern"`
 	BlockFormat string                 `mapstructure:"block_format"`

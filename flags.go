@@ -82,10 +82,7 @@ func ParseFlags() Flags {
 	}
 
 	// here we can define default values
-	cfg := Flags{
-		Country:        "xx",
-		ReplicaRustUrl: "https://replica-search.lantern.io",
-	}
+	cfg := Flags{}
 
 	// the following will error on invalid arguments and take env variables starting with LANTERN_ into consideration
 	err := commandeer.LoadArgsEnv(&flagSet{flag.CommandLine}, &cfg, args, "LANTERN_", nil)
