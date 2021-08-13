@@ -67,12 +67,6 @@ type Flashlight struct {
 	op                *fops.Op
 }
 
-func (f *Flashlight) ReplicaConfig() *config.ReplicaConfig {
-	f.mxGlobal.RLock()
-	defer f.mxGlobal.RUnlock()
-	return f.global.Replica
-}
-
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	f.mxGlobal.Lock()
 	f.global = cfg
