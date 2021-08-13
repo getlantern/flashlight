@@ -123,6 +123,12 @@ func (f *Flashlight) EnabledFeatures() map[string]bool {
 	return featuresEnabled
 }
 
+func (f *Flashlight) IsGlobalNil() bool {
+	f.mxGlobal.RLock()
+	defer f.mxGlobal.RUnlock()
+	return f.global == nil
+}
+
 // FeatureEnabled returns true if the input feature is enabled for this flashlight instance. Feature
 // names are tracked in the config package.
 func (f *Flashlight) FeatureEnabled(feature string) bool {
