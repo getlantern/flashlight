@@ -27,7 +27,7 @@ require (
 	github.com/getlantern/cmuxprivate v0.0.0-20200905032931-afb63438e40b
 	github.com/getlantern/common v1.1.1-0.20200824002646-ca4a48d3a74c
 	github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1
-	github.com/getlantern/dnsgrab v0.0.0-20210120195910-d879cb272122
+	github.com/getlantern/dnsgrab v0.0.0-20210813193242-5b74f2fa306f
 	github.com/getlantern/domains v0.0.0-20200402172102-34a8db1e0e83
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
 	github.com/getlantern/enhttp v0.0.0-20190401024120-a974fa851e3c
@@ -57,7 +57,7 @@ require (
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20201027015000-69ed0bd15259
-	github.com/getlantern/netx v0.0.0-20210806160745-b824e2cad607
+	github.com/getlantern/netx v0.0.0-20210813193214-fc6827f83767
 	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
 	github.com/getlantern/proxy v0.0.0-20210806161026-8f52aabf6214
@@ -106,10 +106,10 @@ require (
 	github.com/ugorji/go v1.1.7 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
-	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2 // indirect
-	golang.org/x/net v0.0.0-20210410081132-afb366fc7cd1
+	golang.org/x/crypto v0.0.0-20210812204632-0ba0e8f03122 // indirect
+	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20210412220455-f1c623a9e750
+	golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20210406143921-e86de6bf7a46 // indirect
 	google.golang.org/grpc v1.37.0 // indirect
