@@ -54,6 +54,8 @@ type ReplicaOptions struct {
 	StaticPeerAddrs []string
 	// Merged with the webseed URLs when the metadata and data buckets are merged.
 	MetadataBaseUrls []string
+	// Default endpoint, if nothing else is found
+	ReplicaRustDefaultEndpoint string
 	// map of region to endpoint url
 	ReplicaRustEndpoints map[string]string
 }
