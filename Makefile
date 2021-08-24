@@ -95,11 +95,18 @@ lanternsdk-android.aar: $(SOURCES)
 	echo "Running gomobile with `which gomobile` version `GO111MODULE=off gomobile version` ..." && \
 	GO111MODULE=off gomobile bind -o=lanternsdk-android.aar -target=android -tags='headless publicsdk' -ldflags="$$EXTRA_LDFLAGS -s -w" github.com/getlantern/flashlight/lanternsdk
 
-LanternSDK.framework: $(SOURCES)
+# we build the LanternSDK.framework in two steps to use XCFramework
+# See https://stackoverflow.com/questions/63942997/generate-xcframework-file-with-gomobile
+Lanternsdk.xcframework: $(SOURCES)
 	@$(call build-tags) && \
 	$(call prep-for-mobile) && \
 	echo "Running gomobile with `which gomobile` version `GO111MODULE=off gomobile version` ..." && \
-	GO111MODULE=off gomobile bind -o=LanternSDK.framework -target=ios -tags='headless publicsdk' -ldflags="$$EXTRA_LDFLAGS -s -w" github.com/getlantern/flashlight/lanternsdk
+	rm -rf /tmp/arm64 ; mkdir /tmp/arm64 && \
+	rm -rf /tmp/amd64 ; mkdir /tmp/amd64 && \
+	GO111MODULE=off gomobile bind -o=LanternSDK.framework -target=ios/arm64 -o /tmp/arm64/Lanternsdk.framework -tags='headless publicsdk' -ldflags="$$EXTRA_LDFLAGS -s -w" github.com/getlantern/flashlight/lanternsdk && \
+	GO111MODULE=off gomobile bind -o=LanternSDK.framework -target=ios/amd64 -o /tmp/amd64/Lanternsdk.framework -tags='headless publicsdk' -ldflags="$$EXTRA_LDFLAGS -s -w" github.com/getlantern/flashlight/lanternsdk && \
+	rm -Rf Lanternsdk.xcframework && \
+	xcodebuild -create-xcframework -framework /tmp/arm64/Lanternsdk.framework/ -framework /tmp/amd64/Lanternsdk.framework -output Lanternsdk.xcframework
 
 clean:
-	rm -rf lanternsdk-android.aar LanternSDK.framework vendor
+	rm -rf lanternsdk-android.aar Lanternsdk.xcframework vendor
