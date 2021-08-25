@@ -158,6 +158,8 @@ github.com/dsnet/golib v0.0.0-20171103203638-1ea166775780/go.mod h1:Lj+Z9rebOhdf
 github.com/dustin/go-humanize v0.0.0-20180421182945-02af3965c54e/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
+github.com/dvyukov/go-fuzz v0.0.0-20210429054444-fca39067bc72 h1:XiR1YwcWcRFzxjAhWK29HQL4nocj0QWJjpeRi/YASV0=
+github.com/dvyukov/go-fuzz v0.0.0-20210429054444-fca39067bc72/go.mod h1:11Gm+ccJnvAhCNLlf5+cS9KjtbaD5I5zaZpFMsTHWTw=
 github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5mFgVsvEsIPBvNs=
 github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21/go.mod h1:+020luEh2TKB4/GOp8oxxtq0Daoen/Cii55CzbTV6DU=
 github.com/eapache/queue v1.1.0/go.mod h1:6eCeP0CKFpHLu8blIFXhExK/dRa7WDZfr6jVFPTqq+I=
@@ -333,6 +335,8 @@ github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7 h1:03J6Cb42EG06lH
 github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7/go.mod h1:GfzwugvtH7YcmNIrHHizeyImsgEdyL88YkdnK28B14c=
 github.com/getlantern/multipath v0.0.0-20201027015000-69ed0bd15259 h1:sDgdO1jeo9ozAd7tstkhle86xK7rc8LIYZvHZM+LRK4=
 github.com/getlantern/multipath v0.0.0-20201027015000-69ed0bd15259/go.mod h1:H/0vJMf1amR3WEUVuoDctZ0ymrMXK8nvxCmeNB+0Pn4=
+github.com/getlantern/nettest v1.0.0 h1:xg8vq9JrGzrFGFkFGwZwIJ5+kwtvyqNDIADwrANvhQg=
+github.com/getlantern/nettest v1.0.0/go.mod h1:8wY0QwrdpkayCBQXjhZoJuwu2IHfp4UErrxgwaJ2UM4=
 github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd/go.mod h1:wKdY0ikOgzrWSeB9UyBVKPRhjXQ+vTb+BPeJuypUuNE=
 github.com/getlantern/netx v0.0.0-20210803075350-eb4fa6261e47/go.mod h1:g7yY/ImU8M+7lS09wVG3GTsxNvtPMTvkeWZVfxowtMo=
 github.com/getlantern/netx v0.0.0-20210806160745-b824e2cad607/go.mod h1:g7yY/ImU8M+7lS09wVG3GTsxNvtPMTvkeWZVfxowtMo=
@@ -348,8 +352,9 @@ github.com/getlantern/packetforward v0.0.0-20201001150407-c68a447b0360/go.mod h1
 github.com/getlantern/pcapper v0.0.0-20181212174440-a8b1a3ff0cde h1:AOVE4+PXPV/DCUtXSqWkz3GEeaUzxlHROoruiaB/qqA=
 github.com/getlantern/pcapper v0.0.0-20181212174440-a8b1a3ff0cde/go.mod h1:x9UkLzamASuFKTLV0iSoeJs0IKZawGO1PDhx+7hC2OE=
 github.com/getlantern/preconn v0.0.0-20180328114929-0b5766010efe/go.mod h1:FvIxQD61iYA42UjaJyzGl9DNne8jbowbgicdeNk/7kE=
-github.com/getlantern/preconn v0.0.0-20210115195610-7b15d0535d80 h1:ofQvRfKpZF2ESFPHj1aoA3IdO1aErrTPq7N5xz8Odf0=
 github.com/getlantern/preconn v0.0.0-20210115195610-7b15d0535d80/go.mod h1:FvIxQD61iYA42UjaJyzGl9DNne8jbowbgicdeNk/7kE=
+github.com/getlantern/preconn v1.0.0 h1:DsY3l/y/BJUj86WyaxXylbJnCC9QbKcc3D6js6rFL60=
+github.com/getlantern/preconn v1.0.0/go.mod h1:i/AnXvx715Fq7HgZLlmQlw3sGfEkku8BQT5hLHMK4+k=
 github.com/getlantern/probe v0.0.0-20191107230642-ed284e08029a h1:WaiTdmGVQTEI7K7nD8/6LP227uGMLudFyd9dKSI7DmQ=
 github.com/getlantern/probe v0.0.0-20191107230642-ed284e08029a/go.mod h1:EPE0nd9YNS2FTIz+2EOkqojCuqaQlJ+fTiLPklsqe/E=
 github.com/getlantern/probednet v0.0.0-20190725133252-1cfdb2354b4d h1:9PBhNNIc3CErDnFbi0uc7WCasEtQ5hoz3jWgebHRYm0=
@@ -393,15 +398,17 @@ github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4/go.mod h1:f
 github.com/getlantern/tlsdialer/v3 v3.0.0/go.mod h1:nznxIhqehmOa3l8YAeEiXoVL57LtRVdbzafVCqIL+PM=
 github.com/getlantern/tlsdialer/v3 v3.0.1 h1:nyq8Cq5gIWZ1iONwPuUwhHG4yKFXHfxItx+j0sIvdqo=
 github.com/getlantern/tlsdialer/v3 v3.0.1/go.mod h1:ZK1keXRsQsvmyCUCnVdmPOXH47OTlyEbSlGrV5C0urA=
-github.com/getlantern/tlsmasq v0.4.2 h1:Oc/UEQyiKh1FLIaBww9meVaClW5/YPTPYvrYjZxHvuo=
 github.com/getlantern/tlsmasq v0.4.2/go.mod h1:s1rOwuBnVjJOqy8fy8qGoYz55xThYnvosyRtH9a7CnE=
+github.com/getlantern/tlsmasq v0.4.5 h1:dFh3AxZdicyo8Sqy1/iZLpWiGuJGew43SKaVSL7o6QA=
+github.com/getlantern/tlsmasq v0.4.5/go.mod h1:qgXekW+O2Eag1/hsAndpV/xdY1XXZaoIj7FhXskbxdY=
 github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836 h1:Qx9tRhqZdhF0RBxHe2OVE1OJ30ipOCPfMraDrZED3bc=
 github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836/go.mod h1:1ZJE0mXEdPyyuF1daUTDBo2nVWB/6nuZy7IcNmRnHrc=
 github.com/getlantern/tlsresumption v0.0.0-20200205020452-74fc6ea4e074 h1:jTMIPFsft81lFB9b9IOJLrQprlNjsITjlLZ8J1muva0=
 github.com/getlantern/tlsresumption v0.0.0-20200205020452-74fc6ea4e074/go.mod h1:Z9JXt049556DEYg7tD1tY4/ROWiec9laxBhFawTx8lE=
 github.com/getlantern/tlsutil v0.2.0/go.mod h1:Vxsyr9DVnYwsqHaEzMYkg9fT8aBrnO2eI+gdICMQbQU=
-github.com/getlantern/tlsutil v0.4.0 h1:wvSKWfxSKFVpP3GgSq0wpLl+gFiiq8pDWgpuTxV3ZJY=
 github.com/getlantern/tlsutil v0.4.0/go.mod h1:8v4sW+apnxSkhURB6IUpQ9zuf1r0+i+CywWSZHxXpzw=
+github.com/getlantern/tlsutil v0.5.0 h1:VNQMXW3oMtPDSNyeTLk+MaU8FGkusNxwARJ30sR7yPw=
+github.com/getlantern/tlsutil v0.5.0/go.mod h1:lVgvr4nxuQ1ocOho90UB6LnHFlpP16TXAGpHR8Z0QnI=
 github.com/getlantern/utls v0.0.0-20191119185840-3db8c755b682 h1:gK0+CerB0oFReyfhHZhTDywm7YU7NIx/xrhRGDhgiK0=
 github.com/getlantern/utls v0.0.0-20191119185840-3db8c755b682/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
 github.com/getlantern/utls v0.0.0-20200903013459-0c02248f7ce1 h1:+Egmu6VMMPm8/FHz8TOtQ1Usn3zg0gkS7ZHrLFycyok=
@@ -1061,6 +1068,7 @@ golang.org/x/sys v0.0.0-20201119102817-f84b799fce68/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20210119212857-b64e53b001e4/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210315160823-c6e025ad8005/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210320140829-1e4c9ba3b0c4/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20210420205809-ac73e9fd8988/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210423082822-04245dca01da/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e h1:WUoyKPm6nCo1BnNUvPGnFG3T5DUVem42yDJZZ4CNxMA=
