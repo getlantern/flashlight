@@ -96,6 +96,10 @@ type options struct {
 	// dictate whether the fetcher will use dual fetching (from fronted and
 	// chained URLs) or not.
 	rt http.RoundTripper
+
+	// experiments specifies the experiments to enable. these are sent with
+	// x-lantern-dev-experiments header as a comma separated list.
+	experiments []string
 }
 
 // pipeConfig creates a new config pipeline for reading a specified type of
@@ -150,8 +154,10 @@ func pipeConfig(opts *options) (stop func()) {
 	// Now continually poll for new configs and pipe them back to the dispatch
 	// function.
 	if !opts.sticky {
-		fetcher := newFetcher(opts.userConfig, opts.rt, opts.originURL)
-		go conf.poll(stopCh, func(cfg interface{}) { dispatch(cfg, Fetched) }, fetcher, opts.sleep)
+		fetcher := newFetcher(opts.userConfig, opts.rt, opts.originURL, opts.experiments)
+		go conf.poll(stopCh, func(cfg interface{}) {
+			dispatch(cfg, Fetched)
+		}, fetcher, opts.sleep)
 	} else {
 		log.Debugf("Using sticky config")
 	}

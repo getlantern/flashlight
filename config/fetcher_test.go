@@ -19,7 +19,7 @@ func TestFetcher(t *testing.T) {
 
 	// This will actually fetch the cloud config over the network.
 	rt := &http.Transport{}
-	configFetcher := newFetcher(newTestUserConfig(), rt, common.GlobalURL)
+	configFetcher := newFetcher(newTestUserConfig(), rt, common.GlobalURL, nil)
 
 	bytes, _, err := configFetcher.fetch()
 	assert.Nil(t, err)
@@ -35,7 +35,7 @@ func TestStagingSetup(t *testing.T) {
 	rt := &http.Transport{}
 
 	var fetch *fetcher
-	fetch = newFetcher(newTestUserConfig(), rt, common.ProxiesURL).(*fetcher)
+	fetch = newFetcher(newTestUserConfig(), rt, common.ProxiesURL, nil).(*fetcher)
 
 	assert.Equal(t, "http://config.getiantem.org/proxies.yaml.gz", fetch.originURL)
 
@@ -43,12 +43,12 @@ func TestStagingSetup(t *testing.T) {
 
 	// Blank flags should mean we use the default
 	flags["cloudconfig"] = ""
-	fetch = newFetcher(newTestUserConfig(), rt, url).(*fetcher)
+	fetch = newFetcher(newTestUserConfig(), rt, url, nil).(*fetcher)
 
 	assert.Equal(t, "http://config.getiantem.org/proxies.yaml.gz", fetch.originURL)
 
 	stagingURL := common.ProxiesStagingURL
 	flags["staging"] = true
-	fetch = newFetcher(newTestUserConfig(), rt, stagingURL).(*fetcher)
+	fetch = newFetcher(newTestUserConfig(), rt, stagingURL, nil).(*fetcher)
 	assert.Equal(t, "http://config-staging.getiantem.org/proxies.yaml.gz", fetch.originURL)
 }

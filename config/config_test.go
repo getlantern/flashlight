@@ -134,7 +134,7 @@ func TestPollProxies(t *testing.T) {
 		os.Remove(file)
 
 		proxyConfigURLs, _ := startConfigServer(t, proxyConfig)
-		fetcher := newFetcher(newTestUserConfig(), &http.Transport{}, proxyConfigURLs)
+		fetcher := newFetcher(newTestUserConfig(), &http.Transport{}, proxyConfigURLs, nil)
 		dispatch := func(cfg interface{}) {
 			proxyChan <- cfg
 		}
@@ -175,7 +175,7 @@ func TestProductionGlobal(t *testing.T) {
 		"akamai":     true,
 	}
 
-	f := newFetcher(newTestUserConfig(), &http.Transport{}, testURL)
+	f := newFetcher(newTestUserConfig(), &http.Transport{}, testURL, nil)
 
 	cfgBytes, _, err := f.fetch()
 	if !assert.NoError(t, err, "Error fetching global config from %s", testURL) {
@@ -244,7 +244,7 @@ func TestPollIntervals(t *testing.T) {
 		pollInterval := 500 * time.Millisecond
 		waitTime := pollInterval*2 + (200 * time.Millisecond)
 
-		fetcher := newFetcher(newTestUserConfig(), &http.Transport{}, configURLs)
+		fetcher := newFetcher(newTestUserConfig(), &http.Transport{}, configURLs, nil)
 		dispatch := func(cfg interface{}) {}
 
 		stopChan := make(chan bool)

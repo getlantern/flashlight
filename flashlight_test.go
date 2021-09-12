@@ -118,3 +118,11 @@ func waitForServer(addr string, limit time.Duration, t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 	}
 }
+
+func TestFlags(t *testing.T) {
+	os.Args = []string{"lantern", "-enabled-experiments", "test,test2"}
+	flags := ParseFlags()
+	if len(flags.Experiments) != 2 {
+		t.Fatal("Failed to parse experiments")
+	}
+}
