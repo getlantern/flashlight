@@ -95,6 +95,8 @@ func (f *Flashlight) reconfigureGoogleAds() {
 	var opts config.GoogleSearchAdsOptions
 	if err := f.FeatureOptions(config.FeatureGoogleSearchAds, &opts); err == nil {
 		f.client.ConfigureGoogleAds(opts)
+	} else {
+		log.Errorf("Unable to configure google search ads: %v", err)
 	}
 }
 
