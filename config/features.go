@@ -99,13 +99,10 @@ func (o *GoogleSearchAdsOptions) fromMap(m map[string]interface{}) error {
 	// that will convert string to regexp and error out on syntax issues
 	config := &mapstructure.DecoderConfig{
 		DecodeHook: func(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
-			if f.Kind() != reflect.String {
-				return data, nil
-			}
 			if t != reflect.TypeOf(regexp.Regexp{}) {
 				return data, nil
 			}
-			r, err := regexp.Compile(data.(string))
+			r, err := regexp.Compile(fmt.Sprintf("%v", data))
 			if err != nil {
 				return nil, err
 			}
