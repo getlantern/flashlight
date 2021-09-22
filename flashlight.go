@@ -449,8 +449,7 @@ func (f *Flashlight) applyClientConfig(cfg *config.Global) {
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
 	} else if cfg.Client != nil && cfg.Client.Fronted != nil {
-		fronted.Configure(certs, cfg.Client.FrontedProviders(), config.CloudfrontProviderID, filepath.Join(f.configDir, "masquerade_cache"))
-		chained.ConfigureFronting(certs, cfg.Client.FrontedProviders(), f.configDir)
+		fronted.Configure(certs, cfg.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(f.configDir, "masquerade_cache"))
 	} else {
 		log.Errorf("Unable to configured fronted (no config)")
 	}
