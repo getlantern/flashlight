@@ -133,15 +133,16 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 }
 
 type PartnerAd struct {
-	Title       string `json:"title"`
-	Url         string `json:"url"`
-	Description string `json:"description"`
+	Title       string
+	Url         string
+	TrackedUrl  string
+	Description string
 	BaseUrl     string
 }
 
 func (ad PartnerAd) String(opts *config.GoogleSearchAdsOptions) string {
 	link := strings.ReplaceAll(opts.AdFormat, "@ADLINK", ad.BaseUrl)
-	link = strings.ReplaceAll(link, "@LINK", ad.Url)
+	link = strings.ReplaceAll(link, "@LINK", ad.TrackedUrl)
 	link = strings.ReplaceAll(link, "@TITLE", ad.Title)
 	link = strings.ReplaceAll(link, "@DESCRIPTION", ad.Description)
 	return link
@@ -172,13 +173,13 @@ func (ads PartnerAds) String(client *Client, opts *config.GoogleSearchAdsOptions
 
 func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords []string) string {
 	ads := PartnerAds{}
+	client.eventWithLabel("google_search", "keyword", strings.Join(keywords, "+"))
 	for _, partnerAds := range opts.Partners {
 		for _, ad := range partnerAds {
 			// check if any keywords match
 			found := false
 		out:
 			for _, query := range keywords {
-				client.eventWithLabel("google_search", "keyword", query)
 				for _, kw := range ad.Keywords {
 					if kw.MatchString(query) {
 						client.eventWithLabel("google_search_ads", "keyword_match", kw.String())
@@ -192,7 +193,8 @@ func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords 
 			if found && rand.Float32() < ad.Probability {
 				ads = append(ads, PartnerAd{
 					Title:       ad.Name,
-					Url:         client.getTrackAdUrl(ad.URL, ad.Campaign),
+					TrackedUrl:  client.getTrackAdUrl(ad.URL, ad.Campaign),
+					Url:         ad.URL,
 					Description: ad.Description,
 					BaseUrl:     client.getBaseUrl(ad.URL),
 				})
