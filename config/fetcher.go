@@ -42,14 +42,13 @@ type fetcher struct {
 	user                common.UserConfig
 	rt                  http.RoundTripper
 	originURL           string
-	experiments         []string
 }
 
 var noSleep = 0 * time.Second
 
 // newFetcher creates a new configuration fetcher with the specified
 // interface for obtaining the user ID and token if those are populated.
-func newFetcher(conf common.UserConfig, rt http.RoundTripper, originURL string, experiments []string) Fetcher {
+func newFetcher(conf common.UserConfig, rt http.RoundTripper, originURL string) Fetcher {
 	log.Debugf("Will poll for config at %v", originURL)
 
 	// Force detour to whitelist chained domain
@@ -64,7 +63,6 @@ func newFetcher(conf common.UserConfig, rt http.RoundTripper, originURL string, 
 		user:                conf,
 		rt:                  rt,
 		originURL:           originURL,
-		experiments:         experiments,
 	}
 }
 
@@ -92,9 +90,6 @@ func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op) ([]byte, time.Durati
 	req.Header.Set("Accept", "application/x-gzip")
 	// Prevents intermediate nodes (domain-fronters) from caching the content
 	req.Header.Set("Cache-Control", "no-cache")
-	if len(cf.experiments) > 0 {
-		req.Header.Set("x-lantern-dev-experiments", strings.Join(cf.experiments, ","))
-	}
 	common.AddCommonHeaders(cf.user, req)
 
 	_forceCountry := forceCountry.Load()
