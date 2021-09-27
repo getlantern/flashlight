@@ -15,18 +15,22 @@ class Tests_iOS: XCTestCase {
         let deviceID = UIDevice.current.identifierForVendor!.uuidString
 
         var error: NSError?
-        let startResult = Lanternsdk.LanternsdkStart("TestApp",
+        Lanternsdk.LanternsdkStart("TestApp",
                                    configDir.path,
                                    deviceID,
                                    true, // proxyAll
-                                   60000, // startTimeoutMillis
                                    &error)
         if let err = error {
             throw err
         }
 
-        if let host = startResult?.httpHost {
-            if let port = startResult?.httpPort {
+        let proxyAddr = Lanternsdk.LanternsdkGetProxyAddr(60000, &error)
+        if let err = error {
+            throw err
+        }
+
+        if let host = proxyAddr?.httpHost {
+            if let port = proxyAddr?.httpPort {
                 let proxyConfig = URLSessionConfiguration.default
                 // see https://stackoverflow.com/questions/42617582/how-to-use-urlsession-with-proxy-in-swift-3#42731010
                 proxyConfig.connectionProxyDictionary = [AnyHashable: Any]()
