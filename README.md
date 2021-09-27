@@ -29,24 +29,26 @@ import Lanternsdk
 
 ...
 
-// Lantern needs a folder in which to store configuration, caches, etc
 let configDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(".lantern")
-// Lantern needs to be able to uniquely identify the user's device
 let deviceID = UIDevice.current.identifierForVendor!.uuidString
 
 var error: NSError?
-let startResult = Lanternsdk.LanternsdkStart("TestApp",
+Lanternsdk.LanternsdkStart("TestApp",
                             configDir.path,
                             deviceID,
                             true, // proxyAll
-                            60000, // startTimeoutMillis
                             &error)
 if let err = error {
     throw err
 }
 
-if let host = startResult?.httpHost {
-    if let port = startResult?.httpPort {
+let proxyAddr = Lanternsdk.LanternsdkGetProxyAddr(60000, &error)
+if let err = error {
+    throw err
+}
+
+if let host = proxyAddr?.httpHost {
+    if let port = proxyAddr?.httpPort {
         let proxyConfig = URLSessionConfiguration.default
         // see https://stackoverflow.com/questions/42617582/how-to-use-urlsession-with-proxy-in-swift-3#42731010
         proxyConfig.connectionProxyDictionary = [AnyHashable: Any]()
@@ -56,7 +58,11 @@ if let host = startResult?.httpHost {
         proxyConfig.connectionProxyDictionary?[kCFStreamPropertyHTTPSProxyHost as String] = host
         proxyConfig.connectionProxyDictionary?[kCFStreamPropertyHTTPSProxyPort as String] = port
 
-        let session = URLSession.init(configuration: proxyConfig)
+        let plainIP = try fetchIP(URLSessionConfiguration.default)
+        XCTAssertNotEqual("", plainIP, "Should have gotten plain IP")
+        let proxiedIP = try fetchIP(proxyConfig)
+        XCTAssertNotEqual("", proxiedIP, "Should have gotten proxied IP")
+        XCTAssertNotEqual(plainIP, proxiedIP, "Plain and proxied IPs should differ")
     }
 }
 
