@@ -10,7 +10,6 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
@@ -21,10 +20,11 @@ import (
 )
 
 var (
-	log     = golog.LoggerFor("lantern")
-	runMx   sync.Mutex
-	running bool
-	cl      = eventual.NewValue()
+	log      = golog.LoggerFor("lantern")
+	runMx    sync.Mutex
+	running  bool
+	cl       *client.Client
+	clientMx sync.Mutex
 )
 
 // ProxyAddr provides information about the started Lantern
@@ -152,11 +152,38 @@ func start(appName, configDir, deviceID string, proxyAll bool) error {
 	if err != nil {
 		return errors.New("Failed to start flashlight: %v", err)
 	}
-	go runner.Run(
-		"127.0.0.1:0", // listen for HTTP on random address
-		"127.0.0.1:0", // listen for SOCKS on random address
-		nil,           // afterStart
-		nil,           // onError
-	)
+
+	var run func()
+	run = func() {
+		go runner.Run(
+			"127.0.0.1:0", // listen for HTTP on random address
+			"127.0.0.1:0", // listen for SOCKS on random address
+			// afterStart
+			func(_cl *client.Client) {
+				clientMx.Lock()
+				defer clientMx.Unlock()
+				cl = _cl
+			},
+			// onError
+			func(err error) {
+				log.Debugf("running failed, will restart: %v", err)
+				run()
+			},
+		)
+	}
+
+	run()
 	return nil
+}
+
+// stops flashlight, only used for testing
+func stop() {
+	clientMx.Lock()
+	defer clientMx.Unlock()
+
+	if cl != nil {
+		if err := cl.Stop(); err != nil {
+			log.Errorf("error stopping: %v", err)
+		}
+	}
 }

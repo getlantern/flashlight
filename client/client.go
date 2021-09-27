@@ -119,7 +119,8 @@ type Client struct {
 
 	proxy proxy.Proxy
 
-	l net.Listener
+	httpListener  net.Listener
+	socksListener net.Listener
 
 	disconnected         func() bool
 	allowProbes          func() bool
@@ -368,8 +369,9 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 			return fmt.Errorf("Unable to listen: %q", err)
 		}
 	}
+	defer l.Close()
 
-	client.l = l
+	client.httpListener = l
 	listenAddr := l.Addr().String()
 	addr.Set(listenAddr)
 	client.httpProxyIP, client.httpProxyPort, _ = net.SplitHostPort(listenAddr)
@@ -400,6 +402,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 		return fmt.Errorf("Unable to listen: %q", err)
 	}
 	l = &optimisticListener{l}
+	defer l.Close()
 	listenAddr := l.Addr().String()
 	socksAddr.Set(listenAddr)
 
@@ -447,7 +450,15 @@ func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo) [
 // Stop is called when the client is no longer needed. It closes the
 // client listener and underlying dialer connection pool
 func (client *Client) Stop() error {
-	return client.l.Close()
+	var socksError error
+	if client.socksListener != nil {
+		socksError = client.socksListener.Close()
+	}
+	httpError := client.httpListener.Close()
+	if httpError != nil {
+		return httpError
+	}
+	return socksError
 }
 
 func (client *Client) dial(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {

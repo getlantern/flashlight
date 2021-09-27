@@ -24,10 +24,17 @@ func TestProxying(t *testing.T) {
 	require.NoError(t, err, "Should have been able to get proxy address")
 	err = Start("lanternSDKtest", "testapp", "en_US", true)
 	require.NoError(t, err, "Should have been able to start lantern twice")
-	newResult, err := GetProxyAddr(10000)
+	secondResult, err := GetProxyAddr(10000)
 	require.NoError(t, err, "Should have been able to get proxy address a 2nd time")
-	require.Equal(t, result.HTTPAddr, newResult.HTTPAddr, "2nd start should have resulted in the same address")
-	testProxiedRequest(t, result.HTTPAddr, false)
+	require.Equal(t, result.HTTPAddr, secondResult.HTTPAddr, "2nd start should have resulted in the same address")
+	testProxiedRequest(t, secondResult.HTTPAddr, false)
+	// stop and then try again
+	stop()
+	time.Sleep(5 * time.Second)
+	thirdResult, err := GetProxyAddr(10000)
+	require.NoError(t, err, "Should have been able to get proxy address a 3rd time")
+	require.NotEqual(t, result.HTTPAddr, thirdResult.HTTPAddr, "address after stop should be different")
+	testProxiedRequest(t, thirdResult.HTTPAddr, false)
 }
 
 func testProxiedRequest(t *testing.T, proxyAddr string, socks bool) {
