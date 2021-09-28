@@ -41,8 +41,9 @@ type Flags struct {
 	Timeout            time.Duration `flag:"timeout" help:"force stop Lantern with an exit status of -1 after the timeout."`
 	// TODO: Remove this flag when this can be specified directly as a country-selected feature, or
 	// overridden via a config file?
-	ReplicaRustUrl string `flag:"replica-rust-url" help:"use the replica-rust service at the provided endpoint"`
-	Staging        bool   `flag:"-"`
+	ReplicaRustUrl string   `flag:"replica-rust-url" help:"use the replica-rust service at the provided endpoint"`
+	Staging        bool     `flag:"-"`
+	Experiments    []string `flag:"enabled-experiments" help:"comma separated list of experiments to enable"`
 }
 
 func (f Flags) AsMap() map[string]interface{} {

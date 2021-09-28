@@ -151,7 +151,9 @@ func pipeConfig(opts *options) (stop func()) {
 	// function.
 	if !opts.sticky {
 		fetcher := newFetcher(opts.userConfig, opts.rt, opts.originURL)
-		go conf.poll(stopCh, func(cfg interface{}) { dispatch(cfg, Fetched) }, fetcher, opts.sleep)
+		go conf.poll(stopCh, func(cfg interface{}) {
+			dispatch(cfg, Fetched)
+		}, fetcher, opts.sleep)
 	} else {
 		log.Debugf("Using sticky config")
 	}

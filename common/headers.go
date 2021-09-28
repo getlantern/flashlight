@@ -46,6 +46,9 @@ func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth
 			req.Header.Set(k, v)
 		}
 	}
+	if len(uc.GetEnabledExperiments()) > 0 {
+		req.Header.Set("x-lantern-dev-experiments", strings.Join(uc.GetEnabledExperiments(), ","))
+	}
 
 	req.Header.Set(PlatformHeader, Platform)
 	req.Header.Set(AppHeader, AppName)

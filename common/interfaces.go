@@ -13,14 +13,16 @@ type UserConfig interface {
 	GetLanguage() string
 	GetTimeZone() (string, error)
 	GetInternalHeaders() map[string]string
+	GetEnabledExperiments() []string
 }
 
 // NullAuthConfig is useful for testing
 type NullAuthConfig struct{}
 
-func (a NullAuthConfig) GetDeviceID() string { return "" }
-func (a NullAuthConfig) GetUserID() int64    { return int64(10) }
-func (a NullAuthConfig) GetToken() string    { return "" }
+func (a NullAuthConfig) GetDeviceID() string             { return "" }
+func (a NullAuthConfig) GetUserID() int64                { return int64(10) }
+func (a NullAuthConfig) GetToken() string                { return "" }
+func (a NullAuthConfig) GetEnabledExperiments() []string { return nil }
 
 var _ AuthConfig = (*NullAuthConfig)(nil)
 
