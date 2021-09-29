@@ -58,11 +58,8 @@ if let host = proxyAddr?.httpHost {
         proxyConfig.connectionProxyDictionary?[kCFStreamPropertyHTTPSProxyHost as String] = host
         proxyConfig.connectionProxyDictionary?[kCFStreamPropertyHTTPSProxyPort as String] = port
 
-        let plainIP = try fetchIP(URLSessionConfiguration.default)
-        XCTAssertNotEqual("", plainIP, "Should have gotten plain IP")
-        let proxiedIP = try fetchIP(proxyConfig)
-        XCTAssertNotEqual("", proxiedIP, "Should have gotten proxied IP")
-        XCTAssertNotEqual(plainIP, proxiedIP, "Plain and proxied IPs should differ")
+        let session = URLSession.init(configuration: proxyConfig)
+        // you can now use this session and everything is proxied
     }
 }
 
