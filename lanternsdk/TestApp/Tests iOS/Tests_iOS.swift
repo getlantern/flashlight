@@ -50,7 +50,6 @@ class Tests_iOS: XCTestCase {
     }
 
     private func fetchIP(_ config: URLSessionConfiguration) throws -> String {
-
         let group = DispatchGroup()
         group.enter()
         let session = URLSession.init(configuration: config)
