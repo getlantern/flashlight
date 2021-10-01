@@ -151,10 +151,11 @@ func start(appName, configDir, deviceID string, proxyAll bool) error {
 		if err != nil {
 			return errors.New("Failed to start flashlight: %v", err)
 		}
+		runner.StartBackgroundServices()
 	}
 
 	log.Debug("Running lantern")
-	go runner.Run(
+	go runner.RunClientListeners(
 		"127.0.0.1:0", // listen for HTTP on random address
 		"",            // don't listen for SOCKS
 		nil,           // afterStart

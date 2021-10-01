@@ -11,6 +11,12 @@ import Lanternsdk
 class Tests_iOS: XCTestCase {
 
     func testExample() throws {
+        try doTestExample()
+        // run test again to make sure calling LanternsdkStart works
+        try doTestExample()
+    }
+
+    func doTestExample() throws {
         let configDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(".lantern")
         let deviceID = UIDevice.current.identifierForVendor!.uuidString
 
