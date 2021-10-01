@@ -21,6 +21,7 @@ func TestProxying(t *testing.T) {
 	result, err := Start("lanternSDKtest", configDir, "en_US", true, 10000)
 	require.NoError(t, err, "Should have been able to start lantern")
 	testProxiedRequest(t, result.HTTPAddr, false)
+
 	secondResult, err := Start("lanternSDKtest", "testapp", "en_US", true, 10000)
 	require.NoError(t, err, "Should have been able to start lantern twice")
 	// note - on iOS, after a Sleep/Wake cycle, the HTTP listener hangs on Accept and it's necessary for
@@ -28,6 +29,11 @@ func TestProxying(t *testing.T) {
 	// a new one at a new address. This test condition checks that.
 	require.NotEqual(t, result.HTTPAddr, secondResult.HTTPAddr, "2nd start should have resulted in a different address")
 	testProxiedRequest(t, secondResult.HTTPAddr, false)
+
+	thirdResult, err := Start("lanternSDKtest", "testapp", "en_US", true, 10000)
+	require.NoError(t, err, "Should have been able to start lantern thrice")
+	require.NotEqual(t, secondResult.HTTPAddr, thirdResult.HTTPAddr, "2nd start should have resulted in a different address")
+	testProxiedRequest(t, thirdResult.HTTPAddr, false)
 }
 
 func testProxiedRequest(t *testing.T, proxyAddr string, socks bool) {

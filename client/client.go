@@ -119,8 +119,8 @@ type Client struct {
 
 	proxy proxy.Proxy
 
-	httpListener  net.Listener
-	socksListener net.Listener
+	httpListener  eventual.Value
+	socksListener eventual.Value
 
 	disconnected         func() bool
 	allowProbes          func() bool
@@ -214,6 +214,8 @@ func NewClient(
 		allowGoogleSearchAds: allowGoogleSearchAds,
 		allowMITM:            allowMITM,
 		eventWithLabel:       eventWithLabel,
+		httpListener:         eventual.NewValue(),
+		socksListener:        eventual.NewValue(),
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -383,9 +385,9 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 	}
 	defer l.Close()
 
-	client.httpListener = l
+	client.httpListener.Set(l)
 	defer func() {
-		client.httpListener = nil
+		client.httpListener.Reset()
 	}()
 
 	listenAddr := l.Addr().String()
@@ -423,9 +425,9 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 	l = &optimisticListener{Listener: l}
 	defer l.Close()
 
-	client.socksListener = l
+	client.socksListener.Set(l)
 	defer func() {
-		client.socksListener = nil
+		client.socksListener.Reset()
 	}()
 
 	listenAddr := l.Addr().String()
@@ -475,15 +477,23 @@ func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo) [
 // Stop is called when the client is no longer needed. It closes the
 // client listener and underlying dialer connection pool
 func (client *Client) Stop() error {
+	httpListener, _ := client.httpListener.Get(eventual.DontWait)
+	socksListener, _ := client.socksListener.Get(eventual.DontWait)
+
+	var httpError error
 	var socksError error
-	if client.socksListener != nil {
-		socksError = client.socksListener.Close()
-		socksAddr.Reset()
-		client.socksWg.Wait()
+
+	if httpListener != nil {
+		httpError = httpListener.(net.Listener).Close()
+		client.httpWg.Wait()
+		addr.Reset()
 	}
-	httpError := client.httpListener.Close()
-	addr.Reset()
-	client.httpWg.Wait()
+	if socksListener != nil {
+		socksError = socksListener.(net.Listener).Close()
+		client.socksWg.Wait()
+		socksAddr.Reset()
+	}
+
 	if httpError != nil {
 		return httpError
 	}
