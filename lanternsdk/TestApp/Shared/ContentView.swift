@@ -30,14 +30,8 @@ struct ContentView_Previews: PreviewProvider {
 }
 
 private func proxyStuff() throws {
-    var error: NSError?
-    let proxyAddr = Lanternsdk.LanternsdkGetProxyAddr(60000, &error)
-    if let err = error {
-        throw err
-    }
-
-    if let host = proxyAddr?.httpHost {
-        if let port = proxyAddr?.httpPort {
+    if let host = TestAppApp.host {
+        if let port = TestAppApp.port {
             let proxyConfig = URLSessionConfiguration.default
             // see https://stackoverflow.com/questions/42617582/how-to-use-urlsession-with-proxy-in-swift-3#42731010
             proxyConfig.connectionProxyDictionary = [AnyHashable: Any]()

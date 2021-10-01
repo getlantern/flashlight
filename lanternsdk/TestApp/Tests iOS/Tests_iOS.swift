@@ -15,16 +15,12 @@ class Tests_iOS: XCTestCase {
         let deviceID = UIDevice.current.identifierForVendor!.uuidString
 
         var error: NSError?
-        Lanternsdk.LanternsdkStart("TestApp",
+        let proxyAddr = Lanternsdk.LanternsdkStart("TestApp",
                                    configDir.path,
                                    deviceID,
                                    true, // proxyAll
+                                   60000, // start timeout
                                    &error)
-        if let err = error {
-            throw err
-        }
-
-        let proxyAddr = Lanternsdk.LanternsdkGetProxyAddr(60000, &error)
         if let err = error {
             throw err
         }

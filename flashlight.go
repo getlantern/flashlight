@@ -444,6 +444,11 @@ func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 	}
 }
 
+// Stops the local proxy
+func (f *Flashlight) Stop() error {
+	return f.client.Stop()
+}
+
 func (f *Flashlight) applyClientConfig(cfg *config.Global) {
 	certs, err := cfg.TrustedCACerts()
 	if err != nil {

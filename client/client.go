@@ -23,7 +23,7 @@ import (
 
 	"github.com/getlantern/detour"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/eventual"
+	eventual "github.com/getlantern/eventual/v2"
 	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
@@ -154,6 +154,9 @@ type Client struct {
 	allowGoogleSearchAds func() bool
 	allowMITM            func() bool
 	eventWithLabel       func(category, action, label string)
+
+	httpWg  sync.WaitGroup
+	socksWg sync.WaitGroup
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -330,7 +333,10 @@ func (client *Client) reportProxyLocationLoop() {
 // Addr returns the address at which the client is listening with HTTP, blocking
 // until the given timeout for an address to become available.
 func Addr(timeout time.Duration) (interface{}, bool) {
-	return addr.Get(timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	result, err := addr.Get(ctx)
+	return result, err == nil
 }
 
 // Addr returns the address at which the client is listening with HTTP, blocking
@@ -342,7 +348,10 @@ func (client *Client) Addr(timeout time.Duration) (interface{}, bool) {
 // Socks5Addr returns the address at which the client is listening with SOCKS5,
 // blocking until the given timeout for an address to become available.
 func Socks5Addr(timeout time.Duration) (interface{}, bool) {
-	return socksAddr.Get(timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	result, err := socksAddr.Get(ctx)
+	return result, err == nil
 }
 
 // Socks5Addr returns the address at which the client is listening with SOCKS5,
@@ -358,6 +367,9 @@ func (client *Client) Socks5Addr(timeout time.Duration) (interface{}, bool) {
 // Sometimes on Windows, http.Server may fail to accept new connections after
 // running for a random period. This method will try serve again.
 func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn func()) error {
+	client.httpWg.Add(1)
+	defer client.httpWg.Done()
+
 	var err error
 	var l net.Listener
 	log.Debugf("About to listen at '%s'", requestedAddr)
@@ -372,6 +384,10 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 	defer l.Close()
 
 	client.httpListener = l
+	defer func() {
+		client.httpListener = nil
+	}()
+
 	listenAddr := l.Addr().String()
 	addr.Set(listenAddr)
 	client.httpProxyIP, client.httpProxyPort, _ = net.SplitHostPort(listenAddr)
@@ -415,13 +431,22 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 // ListenAndServeSOCKS5 starts the SOCKS server listening at the specified
 // address.
 func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
+	client.socksWg.Add(1)
+	defer client.socksWg.Done()
+
 	var err error
 	var l net.Listener
 	if l, err = net.Listen("tcp", requestedAddr); err != nil {
 		return fmt.Errorf("Unable to listen: %q", err)
 	}
-	l = &optimisticListener{l}
+	l = &optimisticListener{l, 0}
 	defer l.Close()
+
+	client.socksListener = l
+	defer func() {
+		client.socksListener = nil
+	}()
+
 	listenAddr := l.Addr().String()
 	socksAddr.Set(listenAddr)
 
@@ -472,8 +497,12 @@ func (client *Client) Stop() error {
 	var socksError error
 	if client.socksListener != nil {
 		socksError = client.socksListener.Close()
+		socksAddr.Reset()
+		client.socksWg.Wait()
 	}
 	httpError := client.httpListener.Close()
+	addr.Reset()
+	client.httpWg.Wait()
 	if httpError != nil {
 		return httpError
 	}

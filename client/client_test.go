@@ -374,7 +374,7 @@ func TestAccessingProxyPort(t *testing.T) {
 		client.ListenAndServeHTTP("localhost:", func() {
 		})
 	}()
-	listenAddr, valid := addr.Get(-1)
+	listenAddr, valid := Addr(24 * time.Hour)
 	assert.True(t, valid, "should set addr")
 	proxyURL := "http://" + listenAddr.(string)
 	tr := http.Transport{
