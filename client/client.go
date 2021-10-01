@@ -420,7 +420,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 	if l, err = net.Listen("tcp", requestedAddr); err != nil {
 		return fmt.Errorf("Unable to listen: %q", err)
 	}
-	l = &optimisticListener{l, 0}
+	l = &optimisticListener{Listener: l}
 	defer l.Close()
 
 	client.socksListener = l
