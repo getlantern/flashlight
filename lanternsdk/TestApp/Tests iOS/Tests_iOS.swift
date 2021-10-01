@@ -11,22 +11,28 @@ import Lanternsdk
 class Tests_iOS: XCTestCase {
 
     func testExample() throws {
+        try doTestExample()
+        // run test again to make sure calling LanternsdkStart works
+        try doTestExample()
+    }
+
+    func doTestExample() throws {
         let configDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(".lantern")
         let deviceID = UIDevice.current.identifierForVendor!.uuidString
 
         var error: NSError?
-        let startResult = Lanternsdk.LanternsdkStart("TestApp",
+        let proxyAddr = Lanternsdk.LanternsdkStart("TestApp",
                                    configDir.path,
                                    deviceID,
                                    true, // proxyAll
-                                   60000, // startTimeoutMillis
+                                   60000, // start timeout
                                    &error)
         if let err = error {
             throw err
         }
 
-        if let host = startResult?.httpHost {
-            if let port = startResult?.httpPort {
+        if let host = proxyAddr?.httpHost {
+            if let port = proxyAddr?.httpPort {
                 let proxyConfig = URLSessionConfiguration.default
                 // see https://stackoverflow.com/questions/42617582/how-to-use-urlsession-with-proxy-in-swift-3#42731010
                 proxyConfig.connectionProxyDictionary = [AnyHashable: Any]()
@@ -46,7 +52,6 @@ class Tests_iOS: XCTestCase {
     }
 
     private func fetchIP(_ config: URLSessionConfiguration) throws -> String {
-
         let group = DispatchGroup()
         group.enter()
         let session = URLSession.init(configuration: config)

@@ -23,30 +23,36 @@ make Lanternsdk.xcframework
 
 #### iOS SDK Usage
 
+The below shows how to start Lantern and use it. When iOS puts the hosting app the sleep and wakes it up again, Lantern's proxy listener
+will hang because the socket becomes unconnected but Go doesn't notice it. So it's necessary to call `LanternsdkStart` every time the
+app wakes, which will start a new listener and return its new address.
+
+A good place to do this is in
+[applicationDidBecomeActive](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1622956-applicationdidbecomeactive),
+which is called when the app first starts and every time it wakes.
+
 ```swift
 
 import Lanternsdk
 
 ...
 
-// Lantern needs a folder in which to store configuration, caches, etc
 let configDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(".lantern")
-// Lantern needs to be able to uniquely identify the user's device
 let deviceID = UIDevice.current.identifierForVendor!.uuidString
 
 var error: NSError?
-let startResult = Lanternsdk.LanternsdkStart("TestApp",
+let proxyAddr = Lanternsdk.LanternsdkStart("TestApp",
                             configDir.path,
                             deviceID,
                             true, // proxyAll
-                            60000, // startTimeoutMillis
+                            60000, // start timeout
                             &error)
 if let err = error {
     throw err
 }
 
-if let host = startResult?.httpHost {
-    if let port = startResult?.httpPort {
+if let host = proxyAddr?.httpHost {
+    if let port = proxyAddr?.httpPort {
         let proxyConfig = URLSessionConfiguration.default
         // see https://stackoverflow.com/questions/42617582/how-to-use-urlsession-with-proxy-in-swift-3#42731010
         proxyConfig.connectionProxyDictionary = [AnyHashable: Any]()
@@ -57,10 +63,12 @@ if let host = startResult?.httpHost {
         proxyConfig.connectionProxyDictionary?[kCFStreamPropertyHTTPSProxyPort as String] = port
 
         let session = URLSession.init(configuration: proxyConfig)
+        // you can now use this session and everything is proxied
     }
 }
 
 ```
+
 
 #### TestApp
 

@@ -244,6 +244,8 @@ github.com/getlantern/event v0.0.0-20170919023932-f16a5563f52e/go.mod h1:iToZ3dq
 github.com/getlantern/eventual v0.0.0-20180125201821-84b02499361b/go.mod h1:O8T3zFEcY6+LRXFcVV4q8mEu2tDIixG8edC84DfswBc=
 github.com/getlantern/eventual v1.0.0 h1:q56jlZhiDeWvdrc0QJ12AaWqcu/Z67wDDjdAUKGnYqc=
 github.com/getlantern/eventual v1.0.0/go.mod h1:xL9T/pQI7i44INFSsKf4zDNz5bXA7P18j1cNd5qy/yI=
+github.com/getlantern/eventual/v2 v2.0.1 h1:aI7NNIbLkJBfq2L30ofB/s9nJcxMOPTd2LMdmv4kCbs=
+github.com/getlantern/eventual/v2 v2.0.1/go.mod h1:o1VZHRk8UArBra+pwPSi23WrahBG4qgg4/ew6Mmlq84=
 github.com/getlantern/fdcount v0.0.0-20170105153814-6a6cb5839bc5/go.mod h1:XZwE+iIlAgr64OFbXKFNCllBwV4wEipPx8Hlo2gZdbM=
 github.com/getlantern/fdcount v0.0.0-20190912142506-f89afd7367c4/go.mod h1:XZwE+iIlAgr64OFbXKFNCllBwV4wEipPx8Hlo2gZdbM=
 github.com/getlantern/fdcount v0.0.0-20210503151800-5decd65b3731 h1:v+vJ3LgV4nW4xRPZo+xkADDflXLpRbG+Lv69XKWFjTQ=

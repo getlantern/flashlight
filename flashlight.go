@@ -13,7 +13,6 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/ops"
 	"github.com/getlantern/proxybench"
@@ -369,27 +368,39 @@ func New(
 	return f, nil
 }
 
-// Run runs the client proxy. It blocks as long as the proxy is running.
+// Run starts background services and runs the client proxy. It blocks as long as
+// the proxy is running.
 func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 	afterStart func(cl *client.Client),
 	onError func(err error),
 ) {
-	if onError == nil {
-		onError = func(_ error) {}
-	}
+	stop := f.StartBackgroundServices()
+	defer stop()
 
+	f.RunClientListeners(httpProxyAddr, socksProxyAddr, afterStart, onError)
+}
+
+// Starts background services like config fetching
+func (f *Flashlight) StartBackgroundServices() func() {
+	log.Debug("Starting client proxy background services")
 	// check # of goroutines every minute, print the top 5 stacks with most
 	// goroutines if the # exceeds 800 and is increasing.
 	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
-	defer stopMonitor()
-	elapsed := mtime.Stopwatch()
 
-	log.Debug("Preparing to start client proxy")
-	stop := f.startConfigFetch()
-	defer stop()
-	onGeo := geolookup.OnRefresh()
+	stopConfigFetch := f.startConfigFetch()
 	geolookup.Refresh()
 
+	return func() {
+		stopConfigFetch()
+		stopMonitor()
+	}
+}
+
+// Runs client listeners, blocking as long as the proxy is running.
+func (f *Flashlight) RunClientListeners(httpProxyAddr, socksProxyAddr string,
+	afterStart func(cl *client.Client),
+	onError func(err error),
+) {
 	// Until we know our country, default to IR which has all detection rules
 	log.Debug("Defaulting detour country to IR until real country is known")
 	detour.SetCountry("IR")
@@ -409,12 +420,16 @@ func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 		}()
 	}
 
+	if onError == nil {
+		onError = func(_ error) {}
+	}
+	onGeo := geolookup.OnRefresh()
+
 	log.Debug("Starting client HTTP proxy")
 	err := f.client.ListenAndServeHTTP(httpProxyAddr, func() {
 		log.Debug("Started client HTTP proxy")
 		proxied.SetProxyAddr(f.client.Addr)
 		email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
-		f.op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
 
 		// wait for borda to be configured before proceeding
 		select {
@@ -442,6 +457,11 @@ func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 		log.Errorf("Error running client proxy: %v", err)
 		onError(err)
 	}
+}
+
+// Stops the local proxy
+func (f *Flashlight) Stop() error {
+	return f.client.Stop()
 }
 
 func (f *Flashlight) applyClientConfig(cfg *config.Global) {
