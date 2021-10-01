@@ -36,6 +36,12 @@ type ProxyAddr struct {
 // waiting for the proxy to listen, and returns the address at which it is listening.
 // If the proxy doesn't start within the given timeout, this method returns an error.
 //
+// Every time that you call Start(), it will return a new HTTP proxy address. This is useful on
+// iOS, where a sleep/wake cycle puts the HTTP proxy's listener socket into a not connected
+// state that returns ENOTCONN to clients. Go doesn't notice that the socket is no longer
+// connected and blocks on Accept(). Calling Start() at this point closes the old listener
+// and starts listening on a new socket (with a different address).
+//
 // appName is a unique name for the application using the lanternsdk. It is used
 // on the back-end for various purposes, including proxy assignment and performance telemetry
 //
@@ -150,7 +156,7 @@ func start(appName, configDir, deviceID string, proxyAll bool) error {
 	log.Debug("Running lantern")
 	go runner.Run(
 		"127.0.0.1:0", // listen for HTTP on random address
-		"",            // listen for SOCKS on random address
+		"",            // don't listen for SOCKS
 		nil,           // afterStart
 		nil,           // onError
 	)

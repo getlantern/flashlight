@@ -23,6 +23,14 @@ make Lanternsdk.xcframework
 
 #### iOS SDK Usage
 
+The below shows how to start Lantern and use it. When iOS puts the hosting app the sleep and wakes it up again, Lantern's proxy listener
+will hang because the socket becomes unconnected but Go doesn't notice it. So it's necessary to call `LanternsdkStart` every time the
+app wakes, which will start a new listener and return its new address.
+
+A good place to do this is in
+[applicationDidBecomeActive](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1622956-applicationdidbecomeactive),
+which is called when the app first starts and every time it wakes.
+
 ```swift
 
 import Lanternsdk
@@ -60,6 +68,7 @@ if let host = proxyAddr?.httpHost {
 }
 
 ```
+
 
 #### TestApp
 

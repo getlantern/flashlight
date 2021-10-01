@@ -2,7 +2,7 @@ package client
 
 import (
 	"net"
-	"sync/atomic"
+	"sync"
 	"time"
 )
 
@@ -10,7 +10,8 @@ import (
 // instead keep trying (unless it has been closed)
 type optimisticListener struct {
 	net.Listener
-	closed int64
+	closed   bool
+	closedMx sync.Mutex
 }
 
 func (l *optimisticListener) Accept() (net.Conn, error) {
@@ -23,7 +24,10 @@ func (l *optimisticListener) Accept() (net.Conn, error) {
 			wait = minWait
 			return conn, nil
 		}
-		if atomic.LoadInt64(&l.closed) == 1 {
+		l.closedMx.Lock()
+		closed := l.closed
+		l.closedMx.Unlock()
+		if closed {
 			return nil, err
 		}
 		log.Errorf("Error on accepting, will try again: %v", err)
@@ -37,6 +41,9 @@ func (l *optimisticListener) Accept() (net.Conn, error) {
 }
 
 func (l *optimisticListener) Close() error {
-	atomic.StoreInt64(&l.closed, 1)
+	l.closedMx.Lock()
+	defer l.closedMx.Unlock()
+
+	l.closed = true
 	return l.Listener.Close()
 }
