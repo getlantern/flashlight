@@ -394,25 +394,6 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 	onListeningFn()
 
 	log.Debugf("About to start HTTP client proxy at %v", listenAddr)
-	// supervisor process
-	go func() {
-		// On iOS, when the app goes to sleep, after waking, the listener socket will still be open but not
-		// connected. Clients who attempt to connect to it get an ENOTCONN, however the listener's Accept
-		// function just blocks without returning an error. This supervisor periodically tries to connect and
-		// if it fails, it forcibly closes the listener to allow us to fail, at which point the client can be
-		// restarted as normal.
-		for {
-			time.Sleep(1 * time.Second)
-			conn, err := net.DialTimeout("tcp", listenAddr, 1*time.Second)
-			if err != nil {
-				log.Errorf("Unable to dial HTTP client proxy at %v, forcing close of listener")
-				l.Close()
-				return
-			}
-			conn.Close()
-		}
-	}()
-
 	for {
 		start := time.Now()
 		conn, err := l.Accept()
