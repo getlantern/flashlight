@@ -12,7 +12,7 @@ import (
 
 	"github.com/andybalholm/brotli"
 	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/proxy/filters"
+	"github.com/getlantern/proxy/v2/filters"
 	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/require"
 
@@ -274,8 +274,8 @@ func TestAdDiversion(t *testing.T) {
 		}
 	}
 
-	nextForVar := func(v string) func(ctx filters.Context, req *http.Request) (*http.Response, filters.Context, error) {
-		return func(ctx filters.Context, req *http.Request) (*http.Response, filters.Context, error) {
+	nextForVar := func(v string) func(cs *filters.ConnectionState, req *http.Request) (*http.Response, *filters.ConnectionState, error) {
+		return func(_ *filters.ConnectionState, req *http.Request) (*http.Response, *filters.ConnectionState, error) {
 			w := httptest.NewRecorder()
 			handlerForVar(v)(w, req)
 			resp := w.Result()
