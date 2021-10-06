@@ -27,6 +27,7 @@ config/fetched-global.yaml.gz
 config/fetched-global.yaml.stored
 config/fetched-proxies.yaml.gz
 config/fetched-proxies.yaml.stored
+config/global.yaml
 config/proxies.yaml
 config/generated/masquerades.go
 profile.cov
