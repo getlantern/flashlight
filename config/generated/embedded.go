@@ -3,6 +3,6 @@ package generated
 import _ "embed"
 
 
-//go:embed global.yaml
+//go:embed embedded-global.yaml
 var GlobalConfig []byte
 
