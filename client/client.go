@@ -451,7 +451,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 			if errOnReply != nil {
 				return op.FailIf(log.Errorf("Unable to reply success to SOCKS5 client: %v", errOnReply))
 			}
-			return op.FailIf(client.proxy.Connect(req.BufConn, conn, addr))
+			return op.FailIf(client.proxy.Connect(ctx, req.BufConn, conn, addr))
 		},
 	}
 	server, err := socks5.New(conf)

@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -40,7 +41,7 @@ func (client *Client) handle(conn net.Conn) error {
 	conn = idletiming.Conn(conn, chained.IdleTimeout, func() {
 		log.Debugf("Client connection idle for %v, closed", chained.IdleTimeout)
 	})
-	err := client.proxy.Handle(conn, conn)
+	err := client.proxy.Handle(context.Background(), conn, conn)
 	if err != nil {
 		log.Error(op.FailIf(err))
 	}
