@@ -39,2005 +39,2005 @@ client:
           update.getlantern.org: update.dsa.akamai.getiantem.org
         masquerades:
         - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.112
+          ipaddress: 184.150.154.103
         - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.91
+          ipaddress: 184.150.49.46
         - domain: a248.e.akamai.net
-          ipaddress: 184.150.154.75
+          ipaddress: 184.150.154.106
         - domain: a248.e.akamai.net
-          ipaddress: 23.46.211.240
+          ipaddress: 184.150.49.8
         - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.105
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.212
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.161
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.196
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.26
-        - domain: a248.e.akamai.net
-          ipaddress: 23.223.246.25
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.203
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.195
-        - domain: a248.e.akamai.net
-          ipaddress: 23.223.246.73
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.46
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.183
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.229
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.154.77
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.139
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.28
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.210
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.77.73
-        - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.31
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.23
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.184
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.167
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.95
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.246
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.137
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.234
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.150
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.176
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.109
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.191
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.211.146
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.176
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.84
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.57
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.229
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.145
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.165
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.124
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.109
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.246
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.178.99
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.178.43
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.55
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.51.163
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.151
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.79
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.251.206
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.178.103
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.127
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.52
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.251.143
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.228
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.36
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.207.207
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.87
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.10
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.70
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.154.104
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.54
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.80
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.118
-        - domain: a248.e.akamai.net
-          ipaddress: 23.210.215.78
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.9.7
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.221.112
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.148
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.86
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.232
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.37
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.200
-        - domain: a248.e.akamai.net
-          ipaddress: 203.74.140.189
-        - domain: a248.e.akamai.net
-          ipaddress: 104.116.243.113
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.34
-        - domain: a248.e.akamai.net
-          ipaddress: 23.2.16.104
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.83
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.29
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.46
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.16.146
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.80
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.99
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.190
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.51.118
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.37
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.183
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.40
-        - domain: a248.e.akamai.net
-          ipaddress: 2.18.215.75
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.161
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.145
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.188
-        - domain: a248.e.akamai.net
-          ipaddress: 23.44.51.43
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.5
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.130
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.143
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.38
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.157
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.250.54
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.28
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.56
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.207
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.135
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.15
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.11.143
-        - domain: a248.e.akamai.net
-          ipaddress: 23.210.215.73
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.91
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.125
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.86
+          ipaddress: 184.150.49.20
         - domain: a248.e.akamai.net
           ipaddress: 23.46.211.148
         - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.49
+          ipaddress: 184.50.27.14
         - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.235
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.56
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.226
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.211
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.18
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.12
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.162
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.12
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.207.221
-        - domain: a248.e.akamai.net
-          ipaddress: 23.44.51.21
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.115
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.156
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.145
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.227
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.250.82
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.49
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.223
-        - domain: a248.e.akamai.net
-          ipaddress: 23.210.215.254
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.206
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.145
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.100
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.157
-        - domain: a248.e.akamai.net
-          ipaddress: 104.116.243.150
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.156
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.120
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.48
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.138
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.213
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.67
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.143
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.51.149
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.93
-        - domain: a248.e.akamai.net
-          ipaddress: 23.2.16.92
-        - domain: a248.e.akamai.net
-          ipaddress: 23.223.246.8
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.98
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.193
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.38
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.207.150
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.237.78
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.129
+          ipaddress: 184.50.27.10
         - domain: a248.e.akamai.net
           ipaddress: 184.50.27.187
         - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.30
+          ipaddress: 184.50.27.168
         - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.24
+          ipaddress: 23.12.40.75
         - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.26
+          ipaddress: 96.7.181.50
         - domain: a248.e.akamai.net
-          ipaddress: 23.44.51.244
+          ipaddress: 184.28.221.68
         - domain: a248.e.akamai.net
-          ipaddress: 23.206.250.65
+          ipaddress: 172.232.16.192
         - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.15
+          ipaddress: 23.45.112.81
         - domain: a248.e.akamai.net
-          ipaddress: 23.223.246.41
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.75
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.178.67
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.211.218
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.11
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.178.8
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.63
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.202
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.16.195
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.72
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.250.97
-        - domain: a248.e.akamai.net
-          ipaddress: 23.2.16.58
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.179
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.96
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.237.79
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.121
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.40
-        - domain: a248.e.akamai.net
-          ipaddress: 23.2.16.22
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.237.88
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.220
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.73
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.100
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.205
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.142
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.141
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.187
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.217
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.84
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.51.115
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.11.140
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.235
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.169
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.172
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.49.45
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.12
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.126
-        - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.25
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.174
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.178.53
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.89
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.162
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.61
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.252
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.24
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.83
-        - domain: a248.e.akamai.net
-          ipaddress: 184.26.127.11
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.125
-        - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.158
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.200
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.115
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.126
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.72
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.20
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.251.210
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.87
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.49.25
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.96
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.99
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.148
-        - domain: a248.e.akamai.net
-          ipaddress: 23.223.246.28
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.152
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.183
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.103
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.207.139
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.45
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.42
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.21
-        - domain: a248.e.akamai.net
-          ipaddress: 23.44.51.12
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.89
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.98
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.224
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.9.49
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.207.147
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.220
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.77.53
-        - domain: a248.e.akamai.net
-          ipaddress: 23.223.246.40
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.49.28
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.95
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.56
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.211
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.54
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.84
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.69
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.34
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.160
-        - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.188
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.142
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.9.32
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.250.59
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.131
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.49.49
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.241
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.21
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.155
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.39
-        - domain: a248.e.akamai.net
-          ipaddress: 23.2.16.204
-        - domain: a248.e.akamai.net
-          ipaddress: 203.74.140.201
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.49
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.16
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.178.107
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.72
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.154
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.118
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.219
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.66
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.241
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.155
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.51.160
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.45
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.115
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.11.186
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.106
-        - domain: a248.e.akamai.net
-          ipaddress: 2.18.215.44
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.187
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.254
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.87
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.27
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.64
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.132
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.27
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.211.194
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.36
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.152
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.194
-        - domain: a248.e.akamai.net
-          ipaddress: 104.116.243.154
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.170
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.36
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.250.84
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.227
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.251.172
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.220
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.176
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.207.223
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.49.10
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.215
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.250.61
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.159
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.23
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.49
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.163
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.168
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.108
-        - domain: a248.e.akamai.net
-          ipaddress: 23.210.215.101
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.154.121
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.142
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.38
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.180
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.13
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.13
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.61
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.71
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.34
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.20
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.84
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.51.143
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.186
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.62
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.162
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.204
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.144
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.168
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.113
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.223
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.237
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.251.145
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.111
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.237.89
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.74
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.161
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.92
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.133
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.23
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.107
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.136
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.48
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.251.196
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.178.29
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.211
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.49.32
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.221.227
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.88
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.25
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.202
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.47
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.151
-        - domain: a248.e.akamai.net
-          ipaddress: 23.223.246.81
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.32
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.230
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.207.144
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.101
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.7
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.199
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.167
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.143
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.125
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.155
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.57
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.132
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.221
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.49.41
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.250.91
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.136
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.49.66
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.227
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.120
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.70
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.70
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.166
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.75
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.211.135
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.213
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.97
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.230
-        - domain: a248.e.akamai.net
-          ipaddress: 23.210.215.60
-        - domain: a248.e.akamai.net
-          ipaddress: 2.18.215.46
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.71
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.173
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.49.69
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.158
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.99
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.103
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.237.86
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.211.182
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.79
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.152
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.119
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.19
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.16
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.46
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.111
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.126
-        - domain: a248.e.akamai.net
-          ipaddress: 23.44.51.19
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.51
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.136
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.144
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.34
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.104
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.178.106
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.13
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.115
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.16
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.36
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.144
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.122
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.236
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.178.56
-        - domain: a248.e.akamai.net
-          ipaddress: 184.26.127.35
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.67
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.32
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.77.61
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.150
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.174
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.162
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.28
-        - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.161
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.207.142
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.218
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.164
-        - domain: a248.e.akamai.net
-          ipaddress: 2.18.215.93
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.51
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.207.225
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.52
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.105
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.196
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.16.177
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.101
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.138
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.159
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.93
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.213
-        - domain: a248.e.akamai.net
-          ipaddress: 23.44.51.17
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.205
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.6
-        - domain: a248.e.akamai.net
-          ipaddress: 23.223.246.48
-        - domain: a248.e.akamai.net
-          ipaddress: 23.2.16.82
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.204
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.29
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.73
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.143
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.73
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.178.252
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.226
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.193
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.145
-        - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.191
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.229
-        - domain: a248.e.akamai.net
-          ipaddress: 203.74.140.147
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.34
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.184
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.173
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.106
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.182
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.12
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.16.173
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.46
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.188
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.41
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.211.181
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.147
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.161
-        - domain: a248.e.akamai.net
-          ipaddress: 23.44.51.7
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.56
-        - domain: a248.e.akamai.net
-          ipaddress: 23.44.51.36
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.216
-        - domain: a248.e.akamai.net
-          ipaddress: 23.2.16.182
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.55
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.189
-        - domain: a248.e.akamai.net
-          ipaddress: 23.44.51.243
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.126
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.243
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.135
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.22
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.170
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.135
-        - domain: a248.e.akamai.net
-          ipaddress: 23.2.16.229
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.163
-        - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.197
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.189.236
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.133
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.189.14
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.139
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.117
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.210
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.82
-        - domain: a248.e.akamai.net
-          ipaddress: 23.223.246.71
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.66
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.129
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.49.36
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.155
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.169
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.9.14
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.111
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.178.32
-        - domain: a248.e.akamai.net
-          ipaddress: 23.2.16.121
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.9.97
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.25
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.54
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.192
-        - domain: a248.e.akamai.net
-          ipaddress: 23.223.246.16
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.154.105
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.29
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.203
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.215
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.71
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.117
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.178
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.250.60
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.138
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.112
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.185
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.218
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.136
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.159
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.136
-        - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.88
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.133
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.175
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.51.123
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.140
-        - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.87
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.65
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.110
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.62
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.101
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.94
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.76
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.231
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.11
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.189.219
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.7
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.208
-        - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.69
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.222
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.202
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.154.65
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.132
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.98
-        - domain: a248.e.akamai.net
-          ipaddress: 23.2.16.48
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.235
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.253
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.170
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.9.35
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.151
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.87
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.206
-        - domain: a248.e.akamai.net
-          ipaddress: 23.223.246.126
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.154.64
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.65
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.91
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.137
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.150
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.55
+          ipaddress: 23.45.112.79
         - domain: a248.e.akamai.net
           ipaddress: 23.45.112.62
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.93
+          ipaddress: 23.209.125.10
         - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.216
+          ipaddress: 88.221.161.67
         - domain: a248.e.akamai.net
-          ipaddress: 23.46.211.220
+          ipaddress: 96.17.207.151
         - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.74
+          ipaddress: 88.221.161.146
         - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.21
+          ipaddress: 23.209.125.31
         - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.207
+          ipaddress: 88.221.161.158
         - domain: a248.e.akamai.net
-          ipaddress: 96.7.251.180
+          ipaddress: 84.53.175.31
         - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.69
+          ipaddress: 23.32.238.217
         - domain: a248.e.akamai.net
-          ipaddress: 2.18.215.67
+          ipaddress: 23.46.210.158
         - domain: a248.e.akamai.net
-          ipaddress: 23.44.51.35
+          ipaddress: 2.19.194.139
         - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.31
+          ipaddress: 184.24.77.181
         - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.219
+          ipaddress: 184.24.77.48
         - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.151
+          ipaddress: 2.22.119.28
         - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.41
+          ipaddress: 23.216.77.23
         - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.165
+          ipaddress: 2.22.9.96
         - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.19
+          ipaddress: 2.22.118.30
         - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.139
+          ipaddress: 104.114.77.63
         - domain: a248.e.akamai.net
-          ipaddress: 203.74.140.136
+          ipaddress: 62.115.253.38
         - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.135
+          ipaddress: 62.115.252.216
         - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.106
+          ipaddress: 2.19.194.242
         - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.205
+          ipaddress: 88.221.161.77
         - domain: a248.e.akamai.net
-          ipaddress: 203.74.140.138
+          ipaddress: 23.32.238.205
         - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.213
+          ipaddress: 84.53.175.87
         - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.176
+          ipaddress: 96.7.181.144
         - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.61
+          ipaddress: 184.150.49.43
         - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.59
+          ipaddress: 184.150.154.7
         - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.198
+          ipaddress: 23.223.246.52
         - domain: a248.e.akamai.net
-          ipaddress: 23.45.51.159
+          ipaddress: 23.46.210.154
         - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.122
+          ipaddress: 80.239.237.4
         - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.30
+          ipaddress: 184.50.27.97
         - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.106
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.72
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.211.235
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.193
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.209
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.114
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.53
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.11
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.78
-        - domain: a248.e.akamai.net
-          ipaddress: 23.223.246.58
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.159
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.16.183
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.189
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.212
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.229
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.8
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.174
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.154.95
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.138
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.165
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.16
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.26
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.123
+          ipaddress: 2.22.118.27
         - domain: a248.e.akamai.net
           ipaddress: 23.218.94.123
         - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.75
+          ipaddress: 23.218.94.109
         - domain: a248.e.akamai.net
-          ipaddress: 184.28.221.71
+          ipaddress: 23.33.32.131
         - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.61
+          ipaddress: 88.221.161.105
         - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.16
+          ipaddress: 23.45.51.170
         - domain: a248.e.akamai.net
-          ipaddress: 92.123.77.46
+          ipaddress: 96.7.181.139
         - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.107
+          ipaddress: 23.223.246.78
         - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.184
+          ipaddress: 23.62.99.66
         - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.146
+          ipaddress: 23.43.243.43
         - domain: a248.e.akamai.net
-          ipaddress: 23.46.211.167
+          ipaddress: 23.209.125.95
         - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.81
+          ipaddress: 23.62.99.43
         - domain: a248.e.akamai.net
-          ipaddress: 23.46.211.234
+          ipaddress: 62.115.252.126
         - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.44
+          ipaddress: 2.22.118.58
         - domain: a248.e.akamai.net
-          ipaddress: 2.22.9.12
+          ipaddress: 88.221.161.70
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.120
+          ipaddress: 2.22.118.36
         - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.64
+          ipaddress: 23.33.32.210
         - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.144
+          ipaddress: 84.53.175.121
         - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.113
+          ipaddress: 62.115.252.237
         - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.129
+          ipaddress: 23.216.77.178
         - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.156
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.17
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.89
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.69
-        - domain: a248.e.akamai.net
-          ipaddress: 203.74.140.203
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.16.150
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.65
-        - domain: a248.e.akamai.net
-          ipaddress: 23.2.16.109
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.162
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.14
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.154.88
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.152
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.20
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.141
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.49.78
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.51.151
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.108
-        - domain: a248.e.akamai.net
-          ipaddress: 23.223.246.74
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.154.81
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.170
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.147
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.196
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.25
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.52
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.110
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.241
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.137
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.214
-        - domain: a248.e.akamai.net
-          ipaddress: 23.2.16.230
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.213
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.57
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.158
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.178.71
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.163
-        - domain: a248.e.akamai.net
-          ipaddress: 23.44.51.234
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.138
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.211.156
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.90
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.250.51
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.132
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.11.142
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.207.161
-        - domain: a248.e.akamai.net
-          ipaddress: 23.2.16.114
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.102
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.54
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.51.147
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.9.104
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.114
-        - domain: a248.e.akamai.net
-          ipaddress: 23.2.16.74
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.224
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.250.78
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.187
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.237.6
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.132
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.155
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.21
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.198
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.8
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.209
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.237.13
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.111
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.59
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.199
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.184
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.168
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.221.110
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.49
-        - domain: a248.e.akamai.net
-          ipaddress: 23.2.16.9
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.39
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.17
-        - domain: a248.e.akamai.net
-          ipaddress: 104.116.243.68
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.121
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.114
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.168
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.224
-        - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.8
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.165
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.131
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.77.13
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.39
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.5
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.178.65
-        - domain: a248.e.akamai.net
-          ipaddress: 203.74.140.137
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.250.85
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.126
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.69
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.171
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.17
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.79
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.207.201
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.16.152
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.192
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.239
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.209
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.187
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.32
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.91
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.72
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.46
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.4
-        - domain: a248.e.akamai.net
-          ipaddress: 2.18.215.45
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.84
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.87
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.111
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.126
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.7
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.113
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.193
-        - domain: a248.e.akamai.net
-          ipaddress: 23.223.246.44
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.200
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.41
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.92
-        - domain: a248.e.akamai.net
-          ipaddress: 203.74.140.140
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.210
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.189.12
-        - domain: a248.e.akamai.net
-          ipaddress: 203.74.140.173
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.245
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.40
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.237.99
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.20
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.182
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.136
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.180
-        - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.203
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.207.217
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.82
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.154.72
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.157
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.15
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.39
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.11.134
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.178.51
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.214
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.30
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.169
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.233
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.130
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.133
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.229
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.83
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.76
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.160
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.110
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.63
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.83
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.211
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.104
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.35
-        - domain: a248.e.akamai.net
-          ipaddress: 104.116.243.202
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.189.254
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.232
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.10
-        - domain: a248.e.akamai.net
-          ipaddress: 23.223.246.30
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.189.214
-        - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.150
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.184
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.211.209
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.49.30
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.215
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.139
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.201
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.207.156
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.74
-        - domain: a248.e.akamai.net
-          ipaddress: 203.74.140.177
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.64
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.29
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.172
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.77.74
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.203
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.34
-        - domain: a248.e.akamai.net
-          ipaddress: 203.74.140.165
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.17
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.221.37
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.16.133
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.112
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.207.133
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.41
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.83
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.16.185
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.7
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.201
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.8
-        - domain: a248.e.akamai.net
-          ipaddress: 203.74.140.170
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.91
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.135
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.70
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.15
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.232
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.42
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.207.199
-        - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.7
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.179
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.37
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.40
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.178
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.53
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.49.12
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.92
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.144
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.143
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.75
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.152
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.126
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.146
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.218
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.183
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.173
-        - domain: a248.e.akamai.net
-          ipaddress: 203.74.140.207
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.51.188
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.133
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.154.118
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.45
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.133
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.46
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.100
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.63
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.170
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.49.22
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.141
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.77.54
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.136
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.30
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.251.222
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.204
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.51.129
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.207
-        - domain: a248.e.akamai.net
-          ipaddress: 184.26.127.40
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.211.179
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.232
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.190
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.42
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.77.62
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.211.201
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.46
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.252.96
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.232
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.208
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.250.69
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.51.116
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.120
-        - domain: a248.e.akamai.net
-          ipaddress: 23.44.51.4
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.132
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.84
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.234
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.159
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.9.19
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.221
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.11.189
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.34
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.51.128
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.80
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.218
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.49.27
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.221.4
-        - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.174
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.11.151
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.17
-        - domain: a248.e.akamai.net
-          ipaddress: 62.115.253.25
-        - domain: a248.e.akamai.net
-          ipaddress: 23.216.77.7
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.178.111
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.51
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.123
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.11.154
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.73
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.169
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.119
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.5
-        - domain: a248.e.akamai.net
-          ipaddress: 203.74.140.144
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.91
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.16.178
-        - domain: a248.e.akamai.net
-          ipaddress: 23.223.246.34
-        - domain: a248.e.akamai.net
-          ipaddress: 172.232.11.193
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.99
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.45
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.153
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.128
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.214
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.22
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.79
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.51.158
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.221.11
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.50
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.104
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.99.229
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.226
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.250.101
-        - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.110
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.141
-        - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.157
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.154.79
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.110
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.159
-        - domain: a248.e.akamai.net
-          ipaddress: 23.2.16.46
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.232
-        - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.15
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.9.87
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.49.53
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.30
-        - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.4
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.118
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.172
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.192
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.159
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.81
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.6
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.224
-        - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.156
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.78
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.173
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.183
-        - domain: a248.e.akamai.net
-          ipaddress: 2.18.215.91
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.204
-        - domain: a248.e.akamai.net
-          ipaddress: 2.19.194.144
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.224
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.111
-        - domain: a248.e.akamai.net
-          ipaddress: 203.74.140.134
-        - domain: a248.e.akamai.net
-          ipaddress: 104.114.77.27
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.67
-        - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.53
-        - domain: a248.e.akamai.net
-          ipaddress: 23.44.51.232
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.39
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.17
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.157
-        - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.14
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.94
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.251.254
-        - domain: a248.e.akamai.net
-          ipaddress: 184.50.27.46
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.24
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.77.69
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.82
-        - domain: a248.e.akamai.net
-          ipaddress: 23.33.32.224
-        - domain: a248.e.akamai.net
-          ipaddress: 2.18.215.64
-        - domain: a248.e.akamai.net
-          ipaddress: 203.74.140.169
-        - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.74
-        - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.74
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.187
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.9.107
-        - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.105
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.199
-        - domain: a248.e.akamai.net
-          ipaddress: 184.150.49.47
+          ipaddress: 88.221.161.163
         - domain: a248.e.akamai.net
           ipaddress: 2.22.9.95
         - domain: a248.e.akamai.net
-          ipaddress: 84.53.175.50
+          ipaddress: 23.12.40.186
         - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.175
+          ipaddress: 23.202.35.110
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.5
+          ipaddress: 23.202.34.96
         - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.171
+          ipaddress: 23.202.34.111
         - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.45
+          ipaddress: 23.202.35.190
         - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.205
+          ipaddress: 23.202.34.231
         - domain: a248.e.akamai.net
-          ipaddress: 23.202.34.16
+          ipaddress: 184.150.49.50
         - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.165
+          ipaddress: 2.22.118.216
         - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.10
+          ipaddress: 184.150.154.112
         - domain: a248.e.akamai.net
-          ipaddress: 203.74.140.154
+          ipaddress: 23.218.94.239
         - domain: a248.e.akamai.net
-          ipaddress: 88.221.161.190
+          ipaddress: 96.7.181.11
         - domain: a248.e.akamai.net
-          ipaddress: 96.7.251.171
+          ipaddress: 203.74.140.182
         - domain: a248.e.akamai.net
-          ipaddress: 96.7.128.200
+          ipaddress: 23.33.32.74
         - domain: a248.e.akamai.net
-          ipaddress: 23.12.40.150
+          ipaddress: 23.45.51.159
         - domain: a248.e.akamai.net
-          ipaddress: 23.43.243.47
+          ipaddress: 23.33.32.56
         - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.190
+          ipaddress: 23.45.51.169
         - domain: a248.e.akamai.net
-          ipaddress: 184.28.221.47
+          ipaddress: 23.33.178.60
         - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.137
+          ipaddress: 96.7.181.214
         - domain: a248.e.akamai.net
-          ipaddress: 104.116.243.70
+          ipaddress: 84.53.175.10
         - domain: a248.e.akamai.net
-          ipaddress: 2.22.9.37
+          ipaddress: 23.206.250.108
         - domain: a248.e.akamai.net
-          ipaddress: 2.22.118.25
+          ipaddress: 23.48.32.20
         - domain: a248.e.akamai.net
-          ipaddress: 23.32.238.212
+          ipaddress: 23.33.178.57
         - domain: a248.e.akamai.net
-          ipaddress: 2.22.9.8
+          ipaddress: 172.232.16.141
         - domain: a248.e.akamai.net
-          ipaddress: 23.209.125.27
+          ipaddress: 23.45.51.137
         - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.44
+          ipaddress: 23.2.16.54
         - domain: a248.e.akamai.net
-          ipaddress: 72.246.150.167
+          ipaddress: 104.116.243.231
         - domain: a248.e.akamai.net
-          ipaddress: 96.7.251.226
+          ipaddress: 23.33.178.102
         - domain: a248.e.akamai.net
-          ipaddress: 23.223.246.70
+          ipaddress: 23.210.215.69
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.79
+        - domain: a248.e.akamai.net
+          ipaddress: 104.116.243.25
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.161
+        - domain: a248.e.akamai.net
+          ipaddress: 104.116.243.157
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.112
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.251.193
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.190
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.166
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.131
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.67
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.133
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.51.138
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.7
+        - domain: a248.e.akamai.net
+          ipaddress: 80.239.237.79
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.132
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.46
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.193
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.184
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.133
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.99
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.213.41
+        - domain: a248.e.akamai.net
+          ipaddress: 23.44.51.11
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.135
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.128
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.221.78
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.32
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.30
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.16.139
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.228
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.157
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.231
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.239
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.51.167
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.245
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.83
+        - domain: a248.e.akamai.net
+          ipaddress: 104.114.77.22
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.99.228
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.150.135
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.154
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.187
+        - domain: a248.e.akamai.net
+          ipaddress: 23.223.246.40
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.28
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.163
+        - domain: a248.e.akamai.net
+          ipaddress: 2.19.194.225
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.185
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.136
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.178.110
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.96
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.178.79
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.23
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.159
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.120
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.9.81
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.150.171
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.177
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.29
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.82
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.75
+        - domain: a248.e.akamai.net
+          ipaddress: 23.12.40.7
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.53
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.193
+        - domain: a248.e.akamai.net
+          ipaddress: 23.12.40.21
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.77.47
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.71
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.75
+        - domain: a248.e.akamai.net
+          ipaddress: 203.74.140.175
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.207.155
+        - domain: a248.e.akamai.net
+          ipaddress: 23.223.246.73
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.179
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.58
+        - domain: a248.e.akamai.net
+          ipaddress: 23.210.215.88
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.11.143
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.178.88
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.89
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.91
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.89
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.210.186
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.51.162
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.16.204
+        - domain: a248.e.akamai.net
+          ipaddress: 184.50.27.113
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.210
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.183
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.28
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.140
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.180
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.16.144
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.221
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.251.184
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.211
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.9.87
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.164
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.251.166
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.40
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.54
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.77
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.16.145
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.77.69
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.160
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.55
+        - domain: a248.e.akamai.net
+          ipaddress: 184.50.27.119
+        - domain: a248.e.akamai.net
+          ipaddress: 104.116.243.203
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.61
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.100
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.182
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.206
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.7
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.83
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.11.133
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.72
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.121
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.26
+        - domain: a248.e.akamai.net
+          ipaddress: 104.116.243.202
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.99.1
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.156
+        - domain: a248.e.akamai.net
+          ipaddress: 23.12.40.173
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.138
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.198
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.185
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.198
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.74
+        - domain: a248.e.akamai.net
+          ipaddress: 23.210.215.77
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.144
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.181
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.235
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.92
+        - domain: a248.e.akamai.net
+          ipaddress: 23.223.246.31
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.183
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.195
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.77.33
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.249
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.221.43
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.150.118
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.248
+        - domain: a248.e.akamai.net
+          ipaddress: 104.116.243.24
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.58
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.178.48
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.150.126
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.51.177
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.124
+        - domain: a248.e.akamai.net
+          ipaddress: 23.210.215.99
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.229
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.26
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.32
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.96
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.16.210
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.163
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.216
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.204
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.17
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.54
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.210.177
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.122
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.49.49
+        - domain: a248.e.akamai.net
+          ipaddress: 2.19.194.224
+        - domain: a248.e.akamai.net
+          ipaddress: 184.50.27.136
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.207.144
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.200
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.9.42
+        - domain: a248.e.akamai.net
+          ipaddress: 104.114.77.45
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.9.100
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.69
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.223
+        - domain: a248.e.akamai.net
+          ipaddress: 203.74.140.187
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.4
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.150.234
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.68
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.9.21
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.70
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.62
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.174
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.130
+        - domain: a248.e.akamai.net
+          ipaddress: 104.114.77.39
+        - domain: a248.e.akamai.net
+          ipaddress: 184.50.27.197
+        - domain: a248.e.akamai.net
+          ipaddress: 104.114.77.146
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.182
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.145
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.99.21
+        - domain: a248.e.akamai.net
+          ipaddress: 104.114.77.153
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.224
+        - domain: a248.e.akamai.net
+          ipaddress: 2.19.194.174
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.46
+        - domain: a248.e.akamai.net
+          ipaddress: 23.44.51.8
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.62
+        - domain: a248.e.akamai.net
+          ipaddress: 23.223.246.29
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.159
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.15
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.34
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.11.176
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.14
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.178.140
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.107
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.45
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.201
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.39
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.185
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.209
+        - domain: a248.e.akamai.net
+          ipaddress: 80.239.237.89
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.142
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.9.80
+        - domain: a248.e.akamai.net
+          ipaddress: 23.206.250.106
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.29
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.54
+        - domain: a248.e.akamai.net
+          ipaddress: 184.50.27.34
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.176
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.216
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.16.201
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.171
+        - domain: a248.e.akamai.net
+          ipaddress: 184.50.27.37
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.179
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.77.12
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.52
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.95
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.150.97
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.220
+        - domain: a248.e.akamai.net
+          ipaddress: 2.19.194.229
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.57
+        - domain: a248.e.akamai.net
+          ipaddress: 23.210.215.50
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.77.48
+        - domain: a248.e.akamai.net
+          ipaddress: 184.50.27.13
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.9
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.140
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.207.207
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.150.187
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.218
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.84
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.63
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.150.109
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.165
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.19
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.237
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.80
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.118
+        - domain: a248.e.akamai.net
+          ipaddress: 23.44.51.16
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.77.66
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.17
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.36
+        - domain: a248.e.akamai.net
+          ipaddress: 23.44.51.229
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.6
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.208
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.226
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.220
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.51.141
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.21
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.20
         - domain: a248.e.akamai.net
           ipaddress: 23.48.32.181
         - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.193
+          ipaddress: 62.115.253.212
         - domain: a248.e.akamai.net
-          ipaddress: 23.45.112.177
+          ipaddress: 23.215.177.132
         - domain: a248.e.akamai.net
-          ipaddress: 23.218.94.232
+          ipaddress: 23.202.35.128
         - domain: a248.e.akamai.net
-          ipaddress: 92.123.77.16
+          ipaddress: 23.215.177.15
         - domain: a248.e.akamai.net
-          ipaddress: 23.202.35.107
+          ipaddress: 23.33.178.30
         - domain: a248.e.akamai.net
-          ipaddress: 96.7.181.80
+          ipaddress: 172.232.16.206
         - domain: a248.e.akamai.net
-          ipaddress: 80.239.237.91
+          ipaddress: 2.22.118.151
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.177.174
+          ipaddress: 184.150.49.70
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.170
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.206
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.145
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.105
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.135
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.217
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.51.122
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.204
+        - domain: a248.e.akamai.net
+          ipaddress: 23.223.246.42
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.23
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.152
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.99.34
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.52
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.173
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.49.67
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.146
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.112
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.199
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.8
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.99.19
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.64
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.22
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.29
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.155
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.16.198
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.26
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.11.132
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.13
+        - domain: a248.e.akamai.net
+          ipaddress: 104.116.243.162
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.221.6
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.58
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.25
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.182
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.98
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.29
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.141
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.241
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.144
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.214
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.6
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.104
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.150
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.89
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.171
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.194
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.51.143
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.20
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.213
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.51
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.135
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.206
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.215
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.228
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.196
+        - domain: a248.e.akamai.net
+          ipaddress: 184.50.27.57
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.184
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.51.146
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.180
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.144
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.218
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.159
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.221.50
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.170
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.209
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.59
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.11.205
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.19
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.85
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.218
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.170
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.77.17
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.221.16
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.14
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.251
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.51.125
+        - domain: a248.e.akamai.net
+          ipaddress: 203.74.140.162
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.193
+        - domain: a248.e.akamai.net
+          ipaddress: 104.114.77.163
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.243
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.49.16
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.182
+        - domain: a248.e.akamai.net
+          ipaddress: 23.223.246.44
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.154
+        - domain: a248.e.akamai.net
+          ipaddress: 104.114.77.47
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.210.223
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.194
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.5
+        - domain: a248.e.akamai.net
+          ipaddress: 104.116.243.227
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.228
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.97
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.9.32
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.84
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.67
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.156
+        - domain: a248.e.akamai.net
+          ipaddress: 23.206.250.86
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.254
+        - domain: a248.e.akamai.net
+          ipaddress: 23.44.51.232
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.16.205
+        - domain: a248.e.akamai.net
+          ipaddress: 104.116.243.229
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.47
+        - domain: a248.e.akamai.net
+          ipaddress: 23.223.246.68
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.178.65
+        - domain: a248.e.akamai.net
+          ipaddress: 80.239.237.80
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.203
+        - domain: a248.e.akamai.net
+          ipaddress: 184.50.27.148
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.98
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.9.44
+        - domain: a248.e.akamai.net
+          ipaddress: 104.114.77.44
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.128
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.25
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.149
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.56
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.37
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.149
+        - domain: a248.e.akamai.net
+          ipaddress: 23.223.246.48
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.41
+        - domain: a248.e.akamai.net
+          ipaddress: 2.19.194.182
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.148
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.137
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.16
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.210.205
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.77.13
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.210.235
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.230
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.49.12
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.29
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.16.155
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.5
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.85
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.141
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.4
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.182
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.224
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.219
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.47
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.99.26
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.221
+        - domain: a248.e.akamai.net
+          ipaddress: 184.50.27.153
+        - domain: a248.e.akamai.net
+          ipaddress: 184.26.127.40
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.159
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.76
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.86
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.11.154
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.76
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.162
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.204
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.9.98
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.216
+        - domain: a248.e.akamai.net
+          ipaddress: 23.210.215.62
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.99.74
+        - domain: a248.e.akamai.net
+          ipaddress: 104.114.77.137
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.207
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.33
+        - domain: a248.e.akamai.net
+          ipaddress: 203.74.140.195
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.107
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.37
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.56
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.98
+        - domain: a248.e.akamai.net
+          ipaddress: 203.74.140.135
+        - domain: a248.e.akamai.net
+          ipaddress: 2.19.194.191
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.189.21
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.213
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.178.50
+        - domain: a248.e.akamai.net
+          ipaddress: 104.116.243.68
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.47
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.51
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.68
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.28
+        - domain: a248.e.akamai.net
+          ipaddress: 203.74.140.199
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.162
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.48
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.57
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.207.157
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.20
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.221.77
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.132
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.40
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.160
+        - domain: a248.e.akamai.net
+          ipaddress: 23.210.215.59
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.129
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.68
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.75
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.74
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.221.11
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.183
+        - domain: a248.e.akamai.net
+          ipaddress: 184.50.27.33
+        - domain: a248.e.akamai.net
+          ipaddress: 203.74.140.165
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.197
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.125
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.156
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.203
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.143
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.49.63
+        - domain: a248.e.akamai.net
+          ipaddress: 203.74.140.140
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.119
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.236
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.45
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.154
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.204
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.15
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.64
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.192
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.17
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.117
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.73
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.13
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.48
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.196
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.150.164
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.31
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.221
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.140
+        - domain: a248.e.akamai.net
+          ipaddress: 23.210.215.96
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.169
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.214
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.178.38
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.221.47
+        - domain: a248.e.akamai.net
+          ipaddress: 2.19.194.230
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.48
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.226
+        - domain: a248.e.akamai.net
+          ipaddress: 23.44.51.228
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.12
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.142
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.9.114
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.48
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.125
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.114
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.128
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.86
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.35
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.155
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.243
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.209
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.77.55
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.210.218
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.51.119
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.165
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.81
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.42
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.11.202
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.210.225
+        - domain: a248.e.akamai.net
+          ipaddress: 2.19.194.143
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.251.158
+        - domain: a248.e.akamai.net
+          ipaddress: 23.44.51.21
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.12
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.24
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.73
+        - domain: a248.e.akamai.net
+          ipaddress: 23.12.40.150
+        - domain: a248.e.akamai.net
+          ipaddress: 104.114.77.38
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.149
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.163
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.106
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.114
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.210.148
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.48
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.81
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.90
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.61
+        - domain: a248.e.akamai.net
+          ipaddress: 104.114.77.190
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.76
+        - domain: a248.e.akamai.net
+          ipaddress: 23.206.250.82
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.254
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.251.153
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.163
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.51.151
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.232
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.198
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.208
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.90
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.215.232
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.63
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.93
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.173
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.23
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.147
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.167
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.72
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.210.184
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.11.160
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.49.81
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.34
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.38
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.207.223
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.221
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.16.140
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.7
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.89
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.185
+        - domain: a248.e.akamai.net
+          ipaddress: 23.206.250.95
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.11.193
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.118
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.77.64
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.16.178
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.181
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.179
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.207.224
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.135
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.221.48
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.123
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.93
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.216
+        - domain: a248.e.akamai.net
+          ipaddress: 104.116.243.148
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.232
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.124
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.89
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.84
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.207.202
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.96
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.139
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.220
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.35
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.99.22
+        - domain: a248.e.akamai.net
+          ipaddress: 23.210.215.47
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.13
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.61
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.8
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.182
+        - domain: a248.e.akamai.net
+          ipaddress: 23.12.40.178
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.221.8
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.105
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.37
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.36
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.119
+        - domain: a248.e.akamai.net
+          ipaddress: 23.210.215.63
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.99.59
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.189.243
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.29
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.26
+        - domain: a248.e.akamai.net
+          ipaddress: 23.12.40.227
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.247
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.38
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.153
+        - domain: a248.e.akamai.net
+          ipaddress: 23.12.40.80
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.99.56
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.178.22
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.221.71
+        - domain: a248.e.akamai.net
+          ipaddress: 2.19.194.211
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.87
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.51.157
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.147
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.207.225
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.207.218
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.115
+        - domain: a248.e.akamai.net
+          ipaddress: 23.44.51.30
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.157
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.215
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.11.157
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.211
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.221.46
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.92
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.22
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.88
+        - domain: a248.e.akamai.net
+          ipaddress: 184.50.27.120
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.190
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.9
+        - domain: a248.e.akamai.net
+          ipaddress: 80.239.237.10
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.178.114
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.81
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.75
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.23
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.49.24
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.54
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.51.120
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.207.209
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.67
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.20
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.56
+        - domain: a248.e.akamai.net
+          ipaddress: 23.206.250.96
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.99.83
+        - domain: a248.e.akamai.net
+          ipaddress: 23.210.215.89
+        - domain: a248.e.akamai.net
+          ipaddress: 2.19.194.168
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.71
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.144
+        - domain: a248.e.akamai.net
+          ipaddress: 23.210.215.46
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.138
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.153
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.207.132
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.221.51
+        - domain: a248.e.akamai.net
+          ipaddress: 23.223.246.24
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.189.224
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.194
+        - domain: a248.e.akamai.net
+          ipaddress: 23.210.215.94
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.70
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.215.54
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.135
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.24
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.16.158
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.150.185
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.51
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.213
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.150.104
+        - domain: a248.e.akamai.net
+          ipaddress: 184.50.27.114
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.150.225
+        - domain: a248.e.akamai.net
+          ipaddress: 23.210.215.101
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.246
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.178.134
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.182
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.152
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.38
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.251.186
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.9.108
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.208
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.11
+        - domain: a248.e.akamai.net
+          ipaddress: 184.50.27.107
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.36
+        - domain: a248.e.akamai.net
+          ipaddress: 184.50.27.163
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.16.132
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.14
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.99.2
+        - domain: a248.e.akamai.net
+          ipaddress: 104.114.77.66
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.78
+        - domain: a248.e.akamai.net
+          ipaddress: 104.114.77.145
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.60
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.184
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.210.208
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.77.49
+        - domain: a248.e.akamai.net
+          ipaddress: 184.50.27.126
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.39
+        - domain: a248.e.akamai.net
+          ipaddress: 23.210.215.64
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.99.81
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.111
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.30
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.210.172
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.152
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.89
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.149
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.68
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.178
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.49.5
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.95
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.150.172
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.157
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.138
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.43
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.84
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.9.26
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.189.48
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.81
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.150.227
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.140
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.99.96
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.135
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.90
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.12
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.150.188
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.189.214
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.108
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.22
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.106
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.20
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.78
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.187
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.206
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.11.136
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.137
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.36
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.86
+        - domain: a248.e.akamai.net
+          ipaddress: 23.223.246.79
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.90
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.52
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.171
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.162
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.60
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.26
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.53
+        - domain: a248.e.akamai.net
+          ipaddress: 104.114.77.136
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.89
+        - domain: a248.e.akamai.net
+          ipaddress: 23.12.40.63
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.13
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.45
+        - domain: a248.e.akamai.net
+          ipaddress: 2.19.194.168
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.238
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.51.176
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.156
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.251.150
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.99.46
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.223
+        - domain: a248.e.akamai.net
+          ipaddress: 23.210.215.76
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.101
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.210.201
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.11.168
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.9.45
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.34
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.167
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.102
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.52
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.147
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.49.78
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.171
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.55
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.183
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.54
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.149
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.32
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.32
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.41
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.77.53
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.6
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.87
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.87
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.109
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.78
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.215.57
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.157
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.55
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.251.183
+        - domain: a248.e.akamai.net
+          ipaddress: 23.206.250.58
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.13
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.79
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.9.102
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.242
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.253
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.11
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.99.87
+        - domain: a248.e.akamai.net
+          ipaddress: 104.114.77.61
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.216
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.86
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.177
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.210
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.115
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.230
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.148
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.25
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.129
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.157
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.150.110
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.104
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.66
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.16
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.158
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.81
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.48
+        - domain: a248.e.akamai.net
+          ipaddress: 23.12.40.170
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.62
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.177
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.118
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.65
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.223
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.12
+        - domain: a248.e.akamai.net
+          ipaddress: 23.12.40.187
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.63
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.211.193
+        - domain: a248.e.akamai.net
+          ipaddress: 203.74.140.171
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.217
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.159
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.78
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.150
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.147
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.139
+        - domain: a248.e.akamai.net
+          ipaddress: 104.116.243.190
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.145
+        - domain: a248.e.akamai.net
+          ipaddress: 203.74.140.170
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.49.45
+        - domain: a248.e.akamai.net
+          ipaddress: 23.44.51.33
+        - domain: a248.e.akamai.net
+          ipaddress: 72.246.189.222
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.178.71
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.171
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.249
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.151
+        - domain: a248.e.akamai.net
+          ipaddress: 184.50.27.24
+        - domain: a248.e.akamai.net
+          ipaddress: 104.114.77.32
+        - domain: a248.e.akamai.net
+          ipaddress: 23.12.40.70
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.20
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.12
+        - domain: a248.e.akamai.net
+          ipaddress: 104.116.243.213
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.27
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.79
+        - domain: a248.e.akamai.net
+          ipaddress: 23.223.246.39
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.14
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.157
+        - domain: a248.e.akamai.net
+          ipaddress: 23.44.51.230
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.60
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.187
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.44
+        - domain: a248.e.akamai.net
+          ipaddress: 2.19.194.131
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.13
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.224
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.59
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.178
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.118.68
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.251.145
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.206
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.49.30
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.253
+        - domain: a248.e.akamai.net
+          ipaddress: 203.74.140.161
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.36
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.106
+        - domain: a248.e.akamai.net
+          ipaddress: 23.223.246.35
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.238.159
+        - domain: a248.e.akamai.net
+          ipaddress: 23.46.210.178
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.253.211
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.76
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.215.92
+        - domain: a248.e.akamai.net
+          ipaddress: 23.12.40.161
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.46
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.77.25
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.174
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.207.160
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.95
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.83
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.99.222
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.49.34
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.154
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.9.253
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.143
+        - domain: a248.e.akamai.net
+          ipaddress: 23.223.246.62
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.34
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.104
+        - domain: a248.e.akamai.net
+          ipaddress: 184.24.77.138
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.90
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.51
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.207.220
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.56
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.172
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.72
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.71
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.33
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.155
+        - domain: a248.e.akamai.net
+          ipaddress: 23.218.94.201
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.77
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.15
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.57
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.34.164
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.157
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.94
+        - domain: a248.e.akamai.net
+          ipaddress: 2.19.194.152
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.144
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.161.83
+        - domain: a248.e.akamai.net
+          ipaddress: 23.216.77.57
+        - domain: a248.e.akamai.net
+          ipaddress: 23.209.125.13
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.140
+        - domain: a248.e.akamai.net
+          ipaddress: 172.232.16.209
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.154.93
+        - domain: a248.e.akamai.net
+          ipaddress: 23.12.40.38
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.207
+        - domain: a248.e.akamai.net
+          ipaddress: 184.150.49.14
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.79
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.104
+        - domain: a248.e.akamai.net
+          ipaddress: 84.53.175.34
+        - domain: a248.e.akamai.net
+          ipaddress: 62.115.252.130
+        - domain: a248.e.akamai.net
+          ipaddress: 2.22.119.147
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.36
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.177.100
+        - domain: a248.e.akamai.net
+          ipaddress: 23.202.35.155
+        - domain: a248.e.akamai.net
+          ipaddress: 23.43.243.29
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.128.58
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.181.8
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.32.113
+        - domain: a248.e.akamai.net
+          ipaddress: 23.33.32.224
+        - domain: a248.e.akamai.net
+          ipaddress: 23.45.112.155
         testurl: https://fronted-ping.dsa.akamai.getiantem.org/ping
         validator:
           rejectstatus:
@@ -2063,2006 +2063,2006 @@ client:
           replica-thumbnailer.lantern.io: d2b627m7r9v7iw.cloudfront.net
           update.getlantern.org: d2yl1zps97e5mx.cloudfront.net
         masquerades: &id001
+        - domain: 1rx.io
+          ipaddress: 65.9.129.179
         - domain: 2cimple.com
-          ipaddress: 13.35.2.93
-        - domain: 4v1game.net
-          ipaddress: 65.8.1.151
-        - domain: 4v1game.net
-          ipaddress: 13.35.3.128
-        - domain: aax-fe.amazon.com
-          ipaddress: 99.86.1.227
-        - domain: abcmouse.com
-          ipaddress: 65.9.128.19
+          ipaddress: 13.249.2.70
+        - domain: 4fdaayvm7rrh2cz8-cdn.telematics-hv.uconnectservice.net
+          ipaddress: 143.204.2.87
+        - domain: aax-eu.amazon.com
+          ipaddress: 54.192.1.228
+        - domain: aax-us-east.amazon.com
+          ipaddress: 65.9.129.45
         - domain: acerchen.com
-          ipaddress: 13.32.2.68
+          ipaddress: 52.84.2.214
         - domain: achievers.com
-          ipaddress: 54.182.2.167
+          ipaddress: 13.249.2.215
+        - domain: achievers.com
+          ipaddress: 54.192.0.57
+        - domain: achievers.com
+          ipaddress: 204.246.169.147
         - domain: achievers.com
           ipaddress: 13.224.0.38
         - domain: acordsolutions.net
-          ipaddress: 54.230.0.24
+          ipaddress: 54.239.130.28
         - domain: acordsolutions.net
-          ipaddress: 13.224.0.124
+          ipaddress: 54.192.0.230
+        - domain: ad1.awsstatic.com
+          ipaddress: 99.84.0.36
         - domain: admin-o2o.dev.fantasyteam.io
           ipaddress: 13.35.1.187
+        - domain: admin.dev.chongon.net
+          ipaddress: 13.35.0.190
         - domain: admin.fantasyteam.io
-          ipaddress: 13.249.2.168
+          ipaddress: 204.246.169.108
+        - domain: admint.jp
+          ipaddress: 54.239.195.14
         - domain: adn.wyzant.com
-          ipaddress: 99.86.0.33
-        - domain: adsrvr.org
-          ipaddress: 54.230.227.117
-        - domain: adsrvr.org
-          ipaddress: 99.84.0.128
+          ipaddress: 54.239.195.191
         - domain: adventureacademy.com
-          ipaddress: 54.192.2.92
+          ipaddress: 54.230.0.104
         - domain: adventureacademy.com
-          ipaddress: 205.251.251.90
-        - domain: ai.hoken-docomo.jp
-          ipaddress: 54.230.0.225
+          ipaddress: 204.246.177.99
+        - domain: advertising.amazon.ca
+          ipaddress: 204.246.164.53
         - domain: aiag.i-memo.jp
           ipaddress: 65.8.0.107
         - domain: aiag.i-memo.jp
-          ipaddress: 204.246.164.67
-        - domain: aiag.i-memo.jp
-          ipaddress: 54.182.2.122
-        - domain: akamai.o.brightcove.com
-          ipaddress: 54.230.202.48
-        - domain: akamai.o.brightcove.com
-          ipaddress: 205.251.251.47
-        - domain: akamai.o.brightcove.com
-          ipaddress: 13.32.2.48
+          ipaddress: 99.86.1.68
+        - domain: aldebaran.com
+          ipaddress: 65.8.1.60
+        - domain: alexa-comms-mobile-service.amazon.com
+          ipaddress: 54.230.203.184
+        - domain: alpha.mymagazine.smt.docomo.ne.jp
+          ipaddress: 54.230.210.82
         - domain: amazonlogistics.com
-          ipaddress: 99.86.0.68
+          ipaddress: 54.230.227.16
+        - domain: amazonlogistics.eu
+          ipaddress: 54.192.0.190
         - domain: amazonpay.amazon.in
           ipaddress: 54.230.0.50
         - domain: amazonsmile.com
-          ipaddress: 65.9.128.170
+          ipaddress: 52.84.2.197
         - domain: amoad.com
           ipaddress: 54.192.0.112
+        - domain: amob.jp
+          ipaddress: 54.230.227.196
         - domain: angels.camp-fire.jp
           ipaddress: 54.230.203.120
-        - domain: answers.chime.aws
-          ipaddress: 54.239.192.52
+        - domain: angels.camp-fire.jp
+          ipaddress: 205.251.251.119
         - domain: anttoken.finance
-          ipaddress: 13.224.0.204
-        - domain: ap1.whispir.com
-          ipaddress: 54.230.210.216
+          ipaddress: 54.230.0.23
+        - domain: apab2020-aws-ip.cxdev.jp
+          ipaddress: 54.230.225.100
+        - domain: api.360.car
+          ipaddress: 54.239.130.109
+        - domain: api.360.car
+          ipaddress: 13.32.1.93
         - domain: api.area-hinan.au.com
-          ipaddress: 13.32.1.130
-        - domain: api.cs-pindrop.io
-          ipaddress: 54.182.3.35
-        - domain: api.cs-pindrop.io
-          ipaddress: 54.192.2.134
-        - domain: api.cs-pindrop.io
-          ipaddress: 143.204.1.140
-        - domain: api.dev.repayonline.com
-          ipaddress: 143.204.1.22
-        - domain: api.enterprise.agero.com
-          ipaddress: 13.35.1.52
-        - domain: api.enterprise.agero.com
-          ipaddress: 54.239.192.9
-        - domain: api.enterprise.agero.com
-          ipaddress: 54.230.203.3
-        - domain: api.everforth.com
-          ipaddress: 54.192.2.237
+          ipaddress: 143.204.2.108
+        - domain: api.eu.context.cloud.sap
+          ipaddress: 54.230.203.187
         - domain: api.imdbws.com
           ipaddress: 54.230.202.81
         - domain: api.mapbox.com
           ipaddress: 143.204.2.103
-        - domain: api.mercadolibre.com
-          ipaddress: 65.8.1.79
+        - domain: api.mapbox.com
+          ipaddress: 54.230.202.178
         - domain: api.msg.ue1.b.app.chime.aws
           ipaddress: 54.239.130.141
-        - domain: api.smartpass.auone.jp
-          ipaddress: 54.192.0.179
-        - domain: api.smartpass.auone.jp
-          ipaddress: 204.246.177.187
+        - domain: api.msg.ue1.g.app.chime.aws
+          ipaddress: 99.84.0.93
+        - domain: api.web.foodnetwork.com
+          ipaddress: 13.35.1.61
         - domain: api1.platformdxc-d2.com
           ipaddress: 99.84.0.214
         - domain: api1.platformdxc-d2.com
           ipaddress: 13.32.1.153
-        - domain: apollox.cloud
-          ipaddress: 54.192.2.2
         - domain: app.imaginelearning.com
-          ipaddress: 13.32.1.171
+          ipaddress: 204.246.164.97
         - domain: appsdownload2.hkjc.com
           ipaddress: 54.239.130.229
-        - domain: appsdownload2.hkjc.com
-          ipaddress: 13.224.0.132
-        - domain: arevea.tv
-          ipaddress: 52.84.2.171
-        - domain: arevea.tv
-          ipaddress: 99.86.0.219
-        - domain: as0.awsstatic.com
-          ipaddress: 205.251.251.14
-        - domain: assets1.uswitch.com
-          ipaddress: 99.86.2.154
-        - domain: audible.es
-          ipaddress: 65.8.0.200
+        - domain: apxlv.com
+          ipaddress: 54.230.129.68
+        - domain: arbitersports.com
+          ipaddress: 52.84.3.168
+        - domain: arya-enterprise-iad.iad.amazon.com.amazon.com
+          ipaddress: 54.230.227.193
+        - domain: assetserv.com
+          ipaddress: 99.84.0.101
+        - domain: assetserv.com
+          ipaddress: 99.86.1.21
         - domain: auth.airmiles.ca
-          ipaddress: 54.230.210.211
+          ipaddress: 54.230.225.150
+        - domain: auth.airmiles.ca
+          ipaddress: 13.32.1.95
         - domain: auth0.com
           ipaddress: 13.35.1.170
-        - domain: autologic.io
-          ipaddress: 54.230.129.186
-        - domain: autopatchhk.yuanshen.com
-          ipaddress: 65.9.129.15
+        - domain: autodata-group.com
+          ipaddress: 65.8.0.98
         - domain: av-eu.amazon.com
           ipaddress: 54.230.0.56
-        - domain: av-eu.amazon.com
-          ipaddress: 13.35.0.236
+        - domain: av-fe.amazon.com
+          ipaddress: 143.204.0.201
+        - domain: av-fe.amazon.com
+          ipaddress: 54.230.210.144
+        - domain: av-na.amazon.com
+          ipaddress: 54.182.2.196
+        - domain: av-na.amazon.com
+          ipaddress: 65.8.1.80
+        - domain: av-na.amazon.com
+          ipaddress: 99.86.0.231
         - domain: aws.amazon.com
-          ipaddress: 13.249.3.74
+          ipaddress: 54.230.208.73
+        - domain: aws.amazon.com
+          ipaddress: 54.230.2.70
+        - domain: ba0.awsstatic.com
+          ipaddress: 204.246.175.80
+        - domain: ba0.awsstatic.com
+          ipaddress: 204.246.169.83
+        - domain: ba0.awsstatic.com
+          ipaddress: 54.239.195.13
+        - domain: bada.com
+          ipaddress: 54.230.225.72
+        - domain: bada.com
+          ipaddress: 65.9.128.60
+        - domain: bada.com
+          ipaddress: 205.251.249.57
         - domain: bada.com
           ipaddress: 204.246.177.63
-        - domain: bada.com
-          ipaddress: 54.239.195.71
         - domain: bbedge2p-light.iotconnectup.com
-          ipaddress: 13.35.0.168
+          ipaddress: 204.246.175.188
         - domain: bd0.awsstatic.com
-          ipaddress: 54.230.225.24
-        - domain: bd0.awsstatic.com
-          ipaddress: 205.251.249.87
-        - domain: bestsocialpartner.com
-          ipaddress: 65.8.1.132
-        - domain: bids.cloverleaf.net
-          ipaddress: 99.86.0.195
-        - domain: bikebandit-images.com
-          ipaddress: 205.251.249.207
-        - domain: bikebandit-images.com
-          ipaddress: 13.35.2.221
-        - domain: bilibiligame.jp
-          ipaddress: 204.246.175.7
-        - domain: billpay.de
-          ipaddress: 205.251.249.212
-        - domain: binance.je
-          ipaddress: 54.230.0.64
+          ipaddress: 65.8.0.96
+        - domain: bd1.awsstatic.com
+          ipaddress: 13.32.2.159
+        - domain: beta.awsapps.com
+          ipaddress: 54.192.1.120
+        - domain: beta.beta-services.wyze.com
+          ipaddress: 204.246.175.147
+        - domain: beta.mymagazine.smt.docomo.ne.jp
+          ipaddress: 54.230.227.162
+        - domain: bibliocommons.com
+          ipaddress: 13.32.2.17
+        - domain: binance.im
+          ipaddress: 13.35.2.11
+        - domain: binance.im
+          ipaddress: 54.192.1.129
+        - domain: binance.me
+          ipaddress: 13.224.0.92
+        - domain: binance.sg
+          ipaddress: 65.9.128.233
         - domain: binanceapi.com
-          ipaddress: 54.239.195.204
+          ipaddress: 65.9.128.98
         - domain: binanceapi.com
-          ipaddress: 204.246.175.209
-        - domain: binanceapi.com
-          ipaddress: 54.239.192.167
+          ipaddress: 54.230.0.112
+        - domain: binanceru.net
+          ipaddress: 13.32.2.104
+        - domain: bittorrent.com
+          ipaddress: 99.86.0.62
         - domain: bks.cybird.ne.jp
-          ipaddress: 54.230.1.177
-        - domain: bks.cybird.ne.jp
-          ipaddress: 54.182.0.182
-        - domain: bks.cybird.ne.jp
-          ipaddress: 99.86.2.134
+          ipaddress: 52.84.3.161
+        - domain: blim.com
+          ipaddress: 54.230.211.21
         - domain: blim.com
           ipaddress: 99.84.0.27
-        - domain: bolindadigital.com
-          ipaddress: 13.35.1.162
-        - domain: breezeblow.com
-          ipaddress: 204.246.175.206
+        - domain: blim.com
+          ipaddress: 13.35.1.171
+        - domain: brightcove.com
+          ipaddress: 54.230.227.160
         - domain: c.amazon-adsystem.com
-          ipaddress: 54.230.211.148
-        - domain: ca.dev.bbc.co.uk
-          ipaddress: 99.84.0.150
-        - domain: cardgames.io
-          ipaddress: 54.230.129.158
+          ipaddress: 143.204.1.143
+        - domain: camp-fire.jp
+          ipaddress: 52.84.3.35
+        - domain: camp-fire.jp
+          ipaddress: 54.230.129.34
         - domain: cascade.madmimi.com
-          ipaddress: 13.35.3.201
-        - domain: cdn.ably.com
-          ipaddress: 54.192.1.225
-        - domain: cdn.airmap.io
-          ipaddress: 54.230.211.45
-        - domain: cdn.airmap.io
-          ipaddress: 99.86.0.28
+          ipaddress: 204.246.164.203
+        - domain: cdn-images.mailchimp.com
+          ipaddress: 204.246.177.96
+        - domain: cdn.burlingtonenglish.com
+          ipaddress: 13.249.2.98
+        - domain: cdn.burlingtonenglish.com
+          ipaddress: 54.230.202.24
+        - domain: cdn.burlingtonenglish.com
+          ipaddress: 65.9.129.23
+        - domain: cdn.burlingtonenglish.com
+          ipaddress: 54.230.0.27
         - domain: cdn.cequintvzwecid.com
-          ipaddress: 204.246.169.53
-        - domain: cdn.cequintvzwecid.com
-          ipaddress: 65.8.1.73
+          ipaddress: 204.246.164.106
         - domain: cdn.di-capt.com
-          ipaddress: 13.32.2.54
+          ipaddress: 54.192.3.54
         - domain: cdn.discounttire.com
-          ipaddress: 13.224.0.101
+          ipaddress: 65.8.1.9
         - domain: cdn.evergage.com
           ipaddress: 204.246.175.129
-        - domain: cdn.fccc.info
-          ipaddress: 205.251.249.125
-        - domain: cdn.hands.net
-          ipaddress: 54.230.225.14
+        - domain: cdn.evergage.com
+          ipaddress: 65.9.128.134
         - domain: cdn.inkfrog.com
-          ipaddress: 99.86.2.216
+          ipaddress: 65.9.128.157
         - domain: cdn.mozilla.net
-          ipaddress: 13.32.1.91
+          ipaddress: 54.182.2.106
         - domain: cdn.myqcloud.com
-          ipaddress: 54.192.0.95
-        - domain: cdn.stg.smartpass.auone.jp
-          ipaddress: 99.86.0.30
-        - domain: cdn.stg.smartpass.auone.jp
-          ipaddress: 54.239.195.169
+          ipaddress: 13.35.3.188
+        - domain: cdn.myqcloud.com
+          ipaddress: 204.246.169.102
+        - domain: cdn.supercell.com
+          ipaddress: 54.192.3.162
+        - domain: cdn.supercell.com
+          ipaddress: 54.230.227.29
+        - domain: cdnsta.fca.telematics.net
+          ipaddress: 65.9.129.11
+        - domain: ceptis.com.br
+          ipaddress: 54.192.0.156
+        - domain: ceptis.com.br
+          ipaddress: 54.182.3.181
+        - domain: cf-ppe-customerapi-th.seacust-test-domain.com
+          ipaddress: 99.86.1.41
+        - domain: cf-ppe-customerapi-th.seacust-test-domain.com
+          ipaddress: 99.86.2.41
         - domain: cf-prod-customerapi-th.seacust-test-domain.com
-          ipaddress: 13.32.2.148
-        - domain: cftng.xyz
-          ipaddress: 13.224.0.203
-        - domain: chartbeat.com
-          ipaddress: 13.35.2.209
+          ipaddress: 13.35.1.41
+        - domain: cf-prod-customerapi-th.seacust-test-domain.com
+          ipaddress: 99.84.0.122
+        - domain: cf.dropboxstatic.com
+          ipaddress: 54.230.211.22
         - domain: chartbeat.com
           ipaddress: 65.8.0.209
+        - domain: chartbeat.com
+          ipaddress: 13.35.2.209
+        - domain: chime.aws
+          ipaddress: 54.239.130.122
+        - domain: chime.aws
+          ipaddress: 65.8.1.78
+        - domain: chn.lps.lottedfs.cn
+          ipaddress: 13.32.2.24
         - domain: classic.dm.amplience-qa.net
           ipaddress: 143.204.1.124
         - domain: classic.dm.amplience-qa.net
+          ipaddress: 54.230.203.116
+        - domain: classic.dm.amplience-qa.net
           ipaddress: 205.251.251.115
+        - domain: client-cjsk.yaowanhk.com
+          ipaddress: 54.230.210.7
         - domain: client.wc.ue1.app.chime.aws
           ipaddress: 13.249.2.114
-        - domain: clients.chime.aws
-          ipaddress: 204.246.169.29
         - domain: cloud.accedo.tv
-          ipaddress: 54.239.192.216
+          ipaddress: 54.230.211.151
+        - domain: cloud.accedo.tv
+          ipaddress: 54.182.0.157
         - domain: cloud.huawei.com
           ipaddress: 52.84.3.136
+        - domain: cloudbees.com
+          ipaddress: 54.239.192.211
         - domain: cloudfront.net
-          ipaddress: 99.84.3.25
+          ipaddress: 13.224.2.150
         - domain: cloudfront.net
-          ipaddress: 13.224.2.207
+          ipaddress: 54.230.209.219
         - domain: cloudfront.net
-          ipaddress: 54.230.130.67
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.231
-        - domain: cloudfront.net
-          ipaddress: 54.230.209.36
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.200
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.135
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.208
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.192
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.38
-        - domain: cloudfront.net
-          ipaddress: 54.230.209.132
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.192
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.53
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.199
-        - domain: cloudfront.net
-          ipaddress: 54.230.130.77
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.21
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.222
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.70
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.121
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.190
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.127
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.95
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.40
-        - domain: cloudfront.net
-          ipaddress: 54.230.130.38
-        - domain: cloudfront.net
-          ipaddress: 54.230.201.17
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.210
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.148
-        - domain: cloudfront.net
-          ipaddress: 65.9.131.12
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.46
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.2
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.27
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.29
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.34
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.102
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.170
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.74
-        - domain: cloudfront.net
-          ipaddress: 65.9.131.16
-        - domain: cloudfront.net
-          ipaddress: 54.239.131.18
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.205
-        - domain: cloudfront.net
-          ipaddress: 54.230.130.200
-        - domain: cloudfront.net
-          ipaddress: 54.239.131.22
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.125
-        - domain: cloudfront.net
-          ipaddress: 54.230.3.32
-        - domain: cloudfront.net
-          ipaddress: 54.230.209.11
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.4
-        - domain: cloudfront.net
-          ipaddress: 54.230.130.169
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.130
-        - domain: cloudfront.net
-          ipaddress: 143.204.3.33
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.39
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.186
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.123
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.41
-        - domain: cloudfront.net
-          ipaddress: 54.230.209.53
+          ipaddress: 99.86.3.83
         - domain: cloudfront.net
           ipaddress: 99.84.2.72
         - domain: cloudfront.net
-          ipaddress: 54.182.1.146
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.155
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.204
-        - domain: cloudfront.net
-          ipaddress: 54.239.131.9
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.73
-        - domain: cloudfront.net
-          ipaddress: 54.230.209.103
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.195
-        - domain: cloudfront.net
-          ipaddress: 54.230.130.82
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.145
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.65
-        - domain: cloudfront.net
-          ipaddress: 54.230.209.68
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.160
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.126
-        - domain: cloudfront.net
-          ipaddress: 54.230.209.76
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.40
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.117
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.135
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.162
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.167
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.104
-        - domain: cloudfront.net
-          ipaddress: 54.230.208.7
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.224
-        - domain: cloudfront.net
-          ipaddress: 54.230.209.5
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.50
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.218
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.51
-        - domain: cloudfront.net
-          ipaddress: 65.9.131.23
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.160
-        - domain: cloudfront.net
-          ipaddress: 54.239.131.10
-        - domain: cloudfront.net
-          ipaddress: 13.249.3.5
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.180
-        - domain: cloudfront.net
-          ipaddress: 13.249.3.19
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.71
-        - domain: cloudfront.net
-          ipaddress: 13.249.3.14
-        - domain: cloudfront.net
-          ipaddress: 54.230.130.222
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.108
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.29
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.171
-        - domain: cloudfront.net
-          ipaddress: 54.230.130.18
-        - domain: cloudfront.net
-          ipaddress: 216.137.35.23
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.14
-        - domain: cloudfront.net
-          ipaddress: 54.230.209.102
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.5
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.35
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.165
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.18
-        - domain: cloudfront.net
-          ipaddress: 13.249.3.29
-        - domain: cloudfront.net
-          ipaddress: 54.230.3.31
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.175
-        - domain: cloudfront.net
-          ipaddress: 143.204.3.9
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.205
-        - domain: cloudfront.net
-          ipaddress: 65.9.131.26
-        - domain: cloudfront.net
-          ipaddress: 54.230.202.61
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.41
-        - domain: cloudfront.net
-          ipaddress: 54.230.130.170
-        - domain: cloudfront.net
-          ipaddress: 54.230.208.24
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.98
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.96
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.125
-        - domain: cloudfront.net
-          ipaddress: 54.230.130.125
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.177
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.90
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.164
-        - domain: cloudfront.net
-          ipaddress: 54.230.209.82
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.174
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.99
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.93
-        - domain: cloudfront.net
-          ipaddress: 54.230.130.160
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.30
-        - domain: cloudfront.net
-          ipaddress: 54.239.131.12
-        - domain: cloudfront.net
-          ipaddress: 54.230.130.76
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.204
-        - domain: cloudfront.net
-          ipaddress: 54.230.130.35
-        - domain: cloudfront.net
-          ipaddress: 54.230.130.113
-        - domain: cloudfront.net
-          ipaddress: 99.84.3.9
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.57
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.72
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.22
-        - domain: cloudfront.net
-          ipaddress: 99.84.3.6
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.200
-        - domain: cloudfront.net
-          ipaddress: 54.230.209.54
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.173
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.145
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.11
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.92
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.28
-        - domain: cloudfront.net
-          ipaddress: 54.230.209.133
-        - domain: cloudfront.net
-          ipaddress: 54.230.209.136
-        - domain: cloudfront.net
-          ipaddress: 143.204.3.22
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.96
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.64
-        - domain: cloudfront.net
-          ipaddress: 13.249.3.23
-        - domain: cloudfront.net
-          ipaddress: 54.239.131.15
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.82
-        - domain: cloudfront.net
-          ipaddress: 216.137.35.28
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.194
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.229
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.117
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.79
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.194
-        - domain: cloudfront.net
-          ipaddress: 54.230.130.220
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.10
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.79
-        - domain: cloudfront.net
-          ipaddress: 54.230.201.33
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.44
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.184
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.57
-        - domain: cloudfront.net
-          ipaddress: 13.249.3.16
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.58
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.215
-        - domain: cloudfront.net
-          ipaddress: 54.230.209.157
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.177
-        - domain: cloudfront.net
-          ipaddress: 54.230.201.23
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.144
-        - domain: cloudfront.net
-          ipaddress: 54.230.224.17
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.45
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.122
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.159
-        - domain: cloudfront.net
-          ipaddress: 13.249.3.32
-        - domain: cloudfront.net
-          ipaddress: 54.230.130.171
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.212
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.109
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.154
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.140
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.9
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.67
-        - domain: cloudfront.net
-          ipaddress: 54.230.130.192
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.180
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.202
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.56
-        - domain: cloudfront.net
-          ipaddress: 54.230.208.26
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.9
-        - domain: cloudfront.net
-          ipaddress: 54.230.3.13
-        - domain: cloudfront.net
-          ipaddress: 54.230.2.31
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.183
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.14
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.197
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.126
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.33
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.189
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.138
-        - domain: cloudfront.net
-          ipaddress: 54.230.2.28
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.31
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.231
-        - domain: cloudfront.net
-          ipaddress: 54.230.3.10
-        - domain: cloudfront.net
-          ipaddress: 13.249.3.4
-        - domain: cloudfront.net
-          ipaddress: 54.230.209.160
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.92
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.99
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.147
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.192
-        - domain: cloudfront.net
-          ipaddress: 54.239.131.19
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.49
-        - domain: cloudfront.net
-          ipaddress: 99.86.3.95
+          ipaddress: 54.182.1.171
         - domain: cloudfront.net
           ipaddress: 54.230.209.41
         - domain: cloudfront.net
-          ipaddress: 54.230.209.223
+          ipaddress: 99.86.3.165
         - domain: cloudfront.net
-          ipaddress: 65.9.131.31
+          ipaddress: 13.224.2.96
         - domain: cloudfront.net
-          ipaddress: 13.224.2.123
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.122
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.79
-        - domain: cloudfront.net
-          ipaddress: 54.230.201.29
-        - domain: cloudfront.net
-          ipaddress: 54.230.130.61
-        - domain: cloudfront.net
-          ipaddress: 54.230.201.28
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.192
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.124
-        - domain: cloudfront.net
-          ipaddress: 99.84.2.8
-        - domain: cloudfront.net
-          ipaddress: 143.204.3.14
-        - domain: cloudfront.net
-          ipaddress: 13.224.2.15
-        - domain: cloudfront.net
-          ipaddress: 205.251.253.19
-        - domain: cloudfront.net
-          ipaddress: 99.86.0.127
-        - domain: cloudfront.net
-          ipaddress: 216.137.35.13
+          ipaddress: 54.239.131.6
         - domain: cloudfront.net
           ipaddress: 99.84.2.103
         - domain: cloudfront.net
-          ipaddress: 143.204.3.26
+          ipaddress: 99.84.3.5
         - domain: cloudfront.net
-          ipaddress: 99.84.2.229
+          ipaddress: 205.251.253.167
         - domain: cloudfront.net
-          ipaddress: 99.86.3.112
+          ipaddress: 54.230.209.15
         - domain: cloudfront.net
-          ipaddress: 205.251.253.183
+          ipaddress: 99.84.3.22
         - domain: cloudfront.net
-          ipaddress: 54.230.2.20
+          ipaddress: 216.137.35.27
         - domain: cloudfront.net
-          ipaddress: 205.251.253.94
+          ipaddress: 54.182.1.37
         - domain: cloudfront.net
-          ipaddress: 54.230.209.183
+          ipaddress: 54.182.1.172
         - domain: cloudfront.net
-          ipaddress: 54.230.209.208
+          ipaddress: 13.224.2.178
         - domain: cloudfront.net
-          ipaddress: 216.137.35.26
+          ipaddress: 13.224.2.111
         - domain: cloudfront.net
-          ipaddress: 13.224.2.39
+          ipaddress: 99.86.3.71
         - domain: cloudfront.net
-          ipaddress: 143.204.3.4
+          ipaddress: 54.182.1.100
         - domain: cloudfront.net
-          ipaddress: 205.251.253.54
+          ipaddress: 54.230.130.220
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.65
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.149
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.173
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.6
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.134
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.155
+        - domain: cloudfront.net
+          ipaddress: 54.239.131.10
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.82
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.68
+        - domain: cloudfront.net
+          ipaddress: 205.251.253.107
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.167
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.128
+        - domain: cloudfront.net
+          ipaddress: 205.251.253.125
         - domain: cloudfront.net
           ipaddress: 54.230.209.222
         - domain: cloudfront.net
-          ipaddress: 54.230.209.99
+          ipaddress: 54.230.208.6
         - domain: cloudfront.net
-          ipaddress: 54.239.131.5
+          ipaddress: 54.182.1.225
         - domain: cloudfront.net
-          ipaddress: 54.230.209.141
+          ipaddress: 54.230.130.8
         - domain: cloudfront.net
-          ipaddress: 54.230.209.101
+          ipaddress: 54.182.1.81
         - domain: cloudfront.net
-          ipaddress: 13.224.2.212
+          ipaddress: 205.251.253.172
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.21
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.114
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.70
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.28
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.226
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.84
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.184
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.43
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.13
+        - domain: cloudfront.net
+          ipaddress: 54.230.3.9
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.46
+        - domain: cloudfront.net
+          ipaddress: 54.239.131.25
+        - domain: cloudfront.net
+          ipaddress: 143.204.3.24
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.70
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.29
+        - domain: cloudfront.net
+          ipaddress: 13.249.3.25
+        - domain: cloudfront.net
+          ipaddress: 216.137.35.14
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.39
+        - domain: cloudfront.net
+          ipaddress: 205.251.253.134
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.65
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.98
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.157
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.171
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.40
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.4
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.56
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.89
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.123
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.207
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.24
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.75
+        - domain: cloudfront.net
+          ipaddress: 205.251.253.150
+        - domain: cloudfront.net
+          ipaddress: 205.251.253.91
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.221
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.102
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.174
+        - domain: cloudfront.net
+          ipaddress: 65.9.131.32
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.76
+        - domain: cloudfront.net
+          ipaddress: 205.251.253.196
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.109
+        - domain: cloudfront.net
+          ipaddress: 54.230.208.10
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.22
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.111
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.124
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.186
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.219
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.107
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.51
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.149
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.37
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.33
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.158
+        - domain: cloudfront.net
+          ipaddress: 205.251.253.216
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.158
+        - domain: cloudfront.net
+          ipaddress: 54.230.2.32
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.47
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.149
+        - domain: cloudfront.net
+          ipaddress: 99.84.3.3
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.9
         - domain: cloudfront.net
           ipaddress: 54.230.201.11
         - domain: cloudfront.net
-          ipaddress: 99.84.2.165
+          ipaddress: 54.230.208.30
         - domain: cloudfront.net
-          ipaddress: 99.86.3.109
+          ipaddress: 54.230.209.129
         - domain: cloudfront.net
-          ipaddress: 54.230.130.122
+          ipaddress: 99.84.3.13
         - domain: cloudfront.net
-          ipaddress: 13.224.2.108
-        - domain: cloudfront.quizscore.com
-          ipaddress: 143.204.2.97
-        - domain: cmcaptrace.com
-          ipaddress: 52.84.3.204
-        - domain: cmcaptrace.com
-          ipaddress: 54.239.192.45
-        - domain: code.org
-          ipaddress: 65.8.1.176
-        - domain: collectivehealth.com
-          ipaddress: 54.239.192.113
+          ipaddress: 99.86.3.116
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.51
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.143
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.52
+        - domain: cloudfront.net
+          ipaddress: 54.230.208.28
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.176
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.14
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.164
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.49
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.33
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.180
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.136
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.28
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.73
+        - domain: cloudfront.net
+          ipaddress: 54.230.201.28
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.36
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.193
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.67
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.180
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.214
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.135
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.83
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.79
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.78
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.130
+        - domain: cloudfront.net
+          ipaddress: 54.239.131.8
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.31
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.115
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.180
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.181
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.76
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.101
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.199
+        - domain: cloudfront.net
+          ipaddress: 99.84.3.28
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.222
+        - domain: cloudfront.net
+          ipaddress: 54.230.224.8
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.99
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.177
+        - domain: cloudfront.net
+          ipaddress: 205.251.253.26
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.220
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.41
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.154
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.119
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.10
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.139
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.131
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.167
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.107
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.88
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.42
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.144
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.131
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.108
+        - domain: cloudfront.net
+          ipaddress: 205.251.253.140
+        - domain: cloudfront.net
+          ipaddress: 205.251.253.108
+        - domain: cloudfront.net
+          ipaddress: 143.204.3.11
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.185
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.101
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.161
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.122
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.157
+        - domain: cloudfront.net
+          ipaddress: 54.230.208.29
+        - domain: cloudfront.net
+          ipaddress: 205.251.253.6
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.17
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.223
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.86
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.190
+        - domain: cloudfront.net
+          ipaddress: 205.251.253.63
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.84
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.22
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.162
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.8
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.141
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.156
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.129
+        - domain: cloudfront.net
+          ipaddress: 54.230.2.16
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.110
+        - domain: cloudfront.net
+          ipaddress: 54.230.3.8
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.220
+        - domain: cloudfront.net
+          ipaddress: 216.137.35.30
+        - domain: cloudfront.net
+          ipaddress: 54.230.224.19
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.228
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.163
+        - domain: cloudfront.net
+          ipaddress: 65.9.131.14
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.105
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.145
+        - domain: cloudfront.net
+          ipaddress: 54.230.130.80
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.54
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.43
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.93
+        - domain: cloudfront.net
+          ipaddress: 54.230.208.21
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.209
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.47
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.128
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.150
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.47
+        - domain: cloudfront.net
+          ipaddress: 65.9.131.7
+        - domain: cloudfront.net
+          ipaddress: 54.230.201.5
+        - domain: cloudfront.net
+          ipaddress: 205.251.253.203
+        - domain: cloudfront.net
+          ipaddress: 54.230.201.21
+        - domain: cloudfront.net
+          ipaddress: 99.86.3.29
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.169
+        - domain: cloudfront.net
+          ipaddress: 99.84.2.77
+        - domain: cloudfront.net
+          ipaddress: 54.230.209.64
+        - domain: cloudfront.net
+          ipaddress: 65.9.131.5
+        - domain: cloudfront.net
+          ipaddress: 13.224.2.104
+        - domain: club-beta2.pokemon.com
+          ipaddress: 54.230.210.20
+        - domain: club-beta2.pokemon.com
+          ipaddress: 52.84.2.19
         - domain: company-target.com
-          ipaddress: 13.224.0.76
-        - domain: company-target.com
-          ipaddress: 54.192.2.208
-        - domain: concursolutions.com
-          ipaddress: 54.230.1.212
+          ipaddress: 54.230.203.50
         - domain: contestimg.wish.com
-          ipaddress: 54.230.1.138
-        - domain: contestimg.wish.com
-          ipaddress: 65.8.0.127
-        - domain: core-bookpass.auone.jp
-          ipaddress: 13.249.2.142
-        - domain: crownpeak.net
-          ipaddress: 13.35.1.98
+          ipaddress: 54.192.0.120
+        - domain: coupang.net
+          ipaddress: 52.84.3.179
+        - domain: courrier.jp
+          ipaddress: 54.192.2.182
+        - domain: crl.aptivcscloud.com
+          ipaddress: 54.230.226.148
         - domain: cuentafan.bancochile.cl
           ipaddress: 54.239.192.15
+        - domain: customers.biocatch.com
+          ipaddress: 13.224.0.56
+        - domain: d-hrp.com
+          ipaddress: 99.86.2.234
         - domain: d-hrp.com
           ipaddress: 54.230.202.182
-        - domain: d-hrp.com
-          ipaddress: 99.84.0.234
-        - domain: d.nanairo.coop
-          ipaddress: 205.251.249.139
-        - domain: datacentral.a2z.com
-          ipaddress: 13.249.2.73
         - domain: datad0g.com
-          ipaddress: 13.32.2.84
+          ipaddress: 99.86.0.60
+        - domain: dbank-api.privacy-rating.com
+          ipaddress: 204.246.177.20
         - domain: demandbase.com
-          ipaddress: 99.86.1.89
-        - domain: demandbase.com
-          ipaddress: 99.86.2.89
+          ipaddress: 204.246.169.64
+        - domain: deploy.itginc.com
+          ipaddress: 13.32.1.123
+        - domain: deploy.itginc.com
+          ipaddress: 52.84.3.123
         - domain: deploygate.com
-          ipaddress: 13.32.2.179
-        - domain: dev.sotappm.auone.jp
-          ipaddress: 13.35.2.4
+          ipaddress: 54.230.203.177
+        - domain: dev.api.mistore.jp
+          ipaddress: 13.35.1.207
+        - domain: dev.eco.siemens-energy.com
+          ipaddress: 54.230.227.182
+        - domain: dev.eco.siemens-energy.com
+          ipaddress: 54.182.0.146
+        - domain: dev.testglider.com
+          ipaddress: 204.246.177.164
+        - domain: dev.twitch.tv
+          ipaddress: 13.35.0.147
+        - domain: dev.twitch.tv
+          ipaddress: 54.230.211.65
+        - domain: developercentral.amazon.com
+          ipaddress: 65.8.0.191
+        - domain: developercentral.amazon.com
+          ipaddress: 204.246.164.39
+        - domain: devicebackup-qa.fujixerox.com
+          ipaddress: 99.86.2.145
         - domain: devicebackup-qa.fujixerox.com
           ipaddress: 13.249.2.22
-        - domain: devicebackup.fujixerox.com
-          ipaddress: 65.8.1.8
+        - domain: devicebackup.fujifilm.com
+          ipaddress: 99.86.1.46
+        - domain: dfoneople.com
+          ipaddress: 99.86.2.147
+        - domain: diceplatform.com
+          ipaddress: 52.84.3.191
+        - domain: diceplatform.com
+          ipaddress: 204.246.177.56
+        - domain: dl.amazon.co.jp
+          ipaddress: 13.249.2.43
         - domain: dl.amazon.co.uk
-          ipaddress: 54.230.129.187
-        - domain: dlog.disney.co.jp
-          ipaddress: 54.230.226.193
+          ipaddress: 65.9.128.92
+        - domain: dl.amazon.com
+          ipaddress: 99.84.0.49
+        - domain: dl.ui.com
+          ipaddress: 143.204.2.24
+        - domain: dmm.co.jp
+          ipaddress: 65.8.1.37
         - domain: dmm.com
-          ipaddress: 13.35.1.108
-        - domain: dmm.com
-          ipaddress: 54.230.203.121
+          ipaddress: 54.230.225.51
         - domain: dmp.tconnect.jp
-          ipaddress: 99.84.0.54
+          ipaddress: 13.35.2.53
         - domain: dmp.tconnect.jp
-          ipaddress: 54.239.192.109
-        - domain: downloads.cdn.telerik.com
-          ipaddress: 99.86.2.222
-        - domain: driveautohook.com
-          ipaddress: 205.251.251.86
+          ipaddress: 54.230.227.42
+        - domain: docomo-analytics.com
+          ipaddress: 99.84.0.206
+        - domain: docstest.solitonnk.com
+          ipaddress: 99.86.1.183
+        - domain: docstest.solitonnk.com
+          ipaddress: 13.35.1.130
+        - domain: download.epicgames.com
+          ipaddress: 205.251.251.54
         - domain: dublinsandbox.api.fluentretail.com
-          ipaddress: 54.192.1.16
+          ipaddress: 54.239.130.17
         - domain: dublinsandbox.api.fluentretail.com
-          ipaddress: 13.32.2.16
-        - domain: dublinsandbox.api.fluentretail.com
-          ipaddress: 52.84.3.17
+          ipaddress: 54.230.211.18
         - domain: e21.co.kr
-          ipaddress: 65.9.128.96
-        - domain: e21.co.kr
-          ipaddress: 204.246.164.99
-        - domain: ecnavi.jp
-          ipaddress: 54.192.2.16
+          ipaddress: 143.204.1.79
+        - domain: ebookstore.sony.jp
+          ipaddress: 204.246.169.157
         - domain: ecnavi.jp
           ipaddress: 143.204.1.17
         - domain: edge-qa03-us.dis.cc.salesforce.com
           ipaddress: 205.251.249.20
-        - domain: edge-qa03-us.dis.cc.salesforce.com
-          ipaddress: 54.230.225.130
+        - domain: edge.dis.commercecloud.salesforce.com
+          ipaddress: 65.8.0.34
         - domain: edge.disstg.commercecloud.salesforce.com
-          ipaddress: 99.86.1.165
-        - domain: edge.disstg.commercecloud.salesforce.com
-          ipaddress: 54.192.0.159
+          ipaddress: 54.239.130.186
         - domain: edwardsdoc.com
-          ipaddress: 65.8.0.63
+          ipaddress: 143.204.2.68
         - domain: edwardsdoc.com
-          ipaddress: 13.32.1.62
-        - domain: edwardsdoc.com
-          ipaddress: 99.84.0.225
-        - domain: ekdgd.com
-          ipaddress: 99.86.2.2
-        - domain: enish-games.com
-          ipaddress: 65.9.128.57
-        - domain: epicgames.com
-          ipaddress: 13.249.2.157
-        - domain: eshop.nanairo.coop
-          ipaddress: 143.204.1.125
-        - domain: eshop.nanairo.coop
-          ipaddress: 99.84.0.135
-        - domain: eu.ec.api.av-gamma.com
-          ipaddress: 54.182.2.95
-        - domain: ewa.wa.gov.au
-          ipaddress: 52.84.2.186
-        - domain: ewa.wa.gov.au
-          ipaddress: 54.192.1.184
+          ipaddress: 54.182.2.216
+        - domain: eproc-gamma.quantumlatency.com
+          ipaddress: 204.246.177.9
+        - domain: eprocurement.marketplace.us-east-1.amazonaws.com
+          ipaddress: 204.246.178.149
+        - domain: esd.sentinelcloud.com
+          ipaddress: 13.249.2.117
+        - domain: eu.auth0.com
+          ipaddress: 52.84.2.184
         - domain: ewa.wa.gov.au
           ipaddress: 54.230.225.124
-        - domain: ext.app-cloud.jp
-          ipaddress: 13.224.0.94
+        - domain: ewrzfr.com
+          ipaddress: 54.230.227.65
+        - domain: fate-go.com.tw
+          ipaddress: 54.230.210.45
+        - domain: fdp.foreflight.com
+          ipaddress: 13.35.3.62
+        - domain: fdp.foreflight.com
+          ipaddress: 54.239.192.107
         - domain: fe.dazn-stage.com
-          ipaddress: 13.32.2.127
+          ipaddress: 143.204.2.209
         - domain: fe.ec.api.amazonvideo.com
-          ipaddress: 65.8.0.124
-        - domain: fe.sellics.xyz
-          ipaddress: 54.192.2.218
-        - domain: fifaconnect.org
-          ipaddress: 54.192.3.155
-        - domain: file-video.stg.classi.jp
-          ipaddress: 54.239.130.194
-        - domain: file.samsungcloud.com
-          ipaddress: 13.249.3.67
+          ipaddress: 13.32.2.120
         - domain: file.samsungcloud.com
           ipaddress: 52.84.3.182
         - domain: file.samsungcloud.com
-          ipaddress: 54.230.0.187
+          ipaddress: 52.84.3.170
+        - domain: file.samsungcloud.com
+          ipaddress: 54.230.202.165
         - domain: flamingo.gomobile.jp
-          ipaddress: 54.192.2.21
+          ipaddress: 205.251.251.21
         - domain: flamingo.gomobile.jp
-          ipaddress: 13.35.2.137
+          ipaddress: 204.246.164.15
         - domain: flamingo.gomobile.jp
           ipaddress: 13.32.1.22
         - domain: fluigidentity.com
-          ipaddress: 13.224.0.64
-        - domain: fluigidentity.com
           ipaddress: 204.246.177.105
-        - domain: fluigidentity.com
-          ipaddress: 204.246.164.24
-        - domain: fm.amob.jp
-          ipaddress: 54.192.1.235
+        - domain: fmsp.amob.jp
+          ipaddress: 13.224.0.85
         - domain: fmsp.amob.jp
           ipaddress: 99.86.0.175
         - domain: form.paygent.co.jp
           ipaddress: 204.246.177.172
-        - domain: form.paygent.co.jp
-          ipaddress: 52.84.2.210
+        - domain: freight.amazon.co.uk
+          ipaddress: 52.84.3.162
+        - domain: freight.amazon.com
+          ipaddress: 13.35.2.159
+        - domain: freight.amazon.com
+          ipaddress: 99.84.0.26
         - domain: freshdesk.com
           ipaddress: 54.230.203.135
-        - domain: freshdesk.com
-          ipaddress: 13.32.2.138
-        - domain: freshdesk.com
-          ipaddress: 54.182.3.159
-        - domain: freshdesk.com
-          ipaddress: 54.230.210.153
         - domain: fs.com
-          ipaddress: 13.224.0.135
-        - domain: gallery.mailchimp.com
-          ipaddress: 54.192.1.114
-        - domain: gamecircus.com
-          ipaddress: 13.35.1.185
-        - domain: gamecircus.com
-          ipaddress: 52.84.3.71
-        - domain: gamevil.com
-          ipaddress: 13.32.2.119
+          ipaddress: 54.230.202.99
+        - domain: gamma.amcentral.amazon.dev
+          ipaddress: 204.246.175.169
+        - domain: gastecnologia.com.br
+          ipaddress: 54.239.192.97
         - domain: gcsp.jnj.com
-          ipaddress: 54.182.2.137
+          ipaddress: 13.35.2.12
         - domain: gcsp.jnj.com
-          ipaddress: 99.86.2.61
+          ipaddress: 54.192.0.113
         - domain: geocomply.net
-          ipaddress: 54.230.129.169
-        - domain: gimmegimme.it
-          ipaddress: 65.9.128.90
-        - domain: gimmegimme.it
-          ipaddress: 13.32.2.88
+          ipaddress: 13.249.2.68
+        - domain: geocomply.net
+          ipaddress: 13.35.1.85
         - domain: giv-dev.nmgcloud.io
-          ipaddress: 143.204.1.139
+          ipaddress: 13.35.3.77
         - domain: glg.it
-          ipaddress: 52.84.3.106
-        - domain: globalindustrial.com
-          ipaddress: 13.249.2.83
+          ipaddress: 54.230.227.124
         - domain: gmp.samsungapps.com
-          ipaddress: 143.204.1.220
-        - domain: goatgames.com
-          ipaddress: 54.230.203.141
-        - domain: gomlab.com
-          ipaddress: 54.230.210.218
-        - domain: goshippo.com
-          ipaddress: 204.246.177.159
-        - domain: hankooktech.com
-          ipaddress: 13.249.2.103
-        - domain: heartbeat.v0.maxdome.cloud
-          ipaddress: 205.251.251.126
-        - domain: highwebmedia.com
-          ipaddress: 54.239.130.158
-        - domain: hkdl.hk
-          ipaddress: 205.251.251.35
-        - domain: hkdl.hk
-          ipaddress: 54.230.202.205
+          ipaddress: 143.204.2.210
+        - domain: highspot.com
+          ipaddress: 54.230.203.87
+        - domain: hijuconn.com
+          ipaddress: 99.84.0.119
+        - domain: hijuconn.com
+          ipaddress: 54.230.203.118
         - domain: i.fyu.se
-          ipaddress: 54.239.130.137
-        - domain: i.fyu.se
-          ipaddress: 54.192.2.114
+          ipaddress: 65.8.0.120
+        - domain: icontactimg.com
+          ipaddress: 13.35.2.122
         - domain: id.amob.jp
           ipaddress: 205.251.251.205
+        - domain: id.amob.jp
+          ipaddress: 13.35.2.124
         - domain: ifunny.co
-          ipaddress: 205.251.251.124
-        - domain: ifunny.co
-          ipaddress: 204.246.177.133
-        - domain: image.ellotte.com
-          ipaddress: 99.86.0.131
-        - domain: imbd-pro.net
-          ipaddress: 54.182.2.33
-        - domain: imdb-video-wab.media-imdb.com
-          ipaddress: 54.239.130.68
-        - domain: imdb.com
-          ipaddress: 52.84.2.114
+          ipaddress: 54.230.1.143
+        - domain: image-trips-staging.findmyadventure.pk
+          ipaddress: 54.182.3.29
+        - domain: images-cn.ssl-images-amazon.com
+          ipaddress: 204.246.164.221
         - domain: imdbtv-backend-eu.amazon.com
           ipaddress: 205.251.251.209
-        - domain: img.fujoho.jp
-          ipaddress: 143.204.2.148
-        - domain: img.fujoho.jp
-          ipaddress: 204.246.164.174
+        - domain: imdbtv-backend-na.amazon.com
+          ipaddress: 54.239.195.66
+        - domain: imdbtv-backend-na.amazon.com
+          ipaddress: 54.192.1.180
+        - domain: indeedassessments-api.com
+          ipaddress: 204.246.175.112
         - domain: insead.edu
-          ipaddress: 54.230.1.184
-        - domain: insead.edu
-          ipaddress: 52.84.2.167
-        - domain: insead.edu
-          ipaddress: 204.246.178.171
+          ipaddress: 13.32.2.166
         - domain: inspector-agent.amazonaws.com
           ipaddress: 52.84.2.199
-        - domain: inspector-agent.amazonaws.com
-          ipaddress: 54.230.202.239
         - domain: integ.sellercentral.amazon.dev
-          ipaddress: 204.246.178.168
+          ipaddress: 54.230.202.206
+        - domain: integ.sellercentral.amazon.dev
+          ipaddress: 99.86.2.159
         - domain: iproc.originenergy.com.au
           ipaddress: 54.239.195.69
         - domain: ipv6.amazon.com
-          ipaddress: 65.9.129.149
-        - domain: isao.net
-          ipaddress: 65.8.0.142
+          ipaddress: 13.35.2.66
+        - domain: ipv6.amazon.com
+          ipaddress: 54.192.0.210
         - domain: ix-cdn.brightedge.com
-          ipaddress: 13.35.2.192
+          ipaddress: 99.86.2.19
+        - domain: ix-cdn.brightedge.com
+          ipaddress: 143.204.2.26
         - domain: izettle.com
-          ipaddress: 54.230.202.105
+          ipaddress: 13.32.1.109
         - domain: jamcity.com
-          ipaddress: 54.230.226.144
+          ipaddress: 204.246.175.120
+        - domain: jamcity.com
+          ipaddress: 54.182.3.143
+        - domain: jamcity.com
+          ipaddress: 13.224.0.78
         - domain: jdsukstaging.api.fluentretail.com
-          ipaddress: 143.204.2.127
-        - domain: joonko.co
-          ipaddress: 204.246.164.202
-        - domain: jtvnw-30eb2e4e018997e11b2884b1f80a025c.twitchcdn.net
-          ipaddress: 54.239.130.22
+          ipaddress: 13.249.2.113
+        - domain: js.pusher.com
+          ipaddress: 99.86.1.211
         - domain: jwo.amazon.com
-          ipaddress: 13.249.2.74
+          ipaddress: 13.35.2.86
+        - domain: jwplayer.com
+          ipaddress: 54.192.1.81
         - domain: k1b.stg.au-market.com
-          ipaddress: 65.8.0.2
-        - domain: kenshoo-lab.com
-          ipaddress: 54.230.211.51
-        - domain: kenshoo-lab.com
-          ipaddress: 54.182.2.51
+          ipaddress: 54.230.227.57
+        - domain: kaltura.com
+          ipaddress: 13.35.2.216
         - domain: kindle-digital-delivery-integ.amazon.com
-          ipaddress: 54.230.225.87
+          ipaddress: 204.246.175.125
         - domain: kindle-digital-delivery.amazon.com
           ipaddress: 54.192.1.35
-        - domain: kindle-digital-delivery.amazon.com
-          ipaddress: 65.9.129.36
+        - domain: komoejoy.com
+          ipaddress: 54.230.211.48
         - domain: kuvo.com
-          ipaddress: 65.8.1.62
-        - domain: learning.dealer-fx.com
-          ipaddress: 99.86.0.190
-        - domain: learning.dealer-fx.com
-          ipaddress: 54.230.202.4
+          ipaddress: 54.230.129.60
+        - domain: landing.registerdisney.go.com
+          ipaddress: 99.86.2.142
+        - domain: landing.registerdisney.go.com
+          ipaddress: 65.9.128.153
+        - domain: leer.amazon.com.mx
+          ipaddress: 65.8.1.3
+        - domain: leer.amazon.com.mx
+          ipaddress: 13.35.2.90
+        - domain: legacy.api.iot.carrier.com
+          ipaddress: 13.35.2.99
+        - domain: legend-dev.digitgaming.com
+          ipaddress: 13.35.2.177
         - domain: lgcpm.com
-          ipaddress: 13.35.1.138
+          ipaddress: 54.192.1.182
+        - domain: litecam.net
+          ipaddress: 13.249.2.79
+        - domain: litecam.net
+          ipaddress: 52.84.3.22
         - domain: litecam.net
           ipaddress: 65.8.1.208
         - domain: livethumb.huluim.com
-          ipaddress: 54.230.210.40
-        - domain: locsec.net
-          ipaddress: 99.84.0.117
-        - domain: login.kataweb.it
-          ipaddress: 65.9.128.105
+          ipaddress: 13.32.2.227
+        - domain: livethumb.huluim.com
+          ipaddress: 13.35.3.39
+        - domain: load-test6.eu-west-2.cf-embed.net
+          ipaddress: 204.246.175.67
         - domain: login.schibsted.com
-          ipaddress: 99.86.1.119
+          ipaddress: 99.86.2.119
+        - domain: login.schibsted.com
+          ipaddress: 54.192.1.2
         - domain: lottedfs.com
-          ipaddress: 99.86.1.121
-        - domain: m.bookdepository.com
-          ipaddress: 54.230.0.5
+          ipaddress: 65.8.1.136
         - domain: m.foxiri.com
-          ipaddress: 65.8.0.122
-        - domain: m.foxiri.com
-          ipaddress: 204.246.175.115
-        - domain: m.yuechawang.com
-          ipaddress: 204.246.169.226
+          ipaddress: 143.204.2.22
         - domain: mainte.mymagazine.smt.docomo.ne.jp
           ipaddress: 143.204.1.168
         - domain: mapbox.cn
-          ipaddress: 54.192.3.146
-        - domain: matarunhijo.m-x.com.mx
-          ipaddress: 143.204.2.126
+          ipaddress: 54.192.0.144
+        - domain: mapbox.cn
+          ipaddress: 54.230.225.3
+        - domain: mcoc-cdn.net
+          ipaddress: 54.230.225.146
         - domain: mcsvc.samsung.com
-          ipaddress: 204.246.177.236
-        - domain: media.amazonwebservices.com
-          ipaddress: 205.251.251.179
-        - domain: media.baselineresearch.com
-          ipaddress: 54.192.0.43
+          ipaddress: 54.230.202.27
         - domain: media.edgenuity.com
-          ipaddress: 52.84.2.151
-        - domain: media.preziusercontent.com
-          ipaddress: 52.84.3.154
+          ipaddress: 143.204.0.155
+        - domain: media.edgenuity.com
+          ipaddress: 13.32.2.150
+        - domain: media.edgenuity.com
+          ipaddress: 13.249.2.76
+        - domain: melaleuca.com
+          ipaddress: 99.86.1.62
         - domain: memestech.co
           ipaddress: 65.8.1.19
+        - domain: mfdhelpsearch.fujifilm.com
+          ipaddress: 54.230.129.197
+        - domain: mfi-device.fnopf.jp
+          ipaddress: 54.230.1.200
+        - domain: mfi-device02-s1.fnopf.jp
+          ipaddress: 52.84.2.48
+        - domain: mfi-device02-s1.fnopf.jp
+          ipaddress: 204.246.175.47
         - domain: mfi-device02.fnopf.jp
-          ipaddress: 13.32.2.74
+          ipaddress: 52.84.2.75
         - domain: mfi-tc02.fnopf.jp
           ipaddress: 54.192.1.110
+        - domain: mfi-tc02.fnopf.jp
+          ipaddress: 99.86.1.238
         - domain: minecraft.net
-          ipaddress: 54.230.1.140
+          ipaddress: 54.230.210.140
         - domain: minecraft.net
-          ipaddress: 99.86.2.83
-        - domain: minnano-cafe.com
-          ipaddress: 54.192.3.34
+          ipaddress: 13.224.0.80
         - domain: mix.tokyo
-          ipaddress: 99.84.0.120
+          ipaddress: 204.246.169.118
+        - domain: mix.tokyo
+          ipaddress: 99.86.0.31
+        - domain: mobadme.jp
+          ipaddress: 65.9.129.18
         - domain: mobile.mercadopago.com
           ipaddress: 65.9.129.194
         - domain: mobyt.fr
-          ipaddress: 13.32.2.167
-        - domain: mobyt.fr
-          ipaddress: 54.182.0.229
-        - domain: mobyt.fr
-          ipaddress: 13.224.0.112
-        - domain: mobyt.fr
           ipaddress: 99.86.2.91
+        - domain: mojang.com
+          ipaddress: 54.182.2.20
         - domain: mora.jp
-          ipaddress: 13.35.2.14
+          ipaddress: 99.86.1.15
+        - domain: movergames.com
+          ipaddress: 204.246.177.156
         - domain: mparticle.com
-          ipaddress: 54.230.129.168
+          ipaddress: 52.84.2.170
+        - domain: mparticle.com
+          ipaddress: 54.182.2.192
+        - domain: multisandbox.connect.fluentretail.com
+          ipaddress: 204.246.177.110
+        - domain: multisandbox.connect.fluentretail.com
+          ipaddress: 99.84.0.235
         - domain: musew.com
-          ipaddress: 65.9.128.189
-        - domain: music.amazon.com
-          ipaddress: 204.246.164.76
+          ipaddress: 54.230.210.193
+        - domain: musixmatch.com
+          ipaddress: 54.192.0.135
+        - domain: musixmatch.com
+          ipaddress: 54.230.210.154
         - domain: myfonts.net
-          ipaddress: 13.35.2.68
+          ipaddress: 13.35.2.132
+        - domain: myfonts.net
+          ipaddress: 54.230.227.107
+        - domain: mymagazine.smt.docomo.ne.jp
+          ipaddress: 54.230.211.157
         - domain: mymathacademy.com
-          ipaddress: 54.239.195.168
+          ipaddress: 205.251.251.6
+        - domain: mymathacademy.com
+          ipaddress: 54.192.1.6
         - domain: mymortgage-app.net
-          ipaddress: 54.239.130.211
-        - domain: n-ship.jp
-          ipaddress: 54.230.225.142
-        - domain: n-ship.jp
-          ipaddress: 99.86.1.120
-        - domain: nav2cloud.bt.siemens.cloud
-          ipaddress: 54.230.225.88
-        - domain: nba-cdn.2ksports.com
-          ipaddress: 65.8.1.160
-        - domain: nba-cdn.2ksports.com
-          ipaddress: 54.239.192.4
-        - domain: nc.com
-          ipaddress: 65.9.128.35
-        - domain: newsletter-images.sndimg.com
-          ipaddress: 54.182.2.124
+          ipaddress: 13.35.1.128
         - domain: nexon.com
           ipaddress: 54.239.195.51
         - domain: nftmultisign.com
-          ipaddress: 54.192.1.226
-        - domain: nftmultisign.com
-          ipaddress: 204.246.169.6
+          ipaddress: 54.230.227.76
         - domain: nftstatic.com
-          ipaddress: 65.9.128.41
+          ipaddress: 13.35.1.178
         - domain: nissanwin.com
-          ipaddress: 13.224.0.84
+          ipaddress: 54.230.210.221
         - domain: nissanwin.com
           ipaddress: 13.35.0.136
-        - domain: nnn.ed.nico
-          ipaddress: 204.246.178.148
+        - domain: notice.purchasingpower.com
+          ipaddress: 54.230.202.23
+        - domain: now.bt.co
+          ipaddress: 65.9.128.45
         - domain: nubium.io
-          ipaddress: 52.84.2.201
+          ipaddress: 54.230.203.33
         - domain: nypl.org
-          ipaddress: 99.86.0.2
+          ipaddress: 204.246.177.157
+        - domain: o2s.cybird.ne.jp
+          ipaddress: 54.192.3.52
+        - domain: oasgames.com
+          ipaddress: 99.86.0.18
         - domain: oasgames.com
           ipaddress: 54.192.1.22
-        - domain: observian.com
-          ipaddress: 52.84.2.2
         - domain: offerobjects.com
           ipaddress: 204.246.177.225
+        - domain: offerupnow.com
+          ipaddress: 54.192.0.26
+        - domain: offlinepay.amazon.in
+          ipaddress: 13.249.2.116
         - domain: offlinepay.amazon.in
           ipaddress: 65.9.128.69
-        - domain: oih-beta.aka.amazon.com
-          ipaddress: 54.230.1.152
-        - domain: oih-beta.aka.amazon.com
-          ipaddress: 205.251.251.133
+        - domain: offlinepay.amazon.in
+          ipaddress: 54.192.3.176
+        - domain: oih-eu.aka.amazon.com
+          ipaddress: 99.86.1.203
+        - domain: oih-fe.aka.amazon.com
+          ipaddress: 204.246.169.187
+        - domain: oih-fe.aka.amazon.com
+          ipaddress: 54.192.2.183
+        - domain: oih-fe.aka.amazon.com
+          ipaddress: 204.246.178.190
+        - domain: oih-gamma-eu.aka.amazon.com
+          ipaddress: 54.239.130.189
+        - domain: oih-gamma-eu.aka.amazon.com
+          ipaddress: 52.84.3.166
         - domain: oih-gamma-fe.aka.amazon.com
-          ipaddress: 54.192.0.35
-        - domain: oih-na.aka.amazon.com
-          ipaddress: 65.8.0.115
-        - domain: oihxray-beta.aka.amazon.com
-          ipaddress: 204.246.164.175
+          ipaddress: 13.35.1.173
+        - domain: oih-gamma-fe.aka.amazon.com
+          ipaddress: 54.230.210.39
+        - domain: oihxray-eu.aka.amazon.com
+          ipaddress: 65.9.128.7
         - domain: oihxray-fe.aka.amazon.com
-          ipaddress: 143.204.0.184
+          ipaddress: 54.230.202.176
         - domain: oihxray-insm.aka.amazon.com
           ipaddress: 13.249.2.191
-        - domain: one.accedo.tv
-          ipaddress: 54.230.227.9
-        - domain: oneblood.org
-          ipaddress: 65.8.1.18
-        - domain: opencds-fb.fujifilm.com
-          ipaddress: 204.246.164.136
-        - domain: opencds.fujixerox.co.jp
-          ipaddress: 54.239.130.40
-        - domain: opencds.fujixerox.co.jp
-          ipaddress: 54.230.202.183
+        - domain: olt-content.sans.org
+          ipaddress: 99.86.0.116
+        - domain: olt-players.sans.org
+          ipaddress: 54.239.192.150
+        - domain: omeuat.ascap.com
+          ipaddress: 13.35.3.192
+        - domain: oneapp-prod-hn.tigocloud.net
+          ipaddress: 143.204.1.189
+        - domain: onmarkonc.mckessonevents.io
+          ipaddress: 52.84.2.232
+        - domain: openfin.co
+          ipaddress: 143.204.2.37
+        - domain: opmsec.sophos.com
+          ipaddress: 54.230.225.223
         - domain: origin-api.eu.amazonalexa.com
-          ipaddress: 54.230.227.62
-        - domain: origin-api.fe.amazonalexa.com
-          ipaddress: 54.192.2.163
+          ipaddress: 13.32.2.232
+        - domain: origin-beta.client.legacy-app.games.a2z.com
+          ipaddress: 54.182.0.238
         - domain: origin-client.legacy-app.games.a2z.com
-          ipaddress: 204.246.177.217
-        - domain: origin-gamma.client.legacy-app.games.a2z.com
-          ipaddress: 54.230.202.168
+          ipaddress: 54.230.129.203
+        - domain: origin-distribution.games.amazon.com
+          ipaddress: 54.182.3.169
         - domain: origin-gql.beta.api.imdb.a2z.com
-          ipaddress: 99.86.0.25
+          ipaddress: 13.32.1.154
         - domain: origin-gql.beta.api.imdb.a2z.com
-          ipaddress: 54.230.202.191
-        - domain: origin-gql.prod.api.imdb.a2z.com
-          ipaddress: 65.9.128.123
-        - domain: origin-gql.prod.api.imdb.a2z.com
-          ipaddress: 204.246.175.217
-        - domain: origin-gql.prod.api.imdb.a2z.com
-          ipaddress: 54.182.2.16
-        - domain: pactsafe.com
-          ipaddress: 65.9.128.104
+          ipaddress: 54.192.3.119
+        - domain: origin-help.imdb.com
+          ipaddress: 54.230.225.164
+        - domain: ouropal.com
+          ipaddress: 13.32.1.185
+        - domain: p-codegeass.jp
+          ipaddress: 99.86.1.213
+        - domain: pagamento.mercadopago.com
+          ipaddress: 143.204.1.126
+        - domain: paltalk.com
+          ipaddress: 99.84.0.53
         - domain: paradoxplaza.com
-          ipaddress: 54.230.0.169
+          ipaddress: 205.251.251.149
         - domain: parsely.com
-          ipaddress: 143.204.2.90
-        - domain: passporthealthusa.com
-          ipaddress: 54.239.130.175
-        - domain: passporthealthusa.com
-          ipaddress: 54.230.129.152
-        - domain: password.amazonworkspaces.com
-          ipaddress: 204.246.177.182
-        - domain: password.amazonworkspaces.com
-          ipaddress: 204.246.164.207
+          ipaddress: 54.230.211.68
+        - domain: patra.store
+          ipaddress: 13.224.0.168
+        - domain: patra.store
+          ipaddress: 54.192.0.80
+        - domain: payment.fururu.online
+          ipaddress: 99.84.0.61
         - domain: payment.global.rakuten.com
-          ipaddress: 205.251.251.82
-        - domain: pcmax.jp
-          ipaddress: 13.35.3.92
-        - domain: perseus.de
-          ipaddress: 13.35.3.175
-        - domain: perseus.de
-          ipaddress: 54.192.2.126
+          ipaddress: 54.230.211.97
+        - domain: pegipegi.com
+          ipaddress: 13.35.0.210
+        - domain: perf.ws.sonos.com
+          ipaddress: 205.251.249.105
+        - domain: pharmacy.amazon.com
+          ipaddress: 65.8.1.29
+        - domain: pharmacy.amazon.com
+          ipaddress: 13.35.3.130
         - domain: phdvasia.com
           ipaddress: 204.246.175.126
-        - domain: phdvasia.com
-          ipaddress: 54.182.3.149
-        - domain: phdvasia.com
-          ipaddress: 99.84.0.15
         - domain: pimg.jp
-          ipaddress: 54.230.225.43
+          ipaddress: 13.32.1.39
+        - domain: playfirst.com
+          ipaddress: 54.230.211.77
         - domain: playwith.com.tw
-          ipaddress: 13.224.0.96
+          ipaddress: 54.230.202.111
         - domain: playwith.jp
-          ipaddress: 143.204.0.222
-        - domain: playwith.jp
-          ipaddress: 65.9.128.14
-        - domain: pod-point.com
-          ipaddress: 13.35.2.52
+          ipaddress: 204.246.178.222
+        - domain: polaris.lhinside.com
+          ipaddress: 54.230.1.181
         - domain: pp.s3.ringcentral.com
-          ipaddress: 54.192.3.15
-        - domain: pr.boatrace.jp
-          ipaddress: 54.230.211.113
-        - domain: prcp.pass.auone.jp
-          ipaddress: 54.192.0.99
+          ipaddress: 54.239.192.88
+        - domain: prd1.cdn.pengine.revtech.glulive.com
+          ipaddress: 52.84.2.44
+        - domain: prd1.cdn.pengine.revtech.glulive.com
+          ipaddress: 54.192.1.42
         - domain: predix.io
           ipaddress: 99.86.0.38
-        - domain: predix.io
-          ipaddress: 54.192.1.25
         - domain: preprod.apac.amway.net
-          ipaddress: 54.230.203.204
-        - domain: primexonevue.com
-          ipaddress: 13.35.1.31
-        - domain: prod-v2.tidalhi.fi
-          ipaddress: 13.249.2.254
-        - domain: product-downloads.atlassian.com
-          ipaddress: 54.230.225.187
-        - domain: product-downloads.atlassian.com
-          ipaddress: 65.9.128.164
+          ipaddress: 54.239.195.90
         - domain: pubcerts-stage.licenses.adobe.com
-          ipaddress: 204.246.177.31
+          ipaddress: 99.86.0.20
         - domain: pubcerts-stage.licenses.adobe.com
-          ipaddress: 52.84.3.30
+          ipaddress: 204.246.169.30
+        - domain: qa-software.cdn.boomi.com
+          ipaddress: 204.246.169.10
+        - domain: qa.edgenuity.com
+          ipaddress: 99.84.0.143
+        - domain: qa.o.brightcove.com
+          ipaddress: 143.204.1.166
         - domain: qobuz.com
-          ipaddress: 13.35.1.23
-        - domain: qobuz.com
-          ipaddress: 204.246.177.118
-        - domain: qobuz.com
-          ipaddress: 54.230.211.129
+          ipaddress: 13.224.0.151
         - domain: qpyou.cn
-          ipaddress: 54.239.192.151
-        - domain: qpyou.cn
-          ipaddress: 65.8.1.93
+          ipaddress: 54.239.130.20
+        - domain: qtest.abcmouse.com
+          ipaddress: 54.230.211.104
         - domain: rafflecopter.com
           ipaddress: 13.35.3.148
-        - domain: rakuten.tv
-          ipaddress: 204.246.164.48
-        - domain: rakuten.tv
-          ipaddress: 54.239.192.35
-        - domain: read.amazon.com
-          ipaddress: 54.230.129.227
+        - domain: read.amazon.co.jp
+          ipaddress: 205.251.249.81
         - domain: realisticgames.co.uk
-          ipaddress: 204.246.177.194
+          ipaddress: 54.182.2.130
         - domain: realisticgames.co.uk
-          ipaddress: 65.8.0.198
+          ipaddress: 54.230.211.39
+        - domain: recordings-api.sans.org
+          ipaddress: 99.86.0.218
+        - domain: recordings-api.sans.org
+          ipaddress: 54.230.211.61
         - domain: recordings-api.sans.org
           ipaddress: 54.239.130.63
-        - domain: report.env01.aptimyz.com
-          ipaddress: 99.86.0.225
-        - domain: rheemcert.com
-          ipaddress: 99.86.1.107
+        - domain: resources.amazonwebapps.com
+          ipaddress: 54.182.3.84
+        - domain: resources.licenses.adobe.com
+          ipaddress: 54.182.3.183
+        - domain: rest.immobilienscout24.de
+          ipaddress: 205.251.249.234
+        - domain: rest.immobilienscout24.de
+          ipaddress: 13.35.1.157
         - domain: rlmcdn.net
-          ipaddress: 204.246.169.192
-        - domain: rockabox.co
-          ipaddress: 204.246.164.73
-        - domain: rockabox.co
-          ipaddress: 54.239.192.144
-        - domain: rockabox.co
-          ipaddress: 143.204.2.82
+          ipaddress: 54.230.211.40
+        - domain: rlmcdn.net
+          ipaddress: 54.192.3.79
         - domain: rovio.com
-          ipaddress: 13.249.2.143
+          ipaddress: 99.86.1.85
+        - domain: rovio.com
+          ipaddress: 52.84.2.237
+        - domain: rr.img1.naver.jp
+          ipaddress: 54.230.227.120
         - domain: rsv.princehotels.co.jp
-          ipaddress: 54.230.129.46
+          ipaddress: 13.32.1.227
         - domain: rummycircle.com
-          ipaddress: 54.230.129.201
-        - domain: rummycircle.com
-          ipaddress: 54.182.0.226
+          ipaddress: 65.9.129.172
         - domain: rview.com
-          ipaddress: 99.86.0.177
+          ipaddress: 54.192.1.82
+        - domain: s.salecycle.com
+          ipaddress: 54.230.210.8
+        - domain: s3-accelerate.amazonaws.com
+          ipaddress: 13.32.2.80
+        - domain: s3-accelerate.amazonaws.com
+          ipaddress: 204.246.169.122
+        - domain: s3-accelerate.amazonaws.com
+          ipaddress: 54.230.202.223
+        - domain: sac-feedback.sophos.com
+          ipaddress: 204.246.175.103
         - domain: samsungacr.com
           ipaddress: 54.230.0.209
-        - domain: samsungacr.com
-          ipaddress: 99.86.1.144
-        - domain: samsungapps.com
-          ipaddress: 65.8.1.195
         - domain: samsungcloudsolution.com
-          ipaddress: 65.9.129.233
-        - domain: samsungcloudsolution.com
-          ipaddress: 205.251.249.163
+          ipaddress: 54.230.210.192
+        - domain: samsungknox.com
+          ipaddress: 204.246.177.15
+        - domain: samsungqbe.com
+          ipaddress: 143.204.1.107
         - domain: sandbox.love
-          ipaddress: 54.239.192.36
-        - domain: sandbox.love
-          ipaddress: 54.230.211.179
-        - domain: saser.tw
-          ipaddress: 54.192.0.166
+          ipaddress: 143.204.1.230
+        - domain: sandbox.testglider.com
+          ipaddress: 13.35.1.100
+        - domain: sandbox.testglider.com
+          ipaddress: 13.32.1.87
         - domain: sayweeecdn.com
-          ipaddress: 99.86.0.142
+          ipaddress: 54.192.2.233
+        - domain: sayweeecdn.com
+          ipaddress: 54.192.1.158
         - domain: sbs.cybird.ne.jp
-          ipaddress: 54.192.0.128
+          ipaddress: 143.204.1.226
         - domain: sdi.lexmark.com
-          ipaddress: 52.84.3.167
-        - domain: secb2b.com
-          ipaddress: 204.246.164.229
-        - domain: secb2b.com
-          ipaddress: 13.249.2.188
-        - domain: seesaw.me
-          ipaddress: 13.35.1.231
+          ipaddress: 13.35.0.214
         - domain: segment.com
-          ipaddress: 13.224.0.82
-        - domain: segment.com
-          ipaddress: 65.9.128.129
+          ipaddress: 13.32.2.128
+        - domain: sellercentral.amazon.com
+          ipaddress: 65.9.128.127
+        - domain: sellercentral.amazon.com
+          ipaddress: 205.251.249.191
         - domain: servicepoint.fluentretail.com
-          ipaddress: 99.86.2.67
+          ipaddress: 99.86.1.67
+        - domain: servicepoint.fluentretail.com
+          ipaddress: 54.192.3.99
+        - domain: servicepoint.fluentretail.com
+          ipaddress: 54.230.225.121
         - domain: sf-unity.com
-          ipaddress: 13.35.2.84
-        - domain: sf-unity.com
-          ipaddress: 54.239.130.233
-        - domain: sf-unity.com
-          ipaddress: 54.192.0.89
+          ipaddress: 65.9.128.13
         - domain: shopch.jp
-          ipaddress: 13.32.1.156
+          ipaddress: 13.35.3.101
         - domain: siedev.net
-          ipaddress: 54.239.195.78
+          ipaddress: 204.246.177.70
+        - domain: siedev.net
+          ipaddress: 54.230.227.78
+        - domain: siedev.net
+          ipaddress: 13.32.1.67
+        - domain: siftscience.com
+          ipaddress: 204.246.177.231
         - domain: siftscience.com
           ipaddress: 54.230.203.194
         - domain: signage.ricoh.com
           ipaddress: 52.84.2.239
         - domain: signal.is
           ipaddress: 54.192.0.16
-        - domain: signal.is
-          ipaddress: 65.9.128.16
+        - domain: simple-workflow-stage.licenses.adobe.com
+          ipaddress: 13.32.1.128
         - domain: simple-workflow.licenses.adobe.com
-          ipaddress: 52.84.3.23
-        - domain: simple-workflow.licenses.adobe.com
-          ipaddress: 204.246.169.23
+          ipaddress: 13.32.2.22
         - domain: site.skychnl.net
-          ipaddress: 99.86.0.113
-        - domain: slot-imas.jp
-          ipaddress: 54.230.210.63
+          ipaddress: 65.8.0.152
         - domain: slot-imas.jp
           ipaddress: 13.249.2.75
-        - domain: slot-imas.jp
-          ipaddress: 99.86.0.199
         - domain: smallpdf.com
           ipaddress: 52.84.3.68
-        - domain: smartmidea.net
-          ipaddress: 54.230.210.100
-        - domain: smentertainment.com
-          ipaddress: 13.35.0.220
-        - domain: smile.amazon.co.uk
-          ipaddress: 205.251.249.221
+        - domain: smallpdf.com
+          ipaddress: 54.230.210.47
+        - domain: smile.amazon.de
+          ipaddress: 204.246.164.66
         - domain: smile.amazon.de
           ipaddress: 65.9.129.219
         - domain: smile.amazon.de
           ipaddress: 54.230.0.51
-        - domain: smtown.com
-          ipaddress: 13.32.2.206
+        - domain: smugmug.com
+          ipaddress: 54.230.129.102
+        - domain: softcoin.com
+          ipaddress: 65.8.0.233
         - domain: software.cdn.boomi.com
-          ipaddress: 65.9.129.61
-        - domain: sophosupd.net
-          ipaddress: 54.239.192.202
+          ipaddress: 99.86.1.164
+        - domain: software.cdn.boomi.com
+          ipaddress: 205.251.251.61
         - domain: sotappm.auone.jp
-          ipaddress: 54.230.210.56
-        - domain: sotappm.auone.jp
-          ipaddress: 13.32.2.50
-        - domain: sparxcdn.net
-          ipaddress: 205.251.251.202
+          ipaddress: 13.35.1.181
+        - domain: spd.samsungdm.com
+          ipaddress: 205.251.249.96
+        - domain: specialized.com
+          ipaddress: 52.84.3.186
+        - domain: specialized.com
+          ipaddress: 13.35.2.115
+        - domain: specialized.com
+          ipaddress: 54.230.1.205
         - domain: spoonflower.com
-          ipaddress: 13.35.2.2
+          ipaddress: 99.86.2.179
+        - domain: spothero.com
+          ipaddress: 204.246.177.166
+        - domain: ss-api-fb.fujifilm.com
+          ipaddress: 99.86.1.114
         - domain: ss-api-fb.fujifilm.com
           ipaddress: 54.230.129.15
-        - domain: ss-api-fb.fujifilm.com
-          ipaddress: 99.86.2.114
         - domain: ss-api-stg-fb.fujifilm.com
-          ipaddress: 54.182.2.139
+          ipaddress: 99.84.0.140
         - domain: ss-api-stg.fujixerox.co.jp
-          ipaddress: 54.230.0.181
-        - domain: ss-api.fujixerox.co.jp
-          ipaddress: 13.35.0.154
+          ipaddress: 54.230.211.147
+        - domain: ss-api-stg.fujixerox.co.jp
+          ipaddress: 204.246.164.152
+        - domain: ssi.servicestream.com.au
+          ipaddress: 54.230.202.137
         - domain: ssi.servicestream.com.au
           ipaddress: 99.86.1.221
-        - domain: staging-payment.fururu.online
-          ipaddress: 54.230.227.43
-        - domain: staging.aplaceformom.com
-          ipaddress: 54.230.203.178
-        - domain: static.datad0g.com
-          ipaddress: 99.84.0.228
+        - domain: stage-spectrum.net
+          ipaddress: 205.251.249.44
+        - domain: stage.cf.md.bbci.co.uk
+          ipaddress: 52.84.2.91
+        - domain: stage.testglider.com
+          ipaddress: 54.239.195.59
+        - domain: static.cld.navitime.jp
+          ipaddress: 204.246.177.148
+        - domain: static.counsyl.com
+          ipaddress: 54.230.129.57
+        - domain: static.counsyl.com
+          ipaddress: 54.230.227.68
         - domain: static.ddog-gov.com
-          ipaddress: 54.230.227.134
+          ipaddress: 65.9.129.181
         - domain: static.emarsys.com
-          ipaddress: 65.9.129.127
+          ipaddress: 204.246.177.138
+        - domain: static.flickr.com
+          ipaddress: 204.246.164.90
         - domain: static.lendingclub.com
-          ipaddress: 13.35.3.33
+          ipaddress: 99.84.0.32
         - domain: static.uber-adsystem.com
-          ipaddress: 205.251.251.105
-        - domain: static.yub-cdn.com
-          ipaddress: 205.251.251.17
-        - domain: stg-gcsp.jnj.com
-          ipaddress: 205.251.249.13
+          ipaddress: 54.230.202.106
         - domain: stg.fantasynft.org
           ipaddress: 54.230.202.70
-        - domain: stg.sotappm.auone.jp
-          ipaddress: 54.192.1.94
         - domain: storeanalytics.amazon.com
-          ipaddress: 99.86.2.229
+          ipaddress: 13.35.0.144
         - domain: stores.pandora.net
-          ipaddress: 54.239.192.26
+          ipaddress: 54.230.202.131
         - domain: sundaysky.com
-          ipaddress: 65.8.0.78
-        - domain: sunsky-online.com
-          ipaddress: 205.251.251.25
-        - domain: sunsky-online.com
-          ipaddress: 13.35.2.187
+          ipaddress: 54.192.3.74
+        - domain: sup-gcsp.jnj.com
+          ipaddress: 54.192.0.30
         - domain: support.atlassian.com
-          ipaddress: 204.246.164.13
-        - domain: sync.amazonworkspaces.com
-          ipaddress: 54.182.2.218
-        - domain: sync.amazonworkspaces.com
-          ipaddress: 13.35.0.209
-        - domain: sync.amazonworkspaces.com
-          ipaddress: 99.86.1.170
-        - domain: terabox.com
-          ipaddress: 54.230.202.203
-        - domain: test-login.kataweb.it
-          ipaddress: 65.9.129.174
-        - domain: test.aeta.world
-          ipaddress: 65.9.128.165
-        - domain: test.api.seek.co.nz
-          ipaddress: 99.86.0.110
+          ipaddress: 54.239.195.21
+        - domain: swipeads.co
+          ipaddress: 143.204.1.5
+        - domain: swipeads.co
+          ipaddress: 54.182.2.225
+        - domain: syapp.jp
+          ipaddress: 204.246.175.93
+        - domain: t.mail.optimumemail1.com
+          ipaddress: 99.86.2.206
+        - domain: t1.sophosupd.com
+          ipaddress: 65.8.0.168
+        - domain: tb1.sayweeecdn.com
+          ipaddress: 65.9.129.188
+        - domain: teamviewer.com
+          ipaddress: 204.246.164.29
         - domain: test.hilander.com
-          ipaddress: 99.86.1.200
+          ipaddress: 143.204.0.220
         - domain: test.hilander.com
-          ipaddress: 13.224.0.201
-        - domain: test.sujanagurung.com
-          ipaddress: 52.84.3.90
-        - domain: thecrew-hub.com
-          ipaddress: 54.239.195.179
-        - domain: thescore.com
-          ipaddress: 54.230.129.214
+          ipaddress: 99.86.2.200
+        - domain: tf-cdn.net
+          ipaddress: 54.230.203.84
+        - domain: thetvdb.com
+          ipaddress: 13.32.1.107
+        - domain: thetvdb.com
+          ipaddress: 54.230.210.220
         - domain: tillster.com
-          ipaddress: 54.182.2.60
-        - domain: tillster.com
-          ipaddress: 54.239.192.74
+          ipaddress: 204.246.164.216
         - domain: toasttab.com
           ipaddress: 205.251.251.203
+        - domain: tolkien.bookdepository.com
+          ipaddress: 54.239.192.18
+        - domain: tolkien.bookdepository.com
+          ipaddress: 13.32.2.219
+        - domain: tomuat.pfdfoods.com.au
+          ipaddress: 54.239.130.151
+        - domain: translate.shighiro.jp.myinstance.com
+          ipaddress: 99.86.0.156
         - domain: traversedlp.com
-          ipaddress: 54.230.202.51
-        - domain: tripkit-test4.jeppesen.com
-          ipaddress: 54.239.195.102
+          ipaddress: 54.239.192.30
+        - domain: traversedlp.com
+          ipaddress: 54.239.195.41
+        - domain: trevianalytics.com
+          ipaddress: 52.84.3.196
+        - domain: trevianalytics.com
+          ipaddress: 204.246.177.121
+        - domain: trevianalytics.com
+          ipaddress: 13.224.0.5
+        - domain: tripkit-test2.jeppesen.com
+          ipaddress: 13.35.2.238
+        - domain: tripkit-test3.jeppesen.com
+          ipaddress: 54.230.225.123
         - domain: tripkit-test5.jeppesen.com
           ipaddress: 13.32.1.173
+        - domain: truste.com
+          ipaddress: 99.86.0.120
+        - domain: tvc-mall.com
+          ipaddress: 13.35.2.78
         - domain: twitchcdn-shadow.net
-          ipaddress: 54.230.202.146
+          ipaddress: 99.86.1.75
         - domain: twitchcdn.net
-          ipaddress: 54.182.2.159
-        - domain: twitchcdn.tech
-          ipaddress: 13.224.0.214
-        - domain: twitchsvc.tech
-          ipaddress: 99.86.0.11
-        - domain: uniqodo.com
-          ipaddress: 54.230.203.137
+          ipaddress: 13.35.1.163
+        - domain: ubnt.com
+          ipaddress: 65.9.129.64
+        - domain: ubnt.com
+          ipaddress: 54.230.210.75
+        - domain: undercovertourist.com
+          ipaddress: 13.35.2.15
+        - domain: universe-official.io
+          ipaddress: 13.32.1.119
+        - domain: universe-official.io
+          ipaddress: 54.230.1.132
         - domain: unrealengine.com
-          ipaddress: 13.35.0.189
+          ipaddress: 54.192.1.150
         - domain: unrulymedia.com
-          ipaddress: 54.230.203.180
+          ipaddress: 52.84.2.183
         - domain: update.hicloud.com
-          ipaddress: 13.32.1.143
+          ipaddress: 54.230.0.107
         - domain: update.hicloud.com
           ipaddress: 13.35.1.234
         - domain: update.hicloud.com
-          ipaddress: 54.182.2.29
-        - domain: update.hicloud.com
-          ipaddress: 13.32.2.96
+          ipaddress: 54.239.192.228
         - domain: update.synology.com
-          ipaddress: 204.246.175.109
-        - domain: updates.cdc.carbonblack.io
-          ipaddress: 54.182.0.194
-        - domain: uploads.skyhighnetworks.com
-          ipaddress: 204.246.169.171
-        - domain: uploads.skyhighnetworks.com
-          ipaddress: 65.8.1.173
-        - domain: v-img.interactive-circle.jp
-          ipaddress: 13.32.1.127
-        - domain: v2.kidizz.com
-          ipaddress: 54.239.130.154
-        - domain: v2ray.transportefredy.online
-          ipaddress: 204.246.178.214
+          ipaddress: 99.84.0.21
+        - domain: us.whispir.com
+          ipaddress: 54.182.0.186
+        - domain: us.whispir.com
+          ipaddress: 54.192.0.227
+        - domain: vdownload.cyberoam.com
+          ipaddress: 54.182.2.132
+        - domain: versal.com
+          ipaddress: 54.239.130.125
+        - domain: verti.iptiq.de
+          ipaddress: 54.182.3.139
         - domain: verti.iptiq.de
           ipaddress: 54.192.3.83
         - domain: verti.iptiq.de
-          ipaddress: 54.182.3.139
-        - domain: video.maint.tivity.health
-          ipaddress: 65.8.1.177
-        - domain: video.qa.tivity.health
-          ipaddress: 52.84.3.33
-        - domain: views.putter.asapdev.mediba.jp
-          ipaddress: 99.86.1.233
+          ipaddress: 54.239.130.181
+        - domain: verti.iptiq.de
+          ipaddress: 65.9.128.86
+        - domain: verti.stg.iptiq.com
+          ipaddress: 205.251.249.17
+        - domain: video.dev.tivity.health
+          ipaddress: 204.246.169.105
+        - domain: video.local.tivity.health
+          ipaddress: 54.182.3.156
         - domain: views.putter.asapdev.mediba.jp
           ipaddress: 54.192.0.110
+        - domain: views.putter.asapdev.mediba.jp
+          ipaddress: 13.35.0.232
+        - domain: views.putter.asapdev.mediba.jp
+          ipaddress: 65.9.129.108
         - domain: vilaweb.cat
           ipaddress: 54.230.202.186
+        - domain: vlive-simulcast.sans.org
+          ipaddress: 13.35.0.152
         - domain: vsplay.com
-          ipaddress: 204.246.169.138
-        - domain: vsplay.com
-          ipaddress: 143.204.0.142
+          ipaddress: 204.246.175.134
         - domain: we-stats.com
-          ipaddress: 54.182.2.205
+          ipaddress: 54.192.1.69
+        - domain: we-stats.com
+          ipaddress: 65.9.128.94
         - domain: web.docomo.ne.jp
-          ipaddress: 204.246.169.50
+          ipaddress: 204.246.164.163
         - domain: web.docomo.ne.jp
-          ipaddress: 52.84.3.202
-        - domain: webview-jp.bh3.com
-          ipaddress: 99.86.2.225
-        - domain: webview-jp.bh3.com
-          ipaddress: 143.204.1.176
+          ipaddress: 204.246.177.192
         - domain: webview-jp.bh3.com
           ipaddress: 99.86.1.225
-        - domain: werally.com
-          ipaddress: 54.192.3.76
         - domain: whoosh.virginmedia.com
           ipaddress: 54.230.202.184
         - domain: whoscall.com
+          ipaddress: 54.239.195.4
+        - domain: whoscall.com
+          ipaddress: 204.246.175.165
+        - domain: whoscall.com
+          ipaddress: 204.246.169.170
+        - domain: whoscall.com
           ipaddress: 54.182.3.177
+        - domain: wms-na.amazon-adsystem.com
+          ipaddress: 54.230.225.136
         - domain: workflow.licenses.adobe.com
-          ipaddress: 54.230.210.121
-        - domain: wpcp.shiseido.co.jp
-          ipaddress: 13.224.0.159
+          ipaddress: 65.9.129.101
         - domain: ws.sonos.com
-          ipaddress: 54.230.210.206
+          ipaddress: 205.251.251.178
         - domain: wuaki.tv
-          ipaddress: 65.9.129.111
+          ipaddress: 54.239.192.34
+        - domain: www.53.localytics.com
+          ipaddress: 13.249.2.62
+        - domain: www.abc-mart.biz
+          ipaddress: 204.246.169.148
+        - domain: www.abc-mart.biz
+          ipaddress: 54.182.0.214
+        - domain: www.accordiagolf.com
+          ipaddress: 13.35.1.150
         - domain: www.adbecrsl.com
-          ipaddress: 54.192.3.35
-        - domain: www.adbephotos-stage.com
-          ipaddress: 204.246.175.66
+          ipaddress: 13.32.1.36
+        - domain: www.adison.co
+          ipaddress: 13.35.1.8
         - domain: www.aktjyds.net
-          ipaddress: 13.224.0.28
-        - domain: www.amazon.ae
-          ipaddress: 13.35.2.144
+          ipaddress: 65.8.1.50
         - domain: www.amazon.eg
           ipaddress: 13.224.0.50
-        - domain: www.amazon.pl
-          ipaddress: 54.230.210.3
         - domain: www.amazon.sa
-          ipaddress: 54.230.0.208
+          ipaddress: 54.230.211.52
         - domain: www.amazon.se
           ipaddress: 13.35.1.129
-        - domain: www.amazon.sg
-          ipaddress: 54.192.2.206
-        - domain: www.amazon.sg
-          ipaddress: 54.182.3.107
+        - domain: www.amcentral.amazon.dev
+          ipaddress: 54.192.3.115
+        - domain: www.animelo.jp
+          ipaddress: 13.35.3.171
         - domain: www.ap-southeast-2.multichdev.a-sharedinfra.net
-          ipaddress: 13.224.0.221
-        - domain: www.ap-southeast-2.multichnonprod.a-sharedinfra.net
-          ipaddress: 54.230.202.42
+          ipaddress: 54.230.226.230
+        - domain: www.ap-southeast-2.multichprod.a-sharedinfra.net
+          ipaddress: 204.246.164.11
         - domain: www.api.brightcove.com
-          ipaddress: 99.86.1.152
-        - domain: www.arrange.jalan.net
-          ipaddress: 13.35.1.32
+          ipaddress: 13.32.1.85
+        - domain: www.audible.ca
+          ipaddress: 54.230.227.103
         - domain: www.audible.co.jp
           ipaddress: 99.86.0.163
-        - domain: www.audible.co.jp
-          ipaddress: 54.239.130.198
-        - domain: www.audible.com
-          ipaddress: 65.8.1.230
-        - domain: www.audible.in
-          ipaddress: 54.192.0.188
+        - domain: www.audible.com.au
+          ipaddress: 204.246.177.144
+        - domain: www.audible.de
+          ipaddress: 54.230.211.99
+        - domain: www.audible.it
+          ipaddress: 65.8.1.71
+        - domain: www.auth.mrreset.com
+          ipaddress: 54.192.2.145
         - domain: www.autopartsbridge.com
           ipaddress: 99.86.0.136
         - domain: www.awsapps.com
-          ipaddress: 99.84.0.12
+          ipaddress: 13.35.2.23
         - domain: www.awsapps.com
-          ipaddress: 54.230.129.111
+          ipaddress: 13.35.2.5
         - domain: www.awsapps.com
-          ipaddress: 54.192.1.60
+          ipaddress: 205.251.249.61
         - domain: www.awsapps.com
-          ipaddress: 54.192.1.178
+          ipaddress: 65.8.0.165
+        - domain: www.awsapps.com
+          ipaddress: 99.86.1.51
         - domain: www.awsapps.com
           ipaddress: 13.224.0.40
         - domain: www.awsapps.com
-          ipaddress: 54.230.225.193
+          ipaddress: 54.192.2.56
         - domain: www.awsapps.com
-          ipaddress: 54.230.202.179
+          ipaddress: 204.246.178.132
         - domain: www.awsapps.com
-          ipaddress: 99.86.1.174
+          ipaddress: 52.84.2.14
         - domain: www.awsapps.com
-          ipaddress: 54.192.2.61
+          ipaddress: 65.9.129.148
         - domain: www.awsapps.com
-          ipaddress: 13.35.2.23
+          ipaddress: 204.246.175.148
         - domain: www.awsapps.com
-          ipaddress: 65.9.129.169
+          ipaddress: 54.230.227.15
         - domain: www.awstennessee.com
-          ipaddress: 143.204.2.190
+          ipaddress: 54.230.203.22
         - domain: www.awstennessee.com
-          ipaddress: 65.9.128.140
+          ipaddress: 99.84.0.175
+        - domain: www.b28.io
+          ipaddress: 143.204.1.188
         - domain: www.b28.io
           ipaddress: 54.230.202.196
-        - domain: www.binance.sg
-          ipaddress: 54.230.129.192
+        - domain: www.bcovlive.io
+          ipaddress: 13.249.2.219
+        - domain: www.beauty-co.jp
+          ipaddress: 54.182.2.6
+        - domain: www.beta.awsapps.com
+          ipaddress: 65.8.0.51
+        - domain: www.beta.awsapps.com
+          ipaddress: 204.246.177.52
         - domain: www.blockcustody.com
           ipaddress: 204.246.178.180
-        - domain: www.blockcustody.com
-          ipaddress: 205.251.251.226
         - domain: www.brightcloud.com
-          ipaddress: 54.230.210.219
+          ipaddress: 13.35.1.26
         - domain: www.brinkpos.net
           ipaddress: 65.9.129.54
-        - domain: www.c.misumi-ec.com
-          ipaddress: 54.192.3.149
-        - domain: www.c.misumi-ec.com
-          ipaddress: 52.84.3.152
-        - domain: www.c5.scopelypv.com
-          ipaddress: 65.8.1.220
-        - domain: www.cafewell.com
-          ipaddress: 205.251.249.124
-        - domain: www.cafewell.com
-          ipaddress: 54.230.0.143
-        - domain: www.cafewell.com
-          ipaddress: 13.32.1.131
+        - domain: www.c.ooyala.com
+          ipaddress: 54.230.225.99
+        - domain: www.cafewellstage.com
+          ipaddress: 99.86.0.91
         - domain: www.cafewellstage.com
           ipaddress: 54.230.1.178
-        - domain: www.ccast.api.amazonvideo.com
-          ipaddress: 54.230.1.141
+        - domain: www.careem.com
+          ipaddress: 99.84.0.138
+        - domain: www.careem.com
+          ipaddress: 54.192.0.90
+        - domain: www.cequintsptecid.com
+          ipaddress: 65.9.129.72
+        - domain: www.cequintsptecid.com
+          ipaddress: 54.192.1.71
         - domain: www.channel4.com
-          ipaddress: 54.192.0.83
-        - domain: www.chartboost.com
-          ipaddress: 54.192.0.121
-        - domain: www.chartboost.com
-          ipaddress: 54.230.227.145
+          ipaddress: 205.251.251.83
         - domain: www.chartboost.com
           ipaddress: 13.32.1.126
-        - domain: www.chatbar.me
-          ipaddress: 13.32.1.145
-        - domain: www.chatbar.me
-          ipaddress: 99.86.1.90
+        - domain: www.chartboost.com
+          ipaddress: 54.192.0.121
         - domain: www.cloud.tenable.com
-          ipaddress: 204.246.177.83
+          ipaddress: 13.35.3.155
         - domain: www.cnnio.net
-          ipaddress: 54.182.3.121
+          ipaddress: 13.35.2.22
         - domain: www.connectwise.com
-          ipaddress: 205.251.251.137
-        - domain: www.connectwise.com
-          ipaddress: 13.32.1.142
+          ipaddress: 54.230.203.98
         - domain: www.connectwisedev.com
-          ipaddress: 65.9.128.42
+          ipaddress: 204.246.177.45
+        - domain: www.connectwisedev.com
+          ipaddress: 13.32.2.42
         - domain: www.contact.olleh.com
-          ipaddress: 205.251.251.44
-        - domain: www.contact.olleh.com
-          ipaddress: 65.9.128.206
-        - domain: www.contact.olleh.com
-          ipaddress: 54.230.226.156
+          ipaddress: 13.35.2.61
+        - domain: www.contrastsecurity.jp
+          ipaddress: 54.230.203.148
         - domain: www.cphostaccess.com
           ipaddress: 143.204.2.212
         - domain: www.cphostaccess.com
-          ipaddress: 54.192.2.147
-        - domain: www.cphostaccess.com
-          ipaddress: 13.32.1.150
-        - domain: www.creditloan.com
-          ipaddress: 13.35.2.37
+          ipaddress: 54.230.202.145
         - domain: www.dazn.com
-          ipaddress: 204.246.175.50
-        - domain: www.dazndn.com
-          ipaddress: 54.239.192.162
-        - domain: www.dcm-icwweb-dev.com
-          ipaddress: 13.35.0.187
+          ipaddress: 143.204.2.38
+        - domain: www.denso-ten.com
+          ipaddress: 54.230.203.103
+        - domain: www.dev.api.nasuni.com
+          ipaddress: 52.84.2.68
+        - domain: www.dev.awsapps.com
+          ipaddress: 54.239.130.179
         - domain: www.dev.irl.aws.tipico.com
-          ipaddress: 205.251.249.166
-        - domain: www.dl3tools.bydeluxe.com
-          ipaddress: 54.192.1.121
-        - domain: www.docomo-icc.com
-          ipaddress: 54.230.0.32
+          ipaddress: 65.9.128.173
+        - domain: www.dev.mxplay.com
+          ipaddress: 54.230.202.231
+        - domain: www.dev.mxplay.com
+          ipaddress: 99.86.2.220
+        - domain: www.dev.ring.com
+          ipaddress: 54.230.227.2
+        - domain: www.dr.sompo-japan.co.jp
+          ipaddress: 205.251.249.203
+        - domain: www.dr.sompo-japan.co.jp
+          ipaddress: 54.230.210.36
         - domain: www.dta.netflix.com
-          ipaddress: 54.230.227.167
-        - domain: www.dwango.jp
-          ipaddress: 143.204.0.166
+          ipaddress: 13.35.1.47
         - domain: www.dwell.com
           ipaddress: 204.246.164.125
         - domain: www.dxpstatic.com
-          ipaddress: 54.182.0.135
+          ipaddress: 54.230.225.135
+        - domain: www.ebookstore.sony.jp
+          ipaddress: 143.204.1.46
+        - domain: www.ebookstore.sony.jp
+          ipaddress: 54.230.203.43
+        - domain: www.eelsy.myinstance.com
+          ipaddress: 52.84.2.38
+        - domain: www.ejawsdemo.com
+          ipaddress: 143.204.2.169
         - domain: www.ejeokvv.com
-          ipaddress: 54.239.192.189
+          ipaddress: 13.35.1.72
         - domain: www.ejeokvv.com
-          ipaddress: 205.251.251.60
+          ipaddress: 54.239.195.125
         - domain: www.endpoint.ubiquity.aws.a2z.com
-          ipaddress: 13.35.3.31
-        - domain: www.eng.bnet.run
-          ipaddress: 13.32.1.120
-        - domain: www.eng.bnet.run
-          ipaddress: 204.246.164.195
+          ipaddress: 54.230.225.94
         - domain: www.enjoy.point.auone.jp
-          ipaddress: 54.230.227.153
-        - domain: www.enjoy.point.auone.jp
-          ipaddress: 143.204.1.58
+          ipaddress: 54.182.3.167
         - domain: www.eproc-desktop.quantumlatency.com
-          ipaddress: 99.86.0.185
+          ipaddress: 54.230.203.142
         - domain: www.eproc-desktop.quantumlatency.com
-          ipaddress: 54.192.0.172
+          ipaddress: 52.84.3.3
         - domain: www.execute-api.ap-northeast-1.amazonaws.com
-          ipaddress: 99.86.1.228
+          ipaddress: 13.32.2.111
         - domain: www.execute-api.ap-southeast-1.amazonaws.com
-          ipaddress: 99.86.1.43
+          ipaddress: 54.230.0.110
+        - domain: www.execute-api.ap-southeast-1.amazonaws.com
+          ipaddress: 99.86.2.43
         - domain: www.execute-api.us-east-1.amazonaws.com
-          ipaddress: 204.246.164.162
+          ipaddress: 54.230.225.137
         - domain: www.execute-api.us-east-1.amazonaws.com
-          ipaddress: 54.182.3.161
+          ipaddress: 13.249.2.223
+        - domain: www.execute-api.us-east-1.amazonaws.com
+          ipaddress: 54.239.195.136
+        - domain: www.execute-api.us-east-1.amazonaws.com
+          ipaddress: 54.239.130.216
         - domain: www.execute-api.us-east-1.amazonaws.com
           ipaddress: 54.230.226.197
+        - domain: www.execute-api.us-west-2.amazonaws.com
+          ipaddress: 99.84.0.195
         - domain: www.exp-dev.bagelgames.com
           ipaddress: 54.230.0.126
-        - domain: www.exp-dev.bagelgames.com
-          ipaddress: 13.32.1.183
         - domain: www.fabric.com
-          ipaddress: 54.192.2.156
+          ipaddress: 52.84.3.158
         - domain: www.flixwagon.com
           ipaddress: 54.182.3.15
-        - domain: www.flixwagon.com
-          ipaddress: 54.192.1.73
+        - domain: www.fp.ps.netease.com
+          ipaddress: 54.182.3.106
+        - domain: www.fp.ps.netease.com
+          ipaddress: 65.8.1.54
         - domain: www.freshdesk.com
-          ipaddress: 65.8.0.6
+          ipaddress: 205.251.249.5
         - domain: www.freshdesk.com
-          ipaddress: 54.230.211.173
-        - domain: www.g.mkey.163.com
-          ipaddress: 54.239.192.233
-        - domain: www.game34.klabgames.net
-          ipaddress: 54.192.2.141
+          ipaddress: 54.230.129.6
+        - domain: www.freshdesk.com
+          ipaddress: 54.192.2.6
+        - domain: www.fukuyamamasaharu.com
+          ipaddress: 204.246.178.161
+        - domain: www.fukuyamamasaharu.com
+          ipaddress: 65.9.128.232
         - domain: www.gamma.awsapps.com
-          ipaddress: 13.32.2.110
+          ipaddress: 54.230.227.163
         - domain: www.gamma.awsapps.com
-          ipaddress: 205.251.249.108
+          ipaddress: 54.192.3.108
+        - domain: www.gamma.awsapps.com
+          ipaddress: 54.230.226.238
         - domain: www.gdl.imtxwy.com
-          ipaddress: 99.84.0.109
+          ipaddress: 52.84.2.88
+        - domain: www.gdl.imtxwy.com
+          ipaddress: 65.9.129.84
+        - domain: www.globalcitizen.org
+          ipaddress: 99.86.2.12
         - domain: www.goldspotmedia.com
-          ipaddress: 65.9.129.74
+          ipaddress: 99.84.0.52
+        - domain: www.gph.gtarcade.com
+          ipaddress: 13.32.1.147
+        - domain: www.gph.imtxwy.com
+          ipaddress: 54.230.210.235
+        - domain: www.gph.imtxwy.com
+          ipaddress: 13.249.2.101
+        - domain: www.gr-assets.com
+          ipaddress: 54.182.2.129
         - domain: www.hfblcj.com
-          ipaddress: 205.251.251.153
-        - domain: www.hicloud.com
-          ipaddress: 54.230.225.97
-        - domain: www.hostedpci.com
-          ipaddress: 54.239.192.164
+          ipaddress: 13.32.1.35
+        - domain: www.hosted-commerce.net
+          ipaddress: 54.192.0.24
         - domain: www.i-ready.com
-          ipaddress: 13.32.1.164
+          ipaddress: 13.35.3.74
         - domain: www.i-ready.com
-          ipaddress: 204.246.175.159
-        - domain: www.i-ready.com
-          ipaddress: 54.192.3.171
-        - domain: www.i-ready.com
-          ipaddress: 143.204.2.39
+          ipaddress: 99.84.0.55
         - domain: www.idexximagebank.com
-          ipaddress: 54.239.195.170
+          ipaddress: 13.35.3.129
+        - domain: www.idexximagebank.com
+          ipaddress: 54.230.202.144
         - domain: www.iflix.com
-          ipaddress: 54.182.2.41
-        - domain: www.iglobalstores.com
-          ipaddress: 54.239.130.38
+          ipaddress: 54.230.225.110
         - domain: www.iglobalstores.com
           ipaddress: 204.246.164.17
+        - domain: www.imaginelearning.com
+          ipaddress: 204.246.177.203
         - domain: www.imtxwy.com
-          ipaddress: 13.32.1.24
-        - domain: www.indigoag.build
-          ipaddress: 65.8.0.97
+          ipaddress: 13.224.0.176
         - domain: www.indigoag.tech
-          ipaddress: 65.8.0.156
-        - domain: www.indigoag.tech
-          ipaddress: 143.204.2.142
-        - domain: www.iot.irobot.cn
-          ipaddress: 205.251.251.29
-        - domain: www.isengard.awsvpc.xyz
-          ipaddress: 54.239.195.38
+          ipaddress: 99.86.0.135
+        - domain: www.innov8.space
+          ipaddress: 54.182.2.146
         - domain: www.jflliving.com.br
-          ipaddress: 65.8.0.87
+          ipaddress: 54.239.192.223
+        - domain: www.jflliving.com.br
+          ipaddress: 54.230.202.230
         - domain: www.kissmetrics.io
-          ipaddress: 99.86.2.74
-        - domain: www.ladymay.net
-          ipaddress: 13.35.1.13
+          ipaddress: 54.182.2.135
         - domain: www.learning.amplify.com
-          ipaddress: 204.246.177.27
-        - domain: www.loggly.com
-          ipaddress: 13.35.0.146
-        - domain: www.lottedfs.com
-          ipaddress: 54.192.1.70
-        - domain: www.lottedfs.com
-          ipaddress: 54.230.211.83
+          ipaddress: 13.224.0.17
+        - domain: www.lineblog.me
+          ipaddress: 54.230.225.11
         - domain: www.m.kor.lps.lottedfs.com
           ipaddress: 13.35.2.237
-        - domain: www.magicinfo.cf
-          ipaddress: 54.182.0.149
+        - domain: www.m.kor.lps.lottedfs.com
+          ipaddress: 65.8.1.57
         - domain: www.me2zengame.com
-          ipaddress: 13.35.3.117
-        - domain: www.media.fashion-store-test.zalan.do
-          ipaddress: 54.192.3.69
-        - domain: www.micro-poc.com
-          ipaddress: 54.192.2.201
-        - domain: www.midasplayer.com
-          ipaddress: 52.84.3.29
-        - domain: www.misumi-ec.com
-          ipaddress: 65.8.1.106
+          ipaddress: 54.192.0.173
         - domain: www.misumi.jp
           ipaddress: 204.246.169.101
-        - domain: www.misumi.jp
-          ipaddress: 54.230.225.120
-        - domain: www.mxplay.com
-          ipaddress: 54.239.192.172
-        - domain: www.mxtakatak.com
-          ipaddress: 54.239.192.192
-        - domain: www.mxtakatak.com
-          ipaddress: 13.35.3.18
-        - domain: www.myconnectwise.net
-          ipaddress: 99.84.0.132
-        - domain: www.myconnectwise.net
-          ipaddress: 54.192.1.9
-        - domain: www.mydaiz.jp
-          ipaddress: 13.224.0.134
-        - domain: www.myharmony.com
-          ipaddress: 54.230.203.12
-        - domain: www.myharmony.com
-          ipaddress: 13.35.0.132
         - domain: www.myharmony.com
           ipaddress: 13.249.2.136
-        - domain: www.netdespatch.com
-          ipaddress: 13.35.1.121
-        - domain: www.netdespatch.com
-          ipaddress: 204.246.175.226
-        - domain: www.neuweb.biz
-          ipaddress: 205.251.251.89
         - domain: www.nie.easebar.com
           ipaddress: 204.246.175.181
         - domain: www.nie.netease.com
-          ipaddress: 52.84.3.36
+          ipaddress: 13.32.2.35
+        - domain: www.nie.netease.com
+          ipaddress: 99.86.0.109
         - domain: www.nrd.netflix.com
-          ipaddress: 13.249.2.172
-        - domain: www.nrd.netflix.com
-          ipaddress: 52.84.2.188
-        - domain: www.nrd.netflix.com
-          ipaddress: 54.192.2.91
+          ipaddress: 54.230.202.90
         - domain: www.nrd.netflix.com
           ipaddress: 99.86.0.126
-        - domain: www.paragonsandbox.com
-          ipaddress: 54.230.226.143
-        - domain: www.paragonsandbox.com
-          ipaddress: 65.8.1.10
-        - domain: www.paragonsandbox.com
-          ipaddress: 13.224.0.69
-        - domain: www.paragonsandbox.com
-          ipaddress: 13.35.2.28
+        - domain: www.nrd.netflix.com
+          ipaddress: 13.32.2.187
+        - domain: www.nrd.netflix.com
+          ipaddress: 65.9.128.147
+        - domain: www.offerup-stg.com
+          ipaddress: 54.239.192.206
+        - domain: www.ooyala.com
+          ipaddress: 54.230.227.18
+        - domain: www.patient-create.orthofi-dev.com
+          ipaddress: 54.192.0.34
         - domain: www.paxstores.com
-          ipaddress: 54.239.130.230
-        - domain: www.pearsondev.com
-          ipaddress: 54.230.210.175
+          ipaddress: 54.239.192.161
         - domain: www.playstove.com
-          ipaddress: 54.230.0.83
+          ipaddress: 204.246.175.73
         - domain: www.playwithsea.com
-          ipaddress: 65.9.129.27
-        - domain: www.prod.tmsimg.com
-          ipaddress: 143.204.1.101
-        - domain: www.psa.fun
-          ipaddress: 54.239.130.235
-        - domain: www.qa.boltdns.net
-          ipaddress: 54.182.2.45
+          ipaddress: 99.84.0.81
+        - domain: www.popinfo.jp
+          ipaddress: 13.249.2.47
+        - domain: www.prod.boltdns.net
+          ipaddress: 54.230.210.54
         - domain: www.qa.tmsimg.com
-          ipaddress: 143.204.1.67
-        - domain: www.qafdg.us
-          ipaddress: 52.84.2.166
-        - domain: www.recoru.in
-          ipaddress: 13.35.2.38
+          ipaddress: 54.230.0.93
+        - domain: www.qa1fdg.net
+          ipaddress: 13.32.1.238
+        - domain: www.quick-cdn.com
+          ipaddress: 54.182.0.138
         - domain: www.ref.csc.turner.com
-          ipaddress: 13.32.2.63
+          ipaddress: 54.230.203.62
+        - domain: www.ref.csc.turner.com
+          ipaddress: 204.246.175.62
         - domain: www.res.netease.com
-          ipaddress: 13.224.0.219
+          ipaddress: 54.192.0.138
         - domain: www.res.netease.com
-          ipaddress: 13.35.2.8
+          ipaddress: 204.246.178.147
         - domain: www.res.netease.com
-          ipaddress: 204.246.169.155
-        - domain: www.ring.com
-          ipaddress: 54.230.129.126
-        - domain: www.saasian.com
-          ipaddress: 205.251.251.225
+          ipaddress: 65.8.1.145
+        - domain: www.resolving.com
+          ipaddress: 13.249.2.182
         - domain: www.samsara.com
           ipaddress: 204.246.164.61
-        - domain: www.sandbox.repayonline.com
-          ipaddress: 205.251.251.227
+        - domain: www.samsara.com
+          ipaddress: 54.230.202.56
+        - domain: www.samsungiotcloud.com
+          ipaddress: 99.86.2.236
+        - domain: www.samsungiotcloud.com
+          ipaddress: 65.9.128.218
+        - domain: www.samsungsmartcam.com
+          ipaddress: 13.35.1.81
         - domain: www.schoology.com
-          ipaddress: 65.8.0.246
-        - domain: www.shiseido.co.jp
-          ipaddress: 143.204.2.207
-        - domain: www.shufu-job.jp
-          ipaddress: 52.84.2.163
+          ipaddress: 13.32.1.244
+        - domain: www.scientist.com
+          ipaddress: 204.246.177.24
         - domain: www.shufu-job.jp
           ipaddress: 204.246.164.116
-        - domain: www.sigalert.com
-          ipaddress: 52.84.3.7
-        - domain: www.sit.dcg.trustago.com
-          ipaddress: 54.239.192.222
         - domain: www.smartpass.auone.jp
-          ipaddress: 54.230.0.144
+          ipaddress: 143.204.2.196
         - domain: www.smartpass.auone.jp
-          ipaddress: 54.230.211.146
+          ipaddress: 204.246.169.230
         - domain: www.sodexomyway.com
-          ipaddress: 204.246.169.14
-        - domain: www.stage.boltdns.net
-          ipaddress: 54.230.202.133
+          ipaddress: 99.86.1.10
+        - domain: www.sprinklr.com
+          ipaddress: 13.249.2.161
+        - domain: www.startrek.digitgaming.com
+          ipaddress: 54.239.130.44
+        - domain: www.stg.hayu.com
+          ipaddress: 54.230.226.171
+        - domain: www.stg.hayu.com
+          ipaddress: 54.239.192.123
         - domain: www.stg.ui.com
-          ipaddress: 13.35.0.142
+          ipaddress: 65.8.1.95
         - domain: www.stg.ui.com
-          ipaddress: 52.84.3.93
-        - domain: www.superevil.net
-          ipaddress: 99.86.1.112
-        - domain: www.superservice.cn
-          ipaddress: 54.239.195.121
+          ipaddress: 54.230.211.105
+        - domain: www.studysapuri.jp
+          ipaddress: 54.230.225.106
+        - domain: www.suezwatertechnologies.com
+          ipaddress: 13.249.2.49
+        - domain: www.suezwatertechnologies.com
+          ipaddress: 205.251.249.30
+        - domain: www.svhw.tech
+          ipaddress: 65.9.129.142
         - domain: www.swipesense.com
-          ipaddress: 54.230.225.196
-        - domain: www.t.job.mynavi.jp
-          ipaddress: 99.84.0.45
+          ipaddress: 143.204.2.20
         - domain: www.t.job.mynavi.jp
           ipaddress: 52.84.2.65
-        - domain: www.taggstar.com
-          ipaddress: 54.182.3.23
-        - domain: www.taggstar.com
-          ipaddress: 54.230.225.16
-        - domain: www.terra-inspection.com
-          ipaddress: 99.86.0.23
+        - domain: www.tap.d2c.ne.jp
+          ipaddress: 54.230.129.218
+        - domain: www.tap.d2c.ne.jp
+          ipaddress: 54.239.192.58
+        - domain: www.test.api.nasuni.com
+          ipaddress: 54.182.3.34
+        - domain: www.test.dctinc.net
+          ipaddress: 13.35.2.103
+        - domain: www.test.dctinc.net
+          ipaddress: 65.9.128.220
         - domain: www.test.iot.irobotapi.com
-          ipaddress: 13.32.1.136
-        - domain: www.test.tpicompcl.com
-          ipaddress: 204.246.164.180
-        - domain: www.test.tpicompcl.com
-          ipaddress: 54.230.227.164
+          ipaddress: 13.32.1.96
+        - domain: www.test.iot.irobotapi.com
+          ipaddress: 205.251.251.162
+        - domain: www.test.iot.irobotapi.com
+          ipaddress: 54.239.130.188
+        - domain: www.test.iot.irobotapi.com
+          ipaddress: 54.192.1.213
+        - domain: www.test.sentinelcloud.com
+          ipaddress: 204.246.175.117
         - domain: www.thinknearhub.com
           ipaddress: 99.86.1.172
-        - domain: www.tianmaoyihao10.com
-          ipaddress: 99.86.2.217
+        - domain: www.thinkthroughmath.com
+          ipaddress: 204.246.175.131
+        - domain: www.thinkthroughmath.com
+          ipaddress: 13.249.2.231
+        - domain: www.tianmaoyihao5.com
+          ipaddress: 13.249.2.216
+        - domain: www.tigocloud.net
+          ipaddress: 143.204.2.227
         - domain: www.tipico.com
-          ipaddress: 99.86.2.84
-        - domain: www.tosconfig.com
-          ipaddress: 54.230.225.231
+          ipaddress: 52.84.3.155
+        - domain: www.travelhook.com
+          ipaddress: 99.84.0.108
+        - domain: www.twitch.tv
+          ipaddress: 99.84.0.72
         - domain: www.uat.catchplay.com
-          ipaddress: 13.32.2.98
-        - domain: www.uat.catchplay.com
-          ipaddress: 54.230.203.95
-        - domain: www.uniqlo.com
-          ipaddress: 99.86.2.113
-        - domain: www.uniqlo.com
-          ipaddress: 99.86.1.113
+          ipaddress: 99.84.0.153
         - domain: www.update.easebar.com
-          ipaddress: 99.84.0.39
+          ipaddress: 143.204.1.145
         - domain: www.update.easebar.com
-          ipaddress: 54.239.195.162
-        - domain: www.update.netease.com
-          ipaddress: 13.32.1.117
+          ipaddress: 52.84.3.69
+        - domain: www.videoamp.com
+          ipaddress: 143.204.2.202
+        - domain: www.videoamp.com
+          ipaddress: 204.246.177.180
+        - domain: www.videocdn.webmeeting.com.br
+          ipaddress: 13.224.0.183
         - domain: www.virtualcampusmfm.com
-          ipaddress: 54.230.203.102
+          ipaddress: 13.32.1.69
         - domain: www.vistarmedia.com
-          ipaddress: 54.230.202.238
-        - domain: www.vod.ooyala.com
-          ipaddress: 52.84.3.89
-        - domain: www.vod.ooyala.com
-          ipaddress: 143.204.2.83
+          ipaddress: 52.84.3.175
         - domain: www.vodafone.gr
           ipaddress: 54.192.1.222
         - domain: www.volume.com
-          ipaddress: 204.246.177.40
-        - domain: www.webapp.easebar.com
-          ipaddress: 13.35.3.61
-        - domain: www.webapp.easebar.com
-          ipaddress: 205.251.251.101
+          ipaddress: 54.239.192.101
+        - domain: www.volume.com
+          ipaddress: 54.239.195.103
+        - domain: www.welcomesoftware.com
+          ipaddress: 143.204.1.191
+        - domain: www.welcomesoftware.com
+          ipaddress: 54.182.2.52
+        - domain: www.whispir.com
+          ipaddress: 99.86.0.15
         - domain: www.withbuddies.com
-          ipaddress: 54.239.130.207
-        - domain: www.withbuddies.com
-          ipaddress: 54.230.226.136
-        - domain: www.withbuddies.com
-          ipaddress: 13.32.1.57
-        - domain: www.ztat.net
-          ipaddress: 204.246.178.205
-        - domain: www.ztat.net
-          ipaddress: 204.246.169.103
-        - domain: www.ztat.net
-          ipaddress: 54.182.2.18
+          ipaddress: 54.192.0.212
+        - domain: www.wordpress.ronil.us
+          ipaddress: 65.8.0.171
         - domain: www7.amazon.com
-          ipaddress: 65.9.129.144
-        - domain: xj-storage.jp
-          ipaddress: 99.86.2.162
+          ipaddress: 99.86.2.135
+        - domain: wyshbox.com
+          ipaddress: 143.204.2.113
+        - domain: yanagidamasahiro.club
+          ipaddress: 65.9.128.167
         - domain: ybweb01.com
           ipaddress: 204.246.175.187
-        - domain: ybweb01.com
-          ipaddress: 99.86.2.72
-        - domain: ybweb01.com
-          ipaddress: 143.204.2.106
-        - domain: yelp.com
-          ipaddress: 65.8.1.226
-        - domain: yepp.pe
-          ipaddress: 13.35.2.230
-        - domain: yieldoptimizer.com
-          ipaddress: 13.35.2.196
-        - domain: yieldoptimizer.com
-          ipaddress: 52.84.2.135
-        - domain: yottaa.net
-          ipaddress: 52.84.3.142
-        - domain: z-eu.associates-amazon.com
-          ipaddress: 54.230.211.174
-        - domain: z-eu.associates-amazon.com
-          ipaddress: 13.35.1.27
-        - domain: z-fe.amazon-adsystem.com
-          ipaddress: 13.35.1.63
+        - domain: youracclaim.com
+          ipaddress: 13.224.0.218
+        - domain: z-fe.associates-amazon.com
+          ipaddress: 65.8.1.200
+        - domain: z-fe.associates-amazon.com
+          ipaddress: 13.32.1.56
+        - domain: z-fe.associates-amazon.com
+          ipaddress: 143.204.2.35
         - domain: z-in.amazon-adsystem.com
-          ipaddress: 54.239.192.173
+          ipaddress: 65.9.129.88
+        - domain: z-na.amazon-adsystem.com
+          ipaddress: 54.239.192.108
         - domain: z-na.associates-amazon.com
-          ipaddress: 65.8.0.47
-        - domain: zeasn.tv
-          ipaddress: 54.230.203.201
-        - domain: zoom.us
-          ipaddress: 204.246.177.250
-        - domain: zuora.identity.fcl-02.prep.fcagcv.com
-          ipaddress: 204.246.177.10
+          ipaddress: 204.246.169.46
         testurl: http://d157vud77ygy87.cloudfront.net/ping
         validator:
           rejectstatus:
@@ -4138,566 +4138,565 @@ featureoptions:
       - campaign: persagg
         description: ''
         keywords:
+        - "\u6FB3\u524D"
+        - "\u603B\u7406"
+        - "\u963F\u535A\u7279"
+        - "\u547C\u5401"
+        - "\u4E16\u754C"
+        - "\u58F0\u63F4"
+        - "\u53F0\u6E7E"
+        - "\u75DB\u6279"
         - "\u5317\u4EAC"
-        - "\u6025\u4EE4"
-        - "\u5C71\u897F"
-        - "\u5185\u8499"
-        - "\u6269\u5927"
-        - "\u7164\u70AD"
-        - "\u4EA7\u91CF"
-        - "\u4EE5\u89E3"
-        - "\u51AC\u5B63"
-        - "\u71C3\u7709"
-        - "\u71C3\u7709\u4E4B\u6025"
-        name: "\u5317\u4EAC\u6025\u4EE4\u5C71\u897F\u5185\u8499\u6269\u5927\u7164\u70AD\
-          \u4EA7\u91CF\u4EE5\u89E3\u51AC\u5B63\u71C3\u7709\u4E4B\u6025"
+        - "\u597D\u6218"
+        name: "\u6FB3\u524D\u603B\u7406\u963F\u535A\u7279\u547C\u5401\u4E16\u754C\u58F0\
+          \u63F4\u53F0\u6E7E\uFF0C\u75DB\u6279\u5317\u4EAC\u597D\u6218"
         probability: 1.0
-        url: https://www.voachinese.com/a/Beijing-Orders-More-Coal-Output-20211008/6262707.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.voachinese.com/a/former-australian-pm-abbott-calls-for-solidarity-with-taiwan-20211009/6264028.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u8457\u540D"
-        - "\u5A92\u4F53"
-        - "\u4EBA\u7F57"
-        - "\u660C\u5E73"
-        - "\u8BC4\u8BBA"
-        - "\u957F\u6D25\u6E56"
-        - "\u88AB\u6355"
-        name: "\u8457\u540D\u5A92\u4F53\u4EBA\u7F57\u660C\u5E73\u56E0\u8BC4\u8BBA\u300A\
-          \u957F\u6D25\u6E56\u300B\u88AB\u6355"
+        - "\u53F0\u6E7E"
+        - "\u603B\u7EDF"
+        - "\u603B\u7EDF\u5E9C"
+        - "\u53F0\u6E7E"
+        - "\u672A\u6765"
+        - "\u638C\u63E1"
+        - "\u4EBA\u6C11"
+        - "\u624B\u4E2D"
+        name: "\u53F0\u6E7E\u603B\u7EDF\u5E9C\uFF1A\u53F0\u6E7E\u7684\u672A\u6765\u638C\
+          \u63E1\u5728\u4EBA\u6C11\u624B\u4E2D"
         probability: 1.0
-        url: https://www.rfa.org/mandarin/yataibaodao/renquanfazhi/ac-10082021072926.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.voachinese.com/a/taiwan-says-its-future-rests-in-hands-of-its-people-20211009/6263974.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u4E0D\u60DC"
-        - "\u4EE3\u4EF7"
-        - "\u4E0D\u60DC\u4EE3\u4EF7"
-        - "\u5E94\u4ED8"
-        - "\u51AC\u5B63"
-        - "\u5185\u8499"
-        - "\u6025\u4EE4"
-        - "\u91CD\u5F00"
-        - '72'
-        - "\u7164\u77FF"
-        name: "\u4E0D\u60DC\u4EE3\u4EF7\u5E94\u4ED8\u51AC\u5B63\u7528\u7164  \u5185\
-          \u8499\u6025\u4EE4\u91CD\u5F0072\u5904\u7164\u77FF"
-        probability: 1.0
-        url: https://www.rfa.org/mandarin/yataibaodao/huanjing/ql1-10082021072240.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u9999\u6E2F"
-        - "\u5927\u5B66"
-        - "\u9999\u6E2F\u5927\u5B66"
-        - "\u8981\u6C42"
-        - "\u8054\u4F1A"
-        - "\u79FB\u8D70"
+        - "\u516D\u56DB"
+        - "\u6700\u540E"
+        - "\u8C61\u5F81"
         - "\u56FD\u6B87"
         - "\u4E4B\u67F1"
-        name: "\u9999\u6E2F\u5927\u5B66\u8981\u6C42\u652F\u8054\u4F1A\u79FB\u8D70\u56FD\
-          \u6B87\u4E4B\u67F1"
+        - "\u91CD\u538B"
+        - "\u80FD\u5426"
+        - "\u5C79\u7ACB"
+        - "\u4E0D\u5012"
+        name: "\u516D\u56DB\u6700\u540E\u8C61\u5F81\u201C\u56FD\u6B87\u4E4B\u67F1\u201D\
+          \u91CD\u538B\u4E0B\u80FD\u5426\u5C79\u7ACB\u4E0D\u5012\uFF1F"
         probability: 1.0
-        url: https://www.rfa.org/mandarin/Xinwen/wul1008c-10082021071326.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.voachinese.com/a/Pillar-Of-Shame-Faces-Removal-From-HKU-20211009/6262774.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u5085\u653F\u534E"
-        - "\u8BF7\u541B\u5165\u74EE"
-        - "\u4E2D\u5171"
-        - "\u91CA\u653E"
+        - "\u4E60\u8FD1\u5E73"
+        - "\u8A93\u8A00"
+        - "\u5B9E\u73B0"
+        - "\u548C\u5E73"
+        - "\u7EDF\u4E00"
+        - "\u548C\u5E73\u7EDF\u4E00"
+        - "\u53F0\u6E7E"
+        - "\u907F\u8C08"
+        - "\u5A01\u80C1"
+        - "\u4F7F\u7528"
+        - "\u6B66\u529B"
+        name: "\u4E60\u8FD1\u5E73\u8A93\u8A00\u5B9E\u73B0\u548C\u5E73\u7EDF\u4E00\u53F0\
+          \u6E7E \u907F\u8C08\u5A01\u80C1\u4F7F\u7528\u6B66\u529B"
+        probability: 1.0
+        url: https://www.voachinese.com/a/after-week-of-tension-china-s-xi-vows-reunification-with-taiwan-but-holds-off-threatening-force-20211009/6263929.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u6234\u742A"
+        - "\u5218\u9E64"
+        - "\u89C6\u9891"
+        - "\u901A\u8BDD"
+        - "\u8BC4\u4F30"
+        - "\u53CC\u8FB9"
+        - "\u63A5\u89E6"
+        - "\u6548\u679C"
+        name: "\u6234\u742A\u548C\u5218\u9E64\u89C6\u9891\u901A\u8BDD \u8BC4\u4F30\
+          \u53CC\u8FB9\u63A5\u89E6\u6548\u679C"
+        probability: 1.0
+        url: https://www.voachinese.com/a/u-s-trade-chief-talks-to-chinese-counterpart-in-test-of-bilateral-engagement-20211008/6263905.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u652F\u6301"
+        - "\u7F8E\u519B"
+        - "\u9A7B\u53F0"
+        - "\u534F\u8BAD"
+        - "\u7F8E\u4E24\u515A"
+        - "\u8BAE\u5458"
+        - "\u547C\u5401"
+        - "\u7ED3\u675F"
+        - "\u5BF9\u53F0"
+        - "\u6218\u7565"
+        - "\u6A21\u7CCA"
+        name: "\u652F\u6301\u7F8E\u519B\u9A7B\u53F0\u534F\u8BAD \u7F8E\u4E24\u515A\
+          \u8BAE\u5458\u547C\u5401\u7ED3\u675F\u5BF9\u53F0\u6218\u7565\u6A21\u7CCA"
+        probability: 1.0
+        url: https://www.voachinese.com/a/us-bipartisan-lawmakers-call-for-end-taiwan-strategic-ambiguity-20211008/6263879.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
         - "\u4EC0\u4E48"
-        - "\u4FE1\u53F7"
-        name: "\u5085\u653F\u534E\u88AB\u201C\u8BF7\u541B\u5165\u74EE\u201D \u4E2D\
-          \u5171\u91CA\u653E\u4EC0\u4E48\u4FE1\u53F7\uFF1F"
-        probability: 1.0
-        url: https://www.voachinese.com/a/implications-of-the-downfall-of-Fu-Zhenghua-20211008/6261023.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u6FB3\u6D32"
-        - "\u516C\u53F8"
-        - "\u516C\u5E03"
+        - "\u4E3A\u4EC0\u4E48"
         - "\u4E2D\u56FD"
-        - PCR
-        - "\u68C0\u6D4B"
-        - "\u6570\u91CF"
-        - "\u7591\u65B0\u51A0"
-        - "\u75AB\u60C5"
-        - "\u4E2D\u56FD"
-        - "\u5B98\u65B9"
-        - "\u516C\u5E03"
-        - "\u7206\u53D1"
-        name: "\u6FB3\u6D32\u516C\u53F8\u516C\u5E03\u4E2D\u56FD\u8D2DPCR\u68C0\u6D4B\
-          \u6570\u91CF   \u7591\u65B0\u51A0\u75AB\u60C5\u65E9\u4E8E\u4E2D\u56FD\u5B98\
-          \u65B9\u516C\u5E03\u524D\u7206\u53D1"
-        probability: 1.0
-        url: https://www.rfa.org/mandarin/Xinwen/wul1008c-10082021062227.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u4E94\u5929"
-        - '150'
         - "\u6218\u673A"
-        - "\u6270\u53F0"
-        - "\u89E3\u653E"
-        - "\u89E3\u653E\u519B"
-        - "\u53E6\u7C7B"
-        - "\u5341\u4E00"
-        - "\u9605\u5175"
-        - "\u6F14\u7ED9"
-        name: "\u4E94\u5929\u5185150\u67B6\u6218\u673A\u6270\u53F0 \u89E3\u653E\u519B\
-          \u201C\u53E6\u7C7B\u5341\u4E00\u9605\u5175\u201D\u6F14\u7ED9\u8C01\u770B\
-          ?"
+        - "\u8FDB\u5165"
+        - "\u53F0\u6E7E"
+        - "\u7A7A\u57DF"
+        - "\u653B\u51FB"
+        name: "\u4E3A\u4EC0\u4E48\u4E2D\u56FD\u6D3E\u6218\u673A\u8FDB\u5165\u53F0\u6E7E\
+          \u7A7A\u57DF\u5374\u4E0D\u653B\u51FB\uFF1F"
         probability: 1.0
-        url: https://www.voachinese.com/a/China-sends-150-warplanes-into-taiwan-defense-zone-in-five-days-20211008/6262562.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.voachinese.com/a/china-taiwan-warplanes-20211008/6263556.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u7F8E\u82F1"
-        - "\u65E5\u52A0"
-        - "\u8377\u516D"
-        - "\u56FD\u519B"
-        - "\u5370\u592A"
-        - "\u5317\u7EA6"
-        - "\u96C6\u4F53"
-        - "\u9632\u536B"
-        - "\u5A01\u6151"
+        - "\u5347\u7EA7"
+        - "\u5FAE\u8F6F"
+        - Windows
+        - '11'
         - "\u4E2D\u56FD"
-        name: "\u7F8E\u82F1\u65E5\u52A0\u65B0\u8377\u516D\u56FD\u519B\u6F14 \u5370\
-          \u592A\u201C\u5317\u7EA6\u5316\u201D \u96C6\u4F53\u9632\u536B\u5A01\u6151\
-          \u4E2D\u56FD"
+        - "\u53EF\u80FD"
+        - "\u4E0D\u5230"
+        name: "\u60F3\u5347\u7EA7\u5FAE\u8F6FWindows 11\uFF1F\u5728\u4E2D\u56FD\u4F60\
+          \u53EF\u80FD\u505A\u4E0D\u5230"
         probability: 1.0
-        url: https://www.rfa.org/mandarin/yataibaodao/junshiwaijiao/hx1008a-10082021051828.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.voachinese.com/a/china-microsoft-windows-11-chip-issue-20211008/6263855.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E13\u680F"
+        - "\u4E2D\u56FD"
+        - "\u6700\u94B1\u7EBF"
+        - "\u94B1\u7EBF"
+        - "\u5927\u4E8B"
+        - "\u5927\u4E8B\u8BB0"
+        - "\u5047\u5927\u68CB"
+        - "\u80CC\u540E"
+        - "\u535A\u5F08"
+        - --
+        - "\u4E8C\u8C08"
+        - "\u4E2D\u56FD"
+        - "\u505C\u7535"
+        name: "\u4E13\u680F | \u4E2D\u56FD\u6700\u94B1\u7EBF\uFF1A\u94B1\u7EBF\u5927\
+          \u4E8B\u8BB0\uFF1A\u5047\u5927\u68CB\u80CC\u540E\u7684\u771F\u535A\u5F08\
+          --\u4E8C\u8C08\u4E2D\u56FD\u5927\u505C\u7535"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/zhuanlan/zhongguozuiqianxian/fin-10082021201219.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E2D\u56FD"
+        - "\u7F51\u7EDC"
+        - "\u9ED1\u5BA2"
+        - "\u884C\u52A8"
+        - "\u51FA\u4E8E"
+        - "\u653F\u6CBB"
+        - "\u7ECF\u6D4E"
+        - "\u76EE\u7684"
+        - "\u652B\u53D6"
+        - "\u5927\u91CF"
+        - "\u6570\u636E"
+        name: "\u4E2D\u56FD\u7F51\u7EDC\u9ED1\u5BA2\u884C\u52A8\u51FA\u4E8E\u653F\u6CBB\
+          \u548C\u7ECF\u6D4E\u76EE\u7684\u800C\u652B\u53D6\u5927\u91CF\u6570\u636E"
+        probability: 1.0
+        url: https://www.voachinese.com/a/chinese-cyber-operatios-scoop-up-data-for-political-economic-aims-20211008/6263843.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E13\u680F"
+        - "\u6709\u95EE\u6709\u7B54"
+        - "\u7EA2\u8272"
+        - "\u8D4C\u76D8"
+        - "\u63ED\u793A"
+        - "\u4EC0\u4E48"
+        - "\u4E2D\u56FD"
+        - "\u6743\u529B"
+        - "\u638C\u63A7"
+        name: "\u4E13\u680F | \u6709\u95EE\u6709\u7B54\uFF1A\u300A\u7EA2\u8272\u8D4C\
+          \u76D8\u300B\u63ED\u793A\u4E86\u4EC0\u4E48\uFF1F\u4E2D\u56FD\u6743\u529B\
+          \u7531\u8C01\u638C\u63A7\uFF1F"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/zhuanlan/youwenyouda/qa-10082021195810.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E13\u680F"
+        - "\u89E3\u8BFB"
+        - "\u65B0\u7586"
+        - "\u4E2D\u56FD"
+        - "\u65B0\u7586"
+        - "\u4EBA\u53E3"
+        - "\u589E\u957F"
+        - "\u62A5\u544A"
+        - "\u5F15\u4EBA"
+        - "\u77A9\u76EE"
+        - "\u5F15\u4EBA\u77A9\u76EE"
+        name: "\u4E13\u680F | \u89E3\u8BFB\u65B0\u7586\uFF1A\u4E2D\u56FD\u65B0\u7586\
+          \u4EBA\u53E3\u589E\u957F\u62A5\u544A\u5F15\u4EBA\u77A9\u76EE"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/zhuanlan/jieduxinjiang/xj-10082021173844.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E13\u680F"
+        - "\u897F\u85CF"
+        - "\u7EB5\u89C8"
+        - "\u4E2D\u56FD"
+        - "\u897F\u85CF"
+        - "\u7EDF\u6CBB"
+        - "\u5177\u6709"
+        - "\u6B96\u6C11"
+        - "\u6C11\u4E3B"
+        - "\u4E3B\u4E49"
+        - "\u6B96\u6C11\u4E3B\u4E49"
+        - "\u6240\u6709"
+        - "\u57FA\u672C"
+        - "\u672C\u7279"
+        - "\u7279\u5F81"
+        - "\u57FA\u672C\u7279\u5F81"
+        name: "\u4E13\u680F | \u897F\u85CF\u7EB5\u89C8\uFF1A\u4E2D\u56FD\u5728\u897F\
+          \u85CF\u7684\u7EDF\u6CBB\u201C\u5177\u6709\u6B96\u6C11\u4E3B\u4E49\u7684\
+          \u6240\u6709\u57FA\u672C\u7279\u5F81\u201D"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/zhuanlan/xizangzonglan/tibet-10082021173903.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E2D\u56FD"
+        - "\u519B\u673A"
+        - "\u4FB5\u6270"
+        - "\u53F0\u6E7E"
+        - "\u6FC0\u589E"
+        - "\u7F8E\u56FD"
+        - "\u662F\u5426"
+        - "\u53F0\u6E7E"
+        - "\u5317\u4EAC"
+        - "\u5F00\u6218"
+        - "\u8003\u9A8C"
+        - "\u62DC\u767B"
+        name: "\u4E2D\u56FD\u519B\u673A\u4FB5\u6270\u53F0\u6E7E\u6FC0\u589E\uFF0C\u7F8E\
+          \u56FD\u662F\u5426\u4E3A\u53F0\u6E7E\u4E0E\u5317\u4EAC\u5F00\u6218\u8003\
+          \u9A8C\u62DC\u767B"
+        probability: 1.0
+        url: https://www.voachinese.com/a/experts-said-biden-is-facing-test-amid-chinese-warplane-incursion-into-taiwan-adiz-20211008/6263570.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - '20'
+        - "\u5927\u524D"
+        - "\u4E2D\u56FD"
+        - "\u653F\u6CBB"
+        - "\u5C40\u52BF"
+        - "\u653F\u6CBB\u5C40"
+        - "\u653F\u6CBB\u5C40\u52BF"
+        - "\u653F\u6CD5"
+        - "\u6CD5\u7CFB"
+        - "\u7CFB\u7EDF"
+        - "\u653F\u6CD5\u7CFB\u7EDF"
+        - "\u6E05\u6D17"
+        - "\u519B\u673A"
+        - "\u76D8\u65CB"
+        - "\u53F0\u6D77"
+        - "\u4E60\u8FD1\u5E73"
+        - "\u4EC0\u4E48"
+        - "\u6234\u5FE0\u4EC1"
+        - "\u5434\u56FD"
+        - "\u9676\u4EEA\u82AC"
+        - "\u4E9A\u6D32"
+        name: "20\u5927\u524D\u7684\u4E2D\u56FD\u653F\u6CBB\u5C40\u52BF\uFF1A\u653F\
+          \u6CD5\u7CFB\u7EDF\u5927\u6E05\u6D17\uFF0C\u519B\u673A\u76D8\u65CB\u53F0\
+          \u6D77\uFF0C\u4E60\u8FD1\u5E73\u5728\u60F3\u4EC0\u4E48\uFF1F(\u6234\u5FE0\
+          \u4EC1/\u5434\u56FD\u5149/\u9676\u4EEA\u82AC\uFF09\uFF5C\u4E9A\u6D32\u5F88\
+          \u60F3\u804A"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/duomeiti/yazhou-henxiangliao/yz-10082021164043.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
         - "\u7F8E\u4F01"
-        - "\u63A5\u6536"
-        - "\u6570\u767E"
-        - "\u7EF4\u543E\u5C14"
+        - "\u627F\u8BA4"
+        - "\u4F7F\u7528"
+        - "\u65B0\u7586"
+        - "\u7EF4\u65CF"
+        - "\u65B0\u7586\u7EF4\u65CF"
+        - "\u52B3\u5DE5"
         - "\u5426\u8BA4"
         - "\u5F3A\u8FEB"
         - "\u52B3\u52A8"
-        name: "\u7F8E\u4F01\u63A5\u6536\u6570\u767E\u7EF4\u543E\u5C14\u4EBA \u4F46\
-          \u5426\u8BA4\u5F3A\u8FEB\u52B3\u52A8"
+        name: "\u7F8E\u4F01\u627F\u8BA4\u4F7F\u7528\u65B0\u7586\u7EF4\u65CF\u52B3\u5DE5\
+          \  \u4F46\u5426\u8BA4\u5F3A\u8FEB\u52B3\u52A8"
         probability: 1.0
-        url: https://www.voachinese.com/a/us-electronics-company-struck-deal-to-transport-hire-uyghur-workers-20211008/6262479.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.rfa.org/mandarin/yataibaodao/shaoshuminzu/hc-10082021165836.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u7F8E\u519B"
-        - "\u52A8\u529B"
-        - "\u6838\u52A8\u529B"
-        - "\u6F5C\u8247"
-        - "\u5357\u6D77"
-        - "\u5F02\u7269"
-        - "\u5341\u591A"
-        - "\u591A\u540D"
-        - "\u5341\u591A\u540D"
-        - "\u6D77\u519B"
-        - "\u53D7\u4F24"
-        name: "\u7F8E\u519B\u6838\u52A8\u529B\u6F5C\u8247\u5357\u6D77\u649E\u5F02\u7269\
-          \   \u5341\u591A\u540D\u6D77\u519B\u53D7\u4F24"
-        probability: 1.0
-        url: https://www.rfa.org/mandarin/Xinwen/wul1008a-10082021033421.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u4E2D\u56FD"
-        - "\u592E\u884C"
-        - "\u8A93\u8A00"
-        - "\u4E00\u6B65"
-        - "\u8FDB\u4E00\u6B65"
-        - "\u6253\u51FB"
-        - "\u91D1\u878D"
-        - "\u79D1\u6280"
-        - "\u4F01\u4E1A"
-        name: "\u4E2D\u56FD\u592E\u884C\u8A93\u8A00\u8981\u8FDB\u4E00\u6B65\u6253\u51FB\
-          \u91D1\u878D\u79D1\u6280\u4F01\u4E1A"
-        probability: 1.0
-        url: https://www.voachinese.com/a/chinese-central-bank-boss-vows-to-further-fintech-crackdown-20211008/6262421.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u552F\u8272"
-        - RFA
-        - "\u535A\u5BA2"
-        - "\u5728\u5188\u4EC1"
-        - "\u6CE2\u9F50"
-        - "\u9047\u5230"
-        - "\u884C\u811A"
-        - "\u884C\u811A\u50E7"
-        - "\u5723\u5C71"
-        - "\u5357\u9762"
-        - "\u6D41\u4EA1"
-        - "\u7CBE\u795E"
-        - "\u795E\u9886"
-        - "\u9886\u8896"
-        - "\u7CBE\u795E\u9886\u8896"
-        - "\u5341\u516B"
-        name: "\u552F\u8272RFA\u535A\u5BA2\uFF1A\u5728\u5188\u4EC1\u6CE2\u9F50\u9047\
-          \u5230\u7684\u884C\u811A\u50E7\uFF0C\u53CA\u5723\u5C71\u5357\u9762\u7684\
-          \u85CF\u4EBA\u4E0E\u6D41\u4EA1\u7684\u7CBE\u795E\u9886\u8896\uFF08\u5341\
-          \u516B\uFF09"
-        probability: 1.0
-        url: https://www.rfa.org/mandarin/pinglun/weiseblog/ws-08262021120716.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u9762\u5BF9"
-        - "\u4E2D\u56FD"
-        - "\u519B\u673A"
-        - "\u9891\u7E41"
-        - "\u4FB5\u6270"
-        - "\u53F0\u6E7E"
-        - "\u8868\u793A"
-        - "\u519B\u4E8B"
-        - "\u5BF9\u6297"
-        name: "\u9762\u5BF9\u4E2D\u56FD\u519B\u673A\u9891\u7E41\u4FB5\u6270 \u53F0\
-          \u6E7E\u8868\u793A\u4E0D\u6C42\u519B\u4E8B\u5BF9\u6297"
-        probability: 1.0
-        url: https://www.voachinese.com/a/taiwan-does-not-seek-military-confrontation-president-says-20211007/6262377.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u4E2D\u56FD"
-        - "\u519B\u673A"
-        - "\u6270\u53F0"
-        - "\u5F15\u53D1"
-        - "\u62C5\u5FE7"
-        - "\u7F8E\u56FD"
-        - "\u56FD\u4F1A"
-        - "\u7F8E\u56FD\u4F1A"
-        - "\u5171\u548C"
-        - "\u515A\u4EBA"
-        - "\u5171\u548C\u515A"
-        - "\u5171\u548C\u515A\u4EBA"
-        - "\u8981\u6C42"
-        - "\u62DC\u767B"
-        - "\u653F\u5E9C"
-        - "\u5B98\u5458"
-        - "\u7B80\u62A5"
-        name: "\u4E2D\u56FD\u519B\u673A\u6270\u53F0\u5F15\u53D1\u62C5\u5FE7 \u7F8E\
-          \u56FD\u4F1A\u5171\u548C\u515A\u4EBA\u8981\u6C42\u62DC\u767B\u653F\u5E9C\
-          \u5B98\u5458\u7B80\u62A5"
-        probability: 1.0
-        url: https://www.voachinese.com/a/us-gop-senators-ask-sfrc-to-hold-briefing-and-hearing-on-china-and-taiwan-20211007/6262355.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u6301\u4E45"
-        - "\u5171\u5B58"
-        - "\u6302\u94A9"
-        - "\u62DC\u767B"
-        - "\u653F\u5E9C"
-        - "\u6539\u53D8"
-        - "\u4E2D\u56FD"
-        - "\u8D38\u6613"
-        - "\u653F\u7B56"
-        name: "\u201C\u6301\u4E45\u5171\u5B58\u201D\u3001\u201C\u518D\u6302\u94A9\u201D\
-          \ \u62DC\u767B\u653F\u5E9C\u8981\u6539\u53D8\u5BF9\u4E2D\u56FD\u7684\u8D38\
-          \u6613\u653F\u7B56\u4E86\u5417\uFF1F"
-        probability: 1.0
-        url: https://www.voachinese.com/a/is-biden-administration-changing-trade-policy-china-20211007/6262357.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u4E2D\u56FD"
-        - "\u519B\u4E8B"
-        - "\u5A01\u80C1"
-        - "\u52A0\u5267"
-        - "\u7F8E\u5401"
-        - "\u53F0\u901F\u5EFA"
-        - "\u8FEB\u5207"
-        - "\u5BF9\u79F0"
-        - "\u80FD\u529B"
-        - "\u9632\u6B62"
-        - "\u5165\u4FB5"
-        name: "\u4E2D\u56FD\u519B\u4E8B\u5A01\u80C1\u52A0\u5267\uFF0C\u7F8E\u5401\u53F0\
-          \u901F\u5EFA\u8FEB\u5207\u6240\u9700\u4E0D\u5BF9\u79F0\u80FD\u529B\u9632\
-          \u6B62\u5165\u4FB5"
-        probability: 1.0
-        url: https://www.voachinese.com/a/us-urges-taiwan-to-build-urgently-needed-asymmetrical-capabilities-asap-amid-china-threat-20211007/6261882.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - IMF
-        - "\u603B\u88C1"
-        - "\u8BA8\u597D"
-        - "\u4E2D\u56FD"
-        - "\u4FEE\u6539"
-        - "\u4E16\u884C"
-        - "\u6570\u636E"
-        - "\u5F8B\u5E08"
-        - "\u53CD\u6307"
-        - "\u9488\u5BF9"
-        - "\u8C03\u67E5"
-        - "\u8FDD\u89C4"
-        name: "IMF\u603B\u88C1\u88AB\u6279\u66FE\u4E3A\u8BA8\u597D\u4E2D\u56FD\u800C\
-          \u4FEE\u6539\u4E16\u884C\u6570\u636E\uFF0C\u5176\u5F8B\u5E08\u53CD\u6307\
-          \u9488\u5BF9\u5979\u7684\u8C03\u67E5\u8FDD\u89C4"
-        probability: 1.0
-        url: https://www.voachinese.com/a/imf-world-bank-data-rigging-georgieva-20211007/6262321.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u53C2\u8BAE"
-        - "\u8BAE\u9662"
-        - "\u53C2\u8BAE\u9662"
-        - "\u7F8E\u53C2\u8BAE\u9662"
-        - "\u6279\u51C6"
-        - "\u77ED\u671F"
-        - "\u63D0\u9AD8"
-        - "\u653F\u5E9C"
-        - "\u503A\u52A1"
-        - "\u4E0A\u9650"
-        - "\u534F\u8BAE"
-        name: "\u7F8E\u53C2\u8BAE\u9662\u6279\u51C6\u77ED\u671F\u63D0\u9AD8\u653F\u5E9C\
-          \u503A\u52A1\u4E0A\u9650\u534F\u8BAE"
-        probability: 1.0
-        url: https://www.voachinese.com/a/us-senators-ok-deal-to-extend-country-borrowing-authority-20211007/6262338.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u7F8E\u56FD"
-        - "\u6307\u63A7"
-        - "\u5854\u5229"
-        - "\u5854\u5229\u73ED"
-        - "\u6307\u6325"
-        - "\u6307\u6325\u5B98"
-        - "\u6D89\u53CA"
-        - "\u6740\u5BB3"
-        - "\u7F8E\u519B"
-        - "\u4EBA\u5458"
-        name: "\u7F8E\u56FD\u6307\u63A7\u5854\u5229\u73ED\u524D\u6307\u6325\u5B98\u6D89\
-          \u53CA\u6740\u5BB3\u7F8E\u519B\u4EBA\u5458"
-        probability: 1.0
-        url: https://www.voachinese.com/a/afghan-charged-anew-20211007/6262291.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
+        - "\u5229\u6587"
+        - "\u6C99\u5229\u6587"
+        - "\u6768\u6D01\u7BEA"
+        - "\u4F1A\u6664"
+        - "\u5BCC\u6709"
+        - "\u6709\u6210"
+        - "\u6210\u6548"
+        - "\u5BCC\u6709\u6210\u6548"
         - "\u53F0\u6D77"
-        - "\u5C40\u52BF"
-        - "\u9AA4\u7136"
-        - "\u5347\u7EA7"
-        - "\u7F8E\u56FD"
-        - "\u884C\u653F"
-        - "\u7ACB\u6CD5"
-        - "\u5982\u4F55"
-        - "\u8054\u52A8"
-        name: "\u53F0\u6D77\u5C40\u52BF\u9AA4\u7136\u5347\u7EA7\uFF0C\u7F8E\u56FD\u884C\
-          \u653F\u3001\u7ACB\u6CD5\u5982\u4F55\u8054\u52A8\uFF1F"
+        - "\u8BAE\u9898"
+        - "\u8BA8\u8BBA"
+        - "\u5F3A\u786C"
+        - "\u76F4\u63A5"
+        name: "\u6C99\u5229\u6587\uFF1A\u4E0E\u6768\u6D01\u7BEA\u4F1A\u6664\u5BCC\u6709\
+          \u6210\u6548  \u53F0\u6D77\u8BAE\u9898\u8BA8\u8BBA\u5F3A\u786C\u76F4\u63A5"
         probability: 1.0
-        url: https://www.voachinese.com/a/6262300.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.rfa.org/mandarin/yataibaodao/junshiwaijiao/cl-10082021172020.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u5206\u6790"
-        - "\u4EBA\u58EB"
-        - "\u62DC\u767B"
+        - "\u63A5\u8FDE"
+        - "\u5A01\u80C1"
+        - "\u7834\u574F"
+        - "\u81EA\u7531"
+        - "\u96D5\u5851"
+        - "\u516C\u56ED"
+        - "\u96D5\u5851\u516C\u56ED"
+        - "\u52A0\u5F3A"
+        - "\u5B89\u4FDD"
+        - "\u63AA\u65BD"
+        - "\u589E\u8BBE"
+        - "\u6444\u50CF"
+        - "\u8BBE\u5907"
+        name: "\u63A5\u8FDE\u5A01\u80C1\u4E0E\u7834\u574F\u4E0B\u7684\u81EA\u7531\u96D5\
+          \u5851\u516C\u56ED\uFF1A\u52A0\u5F3A\u5B89\u4FDD\u63AA\u65BD \u5DF2\u589E\
+          \u8BBE\u6444\u50CF\u8BBE\u5907"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/yataibaodao/renquanfazhi/sc-10082021170353.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E13\u680F"
+        - "\u8D22\u7ECF"
+        - "\u65F6\u65F6"
+        - "\u7ECF\u6D4E"
+        - "\u8131\u94A9"
         - "\u8D38\u6613"
-        - "\u7B56\u7565"
-        - "\u4E0D\u80FD"
-        - "\u5317\u4EAC"
-        - "\u6539\u53D8"
-        - "\u884C\u4E3A"
-        name: "\u5206\u6790\u4EBA\u58EB\uFF1A\u62DC\u767B\u8D38\u6613\u7B56\u7565\u4E0D\
-          \u80FD\u4EE4\u5317\u4EAC\u6539\u53D8\u884C\u4E3A"
+        - "\u4EE3\u8868"
+        - "\u6234\u742A"
+        - "\u9610\u8FF0"
+        - "\u62DC\u767B"
+        - "\u5BF9\u534E"
+        - "\u8D38\u6613"
+        - "\u5BF9\u534E\u8D38\u6613"
+        - "\u653F\u7B56"
+        name: "\u4E13\u680F | \u8D22\u7ECF\u65F6\u65F6\u542C\uFF1A\u7F8E\u4E2D\u7ECF\
+          \u6D4E\u4E0D\u8131\u94A9\u4E86\uFF1F\u7F8E\u8D38\u6613\u4EE3\u8868\u6234\
+          \u742A\u9610\u8FF0\u62DC\u767B\u5BF9\u534E\u8D38\u6613\u653F\u7B56"
         probability: 1.0
-        url: https://www.voachinese.com/a/us-china-trade-outlook-10-07-21/6261647.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.rfa.org/mandarin/zhuanlan/jingmaorediansaomiao/eco-10082021165707.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u4E2D\u60C5"
-        - "\u4E2D\u60C5\u5C40"
-        - "\u5BA3\u5E03"
-        - "\u6210\u7ACB"
-        - "\u4E2D\u56FD"
-        - "\u4EFB\u52A1"
-        - "\u4E2D\u5FC3"
-        - "\u4E2D\u56FD"
-        - "\u56FD\u653F"
+        - "\u4E13\u680F"
+        - "\u591C\u8BDD"
+        - "\u4E2D\u5357"
+        - "\u5357\u6D77"
+        - "\u4E2D\u5357\u6D77"
+        - "\u6731\u9555\u57FA"
+        - "\u4F2F\u4E50"
+        - "\u5C45\u7136"
+        - "\u5E73\u548C"
+        - "\u9648\u5BB6"
+        - "\u7236\u5B50"
+        name: "\u4E13\u680F | \u591C\u8BDD\u4E2D\u5357\u6D77\uFF1A\u6731\u9555\u57FA\
+          \u7684\u4F2F\u4E50\u5C45\u7136\u662F\u5B8B\u5E73\u548C\u9648\u5BB6\u7236\
+          \u5B50"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/zhuanlan/yehuazhongnanhai/gx-10082021164837.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
         - "\u653F\u5E9C"
-        - "\u4E2D\u56FD\u653F\u5E9C"
-        - "\u7F8E\u56FD"
-        - "\u91CD\u8981"
-        - "\u5730\u7F18"
-        - "\u653F\u6CBB"
-        - "\u5A01\u80C1"
-        name: "\u4E2D\u60C5\u5C40\u957F\u5BA3\u5E03\u6210\u7ACB\u4E2D\u56FD\u4EFB\u52A1\
-          \u4E2D\u5FC3\uFF0C\u79F0\u4E2D\u56FD\u653F\u5E9C\u4E3A\u7F8E\u56FD\u6700\
-          \u91CD\u8981\u5730\u7F18\u653F\u6CBB\u5A01\u80C1"
-        probability: 1.0
-        url: https://www.voachinese.com/a/cia-focused-on-china-20211007/6261751.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u62DC\u4E60"
-        - "\u7F8E\u4E2D"
-        - "\u4E2D\u5173"
-        - "\u5173\u7CFB"
-        - "\u7F8E\u4E2D\u5173\u7CFB"
-        - "\u51FA\u73B0"
-        - "\u62D0\u70B9"
-        name: "\u62DC\u4E60\u4F1A\u5728\u5373  \u7F8E\u4E2D\u5173\u7CFB\u51FA\u73B0\
-          \u62D0\u70B9\uFF1F"
-        probability: 1.0
-        url: https://www.rfa.org/mandarin/yataibaodao/junshiwaijiao/wy-10072021141259.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
+        - "\u76D1\u7BA1"
+        - "\u52A0\u5F3A"
+        - "\u8D44\u672C"
+        - "\u9003\u79BB"
         - "\u4E2D\u56FD"
-        - "\u519B\u673A"
-        - "\u9891\u7E41"
-        - "\u6270\u53F0"
-        - "\u59D4\u4F1A"
-        - "\u9646\u59D4\u4F1A"
-        - "\u4E25\u6B63"
-        - "\u6297\u8BAE"
-        name: "\u4E2D\u56FD\u519B\u673A\u9891\u7E41\u6270\u53F0  \u9646\u59D4\u4F1A\
-          \u4E25\u6B63\u6297\u8BAE"
+        - "\u7ECF\u6D4E"
+        - "\u4E0B\u884C"
+        - "\u538B\u529B"
+        - "\u52A0\u5927"
+        name: "\u653F\u5E9C\u76D1\u7BA1\u52A0\u5F3A\uFF0C\u8D44\u672C\u9003\u79BB\uFF0C\
+          \u4E2D\u56FD\u7ECF\u6D4E\u4E0B\u884C\u538B\u529B\u52A0\u5927"
         probability: 1.0
-        url: https://www.rfa.org/mandarin/Xinwen/10-10072021160309.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.voachinese.com/a/china-economy-electricity-property-20211008/6263474.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u671D\u9C9C"
-        - "\u9762\u4E34"
-        - "\u9965\u8352"
-        - "\u8054\u5408"
-        - "\u8054\u5408\u56FD"
-        - "\u4E13\u5BB6"
-        - "\u653E\u677E"
-        - "\u5236\u88C1"
-        name: "\u671D\u9C9C\u6050\u9762\u4E34\u9965\u8352  \u8054\u5408\u56FD\u4E13\
-          \u5BB6\u5401\u653E\u677E\u5236\u88C1"
+        - "\u6B66\u5927"
+        - "\u6821\u957F"
+        - "\u5218\u9053\u7389"
+        - "\u633A\u8EAB"
+        - "\u547C\u5401"
+        - "\u6539\u9769"
+        - "\u6539\u9769\u8005"
+        - "\u624B\u4E0B"
+        - "\u7559\u60C5"
+        - "\u624B\u4E0B\u7559\u60C5"
+        name: "\u6B66\u5927\u8001\u6821\u957F\u5218\u9053\u7389\u633A\u8EAB\u547C\u5401\
+          \u5BF9\u6539\u9769\u8005\u624B\u4E0B\u7559\u60C5"
         probability: 1.0
-        url: https://www.rfa.org/mandarin/Xinwen/9-10072021160244.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.rfa.org/mandarin/yataibaodao/zhengzhi/xx-10082021163750.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
+        - "\u9C7F\u9C7C"
+        - "\u6E38\u620F"
+        - "\u5168\u7403"
+        - "\u70ED\u64AD"
+        - "\u6587\u5316"
+        - "\u8F93\u51FA"
+        - "\u5DEE\u8DDD"
+        - "\u5173\u6CE8"
+        name: "\u300A\u9C7F\u9C7C\u6E38\u620F\u300B\u5168\u7403\u70ED\u64AD   \u4E2D\
+          \u97E9\u6587\u5316\u8F93\u51FA\u5DEE\u8DDD\u5F15\u5173\u6CE8"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/yataibaodao/junshiwaijiao/zbt-10082021162720.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u591A\u5BB6"
+        - "\u6B27\u6D32"
+        - "\u4F01\u4E1A"
+        - "\u8003\u8651"
+        - "\u64A4\u51FA"
+        - "\u9999\u6E2F"
+        - "\u6797\u90D1"
+        - "\u8BA4\u4E3A"
+        - "\u91CD\u8981"
+        name: "\u591A\u5BB6\u6B27\u6D32\u4F01\u4E1A\u8003\u8651\u64A4\u51FA\u9999\u6E2F\
+          \ \u6797\u90D1\u8BA4\u4E3A\u4E0D\u91CD\u8981"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/Xinwen/10-10082021161937.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u6C11\u8C03"
+        - "\u663E\u793A"
         - "\u53F0\u6E7E"
-        - "\u53CC\u5341"
+        - "\u8D85\u51FA"
+        - "\u4E00\u534A"
+        - "\u53D7\u8BBF"
+        - "\u53D7\u8BBF\u8005"
+        - "\u8BA4\u4E3A"
+        - "\u53F0\u6D77"
+        - "\u53D1\u751F"
+        - "\u6218\u4E89"
+        name: "\u6C11\u8C03\u663E\u793A\u53F0\u6E7E\u8D85\u51FA\u4E00\u534A\u7684\u53D7\
+          \u8BBF\u8005\u4E0D\u8BA4\u4E3A\u53F0\u6D77\u4F1A\u53D1\u751F\u6218\u4E89"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/Xinwen/9-10082021161910.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u534E\u76DB"
+        - "\u534E\u76DB\u987F"
+        - "\u7B7E\u7F72"
+        - "\u7981\u4EE4"
+        - "\u5E7F\u6838\u65AD"
+        - "\u4F9B\u6838"
+        - "\u539F\u6599"
+        name: "\u534E\u76DB\u987F\u7B7E\u7F72\u7981\u4EE4 \u5411\u4E2D\u5E7F\u6838\
+          \u65AD\u4F9B\u6838\u539F\u6599"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/Xinwen/8-10082021161845.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u88AB\u63A7"
+        - "\u7F51\u4E0A"
+        - "\u5984\u8BAE"
+        - "\u7535\u5F71"
+        - "\u957F\u6D25\u6E56"
+        - "\u51B0\u96D5"
         - "\u4E2D\u56FD"
-        - "\u90A6\u4EA4"
-        - "\u90A6\u4EA4\u56FD"
-        - "\u5927\u4F7F"
-        - "\u73B0\u8EAB"
-        name: "\u53F0\u6E7E\u5E86\u53CC\u5341    \u4E2D\u56FD\u90A6\u4EA4\u56FD\u7684\
-          \u9A7B\u7F8E\u5927\u4F7F\u4E5F\u73B0\u8EAB"
+        - "\u77E5\u540D"
+        - "\u5A92\u4F53"
+        - "\u4EBA\u7F57"
+        - "\u660C\u5E73"
+        - "\u5211\u62D8"
+        name: "\u88AB\u63A7\u7F51\u4E0A\u5984\u8BAE\u7535\u5F71\u300A\u957F\u6D25\u6E56\
+          \u300B\u4E2D\u7684\u201C\u51B0\u96D5\u8FDE\u201D\uFF0C\u4E2D\u56FD\u77E5\
+          \u540D\u5A92\u4F53\u4EBA\u7F57\u660C\u5E73\u906D\u5211\u62D8"
         probability: 1.0
-        url: https://www.rfa.org/mandarin/yataibaodao/gangtai/rc-10072021151620.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.voachinese.com/a/Chinese-journalist-taken-into-custody-over-social-media-post-20211008/6263237.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u4EBA\u6743"
-        - "\u5F8B\u5E08"
-        - "\u5E38\u73AE\u5E73"
-        - "\u9655\u897F"
-        - "\u5730\u65B9"
-        - "\u5730\u65B9\u5B98"
-        - "\u62A5\u590D"
-        - "\u9177\u540F"
-        - "\u540D\u5355"
-        - "\u66DD\u5149"
-        name: "\u4EBA\u6743\u5F8B\u5E08\u5E38\u73AE\u5E73\u906D\u9655\u897F\u5730\u65B9\
-          \u5B98\u62A5\u590D\uFF0C\u9177\u540F\u540D\u5355\u66DD\u5149"
+        - "\u5927\u8981"
+        - "\u6E2F\u5927\u8981"
+        - "\u79FB\u9664"
+        - "\u56FD\u6B87"
+        - "\u4E4B\u67F1"
+        - "\u521B\u4F5C"
+        - "\u4F5C\u8005"
+        - "\u521B\u4F5C\u8005"
+        - "\u65A5\u4E3A"
+        - "\u516D\u56DB"
+        - "\u4EB5\u6E0E"
+        name: "\u6E2F\u5927\u8981\u79FB\u9664\u201C\u56FD\u6B87\u4E4B\u67F1\u201D\
+          \ \u521B\u4F5C\u8005\u65A5\u4E3A\u5BF9\u516D\u56DB\u4EB5\u6E0E"
         probability: 1.0
-        url: https://www.rfa.org/mandarin/yataibaodao/renquanfazhi/xx-10072021151238.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.voachinese.com/a/UKU-Demands-Pillar-Of-Shame-Removed-20211008/6263168.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u5B5F\u665A"
-        - "\u623F\u5B50"
-        - "\u516C\u5F00"
-        - "\u672A\u516C\u5F00"
-        - "\u52A0\u62FF"
-        - "\u52A0\u62FF\u5927"
-        - "\u5173\u7CFB"
-        - "\u96BE\u65AD"
-        name: "\u5B5F\u665A\u821F\u623F\u5B50\u672A\u516C\u5F00\u6302\u5356    \u52A0\
-          \u62FF\u5927\u5173\u7CFB\u96BE\u65AD\uFF1F"
-        probability: 1.0
-        url: https://www.rfa.org/mandarin/yataibaodao/junshiwaijiao/lf-10072021152350.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
+        - "\u5317\u4EAC"
+        - "\u6124\u6012"
         - "\u62A8\u51FB"
-        - "\u4E2D\u56FD"
-        - "\u519B\u673A"
-        - "\u6270\u53F0"
-        - "\u65E0\u52A9"
-        - "\u533A\u57DF"
-        - "\u548C\u5E73"
-        - "\u7A33\u5B9A"
-        name: "\u7F8E\u3001\u82F1\u3001\u5FB7\u62A8\u51FB\u4E2D\u56FD\u519B\u673A\u6270\
-          \u53F0: \u65E0\u52A9\u533A\u57DF\u548C\u5E73\u7A33\u5B9A"
+        - "\u6CD5\u56FD"
+        - "\u53C2\u8BAE"
+        - "\u8BAE\u5458"
+        - "\u53C2\u8BAE\u5458"
+        - "\u575A\u6301"
+        - "\u8BA4\u4E3A"
+        - "\u53F0\u6E7E"
+        - "\u79F0\u4E3A"
+        - "\u56FD\u5BB6"
+        name: "\u4E0D\u7529\u5317\u4EAC\u6124\u6012\u4E0E\u62A8\u51FB \u6CD5\u56FD\
+          \u53C2\u8BAE\u5458\u575A\u6301\u8BA4\u4E3A\u53F0\u6E7E\u5E94\u88AB\u79F0\
+          \u4E3A\u201C\u56FD\u5BB6\u201D"
         probability: 1.0
-        url: https://www.rfa.org/mandarin/yataibaodao/gangtai/cl-10072021140918.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.voachinese.com/a/call-Taiwan-a-country-French-senator-says-angering-China-20211008/6263058.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u4E2D\u60C5"
-        - "\u4E2D\u60C5\u5C40"
-        - "\u6210\u7ACB"
         - "\u4E2D\u56FD"
-        - "\u4EFB\u52A1"
-        - "\u5C0F\u7EC4"
-        - "\u5F62\u5BB9"
-        - "\u4E2D\u56FD"
-        - "\u91CD\u8981"
-        - "\u5730\u7F18"
-        - "\u653F\u6CBB"
-        - "\u5A01\u80C1"
-        name: "\u7F8E\u4E2D\u60C5\u5C40\u5C06\u6210\u7ACB\u201C\u4E2D\u56FD\u4EFB\u52A1\
-          \u5C0F\u7EC4\u201D   \u5F62\u5BB9\u4E2D\u56FD\u662F\u6700\u91CD\u8981\u7684\
-          \u5730\u7F18\u653F\u6CBB\u5A01\u80C1"
+        - "\u7A7A\u519B"
+        - "\u4E2D\u56FD\u7A7A\u519B"
+        - "\u8FC5\u901F"
+        - "\u5D1B\u8D77"
+        - "\u6253\u7834"
+        - "\u7F8E\u56FD"
+        - "\u7A7A\u4E2D"
+        - "\u4F18\u52BF"
+        name: "\u4E2D\u56FD\u7A7A\u519B\u8FC5\u901F\u5D1B\u8D77\u6216\u5DF2\u53EF\u6253\
+          \u7834\u7F8E\u56FD\u7A7A\u4E2D\u4F18\u52BF\uFF1F"
         probability: 1.0
-        url: https://www.rfa.org/mandarin/Xinwen/6-10072021132859.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.voachinese.com/a/china-us-air-force/6263014.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       usagm_fa:
       - campaign: persagg
         description: ''
         keywords:
-        - "\u062C\u0627\u06CC\u0632\u0647"
-        - "\u0635\u0644\u062D"
-        - "\u0646\u0648\u0628\u0644"
+        - "\u0627\u0641\u0632\u0627\u06CC\u0634"
+        - "\u0627\u0642\u0628\u0627\u0644"
         - "\u0628\u0647"
-        - "\u062F\u0648"
-        - "\u0631\u0648\u0632\u0646\u0627\u0645\u0647"
-        - "\u0646\u06AF\u0627\u0631"
-        - "\u0645\u062F\u0627\u0641\u0639"
-        - "\xAB\u0622\u0632\u0627\u062F\u06CC"
-        - "\u0628\u06CC\u0627\u0646\xBB"
-        - "\u0631\u0633\u06CC\u062F"
-        name: "\u062C\u0627\u06CC\u0632\u0647 \u0635\u0644\u062D \u0646\u0648\u0628\
-          \u0644 \u0628\u0647 \u062F\u0648 \u0631\u0648\u0632\u0646\u0627\u0645\u0647\
-          \ \u0646\u06AF\u0627\u0631 \u0645\u062F\u0627\u0641\u0639 \xAB\u0622\u0632\
-          \u0627\u062F\u06CC \u0628\u06CC\u0627\u0646\xBB \u0631\u0633\u06CC\u062F"
+        - "\u0645\u0627\u0634\u06CC\u0646\u200C\u0647\u0627\u06CC"
+        - "\u0642\u0647\u0648\u0647\u200C\u0633\u0627\u0632"
+        - "\u062E\u0627\u0646\u06AF\u06CC"
+        name: "\u0627\u0641\u0632\u0627\u06CC\u0634 \u0627\u0642\u0628\u0627\u0644\
+          \ \u0628\u0647 \u0645\u0627\u0634\u06CC\u0646\u200C\u0647\u0627\u06CC \u0642\
+          \u0647\u0648\u0647\u200C\u0633\u0627\u0632 \u062E\u0627\u0646\u06AF\u06CC"
         probability: 1.0
-        url: https://ir.voanews.com/a/nobel-peace-prize-russia-philippines-journalists/6262735.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0627\u062F\u0627\u0645\u0647"
-        - "\u0645\u062D\u0627\u06A9\u0645\u0647"
-        - "\u062D\u0645\u06CC\u062F"
-        - "\u0646\u0648\u0631\u06CC"
-        - "\u062F\u0631"
-        - "\u0633\u0648\u0626\u062F"
-        - "\u0628\u0647"
-        - "\u0627\u062A\u0647\u0627\u0645"
-        - "\xAB\u0627\u0631\u062A\u06A9\u0627\u0628"
-        - "\u062C\u0646\u0627\u06CC\u062A"
-        - "\u0639\u0644\u06CC\u0647"
-        - "\u0628\u0634\u0631\u06CC\u062A\xBB"
-        name: "\u0627\u062F\u0627\u0645\u0647 \u0645\u062D\u0627\u06A9\u0645\u0647\
-          \ \u062D\u0645\u06CC\u062F \u0646\u0648\u0631\u06CC \u062F\u0631 \u0633\u0648\
-          \u0626\u062F \u0628\u0647 \u0627\u062A\u0647\u0627\u0645 \xAB\u0627\u0631\
-          \u062A\u06A9\u0627\u0628 \u062C\u0646\u0627\u06CC\u062A \u0639\u0644\u06CC\
-          \u0647 \u0628\u0634\u0631\u06CC\u062A\xBB"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/31499682.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/31489586.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -4705,59 +4704,86 @@ featureoptions:
         - "\u0641\u0631\u062F\u0627"
         name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
         probability: 1.0
-        url: https://www.radiofarda.com/a/31475531.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/31477321.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06AF\u0632\u0627\u0631\u0634\u200C\u0647\u0627"
+        - "\u06F1\u06F8:\u06F0\u06F0"
+        name: "\u062E\u0628\u0631\u0647\u0627 \u0648 \u06AF\u0632\u0627\u0631\u0634\
+          \u200C\u0647\u0627 \u06F1\u06F8:\u06F0\u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477316.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0646\u0642\u062F\u06CC\u0646\u06AF\u06CC"
+        - "\u062F\u0631"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u0628\u0647"
+        - "\u0645\u0631\u0632"
+        - "\u0647\u0632\u0627\u0631"
+        - "\u062A\u0631\u06CC\u0644\u06CC\u0648\u0646"
+        - "\u062A\u0648\u0645\u0627\u0646"
+        - "\u0631\u0633\u06CC\u062F"
+        name: "\u0646\u0642\u062F\u06CC\u0646\u06AF\u06CC \u062F\u0631 \u0627\u06CC\
+          \u0631\u0627\u0646 \u0628\u0647 \u0645\u0631\u0632 \u06F4 \u0647\u0632\u0627\
+          \u0631 \u062A\u0631\u06CC\u0644\u06CC\u0648\u0646 \u062A\u0648\u0645\u0627\
+          \u0646 \u0631\u0633\u06CC\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31501045.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477303.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0634\u0634"
+        - "\u0633\u0631\u0628\u0627\u0632"
+        - "\u0633\u0648\u0631\u06CC"
+        - "\u062F\u0631"
+        - "\u062D\u0645\u0644\u0647"
+        - "\u0647\u0648\u0627\u06CC\u06CC"
+        - "\u0627\u0633\u0631\u0627\u0626\u06CC\u0644"
+        - "\u0628\u0647"
         - "\u06CC\u06A9"
-        - "\u0646\u0647\u0627\u062F"
-        - "\u0641\u062F\u0631\u0627\u0644"
-        - "\u0622\u0644\u0645\u0627\u0646"
-        - "\u0634\u0639\u0628\u0647"
-        - "\u0647\u0627\u0645\u0628\u0648\u0631\u06AF"
-        - "\u0628\u0627\u0646\u06A9"
-        - "\u0645\u0644\u06CC"
-        - "\u0627\u06CC\u0631\u0627\u0646"
-        - "\u0631\u0627"
-        - "\u0627\u0632"
-        - "\u0627\u0639\u0637\u0627\u06CC"
-        - "\u0648\u0627\u0645"
-        - "\u0645\u0646\u0639"
-        - "\u06A9\u0631\u062F"
-        name: "\u06CC\u06A9 \u0646\u0647\u0627\u062F \u0641\u062F\u0631\u0627\u0644\
-          \ \u0622\u0644\u0645\u0627\u0646 \u0634\u0639\u0628\u0647 \u0647\u0627\u0645\
-          \u0628\u0648\u0631\u06AF \u0628\u0627\u0646\u06A9 \u0645\u0644\u06CC \u0627\
-          \u06CC\u0631\u0627\u0646 \u0631\u0627 \u0627\u0632 \u0627\u0639\u0637\u0627\
-          \u06CC \u0648\u0627\u0645 \u0645\u0646\u0639 \u06A9\u0631\u062F"
+        - "\u067E\u0627\u06CC\u06AF\u0627\u0647"
+        - "\u0647\u0648\u0627\u06CC\u06CC"
+        - "\u062F\u0631"
+        - "\u062D\u0645\u0635"
+        - "\u0632\u062E\u0645\u06CC"
+        - "\u0634\u062F\u0646\u062F"
+        name: "\u0634\u0634 \u0633\u0631\u0628\u0627\u0632 \u0633\u0648\u0631\u06CC\
+          \ \u062F\u0631 \u062D\u0645\u0644\u0647 \u0647\u0648\u0627\u06CC\u06CC \u0627\
+          \u0633\u0631\u0627\u0626\u06CC\u0644 \u0628\u0647 \u06CC\u06A9 \u067E\u0627\
+          \u06CC\u06AF\u0627\u0647 \u0647\u0648\u0627\u06CC\u06CC \u062F\u0631 \u062D\
+          \u0645\u0635 \u0632\u062E\u0645\u06CC \u0634\u062F\u0646\u062F"
         probability: 1.0
-        url: https://ir.voanews.com/a/germany-iran-melli-bank-hamburg-loan-ban/6262683.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://ir.voanews.com/a/syria-6-troops-wounded-in-airstrike/6264033.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0648\u0632\u06CC\u0631"
-        - "\u062E\u0627\u0631\u062C\u0647"
-        - "\u0627\u06CC\u0631\u0627\u0646:"
-        - "\u0644\u0628\u0646\u0627\u0646"
-        - "\u0645\u06CC\u200C\u062A\u0648\u0627\u0646\u062F"
-        - "\u0645\u0627\u0646\u0646\u062F"
-        - "\u0639\u0631\u0627\u0642"
-        - "\u0627\u0641\u063A\u0627\u0646\u0633\u062A\u0627\u0646"
-        - "\u0627\u0632"
-        - "\u062A\u062D\u0631\u06CC\u0645\u200C\u0647\u0627\u06CC"
-        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
-        - "\u0639\u0644\u06CC\u0647"
-        - "\u0627\u06CC\u0631\u0627\u0646"
-        - "\u0645\u0633\u062A\u062B\u0646\u0627"
-        - "\u0634\u0648\u062F"
-        name: "\u0648\u0632\u06CC\u0631 \u062E\u0627\u0631\u062C\u0647 \u0627\u06CC\
-          \u0631\u0627\u0646: \u0644\u0628\u0646\u0627\u0646 \u0645\u06CC\u200C\u062A\
-          \u0648\u0627\u0646\u062F \u0645\u0627\u0646\u0646\u062F \u0639\u0631\u0627\
-          \u0642 \u0648 \u0627\u0641\u063A\u0627\u0646\u0633\u062A\u0627\u0646 \u0627\
-          \u0632 \u062A\u062D\u0631\u06CC\u0645\u200C\u0647\u0627\u06CC \u0622\u0645\
-          \u0631\u06CC\u06A9\u0627 \u0639\u0644\u06CC\u0647 \u0627\u06CC\u0631\u0627\
-          \u0646 \u0645\u0633\u062A\u062B\u0646\u0627 \u0634\u0648\u062F"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06AF\u0632\u0627\u0631\u0634\u200C\u0647\u0627"
+        - "\u06F1\u06F7:\u06F0\u06F0"
+        name: "\u062E\u0628\u0631\u0647\u0627 \u0648 \u06AF\u0632\u0627\u0631\u0634\
+          \u200C\u0647\u0627 \u06F1\u06F7:\u06F0\u06F0"
         probability: 1.0
-        url: https://www.radiofarda.com/a/31499559.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/31477291.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477288.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -4768,74 +4794,26 @@ featureoptions:
         name: "\u0645\u062C\u0644\u0647 \u0628\u0639\u062F \u0627\u0632 \u0638\u0647\
           \u0631"
         probability: 1.0
-        url: https://www.radiofarda.com/a/31475522.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/31477281.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0645\u062C\u0644\u0633"
-        - "\u0639\u0631\u0627\u0642"
-        - "\u062F\u0631"
-        - "\u0622\u0633\u062A\u0627\u0646\u0647"
-        - "\u0628\u0631\u06AF\u0632\u0627\u0631\u06CC"
-        - "\u0627\u0646\u062A\u062E\u0627\u0628\u0627\u062A"
-        - "\u062A\u0627\u0632\u0647"
-        - "\u0645\u0646\u062D\u0644"
-        - "\u0634\u062F"
-        name: "\u0645\u062C\u0644\u0633 \u0639\u0631\u0627\u0642 \u062F\u0631 \u0622\
-          \u0633\u062A\u0627\u0646\u0647 \u0628\u0631\u06AF\u0632\u0627\u0631\u06CC\
-          \ \u0627\u0646\u062A\u062E\u0627\u0628\u0627\u062A \u062A\u0627\u0632\u0647\
-          \ \u0645\u0646\u062D\u0644 \u0634\u062F"
+        - "\u0628\u0627\u0632\u06CC"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u06A9\u0631\u0647\u200C"
+        - "\u062C\u0646\u0648\u0628\u06CC"
+        - "\xAB\u0627\u062D\u062A\u0645\u0627\u0644\u0627\xBB"
+        - "\u0628\u062F\u0648\u0646"
+        - "\u062A\u0645\u0627\u0634\u0627\u06AF\u0631"
+        - "\u0628\u0631\u06AF\u0632\u0627\u0631"
+        - "\u0645\u06CC\u200C\u0634\u0648\u062F"
+        name: "\u0628\u0627\u0632\u06CC \u0627\u06CC\u0631\u0627\u0646 \u0648 \u06A9\
+          \u0631\u0647\u200C \u062C\u0646\u0648\u0628\u06CC \xAB\u0627\u062D\u062A\
+          \u0645\u0627\u0644\u0627\xBB \u0628\u062F\u0648\u0646 \u062A\u0645\u0627\
+          \u0634\u0627\u06AF\u0631 \u0628\u0631\u06AF\u0632\u0627\u0631 \u0645\u06CC\
+          \u200C\u0634\u0648\u062F"
         probability: 1.0
-        url: https://www.radiofarda.com/a/31499579.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u062C\u0627\u06CC\u0632\u0647"
-        - "\u0646\u0648\u0628\u0644"
-        - "\u0627\u062F\u0628\u06CC"
-        - "\u06F2\u06F0\u06F2\u06F1\u060C"
-        - "\u0645\u0647\u0645\u062A\u0631\u06CC\u0646"
-        - "\u062C\u0627\u06CC\u0632\u0647"
-        - "\u062C\u0647\u0627\u0646"
-        - "\u062F\u0631"
-        - "\u062D\u0648\u0632\u0647"
-        - "\u0627\u062F\u0628\u06CC\u0627\u062A\u060C"
-        - "\u0628\u0647"
-        - "\u06CC\u06A9"
-        - "\u0646\u0648\u06CC\u0633\u0646\u062F\u0647"
-        - "\u0622\u0641\u0631\u06CC\u0642\u0627\u06CC\u06CC"
-        - "\u0627\u0647\u062F\u0627"
-        - "\u0634\u062F."
-        name: "\u062C\u0627\u06CC\u0632\u0647 \u0646\u0648\u0628\u0644 \u0627\u062F\
-          \u0628\u06CC \u06F2\u06F0\u06F2\u06F1\u060C \u0645\u0647\u0645\u062A\u0631\
-          \u06CC\u0646 \u062C\u0627\u06CC\u0632\u0647 \u062C\u0647\u0627\u0646 \u062F\
-          \u0631 \u062D\u0648\u0632\u0647 \u0627\u062F\u0628\u06CC\u0627\u062A\u060C\
-          \ \u0628\u0647 \u06CC\u06A9 \u0646\u0648\u06CC\u0633\u0646\u062F\u0647 \u0622\
-          \u0641\u0631\u06CC\u0642\u0627\u06CC\u06CC \u0627\u0647\u062F\u0627 \u0634\
-          \u062F."
-        probability: 1.0
-        url: https://www.radiofarda.com/a/31499555.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0628\u0627\u0646\u06A9"
-        - "\u0645\u0644\u06CC"
-        - "\u0627\u06CC\u0631\u0627\u0646\u060C"
-        - "\u0634\u0639\u0628\u0647"
-        - "\u0647\u0627\u0645\u0628\u0648\u0631\u06AF\u060C"
-        - "\u0627\u0632"
-        - "\u0627\u0639\u0637\u0627\u06CC"
-        - "\u0627\u0639\u062A\u0628\u0627\u0631\u0627\u062A"
-        - "\u0645\u0627\u0644\u06CC"
-        - "\u0645\u0646\u0639"
-        - "\u0634\u062F"
-        name: "\u0628\u0627\u0646\u06A9 \u0645\u0644\u06CC \u0627\u06CC\u0631\u0627\
-          \u0646\u060C \u0634\u0639\u0628\u0647 \u0647\u0627\u0645\u0628\u0648\u0631\
-          \u06AF\u060C \u0627\u0632 \u0627\u0639\u0637\u0627\u06CC \u0627\u0639\u062A\
-          \u0628\u0627\u0631\u0627\u062A \u0645\u0627\u0644\u06CC \u0645\u0646\u0639\
-          \ \u0634\u062F"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/germany-forbids-bank-melli-from-loaning-sanctions-transparency/31499516.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/31500933.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -4843,25 +4821,7 @@ featureoptions:
         - "\u0641\u0631\u062F\u0627"
         name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
         probability: 1.0
-        url: https://www.radiofarda.com/a/31475517.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0633\u0647\u0645"
-        - "\u0632\u0646\u0627\u0646"
-        - "\u0627\u0632"
-        - "\u06A9\u0627\u0628\u06CC\u0646\u0647"
-        - "\u0637\u0627\u0644\u0628\u0627\u0646\u061B"
-        - "\u06AF\u0641\u062A\u200C\u0648\u06AF\u0648"
-        - "\u0628\u0627"
-        - "\u0630\u0628\u06CC\u062D\u200C\u0627\u0644\u0644\u0647"
-        - "\u0645\u062C\u0627\u0647\u062F"
-        name: "\u0633\u0647\u0645 \u0632\u0646\u0627\u0646 \u0627\u0632 \u06A9\u0627\
-          \u0628\u06CC\u0646\u0647 \u0637\u0627\u0644\u0628\u0627\u0646\u061B \u06AF\
-          \u0641\u062A\u200C\u0648\u06AF\u0648 \u0628\u0627 \u0630\u0628\u06CC\u062D\
-          \u200C\u0627\u0644\u0644\u0647 \u0645\u062C\u0627\u0647\u062F"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/31499508.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/31477267.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -4871,7 +4831,27 @@ featureoptions:
         name: "\u062E\u0628\u0631\u0647\u0627 \u0648 \u06AF\u0632\u0627\u0631\u0634\
           \u200C\u0647\u0627 \u06F1\u06F5:\u06F0\u06F0"
         probability: 1.0
-        url: https://www.radiofarda.com/a/31475507.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/31477263.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u0628\u0648\u0627\u0644\u062D\u0633\u0646"
+        - "\u0628\u0646\u06CC\u200C\u0635\u062F\u0631\u060C"
+        - "\u0646\u062E\u0633\u062A\u06CC\u0646"
+        - "\u0631\u0626\u06CC\u0633"
+        - "\u062C\u0645\u0647\u0648\u0631\u06CC"
+        - "\u0627\u0633\u0644\u0627\u0645\u06CC"
+        - "\u0627\u06CC\u0631\u0627\u0646\u060C"
+        - "\u062F\u0631"
+        - "\u0641\u0631\u0627\u0646\u0633\u0647"
+        - "\u062F\u0631\u06AF\u0630\u0634\u062A"
+        name: "\u0627\u0628\u0648\u0627\u0644\u062D\u0633\u0646 \u0628\u0646\u06CC\
+          \u200C\u0635\u062F\u0631\u060C \u0646\u062E\u0633\u062A\u06CC\u0646 \u0631\
+          \u0626\u06CC\u0633 \u062C\u0645\u0647\u0648\u0631\u06CC \u0627\u0633\u0644\
+          \u0627\u0645\u06CC \u0627\u06CC\u0631\u0627\u0646\u060C \u062F\u0631 \u0641\
+          \u0631\u0627\u0646\u0633\u0647 \u062F\u0631\u06AF\u0630\u0634\u062A"
+        probability: 1.0
+        url: https://ir.voanews.com/a/banisadr-iran-first-president--dies/6263998.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -4880,66 +4860,56 @@ featureoptions:
         - "\u06A9\u0631\u0648\u0646\u0627"
         - "\u062F\u0631"
         - "\u0627\u06CC\u0631\u0627\u0646\u061B"
+        - "\u0634\u0646\u0627\u0633\u0627\u06CC\u06CC"
+        - "\u0628\u06CC\u0634"
+        - "\u0627\u0632"
+        - "\u0647\u0641\u062A"
+        - "\u0647\u0632\u0627\u0631"
+        - "\u0628\u06CC\u0645\u0627\u0631"
+        - "\u062A\u0627\u0632\u0647"
         - "\u0645\u0631\u06AF"
-        - "\u0645\u06CC\u0631"
-        - "\u0631\u0648\u0632\u0627\u0646\u0647"
-        - "\u0628\u0647"
-        - "\u0632\u06CC\u0631"
-        - "\u06F2\u06F0\u06F0"
+        - "\u06F1\u06F7\u06F3"
         - "\u0646\u0641\u0631"
-        - "\u0631\u0633\u06CC\u062F"
         name: "\u0622\u0645\u0627\u0631 \u0631\u0633\u0645\u06CC \u06A9\u0631\u0648\
-          \u0646\u0627 \u062F\u0631 \u0627\u06CC\u0631\u0627\u0646\u061B \u0645\u0631\
-          \u06AF \u0648 \u0645\u06CC\u0631 \u0631\u0648\u0632\u0627\u0646\u0647 \u0628\
-          \u0647 \u0632\u06CC\u0631 \u06F2\u06F0\u06F0 \u0646\u0641\u0631 \u0631\u0633\
-          \u06CC\u062F"
+          \u0646\u0627 \u062F\u0631 \u0627\u06CC\u0631\u0627\u0646\u061B \u0634\u0646\
+          \u0627\u0633\u0627\u06CC\u06CC \u0628\u06CC\u0634 \u0627\u0632 \u0647\u0641\
+          \u062A \u0647\u0632\u0627\u0631 \u0628\u06CC\u0645\u0627\u0631 \u062A\u0627\
+          \u0632\u0647 \u0648 \u0645\u0631\u06AF \u06F1\u06F7\u06F3 \u0646\u0641\u0631"
         probability: 1.0
-        url: https://www.radiofarda.com/a/31499489.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/31500912.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
-        - "\u0641\u0631\u062F\u0627"
-        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/31475503.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0635\u062F\u0627\u0648\u0633\u06CC\u0645\u0627\u06CC"
-        - "\u062C\u0645\u0647\u0648\u0631\u06CC"
-        - "\u0627\u0633\u0644\u0627\u0645\u06CC"
-        - "\u062A\u0646\u0647\u0627"
-        - "\u06CC\u06A9"
-        - "\u0645\u062E\u0627\u0637\u0628"
-        - "\u0627\u0635\u0644\u06CC:"
-        - "\xAB\u0622\u06CC\u062A\u200C\u0627\u0644\u0644\u0647"
-        - "\u062E\u0627\u0645\u0646\u0647\u200C\u200C\u0627\u06CC\xBB"
-        name: "\u0635\u062F\u0627\u0648\u0633\u06CC\u0645\u0627\u06CC \u062C\u0645\
-          \u0647\u0648\u0631\u06CC \u0627\u0633\u0644\u0627\u0645\u06CC \u0648 \u062A\
-          \u0646\u0647\u0627 \u06CC\u06A9 \u0645\u062E\u0627\u0637\u0628 \u0627\u0635\
-          \u0644\u06CC: \xAB\u0622\u06CC\u062A\u200C\u0627\u0644\u0644\u0647 \u062E\
-          \u0627\u0645\u0646\u0647\u200C\u200C\u0627\u06CC\xBB"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/a-state-tv-which-has-only-one-audience-the-supreme-leader/31499395.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u062C\u0627\u0645\u0639\u0647:"
-        - "\u0646\u06AF\u0627\u0647\u06CC"
+        - "\u0641\u0631\u0645\u0627\u0646\u062F\u0647"
+        - "\u067E\u0644\u06CC\u0633"
+        - "\u0627\u06CC\u0631\u0627\u0646:"
+        - "\u0646\u06CC\u0631\u0648\u0647\u0627\u06CC"
+        - "\u062C\u062F\u06CC\u062F"
         - "\u0628\u0647"
-        - "\u0633\u0627\u0646\u0633\u0648\u0631"
-        - "\u062F\u0631"
-        - "\u0631\u0627\u062F\u06CC\u0648"
-        - "\u062A\u0644\u0648\u06CC\u0632\u06CC\u0648\u0646"
-        - "\u062D\u06A9\u0648\u0645\u062A\u06CC"
-        - "\u0627\u06CC\u0631\u0627\u0646"
-        name: "\u062C\u0627\u0645\u0639\u0647: \u0646\u06AF\u0627\u0647\u06CC \u0628\
-          \u0647 \u0633\u0627\u0646\u0633\u0648\u0631 \u062F\u0631 \u0631\u0627\u062F\
-          \u06CC\u0648 \u0648 \u062A\u0644\u0648\u06CC\u0632\u06CC\u0648\u0646 \u062D\
-          \u06A9\u0648\u0645\u062A\u06CC \u0627\u06CC\u0631\u0627\u0646"
+        - "\u0645\u0631\u0632\u0647\u0627\u06CC"
+        - "\u0634\u0645\u0627\u0644"
+        - "\u063A\u0631\u0628\u06CC"
+        - "\u0627\u0639\u0632\u0627\u0645"
+        - "\u0634\u062F\u0646\u062F"
+        name: "\u0641\u0631\u0645\u0627\u0646\u062F\u0647 \u067E\u0644\u06CC\u0633\
+          \ \u0627\u06CC\u0631\u0627\u0646: \u0646\u06CC\u0631\u0648\u0647\u0627\u06CC\
+          \ \u062C\u062F\u06CC\u062F \u0628\u0647 \u0645\u0631\u0632\u0647\u0627\u06CC\
+          \ \u0634\u0645\u0627\u0644 \u063A\u0631\u0628\u06CC \u0627\u0639\u0632\u0627\
+          \u0645 \u0634\u062F\u0646\u062F"
         probability: 1.0
-        url: https://www.radiofarda.com/a/31499391.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/31500854.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0622\u063A\u0627\u0632"
+        - "\u0627\u0646\u062A\u062E\u0627\u0628\u0627\u062A"
+        - "\u067E\u0627\u0631\u0644\u0645\u0627\u0646\u06CC"
+        - "\u0639\u0631\u0627\u0642"
+        name: "\u0622\u063A\u0627\u0632 \u0627\u0646\u062A\u062E\u0627\u0628\u0627\
+          \u062A \u067E\u0627\u0631\u0644\u0645\u0627\u0646\u06CC \u0639\u0631\u0627\
+          \u0642"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500757.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -4947,54 +4917,7 @@ featureoptions:
         - "\u0646\u06CC\u0645\u0631\u0648\u0632\u06CC"
         name: "\u0645\u062C\u0644\u0647 \u0646\u06CC\u0645\u0631\u0648\u0632\u06CC"
         probability: 1.0
-        url: https://www.radiofarda.com/a/31475493.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u06A9\u0631\u0645\u0644\u06CC\u0646"
-        - "\u0627\u0632"
-        - "\u0627\u0647\u062F\u0627\u06CC"
-        - "\u062C\u0627\u06CC\u0632\u0647"
-        - "\u0635\u0644\u062D"
-        - "\u0646\u0648\u0628\u0644"
-        - "\u0628\u0647"
-        - "\u0631\u0648\u0632\u0646\u0627\u0645\u0647\u200C\u0646\u06AF\u0627\u0631"
-        - "\u0645\u0646\u062A\u0642\u062F"
-        - "\u0631\u0648\u0633\u06CC"
-        - "\u0627\u0633\u062A\u0642\u0628\u0627\u0644"
-        - "\u06A9\u0631\u062F"
-        name: "\u06A9\u0631\u0645\u0644\u06CC\u0646 \u0627\u0632 \u0627\u0647\u062F\
-          \u0627\u06CC \u062C\u0627\u06CC\u0632\u0647 \u0635\u0644\u062D \u0646\u0648\
-          \u0628\u0644 \u0628\u0647 \u0631\u0648\u0632\u0646\u0627\u0645\u0647\u200C\
-          \u0646\u06AF\u0627\u0631 \u0645\u0646\u062A\u0642\u062F \u0631\u0648\u0633\
-          \u06CC \u0627\u0633\u062A\u0642\u0628\u0627\u0644 \u06A9\u0631\u062F"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/31499295.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0627\u0628\u0631\u0627\u0632"
-        - "\xAB\u062A\u0627\u0633\u0641"
-        - "\u0639\u0645\u06CC\u0642\xBB"
-        - "\u0627\u062A\u062D\u0627\u062F\u06CC\u0647"
-        - "\u0627\u0631\u0648\u067E\u0627"
-        - "\u0627\u0632"
-        - "\u0639\u062F\u0645"
-        - "\u062A\u0645\u062F\u06CC\u062F"
-        - "\u06A9\u0627\u0631"
-        - "\u06A9\u0627\u0631\u0634\u0646\u0627\u0633\u0627\u0646"
-        - "\u062D\u0642\u0648\u0642"
-        - "\u0628\u0634\u0631"
-        - "\u062F\u0631"
-        - "\u06CC\u0645\u0646"
-        name: "\u0627\u0628\u0631\u0627\u0632 \xAB\u062A\u0627\u0633\u0641 \u0639\u0645\
-          \u06CC\u0642\xBB \u0627\u062A\u062D\u0627\u062F\u06CC\u0647 \u0627\u0631\
-          \u0648\u067E\u0627 \u0627\u0632 \u0639\u062F\u0645 \u062A\u0645\u062F\u06CC\
-          \u062F \u06A9\u0627\u0631 \u06A9\u0627\u0631\u0634\u0646\u0627\u0633\u0627\
-          \u0646 \u062D\u0642\u0648\u0642 \u0628\u0634\u0631 \u062F\u0631 \u06CC\u0645\
-          \u0646"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/eu-un-human-rights-yemen-resolution-rejected/31499335.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/31477254.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -5002,29 +4925,33 @@ featureoptions:
         - "\u0641\u0631\u062F\u0627"
         name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
         probability: 1.0
-        url: https://www.radiofarda.com/a/31475489.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/31477248.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u062F\u0631\u062E\u0648\u0627\u0633\u062A"
-        - "\u0641\u0639\u0627\u0644\u0627\u0646"
-        - "\u062D\u0642\u0648\u0642"
-        - "\u0628\u0634\u0631"
-        - "\u0628\u0631\u0627\u06CC"
-        - "\u0628\u0627\u0632\u062F\u0627\u0634\u062A"
-        - "\u0631\u0626\u064A\u0633\u06CC"
+        - "\u0627\u062F\u0639\u0627\u06CC"
+        - "\u0631\u0626\u064A\u0633"
+        - "\u0633\u0627\u0632\u0645\u0627\u0646"
+        - "\u0632\u0646\u062F\u0627\u0646\u200C\u0647\u0627"
         - "\u062F\u0631"
-        - "\u0635\u0648\u0631\u062A"
-        - "\u0633\u0641\u0631"
+        - "\u0648\u0627\u06A9\u0646\u0634"
         - "\u0628\u0647"
-        - "\u0627\u0633\u06A9\u0627\u062A\u0644\u0646\u062F"
-        name: "\u062F\u0631\u062E\u0648\u0627\u0633\u062A \u0641\u0639\u0627\u0644\
-          \u0627\u0646 \u062D\u0642\u0648\u0642 \u0628\u0634\u0631 \u0628\u0631\u0627\
-          \u06CC \u0628\u0627\u0632\u062F\u0627\u0634\u062A \u0631\u0626\u064A\u0633\
-          \u06CC \u062F\u0631 \u0635\u0648\u0631\u062A \u0633\u0641\u0631 \u0628\u0647\
-          \ \u0627\u0633\u06A9\u0627\u062A\u0644\u0646\u062F"
+        - "\u0636\u0631\u0628"
+        - "\u0634\u062A\u0645"
+        - "\u0632\u0646\u062F\u0627\u0646\u06CC\u0627\u0646"
+        - "\u0633\u06CC\u0627\u0633\u06CC"
+        - "\u062F\u0631"
+        - "\u0632\u0646\u062F\u0627\u0646"
+        - "\u062A\u0647\u0631\u0627\u0646"
+        - "\u0628\u0632\u0631\u06AF"
+        name: "\u0627\u062F\u0639\u0627\u06CC \u0631\u0626\u064A\u0633 \u0633\u0627\
+          \u0632\u0645\u0627\u0646 \u0632\u0646\u062F\u0627\u0646\u200C\u0647\u0627\
+          \ \u062F\u0631 \u0648\u0627\u06A9\u0646\u0634 \u0628\u0647 \u0636\u0631\u0628\
+          \ \u0648 \u0634\u062A\u0645 \u0632\u0646\u062F\u0627\u0646\u06CC\u0627\u0646\
+          \ \u0633\u06CC\u0627\u0633\u06CC \u062F\u0631 \u0632\u0646\u062F\u0627\u0646\
+          \ \u062A\u0647\u0631\u0627\u0646 \u0628\u0632\u0631\u06AF"
         probability: 1.0
-        url: https://www.radiofarda.com/a/iran-raeesi-request-for-arrest-in-scotland-for-cop-climate-genocide/31499187.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/iran-prisons-head-says-political-separate-clashes/31500782.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -5034,30 +4961,161 @@ featureoptions:
         name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F1\u06F3\
           :\u06F0\u06F0"
         probability: 1.0
-        url: https://www.radiofarda.com/a/31475480.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/31477238.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0633\u062E\u0646\u06AF\u0648\u06CC"
-        - "\u0648\u0632\u0627\u0631\u062A"
-        - "\u062E\u0627\u0631\u062C\u0647"
-        - "\u0622\u0645\u0631\u06CC\u06A9\u0627:"
-        - "\u0645\u0639\u062A\u0642\u062F\u06CC\u0645"
-        - "\u0645\u0633\u06CC\u0631"
-        - "\u062F\u06CC\u067E\u0644\u0645\u0627\u0633\u06CC"
-        - "\u0628\u0627"
-        - "\u0627\u06CC\u0631\u0627\u0646"
-        - "\u0647\u0645\u0686\u0646\u0627\u0646"
-        - "\u0628\u0627\u0632"
-        - "\u0627\u0633\u062A"
-        name: "\u0633\u062E\u0646\u06AF\u0648\u06CC \u0648\u0632\u0627\u0631\u062A\
-          \ \u062E\u0627\u0631\u062C\u0647 \u0622\u0645\u0631\u06CC\u06A9\u0627: \u0645\
-          \u0639\u062A\u0642\u062F\u06CC\u0645 \u0645\u0633\u06CC\u0631 \u062F\u06CC\
-          \u067E\u0644\u0645\u0627\u0633\u06CC \u0628\u0627 \u0627\u06CC\u0631\u0627\
-          \u0646 \u0647\u0645\u0686\u0646\u0627\u0646 \u0628\u0627\u0632 \u0627\u0633\
-          \u062A"
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
         probability: 1.0
-        url: https://ir.voanews.com/a/us-ned-price-iran-nuclear-talks/6261684.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/31477234.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062E\u0637"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06F1\u06F2:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F1\u06F2\
+          :\u06F0\u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477226.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u0626\u062A\u0644\u0627\u0641"
+        - "\u062A\u062D\u062A"
+        - "\u0631\u0647\u0628\u0631\u06CC"
+        - "\u0633\u0639\u0648\u062F\u06CC:"
+        - "\u062F\u0631"
+        - "\u062F\u0648"
+        - "\u062D\u0645\u0644\u0647"
+        - "\u067E\u0647\u067E\u0627\u062F\u06CC"
+        - "\u0628\u0647"
+        - "\u0641\u0631\u0648\u062F\u06AF\u0627\u0647"
+        - "\u062C\u06CC\u0632\u0627\u0646"
+        - "\u06F1\u06F0"
+        - "\u0646\u0641\u0631"
+        - "\u0632\u062E\u0645\u06CC"
+        - "\u0634\u062F\u0646\u062F"
+        name: "\u0627\u0626\u062A\u0644\u0627\u0641 \u062A\u062D\u062A \u0631\u0647\
+          \u0628\u0631\u06CC \u0633\u0639\u0648\u062F\u06CC: \u062F\u0631 \u062F\u0648\
+          \ \u062D\u0645\u0644\u0647 \u067E\u0647\u067E\u0627\u062F\u06CC \u0628\u0647\
+          \ \u0641\u0631\u0648\u062F\u06AF\u0627\u0647 \u062C\u06CC\u0632\u0627\u0646\
+          \ \u06F1\u06F0 \u0646\u0641\u0631 \u0632\u062E\u0645\u06CC \u0634\u062F\u0646\
+          \u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/ten-injured-in-two-drone-attacks-saudi/6263914.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u062D\u0645\u0644\u0647"
+        - "\u0645\u0631\u06AF\u0628\u0627\u0631"
+        - "\u0631\u0648\u0632"
+        - "\u062C\u0645\u0639\u0647"
+        - "\u0628\u0647"
+        - "\u0645\u0633\u062C\u062F\u06CC"
+        - "\u062F\u0631"
+        - "\u0642\u0646\u062F\u0648\u0632"
+        - "\u0631\u0627"
+        - "\xAB\u0628\u0647"
+        - "\u0634\u062F\u06CC\u062F\u062A\u0631\u06CC\u0646"
+        - "\u0644\u062D\u0646\xBB"
+        - "\u0645\u062D\u06A9\u0648\u0645"
+        - "\u06A9\u0631\u062F"
+        name: "\u0622\u0645\u0631\u06CC\u06A9\u0627 \u062D\u0645\u0644\u0647 \u0645\
+          \u0631\u06AF\u0628\u0627\u0631 \u0631\u0648\u0632 \u062C\u0645\u0639\u0647\
+          \ \u0628\u0647 \u0645\u0633\u062C\u062F\u06CC \u062F\u0631 \u0642\u0646\u062F\
+          \u0648\u0632 \u0631\u0627 \xAB\u0628\u0647 \u0634\u062F\u06CC\u062F\u062A\
+          \u0631\u06CC\u0646 \u0644\u062D\u0646\xBB \u0645\u062D\u06A9\u0648\u0645\
+          \ \u06A9\u0631\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/6263906.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062C\u0648"
+        - "\u0628\u0627\u06CC\u062F\u0646"
+        - "\u0627\u0648\u0644\u06CC\u0646"
+        - "\u0631\u0626\u06CC\u0633"
+        - "\u062C\u0645\u0647\u0648\u0631\u06CC"
+        - "\u0627\u06CC\u0627\u0644\u0627\u062A"
+        - "\u0645\u062A\u062D\u062F\u0647"
+        - "\u06A9\u0647"
+        - "\u0631\u0648\u0632"
+        - "\u06AF\u0631\u0627\u0645\u06CC\u062F\u0627\u0634\u062A"
+        - "\u0628\u0648\u0645\u06CC\u0627\u0646"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u0631\u0627"
+        - "\u0627\u0639\u0644\u0627\u0645"
+        - "\u06A9\u0631\u062F"
+        name: "\u062C\u0648 \u0628\u0627\u06CC\u062F\u0646 \u0627\u0648\u0644\u06CC\
+          \u0646 \u0631\u0626\u06CC\u0633 \u062C\u0645\u0647\u0648\u0631\u06CC \u0627\
+          \u06CC\u0627\u0644\u0627\u062A \u0645\u062A\u062D\u062F\u0647 \u06A9\u0647\
+          \ \u0631\u0648\u0632 \u06AF\u0631\u0627\u0645\u06CC\u062F\u0627\u0634\u062A\
+          \ \u0628\u0648\u0645\u06CC\u0627\u0646 \u0622\u0645\u0631\u06CC\u06A9\u0627\
+          \ \u0631\u0627 \u0627\u0639\u0644\u0627\u0645 \u06A9\u0631\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/us-biden-indigenous-native-day-proclamation/6263840.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u067E\u0631\u0632\u06CC\u062F\u0646\u062A"
+        - "\u0628\u0627\u06CC\u062F\u0646:"
+        - "\u0628\u0631\u0646\u062F\u06AF\u0627\u0646"
+        - "\u062C\u0627\u06CC\u0632\u0647"
+        - "\u0627\u0645\u0633\u0627\u0644"
+        - "\u0635\u0644\u062D"
+        - "\u0646\u0648\u0628\u0644"
+        - "\u0645\u0627\u0646\u0646\u062F"
+        - "\u0633\u0627\u06CC\u0631"
+        - "\u0631\u0648\u0632\u0646\u0627\u0645\u0647\u200C\u0646\u06AF\u0627\u0631\
+          \u0627\u0646"
+        - "\u062C\u0647\u0627\u0646"
+        - "\u062F\u0631"
+        - "\u062E\u0637"
+        - "\u0645\u0642\u062F\u0645"
+        - "\u0645\u0628\u0627\u0631\u0632\u0647"
+        - "\u0628\u0631\u0627\u06CC"
+        - "\u062D\u0642\u06CC\u0642\u062A"
+        - "\u0647\u0633\u062A\u0646\u062F"
+        name: "\u067E\u0631\u0632\u06CC\u062F\u0646\u062A \u0628\u0627\u06CC\u062F\
+          \u0646: \u0628\u0631\u0646\u062F\u06AF\u0627\u0646 \u062C\u0627\u06CC\u0632\
+          \u0647 \u0627\u0645\u0633\u0627\u0644 \u0635\u0644\u062D \u0646\u0648\u0628\
+          \u0644 \u0645\u0627\u0646\u0646\u062F \u0633\u0627\u06CC\u0631 \u0631\u0648\
+          \u0632\u0646\u0627\u0645\u0647\u200C\u0646\u06AF\u0627\u0631\u0627\u0646\
+          \ \u062C\u0647\u0627\u0646 \u062F\u0631 \u062E\u0637 \u0645\u0642\u062F\u0645\
+          \ \u0645\u0628\u0627\u0631\u0632\u0647 \u0628\u0631\u0627\u06CC \u062D\u0642\
+          \u06CC\u0642\u062A \u0647\u0633\u062A\u0646\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/us-biden-nobel-peace-prize-journalists/6263547.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0642\u0627\u0626\u0645"
+        - "\u0645\u0642\u0627\u0645"
+        - "\u0648\u0632\u06CC\u0631"
+        - "\u062E\u0627\u0631\u062C\u0647"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u0628\u0627"
+        - "\u0645\u0642\u0627\u0645\u200C\u0647\u0627\u06CC"
+        - "\u0627\u0631\u0634\u062F"
+        - "\u067E\u0627\u06A9\u0633\u062A\u0627\u0646"
+        - "\u062F\u0631\u0628\u0627\u0631\u0647"
+        - "\u0648\u0636\u0639\u06CC\u062A"
+        - "\u0627\u0641\u063A\u0627\u0646\u0633\u062A\u0627\u0646"
+        - "\u06AF\u0641\u062A\u200C\u0648\u06AF\u0648"
+        - "\u06A9\u0631\u062F"
+        name: "\u0642\u0627\u0626\u0645 \u0645\u0642\u0627\u0645 \u0648\u0632\u06CC\
+          \u0631 \u062E\u0627\u0631\u062C\u0647 \u0622\u0645\u0631\u06CC\u06A9\u0627\
+          \ \u0628\u0627 \u0645\u0642\u0627\u0645\u200C\u0647\u0627\u06CC \u0627\u0631\
+          \u0634\u062F \u067E\u0627\u06A9\u0633\u062A\u0627\u0646 \u062F\u0631\u0628\
+          \u0627\u0631\u0647 \u0648\u0636\u0639\u06CC\u062A \u0627\u0641\u063A\u0627\
+          \u0646\u0633\u062A\u0627\u0646 \u06AF\u0641\u062A\u200C\u0648\u06AF\u0648\
+          \ \u06A9\u0631\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/us-sherman-pakistan-afghanistan-taliban/6263498.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -5066,57 +5124,7 @@ featureoptions:
         name: "\u0627\u062E\u0628\u0627\u0631 \u0634\u0628\u0627\u0646\u06AF\u0627\
           \u0647\u06CC"
         probability: 1.0
-        url: https://ir.voanews.com/a/6261668.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u062A\u0628\u0644\u062A:"
-        - "\u0637\u0627\u0644\u0628\u0627\u0646"
-        - "\u0648\u0637\u0646\u06CC(\u0627\u0639\u0645"
-        - "\u0627\u0632"
-        - "\u0627\u0635\u0644\u0627\u062D\u200C\u0637\u0644\u0628"
-        - "\u0627\u0635\u0648\u0644\u06AF\u0631\u0627)"
-        - "\u0622\u0646\u0686\u0647"
-        - "\u0628\u0627"
-        - "\u0632\u0646\u0627\u0646"
-        - "\u06A9\u0648\u062F\u06A9\u0627\u0646"
-        - "\u0627\u06CC\u0631\u0627\u0646"
-        - "\u06A9\u0631\u062F\u0646\u062F"
-        name: "\u062A\u0628\u0644\u062A: \u0637\u0627\u0644\u0628\u0627\u0646 \u0648\
-          \u0637\u0646\u06CC(\u0627\u0639\u0645 \u0627\u0632 \u0627\u0635\u0644\u0627\
-          \u062D\u200C\u0637\u0644\u0628 \u0648 \u0627\u0635\u0648\u0644\u06AF\u0631\
-          \u0627) \u0648 \u0622\u0646\u0686\u0647 \u0628\u0627 \u0632\u0646\u0627\u0646\
-          \ \u0648 \u06A9\u0648\u062F\u06A9\u0627\u0646 \u0627\u06CC\u0631\u0627\u0646\
-          \ \u06A9\u0631\u062F\u0646\u062F"
-        probability: 1.0
-        url: https://ir.voanews.com/a/6261637.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u062A\u063A\u06CC\u06CC\u0631\u0627\u062A"
-        - "\u062F\u0631"
-        - "\u0633\u0627\u0632\u0645\u0627\u0646"
-        - "\u0627\u0637\u0644\u0627\u0639\u0627\u062A"
-        - "\u0645\u0631\u06A9\u0632\u06CC"
-        - "\u0622\u0645\u0631\u06CC\u06A9\u0627:"
-        - "\u0645\u0631\u0627\u06A9\u0632"
-        - "\u0627\u06CC\u0631\u0627\u0646"
-        - "\u06A9\u0631\u0647"
-        - "\u0634\u0645\u0627\u0644\u06CC"
-        - "\u062F\u0631"
-        - "\u06AF\u0631\u0648\u0647\u200C\u0647\u0627\u06CC"
-        - "\u0645\u0646\u0637\u0642\u0647\u200C\u0627\u06CC"
-        - "\u0627\u062F\u063A\u0627\u0645"
-        - "\u0645\u06CC\u200C\u0634\u0648\u0646\u062F"
-        name: "\u062A\u063A\u06CC\u06CC\u0631\u0627\u062A \u062F\u0631 \u0633\u0627\
-          \u0632\u0645\u0627\u0646 \u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0645\
-          \u0631\u06A9\u0632\u06CC \u0622\u0645\u0631\u06CC\u06A9\u0627: \u0645\u0631\
-          \u0627\u06A9\u0632 \u0627\u06CC\u0631\u0627\u0646 \u0648 \u06A9\u0631\u0647\
-          \ \u0634\u0645\u0627\u0644\u06CC \u062F\u0631 \u06AF\u0631\u0648\u0647\u200C\
-          \u0647\u0627\u06CC \u0645\u0646\u0637\u0642\u0647\u200C\u0627\u06CC \u0627\
-          \u062F\u063A\u0627\u0645 \u0645\u06CC\u200C\u0634\u0648\u0646\u062F"
-        probability: 1.0
-        url: https://ir.voanews.com/a/us-cia-changes-iran-nkorea-china-mission-centers/6261876.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://ir.voanews.com/a/6263417.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -5139,199 +5147,136 @@ featureoptions:
           \u062A \u0645\u0630\u0647\u0628\u06CC\u061B \u0631\u0627\u0647\u06A9\u0627\
           \u0631 \u062C\u0645\u0647\u0648\u0631\u06CC \u0627\u0633\u0644\u0627\u0645\
           \u06CC \u062F\u0631 \u0628\u0633\u06CC\u0627\u0631\u06CC \u0627\u0632 \u0628\
-          \u062D\u0631\u0627\u0646\u200C\u0647\u0627 - \u06F1"
+          \u062D\u0631\u0627\u0646\u200C\u0647\u0627 - \u06F2"
         probability: 1.0
-        url: https://ir.voanews.com/a/6261592.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://ir.voanews.com/a/6263340.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0646\u06CC\u0631\u0648\u06CC"
-        - "\u062F\u0631\u06CC\u0627\u06CC\u06CC"
-        - "\u0622\u0645\u0631\u06CC\u06A9\u0627:"
-        - "\u062D\u0631\u06A9\u062A"
-        - "\u0645\u062E\u0627\u0637\u0631\u0647\u200C\u0622\u0645\u06CC\u0632\u06CC"
-        - "\u0627\u0632"
-        - "\u0633\u0648\u06CC"
+        - "\u063A\u0632\u0627\u0644\u0647"
+        - "\u062D\u0633\u06CC\u0646\u06CC"
+        - "\u0627\u0648\u0644\u06CC\u0646"
+        - "\u0645\u062F\u0627\u0644"
+        - "\u0632\u0646\u0627\u0646"
+        - "\u0648\u0632\u0646\u0647\u200C\u0628\u0631\u062F\u0627\u0631"
         - "\u0627\u06CC\u0631\u0627\u0646"
         - "\u062F\u0631"
-        - "\u062E\u0644\u06CC\u062C"
-        - "\u0641\u0627\u0631\u0633"
-        - "\u06AF\u0632\u0627\u0631\u0634"
-        - "\u0646\u0634\u062F\u0647"
-        - "\u0627\u0633\u062A"
-        name: "\u0646\u06CC\u0631\u0648\u06CC \u062F\u0631\u06CC\u0627\u06CC\u06CC\
-          \ \u0622\u0645\u0631\u06CC\u06A9\u0627: \u062D\u0631\u06A9\u062A \u0645\u062E\
-          \u0627\u0637\u0631\u0647\u200C\u0622\u0645\u06CC\u0632\u06CC \u0627\u0632\
-          \ \u0633\u0648\u06CC \u0627\u06CC\u0631\u0627\u0646 \u062F\u0631 \u062E\u0644\
-          \u06CC\u062C \u0641\u0627\u0631\u0633 \u06AF\u0632\u0627\u0631\u0634 \u0646\
-          \u0634\u062F\u0647 \u0627\u0633\u062A"
+        - "\u0642\u0647\u0631\u0645\u0627\u0646\u06CC"
+        - "\u0646\u0648\u062C\u0648\u0627\u0646\u0627\u0646"
+        - "\u062C\u0647\u0627\u0646"
+        - "\u0631\u0627"
+        - "\u06A9\u0633\u0628"
+        - "\u06A9\u0631\u062F"
+        name: "\u063A\u0632\u0627\u0644\u0647 \u062D\u0633\u06CC\u0646\u06CC \u0627\
+          \u0648\u0644\u06CC\u0646 \u0645\u062F\u0627\u0644 \u0632\u0646\u0627\u0646\
+          \ \u0648\u0632\u0646\u0647\u200C\u0628\u0631\u062F\u0627\u0631 \u0627\u06CC\
+          \u0631\u0627\u0646 \u062F\u0631 \u0642\u0647\u0631\u0645\u0627\u0646\u06CC\
+          \ \u0646\u0648\u062C\u0648\u0627\u0646\u0627\u0646 \u062C\u0647\u0627\u0646\
+          \ \u0631\u0627 \u06A9\u0633\u0628 \u06A9\u0631\u062F"
         probability: 1.0
-        url: https://ir.voanews.com/a/us-5th-fleet-reaction-iran-state-media-fast-boat-us-navy-voa/6261538.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://ir.voanews.com/a/iran-women-weight-lifting-medal/6263286.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u067E\u0627\u062F\u06A9\u0633\u062A"
-        - "\xAB\u0686\u0627\u06CC"
-        - "\u0628\u0627"
-        - "\u0628\u0646\u0641\u0634\u0647\xBB\u061B"
-        - "\u062F\u0627\u0633\u062A\u0627\u0646\u200C\u0647\u0627\u06CC"
-        - "\u06A9\u0647\u0646"
-        - "\u0627\u06CC\u0631\u0627\u0646\u06CC"
-        - "\u0628\u0627"
-        - "\u0628\u0646\u0641\u0634\u0647"
-        - "\u0637\u0627\u0647\u0631\u06CC\u0627\u0646"
-        - "\u0647\u0646\u0631\u0645\u0646\u062F"
-        - "\u0627\u06CC\u0631\u0627\u0646\u06CC"
-        - "\u0633\u0627\u06A9\u0646"
-        - "\u06A9\u0627\u0646\u0627\u062F\u0627"
-        name: "\u067E\u0627\u062F\u06A9\u0633\u062A \xAB\u0686\u0627\u06CC \u0628\u0627\
-          \ \u0628\u0646\u0641\u0634\u0647\xBB\u061B \u062F\u0627\u0633\u062A\u0627\
-          \u0646\u200C\u0647\u0627\u06CC \u06A9\u0647\u0646 \u0627\u06CC\u0631\u0627\
-          \u0646\u06CC \u0628\u0627 \u0628\u0646\u0641\u0634\u0647 \u0637\u0627\u0647\
-          \u0631\u06CC\u0627\u0646 \u0647\u0646\u0631\u0645\u0646\u062F \u0627\u06CC\
-          \u0631\u0627\u0646\u06CC \u0633\u0627\u06A9\u0646 \u06A9\u0627\u0646\u0627\
-          \u062F\u0627"
+        - "\u06A9\u06CC\u0645"
+        - "\u06A9\u0627\u0631\u062F\u0627\u0634\u06CC\u0627\u0646"
+        - "\u0628\u0631\u0627\u06CC"
+        - "\u0628\u0631\u0646\u0627\u0645\u0647"
+        - "\u0637\u0646\u0632"
+        - "\u062A\u0644\u0648\u06CC\u0632\u06CC\u0648\u0646\u06CC"
+        - "\u0622\u0645\u0627\u062F\u0647"
+        - "\u0645\u06CC\u200C\u0634\u0648\u062F\u061B"
+        - "\u0645\u0646\u062A\u0642\u062F\u0627\u0646"
+        - "\u0645\u06CC\u200C\u06AF\u0648\u06CC\u0646\u062F"
+        - "\xAB\u0634\u0648\u062E\u200C"
+        - "\u0637\u0628\u0639\xBB"
+        - "\u0646\u06CC\u0633\u062A"
+        name: "\u06A9\u06CC\u0645 \u06A9\u0627\u0631\u062F\u0627\u0634\u06CC\u0627\
+          \u0646 \u0628\u0631\u0627\u06CC \u0628\u0631\u0646\u0627\u0645\u0647 \u0637\
+          \u0646\u0632 \u062A\u0644\u0648\u06CC\u0632\u06CC\u0648\u0646\u06CC \u0622\
+          \u0645\u0627\u062F\u0647 \u0645\u06CC\u200C\u0634\u0648\u062F\u061B \u0645\
+          \u0646\u062A\u0642\u062F\u0627\u0646 \u0645\u06CC\u200C\u06AF\u0648\u06CC\
+          \u0646\u062F \xAB\u0634\u0648\u062E\u200C \u0637\u0628\u0639\xBB \u0646\u06CC\
+          \u0633\u062A"
         probability: 1.0
-        url: https://ir.voanews.com/a/banafsheh-taherian-iranian-toronto-podcast-literature-poetry/6261532.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://ir.voanews.com/a/kim-kardashian-preparing-for-snl-hosting-debut/6263318.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
         - "\u0634\u0628"
         name: "\u06F9 \u0634\u0628"
         probability: 1.0
-        url: https://ir.voanews.com/a/6261479.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://ir.voanews.com/a/6263258.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0628\u06CC\u0633\u062A"
-        - "\u067E\u0646\u062C\u0645\u06CC\u0646"
-        - "\u062C\u0644\u0633\u0647"
-        - "\u062F\u0627\u062F\u06AF\u0627\u0647"
-        - "\u062D\u0645\u06CC\u062F"
-        - "\u0646\u0648\u0631\u06CC\u061B"
-        - "\u0634\u0627\u0647\u062F"
-        - "\u0631\u0648\u0627\u06CC\u062A"
-        - "\u062E\u0648\u062F"
+        - "\u0635\u0641\u062D\u0647"
+        - "\u0622\u062E\u0631:"
+        - "\u0645\u0633\u0639\u0648\u062F"
+        - "\u0645\u06CC\u0631\u06A9\u0627\u0638\u0645\u06CC"
+        - "\u0631\u0626\u06CC\u0633"
+        - "\u0633\u0627\u0632\u0645\u0627\u0646"
+        - "\u0628\u0631\u0646\u0627\u0645\u0647"
+        - "\u0628\u0648\u062F\u062C\u0647"
+        - "\u062F\u0648\u0644\u062A"
+        - "\u0631\u0626\u06CC\u0633\u06CC"
         - "\u0631\u0627"
-        - "\u0627\u0632"
-        - "\xAB\u0634\u0628"
-        - "\u0622\u063A\u0627\u0632"
-        - "\u0627\u0639\u062F\u0627\u0645"
-        - "\u0647\u0627\xBB"
-        - "\u0628\u0627\u0632\u06AF\u0648"
-        - "\u06A9\u0631\u062F"
-        name: "\u0628\u06CC\u0633\u062A \u0648 \u067E\u0646\u062C\u0645\u06CC\u0646\
-          \ \u062C\u0644\u0633\u0647 \u062F\u0627\u062F\u06AF\u0627\u0647 \u062D\u0645\
-          \u06CC\u062F \u0646\u0648\u0631\u06CC\u061B \u0634\u0627\u0647\u062F \u0631\
-          \u0648\u0627\u06CC\u062A \u062E\u0648\u062F \u0631\u0627 \u0627\u0632 \xAB\
-          \u0634\u0628 \u0622\u063A\u0627\u0632 \u0627\u0639\u062F\u0627\u0645 \u0647\
-          \u0627\xBB \u0628\u0627\u0632\u06AF\u0648 \u06A9\u0631\u062F"
+        - "\u0628\u0647\u062A\u0631"
+        - "\u0628\u0634\u0646\u0627\u0633\u06CC\u0645"
+        name: "\u0635\u0641\u062D\u0647 \u0622\u062E\u0631: \u0645\u0633\u0639\u0648\
+          \u062F \u0645\u06CC\u0631\u06A9\u0627\u0638\u0645\u06CC \u0631\u0626\u06CC\
+          \u0633 \u0633\u0627\u0632\u0645\u0627\u0646 \u0628\u0631\u0646\u0627\u0645\
+          \u0647 \u0648 \u0628\u0648\u062F\u062C\u0647 \u062F\u0648\u0644\u062A \u0631\
+          \u0626\u06CC\u0633\u06CC \u0631\u0627 \u0628\u0647\u062A\u0631 \u0628\u0634\
+          \u0646\u0627\u0633\u06CC\u0645"
         probability: 1.0
-        url: https://ir.voanews.com/a/iran-nouri-sweden-court-25th-session/6261419.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://ir.voanews.com/a/6263214.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u062A\u0631\u06A9\u06CC\u0647"
-        - "\u0639\u0645\u0644\u06CC\u0627\u062A"
-        - "\u0633\u0627\u062E\u062A"
-        - "\u06F2\u06F0"
-        - "\u06A9\u06CC\u0644\u0648\u0645\u062A\u0631"
-        - "\u062F\u06CC\u0648\u0627\u0631"
-        - "\u0645\u0631\u0632\u06CC"
-        - "\u0628\u0627"
-        - "\u0627\u06CC\u0631\u0627\u0646"
-        - "\u0631\u0627"
-        - "\u0628\u0647"
         - "\u067E\u0627\u06CC\u0627\u0646"
-        - "\u0631\u0633\u0627\u0646\u062F"
-        name: "\u062A\u0631\u06A9\u06CC\u0647 \u0639\u0645\u0644\u06CC\u0627\u062A\
-          \ \u0633\u0627\u062E\u062A \u06F2\u06F0 \u06A9\u06CC\u0644\u0648\u0645\u062A\
-          \u0631 \u062F\u06CC\u0648\u0627\u0631 \u0645\u0631\u0632\u06CC \u0628\u0627\
-          \ \u0627\u06CC\u0631\u0627\u0646 \u0631\u0627 \u0628\u0647 \u067E\u0627\u06CC\
-          \u0627\u0646 \u0631\u0633\u0627\u0646\u062F"
-        probability: 1.0
-        url: https://ir.voanews.com/a/turkey-iran-border-wall-completed/6261449.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u062E\u0628\u0631"
-        name: "\u062E\u0628\u0631 \u06F8"
-        probability: 1.0
-        url: https://ir.voanews.com/a/6261374.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0645\u0627\u062F\u0631"
-        - "\u06CC\u06A9"
-        - "\u0641\u0639\u0627\u0644"
-        - "\u0645\u062F\u0646\u06CC"
-        - "\u0632\u0646\u062F\u0627\u0646\u06CC:"
-        - "\u0627\u06AF\u0631"
-        - "\u0622\u0633\u06CC\u0628"
-        - "\u0646\u0627\u0634\u06CC"
+        - "\u0627\u0646\u062A\u0638\u0627\u0631"
+        - "\u062F\u0648\u0633\u062A\u062F\u0627\u0631\u0627\u0646"
+        - "\xAB\u0627\u062F\u0644\xBB\u061B"
+        - "\u0627\u0648\u0644\u06CC\u0646"
+        - "\u0622\u0644\u0628\u0648\u0645"
+        - "\u062E\u0648\u0627\u0646\u0646\u062F\u0647"
+        - "\u0628\u0631\u06CC\u062A\u0627\u0646\u06CC\u0627\u06CC\u06CC"
+        - "\u067E\u0633"
         - "\u0627\u0632"
-        - "\u0634\u06A9\u0646\u062C\u0647"
-        - "\u0641\u0631\u0632\u0646\u062F\u0645"
-        - "\u062F\u0631\u0645\u0627\u0646"
-        - "\u0646\u0634\u0648\u062F"
-        - "\u0634\u0627\u06CC\u062F"
-        - "\u0628\u0647"
-        - "\u06A9\u0645\u0627"
-        - "\u0628\u0631\u0648\u062F"
-        name: "\u0645\u0627\u062F\u0631 \u06CC\u06A9 \u0641\u0639\u0627\u0644 \u0645\
-          \u062F\u0646\u06CC \u0632\u0646\u062F\u0627\u0646\u06CC: \u0627\u06AF\u0631\
-          \ \u0622\u0633\u06CC\u0628 \u0646\u0627\u0634\u06CC \u0627\u0632 \u0634\u06A9\
-          \u0646\u062C\u0647 \u0641\u0631\u0632\u0646\u062F\u0645 \u062F\u0631\u0645\
-          \u0627\u0646 \u0646\u0634\u0648\u062F \u0634\u0627\u06CC\u062F \u0628\u0647\
-          \ \u06A9\u0645\u0627 \u0628\u0631\u0648\u062F"
+        - "\u0634\u0634"
+        - "\u0633\u0627\u0644"
+        - "\u0645\u0646\u062A\u0634\u0631"
+        - "\u0645\u06CC\u200C\u0634\u0648\u062F"
+        name: "\u067E\u0627\u06CC\u0627\u0646 \u0627\u0646\u062A\u0638\u0627\u0631\
+          \ \u062F\u0648\u0633\u062A\u062F\u0627\u0631\u0627\u0646 \xAB\u0627\u062F\
+          \u0644\xBB\u061B \u0627\u0648\u0644\u06CC\u0646 \u0622\u0644\u0628\u0648\
+          \u0645 \u062E\u0648\u0627\u0646\u0646\u062F\u0647 \u0628\u0631\u06CC\u062A\
+          \u0627\u0646\u06CC\u0627\u06CC\u06CC \u067E\u0633 \u0627\u0632 \u0634\u0634\
+          \ \u0633\u0627\u0644 \u0645\u0646\u062A\u0634\u0631 \u0645\u06CC\u200C\u0634\
+          \u0648\u062F"
         probability: 1.0
-        url: https://ir.voanews.com/a/iran-rights-political-prisoner-saeed-eghbali/6261324.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://ir.voanews.com/a/uk-singer-adele-upcoming-album/6263064.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\xAB\u0644\u062D\u0638\u0647\u200C\u0627\u06CC"
-        - "\u062A\u0627\u0631\u06CC\u062E\u06CC\xBB"
-        - "\u062F\u0631"
-        - "\u0645\u0628\u0627\u0631\u0632\u0647"
-        - "\u0628\u0627"
-        - "\u0645\u0627\u0644\u0627\u0631\u06CC\u0627\u061B"
-        - "\u062F\u0647\u200C\u0647\u0627"
-        - "\u0647\u0632\u0627\u0631"
-        - "\u06A9\u0648\u062F\u06A9"
-        - "\u0628\u0627"
-        - "\u0648\u0627\u06A9\u0633\u0646"
-        - "\u062A\u0627\u06CC\u06CC\u062F\u0634\u062F\u0647"
-        - "\u0646\u062C\u0627\u062A"
-        - "\u0645\u06CC\u200C\u06CC\u0627\u0628\u0646\u062F"
-        name: "\xAB\u0644\u062D\u0638\u0647\u200C\u0627\u06CC \u062A\u0627\u0631\u06CC\
-          \u062E\u06CC\xBB \u062F\u0631 \u0645\u0628\u0627\u0631\u0632\u0647 \u0628\
-          \u0627 \u0645\u0627\u0644\u0627\u0631\u06CC\u0627\u061B \u062F\u0647\u200C\
-          \u0647\u0627 \u0647\u0632\u0627\u0631 \u06A9\u0648\u062F\u06A9 \u0628\u0627\
-          \ \u0648\u0627\u06A9\u0633\u0646 \u062A\u0627\u06CC\u06CC\u062F\u0634\u062F\
-          \u0647 \u0646\u062C\u0627\u062A \u0645\u06CC\u200C\u06CC\u0627\u0628\u0646\
-          \u062F"
+        - "\u062F\u0631\u062E\u0648\u0627\u0633\u062A"
+        - "\u0631\u0626\u06CC\u0633\u06CC"
+        - "\u0627\u0632"
+        - "\u0628\u062E\u0634\u200C\u0647\u0627\u06CC"
+        - "\u0627\u0637\u0644\u0627\u0639\u0627\u062A\u06CC"
+        - "\u0628\u0631\u0627\u06CC"
+        - "\u0634\u0646\u0627\u0633\u0627\u06CC\u06CC"
+        - "\xAB\u062C\u0631\u06CC\u0627\u0646"
+        - "\u0645\u0627\u0641\u06CC\u0627\u06CC\u06CC\xBB"
+        - "\u0642\u0627\u0686\u0627\u0642"
+        name: "\u062F\u0631\u062E\u0648\u0627\u0633\u062A \u0631\u0626\u06CC\u0633\
+          \u06CC \u0627\u0632 \u0628\u062E\u0634\u200C\u0647\u0627\u06CC \u0627\u0637\
+          \u0644\u0627\u0639\u0627\u062A\u06CC\_\u0628\u0631\u0627\u06CC \u0634\u0646\
+          \u0627\u0633\u0627\u06CC\u06CC \xAB\u062C\u0631\u06CC\u0627\u0646 \u0645\
+          \u0627\u0641\u06CC\u0627\u06CC\u06CC\xBB \u0642\u0627\u0686\u0627\u0642"
         probability: 1.0
-        url: https://ir.voanews.com/a/who-world-first-malaria-vaccine-africa/6261268.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0628\u0631\u0631\u0633\u06CC"
-        - "\u062A\u0646\u0634"
-        - "\u0627\u062E\u06CC\u0631"
-        - "\u0645\u06CC\u0627\u0646"
-        - "\u0627\u06CC\u0631\u0627\u0646"
-        - "\u062C\u0645\u0647\u0648\u0631\u06CC"
-        - "\u0622\u0630\u0631\u0628\u0627\u06CC\u062C\u0627\u0646\u061B"
-        - "\u0639\u0648\u0627\u0645\u0644"
-        - "\u067E\u06CC\u0627\u0645\u062F\u0647\u0627"
-        - "\u0686\u06CC\u0633\u062A\u061F"
-        name: "\u0628\u0631\u0631\u0633\u06CC \u062A\u0646\u0634 \u0627\u062E\u06CC\
-          \u0631 \u0645\u06CC\u0627\u0646 \u0627\u06CC\u0631\u0627\u0646 \u0648 \u062C\
-          \u0645\u0647\u0648\u0631\u06CC \u0622\u0630\u0631\u0628\u0627\u06CC\u062C\
-          \u0627\u0646\u061B \u0639\u0648\u0627\u0645\u0644 \u0648 \u067E\u06CC\u0627\
-          \u0645\u062F\u0647\u0627 \u0686\u06CC\u0633\u062A\u061F"
-        probability: 1.0
-        url: https://ir.voanews.com/a/iran-azerbaijan-republic-israel-tension-bloomberg/6261239.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://ir.voanews.com/a/iran-raisi-smuggling-mafia-irgc/6262989.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -5340,83 +5285,1838 @@ featureoptions:
         name: "\u0627\u062E\u0628\u0627\u0631 \u0634\u0627\u0645\u06AF\u0627\u0647\
           \u06CC"
         probability: 1.0
-        url: https://ir.voanews.com/a/6261255.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://ir.voanews.com/a/6263006.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u062F\u0646\u06CC\u0644"
-        - "\u06A9\u0631\u06CC\u06AF"
-        - "\u0628\u0627\u0632\u06CC\u06AF\u0631"
-        - "\u0646\u0642\u0634"
-        - "\xAB\u062C\u06CC\u0645\u0632"
-        - "\u0628\u0627\u0646\u062F\xBB"
-        - "\u0635\u0627\u062D\u0628"
-        - "\u0633\u062A\u0627\u0631\u0647\u200C\u0627\u06CC"
+        - "\u0627\u0646\u0641\u062C\u0627\u0631"
+        - "\u0628\u0645\u0628"
         - "\u062F\u0631"
-        - "\u0628\u0644\u0648\u0627\u0631"
-        - "\u0645\u0634\u0627\u0647\u06CC\u0631"
-        - "\u0647\u0627\u0644\u06CC\u0648\u0648\u062F"
-        - "\u0634\u062F"
-        name: "\u062F\u0646\u06CC\u0644 \u06A9\u0631\u06CC\u06AF \u0628\u0627\u0632\
-          \u06CC\u06AF\u0631 \u0646\u0642\u0634 \xAB\u062C\u06CC\u0645\u0632 \u0628\
-          \u0627\u0646\u062F\xBB \u0635\u0627\u062D\u0628 \u0633\u062A\u0627\u0631\
-          \u0647\u200C\u0627\u06CC \u062F\u0631 \u0628\u0644\u0648\u0627\u0631 \u0645\
-          \u0634\u0627\u0647\u06CC\u0631 \u0647\u0627\u0644\u06CC\u0648\u0648\u062F\
-          \ \u0634\u062F"
+        - "\u0645\u0633\u062C\u062F\u06CC"
+        - "\u062F\u0631"
+        - "\u0627\u0641\u063A\u0627\u0646\u0633\u062A\u0627\u0646"
+        - "\u0628\u06CC\u0634"
+        - "\u0627\u0632"
+        - "\u06CC\u06A9\u0635\u062F"
+        - "\u06A9\u0634\u062A\u0647"
+        - "\u0632\u062E\u0645\u06CC"
+        - "\u0628\u0631\u062C\u0627"
+        - "\u06AF\u0630\u0627\u0634\u062A"
+        name: "\u0627\u0646\u0641\u062C\u0627\u0631 \u0628\u0645\u0628 \u062F\u0631\
+          \ \u0645\u0633\u062C\u062F\u06CC \u062F\u0631 \u0627\u0641\u063A\u0627\u0646\
+          \u0633\u062A\u0627\u0646 \u0628\u06CC\u0634 \u0627\u0632 \u06CC\u06A9\u0635\
+          \u062F \u06A9\u0634\u062A\u0647 \u0648 \u0632\u062E\u0645\u06CC \u0628\u0631\
+          \u062C\u0627 \u06AF\u0630\u0627\u0634\u062A"
         probability: 1.0
-        url: https://ir.voanews.com/a/us-cinema-daniel-craig-james-bond-walk-of-fame-star/6261187.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://ir.voanews.com/a/afghanistan-kunduz-mosque-blast/6262889.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
         - "\u06A9\u0631\u0648\u0646\u0627"
         - "\u062F\u0631"
         - "\u0627\u06CC\u0631\u0627\u0646"
-        - "\u0647\u062C\u0648\u0645"
-        - "\u0632\u0627\u0626\u0631\u0627\u0646"
+        - "\u0646\u06AF\u0631\u0627\u0646\u06CC"
+        - "\u0627\u0632"
+        - "\xAB\u0633\u0647\u0644\u200C\u0627\u0646\u06AF\u0627\u0631\u06CC\xBB"
+        - "\u0648\u0642\u0648\u0639"
+        - "\u0645\u0648\u062C"
+        - "\u0634\u0634\u0645\u061B"
+        - "\u062A\u0632\u0631\u06CC\u0642"
+        - "\u062F\u0632"
+        - "\u06CC\u0627\u062F\u0622\u0648\u0631"
+        - "\u0628\u0627"
+        - "\u0622\u0633\u062A\u0631\u0627\u0632\u0646\u06A9\u0627"
+        - "\u067E\u0627\u0633\u062A\u0648\u06A9\u0648\u0648\u06A9"
+        name: "\u06A9\u0631\u0648\u0646\u0627 \u062F\u0631 \u0627\u06CC\u0631\u0627\
+          \u0646 \u2013 \u0646\u06AF\u0631\u0627\u0646\u06CC \u0627\u0632 \xAB\u0633\
+          \u0647\u0644\u200C\u0627\u0646\u06AF\u0627\u0631\u06CC\xBB \u0648 \u0648\
+          \u0642\u0648\u0639 \u0645\u0648\u062C \u0634\u0634\u0645\u061B \u062A\u0632\
+          \u0631\u06CC\u0642 \u062F\u0632 \u06CC\u0627\u062F\u0622\u0648\u0631 \u0628\
+          \u0627 \u0622\u0633\u062A\u0631\u0627\u0632\u0646\u06A9\u0627 \u0648 \u067E\
+          \u0627\u0633\u062A\u0648\u06A9\u0648\u0648\u06A9"
+        probability: 1.0
+        url: https://ir.voanews.com/a/iran-coronavirus-cases-death-oct8th/6262891.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\xAB\u06AF\u0631\u0648\u0647"
+        - "\u0635\u0646\u0639\u062A\u06CC"
+        - "\u0645\u0627\u0645\u0648\u062A\xBB"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u0627\u0632"
+        - "\u0641\u0647\u0631\u0633\u062A"
+        - "\u062A\u062D\u0631\u06CC\u0645\u200C\u0647\u0627"
+        - "\u062E\u0627\u0631\u062C"
+        - "\u0634\u062F\u061B"
+        - "\u062E\u0632\u0627\u0646\u0647\u200C\u062F\u0627\u0631\u06CC"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627:"
+        - "\u0627\u0631\u062A\u0628\u0627\u0637\u06CC"
         - "\u0628\u0647"
-        - "\u0645\u0634\u0647\u062F\u061B"
+        - "\u0628\u0631\u062C\u0627\u0645"
+        - "\u0646\u062F\u0627\u0631\u062F"
+        name: "\xAB\u06AF\u0631\u0648\u0647 \u0635\u0646\u0639\u062A\u06CC \u0645\u0627\
+          \u0645\u0648\u062A\xBB \u0627\u06CC\u0631\u0627\u0646 \u0627\u0632 \u0641\
+          \u0647\u0631\u0633\u062A \u062A\u062D\u0631\u06CC\u0645\u200C\u0647\u0627\
+          \ \u062E\u0627\u0631\u062C \u0634\u062F\u061B \u062E\u0632\u0627\u0646\u0647\
+          \u200C\u062F\u0627\u0631\u06CC \u0622\u0645\u0631\u06CC\u06A9\u0627: \u0627\
+          \u0631\u062A\u0628\u0627\u0637\u06CC \u0628\u0647 \u0628\u0631\u062C\u0627\
+          \u0645 \u0646\u062F\u0627\u0631\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/us-treasury-ofac-iran-mammut-group-sanctions/6262872.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062F\u06CC\u062F\u0627\u0631"
+        - "\u0633\u0627\u0639\u062A\u0647"
+        - "\u0633\u0627\u0644\u06CC\u0648\u0627\u0646"
+        - "\u062C\u06CC\u0647\u200C\u0686\u06CC"
+        - "\u067E\u0634\u062A"
+        - "\u062F\u0631\u0647\u0627\u06CC"
+        - "\u0628\u0633\u062A\u0647\u061B"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u0628\u0647"
+        - "\u062F\u0646\u0628\u0627\u0644"
+        - "\u0631\u0648\u06CC\u0627\u0631\u0648\u06CC\u06CC"
+        - "\u0628\u0627"
+        - "\u0686\u06CC\u0646"
+        - "\u0646\u06CC\u0633\u062A"
+        name: "\u062F\u06CC\u062F\u0627\u0631 \u06F6 \u0633\u0627\u0639\u062A\u0647\
+          \ \u0633\u0627\u0644\u06CC\u0648\u0627\u0646 \u0648 \u062C\u06CC\u0647\u200C\
+          \u0686\u06CC \u067E\u0634\u062A \u062F\u0631\u0647\u0627\u06CC \u0628\u0633\
+          \u062A\u0647\u061B \u0622\u0645\u0631\u06CC\u06A9\u0627 \u0628\u0647 \u062F\
+          \u0646\u0628\u0627\u0644 \u0631\u0648\u06CC\u0627\u0631\u0648\u06CC\u06CC\
+          \ \u0628\u0627 \u0686\u06CC\u0646 \u0646\u06CC\u0633\u062A"
+        probability: 1.0
+        url: https://ir.voanews.com/a/sullivan-china-us-talks/6262832.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      usagm_fa_weekly:
+      - campaign: persagg
+        description: ''
+        keywords:
         - "\u0627\u0641\u0632\u0627\u06CC\u0634"
-        - "\u0627\u062E\u062A\u0644\u0627\u0644\u0627\u062A"
-        - "\u0631\u0648\u0627\u0646\u06CC"
+        - "\u0627\u0642\u0628\u0627\u0644"
+        - "\u0628\u0647"
+        - "\u0645\u0627\u0634\u06CC\u0646\u200C\u0647\u0627\u06CC"
+        - "\u0642\u0647\u0648\u0647\u200C\u0633\u0627\u0632"
+        - "\u062E\u0627\u0646\u06AF\u06CC"
+        name: "\u0627\u0641\u0632\u0627\u06CC\u0634 \u0627\u0642\u0628\u0627\u0644\
+          \ \u0628\u0647 \u0645\u0627\u0634\u06CC\u0646\u200C\u0647\u0627\u06CC \u0642\
+          \u0647\u0648\u0647\u200C\u0633\u0627\u0632 \u062E\u0627\u0646\u06AF\u06CC"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31489586.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06AF\u0632\u0627\u0631\u0634\u200C\u0647\u0627"
+        - "\u06F1\u06F8:\u06F0\u06F0"
+        name: "\u062E\u0628\u0631\u0647\u0627 \u0648 \u06AF\u0632\u0627\u0631\u0634\
+          \u200C\u0647\u0627 \u06F1\u06F8:\u06F0\u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477316.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0646\u0642\u062F\u06CC\u0646\u06AF\u06CC"
         - "\u062F\u0631"
         - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u0628\u0647"
+        - "\u0645\u0631\u0632"
+        - "\u0647\u0632\u0627\u0631"
+        - "\u062A\u0631\u06CC\u0644\u06CC\u0648\u0646"
+        - "\u062A\u0648\u0645\u0627\u0646"
+        - "\u0631\u0633\u06CC\u062F"
+        name: "\u0646\u0642\u062F\u06CC\u0646\u06AF\u06CC \u062F\u0631 \u0627\u06CC\
+          \u0631\u0627\u0646 \u0628\u0647 \u0645\u0631\u0632 \u06F4 \u0647\u0632\u0627\
+          \u0631 \u062A\u0631\u06CC\u0644\u06CC\u0648\u0646 \u062A\u0648\u0645\u0627\
+          \u0646 \u0631\u0633\u06CC\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31501045.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477303.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0634\u0634"
+        - "\u0633\u0631\u0628\u0627\u0632"
+        - "\u0633\u0648\u0631\u06CC"
+        - "\u062F\u0631"
+        - "\u062D\u0645\u0644\u0647"
+        - "\u0647\u0648\u0627\u06CC\u06CC"
+        - "\u0627\u0633\u0631\u0627\u0626\u06CC\u0644"
+        - "\u0628\u0647"
+        - "\u06CC\u06A9"
+        - "\u067E\u0627\u06CC\u06AF\u0627\u0647"
+        - "\u0647\u0648\u0627\u06CC\u06CC"
+        - "\u062F\u0631"
+        - "\u062D\u0645\u0635"
+        - "\u0632\u062E\u0645\u06CC"
+        - "\u0634\u062F\u0646\u062F"
+        name: "\u0634\u0634 \u0633\u0631\u0628\u0627\u0632 \u0633\u0648\u0631\u06CC\
+          \ \u062F\u0631 \u062D\u0645\u0644\u0647 \u0647\u0648\u0627\u06CC\u06CC \u0627\
+          \u0633\u0631\u0627\u0626\u06CC\u0644 \u0628\u0647 \u06CC\u06A9 \u067E\u0627\
+          \u06CC\u06AF\u0627\u0647 \u0647\u0648\u0627\u06CC\u06CC \u062F\u0631 \u062D\
+          \u0645\u0635 \u0632\u062E\u0645\u06CC \u0634\u062F\u0646\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/syria-6-troops-wounded-in-airstrike/6264033.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06AF\u0632\u0627\u0631\u0634\u200C\u0647\u0627"
+        - "\u06F1\u06F7:\u06F0\u06F0"
+        name: "\u062E\u0628\u0631\u0647\u0627 \u0648 \u06AF\u0632\u0627\u0631\u0634\
+          \u200C\u0647\u0627 \u06F1\u06F7:\u06F0\u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477291.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477288.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u062C\u0644\u0647"
+        - "\u0628\u0639\u062F"
+        - "\u0627\u0632"
+        - "\u0638\u0647\u0631"
+        name: "\u0645\u062C\u0644\u0647 \u0628\u0639\u062F \u0627\u0632 \u0638\u0647\
+          \u0631"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477281.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0628\u0627\u0632\u06CC"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u06A9\u0631\u0647\u200C"
+        - "\u062C\u0646\u0648\u0628\u06CC"
+        - "\xAB\u0627\u062D\u062A\u0645\u0627\u0644\u0627\xBB"
+        - "\u0628\u062F\u0648\u0646"
+        - "\u062A\u0645\u0627\u0634\u0627\u06AF\u0631"
+        - "\u0628\u0631\u06AF\u0632\u0627\u0631"
+        - "\u0645\u06CC\u200C\u0634\u0648\u062F"
+        name: "\u0628\u0627\u0632\u06CC \u0627\u06CC\u0631\u0627\u0646 \u0648 \u06A9\
+          \u0631\u0647\u200C \u062C\u0646\u0648\u0628\u06CC \xAB\u0627\u062D\u062A\
+          \u0645\u0627\u0644\u0627\xBB \u0628\u062F\u0648\u0646 \u062A\u0645\u0627\
+          \u0634\u0627\u06AF\u0631 \u0628\u0631\u06AF\u0632\u0627\u0631 \u0645\u06CC\
+          \u200C\u0634\u0648\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500933.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477267.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06AF\u0632\u0627\u0631\u0634\u200C\u0647\u0627"
+        - "\u06F1\u06F5:\u06F0\u06F0"
+        name: "\u062E\u0628\u0631\u0647\u0627 \u0648 \u06AF\u0632\u0627\u0631\u0634\
+          \u200C\u0647\u0627 \u06F1\u06F5:\u06F0\u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477263.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u0628\u0648\u0627\u0644\u062D\u0633\u0646"
+        - "\u0628\u0646\u06CC\u200C\u0635\u062F\u0631\u060C"
+        - "\u0646\u062E\u0633\u062A\u06CC\u0646"
+        - "\u0631\u0626\u06CC\u0633"
+        - "\u062C\u0645\u0647\u0648\u0631\u06CC"
+        - "\u0627\u0633\u0644\u0627\u0645\u06CC"
+        - "\u0627\u06CC\u0631\u0627\u0646\u060C"
+        - "\u062F\u0631"
+        - "\u0641\u0631\u0627\u0646\u0633\u0647"
+        - "\u062F\u0631\u06AF\u0630\u0634\u062A"
+        name: "\u0627\u0628\u0648\u0627\u0644\u062D\u0633\u0646 \u0628\u0646\u06CC\
+          \u200C\u0635\u062F\u0631\u060C \u0646\u062E\u0633\u062A\u06CC\u0646 \u0631\
+          \u0626\u06CC\u0633 \u062C\u0645\u0647\u0648\u0631\u06CC \u0627\u0633\u0644\
+          \u0627\u0645\u06CC \u0627\u06CC\u0631\u0627\u0646\u060C \u062F\u0631 \u0641\
+          \u0631\u0627\u0646\u0633\u0647 \u062F\u0631\u06AF\u0630\u0634\u062A"
+        probability: 1.0
+        url: https://ir.voanews.com/a/banisadr-iran-first-president--dies/6263998.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0622\u0645\u0627\u0631"
+        - "\u0631\u0633\u0645\u06CC"
+        - "\u06A9\u0631\u0648\u0646\u0627"
+        - "\u062F\u0631"
+        - "\u0627\u06CC\u0631\u0627\u0646\u061B"
+        - "\u0634\u0646\u0627\u0633\u0627\u06CC\u06CC"
+        - "\u0628\u06CC\u0634"
+        - "\u0627\u0632"
+        - "\u0647\u0641\u062A"
+        - "\u0647\u0632\u0627\u0631"
+        - "\u0628\u06CC\u0645\u0627\u0631"
+        - "\u062A\u0627\u0632\u0647"
+        - "\u0645\u0631\u06AF"
+        - "\u06F1\u06F7\u06F3"
+        - "\u0646\u0641\u0631"
+        name: "\u0622\u0645\u0627\u0631 \u0631\u0633\u0645\u06CC \u06A9\u0631\u0648\
+          \u0646\u0627 \u062F\u0631 \u0627\u06CC\u0631\u0627\u0646\u061B \u0634\u0646\
+          \u0627\u0633\u0627\u06CC\u06CC \u0628\u06CC\u0634 \u0627\u0632 \u0647\u0641\
+          \u062A \u0647\u0632\u0627\u0631 \u0628\u06CC\u0645\u0627\u0631 \u062A\u0627\
+          \u0632\u0647 \u0648 \u0645\u0631\u06AF \u06F1\u06F7\u06F3 \u0646\u0641\u0631"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500912.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0641\u0631\u0645\u0627\u0646\u062F\u0647"
+        - "\u067E\u0644\u06CC\u0633"
+        - "\u0627\u06CC\u0631\u0627\u0646:"
+        - "\u0646\u06CC\u0631\u0648\u0647\u0627\u06CC"
+        - "\u062C\u062F\u06CC\u062F"
+        - "\u0628\u0647"
+        - "\u0645\u0631\u0632\u0647\u0627\u06CC"
+        - "\u0634\u0645\u0627\u0644"
+        - "\u063A\u0631\u0628\u06CC"
+        - "\u0627\u0639\u0632\u0627\u0645"
+        - "\u0634\u062F\u0646\u062F"
+        name: "\u0641\u0631\u0645\u0627\u0646\u062F\u0647 \u067E\u0644\u06CC\u0633\
+          \ \u0627\u06CC\u0631\u0627\u0646: \u0646\u06CC\u0631\u0648\u0647\u0627\u06CC\
+          \ \u062C\u062F\u06CC\u062F \u0628\u0647 \u0645\u0631\u0632\u0647\u0627\u06CC\
+          \ \u0634\u0645\u0627\u0644 \u063A\u0631\u0628\u06CC \u0627\u0639\u0632\u0627\
+          \u0645 \u0634\u062F\u0646\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500854.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0622\u063A\u0627\u0632"
+        - "\u0627\u0646\u062A\u062E\u0627\u0628\u0627\u062A"
+        - "\u067E\u0627\u0631\u0644\u0645\u0627\u0646\u06CC"
+        - "\u0639\u0631\u0627\u0642"
+        name: "\u0622\u063A\u0627\u0632 \u0627\u0646\u062A\u062E\u0627\u0628\u0627\
+          \u062A \u067E\u0627\u0631\u0644\u0645\u0627\u0646\u06CC \u0639\u0631\u0627\
+          \u0642"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500757.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u062C\u0644\u0647"
+        - "\u0646\u06CC\u0645\u0631\u0648\u0632\u06CC"
+        name: "\u0645\u062C\u0644\u0647 \u0646\u06CC\u0645\u0631\u0648\u0632\u06CC"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477254.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477248.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u062F\u0639\u0627\u06CC"
+        - "\u0631\u0626\u064A\u0633"
+        - "\u0633\u0627\u0632\u0645\u0627\u0646"
+        - "\u0632\u0646\u062F\u0627\u0646\u200C\u0647\u0627"
+        - "\u062F\u0631"
+        - "\u0648\u0627\u06A9\u0646\u0634"
+        - "\u0628\u0647"
+        - "\u0636\u0631\u0628"
+        - "\u0634\u062A\u0645"
+        - "\u0632\u0646\u062F\u0627\u0646\u06CC\u0627\u0646"
+        - "\u0633\u06CC\u0627\u0633\u06CC"
+        - "\u062F\u0631"
+        - "\u0632\u0646\u062F\u0627\u0646"
+        - "\u062A\u0647\u0631\u0627\u0646"
+        - "\u0628\u0632\u0631\u06AF"
+        name: "\u0627\u062F\u0639\u0627\u06CC \u0631\u0626\u064A\u0633 \u0633\u0627\
+          \u0632\u0645\u0627\u0646 \u0632\u0646\u062F\u0627\u0646\u200C\u0647\u0627\
+          \ \u062F\u0631 \u0648\u0627\u06A9\u0646\u0634 \u0628\u0647 \u0636\u0631\u0628\
+          \ \u0648 \u0634\u062A\u0645 \u0632\u0646\u062F\u0627\u0646\u06CC\u0627\u0646\
+          \ \u0633\u06CC\u0627\u0633\u06CC \u062F\u0631 \u0632\u0646\u062F\u0627\u0646\
+          \ \u062A\u0647\u0631\u0627\u0646 \u0628\u0632\u0631\u06AF"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/iran-prisons-head-says-political-separate-clashes/31500782.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062E\u0637"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06F1\u06F3:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F1\u06F3\
+          :\u06F0\u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477238.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477234.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062E\u0637"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06F1\u06F2:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F1\u06F2\
+          :\u06F0\u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477226.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0641\u06CC\u0633\u200C\u0628\u0648\u06A9"
+        - "\u0628\u0631\u0627\u06CC"
+        - "\u062F\u0648\u0645\u06CC\u0646"
+        - "\u0628\u0627\u0631"
+        - "\u062F\u0631"
+        - "\u06CC\u06A9"
+        - "\u0647\u0641\u062A\u0647"
+        - "\u0645\u062C\u0628\u0648\u0631"
+        - "\u0628\u0647"
+        - "\u0639\u0630\u0631\u062E\u0648\u0627\u0647\u06CC"
+        - "\u0634\u062F"
+        name: "\u0641\u06CC\u0633\u200C\u0628\u0648\u06A9 \u0628\u0631\u0627\u06CC\
+          \ \u062F\u0648\u0645\u06CC\u0646 \u0628\u0627\u0631 \u062F\u0631 \u06CC\u06A9\
+          \ \u0647\u0641\u062A\u0647 \u0645\u062C\u0628\u0648\u0631 \u0628\u0647 \u0639\
+          \u0630\u0631\u062E\u0648\u0627\u0647\u06CC \u0634\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500751.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477219.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062E\u0637"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06F1\u06F1:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F1\u06F1\
+          :\u06F0\u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477208.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u0628\u0648\u0627\u0644\u062D\u0633\u0646"
+        - "\u0628\u0646\u06CC\u200C\u0635\u062F\u0631\u060C"
+        - "\u0627\u0648\u0644\u06CC\u0646"
+        - "\u0631\u0626\u06CC\u0633"
+        - "\u062C\u0645\u0647\u0648\u0631\u06CC"
+        - "\u0627\u0633\u0644\u0627\u0645\u06CC\u060C"
+        - "\u062F\u0631"
+        - "\u067E\u0627\u0631\u06CC\u0633"
+        - "\u062F\u0631\u06AF\u0630\u0634\u062A"
+        name: "\u0627\u0628\u0648\u0627\u0644\u062D\u0633\u0646 \u0628\u0646\u06CC\
+          \u200C\u0635\u062F\u0631\u060C \u0627\u0648\u0644\u06CC\u0646 \u0631\u0626\
+          \u06CC\u0633 \u062C\u0645\u0647\u0648\u0631\u06CC \u0627\u0633\u0644\u0627\
+          \u0645\u06CC\u060C \u062F\u0631 \u067E\u0627\u0631\u06CC\u0633 \u062F\u0631\
+          \u06AF\u0630\u0634\u062A"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/iran-bani-sadr-first-president-islamic-republic-died/31500702.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0648\u0627\u06A9\u0646\u0634"
+        - "\u062A\u0627\u06CC\u0648\u0627\u0646"
+        - "\u0628\u0647"
+        - "\u0633\u062E\u0646\u0631\u0627\u0646\u06CC"
+        - "\u0631\u0626\u06CC\u0633"
+        - "\u062C\u0645\u0647\u0648\u0631\u06CC"
+        - "\u0686\u06CC\u0646:"
+        - "\xAB\u0622\u06CC\u0646\u062F\u0647"
+        - "\u06A9\u0634\u0648\u0631"
+        - "\u062F\u0631"
+        - "\u062F\u0633\u062A"
+        - "\u0645\u0631\u062F\u0645"
+        - "\u0627\u0633\u062A\xBB"
+        name: "\u0648\u0627\u06A9\u0646\u0634 \u062A\u0627\u06CC\u0648\u0627\u0646\
+          \ \u0628\u0647 \u0633\u062E\u0646\u0631\u0627\u0646\u06CC \u0631\u0626\u06CC\
+          \u0633 \u062C\u0645\u0647\u0648\u0631\u06CC \u0686\u06CC\u0646: \xAB\u0622\
+          \u06CC\u0646\u062F\u0647 \u06A9\u0634\u0648\u0631 \u062F\u0631 \u062F\u0633\
+          \u062A \u0645\u0631\u062F\u0645 \u0627\u0633\u062A\xBB"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500681.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0639\u0628\u062F\u0627\u0644\u0631\u0632\u0627\u0642"
+        - "\u0642\u0631\u0646\u062D\u061B"
+        - "\u0633\u06A9\u0648\u062A"
+        - "\u062A\u0628\u0639\u06CC\u062F\u0634\u062F\u06AF\u0627\u0646"
+        - "\u062B\u0631\u0648\u062A"
+        - "\u067E\u0646\u0627\u0647\u062C\u0648\u06CC\u0627\u0646"
+        name: "\u0639\u0628\u062F\u0627\u0644\u0631\u0632\u0627\u0642 \u0642\u0631\
+          \u0646\u062D\u061B \u0633\u06A9\u0648\u062A \u062A\u0628\u0639\u06CC\u062F\
+          \u0634\u062F\u06AF\u0627\u0646 \u0648 \u062B\u0631\u0648\u062A \u067E\u0646\
+          \u0627\u0647\u062C\u0648\u06CC\u0627\u0646"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/gurnah-the-silence-of-the-exiles-and-the-wealth-of-the-asylum-seekers/31499894.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477205.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u06A9\u0631\u0648\u0646\u0627"
+        - "\u0627\u0632"
+        - "\u0645\u06CC\u0627\u0646"
+        - "\u0647\u0646\u0631\u0645\u0646\u062F\u0627\u0646"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u06CC\u06A9"
+        - "\u0642\u0631\u0628\u0627\u0646\u06CC"
+        - "\u062F\u06CC\u06AF\u0631"
+        - "\u06AF\u0631\u0641\u062A:"
+        - "\u0639\u0632\u062A\u200C\u0627\u0644\u0644\u0647"
+        - "\u0645\u0647\u0631\u0622\u0648\u0631\u0627\u0646"
+        name: "\u06A9\u0631\u0648\u0646\u0627 \u0627\u0632 \u0645\u06CC\u0627\u0646\
+          \ \u0647\u0646\u0631\u0645\u0646\u062F\u0627\u0646 \u0627\u06CC\u0631\u0627\
+          \u0646 \u06CC\u06A9 \u0642\u0631\u0628\u0627\u0646\u06CC \u062F\u06CC\u06AF\
+          \u0631 \u06AF\u0631\u0641\u062A: \u0639\u0632\u062A\u200C\u0627\u0644\u0644\
+          \u0647 \u0645\u0647\u0631\u0622\u0648\u0631\u0627\u0646"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500663.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062E\u0637"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06F1\u06F0:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F1\u06F0\
+          :\u06F0\u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477197.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062E\u0637"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06F9:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F9:\u06F0\
+          \u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477181.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0635\u0628\u062D\u0627\u0646\u0647"
+        - "\u0628\u0627"
+        - "\u062E\u0628\u0631"
+        - "\u06F1\u06F7"
+        - "\u0645\u0647\u0631"
+        name: "\u0635\u0628\u062D\u0627\u0646\u0647 \u0628\u0627 \u062E\u0628\u0631\
+          \ \u06F1\u06F7 \u0645\u0647\u0631"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500617.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062E\u0637"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06F8:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F8:\u06F0\
+          \u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477170.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u062D\u0645\u0644\u0647"
+        - "\u0645\u0631\u06AF\u0628\u0627\u0631"
+        - "\u0628\u0647"
+        - "\u0645\u0633\u062C\u062F"
+        - "\u0634\u06CC\u0639\u06CC\u0627\u0646"
+        - "\u062F\u0631"
+        - "\u0627\u0641\u063A\u0627\u0646\u0633\u062A\u0627\u0646"
+        - "\u0631\u0627"
+        - "\u0645\u062D\u06A9\u0648\u0645"
+        - "\u06A9\u0631\u062F"
+        name: "\u0622\u0645\u0631\u06CC\u06A9\u0627 \u062D\u0645\u0644\u0647 \u0645\
+          \u0631\u06AF\u0628\u0627\u0631 \u0628\u0647 \u0645\u0633\u062C\u062F \u0634\
+          \u06CC\u0639\u06CC\u0627\u0646 \u062F\u0631 \u0627\u0641\u063A\u0627\u0646\
+          \u0633\u062A\u0627\u0646 \u0631\u0627 \u0645\u062D\u06A9\u0648\u0645 \u06A9\
+          \u0631\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/us-condemned-attack-afghanistan/31500613.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u0626\u062A\u0644\u0627\u0641"
+        - "\u062A\u062D\u062A"
+        - "\u0631\u0647\u0628\u0631\u06CC"
+        - "\u0633\u0639\u0648\u062F\u06CC:"
+        - "\u062F\u0631"
+        - "\u062F\u0648"
+        - "\u062D\u0645\u0644\u0647"
+        - "\u067E\u0647\u067E\u0627\u062F\u06CC"
+        - "\u0628\u0647"
+        - "\u0641\u0631\u0648\u062F\u06AF\u0627\u0647"
+        - "\u062C\u06CC\u0632\u0627\u0646"
+        - "\u06F1\u06F0"
+        - "\u0646\u0641\u0631"
+        - "\u0632\u062E\u0645\u06CC"
+        - "\u0634\u062F\u0646\u062F"
+        name: "\u0627\u0626\u062A\u0644\u0627\u0641 \u062A\u062D\u062A \u0631\u0647\
+          \u0628\u0631\u06CC \u0633\u0639\u0648\u062F\u06CC: \u062F\u0631 \u062F\u0648\
+          \ \u062D\u0645\u0644\u0647 \u067E\u0647\u067E\u0627\u062F\u06CC \u0628\u0647\
+          \ \u0641\u0631\u0648\u062F\u06AF\u0627\u0647 \u062C\u06CC\u0632\u0627\u0646\
+          \ \u06F1\u06F0 \u0646\u0641\u0631 \u0632\u062E\u0645\u06CC \u0634\u062F\u0646\
+          \u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/ten-injured-in-two-drone-attacks-saudi/6263914.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0635\u0628\u062D\u0627\u0646\u0647"
+        - "\u0628\u0627"
+        - "\u062E\u0628\u0631"
+        name: "\u0635\u0628\u062D\u0627\u0646\u0647 \u0628\u0627 \u062E\u0628\u0631"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477148.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062F\u0631"
+        - "\u062D\u0645\u0644\u0647"
+        - "\u067E\u0647\u067E\u0627\u062F\u06CC"
+        - "\u0628\u0647"
+        - "\u0641\u0631\u0648\u062F\u06AF\u0627\u0647"
+        - "\u062C\u0627\u0632\u0627\u0646"
+        - "\u0639\u0631\u0628\u0633\u062A\u0627\u0646"
+        - "\xAB\u06F1\u06F0"
+        - "\u0646\u0641\u0631"
+        - "\u0632\u062E\u0645\u06CC"
+        - "\u0634\u062F\u0646\u062F\xBB"
+        name: "\u062F\u0631 \u062D\u0645\u0644\u0647 \u067E\u0647\u067E\u0627\u062F\
+          \u06CC \u0628\u0647 \u0641\u0631\u0648\u062F\u06AF\u0627\u0647 \u062C\u0627\
+          \u0632\u0627\u0646 \u0639\u0631\u0628\u0633\u062A\u0627\u0646 \xAB\u06F1\
+          \u06F0 \u0646\u0641\u0631 \u0632\u062E\u0645\u06CC \u0634\u062F\u0646\u062F\
+          \xBB"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/saudi-airport-attacked-by-houthi/31500600.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u062D\u0645\u0644\u0647"
+        - "\u0645\u0631\u06AF\u0628\u0627\u0631"
+        - "\u0631\u0648\u0632"
+        - "\u062C\u0645\u0639\u0647"
+        - "\u0628\u0647"
+        - "\u0645\u0633\u062C\u062F\u06CC"
+        - "\u062F\u0631"
+        - "\u0642\u0646\u062F\u0648\u0632"
+        - "\u0631\u0627"
+        - "\xAB\u0628\u0647"
+        - "\u0634\u062F\u06CC\u062F\u062A\u0631\u06CC\u0646"
+        - "\u0644\u062D\u0646\xBB"
+        - "\u0645\u062D\u06A9\u0648\u0645"
+        - "\u06A9\u0631\u062F"
+        name: "\u0622\u0645\u0631\u06CC\u06A9\u0627 \u062D\u0645\u0644\u0647 \u0645\
+          \u0631\u06AF\u0628\u0627\u0631 \u0631\u0648\u0632 \u062C\u0645\u0639\u0647\
+          \ \u0628\u0647 \u0645\u0633\u062C\u062F\u06CC \u062F\u0631 \u0642\u0646\u062F\
+          \u0648\u0632 \u0631\u0627 \xAB\u0628\u0647 \u0634\u062F\u06CC\u062F\u062A\
+          \u0631\u06CC\u0646 \u0644\u062D\u0646\xBB \u0645\u062D\u06A9\u0648\u0645\
+          \ \u06A9\u0631\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/6263906.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062E\u0637"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06F6:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F6:\u06F0\
+          \u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477145.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477143.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062E\u0637"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06F5:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F5:\u06F0\
+          \u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477141.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477140.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062E\u0637"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06F4:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F4:\u06F0\
+          \u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477137.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477136.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062C\u0648"
+        - "\u0628\u0627\u06CC\u062F\u0646"
+        - "\u0627\u0648\u0644\u06CC\u0646"
+        - "\u0631\u0626\u06CC\u0633"
+        - "\u062C\u0645\u0647\u0648\u0631\u06CC"
+        - "\u0627\u06CC\u0627\u0644\u0627\u062A"
+        - "\u0645\u062A\u062D\u062F\u0647"
+        - "\u06A9\u0647"
+        - "\u0631\u0648\u0632"
+        - "\u06AF\u0631\u0627\u0645\u06CC\u062F\u0627\u0634\u062A"
+        - "\u0628\u0648\u0645\u06CC\u0627\u0646"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u0631\u0627"
+        - "\u0627\u0639\u0644\u0627\u0645"
+        - "\u06A9\u0631\u062F"
+        name: "\u062C\u0648 \u0628\u0627\u06CC\u062F\u0646 \u0627\u0648\u0644\u06CC\
+          \u0646 \u0631\u0626\u06CC\u0633 \u062C\u0645\u0647\u0648\u0631\u06CC \u0627\
+          \u06CC\u0627\u0644\u0627\u062A \u0645\u062A\u062D\u062F\u0647 \u06A9\u0647\
+          \ \u0631\u0648\u0632 \u06AF\u0631\u0627\u0645\u06CC\u062F\u0627\u0634\u062A\
+          \ \u0628\u0648\u0645\u06CC\u0627\u0646 \u0622\u0645\u0631\u06CC\u06A9\u0627\
+          \ \u0631\u0627 \u0627\u0639\u0644\u0627\u0645 \u06A9\u0631\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/us-biden-indigenous-native-day-proclamation/6263840.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0631\u0648\u06CC\u062A\u0631\u0632:"
+        - "\u06CC\u06A9"
+        - "\u0647\u06CC\u0627\u062A"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627\u06CC\u06CC"
+        - "\u0628\u0627"
+        - "\u0645\u0642\u0627\u0645\u0627\u062A"
+        - "\u0627\u0631\u0634\u062F"
+        - "\u0637\u0627\u0644\u0628\u0627\u0646"
+        - "\u062F\u0631"
+        - "\u062F\u0648\u062D\u0647"
+        - "\u062F\u06CC\u062F\u0627\u0631"
+        - "\u0645\u06CC\u200C\u06A9\u0646\u062F"
+        name: "\u0631\u0648\u06CC\u062A\u0631\u0632: \u06CC\u06A9 \u0647\u06CC\u0627\
+          \u062A \u0622\u0645\u0631\u06CC\u06A9\u0627\u06CC\u06CC \u0628\u0627 \u0645\
+          \u0642\u0627\u0645\u0627\u062A \u0627\u0631\u0634\u062F \u0637\u0627\u0644\
+          \u0628\u0627\u0646 \u062F\u0631 \u062F\u0648\u062D\u0647 \u062F\u06CC\u062F\
+          \u0627\u0631 \u0645\u06CC\u200C\u06A9\u0646\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/taliban-us-talk-qatar-delegation/31500198.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062E\u0637"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06F3:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F3:\u06F0\
+          \u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477133.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u067E\u0631\u0632\u06CC\u062F\u0646\u062A"
+        - "\u0628\u0627\u06CC\u062F\u0646:"
+        - "\u0628\u0631\u0646\u062F\u06AF\u0627\u0646"
+        - "\u062C\u0627\u06CC\u0632\u0647"
+        - "\u0627\u0645\u0633\u0627\u0644"
+        - "\u0635\u0644\u062D"
+        - "\u0646\u0648\u0628\u0644"
+        - "\u0645\u0627\u0646\u0646\u062F"
+        - "\u0633\u0627\u06CC\u0631"
+        - "\u0631\u0648\u0632\u0646\u0627\u0645\u0647\u200C\u0646\u06AF\u0627\u0631\
+          \u0627\u0646"
+        - "\u062C\u0647\u0627\u0646"
+        - "\u062F\u0631"
+        - "\u062E\u0637"
+        - "\u0645\u0642\u062F\u0645"
+        - "\u0645\u0628\u0627\u0631\u0632\u0647"
+        - "\u0628\u0631\u0627\u06CC"
+        - "\u062D\u0642\u06CC\u0642\u062A"
+        - "\u0647\u0633\u062A\u0646\u062F"
+        name: "\u067E\u0631\u0632\u06CC\u062F\u0646\u062A \u0628\u0627\u06CC\u062F\
+          \u0646: \u0628\u0631\u0646\u062F\u06AF\u0627\u0646 \u062C\u0627\u06CC\u0632\
+          \u0647 \u0627\u0645\u0633\u0627\u0644 \u0635\u0644\u062D \u0646\u0648\u0628\
+          \u0644 \u0645\u0627\u0646\u0646\u062F \u0633\u0627\u06CC\u0631 \u0631\u0648\
+          \u0632\u0646\u0627\u0645\u0647\u200C\u0646\u06AF\u0627\u0631\u0627\u0646\
+          \ \u062C\u0647\u0627\u0646 \u062F\u0631 \u062E\u0637 \u0645\u0642\u062F\u0645\
+          \ \u0645\u0628\u0627\u0631\u0632\u0647 \u0628\u0631\u0627\u06CC \u062D\u0642\
+          \u06CC\u0642\u062A \u0647\u0633\u062A\u0646\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/us-biden-nobel-peace-prize-journalists/6263547.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477132.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062E\u0637"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06F2:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F2:\u06F0\
+          \u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477130.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u0628\u0647\u0627\u0645"
+        - "\u062F\u0631\u0628\u0627\u0631\u0647"
+        - "\u0633\u0631\u0646\u0648\u0634\u062A"
+        - "\u0645\u0630\u0627\u06A9\u0631\u0647\u200C\u0647\u0627\u06CC"
+        - "\u0647\u0633\u062A\u0647\u200C\u0627\u06CC"
+        name: "\u0627\u0628\u0647\u0627\u0645 \u062F\u0631\u0628\u0627\u0631\u0647\
+          \ \u0633\u0631\u0646\u0648\u0634\u062A \u0645\u0630\u0627\u06A9\u0631\u0647\
+          \u200C\u0647\u0627\u06CC \u0647\u0633\u062A\u0647\u200C\u0627\u06CC"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500083.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u0641\u0632\u0627\u06CC\u0634"
+        - "\u062A\u0646\u0634\u200C\u0647\u0627"
+        - "\u0628\u06CC\u0646"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u0686\u06CC\u0646\u060C"
+        - "\u0628\u0631\u200C\u0633\u0631"
+        - "\u062A\u0627\u06CC\u0648\u0627\u0646"
+        name: "\u0627\u0641\u0632\u0627\u06CC\u0634 \u062A\u0646\u0634\u200C\u0647\
+          \u0627 \u0628\u06CC\u0646 \u0622\u0645\u0631\u06CC\u06A9\u0627 \u0648 \u0686\
+          \u06CC\u0646\u060C \u0628\u0631\u200C\u0633\u0631 \u062A\u0627\u06CC\u0648\
+          \u0627\u0646"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500080.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u062C\u0631\u0627\u06CC"
+        - "\u06CC\u06A9"
+        - "\u06AF\u0631\u0648\u0647"
+        - "\u062A\u0626\u0627\u062A\u0631"
+        - "\u0627\u06CC\u0631\u0627\u0646\u06CC"
+        - "\u062F\u0631"
+        - "\u067E\u0627\u06CC\u062A\u062E\u062A"
+        - "\u0627\u0648\u06A9\u0631\u0627\u06CC\u0646"
+        name: "\u0627\u062C\u0631\u0627\u06CC \u06CC\u06A9 \u06AF\u0631\u0648\u0647\
+          \ \u062A\u0626\u0627\u062A\u0631 \u0627\u06CC\u0631\u0627\u0646\u06CC \u062F\
+          \u0631 \u067E\u0627\u06CC\u062A\u062E\u062A \u0627\u0648\u06A9\u0631\u0627\
+          \u06CC\u0646"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500040.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u0646\u062A\u0642\u0627\u062F"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u0627\u0632"
+        - "\u0627\u0631\u0633\u0627\u0644"
+        - "\u0645\u062D\u0645\u0648\u0644\u0647\u200C\u0647\u0627\u06CC"
+        - "\u0633\u0648\u062E\u062A"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u0628\u0631\u0627\u06CC"
+        - "\u0644\u0628\u0646\u0627\u0646"
+        name: "\u0627\u0646\u062A\u0642\u0627\u062F \u0622\u0645\u0631\u06CC\u06A9\
+          \u0627 \u0627\u0632 \u0627\u0631\u0633\u0627\u0644 \u0645\u062D\u0645\u0648\
+          \u0644\u0647\u200C\u0647\u0627\u06CC \u0633\u0648\u062E\u062A \u0627\u06CC\
+          \u0631\u0627\u0646 \u0628\u0631\u0627\u06CC \u0644\u0628\u0646\u0627\u0646"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500038.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062C\u0645\u0647\u0648\u0631\u06CC"
+        - "\u0627\u0633\u0644\u0627\u0645\u06CC"
+        - "\u0628\u0631\u0627\u06CC"
+        - "\u0645\u0630\u0627\u06A9\u0631\u0647"
+        - "\u0647\u0633\u062A\u0647\u200C\u0627\u06CC"
+        - "\u0639\u062C\u0644\u0647"
+        - "\u0646\u0645\u06CC\u200C\u06A9\u0646\u062F"
+        name: "\u062C\u0645\u0647\u0648\u0631\u06CC \u0627\u0633\u0644\u0627\u0645\
+          \u06CC \u0628\u0631\u0627\u06CC \u0645\u0630\u0627\u06A9\u0631\u0647 \u0647\
+          \u0633\u062A\u0647\u200C\u0627\u06CC \u0639\u062C\u0644\u0647 \u0646\u0645\
+          \u06CC\u200C\u06A9\u0646\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500089.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u062C\u0627\u0632\u0627\u062A"
+        - "\u0627\u0639\u062F\u0627\u0645"
+        - "\u0631\u0627"
+        - "\u067E\u0627\u06CC\u0627\u0646"
+        - "\u062F\u0647\u06CC\u062F"
+        name: "\u0645\u062C\u0627\u0632\u0627\u062A \u0627\u0639\u062F\u0627\u0645\
+          \ \u0631\u0627 \u067E\u0627\u06CC\u0627\u0646 \u062F\u0647\u06CC\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500093.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u06AF\u0631\u0627\u0646\u06CC"
+        - "\u0627\u0641\u0632\u0627\u06CC\u0634"
+        - "\u062A\u0648\u0631\u0645"
+        - "\u062F\u0631"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u0647\u0645\u0686\u0646\u0627\u0646"
+        - "\u0627\u062F\u0627\u0645\u0647"
+        - "\u062F\u0627\u0631\u062F"
+        name: "\u06AF\u0631\u0627\u0646\u06CC \u0648 \u0627\u0641\u0632\u0627\u06CC\
+          \u0634 \u062A\u0648\u0631\u0645 \u062F\u0631 \u0627\u06CC\u0631\u0627\u0646\
+          \ \u0647\u0645\u0686\u0646\u0627\u0646 \u0627\u062F\u0627\u0645\u0647 \u062F\
+          \u0627\u0631\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500110.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0646\u06AF\u0627\u0647\u06CC"
+        - "\u0628\u0647"
+        - "\u0631\u0648\u0632\u0646\u0627\u0645\u0647\u200C\u0647\u0627"
+        - "\u0646\u0634\u0631\u06CC\u0627\u062A"
+        - "\u0627\u0645\u0631\u0648\u0632"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        name: "\u0646\u06AF\u0627\u0647\u06CC \u0628\u0647 \u0631\u0648\u0632\u0646\
+          \u0627\u0645\u0647\u200C\u0647\u0627 \u0648 \u0646\u0634\u0631\u06CC\u0627\
+          \u062A \u0627\u0645\u0631\u0648\u0632 \u0627\u06CC\u0631\u0627\u0646"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500042.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u06CC\u06A9\u0633\u0627\u0644"
         - "\u067E\u0633"
         - "\u0627\u0632"
-        - "\u0634\u06CC\u0648\u0639"
-        - "\u06A9\u0631\u0648\u0646\u0627"
-        name: "\u06A9\u0631\u0648\u0646\u0627 \u062F\u0631 \u0627\u06CC\u0631\u0627\
-          \u0646 - \u0647\u062C\u0648\u0645 \u0632\u0627\u0626\u0631\u0627\u0646 \u0628\
-          \u0647 \u0645\u0634\u0647\u062F\u061B \u0627\u0641\u0632\u0627\u06CC\u0634\
-          \ \u0627\u062E\u062A\u0644\u0627\u0644\u0627\u062A \u0631\u0648\u0627\u0646\
-          \u06CC \u062F\u0631 \u0627\u06CC\u0631\u0627\u0646 \u067E\u0633 \u0627\u0632\
-          \ \u0634\u06CC\u0648\u0639 \u06A9\u0631\u0648\u0646\u0627"
+        - "\u0645\u0631\u06AF"
+        - "\u062E\u0633\u0631\u0648\u06CC"
+        - "\u0622\u0648\u0627\u0632"
+        name: "\u06CC\u06A9\u0633\u0627\u0644 \u067E\u0633 \u0627\u0632 \u0645\u0631\
+          \u06AF \u062E\u0633\u0631\u0648\u06CC \u0622\u0648\u0627\u0632"
         probability: 1.0
-        url: https://ir.voanews.com/a/iran-coronavirus-cases-death-oct7th/6261121.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/31500044.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0631\u0627\u0628\u0631\u062A"
-        - "\u0645\u0627\u0644\u06CC"
-        - "\u062E\u0648\u0627\u0647\u0627\u0646"
-        - "\u0627\u062F\u0627\u0645\u0647"
-        - "\u0646\u0642\u0634"
-        - "\xAB\u0633\u0627\u0632\u0646\u062F\u0647\xBB"
-        - "\u0633\u0626\u0648\u0644"
-        - "\u0628\u0631\u0627\u06CC"
-        - "\u0627\u0632"
-        - "\u0633\u0631\u06AF\u06CC\u0631\u06CC"
-        - "\u0645\u0630\u0627\u06A9\u0631\u0627\u062A"
-        - "\u0628\u0631\u062C\u0627\u0645"
-        - "\u0634\u062F"
-        name: "\u0631\u0627\u0628\u0631\u062A \u0645\u0627\u0644\u06CC \u062E\u0648\
-          \u0627\u0647\u0627\u0646 \u0627\u062F\u0627\u0645\u0647 \u0646\u0642\u0634\
-          \ \xAB\u0633\u0627\u0632\u0646\u062F\u0647\xBB \u0633\u0626\u0648\u0644\
-          \ \u0628\u0631\u0627\u06CC \u0627\u0632 \u0633\u0631\u06AF\u06CC\u0631\u06CC\
-          \ \u0645\u0630\u0627\u06A9\u0631\u0627\u062A \u0628\u0631\u062C\u0627\u0645\
-          \ \u0634\u062F"
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
         probability: 1.0
-        url: https://ir.voanews.com/a/us-malley-skorea-vice-fm-iran-jcpoa-talks/6261066.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      usagm_fa_weekly:
+        url: https://www.radiofarda.com/a/31477128.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0628\u0634\u0627\u0631"
+        - "\u0627\u0633\u062F"
+        - "\u0628\u0647"
+        - "\u0639\u0645\u0648\u06CC"
+        - "\u062A\u0628\u0639\u06CC\u062F\u06CC"
+        - "\u062E\u0648\u062F"
+        - "\xAB\u0627\u062C\u0627\u0632\u0647"
+        - "\u062F\u0627\u062F"
+        - "\u0628\u0647"
+        - "\u0633\u0648\u0631\u06CC\u0647"
+        - "\u0628\u0627\u0632\u06AF\u0631\u062F\u062F\xBB"
+        name: "\u0628\u0634\u0627\u0631 \u0627\u0633\u062F \u0628\u0647 \u0639\u0645\
+          \u0648\u06CC \u062A\u0628\u0639\u06CC\u062F\u06CC \u062E\u0648\u062F \xAB\
+          \u0627\u062C\u0627\u0632\u0647 \u062F\u0627\u062F \u0628\u0647 \u0633\u0648\
+          \u0631\u06CC\u0647 \u0628\u0627\u0632\u06AF\u0631\u062F\u062F\xBB"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/rifaat-assad-returened-syria/31500180.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0642\u0627\u0626\u0645"
+        - "\u0645\u0642\u0627\u0645"
+        - "\u0648\u0632\u06CC\u0631"
+        - "\u062E\u0627\u0631\u062C\u0647"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u0628\u0627"
+        - "\u0645\u0642\u0627\u0645\u200C\u0647\u0627\u06CC"
+        - "\u0627\u0631\u0634\u062F"
+        - "\u067E\u0627\u06A9\u0633\u062A\u0627\u0646"
+        - "\u062F\u0631\u0628\u0627\u0631\u0647"
+        - "\u0648\u0636\u0639\u06CC\u062A"
+        - "\u0627\u0641\u063A\u0627\u0646\u0633\u062A\u0627\u0646"
+        - "\u06AF\u0641\u062A\u200C\u0648\u06AF\u0648"
+        - "\u06A9\u0631\u062F"
+        name: "\u0642\u0627\u0626\u0645 \u0645\u0642\u0627\u0645 \u0648\u0632\u06CC\
+          \u0631 \u062E\u0627\u0631\u062C\u0647 \u0622\u0645\u0631\u06CC\u06A9\u0627\
+          \ \u0628\u0627 \u0645\u0642\u0627\u0645\u200C\u0647\u0627\u06CC \u0627\u0631\
+          \u0634\u062F \u067E\u0627\u06A9\u0633\u062A\u0627\u0646 \u062F\u0631\u0628\
+          \u0627\u0631\u0647 \u0648\u0636\u0639\u06CC\u062A \u0627\u0641\u063A\u0627\
+          \u0646\u0633\u062A\u0627\u0646 \u06AF\u0641\u062A\u200C\u0648\u06AF\u0648\
+          \ \u06A9\u0631\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/us-sherman-pakistan-afghanistan-taliban/6263498.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062E\u0637"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06F1:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F1:\u06F0\
+          \u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477117.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0648\u0631\u06CC\u0647"
+        - "\u0627\u0632"
+        - "\u062F\u0641\u0639"
+        - "\u062D\u0645\u0644\u0647"
+        - "\u0647\u0648\u0627\u06CC\u06CC"
+        - "\u0627\u0633\u0631\u0627\u0626\u06CC\u0644"
+        - "\u0628\u0647"
+        - "\u06CC\u06A9"
+        - "\u067E\u0627\u06CC\u06AF\u0627\u0647"
+        - "\u0646\u0638\u0627\u0645\u06CC"
+        - "\u062F\u0631"
+        - "\u062D\u0645\u0635"
+        - "\u062E\u0628\u0631"
+        - "\u062F\u0627\u062F"
+        name: "\u0633\u0648\u0631\u06CC\u0647 \u0627\u0632 \u062F\u0641\u0639 \u062D\
+          \u0645\u0644\u0647 \u0647\u0648\u0627\u06CC\u06CC \u0627\u0633\u0631\u0627\
+          \u0626\u06CC\u0644 \u0628\u0647 \u06CC\u06A9 \u067E\u0627\u06CC\u06AF\u0627\
+          \u0647 \u0646\u0638\u0627\u0645\u06CC \u062F\u0631 \u062D\u0645\u0635 \u062E\
+          \u0628\u0631 \u062F\u0627\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/syria-air-attack-t4-israel/31500164.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u062C\u0644\u0647"
+        - "\u0646\u06CC\u0645\u0647\u200C\u0634\u0628"
+        name: "\u0645\u062C\u0644\u0647 \u0646\u06CC\u0645\u0647\u200C\u0634\u0628"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31477093.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0627\u0632\u0645\u0627\u0646"
+        - "\u0645\u0644\u0644"
+        - "\u062F\u0633\u062A\u0631\u0633\u06CC"
+        - "\u0628\u0647"
+        - "\u0645\u062D\u06CC\u0637"
+        - "\u0632\u06CC\u0633\u062A"
+        - "\u0633\u0627\u0644\u0645"
+        - "\u0631\u0627"
+        - "\xAB\u062D\u0642"
+        - "\u0627\u0633\u0627\u0633\u06CC\xBB"
+        - "\u0628\u0634\u0631"
+        - "\u062F\u0627\u0646\u0633\u062A"
+        name: "\u0633\u0627\u0632\u0645\u0627\u0646 \u0645\u0644\u0644 \u062F\u0633\
+          \u062A\u0631\u0633\u06CC \u0628\u0647 \u0645\u062D\u06CC\u0637 \u0632\u06CC\
+          \u0633\u062A \u0633\u0627\u0644\u0645 \u0631\u0627 \xAB\u062D\u0642 \u0627\
+          \u0633\u0627\u0633\u06CC\xBB \u0628\u0634\u0631 \u062F\u0627\u0646\u0633\
+          \u062A"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31500048.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06AF\u0632\u0627\u0631\u0634\u200C\u0647\u0627"
+        - "\u06F2\u06F3:\u06F0\u06F0"
+        name: "\u062E\u0628\u0631\u0647\u0627 \u0648 \u06AF\u0632\u0627\u0631\u0634\
+          \u200C\u0647\u0627 \u06F2\u06F3:\u06F0\u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31475702.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u062E\u0628\u0627\u0631"
+        - "\u0634\u0628\u0627\u0646\u06AF\u0627\u0647\u06CC"
+        name: "\u0627\u062E\u0628\u0627\u0631 \u0634\u0628\u0627\u0646\u06AF\u0627\
+          \u0647\u06CC"
+        probability: 1.0
+        url: https://ir.voanews.com/a/6263417.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31475701.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u062D\u06A9\u0648\u0645\u06CC\u062A"
+        - "\u0641\u0639\u0627\u0644"
+        - "\u0633\u06CC\u0627\u0633\u06CC"
+        - "\u0627\u067E\u0648\u0632\u06CC\u0633\u06CC\u0648\u0646"
+        - "\u062F\u0631"
+        - "\u0622\u0630\u0631\u0628\u0627\u06CC\u062C\u0627\u0646"
+        - "\u0628\u0647"
+        - "\u06F1\u06F3"
+        - "\u0633\u0627\u0644"
+        - "\u0632\u0646\u062F\u0627\u0646"
+        name: "\u0645\u062D\u06A9\u0648\u0645\u06CC\u062A \u0641\u0639\u0627\u0644\
+          \ \u0633\u06CC\u0627\u0633\u06CC \u0627\u067E\u0648\u0632\u06CC\u0633\u06CC\
+          \u0648\u0646 \u062F\u0631 \u0622\u0630\u0631\u0628\u0627\u06CC\u062C\u0627\
+          \u0646 \u0628\u0647 \u06F1\u06F3 \u0633\u0627\u0644 \u0632\u0646\u062F\u0627\
+          \u0646"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/azerbaijani-activist-sentenced-to-13-years-in-prison-on-absurd-terrorism-charges/31499936.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0631\u0648\u06CC"
+        - "\u062E\u0637"
+        - "\u0627\u0633\u062A\u0641\u0627\u062F\u0647"
+        - "\u0627\u0632"
+        - "\u062F\u0639\u0627"
+        - "\u0646\u0630\u0648\u0631\u0627\u062A"
+        - "\u0645\u0630\u0647\u0628\u06CC\u061B"
+        - "\u0631\u0627\u0647\u06A9\u0627\u0631"
+        - "\u062C\u0645\u0647\u0648\u0631\u06CC"
+        - "\u0627\u0633\u0644\u0627\u0645\u06CC"
+        - "\u062F\u0631"
+        - "\u0628\u0633\u06CC\u0627\u0631\u06CC"
+        - "\u0627\u0632"
+        - "\u0628\u062D\u0631\u0627\u0646\u200C\u0647\u0627"
+        name: "\u0631\u0648\u06CC \u062E\u0637 - \u0627\u0633\u062A\u0641\u0627\u062F\
+          \u0647 \u0627\u0632 \u062F\u0639\u0627 \u0648 \u0646\u0630\u0648\u0631\u0627\
+          \u062A \u0645\u0630\u0647\u0628\u06CC\u061B \u0631\u0627\u0647\u06A9\u0627\
+          \u0631 \u062C\u0645\u0647\u0648\u0631\u06CC \u0627\u0633\u0644\u0627\u0645\
+          \u06CC \u062F\u0631 \u0628\u0633\u06CC\u0627\u0631\u06CC \u0627\u0632 \u0628\
+          \u062D\u0631\u0627\u0646\u200C\u0647\u0627 - \u06F2"
+        probability: 1.0
+        url: https://ir.voanews.com/a/6263340.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u062C\u0644\u0647"
+        - "\u0634\u0628\u0627\u0646\u06AF\u0627\u0647\u06CC"
+        name: "\u0645\u062C\u0644\u0647 \u0634\u0628\u0627\u0646\u06AF\u0627\u0647\
+          \u06CC"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31475692.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u063A\u0632\u0627\u0644\u0647"
+        - "\u062D\u0633\u06CC\u0646\u06CC"
+        - "\u0627\u0648\u0644\u06CC\u0646"
+        - "\u0645\u062F\u0627\u0644"
+        - "\u0632\u0646\u0627\u0646"
+        - "\u0648\u0632\u0646\u0647\u200C\u0628\u0631\u062F\u0627\u0631"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u062F\u0631"
+        - "\u0642\u0647\u0631\u0645\u0627\u0646\u06CC"
+        - "\u0646\u0648\u062C\u0648\u0627\u0646\u0627\u0646"
+        - "\u062C\u0647\u0627\u0646"
+        - "\u0631\u0627"
+        - "\u06A9\u0633\u0628"
+        - "\u06A9\u0631\u062F"
+        name: "\u063A\u0632\u0627\u0644\u0647 \u062D\u0633\u06CC\u0646\u06CC \u0627\
+          \u0648\u0644\u06CC\u0646 \u0645\u062F\u0627\u0644 \u0632\u0646\u0627\u0646\
+          \ \u0648\u0632\u0646\u0647\u200C\u0628\u0631\u062F\u0627\u0631 \u0627\u06CC\
+          \u0631\u0627\u0646 \u062F\u0631 \u0642\u0647\u0631\u0645\u0627\u0646\u06CC\
+          \ \u0646\u0648\u062C\u0648\u0627\u0646\u0627\u0646 \u062C\u0647\u0627\u0646\
+          \ \u0631\u0627 \u06A9\u0633\u0628 \u06A9\u0631\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/iran-women-weight-lifting-medal/6263286.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u062A\u062D\u0631\u06CC\u0645\u200C\u0647\u0627\u06CC"
+        - "\u0634\u0631\u06A9\u062A"
+        - "\u0645\u0627\u0645\u0648\u062A"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u0632\u06CC\u0631\u0645\u062C\u0645\u0648\u0639\u0647\u200C\u0647\u0627\
+          \u06CC\u0634"
+        - "\u0631\u0627"
+        - "\u0644\u063A\u0648"
+        - "\u06A9\u0631\u062F"
+        name: "\u0622\u0645\u0631\u06CC\u06A9\u0627 \u062A\u062D\u0631\u06CC\u0645\
+          \u200C\u0647\u0627\u06CC \u0634\u0631\u06A9\u062A \u0645\u0627\u0645\u0648\
+          \u062A \u0627\u06CC\u0631\u0627\u0646 \u0648 \u0632\u06CC\u0631\u0645\u062C\
+          \u0645\u0648\u0639\u0647\u200C\u0647\u0627\u06CC\u0634 \u0631\u0627 \u0644\
+          \u063A\u0648 \u06A9\u0631\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31499881.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u06A9\u06CC\u0645"
+        - "\u06A9\u0627\u0631\u062F\u0627\u0634\u06CC\u0627\u0646"
+        - "\u0628\u0631\u0627\u06CC"
+        - "\u0628\u0631\u0646\u0627\u0645\u0647"
+        - "\u0637\u0646\u0632"
+        - "\u062A\u0644\u0648\u06CC\u0632\u06CC\u0648\u0646\u06CC"
+        - "\u0622\u0645\u0627\u062F\u0647"
+        - "\u0645\u06CC\u200C\u0634\u0648\u062F\u061B"
+        - "\u0645\u0646\u062A\u0642\u062F\u0627\u0646"
+        - "\u0645\u06CC\u200C\u06AF\u0648\u06CC\u0646\u062F"
+        - "\xAB\u0634\u0648\u062E\u200C"
+        - "\u0637\u0628\u0639\xBB"
+        - "\u0646\u06CC\u0633\u062A"
+        name: "\u06A9\u06CC\u0645 \u06A9\u0627\u0631\u062F\u0627\u0634\u06CC\u0627\
+          \u0646 \u0628\u0631\u0627\u06CC \u0628\u0631\u0646\u0627\u0645\u0647 \u0637\
+          \u0646\u0632 \u062A\u0644\u0648\u06CC\u0632\u06CC\u0648\u0646\u06CC \u0622\
+          \u0645\u0627\u062F\u0647 \u0645\u06CC\u200C\u0634\u0648\u062F\u061B \u0645\
+          \u0646\u062A\u0642\u062F\u0627\u0646 \u0645\u06CC\u200C\u06AF\u0648\u06CC\
+          \u0646\u062F \xAB\u0634\u0648\u062E\u200C \u0637\u0628\u0639\xBB \u0646\u06CC\
+          \u0633\u062A"
+        probability: 1.0
+        url: https://ir.voanews.com/a/kim-kardashian-preparing-for-snl-hosting-debut/6263318.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u062A\u062D\u0627\u062F\u06CC\u0647"
+        - "\u0627\u0631\u0648\u067E\u0627"
+        - "\u062F\u0631"
+        - "\u0645\u0648\u0631\u062F"
+        - "\u062E\u0637\u0631\u0627\u062A"
+        - "\u0627\u0645\u0646\u06CC\u062A\u06CC"
+        - "\u0645\u0631\u062A\u0628\u0637"
+        - "\u0628\u0627"
+        - "\u0645\u0647\u0627\u062C\u0631\u062A"
+        - "\u0627\u0632"
+        - "\u0627\u0641\u063A\u0627\u0646\u0633\u062A\u0627\u0646"
+        - "\u0647\u0634\u062F\u0627\u0631"
+        - "\u062F\u0627\u062F"
+        name: "\u0627\u062A\u062D\u0627\u062F\u06CC\u0647 \u0627\u0631\u0648\u067E\
+          \u0627 \u062F\u0631 \u0645\u0648\u0631\u062F \u062E\u0637\u0631\u0627\u062A\
+          \ \u0627\u0645\u0646\u06CC\u062A\u06CC \u0645\u0631\u062A\u0628\u0637 \u0628\
+          \u0627 \u0645\u0647\u0627\u062C\u0631\u062A \u0627\u0632 \u0627\u0641\u063A\
+          \u0627\u0646\u0633\u062A\u0627\u0646 \u0647\u0634\u062F\u0627\u0631 \u062F\
+          \u0627\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/eu-official-warns-of-security-threats-related-to-afghanistan/31500063.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31475691.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u067E\u0627\u0631\u0627\u062F\u0648\u06A9\u0633"
+        name: "\u067E\u0627\u0631\u0627\u062F\u0648\u06A9\u0633"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31475690.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06AF\u0632\u0627\u0631\u0634\u200C\u0647\u0627"
+        - "\u06F2\u06F1:\u06F0\u06F0"
+        name: "\u062E\u0628\u0631\u0647\u0627 \u0648 \u06AF\u0632\u0627\u0631\u0634\
+          \u200C\u0647\u0627 \u06F2\u06F1:\u06F0\u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31475686.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0634\u0628"
+        name: "\u06F9 \u0634\u0628"
+        probability: 1.0
+        url: https://ir.voanews.com/a/6263258.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062F\u0631"
+        - "\u0633\u062A\u0627\u06CC\u0634"
+        - "\u062A\u0647\u0631\u0627\u0646"
+        - "\u062C\u0646\u06AF\u200C\u0647\u0627\u06CC"
+        - "\u0646\u06CC\u0627\u0628\u062A\u06CC!"
+        name: "\u062F\u0631 \u0633\u062A\u0627\u06CC\u0634 \u062A\u0647\u0631\u0627\
+          \u0646 \u0648 \u062C\u0646\u06AF\u200C\u0647\u0627\u06CC \u0646\u06CC\u0627\
+          \u0628\u062A\u06CC!"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/paradox-e228-kambiz-hosseini/31500000.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31475642.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062F\u0631"
+        - "\u0633\u062A\u0627\u06CC\u0634"
+        - "\u062A\u0647\u0631\u0627\u0646"
+        - "\u062C\u0646\u06AF\u200C\u0647\u0627\u06CC"
+        - "\u0646\u06CC\u0627\u0628\u062A\u06CC!"
+        name: "\u062F\u0631 \u0633\u062A\u0627\u06CC\u0634 \u062A\u0647\u0631\u0627\
+          \u0646 \u0648 \u062C\u0646\u06AF\u200C\u0647\u0627\u06CC \u0646\u06CC\u0627\
+          \u0628\u062A\u06CC!"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31499993.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0645\u0646\u0648\u0639"
+        - "\u0645\u06CC\u200C\u06A9\u0646\u0645\u060C"
+        - "\u067E\u0633"
+        - "\u0647\u0633\u062A\u0645!"
+        name: "\u0645\u0645\u0646\u0648\u0639 \u0645\u06CC\u200C\u06A9\u0646\u0645\
+          \u060C \u067E\u0633 \u0647\u0633\u062A\u0645!"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/sixth-hour-on-khamenei-bans/31499337.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u063A\u0632\u0627\u0644\u0647"
+        - "\u062D\u0633\u06CC\u0646\u06CC\u060C"
+        - "\u0648\u0632\u0646\u0647\u200C\u0628\u0631\u062F\u0627\u0631"
+        - "\u0646\u0648\u062C\u0648\u0627\u0646"
+        - "\u0627\u06CC\u0631\u0627\u0646\u060C"
+        - "\u062A\u0627\u0631\u06CC\u062E\u200C\u0633\u0627\u0632"
+        - "\u0634\u062F"
+        name: "\u063A\u0632\u0627\u0644\u0647 \u062D\u0633\u06CC\u0646\u06CC\u060C\
+          \ \u0648\u0632\u0646\u0647\u200C\u0628\u0631\u062F\u0627\u0631 \u0646\u0648\
+          \u062C\u0648\u0627\u0646 \u0627\u06CC\u0631\u0627\u0646\u060C \u062A\u0627\
+          \u0631\u06CC\u062E\u200C\u0633\u0627\u0632 \u0634\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/iran-ghazalehhoseini/31499968.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0635\u0641\u062D\u0647"
+        - "\u0622\u062E\u0631:"
+        - "\u0645\u0633\u0639\u0648\u062F"
+        - "\u0645\u06CC\u0631\u06A9\u0627\u0638\u0645\u06CC"
+        - "\u0631\u0626\u06CC\u0633"
+        - "\u0633\u0627\u0632\u0645\u0627\u0646"
+        - "\u0628\u0631\u0646\u0627\u0645\u0647"
+        - "\u0628\u0648\u062F\u062C\u0647"
+        - "\u062F\u0648\u0644\u062A"
+        - "\u0631\u0626\u06CC\u0633\u06CC"
+        - "\u0631\u0627"
+        - "\u0628\u0647\u062A\u0631"
+        - "\u0628\u0634\u0646\u0627\u0633\u06CC\u0645"
+        name: "\u0635\u0641\u062D\u0647 \u0622\u062E\u0631: \u0645\u0633\u0639\u0648\
+          \u062F \u0645\u06CC\u0631\u06A9\u0627\u0638\u0645\u06CC \u0631\u0626\u06CC\
+          \u0633 \u0633\u0627\u0632\u0645\u0627\u0646 \u0628\u0631\u0646\u0627\u0645\
+          \u0647 \u0648 \u0628\u0648\u062F\u062C\u0647 \u062F\u0648\u0644\u062A \u0631\
+          \u0626\u06CC\u0633\u06CC \u0631\u0627 \u0628\u0647\u062A\u0631 \u0628\u0634\
+          \u0646\u0627\u0633\u06CC\u0645"
+        probability: 1.0
+        url: https://ir.voanews.com/a/6263224.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0635\u0641\u062D\u0647"
+        - "\u0622\u062E\u0631:"
+        - "\u0645\u0633\u0639\u0648\u062F"
+        - "\u0645\u06CC\u0631\u06A9\u0627\u0638\u0645\u06CC"
+        - "\u0631\u0626\u06CC\u0633"
+        - "\u0633\u0627\u0632\u0645\u0627\u0646"
+        - "\u0628\u0631\u0646\u0627\u0645\u0647"
+        - "\u0628\u0648\u062F\u062C\u0647"
+        - "\u062F\u0648\u0644\u062A"
+        - "\u0631\u0626\u06CC\u0633\u06CC"
+        - "\u0631\u0627"
+        - "\u0628\u0647\u062A\u0631"
+        - "\u0628\u0634\u0646\u0627\u0633\u06CC\u0645"
+        name: "\u0635\u0641\u062D\u0647 \u0622\u062E\u0631: \u0645\u0633\u0639\u0648\
+          \u062F \u0645\u06CC\u0631\u06A9\u0627\u0638\u0645\u06CC \u0631\u0626\u06CC\
+          \u0633 \u0633\u0627\u0632\u0645\u0627\u0646 \u0628\u0631\u0646\u0627\u0645\
+          \u0647 \u0648 \u0628\u0648\u062F\u062C\u0647 \u062F\u0648\u0644\u062A \u0631\
+          \u0626\u06CC\u0633\u06CC \u0631\u0627 \u0628\u0647\u062A\u0631 \u0628\u0634\
+          \u0646\u0627\u0633\u06CC\u0645"
+        probability: 1.0
+        url: https://ir.voanews.com/a/6263214.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06AF\u0632\u0627\u0631\u0634\u200C\u0647\u0627"
+        - "\u06F2\u06F0:\u06F0\u06F0"
+        name: "\u062E\u0628\u0631\u0647\u0627 \u0648 \u06AF\u0632\u0627\u0631\u0634\
+          \u200C\u0647\u0627 \u06F2\u06F0:\u06F0\u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31475627.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0628\u062D\u0631\u0627\u0646"
+        - "\u062F\u0631"
+        - "\u0627\u062A\u062D\u0627\u062F\u06CC\u0647"
+        - "\u0627\u0631\u0648\u067E\u0627"
+        - "\u0628\u0647"
+        - "\u062F\u0644\u06CC\u0644"
+        - "\u062D\u06A9\u0645"
+        - "\u062F\u0627\u062F\u06AF\u0627\u0647"
+        - "\u0642\u0627\u0646\u0648\u0646"
+        - "\u0627\u0633\u0627\u0633\u06CC"
+        - "\u0644\u0647\u0633\u062A\u0627\u0646"
+        name: "\u0628\u062D\u0631\u0627\u0646 \u062F\u0631 \u0627\u062A\u062D\u0627\
+          \u062F\u06CC\u0647 \u0627\u0631\u0648\u067E\u0627 \u0628\u0647 \u062F\u0644\
+          \u06CC\u0644 \u062D\u06A9\u0645 \u062F\u0627\u062F\u06AF\u0627\u0647 \u0642\
+          \u0627\u0646\u0648\u0646 \u0627\u0633\u0627\u0633\u06CC \u0644\u0647\u0633\
+          \u062A\u0627\u0646"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/eu-faces-crisis-over-polish-court-ruling/31499951.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u0638\u0647\u0627\u0631\u0627\u062A"
+        - "\u0633\u062E\u0646\u06AF\u0648\u06CC"
+        - "\u0648\u0632\u0627\u0631\u062A"
+        - "\u0627\u0645\u0648\u0631"
+        - "\u062E\u0627\u0631\u062C\u0647"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u062F\u0631\u0628\u0627\u0631\u0647"
+        - "\u0631\u0648\u0627\u0628\u0637"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u0644\u0628\u0646\u0627\u0646"
+        name: "\u0627\u0638\u0647\u0627\u0631\u0627\u062A \u0633\u062E\u0646\u06AF\
+          \u0648\u06CC \u0648\u0632\u0627\u0631\u062A \u0627\u0645\u0648\u0631 \u062E\
+          \u0627\u0631\u062C\u0647 \u0622\u0645\u0631\u06CC\u06A9\u0627 \u062F\u0631\
+          \u0628\u0627\u0631\u0647 \u0631\u0648\u0627\u0628\u0637 \u0627\u06CC\u0631\
+          \u0627\u0646 \u0648 \u0644\u0628\u0646\u0627\u0646"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31499949.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u067E\u0627\u06CC\u0627\u0646"
+        - "\u0627\u0646\u062A\u0638\u0627\u0631"
+        - "\u062F\u0648\u0633\u062A\u062F\u0627\u0631\u0627\u0646"
+        - "\xAB\u0627\u062F\u0644\xBB\u061B"
+        - "\u0627\u0648\u0644\u06CC\u0646"
+        - "\u0622\u0644\u0628\u0648\u0645"
+        - "\u062E\u0648\u0627\u0646\u0646\u062F\u0647"
+        - "\u0628\u0631\u06CC\u062A\u0627\u0646\u06CC\u0627\u06CC\u06CC"
+        - "\u067E\u0633"
+        - "\u0627\u0632"
+        - "\u0634\u0634"
+        - "\u0633\u0627\u0644"
+        - "\u0645\u0646\u062A\u0634\u0631"
+        - "\u0645\u06CC\u200C\u0634\u0648\u062F"
+        name: "\u067E\u0627\u06CC\u0627\u0646 \u0627\u0646\u062A\u0638\u0627\u0631\
+          \ \u062F\u0648\u0633\u062A\u062F\u0627\u0631\u0627\u0646 \xAB\u0627\u062F\
+          \u0644\xBB\u061B \u0627\u0648\u0644\u06CC\u0646 \u0622\u0644\u0628\u0648\
+          \u0645 \u062E\u0648\u0627\u0646\u0646\u062F\u0647 \u0628\u0631\u06CC\u062A\
+          \u0627\u0646\u06CC\u0627\u06CC\u06CC \u067E\u0633 \u0627\u0632 \u0634\u0634\
+          \ \u0633\u0627\u0644 \u0645\u0646\u062A\u0634\u0631 \u0645\u06CC\u200C\u0634\
+          \u0648\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/uk-singer-adele-upcoming-album/6263064.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0627\u0639\u062A"
+        - "\u0634\u0634\u0645"
+        - "\u0645\u0645\u0646\u0648\u0639"
+        - "\u0645\u06CC\u200C\u06A9\u0646\u0645\u061B"
+        - "\u067E\u0633"
+        - "\u0647\u0633\u062A\u0645"
+        name: "\u0633\u0627\u0639\u062A \u0634\u0634\u0645 - \u0645\u0645\u0646\u0648\
+          \u0639 \u0645\u06CC\u200C\u06A9\u0646\u0645\u061B \u067E\u0633 \u0647\u0633\
+          \u062A\u0645"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31499944.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062C\u0634\u0646"
+        - "\u0645\u0647\u0631\u06AF\u0627\u0646"
+        - "\u062F\u0631"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        name: "\u062C\u0634\u0646 \u0645\u0647\u0631\u06AF\u0627\u0646 \u062F\u0631\
+          \ \u0627\u06CC\u0631\u0627\u0646"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31499946.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0628\u0631\u0646\u0627\u0645\u0647"
+        - "\u0647\u0641\u062A\u06AF\u06CC"
+        - "\u06A9\u0627\u0631\u0646\u0627\u0645\u0647"
+        name: "\u0628\u0631\u0646\u0627\u0645\u0647 \u0647\u0641\u062A\u06AF\u06CC\
+          \ \u06A9\u0627\u0631\u0646\u0627\u0645\u0647"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31475579.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u06A9\u0631\u0648\u0646\u0627"
+        - "\u062C\u0627\u0646"
+        - "\u06CC\u06A9"
+        - "\u067E\u0631\u0633\u062A\u0627\u0631"
+        - "\u062F\u06CC\u06AF\u0631"
+        - "\u0631\u0627"
+        - "\u062F\u0631"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u06AF\u0631\u0641\u062A"
+        name: "\u06A9\u0631\u0648\u0646\u0627 \u062C\u0627\u0646 \u06CC\u06A9 \u067E\
+          \u0631\u0633\u062A\u0627\u0631 \u062F\u06CC\u06AF\u0631 \u0631\u0627 \u062F\
+          \u0631 \u0627\u06CC\u0631\u0627\u0646 \u06AF\u0631\u0641\u062A"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/iran-corona/31499889.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062F\u0631\u062E\u0648\u0627\u0633\u062A"
+        - "\u0631\u0626\u06CC\u0633\u06CC"
+        - "\u0627\u0632"
+        - "\u0628\u062E\u0634\u200C\u0647\u0627\u06CC"
+        - "\u0627\u0637\u0644\u0627\u0639\u0627\u062A\u06CC"
+        - "\u0628\u0631\u0627\u06CC"
+        - "\u0634\u0646\u0627\u0633\u0627\u06CC\u06CC"
+        - "\xAB\u062C\u0631\u06CC\u0627\u0646"
+        - "\u0645\u0627\u0641\u06CC\u0627\u06CC\u06CC\xBB"
+        - "\u0642\u0627\u0686\u0627\u0642"
+        name: "\u062F\u0631\u062E\u0648\u0627\u0633\u062A \u0631\u0626\u06CC\u0633\
+          \u06CC \u0627\u0632 \u0628\u062E\u0634\u200C\u0647\u0627\u06CC \u0627\u0637\
+          \u0644\u0627\u0639\u0627\u062A\u06CC\_\u0628\u0631\u0627\u06CC \u0634\u0646\
+          \u0627\u0633\u0627\u06CC\u06CC \xAB\u062C\u0631\u06CC\u0627\u0646 \u0645\
+          \u0627\u0641\u06CC\u0627\u06CC\u06CC\xBB \u0642\u0627\u0686\u0627\u0642"
+        probability: 1.0
+        url: https://ir.voanews.com/a/iran-raisi-smuggling-mafia-irgc/6262989.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062C\u0627\u06CC\u0632\u0647"
+        - "\u0635\u0644\u062D"
+        - "\u0646\u0648\u0628\u0644"
+        - "\u0628\u0647"
+        - "\u062F\u0648"
+        - "\u0631\u0648\u0632\u0646\u0627\u0645\u0647\u200C\u0646\u06AF\u0627\u0631"
+        - "\u0631\u0648\u0633"
+        - "\u0641\u06CC\u0644\u06CC\u067E\u06CC\u0646\u06CC"
+        - "\u0631\u0633\u06CC\u062F"
+        name: "\u062C\u0627\u06CC\u0632\u0647 \u0635\u0644\u062D \u0646\u0648\u0628\
+          \u0644 \u0628\u0647 \u062F\u0648 \u0631\u0648\u0632\u0646\u0627\u0645\u0647\
+          \u200C\u0646\u06AF\u0627\u0631 \u0631\u0648\u0633 \u0648 \u0641\u06CC\u0644\
+          \u06CC\u067E\u06CC\u0646\u06CC \u0631\u0633\u06CC\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31499891.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u062E\u0628\u0627\u0631"
+        - "\u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
+        name: "\u0627\u062E\u0628\u0627\u0631 \u0634\u0627\u0645\u06AF\u0627\u0647\
+          \u06CC"
+        probability: 1.0
+        url: https://ir.voanews.com/a/6263006.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u062C\u0644\u0647"
+        - "\u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
+        name: "\u0645\u062C\u0644\u0647 \u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31475578.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u0646\u0641\u062C\u0627\u0631"
+        - "\u0628\u0645\u0628"
+        - "\u062F\u0631"
+        - "\u0645\u0633\u062C\u062F\u06CC"
+        - "\u062F\u0631"
+        - "\u0627\u0641\u063A\u0627\u0646\u0633\u062A\u0627\u0646"
+        - "\u0628\u06CC\u0634"
+        - "\u0627\u0632"
+        - "\u06CC\u06A9\u0635\u062F"
+        - "\u06A9\u0634\u062A\u0647"
+        - "\u0632\u062E\u0645\u06CC"
+        - "\u0628\u0631\u062C\u0627"
+        - "\u06AF\u0630\u0627\u0634\u062A"
+        name: "\u0627\u0646\u0641\u062C\u0627\u0631 \u0628\u0645\u0628 \u062F\u0631\
+          \ \u0645\u0633\u062C\u062F\u06CC \u062F\u0631 \u0627\u0641\u063A\u0627\u0646\
+          \u0633\u062A\u0627\u0646 \u0628\u06CC\u0634 \u0627\u0632 \u06CC\u06A9\u0635\
+          \u062F \u06A9\u0634\u062A\u0647 \u0648 \u0632\u062E\u0645\u06CC \u0628\u0631\
+          \u062C\u0627 \u06AF\u0630\u0627\u0634\u062A"
+        probability: 1.0
+        url: https://ir.voanews.com/a/afghanistan-kunduz-mosque-blast/6262889.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u0648\u062C\u06CC:"
+        - "\u0646\u06CC\u0627\u0632"
+        - "\u0628\u0647"
+        - "\u06F2\u06F2"
+        - "\u0645\u06CC\u0644\u06CC\u0627\u0631\u062F"
+        - "\u062F\u0644\u0627\u0631"
+        - "\u0633\u0631\u0645\u0627\u06CC\u0647"
+        - "\u0628\u0631\u0627\u06CC"
+        - "\u062C\u0644\u0648\u06AF\u06CC\u0631\u06CC"
+        - "\u0627\u0632"
+        - "\u0627\u0641\u062A"
+        - "\u062A\u0648\u0644\u06CC\u062F"
+        - "\u06AF\u0627\u0632"
+        name: "\u0627\u0648\u062C\u06CC: \u0646\u06CC\u0627\u0632 \u0628\u0647 \u06F2\
+          \u06F2 \u0645\u06CC\u0644\u06CC\u0627\u0631\u062F \u062F\u0644\u0627\u0631\
+          \ \u0633\u0631\u0645\u0627\u06CC\u0647 \u0628\u0631\u0627\u06CC \u062C\u0644\
+          \u0648\u06AF\u06CC\u0631\u06CC \u0627\u0632 \u0627\u0641\u062A \u062A\u0648\
+          \u0644\u06CC\u062F \u06AF\u0627\u0632"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31499859.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u06A9\u0631\u0648\u0646\u0627"
+        - "\u062F\u0631"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u0646\u06AF\u0631\u0627\u0646\u06CC"
+        - "\u0627\u0632"
+        - "\xAB\u0633\u0647\u0644\u200C\u0627\u0646\u06AF\u0627\u0631\u06CC\xBB"
+        - "\u0648\u0642\u0648\u0639"
+        - "\u0645\u0648\u062C"
+        - "\u0634\u0634\u0645\u061B"
+        - "\u062A\u0632\u0631\u06CC\u0642"
+        - "\u062F\u0632"
+        - "\u06CC\u0627\u062F\u0622\u0648\u0631"
+        - "\u0628\u0627"
+        - "\u0622\u0633\u062A\u0631\u0627\u0632\u0646\u06A9\u0627"
+        - "\u067E\u0627\u0633\u062A\u0648\u06A9\u0648\u0648\u06A9"
+        name: "\u06A9\u0631\u0648\u0646\u0627 \u062F\u0631 \u0627\u06CC\u0631\u0627\
+          \u0646 \u2013 \u0646\u06AF\u0631\u0627\u0646\u06CC \u0627\u0632 \xAB\u0633\
+          \u0647\u0644\u200C\u0627\u0646\u06AF\u0627\u0631\u06CC\xBB \u0648 \u0648\
+          \u0642\u0648\u0639 \u0645\u0648\u062C \u0634\u0634\u0645\u061B \u062A\u0632\
+          \u0631\u06CC\u0642 \u062F\u0632 \u06CC\u0627\u062F\u0622\u0648\u0631 \u0628\
+          \u0627 \u0622\u0633\u062A\u0631\u0627\u0632\u0646\u06A9\u0627 \u0648 \u067E\
+          \u0627\u0633\u062A\u0648\u06A9\u0648\u0648\u06A9"
+        probability: 1.0
+        url: https://ir.voanews.com/a/iran-coronavirus-cases-death-oct8th/6262891.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\xAB\u06AF\u0631\u0648\u0647"
+        - "\u0635\u0646\u0639\u062A\u06CC"
+        - "\u0645\u0627\u0645\u0648\u062A\xBB"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u0627\u0632"
+        - "\u0641\u0647\u0631\u0633\u062A"
+        - "\u062A\u062D\u0631\u06CC\u0645\u200C\u0647\u0627"
+        - "\u062E\u0627\u0631\u062C"
+        - "\u0634\u062F\u061B"
+        - "\u062E\u0632\u0627\u0646\u0647\u200C\u062F\u0627\u0631\u06CC"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627:"
+        - "\u0627\u0631\u062A\u0628\u0627\u0637\u06CC"
+        - "\u0628\u0647"
+        - "\u0628\u0631\u062C\u0627\u0645"
+        - "\u0646\u062F\u0627\u0631\u062F"
+        name: "\xAB\u06AF\u0631\u0648\u0647 \u0635\u0646\u0639\u062A\u06CC \u0645\u0627\
+          \u0645\u0648\u062A\xBB \u0627\u06CC\u0631\u0627\u0646 \u0627\u0632 \u0641\
+          \u0647\u0631\u0633\u062A \u062A\u062D\u0631\u06CC\u0645\u200C\u0647\u0627\
+          \ \u062E\u0627\u0631\u062C \u0634\u062F\u061B \u062E\u0632\u0627\u0646\u0647\
+          \u200C\u062F\u0627\u0631\u06CC \u0622\u0645\u0631\u06CC\u06A9\u0627: \u0627\
+          \u0631\u062A\u0628\u0627\u0637\u06CC \u0628\u0647 \u0628\u0631\u062C\u0627\
+          \u0645 \u0646\u062F\u0627\u0631\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/us-treasury-ofac-iran-mammut-group-sanctions/6262872.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0627\u0639\u062A\u200C"
+        - "\u0634\u0634\u0645"
+        name: "\u0633\u0627\u0639\u062A\u200C \u0634\u0634\u0645"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31475569.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06AF\u0632\u0627\u0631\u0634\u200C\u0647\u0627"
+        - "\u06F1\u06F8:\u06F0\u06F0"
+        name: "\u062E\u0628\u0631\u0647\u0627 \u0648 \u06AF\u0632\u0627\u0631\u0634\
+          \u200C\u0647\u0627 \u06F1\u06F8:\u06F0\u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31475550.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062F\u06CC\u062F\u0627\u0631"
+        - "\u0633\u0627\u0639\u062A\u0647"
+        - "\u0633\u0627\u0644\u06CC\u0648\u0627\u0646"
+        - "\u062C\u06CC\u0647\u200C\u0686\u06CC"
+        - "\u067E\u0634\u062A"
+        - "\u062F\u0631\u0647\u0627\u06CC"
+        - "\u0628\u0633\u062A\u0647\u061B"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u0628\u0647"
+        - "\u062F\u0646\u0628\u0627\u0644"
+        - "\u0631\u0648\u06CC\u0627\u0631\u0648\u06CC\u06CC"
+        - "\u0628\u0627"
+        - "\u0686\u06CC\u0646"
+        - "\u0646\u06CC\u0633\u062A"
+        name: "\u062F\u06CC\u062F\u0627\u0631 \u06F6 \u0633\u0627\u0639\u062A\u0647\
+          \ \u0633\u0627\u0644\u06CC\u0648\u0627\u0646 \u0648 \u062C\u06CC\u0647\u200C\
+          \u0686\u06CC \u067E\u0634\u062A \u062F\u0631\u0647\u0627\u06CC \u0628\u0633\
+          \u062A\u0647\u061B \u0622\u0645\u0631\u06CC\u06A9\u0627 \u0628\u0647 \u062F\
+          \u0646\u0628\u0627\u0644 \u0631\u0648\u06CC\u0627\u0631\u0648\u06CC\u06CC\
+          \ \u0628\u0627 \u0686\u06CC\u0646 \u0646\u06CC\u0633\u062A"
+        probability: 1.0
+        url: https://ir.voanews.com/a/sullivan-china-us-talks/6262832.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062F\u0627\u0631"
+        - "\u0622\u0632\u0645\u0648\u0646"
+        - "\u062F\u0631"
+        - "\u0631\u0627\u062F\u0627\u0631"
+        - "\u0622\u0631\u0633\u0646\u0627\u0644\u061B"
+        - "\u0627\u062D\u062A\u0645\u0627\u0644"
+        - "\u0627\u0646\u062A\u0642\u0627\u0644"
+        - "\xAB\u0645\u0633\u06CC"
+        - "\u0627\u06CC\u0631\u0627\u0646\u06CC\xBB"
+        - "\u0628\u0647"
+        - "\u0627\u0646\u06AF\u0644\u0633\u062A\u0627\u0646"
+        - "\u062C\u062F\u06CC"
+        - "\u0627\u0633\u062A"
+        name: "\u0633\u0631\u062F\u0627\u0631 \u0622\u0632\u0645\u0648\u0646 \u062F\
+          \u0631 \u0631\u0627\u062F\u0627\u0631 \u0622\u0631\u0633\u0646\u0627\u0644\
+          \u061B \u0627\u062D\u062A\u0645\u0627\u0644 \u0627\u0646\u062A\u0642\u0627\
+          \u0644 \xAB\u0645\u0633\u06CC \u0627\u06CC\u0631\u0627\u0646\u06CC\xBB \u0628\
+          \u0647 \u0627\u0646\u06AF\u0644\u0633\u062A\u0627\u0646 \u062C\u062F\u06CC\
+          \ \u0627\u0633\u062A"
+        probability: 1.0
+        url: https://ir.voanews.com/a/iran-soccer-sardar-azmoun-england-arsenal/6262809.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u0646\u0641\u062C\u0627\u0631"
+        - "\u062F\u0631"
+        - "\u0645\u0633\u062C\u062F"
+        - "\u0634\u06CC\u0639\u06CC\u0627\u0646"
+        - "\u0634\u0645\u0627\u0644"
+        - "\u0627\u0641\u063A\u0627\u0646\u0633\u062A\u0627\u0646\u061B"
+        - "\u062F\u0633\u062A\u200C\u06A9\u0645"
+        - "\u06F1\u06F0\u06F0"
+        - "\u06A9\u0634\u062A\u0647"
+        - "\u062F\u0647\u200C\u0647\u0627"
+        - "\u0632\u062E\u0645\u06CC"
+        name: "\u0627\u0646\u0641\u062C\u0627\u0631 \u062F\u0631 \u0645\u0633\u062C\
+          \u062F \u0634\u06CC\u0639\u06CC\u0627\u0646 \u0634\u0645\u0627\u0644 \u0627\
+          \u0641\u063A\u0627\u0646\u0633\u062A\u0627\u0646\u061B \u062F\u0633\u062A\
+          \u200C\u06A9\u0645 \u06F1\u06F0\u06F0 \u06A9\u0634\u062A\u0647 \u0648 \u062F\
+          \u0647\u200C\u0647\u0627 \u0632\u062E\u0645\u06CC"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/explosion-in-kunduz-killed-at-least-100-prayers/31499740.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
+        - "\u0641\u0631\u062F\u0627"
+        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31475543.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u0628\u0631\u0627\u06CC"
+        - "\u0627\u062F\u0627\u0645\u0647"
+        - "\u0627\u0631\u0633\u0627\u0644"
+        - "\u0641\u0631\u0622\u0648\u0631\u062F\u0647\u200C\u0647\u0627\u06CC"
+        - "\u0633\u0648\u062E\u062A\u06CC"
+        - "\u0628\u0647"
+        - "\u0644\u0628\u0646\u0627\u0646"
+        - "\u0627\u0639\u0644\u0627\u0645"
+        - "\u0622\u0645\u0627\u062F\u06AF\u06CC"
+        - "\u06A9\u0631\u062F"
+        name: "\u0627\u06CC\u0631\u0627\u0646 \u0628\u0631\u0627\u06CC \u0627\u062F\
+          \u0627\u0645\u0647 \u0627\u0631\u0633\u0627\u0644 \u0641\u0631\u0622\u0648\
+          \u0631\u062F\u0647\u200C\u0647\u0627\u06CC \u0633\u0648\u062E\u062A\u06CC\
+          \ \u0628\u0647 \u0644\u0628\u0646\u0627\u0646 \u0627\u0639\u0644\u0627\u0645\
+          \ \u0622\u0645\u0627\u062F\u06AF\u06CC \u06A9\u0631\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/iran-fm-lebanon-fuel-shipment-continuation/6262763.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0647\u0634\u062F\u0627\u0631"
+        - "\u06CC\u06A9"
+        - "\u06A9\u0627\u0631\u0634\u0646\u0627\u0633:"
+        - "\u0641\u0644\u0627\u062A"
+        - "\u0645\u0631\u06A9\u0632\u06CC"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u062F\u0631"
+        - "\u0622\u0633\u062A\u0627\u0646\u0647"
+        - "\u06A9\u0648\u0686"
+        - "\u0645\u06CC\u0644\u06CC\u0648\u0646\u200C\u0647\u0627"
+        - "\u0627\u0646\u0633\u0627\u0646"
+        - "\u0646\u0627\u0628\u0648\u062F\u06CC"
+        - "\u062A\u0627\u0631\u06CC\u062E"
+        - "\u062A\u0645\u062F\u0646"
+        - "\u0627\u0633\u062A"
+        name: "\u0647\u0634\u062F\u0627\u0631 \u06CC\u06A9 \u06A9\u0627\u0631\u0634\
+          \u0646\u0627\u0633: \u0641\u0644\u0627\u062A \u0645\u0631\u06A9\u0632\u06CC\
+          \ \u0627\u06CC\u0631\u0627\u0646 \u062F\u0631 \u0622\u0633\u062A\u0627\u0646\
+          \u0647 \u06A9\u0648\u0686 \u0645\u06CC\u0644\u06CC\u0648\u0646\u200C\u0647\
+          \u0627 \u0627\u0646\u0633\u0627\u0646 \u0648 \u0646\u0627\u0628\u0648\u062F\
+          \u06CC \u062A\u0627\u0631\u06CC\u062E \u0648 \u062A\u0645\u062F\u0646 \u0627\
+          \u0633\u062A"
+        probability: 1.0
+        url: https://ir.voanews.com/a/iran-water-shortage-ground-subsidence-warning/6262768.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06AF\u0632\u0627\u0631\u0634\u200C\u0647\u0627"
+        - "\u06F1\u06F7:\u06F0\u06F0"
+        name: "\u062E\u0628\u0631\u0647\u0627 \u0648 \u06AF\u0632\u0627\u0631\u0634\
+          \u200C\u0647\u0627 \u06F1\u06F7:\u06F0\u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31475534.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -5459,6 +7159,49 @@ featureoptions:
           \u0647 \u0628\u0634\u0631\u06CC\u062A\xBB"
         probability: 1.0
         url: https://www.radiofarda.com/a/31499682.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u0645\u06CC\u0631\u0639\u0628\u062F\u0627\u0644\u0644\u0647\u06CC\
+          \u0627\u0646:"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u0622\u063A\u0627\u0632\u06AF\u0631"
+        - "\u0642\u0637\u0639"
+        - "\u0627\u0631\u062A\u0628\u0627\u0637"
+        - "\u0628\u0627"
+        - "\u0639\u0631\u0628\u0633\u062A\u0627\u0646"
+        - "\u0646\u0628\u0648\u062F"
+        name: "\u0627\u0645\u06CC\u0631\u0639\u0628\u062F\u0627\u0644\u0644\u0647\u06CC\
+          \u0627\u0646: \u0627\u06CC\u0631\u0627\u0646 \u0622\u063A\u0627\u0632\u06AF\
+          \u0631 \u0642\u0637\u0639 \u0627\u0631\u062A\u0628\u0627\u0637 \u0628\u0627\
+          \ \u0639\u0631\u0628\u0633\u062A\u0627\u0646 \u0646\u0628\u0648\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/iran-amirabdollahian-saudi-arabia-cut-ties-dialogue/6262723.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0639\u0641\u0648"
+        - "\u0628\u06CC\u0646\u200C\u0627\u0644\u0645\u0644\u0644:"
+        - "\u0639\u0628\u0627\u0633"
+        - "\u0648\u0627\u062D\u062F\u06CC\u0627\u0646\u060C"
+        - "\u0632\u0646\u062F\u0627\u0646\u06CC"
+        - "\u0633\u06CC\u0627\u0633\u06CC"
+        - "\u062F\u0631"
+        - "\u0627\u06CC\u0631\u0627\u0646\u060C"
+        - "\xAB\u0641\u0648\u0631\u0627"
+        - "\u0628\u06CC"
+        - "\u0642\u06CC\u062F"
+        - "\u0634\u0631\u0637\xBB"
+        - "\u0622\u0632\u0627\u062F"
+        - "\u0634\u0648\u062F"
+        name: "\u0639\u0641\u0648 \u0628\u06CC\u0646\u200C\u0627\u0644\u0645\u0644\
+          \u0644: \u0639\u0628\u0627\u0633 \u0648\u0627\u062D\u062F\u06CC\u0627\u0646\
+          \u060C \u0632\u0646\u062F\u0627\u0646\u06CC \u0633\u06CC\u0627\u0633\u06CC\
+          \ \u062F\u0631 \u0627\u06CC\u0631\u0627\u0646\u060C \xAB\u0641\u0648\u0631\
+          \u0627 \u0648 \u0628\u06CC \u0642\u06CC\u062F \u0648 \u0634\u0631\u0637\xBB\
+          \ \u0622\u0632\u0627\u062F \u0634\u0648\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/amnesty-iran-rights-political-prisoner-abbas-vahedian/6262817.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -5656,6 +7399,34 @@ featureoptions:
           \u06CC\u062F"
         probability: 1.0
         url: https://www.radiofarda.com/a/31499489.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0647\u0634\u062F\u0627\u0631"
+        - "\u062F\u0631"
+        - "\u0645\u0648\u0631\u062F"
+        - "\u06A9\u0645\u0628\u0648\u062F"
+        - "\u06AF\u0627\u0632"
+        - "\u0628\u0631\u0642"
+        - "\u062F\u0631"
+        - "\u0641\u0635\u0644"
+        - "\u0633\u0631\u0645\u0627\u061B"
+        - "\u0645\u0635\u0631\u0641"
+        - "\u06AF\u0627\u0632"
+        - "\u062F\u0631"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u06F2.\u06F5"
+        - "\u062F\u0631\u0635\u062F"
+        - "\u0627\u0641\u0632\u0627\u06CC\u0634"
+        - "\u06CC\u0627\u0641\u062A"
+        name: "\u0647\u0634\u062F\u0627\u0631 \u062F\u0631 \u0645\u0648\u0631\u062F\
+          \ \u06A9\u0645\u0628\u0648\u062F \u06AF\u0627\u0632 \u0648 \u0628\u0631\u0642\
+          \ \u062F\u0631 \u0641\u0635\u0644 \u0633\u0631\u0645\u0627\u061B \u0645\u0635\
+          \u0631\u0641 \u06AF\u0627\u0632 \u062F\u0631 \u0627\u06CC\u0631\u0627\u0646\
+          \ \u06F2.\u06F5 \u062F\u0631\u0635\u062F \u0627\u0641\u0632\u0627\u06CC\u0634\
+          \ \u06CC\u0627\u0641\u062A"
+        probability: 1.0
+        url: https://ir.voanews.com/a/iran-cold-season-gas-shortage-electrisity-crisis/6262588.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -6697,13 +8468,6 @@ featureoptions:
       - campaign: persagg
         description: ''
         keywords:
-        - "\u062E\u0628\u0631"
-        name: "\u062E\u0628\u0631 \u06F8"
-        probability: 1.0
-        url: https://ir.voanews.com/a/6261374.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
         - "\u062E\u0628\u0631\u0647\u0627"
         - "\u06AF\u0632\u0627\u0631\u0634\u200C\u0647\u0627"
         - "\u06F2\u06F0:\u06F0\u06F0"
@@ -6711,6 +8475,13 @@ featureoptions:
           \u200C\u0647\u0627 \u06F2\u06F0:\u06F0\u06F0"
         probability: 1.0
         url: https://www.radiofarda.com/a/31473849.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062E\u0628\u0631"
+        name: "\u062E\u0628\u0631 \u06F8"
+        probability: 1.0
+        url: https://ir.voanews.com/a/6261374.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -6866,20 +8637,20 @@ featureoptions:
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0645\u062C\u0644\u0647"
-        - "\u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
-        name: "\u0645\u062C\u0644\u0647 \u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/31473795.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
         - "\u0627\u062E\u0628\u0627\u0631"
         - "\u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
         name: "\u0627\u062E\u0628\u0627\u0631 \u0634\u0627\u0645\u06AF\u0627\u0647\
           \u06CC"
         probability: 1.0
         url: https://ir.voanews.com/a/6261255.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u062C\u0644\u0647"
+        - "\u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
+        name: "\u0645\u062C\u0644\u0647 \u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31473795.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -8152,15 +9923,6 @@ featureoptions:
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0627\u062E\u0628\u0627\u0631"
-        - "\u0634\u0628\u0627\u0646\u06AF\u0627\u0647\u06CC"
-        name: "\u0627\u062E\u0628\u0627\u0631 \u0634\u0628\u0627\u0646\u06AF\u0627\
-          \u0647\u06CC"
-        probability: 1.0
-        url: https://ir.voanews.com/a/6260047.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
         - "\u062E\u0628\u0631\u0647\u0627"
         - "\u06AF\u0632\u0627\u0631\u0634\u200C\u0647\u0627"
         - "\u06F2\u06F3:\u06F0\u06F0"
@@ -8168,6 +9930,15 @@ featureoptions:
           \u200C\u0647\u0627 \u06F2\u06F3:\u06F0\u06F0"
         probability: 1.0
         url: https://www.radiofarda.com/a/31472066.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u062E\u0628\u0627\u0631"
+        - "\u0634\u0628\u0627\u0646\u06AF\u0627\u0647\u06CC"
+        name: "\u0627\u062E\u0628\u0627\u0631 \u0634\u0628\u0627\u0646\u06AF\u0627\
+          \u0647\u06CC"
+        probability: 1.0
+        url: https://ir.voanews.com/a/6260047.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -8520,20 +10291,20 @@ featureoptions:
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0645\u062C\u0644\u0647"
-        - "\u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
-        name: "\u0645\u062C\u0644\u0647 \u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/31471941.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
         - "\u0627\u062E\u0628\u0627\u0631"
         - "\u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
         name: "\u0627\u062E\u0628\u0627\u0631 \u0634\u0627\u0645\u06AF\u0627\u0647\
           \u06CC"
         probability: 1.0
         url: https://ir.voanews.com/a/6259663.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u062C\u0644\u0647"
+        - "\u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
+        name: "\u0645\u062C\u0644\u0647 \u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/31471941.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -9523,6 +11294,805 @@ featureoptions:
         probability: 1.0
         url: https://ir.voanews.com/a/biden-israel-us/6257951.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       usagm_weekly:
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u6FB3\u524D"
+        - "\u603B\u7406"
+        - "\u963F\u535A\u7279"
+        - "\u547C\u5401"
+        - "\u4E16\u754C"
+        - "\u58F0\u63F4"
+        - "\u53F0\u6E7E"
+        - "\u75DB\u6279"
+        - "\u5317\u4EAC"
+        - "\u597D\u6218"
+        name: "\u6FB3\u524D\u603B\u7406\u963F\u535A\u7279\u547C\u5401\u4E16\u754C\u58F0\
+          \u63F4\u53F0\u6E7E\uFF0C\u75DB\u6279\u5317\u4EAC\u597D\u6218"
+        probability: 1.0
+        url: https://www.voachinese.com/a/former-australian-pm-abbott-calls-for-solidarity-with-taiwan-20211009/6264028.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u53F0\u6E7E"
+        - "\u603B\u7EDF"
+        - "\u603B\u7EDF\u5E9C"
+        - "\u53F0\u6E7E"
+        - "\u672A\u6765"
+        - "\u638C\u63E1"
+        - "\u4EBA\u6C11"
+        - "\u624B\u4E2D"
+        name: "\u53F0\u6E7E\u603B\u7EDF\u5E9C\uFF1A\u53F0\u6E7E\u7684\u672A\u6765\u638C\
+          \u63E1\u5728\u4EBA\u6C11\u624B\u4E2D"
+        probability: 1.0
+        url: https://www.voachinese.com/a/taiwan-says-its-future-rests-in-hands-of-its-people-20211009/6263974.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u516D\u56DB"
+        - "\u6700\u540E"
+        - "\u8C61\u5F81"
+        - "\u56FD\u6B87"
+        - "\u4E4B\u67F1"
+        - "\u91CD\u538B"
+        - "\u80FD\u5426"
+        - "\u5C79\u7ACB"
+        - "\u4E0D\u5012"
+        name: "\u516D\u56DB\u6700\u540E\u8C61\u5F81\u201C\u56FD\u6B87\u4E4B\u67F1\u201D\
+          \u91CD\u538B\u4E0B\u80FD\u5426\u5C79\u7ACB\u4E0D\u5012\uFF1F"
+        probability: 1.0
+        url: https://www.voachinese.com/a/Pillar-Of-Shame-Faces-Removal-From-HKU-20211009/6262774.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E60\u8FD1\u5E73"
+        - "\u8A93\u8A00"
+        - "\u5B9E\u73B0"
+        - "\u548C\u5E73"
+        - "\u7EDF\u4E00"
+        - "\u548C\u5E73\u7EDF\u4E00"
+        - "\u53F0\u6E7E"
+        - "\u907F\u8C08"
+        - "\u5A01\u80C1"
+        - "\u4F7F\u7528"
+        - "\u6B66\u529B"
+        name: "\u4E60\u8FD1\u5E73\u8A93\u8A00\u5B9E\u73B0\u548C\u5E73\u7EDF\u4E00\u53F0\
+          \u6E7E \u907F\u8C08\u5A01\u80C1\u4F7F\u7528\u6B66\u529B"
+        probability: 1.0
+        url: https://www.voachinese.com/a/after-week-of-tension-china-s-xi-vows-reunification-with-taiwan-but-holds-off-threatening-force-20211009/6263929.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u6234\u742A"
+        - "\u5218\u9E64"
+        - "\u89C6\u9891"
+        - "\u901A\u8BDD"
+        - "\u8BC4\u4F30"
+        - "\u53CC\u8FB9"
+        - "\u63A5\u89E6"
+        - "\u6548\u679C"
+        name: "\u6234\u742A\u548C\u5218\u9E64\u89C6\u9891\u901A\u8BDD \u8BC4\u4F30\
+          \u53CC\u8FB9\u63A5\u89E6\u6548\u679C"
+        probability: 1.0
+        url: https://www.voachinese.com/a/u-s-trade-chief-talks-to-chinese-counterpart-in-test-of-bilateral-engagement-20211008/6263905.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u652F\u6301"
+        - "\u7F8E\u519B"
+        - "\u9A7B\u53F0"
+        - "\u534F\u8BAD"
+        - "\u7F8E\u4E24\u515A"
+        - "\u8BAE\u5458"
+        - "\u547C\u5401"
+        - "\u7ED3\u675F"
+        - "\u5BF9\u53F0"
+        - "\u6218\u7565"
+        - "\u6A21\u7CCA"
+        name: "\u652F\u6301\u7F8E\u519B\u9A7B\u53F0\u534F\u8BAD \u7F8E\u4E24\u515A\
+          \u8BAE\u5458\u547C\u5401\u7ED3\u675F\u5BF9\u53F0\u6218\u7565\u6A21\u7CCA"
+        probability: 1.0
+        url: https://www.voachinese.com/a/us-bipartisan-lawmakers-call-for-end-taiwan-strategic-ambiguity-20211008/6263879.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4EC0\u4E48"
+        - "\u4E3A\u4EC0\u4E48"
+        - "\u4E2D\u56FD"
+        - "\u6218\u673A"
+        - "\u8FDB\u5165"
+        - "\u53F0\u6E7E"
+        - "\u7A7A\u57DF"
+        - "\u653B\u51FB"
+        name: "\u4E3A\u4EC0\u4E48\u4E2D\u56FD\u6D3E\u6218\u673A\u8FDB\u5165\u53F0\u6E7E\
+          \u7A7A\u57DF\u5374\u4E0D\u653B\u51FB\uFF1F"
+        probability: 1.0
+        url: https://www.voachinese.com/a/china-taiwan-warplanes-20211008/6263556.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u5347\u7EA7"
+        - "\u5FAE\u8F6F"
+        - Windows
+        - '11'
+        - "\u4E2D\u56FD"
+        - "\u53EF\u80FD"
+        - "\u4E0D\u5230"
+        name: "\u60F3\u5347\u7EA7\u5FAE\u8F6FWindows 11\uFF1F\u5728\u4E2D\u56FD\u4F60\
+          \u53EF\u80FD\u505A\u4E0D\u5230"
+        probability: 1.0
+        url: https://www.voachinese.com/a/china-microsoft-windows-11-chip-issue-20211008/6263855.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E13\u680F"
+        - "\u4E2D\u56FD"
+        - "\u6700\u94B1\u7EBF"
+        - "\u94B1\u7EBF"
+        - "\u5927\u4E8B"
+        - "\u5927\u4E8B\u8BB0"
+        - "\u5047\u5927\u68CB"
+        - "\u80CC\u540E"
+        - "\u535A\u5F08"
+        - --
+        - "\u4E8C\u8C08"
+        - "\u4E2D\u56FD"
+        - "\u505C\u7535"
+        name: "\u4E13\u680F | \u4E2D\u56FD\u6700\u94B1\u7EBF\uFF1A\u94B1\u7EBF\u5927\
+          \u4E8B\u8BB0\uFF1A\u5047\u5927\u68CB\u80CC\u540E\u7684\u771F\u535A\u5F08\
+          --\u4E8C\u8C08\u4E2D\u56FD\u5927\u505C\u7535"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/zhuanlan/zhongguozuiqianxian/fin-10082021201219.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E2D\u56FD"
+        - "\u7F51\u7EDC"
+        - "\u9ED1\u5BA2"
+        - "\u884C\u52A8"
+        - "\u51FA\u4E8E"
+        - "\u653F\u6CBB"
+        - "\u7ECF\u6D4E"
+        - "\u76EE\u7684"
+        - "\u652B\u53D6"
+        - "\u5927\u91CF"
+        - "\u6570\u636E"
+        name: "\u4E2D\u56FD\u7F51\u7EDC\u9ED1\u5BA2\u884C\u52A8\u51FA\u4E8E\u653F\u6CBB\
+          \u548C\u7ECF\u6D4E\u76EE\u7684\u800C\u652B\u53D6\u5927\u91CF\u6570\u636E"
+        probability: 1.0
+        url: https://www.voachinese.com/a/chinese-cyber-operatios-scoop-up-data-for-political-economic-aims-20211008/6263843.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E13\u680F"
+        - "\u6709\u95EE\u6709\u7B54"
+        - "\u7EA2\u8272"
+        - "\u8D4C\u76D8"
+        - "\u63ED\u793A"
+        - "\u4EC0\u4E48"
+        - "\u4E2D\u56FD"
+        - "\u6743\u529B"
+        - "\u638C\u63A7"
+        name: "\u4E13\u680F | \u6709\u95EE\u6709\u7B54\uFF1A\u300A\u7EA2\u8272\u8D4C\
+          \u76D8\u300B\u63ED\u793A\u4E86\u4EC0\u4E48\uFF1F\u4E2D\u56FD\u6743\u529B\
+          \u7531\u8C01\u638C\u63A7\uFF1F"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/zhuanlan/youwenyouda/qa-10082021195810.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E13\u680F"
+        - "\u89E3\u8BFB"
+        - "\u65B0\u7586"
+        - "\u4E2D\u56FD"
+        - "\u65B0\u7586"
+        - "\u4EBA\u53E3"
+        - "\u589E\u957F"
+        - "\u62A5\u544A"
+        - "\u5F15\u4EBA"
+        - "\u77A9\u76EE"
+        - "\u5F15\u4EBA\u77A9\u76EE"
+        name: "\u4E13\u680F | \u89E3\u8BFB\u65B0\u7586\uFF1A\u4E2D\u56FD\u65B0\u7586\
+          \u4EBA\u53E3\u589E\u957F\u62A5\u544A\u5F15\u4EBA\u77A9\u76EE"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/zhuanlan/jieduxinjiang/xj-10082021173844.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E13\u680F"
+        - "\u897F\u85CF"
+        - "\u7EB5\u89C8"
+        - "\u4E2D\u56FD"
+        - "\u897F\u85CF"
+        - "\u7EDF\u6CBB"
+        - "\u5177\u6709"
+        - "\u6B96\u6C11"
+        - "\u6C11\u4E3B"
+        - "\u4E3B\u4E49"
+        - "\u6B96\u6C11\u4E3B\u4E49"
+        - "\u6240\u6709"
+        - "\u57FA\u672C"
+        - "\u672C\u7279"
+        - "\u7279\u5F81"
+        - "\u57FA\u672C\u7279\u5F81"
+        name: "\u4E13\u680F | \u897F\u85CF\u7EB5\u89C8\uFF1A\u4E2D\u56FD\u5728\u897F\
+          \u85CF\u7684\u7EDF\u6CBB\u201C\u5177\u6709\u6B96\u6C11\u4E3B\u4E49\u7684\
+          \u6240\u6709\u57FA\u672C\u7279\u5F81\u201D"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/zhuanlan/xizangzonglan/tibet-10082021173903.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E2D\u56FD"
+        - "\u519B\u673A"
+        - "\u4FB5\u6270"
+        - "\u53F0\u6E7E"
+        - "\u6FC0\u589E"
+        - "\u7F8E\u56FD"
+        - "\u662F\u5426"
+        - "\u53F0\u6E7E"
+        - "\u5317\u4EAC"
+        - "\u5F00\u6218"
+        - "\u8003\u9A8C"
+        - "\u62DC\u767B"
+        name: "\u4E2D\u56FD\u519B\u673A\u4FB5\u6270\u53F0\u6E7E\u6FC0\u589E\uFF0C\u7F8E\
+          \u56FD\u662F\u5426\u4E3A\u53F0\u6E7E\u4E0E\u5317\u4EAC\u5F00\u6218\u8003\
+          \u9A8C\u62DC\u767B"
+        probability: 1.0
+        url: https://www.voachinese.com/a/experts-said-biden-is-facing-test-amid-chinese-warplane-incursion-into-taiwan-adiz-20211008/6263570.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - '20'
+        - "\u5927\u524D"
+        - "\u4E2D\u56FD"
+        - "\u653F\u6CBB"
+        - "\u5C40\u52BF"
+        - "\u653F\u6CBB\u5C40"
+        - "\u653F\u6CBB\u5C40\u52BF"
+        - "\u653F\u6CD5"
+        - "\u6CD5\u7CFB"
+        - "\u7CFB\u7EDF"
+        - "\u653F\u6CD5\u7CFB\u7EDF"
+        - "\u6E05\u6D17"
+        - "\u519B\u673A"
+        - "\u76D8\u65CB"
+        - "\u53F0\u6D77"
+        - "\u4E60\u8FD1\u5E73"
+        - "\u4EC0\u4E48"
+        - "\u6234\u5FE0\u4EC1"
+        - "\u5434\u56FD"
+        - "\u9676\u4EEA\u82AC"
+        - "\u4E9A\u6D32"
+        name: "20\u5927\u524D\u7684\u4E2D\u56FD\u653F\u6CBB\u5C40\u52BF\uFF1A\u653F\
+          \u6CD5\u7CFB\u7EDF\u5927\u6E05\u6D17\uFF0C\u519B\u673A\u76D8\u65CB\u53F0\
+          \u6D77\uFF0C\u4E60\u8FD1\u5E73\u5728\u60F3\u4EC0\u4E48\uFF1F(\u6234\u5FE0\
+          \u4EC1/\u5434\u56FD\u5149/\u9676\u4EEA\u82AC\uFF09\uFF5C\u4E9A\u6D32\u5F88\
+          \u60F3\u804A"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/duomeiti/yazhou-henxiangliao/yz-10082021164043.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u7F8E\u4F01"
+        - "\u627F\u8BA4"
+        - "\u4F7F\u7528"
+        - "\u65B0\u7586"
+        - "\u7EF4\u65CF"
+        - "\u65B0\u7586\u7EF4\u65CF"
+        - "\u52B3\u5DE5"
+        - "\u5426\u8BA4"
+        - "\u5F3A\u8FEB"
+        - "\u52B3\u52A8"
+        name: "\u7F8E\u4F01\u627F\u8BA4\u4F7F\u7528\u65B0\u7586\u7EF4\u65CF\u52B3\u5DE5\
+          \  \u4F46\u5426\u8BA4\u5F3A\u8FEB\u52B3\u52A8"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/yataibaodao/shaoshuminzu/hc-10082021165836.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u5229\u6587"
+        - "\u6C99\u5229\u6587"
+        - "\u6768\u6D01\u7BEA"
+        - "\u4F1A\u6664"
+        - "\u5BCC\u6709"
+        - "\u6709\u6210"
+        - "\u6210\u6548"
+        - "\u5BCC\u6709\u6210\u6548"
+        - "\u53F0\u6D77"
+        - "\u8BAE\u9898"
+        - "\u8BA8\u8BBA"
+        - "\u5F3A\u786C"
+        - "\u76F4\u63A5"
+        name: "\u6C99\u5229\u6587\uFF1A\u4E0E\u6768\u6D01\u7BEA\u4F1A\u6664\u5BCC\u6709\
+          \u6210\u6548  \u53F0\u6D77\u8BAE\u9898\u8BA8\u8BBA\u5F3A\u786C\u76F4\u63A5"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/yataibaodao/junshiwaijiao/cl-10082021172020.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u63A5\u8FDE"
+        - "\u5A01\u80C1"
+        - "\u7834\u574F"
+        - "\u81EA\u7531"
+        - "\u96D5\u5851"
+        - "\u516C\u56ED"
+        - "\u96D5\u5851\u516C\u56ED"
+        - "\u52A0\u5F3A"
+        - "\u5B89\u4FDD"
+        - "\u63AA\u65BD"
+        - "\u589E\u8BBE"
+        - "\u6444\u50CF"
+        - "\u8BBE\u5907"
+        name: "\u63A5\u8FDE\u5A01\u80C1\u4E0E\u7834\u574F\u4E0B\u7684\u81EA\u7531\u96D5\
+          \u5851\u516C\u56ED\uFF1A\u52A0\u5F3A\u5B89\u4FDD\u63AA\u65BD \u5DF2\u589E\
+          \u8BBE\u6444\u50CF\u8BBE\u5907"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/yataibaodao/renquanfazhi/sc-10082021170353.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E13\u680F"
+        - "\u8D22\u7ECF"
+        - "\u65F6\u65F6"
+        - "\u7ECF\u6D4E"
+        - "\u8131\u94A9"
+        - "\u8D38\u6613"
+        - "\u4EE3\u8868"
+        - "\u6234\u742A"
+        - "\u9610\u8FF0"
+        - "\u62DC\u767B"
+        - "\u5BF9\u534E"
+        - "\u8D38\u6613"
+        - "\u5BF9\u534E\u8D38\u6613"
+        - "\u653F\u7B56"
+        name: "\u4E13\u680F | \u8D22\u7ECF\u65F6\u65F6\u542C\uFF1A\u7F8E\u4E2D\u7ECF\
+          \u6D4E\u4E0D\u8131\u94A9\u4E86\uFF1F\u7F8E\u8D38\u6613\u4EE3\u8868\u6234\
+          \u742A\u9610\u8FF0\u62DC\u767B\u5BF9\u534E\u8D38\u6613\u653F\u7B56"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/zhuanlan/jingmaorediansaomiao/eco-10082021165707.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E13\u680F"
+        - "\u591C\u8BDD"
+        - "\u4E2D\u5357"
+        - "\u5357\u6D77"
+        - "\u4E2D\u5357\u6D77"
+        - "\u6731\u9555\u57FA"
+        - "\u4F2F\u4E50"
+        - "\u5C45\u7136"
+        - "\u5E73\u548C"
+        - "\u9648\u5BB6"
+        - "\u7236\u5B50"
+        name: "\u4E13\u680F | \u591C\u8BDD\u4E2D\u5357\u6D77\uFF1A\u6731\u9555\u57FA\
+          \u7684\u4F2F\u4E50\u5C45\u7136\u662F\u5B8B\u5E73\u548C\u9648\u5BB6\u7236\
+          \u5B50"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/zhuanlan/yehuazhongnanhai/gx-10082021164837.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u653F\u5E9C"
+        - "\u76D1\u7BA1"
+        - "\u52A0\u5F3A"
+        - "\u8D44\u672C"
+        - "\u9003\u79BB"
+        - "\u4E2D\u56FD"
+        - "\u7ECF\u6D4E"
+        - "\u4E0B\u884C"
+        - "\u538B\u529B"
+        - "\u52A0\u5927"
+        name: "\u653F\u5E9C\u76D1\u7BA1\u52A0\u5F3A\uFF0C\u8D44\u672C\u9003\u79BB\uFF0C\
+          \u4E2D\u56FD\u7ECF\u6D4E\u4E0B\u884C\u538B\u529B\u52A0\u5927"
+        probability: 1.0
+        url: https://www.voachinese.com/a/china-economy-electricity-property-20211008/6263474.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u6B66\u5927"
+        - "\u6821\u957F"
+        - "\u5218\u9053\u7389"
+        - "\u633A\u8EAB"
+        - "\u547C\u5401"
+        - "\u6539\u9769"
+        - "\u6539\u9769\u8005"
+        - "\u624B\u4E0B"
+        - "\u7559\u60C5"
+        - "\u624B\u4E0B\u7559\u60C5"
+        name: "\u6B66\u5927\u8001\u6821\u957F\u5218\u9053\u7389\u633A\u8EAB\u547C\u5401\
+          \u5BF9\u6539\u9769\u8005\u624B\u4E0B\u7559\u60C5"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/yataibaodao/zhengzhi/xx-10082021163750.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u9C7F\u9C7C"
+        - "\u6E38\u620F"
+        - "\u5168\u7403"
+        - "\u70ED\u64AD"
+        - "\u6587\u5316"
+        - "\u8F93\u51FA"
+        - "\u5DEE\u8DDD"
+        - "\u5173\u6CE8"
+        name: "\u300A\u9C7F\u9C7C\u6E38\u620F\u300B\u5168\u7403\u70ED\u64AD   \u4E2D\
+          \u97E9\u6587\u5316\u8F93\u51FA\u5DEE\u8DDD\u5F15\u5173\u6CE8"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/yataibaodao/junshiwaijiao/zbt-10082021162720.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u591A\u5BB6"
+        - "\u6B27\u6D32"
+        - "\u4F01\u4E1A"
+        - "\u8003\u8651"
+        - "\u64A4\u51FA"
+        - "\u9999\u6E2F"
+        - "\u6797\u90D1"
+        - "\u8BA4\u4E3A"
+        - "\u91CD\u8981"
+        name: "\u591A\u5BB6\u6B27\u6D32\u4F01\u4E1A\u8003\u8651\u64A4\u51FA\u9999\u6E2F\
+          \ \u6797\u90D1\u8BA4\u4E3A\u4E0D\u91CD\u8981"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/Xinwen/10-10082021161937.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u6C11\u8C03"
+        - "\u663E\u793A"
+        - "\u53F0\u6E7E"
+        - "\u8D85\u51FA"
+        - "\u4E00\u534A"
+        - "\u53D7\u8BBF"
+        - "\u53D7\u8BBF\u8005"
+        - "\u8BA4\u4E3A"
+        - "\u53F0\u6D77"
+        - "\u53D1\u751F"
+        - "\u6218\u4E89"
+        name: "\u6C11\u8C03\u663E\u793A\u53F0\u6E7E\u8D85\u51FA\u4E00\u534A\u7684\u53D7\
+          \u8BBF\u8005\u4E0D\u8BA4\u4E3A\u53F0\u6D77\u4F1A\u53D1\u751F\u6218\u4E89"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/Xinwen/9-10082021161910.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u534E\u76DB"
+        - "\u534E\u76DB\u987F"
+        - "\u7B7E\u7F72"
+        - "\u7981\u4EE4"
+        - "\u5E7F\u6838\u65AD"
+        - "\u4F9B\u6838"
+        - "\u539F\u6599"
+        name: "\u534E\u76DB\u987F\u7B7E\u7F72\u7981\u4EE4 \u5411\u4E2D\u5E7F\u6838\
+          \u65AD\u4F9B\u6838\u539F\u6599"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/Xinwen/8-10082021161845.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u7F8E\u6B27"
+        - "\u8981\u6C42"
+        - "\u4E2D\u56FD"
+        - "\u5927\u9646"
+        - "\u63D0\u9AD8"
+        - "\u51CF\u78B3"
+        - "\u76EE\u6807"
+        name: "\u7F8E\u6B27\u8981\u6C42\u4E2D\u56FD\u5927\u9646\u63D0\u9AD8\u51CF\u78B3\
+          \u76EE\u6807"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/Xinwen/4-10082021135254.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u8FB9\u5883"
+        - "\u518D\u8D77"
+        - "\u4E89\u7AEF"
+        - '200'
+        - "\u4E2D\u56FD"
+        - "\u519B\u4EBA"
+        - "\u8D8A\u754C"
+        - "\u610F\u56FE"
+        - "\u7834\u574F"
+        - "\u5370\u65B9"
+        - "\u5DE5\u4E8B"
+        name: "\u4E2D\u5370\u8FB9\u5883\u518D\u8D77\u4E89\u7AEF 200\u540D\u4E2D\u56FD\
+          \u519B\u4EBA\u8D8A\u754C\u610F\u56FE\u7834\u574F\u5370\u65B9\u5DE5\u4E8B"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/Xinwen/5-10082021135149.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u6BD4\u4E9A"
+        - "\u8D5E\u6BD4\u4E9A"
+        - "\u62D6\u6B20"
+        - "\u4E2D\u56FD"
+        - "\u503A\u6743"
+        - "\u503A\u6743\u4EBA"
+        - "\u8D85\u8FC7"
+        - '60'
+        - "\u7F8E\u5143"
+        - "\u4EBF\u7F8E\u5143"
+        name: "\u8D5E\u6BD4\u4E9A\u62D6\u6B20\u4E2D\u56FD\u503A\u6743\u4EBA\u8D85\u8FC7\
+          60\u4EBF\u7F8E\u5143"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/Xinwen/6-10082021135037.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u82AF\u7247"
+        - "\u77ED\u7F3A"
+        - "\u4E00\u6B65"
+        - "\u8FDB\u4E00\u6B65"
+        - "\u5236\u7EA6"
+        - "\u4E2D\u56FD"
+        - "\u6C7D\u8F66"
+        - "\u6C7D\u8F66\u4E1A"
+        name: "\u82AF\u7247\u77ED\u7F3A\u8FDB\u4E00\u6B65\u5236\u7EA6\u4E2D\u56FD\u6C7D\
+          \u8F66\u4E1A"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/Xinwen/7-10082021134943.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u88AB\u63A7"
+        - "\u7F51\u4E0A"
+        - "\u5984\u8BAE"
+        - "\u7535\u5F71"
+        - "\u957F\u6D25\u6E56"
+        - "\u51B0\u96D5"
+        - "\u4E2D\u56FD"
+        - "\u77E5\u540D"
+        - "\u5A92\u4F53"
+        - "\u4EBA\u7F57"
+        - "\u660C\u5E73"
+        - "\u5211\u62D8"
+        name: "\u88AB\u63A7\u7F51\u4E0A\u5984\u8BAE\u7535\u5F71\u300A\u957F\u6D25\u6E56\
+          \u300B\u4E2D\u7684\u201C\u51B0\u96D5\u8FDE\u201D\uFF0C\u4E2D\u56FD\u77E5\
+          \u540D\u5A92\u4F53\u4EBA\u7F57\u660C\u5E73\u906D\u5211\u62D8"
+        probability: 1.0
+        url: https://www.voachinese.com/a/Chinese-journalist-taken-into-custody-over-social-media-post-20211008/6263237.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u5927\u8981"
+        - "\u6E2F\u5927\u8981"
+        - "\u79FB\u9664"
+        - "\u56FD\u6B87"
+        - "\u4E4B\u67F1"
+        - "\u521B\u4F5C"
+        - "\u4F5C\u8005"
+        - "\u521B\u4F5C\u8005"
+        - "\u65A5\u4E3A"
+        - "\u516D\u56DB"
+        - "\u4EB5\u6E0E"
+        name: "\u6E2F\u5927\u8981\u79FB\u9664\u201C\u56FD\u6B87\u4E4B\u67F1\u201D\
+          \ \u521B\u4F5C\u8005\u65A5\u4E3A\u5BF9\u516D\u56DB\u4EB5\u6E0E"
+        probability: 1.0
+        url: https://www.voachinese.com/a/UKU-Demands-Pillar-Of-Shame-Removed-20211008/6263168.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u5317\u4EAC"
+        - "\u6124\u6012"
+        - "\u62A8\u51FB"
+        - "\u6CD5\u56FD"
+        - "\u53C2\u8BAE"
+        - "\u8BAE\u5458"
+        - "\u53C2\u8BAE\u5458"
+        - "\u575A\u6301"
+        - "\u8BA4\u4E3A"
+        - "\u53F0\u6E7E"
+        - "\u79F0\u4E3A"
+        - "\u56FD\u5BB6"
+        name: "\u4E0D\u7529\u5317\u4EAC\u6124\u6012\u4E0E\u62A8\u51FB \u6CD5\u56FD\
+          \u53C2\u8BAE\u5458\u575A\u6301\u8BA4\u4E3A\u53F0\u6E7E\u5E94\u88AB\u79F0\
+          \u4E3A\u201C\u56FD\u5BB6\u201D"
+        probability: 1.0
+        url: https://www.voachinese.com/a/call-Taiwan-a-country-French-senator-says-angering-China-20211008/6263058.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E2D\u56FD"
+        - "\u7A7A\u519B"
+        - "\u4E2D\u56FD\u7A7A\u519B"
+        - "\u8FC5\u901F"
+        - "\u5D1B\u8D77"
+        - "\u6253\u7834"
+        - "\u7F8E\u56FD"
+        - "\u7A7A\u4E2D"
+        - "\u4F18\u52BF"
+        name: "\u4E2D\u56FD\u7A7A\u519B\u8FC5\u901F\u5D1B\u8D77\u6216\u5DF2\u53EF\u6253\
+          \u7834\u7F8E\u56FD\u7A7A\u4E2D\u4F18\u52BF\uFF1F"
+        probability: 1.0
+        url: https://www.voachinese.com/a/china-us-air-force/6263014.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E13\u680F"
+        - "\u6587\u5B66"
+        - "\u7981\u533A"
+        - "\u8F6C\u4E16"
+        - "\u516D\u5341"
+        - "\u5341\u4E09"
+        - "\u516D\u5341\u4E09"
+        - "\u738B\u529B"
+        - "\u96C4\u8457"
+        name: "\u4E13\u680F | \u6587\u5B66\u7981\u533A\uFF1A\u300A\u8F6C\u4E16\u300B\
+          \uFF08\u516D\u5341\u4E09\uFF09\u738B\u529B\u96C4\u8457"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/zhuanlan/wenxuejinqu-cite/wxjq-10082021115540.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E13\u680F"
+        - "\u5468\u5609\u6709"
+        - "\u957F\u6D25\u6E56"
+        - "\u4E4B\u6218"
+        - "\u4E00\u573A"
+        - "\u6218\u6597"
+        - "\u4E0D\u540C"
+        - "\u89E3\u8BFB"
+        name: "\u4E13\u680F | \u5468\u5609\u6709\u8BDD\u8BF4\uFF1A\u300A\u957F\u6D25\
+          \u6E56\u300B\u4E4B\u6218\uFF1A\u540C\u4E00\u573A\u6218\u6597\uFF0C\u4E0D\
+          \u540C\u7684\u89E3\u8BFB"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/zhuanlan/5468560967098bdd8bf4/talk-10082021114355.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E24\u540D"
+        - "\u8BB0\u8005"
+        - "\u6311\u6218"
+        - "\u6743\u529B"
+        - '2021'
+        - "\u8BFA\u8D1D"
+        - "\u8D1D\u5C14"
+        - "\u548C\u5E73"
+        - "\u8BFA\u8D1D\u5C14"
+        - "\u548C\u5E73\u5956"
+        - "\u8BFA\u8D1D\u5C14\u548C\u5E73\u5956"
+        - "\u53CD\u5E94"
+        - "\u5929\u5DEE\u5730\u522B"
+        name: "\u4E24\u540D\u8BB0\u8005\u6311\u6218\u6743\u529B\u83B72021\u5E74\u8BFA\
+          \u8D1D\u5C14\u548C\u5E73\u5956 \u4E2D\u4FC4\u53CD\u5E94\u5929\u5DEE\u5730\
+          \u522B"
+        probability: 1.0
+        url: https://www.voachinese.com/a/Two-Reporters-Win-Nobel-Peace-Prize-20211008/6262962.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u9999\u6E2F"
+        - "\u5236\u88C1"
+        - "\u518D\u73B0"
+        - "\u53D8\u6570"
+        - "\u9648\u667A\u601D"
+        - "\u76F8\u5F53"
+        - "\u80AF\u5B9A"
+        - "\u5B9E\u65BD"
+        name: "\u9999\u6E2F\u201C\u53CD\u5236\u88C1\u6CD5\u201D\u518D\u73B0\u53D8\u6570\
+          \   \u9648\u667A\u601D\uFF1A\u201C\u76F8\u5F53\u80AF\u5B9A\u201D\u5728\u6E2F\
+          \u5B9E\u65BD"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/yataibaodao/gangtai/gf-10082021080519.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u7F8E\u56E2"
+        - "\u5784\u65AD"
+        - "\u884C\u4E3A"
+        - '34'
+        - "\u4EBF\u5143"
+        name: "\u7F8E\u56E2\u56E0\u5784\u65AD\u884C\u4E3A\u88AB\u7F5A34\u4EBF\u5143"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/Xinwen/1-10082021110755.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E60\u8FD1\u5E73"
+        - "\u65E5\u672C"
+        - "\u65B0\u4EFB"
+        - "\u9996\u76F8"
+        - "\u5CB8\u7530\u6587\u96C4"
+        - "\u901A\u7535"
+        - "\u7535\u8BDD"
+        - "\u901A\u7535\u8BDD"
+        - "\u65E5\u672C"
+        - "\u4ECD\u7136"
+        - "\u4E2D\u65E5"
+        - "\u5173\u7CFB"
+        - "\u4E2D\u65E5\u5173\u7CFB"
+        name: "\u4E60\u8FD1\u5E73\u4E0E\u65E5\u672C\u65B0\u4EFB\u9996\u76F8\u5CB8\u7530\
+          \u6587\u96C4\u901A\u7535\u8BDD \u65E5\u672C\u4ECD\u7136\u5FE7\u4E2D\u65E5\
+          \u5173\u7CFB"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/Xinwen/2-10082021110646.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u6CD5\u56FD"
+        - "\u524D\u9632\u957F"
+        - "\u8BBF\u53F0"
+        - "\u518D\u6B21"
+        - "\u53F0\u6E7E"
+        - "\u56FD\u5BB6"
+        name: "\u6CD5\u56FD\u524D\u9632\u957F\u8BBF\u53F0 \u518D\u6B21\u79F0\u53F0\
+          \u6E7E\u4E3A\u56FD\u5BB6"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/Xinwen/3-10082021110547.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u7F8E\u519B"
+        - "\u9A7B\u53F0"
+        - "\u8BAD\u7EC3"
+        - "\u53F0\u6E7E"
+        - "\u519B\u961F"
+        - "\u4E00\u5E74"
+        - "\u82F1\u6587"
+        - "\u65E0\u610F"
+        - "\u5F15\u53D1"
+        - "\u51B2\u7A81"
+        name: "\u7F8E\u519B\u9A7B\u53F0\u8BAD\u7EC3\u53F0\u6E7E\u519B\u961F\u5DF2\u4E00\
+          \u5E74  \u8521\u82F1\u6587\u8BF4\u65E0\u610F\u5F15\u53D1\u51B2\u7A81"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/yataibaodao/gangtai/hx2-10082021074736.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E13\u680F"
+        - "\u5927\u56FD"
+        - "\u653B\u7565"
+        - "\u5CB8\u7530\u6587\u96C4"
+        - "\u4E71\u4E16"
+        - "\u638C\u8235"
+        - "\u5982\u4F55"
+        - "\u5E94\u5BF9"
+        - "\u4E2D\u56FD"
+        name: "\u4E13\u680F | \u5927\u56FD\u653B\u7565\uFF1A\u5CB8\u7530\u6587\u96C4\
+          \u4E71\u4E16\u638C\u8235 \u5C06\u5982\u4F55\u5E94\u5BF9\u4E2D\u56FD?"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/zhuanlan/daguogonglue/dip-10082021093949.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E13\u8BBF"
+        - "\u5C45\u6E2F"
+        - "\u7F8E\u7C4D"
+        - "\u5F8B\u5E08"
+        - "\u88AB\u63A7"
+        - "\u88AD\u8B66"
+        - "\u5224\u56DA"
+        - "\u4E0D\u670D"
+        - "\u4E0A\u8BC9"
+        - "\u575A\u6301"
+        - "\u6E2F\u4EBA"
+        - "\u5BFB\u6C42"
+        - "\u516C\u4E49"
+        name: "\u4E13\u8BBF\uFF1A\u5C45\u6E2F\u7F8E\u7C4D\u5F8B\u5E08\u88AB\u63A7\u88AD\
+          \u8B66\u5224\u56DA\u3000\u4E0D\u670D\u63D0\u4E0A\u8BC9\u575A\u6301\u4E3A\
+          \u6E2F\u4EBA\u5BFB\u6C42\u516C\u4E49"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/yataibaodao/gangtai/km-10082021092953.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E60\u8FD1\u5E73"
+        - "\u4E0E\u5CB8"
+        - "\u7530\u6587\u96C4"
+        - "\u901A\u7535"
+        - "\u7535\u8BDD"
+        - "\u901A\u7535\u8BDD"
+        - "\u8868\u793A"
+        - "\u613F\u610F"
+        - "\u52A0\u5F3A"
+        - "\u4E2D\u65E5"
+        - "\u5BF9\u8BDD"
+        - "\u5408\u4F5C"
+        name: "\u4E60\u8FD1\u5E73\u4E0E\u5CB8\u7530\u6587\u96C4\u901A\u7535\u8BDD\uFF0C\
+          \u8868\u793A\u613F\u610F\u52A0\u5F3A\u4E2D\u65E5\u5BF9\u8BDD\u4E0E\u5408\
+          \u4F5C"
+        probability: 1.0
+        url: https://www.voachinese.com/a/China-s-Xi-discusses-bilaterial-ties-with-Japan-s-new-PM-20211008/6262786.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -10850,6 +13420,38 @@ featureoptions:
       - campaign: persagg
         description: ''
         keywords:
+        - "\u72EC\u7ACB"
+        - "\u5A92\u4F53"
+        - "\u4EBA\u738B"
+        - "\u8BBF\u8C08"
+        - "\u4E2D\u5171"
+        - "\u4E00\u76F4"
+        - "\u9633\u8C0B"
+        name: "\u72EC\u7ACB\u5A92\u4F53\u4EBA\u738B\u5251\u8BBF\u8C08\uFF1A\u4E2D\u5171\
+          \u4E00\u76F4\u662F\u9633\u8C0B"
+        probability: 1.0
+        url: https://www.voachinese.com/a/6260231.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u7F8E\u56FD"
+        - "\u627F\u8BFA"
+        - "\u6350\u52A9"
+        - "\u4E16\u754C"
+        - '11'
+        - "\u4EBF\u8BA1"
+        - "\u75AB\u82D7"
+        - "\u53D1\u9001"
+        - 15%
+        - "\u627F\u8BFA"
+        - "\u5242\u91CF"
+        name: "\u7F8E\u56FD\u627F\u8BFA\u6350\u52A9\u4E16\u754C11\u4EBF\u8BA1\u75AB\
+          \u82D7 \u5DF2\u53D1\u900115%\u627F\u8BFA\u5242\u91CF"
+        probability: 1.0
+        url: https://www.voachinese.com/a/6260230.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
         - "\u767D\u5BAB"
         - "\u8981\u4E49"
         - "\u5171\u519B"
@@ -10881,38 +13483,6 @@ featureoptions:
           \u4F46\u201C\u771F\u8BDA\u201D\u6C9F\u901A"
         probability: 1.0
         url: https://www.voachinese.com/a/6260229.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u7F8E\u56FD"
-        - "\u627F\u8BFA"
-        - "\u6350\u52A9"
-        - "\u4E16\u754C"
-        - '11'
-        - "\u4EBF\u8BA1"
-        - "\u75AB\u82D7"
-        - "\u53D1\u9001"
-        - 15%
-        - "\u627F\u8BFA"
-        - "\u5242\u91CF"
-        name: "\u7F8E\u56FD\u627F\u8BFA\u6350\u52A9\u4E16\u754C11\u4EBF\u8BA1\u75AB\
-          \u82D7 \u5DF2\u53D1\u900115%\u627F\u8BFA\u5242\u91CF"
-        probability: 1.0
-        url: https://www.voachinese.com/a/6260230.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u72EC\u7ACB"
-        - "\u5A92\u4F53"
-        - "\u4EBA\u738B"
-        - "\u8BBF\u8C08"
-        - "\u4E2D\u5171"
-        - "\u4E00\u76F4"
-        - "\u9633\u8C0B"
-        name: "\u72EC\u7ACB\u5A92\u4F53\u4EBA\u738B\u5251\u8BBF\u8C08\uFF1A\u4E2D\u5171\
-          \u4E00\u76F4\u662F\u9633\u8C0B"
-        probability: 1.0
-        url: https://www.voachinese.com/a/6260231.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -11815,19 +14385,24 @@ featureoptions:
       - campaign: persagg
         description: ''
         keywords:
-        - "\u7F8E\u5C06"
-        - "\u7EE7\u7EED"
-        - "\u5408\u4F5C"
-        - "\u81F4\u529B"
-        - "\u81F4\u529B\u4E8E"
-        - "\u81EA\u7531"
-        - "\u5F00\u653E"
-        - "\u5370\u592A"
-        - "\u5730\u533A"
-        name: "\u7F8E\u5C06\u4E0E\u6CD5\u7EE7\u7EED\u5408\u4F5C\u81F4\u529B\u4E8E\u81EA\
-          \u7531\u5F00\u653E\u7684\u5370\u592A\u5730\u533A"
+        - "\u767D\u5BAB"
+        - "\u8981\u4E49"
+        - "\u767D\u5BAB"
+        - "\u56FD\u5B89"
+        - "\u987E\u95EE"
+        - "\u5229\u6587"
+        - "\u6C99\u5229\u6587"
+        - "\u5C06\u4F1A"
+        - "\u6768\u6D01\u7BEA"
+        - "\u65E0\u62DC"
+        - "\u4E60\u4F1A"
+        - "\u8BC1\u5B9E"
+        - "\u53EF\u8BC1\u5B9E"
+        name: "\u767D\u5BAB\u8981\u4E49: \u767D\u5BAB: \u56FD\u5B89\u987E\u95EE\u6C99\
+          \u5229\u6587\u5C06\u4F1A\u6768\u6D01\u7BEA\uFF0C\u65E0\u62DC\u4E60\u4F1A\
+          \u53EF\u8BC1\u5B9E"
         probability: 1.0
-        url: https://www.voachinese.com/a/6258639.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.voachinese.com/a/6258640.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -11848,24 +14423,19 @@ featureoptions:
       - campaign: persagg
         description: ''
         keywords:
-        - "\u767D\u5BAB"
-        - "\u8981\u4E49"
-        - "\u767D\u5BAB"
-        - "\u56FD\u5B89"
-        - "\u987E\u95EE"
-        - "\u5229\u6587"
-        - "\u6C99\u5229\u6587"
-        - "\u5C06\u4F1A"
-        - "\u6768\u6D01\u7BEA"
-        - "\u65E0\u62DC"
-        - "\u4E60\u4F1A"
-        - "\u8BC1\u5B9E"
-        - "\u53EF\u8BC1\u5B9E"
-        name: "\u767D\u5BAB\u8981\u4E49: \u767D\u5BAB: \u56FD\u5B89\u987E\u95EE\u6C99\
-          \u5229\u6587\u5C06\u4F1A\u6768\u6D01\u7BEA\uFF0C\u65E0\u62DC\u4E60\u4F1A\
-          \u53EF\u8BC1\u5B9E"
+        - "\u7F8E\u5C06"
+        - "\u7EE7\u7EED"
+        - "\u5408\u4F5C"
+        - "\u81F4\u529B"
+        - "\u81F4\u529B\u4E8E"
+        - "\u81EA\u7531"
+        - "\u5F00\u653E"
+        - "\u5370\u592A"
+        - "\u5730\u533A"
+        name: "\u7F8E\u5C06\u4E0E\u6CD5\u7EE7\u7EED\u5408\u4F5C\u81F4\u529B\u4E8E\u81EA\
+          \u7531\u5F00\u653E\u7684\u5370\u592A\u5730\u533A"
         probability: 1.0
-        url: https://www.voachinese.com/a/6258640.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.voachinese.com/a/6258639.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
