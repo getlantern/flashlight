@@ -56,55 +56,29 @@ func init() {
 	netx.EnableNAT64AutoDiscovery()
 }
 
-// ProxiesUpdateHandler handles updates to proxy settings. Any fields may be nil.
-type ProxiesUpdateHandler struct {
-	OnUpdate    func([]balancer.Dialer, config.Source)
-	OnSaveError func(error)
-}
+// HandledErrorType is used to differentiate error types to handlers configured via
+// Flashlight.SetErrorHandler.
+type HandledErrorType int
 
-func (h ProxiesUpdateHandler) handleUpdate(d []balancer.Dialer, src config.Source) {
-	if h.OnUpdate != nil {
-		h.OnUpdate(d, src)
-	}
-}
-
-func (h ProxiesUpdateHandler) handleSaveError(err error) {
-	if h.OnSaveError != nil {
-		h.OnSaveError(err)
-	}
-}
-
-// ConfigUpdateHandler handles updates to global config. Any fields may be nil.
-type ConfigUpdateHandler struct {
-	OnUpdate    func(*config.Global, config.Source)
-	OnSaveError func(error)
-}
-
-func (h ConfigUpdateHandler) handleUpdate(cfg *config.Global, src config.Source) {
-	if h.OnUpdate != nil {
-		h.OnUpdate(cfg, src)
-	}
-}
-
-func (h ConfigUpdateHandler) handleSaveError(err error) {
-	if h.OnSaveError != nil {
-		h.OnSaveError(err)
-	}
-}
+const (
+	ErrorTypeProxySaveFailure  HandledErrorType = iota
+	ErrorTypeConfigSaveFailure HandledErrorType = iota
+)
 
 type Flashlight struct {
-	configDir            string
-	flagsAsMap           map[string]interface{}
-	userConfig           common.UserConfig
-	isPro                func() bool
-	mxGlobal             sync.RWMutex
-	global               *config.Global
-	proxiesUpdateHandler ProxiesUpdateHandler
-	configUpdateHandler  ConfigUpdateHandler
-	onBordaConfigured    chan bool
-	autoReport           func() bool
-	client               *client.Client
-	op                   *fops.Op
+	configDir         string
+	flagsAsMap        map[string]interface{}
+	userConfig        common.UserConfig
+	isPro             func() bool
+	mxGlobal          sync.RWMutex
+	global            *config.Global
+	onProxiesUpdate   func([]balancer.Dialer, config.Source)
+	onConfigUpdate    func(*config.Global, config.Source)
+	onBordaConfigured chan bool
+	autoReport        func() bool
+	client            *client.Client
+	op                *fops.Op
+	errorHandler      func(HandledErrorType, error)
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
@@ -121,7 +95,7 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	default:
 		// ignore
 	}
-	f.configUpdateHandler.handleUpdate(cfg, src)
+	f.onConfigUpdate(cfg, src)
 	f.reconfigurePingProxies()
 	f.reconfigureGoogleAds()
 }
@@ -215,7 +189,7 @@ func (f *Flashlight) startConfigFetch() func() {
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
 		dialers := f.client.Configure(proxyMap)
 		if dialers != nil {
-			f.proxiesUpdateHandler.handleUpdate(dialers, src)
+			f.onProxiesUpdate(dialers, src)
 		}
 	}
 	globalDispatch := func(conf interface{}, src config.Source) {
@@ -225,10 +199,17 @@ func (f *Flashlight) startConfigFetch() func() {
 	}
 	rt := proxied.ParallelPreferChained()
 
+	onProxiesSaveError := func(err error) {
+		f.errorHandler(ErrorTypeProxySaveFailure, err)
+	}
+	onConfigSaveError := func(err error) {
+		f.errorHandler(ErrorTypeConfigSaveFailure, err)
+	}
+
 	stopConfig := config.Init(
 		f.configDir, f.flagsAsMap, f.userConfig,
-		proxiesDispatch, f.proxiesUpdateHandler.handleSaveError,
-		globalDispatch, f.configUpdateHandler.OnSaveError, rt)
+		proxiesDispatch, onProxiesSaveError,
+		globalDispatch, onConfigSaveError, rt)
 	return stopConfig
 }
 
@@ -278,8 +259,8 @@ func New(
 	allowPrivateHosts func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
-	proxiesUpdateHandler *ProxiesUpdateHandler,
-	configUpdateHandler *ConfigUpdateHandler,
+	onConfigUpdate func(*config.Global, config.Source),
+	onProxiesUpdate func([]balancer.Dialer, config.Source),
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	isPro func() bool,
@@ -292,11 +273,11 @@ func New(
 
 	log.Debugf("Using configdir: %v", configDir)
 
-	if proxiesUpdateHandler == nil {
-		proxiesUpdateHandler = &ProxiesUpdateHandler{}
+	if onProxiesUpdate == nil {
+		onProxiesUpdate = func(_ []balancer.Dialer, src config.Source) {}
 	}
-	if configUpdateHandler == nil {
-		configUpdateHandler = &ConfigUpdateHandler{}
+	if onConfigUpdate == nil {
+		onConfigUpdate = func(_ *config.Global, src config.Source) {}
 	}
 	displayVersion()
 	deviceID := userConfig.GetDeviceID()
@@ -307,16 +288,19 @@ func New(
 	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 
 	f := &Flashlight{
-		configDir:            configDir,
-		flagsAsMap:           flagsAsMap,
-		userConfig:           userConfig,
-		isPro:                isPro,
-		global:               nil,
-		proxiesUpdateHandler: *proxiesUpdateHandler,
-		configUpdateHandler:  *configUpdateHandler,
-		onBordaConfigured:    make(chan bool, 1),
-		autoReport:           autoReport,
-		op:                   fops.Begin("client_started"),
+		configDir:         configDir,
+		flagsAsMap:        flagsAsMap,
+		userConfig:        userConfig,
+		isPro:             isPro,
+		global:            nil,
+		onProxiesUpdate:   onProxiesUpdate,
+		onConfigUpdate:    onConfigUpdate,
+		onBordaConfigured: make(chan bool, 1),
+		autoReport:        autoReport,
+		op:                fops.Begin("client_started"),
+		errorHandler: func(_ HandledErrorType, err error) {
+			log.Error(err)
+		},
 	}
 
 	var grabber dnsgrab.Server
@@ -496,6 +480,14 @@ func (f *Flashlight) RunClientListeners(httpProxyAddr, socksProxyAddr string,
 		log.Errorf("Error running client proxy: %v", err)
 		onError(err)
 	}
+}
+
+// SetErrorHandler configures error handling. All errors provided to the handler are significant,
+// but not enough to stop operation of the Flashlight instance. This method must be called before
+// calling Run. All errors provided to the handler will be of a RuntimeErrorType defined in this
+// package. If this method is never called, these errors will be logged on the ERROR level.
+func (f *Flashlight) SetErrorHandler(handler func(t HandledErrorType, err error)) {
+	f.errorHandler = handler
 }
 
 // Stops the local proxy
