@@ -56,19 +56,55 @@ func init() {
 	netx.EnableNAT64AutoDiscovery()
 }
 
+// ProxiesUpdateHandler handles updates to proxy settings. Any fields may be nil.
+type ProxiesUpdateHandler struct {
+	OnUpdate    func([]balancer.Dialer, config.Source)
+	OnSaveError func(error)
+}
+
+func (h ProxiesUpdateHandler) handleUpdate(d []balancer.Dialer, src config.Source) {
+	if h.OnUpdate != nil {
+		h.OnUpdate(d, src)
+	}
+}
+
+func (h ProxiesUpdateHandler) handleSaveError(err error) {
+	if h.OnSaveError != nil {
+		h.OnSaveError(err)
+	}
+}
+
+// ConfigUpdateHandler handles updates to global config. Any fields may be nil.
+type ConfigUpdateHandler struct {
+	OnUpdate    func(*config.Global, config.Source)
+	OnSaveError func(error)
+}
+
+func (h ConfigUpdateHandler) handleUpdate(cfg *config.Global, src config.Source) {
+	if h.OnUpdate != nil {
+		h.OnUpdate(cfg, src)
+	}
+}
+
+func (h ConfigUpdateHandler) handleSaveError(err error) {
+	if h.OnSaveError != nil {
+		h.OnSaveError(err)
+	}
+}
+
 type Flashlight struct {
-	configDir         string
-	flagsAsMap        map[string]interface{}
-	userConfig        common.UserConfig
-	isPro             func() bool
-	mxGlobal          sync.RWMutex
-	global            *config.Global
-	onProxiesUpdate   func([]balancer.Dialer, config.Source)
-	onConfigUpdate    func(*config.Global, config.Source)
-	onBordaConfigured chan bool
-	autoReport        func() bool
-	client            *client.Client
-	op                *fops.Op
+	configDir            string
+	flagsAsMap           map[string]interface{}
+	userConfig           common.UserConfig
+	isPro                func() bool
+	mxGlobal             sync.RWMutex
+	global               *config.Global
+	proxiesUpdateHandler ProxiesUpdateHandler
+	configUpdateHandler  ConfigUpdateHandler
+	onBordaConfigured    chan bool
+	autoReport           func() bool
+	client               *client.Client
+	op                   *fops.Op
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
@@ -85,7 +121,7 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	default:
 		// ignore
 	}
-	f.onConfigUpdate(cfg, src)
+	f.configUpdateHandler.handleUpdate(cfg, src)
 	f.reconfigurePingProxies()
 	f.reconfigureGoogleAds()
 }
@@ -179,7 +215,7 @@ func (f *Flashlight) startConfigFetch() func() {
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
 		dialers := f.client.Configure(proxyMap)
 		if dialers != nil {
-			f.onProxiesUpdate(dialers, src)
+			f.proxiesUpdateHandler.handleUpdate(dialers, src)
 		}
 	}
 	globalDispatch := func(conf interface{}, src config.Source) {
@@ -189,7 +225,10 @@ func (f *Flashlight) startConfigFetch() func() {
 	}
 	rt := proxied.ParallelPreferChained()
 
-	stopConfig := config.Init(f.configDir, f.flagsAsMap, f.userConfig, proxiesDispatch, globalDispatch, rt)
+	stopConfig := config.Init(
+		f.configDir, f.flagsAsMap, f.userConfig,
+		proxiesDispatch, f.proxiesUpdateHandler.handleSaveError,
+		globalDispatch, f.configUpdateHandler.OnSaveError, rt)
 	return stopConfig
 }
 
@@ -239,8 +278,8 @@ func New(
 	allowPrivateHosts func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
-	onConfigUpdate func(*config.Global, config.Source),
-	onProxiesUpdate func([]balancer.Dialer, config.Source),
+	proxiesUpdateHandler *ProxiesUpdateHandler,
+	configUpdateHandler *ConfigUpdateHandler,
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	isPro func() bool,
@@ -253,11 +292,11 @@ func New(
 
 	log.Debugf("Using configdir: %v", configDir)
 
-	if onProxiesUpdate == nil {
-		onProxiesUpdate = func(_ []balancer.Dialer, src config.Source) {}
+	if proxiesUpdateHandler == nil {
+		proxiesUpdateHandler = &ProxiesUpdateHandler{}
 	}
-	if onConfigUpdate == nil {
-		onConfigUpdate = func(_ *config.Global, src config.Source) {}
+	if configUpdateHandler == nil {
+		configUpdateHandler = &ConfigUpdateHandler{}
 	}
 	displayVersion()
 	deviceID := userConfig.GetDeviceID()
@@ -268,16 +307,16 @@ func New(
 	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 
 	f := &Flashlight{
-		configDir:         configDir,
-		flagsAsMap:        flagsAsMap,
-		userConfig:        userConfig,
-		isPro:             isPro,
-		global:            nil,
-		onProxiesUpdate:   onProxiesUpdate,
-		onConfigUpdate:    onConfigUpdate,
-		onBordaConfigured: make(chan bool, 1),
-		autoReport:        autoReport,
-		op:                fops.Begin("client_started"),
+		configDir:            configDir,
+		flagsAsMap:           flagsAsMap,
+		userConfig:           userConfig,
+		isPro:                isPro,
+		global:               nil,
+		proxiesUpdateHandler: *proxiesUpdateHandler,
+		configUpdateHandler:  *configUpdateHandler,
+		onBordaConfigured:    make(chan bool, 1),
+		autoReport:           autoReport,
+		op:                   fops.Begin("client_started"),
 	}
 
 	var grabber dnsgrab.Server

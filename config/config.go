@@ -57,6 +57,9 @@ type options struct {
 	// for existing saved configs.
 	saveDir string
 
+	// onSaveError is called when an error occurs saving the config. May be nil.
+	onSaveError func(error)
+
 	// obfuscate specifies whether or not to obfuscate the config on disk.
 	obfuscate bool
 
@@ -205,7 +208,7 @@ func newConfig(filePath string,
 	}
 
 	// Start separate go routine that saves newly fetched proxies to disk.
-	go cfg.save()
+	go cfg.save(opts.onSaveError)
 	return cfg
 }
 
@@ -280,11 +283,11 @@ func (conf *config) fetchConfig(stopCh chan bool, dispatch func(interface{}), fe
 	}
 }
 
-func (conf *config) save() {
+func (conf *config) save(onError func(error)) {
 	for {
 		in := <-conf.saveChan
-		if err := conf.saveOne(in); err != nil {
-			log.Errorf("Could not save %v, %v", in, err)
+		if err := conf.saveOne(in); err != nil && onError != nil {
+			onError(err)
 		}
 	}
 }
