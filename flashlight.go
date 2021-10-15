@@ -65,6 +65,17 @@ const (
 	ErrorTypeConfigSaveFailure HandledErrorType = iota
 )
 
+func (t HandledErrorType) String() string {
+	switch t {
+	case ErrorTypeProxySaveFailure:
+		return "proxy save failure"
+	case ErrorTypeConfigSaveFailure:
+		return "config save failure"
+	default:
+		return fmt.Sprintf("unrecognized error type %d", t)
+	}
+}
+
 type Flashlight struct {
 	configDir         string
 	flagsAsMap        map[string]interface{}
@@ -298,8 +309,8 @@ func New(
 		onBordaConfigured: make(chan bool, 1),
 		autoReport:        autoReport,
 		op:                fops.Begin("client_started"),
-		errorHandler: func(_ HandledErrorType, err error) {
-			log.Error(err)
+		errorHandler: func(t HandledErrorType, err error) {
+			log.Errorf("%v: %v", t, err)
 		},
 	}
 
