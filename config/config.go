@@ -287,7 +287,8 @@ func (conf *config) save(onError func(error)) {
 	for {
 		in := <-conf.saveChan
 		if err := conf.saveOne(in); err != nil && onError != nil {
-			onError(err)
+			// Handle the error in a goroutine to avoid blocking save loop.
+			go onError(err)
 		}
 	}
 }
