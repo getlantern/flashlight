@@ -496,8 +496,13 @@ func (f *Flashlight) RunClientListeners(httpProxyAddr, socksProxyAddr string,
 // SetErrorHandler configures error handling. All errors provided to the handler are significant,
 // but not enough to stop operation of the Flashlight instance. This method must be called before
 // calling Run. All errors provided to the handler will be of a RuntimeErrorType defined in this
-// package. If this method is never called, these errors will be logged on the ERROR level.
+// package. The handler may be called multiple times concurrently.
+//
+// If no handler is configured, these errors will be logged on the ERROR level.
 func (f *Flashlight) SetErrorHandler(handler func(t HandledErrorType, err error)) {
+	if handler == nil {
+		return
+	}
 	f.errorHandler = handler
 }
 
