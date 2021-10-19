@@ -41,7 +41,7 @@ require (
 	github.com/getlantern/golog v0.0.0-20210606115803-bce9f9fe5a5f
 	github.com/getlantern/hellosplitter v0.1.0
 	github.com/getlantern/hidden v0.0.0-20201229170000-e66e7f878730
-	github.com/getlantern/http-proxy-lantern/v2 v2.6.47-0.20210825170543-ed11ab010693
+	github.com/getlantern/http-proxy-lantern/v2 v2.6.48-0.20211019161829-173b0d7fe814
 	github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
 	github.com/getlantern/idletiming v0.0.0-20201229174729-33d04d220c4e
