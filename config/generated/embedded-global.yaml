@@ -1,6 +1,3 @@
-package generated
-
-var GlobalConfig = []byte(`
 adsettings:
   countries:
     ae: none
@@ -2084,7 +2081,7 @@ client:
         - domain: adn.wyzant.com
           ipaddress: 99.86.0.33
         - domain: adsrvr.org
-          ipaddress: 13.35.1.177
+          ipaddress: 54.230.210.163
         - domain: adtpulseaws.net
           ipaddress: 99.86.2.215
         - domain: adtpulseaws.net
@@ -2200,9 +2197,9 @@ client:
         - domain: binance.us
           ipaddress: 13.35.2.129
         - domain: binance.us
-          ipaddress: 52.84.2.8
+          ipaddress: 13.35.2.129
         - domain: binanceapi.com
-          ipaddress: 54.230.202.222
+          ipaddress: 54.230.0.112
         - domain: binanceapi.com
           ipaddress: 54.230.227.138
         - domain: binanceapi.com
@@ -3018,7 +3015,7 @@ client:
         - domain: hankooktech.com
           ipaddress: 205.251.249.151
         - domain: highwebmedia.com
-          ipaddress: 13.35.1.208
+          ipaddress: 13.224.0.86
         - domain: hijuconn.com
           ipaddress: 54.192.1.117
         - domain: hkdl.hk
@@ -3056,7 +3053,7 @@ client:
         - domain: jamcity.com
           ipaddress: 13.224.0.78
         - domain: jamcity.com
-          ipaddress: 54.239.192.204
+          ipaddress: 54.182.3.143
         - domain: jdsukstaging.api.fluentretail.com
           ipaddress: 204.246.177.18
         - domain: jdsukstaging.api.fluentretail.com
@@ -3608,7 +3605,7 @@ client:
         - domain: www.awsapps.com
           ipaddress: 204.246.175.60
         - domain: www.awsapps.com
-          ipaddress: 204.246.175.148
+          ipaddress: 54.230.210.151
         - domain: www.awsapps.com
           ipaddress: 54.192.2.61
         - domain: www.awsapps.com
@@ -3744,7 +3741,9 @@ client:
         - domain: www.ejeokvv.com
           ipaddress: 65.9.128.130
         - domain: www.eng.bnet.run
-          ipaddress: 65.8.1.122
+          ipaddress: 204.246.164.195
+        - domain: www.engine.scorm.com
+          ipaddress: 54.230.211.85
         - domain: www.enjoy.point.auone.jp
           ipaddress: 54.192.1.186
         - domain: www.enjoy.point.auone.jp
@@ -4054,7 +4053,7 @@ client:
         - domain: z-fe.amazon-adsystem.com
           ipaddress: 54.192.0.60
         - domain: z-fe.associates-amazon.com
-          ipaddress: 143.204.2.35
+          ipaddress: 54.230.227.108
         - domain: z-in.amazon-adsystem.com
           ipaddress: 54.239.192.173
         - domain: z-na.amazon-adsystem.com
@@ -4821,9 +4820,9 @@ featureoptions:
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
-        - "\u0641\u0631\u062F\u0627"
-        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        - "\u0645\u062C\u0644\u0647"
+        - "\u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
+        name: "\u0645\u062C\u0644\u0647 \u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
         probability: 1.0
         url: https://www.radiofarda.com/a/31514547.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
@@ -4955,9 +4954,30 @@ featureoptions:
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
-        - "\u0641\u0631\u062F\u0627"
-        name: "\u0645\u0648\u0633\u06CC\u0642\u06CC \u0641\u0631\u062F\u0627"
+        - "\u0627\u062F\u0627\u0645\u0647"
+        - "\u0648\u0627\u06A9\u0646\u0634\u200C\u0647\u0627"
+        - "\u0628\u0647"
+        - "\u0645\u062D\u06A9\u0648\u0645\u06CC\u062A"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u062F\u0631"
+        - "\u067E\u0631\u0648\u0646\u062F\u0647"
+        - "\u06A9\u0631\u0633\u0646\u062A\u061B"
+        - "\u0628\u0647"
+        - "\u0646\u0645\u0627\u06CC\u0646\u062F\u06AF\u0627\u0646"
+        - "\u0645\u062C\u0644\u0633"
+        - "\u06AF\u0641\u062A\u0647"
+        - "\u0634\u062F\u0647"
+        - "\u0628\u0648\u062F"
+        - "\u062D\u0642"
+        - "\xAB\u0627\u0638\u0647\u0627\u0631\u0646\u0638\u0631\xBB"
+        - "\u0646\u062F\u0627\u0631\u0646\u062F"
+        name: "\u0627\u062F\u0627\u0645\u0647 \u0648\u0627\u06A9\u0646\u0634\u200C\
+          \u0647\u0627 \u0628\u0647 \u0645\u062D\u06A9\u0648\u0645\u06CC\u062A \u0627\
+          \u06CC\u0631\u0627\u0646 \u062F\u0631 \u067E\u0631\u0648\u0646\u062F\u0647\
+          \ \u06A9\u0631\u0633\u0646\u062A\u061B \u0628\u0647 \u0646\u0645\u0627\u06CC\
+          \u0646\u062F\u06AF\u0627\u0646 \u0645\u062C\u0644\u0633 \u06AF\u0641\u062A\
+          \u0647 \u0634\u062F\u0647 \u0628\u0648\u062F \u062D\u0642 \xAB\u0627\u0638\
+          \u0647\u0627\u0631\u0646\u0638\u0631\xBB \u0646\u062F\u0627\u0631\u0646\u062F"
         probability: 1.0
         url: https://www.radiofarda.com/a/31514545.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
@@ -9039,6 +9059,9 @@ featureoptions:
       - campaign: persagg
         description: ''
         keywords:
+        - "\u4E60\u8FD1\u5E73"
+        - "\u5929\u4E0B"
+        - "\u82F1\u624D"
         - "\u4E2D\u56FD"
         - "\u6D77\u5173"
         - "\u603B\u7F72"
@@ -18454,4 +18477,3 @@ trustedcas:
     '
   commonname: GlobalSign
 uiaddr: 127.0.0.1:16823
-`)
