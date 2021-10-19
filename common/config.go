@@ -17,11 +17,12 @@ type UserConfigData struct {
 	Headers  map[string]string
 }
 
-func (uc *UserConfigData) GetDeviceID() string          { return uc.DeviceID }
-func (uc *UserConfigData) GetUserID() int64             { return uc.UserID }
-func (uc *UserConfigData) GetToken() string             { return uc.Token }
-func (uc *UserConfigData) GetLanguage() string          { return uc.Language }
-func (uc *UserConfigData) GetTimeZone() (string, error) { return timezone.IANANameForTime(time.Now()) }
+func (uc *UserConfigData) GetDeviceID() string             { return uc.DeviceID }
+func (uc *UserConfigData) GetUserID() int64                { return uc.UserID }
+func (uc *UserConfigData) GetToken() string                { return uc.Token }
+func (uc *UserConfigData) GetLanguage() string             { return uc.Language }
+func (uc *UserConfigData) GetTimeZone() (string, error)    { return timezone.IANANameForTime(time.Now()) }
+func (uc *UserConfigData) GetEnabledExperiments() []string { return nil }
 func (uc *UserConfigData) GetInternalHeaders() map[string]string {
 	h := make(map[string]string)
 	for k, v := range uc.Headers {

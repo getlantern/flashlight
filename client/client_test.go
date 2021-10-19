@@ -95,12 +95,15 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 		func() bool { return true },
 		func() bool { return true },
 		func() bool { return false },
+		func() bool { return false },
 		newTestUserConfig(),
 		mockStatsTracker{},
 		func() bool { return true },
 		func() string { return lang },
 		func() string { return adSwapTargetURL },
 		func(host string) (string, error) { return host, nil },
+		func() string { return "https://tracker/ads" },
+		func(category, action, label string) {},
 	)
 	return client
 }
@@ -169,6 +172,8 @@ func TestIsAddressProxyable(t *testing.T) {
 		"address should not be proxyable if it's a plain hostname")
 	assert.Error(t, client.isAddressProxyable("something.local:80"),
 		"address should not be proxyable if it ends in .local")
+	assert.Error(t, client.isAddressProxyable("something.onion:80"),
+		"address should not be proxyable if it ends in .onion")
 	assert.NoError(t, client.isAddressProxyable("anysite.com:80"),
 		"address should be proxyable if it's not an IP address, not a plain hostname and does not end in .local")
 }
@@ -369,7 +374,7 @@ func TestAccessingProxyPort(t *testing.T) {
 		client.ListenAndServeHTTP("localhost:", func() {
 		})
 	}()
-	listenAddr, valid := addr.Get(-1)
+	listenAddr, valid := Addr(24 * time.Hour)
 	assert.True(t, valid, "should set addr")
 	proxyURL := "http://" + listenAddr.(string)
 	tr := http.Transport{

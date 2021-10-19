@@ -6,12 +6,12 @@ import (
 	"context"
 	crand "crypto/rand"
 	"encoding/binary"
+	goerrors "errors"
 	"fmt"
 	"io"
 	mrand "math/rand"
 	"net"
 	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/getlantern/errors"
@@ -124,12 +124,7 @@ func ssTranslateError(err error) error {
 		return nil
 	}
 
-	// in go 1.16, this error is called net.ErrClosed and
-	// this could become errors.Is(err, net.ErrClosed).
-	// See a decade of discussion here:
-	// https://github.com/golang/go/issues/4373
-	// here it's just treated as io.EOF
-	if strings.Contains(err.Error(), "use of closed network connection") {
+	if goerrors.Is(err, net.ErrClosed) {
 		return io.EOF
 	}
 

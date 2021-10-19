@@ -13,7 +13,7 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/mtime"
+	"github.com/getlantern/netx"
 	"github.com/getlantern/ops"
 	"github.com/getlantern/proxybench"
 
@@ -31,7 +31,6 @@ import (
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/stats"
-	"github.com/getlantern/flashlight/vpn"
 )
 
 var (
@@ -43,6 +42,7 @@ var (
 	// default enabled status (until we know the country)
 	blockingRelevantFeatures = map[string]bool{
 		config.FeatureProxyBench:           false,
+		config.FeatureGoogleSearchAds:      false,
 		config.FeaturePingProxies:          false,
 		config.FeatureNoBorda:              true,
 		config.FeatureNoProbeProxies:       true,
@@ -51,6 +51,30 @@ var (
 		config.FeatureProxyWhitelistedOnly: true,
 	}
 )
+
+func init() {
+	netx.EnableNAT64AutoDiscovery()
+}
+
+// HandledErrorType is used to differentiate error types to handlers configured via
+// Flashlight.SetErrorHandler.
+type HandledErrorType int
+
+const (
+	ErrorTypeProxySaveFailure  HandledErrorType = iota
+	ErrorTypeConfigSaveFailure HandledErrorType = iota
+)
+
+func (t HandledErrorType) String() string {
+	switch t {
+	case ErrorTypeProxySaveFailure:
+		return "proxy save failure"
+	case ErrorTypeConfigSaveFailure:
+		return "config save failure"
+	default:
+		return fmt.Sprintf("unrecognized error type %d", t)
+	}
+}
 
 type Flashlight struct {
 	configDir         string
@@ -64,8 +88,8 @@ type Flashlight struct {
 	onBordaConfigured chan bool
 	autoReport        func() bool
 	client            *client.Client
-	vpnEnabled        bool
 	op                *fops.Op
+	errorHandler      func(HandledErrorType, error)
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
@@ -84,6 +108,16 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	}
 	f.onConfigUpdate(cfg, src)
 	f.reconfigurePingProxies()
+	f.reconfigureGoogleAds()
+}
+
+func (f *Flashlight) reconfigureGoogleAds() {
+	var opts config.GoogleSearchAdsOptions
+	if err := f.FeatureOptions(config.FeatureGoogleSearchAds, &opts); err == nil {
+		f.client.ConfigureGoogleAds(opts)
+	} else {
+		log.Errorf("Unable to configure google search ads: %v", err)
+	}
 }
 
 func (f *Flashlight) reconfigurePingProxies() {
@@ -176,7 +210,17 @@ func (f *Flashlight) startConfigFetch() func() {
 	}
 	rt := proxied.ParallelPreferChained()
 
-	stopConfig := config.Init(f.configDir, f.flagsAsMap, f.userConfig, proxiesDispatch, globalDispatch, rt)
+	onProxiesSaveError := func(err error) {
+		f.errorHandler(ErrorTypeProxySaveFailure, err)
+	}
+	onConfigSaveError := func(err error) {
+		f.errorHandler(ErrorTypeConfigSaveFailure, err)
+	}
+
+	stopConfig := config.Init(
+		f.configDir, f.flagsAsMap, f.userConfig,
+		proxiesDispatch, onProxiesSaveError,
+		globalDispatch, onConfigSaveError, rt)
 	return stopConfig
 }
 
@@ -222,6 +266,7 @@ func New(
 	enableVPN bool,
 	disconnected func() bool,
 	_proxyAll func() bool,
+	_googleAds func() bool,
 	allowPrivateHosts func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
@@ -232,7 +277,10 @@ func New(
 	isPro func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
-	reverseDNS func(host string) (string, error)) (*Flashlight, error) {
+	reverseDNS func(host string) (string, error),
+	adTrackUrl func() string,
+	eventWithLabel func(category, action, label string),
+) (*Flashlight, error) {
 
 	log.Debugf("Using configdir: %v", configDir)
 
@@ -261,6 +309,9 @@ func New(
 		onBordaConfigured: make(chan bool, 1),
 		autoReport:        autoReport,
 		op:                fops.Begin("client_started"),
+		errorHandler: func(t HandledErrorType, err error) {
+			log.Errorf("%v: %v", t, err)
+		},
 	}
 
 	var grabber dnsgrab.Server
@@ -268,7 +319,7 @@ func New(
 	if enableVPN {
 		grabber, grabberErr = dnsgrab.Listen(50000,
 			"127.0.0.1:53",
-			"8.8.8.8")
+			func() string { return "8.8.8.8" })
 		if grabberErr != nil {
 			log.Errorf("dnsgrab unable to listen: %v", grabberErr)
 		}
@@ -300,7 +351,6 @@ func New(
 			}
 			return fmt.Sprintf("%v:%v", updatedHost, port), nil
 		}
-		f.vpnEnabled = true
 	}
 
 	useShortcut := func() bool {
@@ -324,14 +374,23 @@ func New(
 		useShortcut,
 		shortcut.Allow,
 		useDetour,
-		func() bool { return !f.FeatureEnabled(config.FeatureNoHTTPSEverywhere) },
-		func() bool { return common.Platform != "android" && f.FeatureEnabled(config.FeatureTrackYouTube) },
+		func() bool {
+			return !f.FeatureEnabled(config.FeatureNoHTTPSEverywhere)
+		},
+		func() bool {
+			return common.Platform != "android" && (f.FeatureEnabled(config.FeatureTrackYouTube) || f.FeatureEnabled(config.FeatureGoogleSearchAds))
+		},
+		func() bool {
+			return _googleAds() && f.FeatureEnabled(config.FeatureGoogleSearchAds)
+		},
 		userConfig,
 		statsTracker,
 		allowPrivateHosts,
 		lang,
 		adSwapTargetURL,
 		reverseDNS,
+		adTrackUrl,
+		eventWithLabel,
 	)
 	if err != nil {
 		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)
@@ -343,27 +402,39 @@ func New(
 	return f, nil
 }
 
-// Run runs the client proxy. It blocks as long as the proxy is running.
+// Run starts background services and runs the client proxy. It blocks as long as
+// the proxy is running.
 func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 	afterStart func(cl *client.Client),
 	onError func(err error),
 ) {
-	if onError == nil {
-		onError = func(_ error) {}
-	}
+	stop := f.StartBackgroundServices()
+	defer stop()
 
+	f.RunClientListeners(httpProxyAddr, socksProxyAddr, afterStart, onError)
+}
+
+// Starts background services like config fetching
+func (f *Flashlight) StartBackgroundServices() func() {
+	log.Debug("Starting client proxy background services")
 	// check # of goroutines every minute, print the top 5 stacks with most
 	// goroutines if the # exceeds 800 and is increasing.
 	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
-	defer stopMonitor()
-	elapsed := mtime.Stopwatch()
 
-	log.Debug("Preparing to start client proxy")
-	stop := f.startConfigFetch()
-	defer stop()
-	onGeo := geolookup.OnRefresh()
+	stopConfigFetch := f.startConfigFetch()
 	geolookup.Refresh()
 
+	return func() {
+		stopConfigFetch()
+		stopMonitor()
+	}
+}
+
+// Runs client listeners, blocking as long as the proxy is running.
+func (f *Flashlight) RunClientListeners(httpProxyAddr, socksProxyAddr string,
+	afterStart func(cl *client.Client),
+	onError func(err error),
+) {
 	// Until we know our country, default to IR which has all detection rules
 	log.Debug("Defaulting detour country to IR until real country is known")
 	detour.SetCountry("IR")
@@ -381,24 +452,18 @@ func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 				log.Errorf("Unable to start SOCKS5 proxy: %v", err)
 			}
 		}()
-
-		if f.vpnEnabled {
-			log.Debug("Enabling VPN mode")
-			closeVPN, vpnErr := vpn.Enable(socksProxyAddr, "192.168.1.1", "", "10.0.0.2", "255.255.255.0")
-			if vpnErr != nil {
-				log.Error(vpnErr)
-			} else {
-				defer closeVPN()
-			}
-		}
 	}
+
+	if onError == nil {
+		onError = func(_ error) {}
+	}
+	onGeo := geolookup.OnRefresh()
 
 	log.Debug("Starting client HTTP proxy")
 	err := f.client.ListenAndServeHTTP(httpProxyAddr, func() {
 		log.Debug("Started client HTTP proxy")
 		proxied.SetProxyAddr(f.client.Addr)
 		email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
-		f.op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
 
 		// wait for borda to be configured before proceeding
 		select {
@@ -428,13 +493,30 @@ func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 	}
 }
 
+// SetErrorHandler configures error handling. All errors provided to the handler are significant,
+// but not enough to stop operation of the Flashlight instance. This method must be called before
+// calling Run. All errors provided to the handler will be of a HandledErrorType defined in this
+// package. The handler may be called multiple times concurrently.
+//
+// If no handler is configured, these errors will be logged on the ERROR level.
+func (f *Flashlight) SetErrorHandler(handler func(t HandledErrorType, err error)) {
+	if handler == nil {
+		return
+	}
+	f.errorHandler = handler
+}
+
+// Stops the local proxy
+func (f *Flashlight) Stop() error {
+	return f.client.Stop()
+}
+
 func (f *Flashlight) applyClientConfig(cfg *config.Global) {
 	certs, err := cfg.TrustedCACerts()
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
 	} else if cfg.Client != nil && cfg.Client.Fronted != nil {
-		fronted.Configure(certs, cfg.Client.FrontedProviders(), config.CloudfrontProviderID, filepath.Join(f.configDir, "masquerade_cache"))
-		chained.ConfigureFronting(certs, cfg.Client.FrontedProviders(), f.configDir)
+		fronted.Configure(certs, cfg.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(f.configDir, "masquerade_cache"))
 	} else {
 		log.Errorf("Unable to configured fronted (no config)")
 	}

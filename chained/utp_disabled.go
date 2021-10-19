@@ -1,4 +1,4 @@
-// +build android iosapp linux
+// +build android iosapp ios linux
 
 package chained
 

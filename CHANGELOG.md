@@ -1,4 +1,15 @@
 
+<a name="lantern-6.7.0"></a>
+## [lantern-6.7.0](https://github.com/getlantern/flashlight/compare/lantern-6.6.1...lantern-6.7.0)
+
+> 2021-06-03
+
+### Pull Requests
+
+* Merge pull request [#1095](https://github.com/getlantern/flashlight/issues/1095) from getlantern/no-onion-domains
+* Merge pull request [#1097](https://github.com/getlantern/flashlight/issues/1097) from getlantern/jm/replica-cache-control-headers
+
+
 <a name="lantern-6.6.1"></a>
 ## [lantern-6.6.1](https://github.com/getlantern/flashlight/compare/lantern-6.6.0...lantern-6.6.1)
 

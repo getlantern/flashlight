@@ -37,8 +37,8 @@ func TestInstrumentedResponseWriterMetrics(t *testing.T) {
 
 		assert.Equal(t, "testing", ctx["op"])
 		assert.Equal(t, borda.Sum(expectedByteCount), actualByteCount)
-		assert.InDeltaSlice(t, expectedFirstByteTime, actualFirstByteTime, 5.0)
-		assert.InDeltaSlice(t, expectedResponseTime, actualResponseTime, 5.0)
+		assert.InDeltaSlice(t, expectedFirstByteTime, actualFirstByteTime, 10.0)
+		assert.InDeltaSlice(t, expectedResponseTime, actualResponseTime, 10.0)
 		assert.InDeltaSlice(t, expectedResponseRate, actualResponseRate, 0.01)
 	})
 

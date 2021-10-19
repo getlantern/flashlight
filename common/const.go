@@ -1,7 +1,6 @@
 package common
 
 import (
-	"net/url"
 	"os"
 	"strconv"
 	"time"
@@ -42,13 +41,7 @@ var (
 
 	Staging = false
 
-	AuthServerAddr = "https://auth4.lantern.network"
-
 	ProAPIHost = "api.getiantem.org"
-
-	ReplicaSearchAPIHost = "replica-search.lantern.io"
-
-	ReplicaServiceEndpoint = url.URL{Scheme: "https", Host: ReplicaSearchAPIHost}
 
 	log = golog.LoggerFor("flashlight.common")
 
@@ -74,9 +67,7 @@ func initInternal() {
 		return
 	}
 	if Staging {
-		AuthServerAddr = "https://auth-staging.lantern.network"
 		ProAPIHost = "api-staging.getiantem.org"
-		ReplicaSearchAPIHost = "replica-search-staging.lantern.io"
 	}
 	forceAds, _ = strconv.ParseBool(os.Getenv("FORCEADS"))
 }

@@ -66,7 +66,7 @@ func startConfigServer(t *testing.T, config interface{}) (u string, reqCount fun
 	}
 	go func() {
 		if err = hs.Serve(l); err != nil {
-			t.Fatalf("Unable to serve: %v", err)
+			t.Errorf("Unable to serve: %v", err)
 		}
 	}()
 
@@ -119,11 +119,21 @@ pingsamplepercentage: 0
 reportissueemail: ""
 client:
   dumpheaders: false
+  fronted:
+    providers:
+      cloudfront:
+        hostaliases:
+          xyz.getiantem.org: xyz.cloudfront.net
+        masquerades: &id001
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.120
+        testurl: http://zyx.cloudfront.net/ping
+        validator:
+          rejectstatus:
+          - 403
   masqueradesets:
     cloudflare: []
-    cloudfront:
-    - domain: ad1.awsstatic.com
-      ipaddress: 54.192.34.80
+    cloudfront: *id001
 adsettings: null
 proxiedsites:
   delta:

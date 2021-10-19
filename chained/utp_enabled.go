@@ -1,5 +1,6 @@
 // +build !android
 // +build !iosapp
+// +build !ios
 // +build !linux
 
 package chained
