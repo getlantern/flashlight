@@ -1,15 +1,23 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"math/rand"
 	"net"
-
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/getlantern/flashlight/config"
+
+	"github.com/PuerkitoBio/goquery"
+	"github.com/andybalholm/brotli"
 
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/proxy/filters"
@@ -61,7 +69,7 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 	}
 
 	trackYoutubeWatches(req)
-
+	client.trackSearches(req)
 	// Add the scheme back for CONNECT requests. It is cleared
 	// intentionally by the standard library, see
 	// https://golang.org/src/net/http/request.go#L938. The easylist
@@ -117,7 +125,159 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
 	}
 
+	if client.googleAdsFilter() && strings.Contains(strings.ToLower(req.Host), ".google.") && req.Method == "GET" && req.URL.Path == "/search" {
+		return client.divertGoogleSearchAds(ctx, req, next)
+	}
+
 	return next(ctx, req)
+}
+
+type PartnerAd struct {
+	Title       string
+	Url         string
+	TrackedUrl  string
+	Description string
+	BaseUrl     string
+}
+
+func (ad PartnerAd) String(opts *config.GoogleSearchAdsOptions) string {
+	link := strings.ReplaceAll(opts.AdFormat, "@ADLINK", ad.BaseUrl)
+	link = strings.ReplaceAll(link, "@LINK", ad.TrackedUrl)
+	link = strings.ReplaceAll(link, "@TITLE", ad.Title)
+	link = strings.ReplaceAll(link, "@DESCRIPTION", ad.Description)
+	return link
+}
+
+type PartnerAds []PartnerAd
+
+func (ads PartnerAds) String(client *Client, opts *config.GoogleSearchAdsOptions) string {
+	if len(ads) == 0 {
+		return ""
+	}
+	builder := strings.Builder{}
+
+	// Randomize the ads so we don't always show the same ones.
+	rand.Shuffle(len(ads), func(i, j int) {
+		ads[i], ads[j] = ads[j], ads[i]
+	})
+	for i, ad := range ads {
+		// Do not include more than a few ads.
+		if i >= 2 {
+			break
+		}
+		client.eventWithLabel("google_search_ads", "ad_injected", ad.Url)
+		builder.WriteString(ad.String(opts))
+	}
+	return strings.Replace(opts.BlockFormat, "@LINKS", builder.String(), 1)
+}
+
+func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords []string) string {
+	ads := PartnerAds{}
+	client.eventWithLabel("google_search", "keyword", strings.Join(keywords, "+"))
+	for _, partnerAds := range opts.Partners {
+		for _, ad := range partnerAds {
+			// check if any keywords match
+			found := false
+		out:
+			for _, query := range keywords {
+				for _, kw := range ad.Keywords {
+					if kw.MatchString(query) {
+						client.eventWithLabel("google_search_ads", "keyword_match", kw.String())
+
+						found = true
+						break out
+					}
+				}
+			}
+			// we randomly skip the injection based on probability specified in config
+			if found && rand.Float32() < ad.Probability {
+				ads = append(ads, PartnerAd{
+					Title:       ad.Name,
+					TrackedUrl:  client.getTrackAdUrl(ad.URL, ad.Campaign),
+					Url:         ad.URL,
+					Description: ad.Description,
+					BaseUrl:     client.getBaseUrl(ad.URL),
+				})
+			}
+
+		}
+	}
+	return ads.String(client, opts)
+}
+
+// getBaseUrl returns the URL for the base domain of an ad without the full path, query string,
+// etc.
+func (client *Client) getBaseUrl(originalUrl string) string {
+	url, err := url.Parse(originalUrl)
+	if err != nil {
+		return originalUrl
+	}
+	return url.Scheme + "://" + url.Host
+}
+
+// getTrackAdUrl takes original URL and passes it to the analytics tracker
+// once the click event is logged, we redirect to the actual ad
+func (client *Client) getTrackAdUrl(originalUrl string, campaign string) string {
+	newUrl, err := url.Parse(client.adTrackUrl())
+	if err != nil {
+		return originalUrl
+	}
+	q := newUrl.Query()
+	q.Set("ad_url", originalUrl)
+	if campaign != "" {
+		q.Set("ad_campaign", campaign)
+	}
+	newUrl.RawQuery = q.Encode()
+	return newUrl.String()
+}
+
+func (client *Client) divertGoogleSearchAds(initialContext filters.Context, req *http.Request, next filters.Next) (resp *http.Response, ctx filters.Context, err error) {
+	log.Debug("Processing google search ads")
+	client.googleAdsOptionsLock.RLock()
+	opts := client.googleAdsOptions
+	client.googleAdsOptionsLock.RUnlock()
+	resp, ctx, err = next(initialContext, req)
+
+	// if both requests succeed, extract partner ads and inject them
+	if err == nil && opts != nil {
+		body := bytes.NewBuffer(nil)
+		if _, err = io.Copy(body, brotli.NewReader(resp.Body)); err != nil {
+			return
+		}
+		_ = resp.Body.Close()
+		resp.Body = ioutil.NopCloser(bytes.NewBufferString(body.String())) // restore the body, since we consumed it. In case we don't modify anything
+		var doc *goquery.Document
+		doc, err = goquery.NewDocumentFromReader(body)
+		if err != nil {
+			return
+		}
+
+		// find existing ads based on the pattern in config
+		adNode := doc.Find(opts.Pattern)
+		if len(adNode.Nodes) == 0 {
+			return
+		}
+
+		// extract search query
+		var query string
+		query, err = url.QueryUnescape(req.URL.Query().Get("q"))
+		if err != nil {
+			return
+		}
+		// inject new ads
+		adNode.ReplaceWithHtml(client.generateAds(opts, strings.Split(query, " ")))
+
+		// serialize DOM to string
+		var htmlResult string
+		htmlResult, err = doc.Html()
+		if err != nil {
+			return
+		}
+
+		resp.Header.Del("Content-Encoding")
+		resp.Body = io.NopCloser(bytes.NewBufferString(htmlResult))
+	}
+	return
 }
 
 func (client *Client) isHTTPProxyPort(r *http.Request) bool {
@@ -223,6 +383,42 @@ func (client *Client) redirectAdSwap(ctx filters.Context, req *http.Request, adS
 	}
 	resp.Header.Set("Location", adSwapURL)
 	return filters.ShortCircuit(ctx, req, resp)
+}
+
+type SearchEngine struct {
+	host string
+	path string
+}
+
+var SearchEnginesToTrack = map[string]SearchEngine{
+	"google": {
+		host: "google.com",
+		path: "/search",
+	},
+	"bing": {
+		host: "bing.com",
+		path: "/search",
+	},
+	"baidu": {
+		host: "baidu.com",
+		path: "/s",
+	},
+}
+
+func (s *SearchEngine) Matches(req *http.Request) bool {
+	if !strings.Contains(strings.ToLower(req.Host), s.host) && !strings.Contains(strings.ToLower(req.URL.Host), s.host) {
+		return false
+	}
+	return strings.Contains(strings.ToLower(req.URL.Path), s.path)
+}
+
+func (client *Client) trackSearches(req *http.Request) {
+	for engine, params := range SearchEnginesToTrack {
+		if params.Matches(req) {
+			client.eventWithLabel("search", "search_performed", engine)
+			break
+		}
+	}
 }
 
 func trackYoutubeWatches(req *http.Request) {

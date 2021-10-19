@@ -39,7 +39,7 @@ var (
 		"proxy_rank",
 		"proxy_selection_stability",
 		"probe",
-		"balancer_dial",
+		"dial_for_balancer",
 		"proxy_dial",
 		"youtube_view",
 		"replica_upload",
@@ -49,7 +49,7 @@ var (
 
 	// LightweightOps are ops for which we record less than the full set of dimensions (e.g. omit error)
 	LightweightOps = []string{
-		"balancer_dial",
+		"dial_for_balancer",
 		"proxy_dial",
 		"youtube_view"}
 

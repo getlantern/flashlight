@@ -4,15 +4,11 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/pem"
-	"fmt"
 	"net"
-	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/fronted"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tinywss"
 	"github.com/getlantern/tlsdialer/v3"
@@ -31,7 +27,6 @@ func newWSSImpl(addr string, s *ChainedServerInfo, reportDialCore reportDialCore
 
 	url := s.ptSetting("url")
 	force_http := s.ptSettingBool("force_http")
-	fctx_id := s.ptSetting("df_ctx")
 
 	if force_http {
 		log.Debugf("Using wss http direct")
@@ -39,17 +34,6 @@ func newWSSImpl(addr string, s *ChainedServerInfo, reportDialCore reportDialCore
 		if err != nil {
 			return nil, err
 		}
-	} else if fctx_id != "" {
-		fctx := GetFrontingContext(fctx_id)
-		if fctx == nil {
-			return nil, fmt.Errorf("unsupported wss df_ctx=%s! skipping.", fctx_id)
-		}
-		timeout, err := time.ParseDuration(s.ptSetting("df_timeout"))
-		if err != nil || timeout < 0 {
-			timeout = 1 * time.Minute
-		}
-		log.Debugf("Using wss fctx_id=%s timeout=%v", fctx_id, timeout)
-		rt = &wssFrontedRT{fctx, timeout}
 	} else {
 		log.Debugf("Using wss https direct")
 		rt, err = wssHTTPSRoundTripper(s)
@@ -139,21 +123,4 @@ func wssHTTPSRoundTripper(s *ChainedServerInfo) (tinywss.RoundTripHijacker, erro
 		// the configured proxy address is always contacted.
 		return td.Dial(network, addr)
 	}), nil
-}
-
-type wssFrontedRT struct {
-	fctx    *fronted.FrontingContext
-	timeout time.Duration
-}
-
-func (rt *wssFrontedRT) RoundTripHijack(req *http.Request) (*http.Response, net.Conn, error) {
-	r, ok := rt.fctx.NewDirect(rt.timeout)
-	if !ok {
-		return nil, nil, fmt.Errorf("Unable to obtain fronted roundtripper after %v fctx=%s!", rt.timeout, rt.fctx)
-	}
-	if rth, ok := r.(tinywss.RoundTripHijacker); ok {
-		return rth.RoundTripHijack(req)
-	} else {
-		return nil, nil, fmt.Errorf("Unsupported roundtripper obtained from fronted!")
-	}
 }

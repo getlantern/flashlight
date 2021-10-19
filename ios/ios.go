@@ -230,7 +230,7 @@ func (c *client) start() (ClientWriter, error) {
 	}
 	grabber, err := dnsgrab.ListenWithCache(
 		"127.0.0.1:0",
-		c.realDNSHost,
+		func() string { return c.realDNSHost },
 		cache,
 	)
 	if err != nil {
