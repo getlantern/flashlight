@@ -16,7 +16,6 @@ function gen-list-for-country() {
   cat resources/default_ipv6.txt >> resources/$2_ipv6.txt
 }
 
-which go-bindata >/dev/null || die 'Missing command "go-bindata". See https://github.com/jteeuwen/go-bindata.'
 [ ! -z "$MAXMIND_LICENSE_KEY" ] || die 'Missing envvar "MAXMIND_LICENSE_KEY".'
 mkdir -p resources && \
 curl "https://download.maxmind.com/app/geoip_download?license_key=$MAXMIND_LICENSE_KEY&edition_id=GeoLite2-Country-CSV&suffix=zip" > geoip2.zip && \
@@ -28,4 +27,3 @@ gen-list-for-country 290557 ae && \
 rm geoip2.zip && \
 rm *.csv  && \
 rm *.txt  && \
-go-bindata -nomemcopy -nocompress -pkg shortcut -o resources.go resources
