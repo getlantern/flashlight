@@ -6,6 +6,7 @@ import (
 	"compress/gzip"
 	"crypto/sha256"
 	"crypto/tls"
+	_ "embed"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
@@ -59,6 +60,10 @@ const (
 var (
 	log               = golog.LoggerFor("testsupport")
 	tlsmasqOriginAddr string
+	//go:embed global-cfg.yaml
+	globalCfg []byte
+	//go:embed proxies-template.yaml
+	proxiesTemplate []byte
 )
 
 // Helper is a helper for running integration tests that provides its own web,
@@ -346,7 +351,7 @@ func (helper *Helper) writeGlobalConfig(resp http.ResponseWriter, req *http.Requ
 	resp.WriteHeader(http.StatusOK)
 
 	w := gzip.NewWriter(resp)
-	_, err := w.Write([]byte(globalCfg))
+	_, err := w.Write(globalCfg)
 	if err != nil {
 		helper.t.Error(err)
 	}
@@ -418,7 +423,7 @@ func (helper *Helper) buildProxies(proto string) (map[string]*chained.ChainedSer
 		return proxies, nil
 	}
 	var srv chained.ChainedServerInfo
-	err := yaml.Unmarshal([]byte(proxiesTemplate), &srv)
+	err := yaml.Unmarshal(proxiesTemplate, &srv)
 	if err != nil {
 		return nil, fmt.Errorf("Could not unmarshal config %v", err)
 	}
