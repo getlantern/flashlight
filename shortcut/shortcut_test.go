@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestReadResources(t *testing.T) {
+func TestShortcutResources(t *testing.T) {
 	log := golog.LoggerFor("shortcut-test")
 	countries := []string{"ae", "cn", "ir", "default"}
 	for _, country := range countries {

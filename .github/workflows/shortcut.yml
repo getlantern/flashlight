@@ -1,0 +1,34 @@
+name: Update Shortcut ip lists
+
+on:
+  schedule:
+    - cron: "0 */12 * * *"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16
+    - name: Granting private modules access
+      run: |
+          git config --global url."https://${{ secrets.GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+    - uses: actions/checkout@v2
+      with:
+        ref: devel
+    - run: |
+        cd ./shortcut
+        ./genlist.sh
+        go test -run TestShortcutResources
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git add resources/*
+        git commit -m "pushing auto-generated shortcut ip lists"
+        echo "pushing to devel"
+        git push origin devel
