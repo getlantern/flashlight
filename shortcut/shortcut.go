@@ -7,6 +7,7 @@ package shortcut
 import (
 	"bytes"
 	"context"
+	"embed"
 	"net"
 	"strings"
 	"sync"
@@ -42,12 +43,15 @@ func (s *nullShortcut) Allow(context.Context, string) (bool, net.IP) {
 func (s *nullShortcut) SetResolver(func(context.Context, string) (net.IP, error)) {
 }
 
+//go:embed resources/*.txt
+var ipTables embed.FS
+
 func configure(country string) {
 	country = strings.ToLower(country)
 	var _sc shortcut.Shortcut
 	for {
-		v4, v4err := Asset("resources/" + country + "_ipv4.txt")
-		v6, v6err := Asset("resources/" + country + "_ipv6.txt")
+		v4, v4err := ipTables.ReadFile("resources/" + country + "_ipv4.txt")
+		v6, v6err := ipTables.ReadFile("resources/" + country + "_ipv6.txt")
 		if v4err == nil && v6err == nil {
 			_sc = shortcut.NewFromReader(
 				bytes.NewReader(v4),
