@@ -23,7 +23,7 @@ function gen-list-for-country() {
   touch resources/"$2"_ipv6_proxied.txt
   local default_ipv4_proxied="resources/default_ipv4_$2_proxied.txt"
   if test -f "$default_ipv4_proxied"; then
-    cat "$default_ipv4_proxied" >> resources/"$2"_ipv4_proxied.txt
+    cat "$default_ipv4_proxied" > resources/"$2"_ipv4_proxied.txt
   fi
 }
 
