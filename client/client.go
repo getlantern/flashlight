@@ -18,6 +18,7 @@ import (
 
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getlantern/shortcut"
 
 	lru "github.com/hashicorp/golang-lru"
 
@@ -126,7 +127,7 @@ type Client struct {
 	allowProbes          func() bool
 	proxyAll             func() bool
 	useShortcut          func() bool
-	allowShortcutTo      func(ctx context.Context, addr string) (bool, net.IP)
+	shortcutMethod       func(ctx context.Context, addr string) (shortcut.Method, net.IP)
 	useDetour            func() bool
 	allowHTTPSEverywhere func() bool
 	user                 common.UserConfig
@@ -168,7 +169,7 @@ func NewClient(
 	allowProbes func() bool,
 	proxyAll func() bool,
 	useShortcut func() bool,
-	allowShortcutTo func(ctx context.Context, addr string) (bool, net.IP),
+	shortcutMethod func(ctx context.Context, addr string) (shortcut.Method, net.IP),
 	useDetour func() bool,
 	allowHTTPSEverywhere func() bool,
 	allowMITM func() bool,
@@ -195,7 +196,7 @@ func NewClient(
 		allowProbes:          allowProbes,
 		proxyAll:             proxyAll,
 		useShortcut:          useShortcut,
-		allowShortcutTo:      allowShortcutTo,
+		shortcutMethod:       shortcutMethod,
 		useDetour:            useDetour,
 		allowHTTPSEverywhere: allowHTTPSEverywhere,
 		user:                 userConfig,
@@ -612,7 +613,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 
 	dialDirectForDetour := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		if client.useShortcut() {
-			if allow, ip := client.allowShortcutTo(cappedCTX, addr); allow {
+			if method, ip := client.shortcutMethod(cappedCTX, addr); method == shortcut.Direct {
 				// Arbitrarily have a larger timeout if the address is eligible for shortcut.
 				shortcutCTX, cancel := context.WithTimeout(ctx, directTimeout*2)
 				defer cancel()
@@ -636,7 +637,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		dialer = func(ctx context.Context, network, addr string) (net.Conn, error) {
 			var conn net.Conn
 			var err error
-			if allow, ip := client.allowShortcutTo(cappedCTX, addr); allow {
+			if method, ip := client.shortcutMethod(cappedCTX, addr); method == shortcut.Direct {
 				// Don't cap the context if the address is eligible for shortcut.
 				conn, err = dialDirectForShortcut(ctx, network, addr, ip)
 				if err == nil {

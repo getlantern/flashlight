@@ -13,7 +13,6 @@ require (
 	github.com/anacrolix/sync v0.2.0 // indirect
 	github.com/andybalholm/brotli v1.0.3
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
-	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff
@@ -68,7 +67,7 @@ require (
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/safechannels v0.0.0-20201218194342-b4e5383e9627
-	github.com/getlantern/shortcut v0.0.0-20200404021120-6e9e99fe45a0
+	github.com/getlantern/shortcut v0.0.0-20211026183428-bf59a137fdec
 	github.com/getlantern/timezone v0.0.0-20210104163318-083eaadcecbd
 	github.com/getlantern/tinywss v0.0.0-20200121221108-851921f95ad7
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4

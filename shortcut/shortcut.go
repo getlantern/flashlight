@@ -36,8 +36,8 @@ func init() {
 
 type nullShortcut struct{}
 
-func (s *nullShortcut) Allow(context.Context, string) (bool, net.IP) {
-	return false, nil
+func (s *nullShortcut) RouteMethod(context.Context, string) (shortcut.Method, net.IP) {
+	return shortcut.Proxy, nil
 }
 
 func (s *nullShortcut) SetResolver(func(context.Context, string) (net.IP, error)) {
@@ -52,10 +52,15 @@ func configure(country string) {
 	for {
 		v4, v4err := ipRanges.ReadFile("resources/" + country + "_ipv4.txt")
 		v6, v6err := ipRanges.ReadFile("resources/" + country + "_ipv6.txt")
-		if v4err == nil && v6err == nil {
+		v4Proxied, v4errProxied := ipRanges.ReadFile("resources/" + country + "_ipv4_proxied.txt")
+		v6Proxied, v6errProxied := ipRanges.ReadFile("resources/" + country + "_ipv6_proxied.txt")
+		if v4err == nil && v6err == nil && v4errProxied == nil && v6errProxied == nil {
+			log.Debugf("Configuring for country %v", country)
 			_sc = shortcut.NewFromReader(
 				bytes.NewReader(v4),
 				bytes.NewReader(v6),
+				bytes.NewReader(v4Proxied),
+				bytes.NewReader(v6Proxied),
 			)
 			_sc.SetResolver(func(ctx context.Context, addr string) (net.IP, error) {
 				// TODO: change netx to accept context
@@ -91,9 +96,9 @@ func configure(country string) {
 	log.Debugf("loaded shortcut list for country %s", country)
 }
 
-func Allow(ctx context.Context, addr string) (bool, net.IP) {
+func Allow(ctx context.Context, addr string) (shortcut.Method, net.IP) {
 	mu.RLock()
 	_sc := sc
 	mu.RUnlock()
-	return _sc.Allow(ctx, addr)
+	return _sc.RouteMethod(ctx, addr)
 }
