@@ -650,7 +650,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 					return conn, err
 				}
 			case shortcut.Proxy:
-				return dialProxied(ctx, "whatever", addr)
+				return dialProxied(ctx, network, addr)
 			}
 			select {
 			case <-ctx.Done():

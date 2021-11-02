@@ -355,7 +355,7 @@ func TestTimeoutCheckingShortcut(t *testing.T) {
 		// In theory allowShortcut should never exceed the context deadline,
 		// but it could happen in cases like computer resuming from sleeping.
 		time.Sleep(requestTimeout * 2)
-		return shortcut.Proxy, nil
+		return shortcut.Unknown, nil
 	}
 
 	dialer := mockconn.SucceedingDialer([]byte("whatever"))
