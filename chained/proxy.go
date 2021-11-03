@@ -140,7 +140,7 @@ func extractParams(s *ChainedServerInfo) (addr, transport, network string, err e
 	}
 	network = "tcp"
 	switch transport {
-	case "utphttp", "utphttps", "utpobfs4", "quic", "quic_ietf", "oquic":
+	case "utphttp", "utphttps", "utpobfs4", "quic_ietf":
 		network = "udp"
 	}
 	return
@@ -181,7 +181,7 @@ func createImpl(configDir, name, addr, transport string, s *ChainedServerInfo, u
 		impl, err = newOBFS4Impl(name, addr, s, coreDialer)
 	case "lampshade":
 		impl, err = newLampshadeImpl(name, addr, s, reportDialCore)
-	case "quic_ietf", "oquic":
+	case "quic_ietf":
 		impl, err = newQUICImpl(name, addr, s, reportDialCore)
 	case "shadowsocks":
 		impl, err = newShadowsocksImpl(name, addr, s, reportDialCore)
