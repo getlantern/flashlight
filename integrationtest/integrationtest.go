@@ -25,7 +25,6 @@ import (
 
 	"github.com/getlantern/golog"
 	proxy "github.com/getlantern/http-proxy-lantern/v2"
-	"github.com/getlantern/quicwrapper"
 	"github.com/getlantern/tlsdefaults"
 	"github.com/getlantern/waitforserver"
 	"github.com/getlantern/yaml"
@@ -44,8 +43,6 @@ const (
 	IfNoneMatch = "X-Lantern-If-None-Match"
 
 	obfs4SubDir = ".obfs4"
-
-	oquicKey = "tAqXDihxfJDqyHy35k2NhImetkzKmoC7MFEELrYi6LI="
 
 	shadowsocksSecret   = "foobarbaz"
 	shadowsocksUpstream = "local"
@@ -79,7 +76,6 @@ type Helper struct {
 	LampshadeProxyServerAddr      string
 	LampshadeUTPProxyServerAddr   string
 	QUICIETFProxyServerAddr       string
-	OQUICProxyServerAddr          string
 	WSSProxyServerAddr            string
 	ShadowsocksProxyServerAddr    string
 	ShadowsocksmuxProxyServerAddr string
@@ -122,7 +118,6 @@ func NewHelper(t *testing.T, basePort int) (*Helper, error) {
 		LampshadeProxyServerAddr:      nextListenAddr(),
 		LampshadeUTPProxyServerAddr:   nextListenAddr(),
 		QUICIETFProxyServerAddr:       nextListenAddr(),
-		OQUICProxyServerAddr:          nextListenAddr(),
 		WSSProxyServerAddr:            nextListenAddr(),
 		ShadowsocksProxyServerAddr:    nextListenAddr(),
 		ShadowsocksmuxProxyServerAddr: nextListenAddr(),
@@ -222,8 +217,6 @@ func (helper *Helper) startProxyServer() error {
 		return err
 	}
 
-	oqDefaults := quicwrapper.DefaultOQuicConfig([]byte(""))
-
 	s1 := &proxy.Proxy{
 		TestingLocal:             true,
 		HTTPAddr:                 helper.HTTPSProxyServerAddr,
@@ -240,13 +233,6 @@ func (helper *Helper) startProxyServer() error {
 		ShadowsocksAddr:          helper.ShadowsocksProxyServerAddr,
 		ShadowsocksMultiplexAddr: helper.ShadowsocksmuxProxyServerAddr,
 		ShadowsocksSecret:        shadowsocksSecret,
-
-		OQUICAddr:              helper.OQUICProxyServerAddr,
-		OQUICKey:               oquicKey,
-		OQUICCipher:            oqDefaults.Cipher,
-		OQUICAggressivePadding: uint64(oqDefaults.AggressivePadding),
-		OQUICMaxPaddingHint:    uint64(oqDefaults.MaxPaddingHint),
-		OQUICMinPadded:         uint64(oqDefaults.MinPadded),
 
 		TLSMasqSecret:     tlsmasqServerSecret,
 		TLSMasqOriginAddr: helper.tlsMasqOriginAddr,
@@ -458,12 +444,6 @@ func (helper *Helper) buildProxies(proto string) (map[string]*chained.ChainedSer
 		} else if proto == "quic_ietf" {
 			srv.Addr = helper.QUICIETFProxyServerAddr
 			srv.PluggableTransport = "quic_ietf"
-		} else if proto == "oquic" {
-			srv.Addr = helper.OQUICProxyServerAddr
-			srv.PluggableTransport = "oquic"
-			srv.PluggableTransportSettings = map[string]string{
-				"oquic_key": oquicKey,
-			}
 		} else if proto == "wss" {
 			srv.Addr = helper.WSSProxyServerAddr
 			srv.PluggableTransport = "wss"
