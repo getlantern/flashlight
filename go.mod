@@ -85,6 +85,7 @@ require (
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/huandu/xstrings v1.3.2 // indirect
+	github.com/huin/goupnp v1.0.2 // indirect
 	github.com/jaffee/commandeer v0.5.0
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
 	github.com/lucas-clemente/quic-go v0.19.3 // indirect
@@ -105,6 +106,7 @@ require (
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
 	golang.org/x/crypto v0.0.0-20210812204632-0ba0e8f03122 // indirect
 	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e
 	google.golang.org/genproto v0.0.0-20210406143921-e86de6bf7a46 // indirect
 	google.golang.org/grpc v1.37.0 // indirect
