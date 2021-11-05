@@ -289,6 +289,8 @@ github.com/getlantern/http-proxy v0.0.3-0.20210512134337-960392ff8d2e h1:E+1BVsh
 github.com/getlantern/http-proxy v0.0.3-0.20210512134337-960392ff8d2e/go.mod h1:nUNURGEzyTzf7C4aq34Vem1sdDkODvKJx3sKeX7C53Q=
 github.com/getlantern/http-proxy-lantern/v2 v2.6.48 h1:Ib2yK7EjWHBWCkdI+a8bPzmbHrGtvEwRHsqxrQR1kW8=
 github.com/getlantern/http-proxy-lantern/v2 v2.6.48/go.mod h1:6U9Zk3DHcKXPCns8GtWcARBFKWtDRqc8ALhYr4eZmRE=
+github.com/getlantern/http-proxy-lantern/v2 v2.6.49 h1:UOmaqaOtaZpbRIQiiMgvZSjeESeroAy+h0XlpNMnt5U=
+github.com/getlantern/http-proxy-lantern/v2 v2.6.49/go.mod h1:amJREyKa8wDSY3KmL8b3ibANl8fFOMWV+CF8tiubIYE=
 github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca h1:Of3VwFEfKbVnK5/VGy05XUbi6QvTs5Y2eLDfPv3O50E=
 github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca/go.mod h1:TNC/xJFmctsSGyXqcnVWwCRCPD/4zGQP7yBVnLDRa/U=
 github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c h1:+JnT+Rwa/3rksc4Zi0u6fJ/WX+tPK58GtsrcXWVUU2U=
@@ -338,6 +340,8 @@ github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7 h1:03J6Cb42EG06lH
 github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7/go.mod h1:GfzwugvtH7YcmNIrHHizeyImsgEdyL88YkdnK28B14c=
 github.com/getlantern/multipath v0.0.0-20201027015000-69ed0bd15259 h1:sDgdO1jeo9ozAd7tstkhle86xK7rc8LIYZvHZM+LRK4=
 github.com/getlantern/multipath v0.0.0-20201027015000-69ed0bd15259/go.mod h1:H/0vJMf1amR3WEUVuoDctZ0ymrMXK8nvxCmeNB+0Pn4=
+github.com/getlantern/multipath v0.0.0-20211105161347-48cd80ec7050 h1:IFYwB2k4C/lDEkoG748UB/CmRfmuxlgxwhj2gwcDBLQ=
+github.com/getlantern/multipath v0.0.0-20211105161347-48cd80ec7050/go.mod h1:H/0vJMf1amR3WEUVuoDctZ0ymrMXK8nvxCmeNB+0Pn4=
 github.com/getlantern/nettest v1.0.0 h1:xg8vq9JrGzrFGFkFGwZwIJ5+kwtvyqNDIADwrANvhQg=
 github.com/getlantern/nettest v1.0.0/go.mod h1:8wY0QwrdpkayCBQXjhZoJuwu2IHfp4UErrxgwaJ2UM4=
 github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd/go.mod h1:wKdY0ikOgzrWSeB9UyBVKPRhjXQ+vTb+BPeJuypUuNE=

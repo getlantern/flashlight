@@ -42,7 +42,7 @@ require (
 	github.com/getlantern/golog v0.0.0-20210606115803-bce9f9fe5a5f
 	github.com/getlantern/hellosplitter v0.1.0
 	github.com/getlantern/hidden v0.0.0-20201229170000-e66e7f878730
-	github.com/getlantern/http-proxy-lantern/v2 v2.6.48
+	github.com/getlantern/http-proxy-lantern/v2 v2.6.49
 	github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
 	github.com/getlantern/idletiming v0.0.0-20201229174729-33d04d220c4e
@@ -56,7 +56,7 @@ require (
 	github.com/getlantern/mitm v0.0.0-20210622063317-e6510574903b
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
-	github.com/getlantern/multipath v0.0.0-20201027015000-69ed0bd15259
+	github.com/getlantern/multipath v0.0.0-20211105161347-48cd80ec7050
 	github.com/getlantern/netx v0.0.0-20210813193214-fc6827f83767
 	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
