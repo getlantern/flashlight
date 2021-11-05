@@ -85,6 +85,8 @@ func configure(country string) {
 				}
 			})
 			break
+		} else {
+			log.Debugf("Could not open all files %v, %v, %v, %v", v4err, v6err, v4errProxied, v6errProxied)
 		}
 		log.Debugf("no shortcut list for country %s, fallback to default", country)
 		country = "default"
