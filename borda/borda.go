@@ -96,9 +96,9 @@ func Enabler(samplePercentage float64) EnabledFunc {
 func Configure(reportInterval time.Duration, enabled EnabledFunc) {
 	log.Debugf("Supplied report interval is %v", reportInterval)
 	if common.InDevelopment() {
-		if reportInterval > 1*time.Minute {
-			log.Debug("In development, will report everything to borda every 1 minutes")
-			reportInterval = 1 * time.Minute
+		if reportInterval > 1*time.Second {
+			log.Debug("In development, will report everything to borda every second")
+			reportInterval = 1 * time.Second
 		}
 		enabled = func(ctx map[string]interface{}) bool {
 			return true
