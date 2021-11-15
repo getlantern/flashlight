@@ -58,6 +58,11 @@ type ReplicaOptions struct {
 	ReplicaRustDefaultEndpoint string
 	// map of region to endpoint url
 	ReplicaRustEndpoints map[string]string
+	// A set of info hashes (20 bytes, hex-encoded) by proxy country to which proxies should
+	// announce themselves.
+	ProxyAnnounceTargets map[string][]string
+	// A set of info hashes per client country where p2p-proxy peers can be found.
+	ProxyPeerInfoHashes map[string][]string
 }
 
 func (gc *ReplicaOptions) MetainfoUrls(prefix string) (ret []string) {
