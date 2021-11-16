@@ -11,7 +11,7 @@ require (
 	github.com/anacrolix/log v0.8.0 // indirect
 	github.com/anacrolix/mmsg v1.0.0 // indirect
 	github.com/anacrolix/sync v0.2.0 // indirect
-	github.com/andybalholm/brotli v1.0.3
+	github.com/andybalholm/brotli v1.0.4
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
@@ -95,7 +95,7 @@ require (
 	github.com/montanaflynn/stats v0.6.3 // indirect
 	github.com/pborman/uuid v1.2.1
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
-	github.com/refraction-networking/utls v0.0.0-20200729012536-186025ac7b77
+	github.com/refraction-networking/utls v1.0.0
 	github.com/shadowsocks/go-shadowsocks2 v0.1.4-0.20201002022019-75d43273f5a5
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
@@ -103,8 +103,7 @@ require (
 	github.com/ugorji/go v1.1.7 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
-	golang.org/x/crypto v0.0.0-20210812204632-0ba0e8f03122 // indirect
-	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
+	golang.org/x/net v0.0.0-20211111160137-58aab5ef257a
 	golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e
 	google.golang.org/genproto v0.0.0-20210406143921-e86de6bf7a46 // indirect
 	google.golang.org/grpc v1.37.0 // indirect
@@ -114,7 +113,7 @@ require (
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.0.0-20211103152344-c9ce5bfd4854
 
-replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20200903013459-0c02248f7ce1
+replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20211116192935-1abdc4b1acab
 
 replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3-0.20210202003624-785b5fda134e
 
