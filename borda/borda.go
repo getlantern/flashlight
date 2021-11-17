@@ -57,6 +57,12 @@ var (
 	// submitted. It's mostly useful for unit testing.
 	BeforeSubmit func(name string, ts time.Time, values map[string]borda.Val, dimensionsJSON []byte)
 
+	// Set by SetURL.
+	// n.b. If SetURL is never called, the empty string is provided to getlantern/borda, resulting
+	// in use of getlantern/borda.DefaultURL.
+	bordaURL   string
+	bordaURLMx sync.Mutex
+
 	bordaClient   *borda.Client
 	bordaClientMx sync.Mutex
 
@@ -91,6 +97,15 @@ func Enabler(samplePercentage float64) EnabledFunc {
 	}
 }
 
+// SetURL sets the URL which should be used to reach Borda. This is mostly intended for use by
+// tests. Must be called before the first call to Configure (which may be called at any time once
+// flashlight.Flashlight.Run is called). Once Configure is called, the URL is set.
+func SetURL(url string) {
+	bordaURLMx.Lock()
+	bordaURL = url
+	bordaURLMx.Unlock()
+}
+
 // Configure starts borda reporting if reportInterval > 0. The service never stops once enabled.
 // The service will check enabled each time before it reports to borda, however.
 func Configure(reportInterval time.Duration, enabled EnabledFunc) {
@@ -111,10 +126,14 @@ func Configure(reportInterval time.Duration, enabled EnabledFunc) {
 		return
 	}
 
+	bordaURLMx.Lock()
+	url := bordaURL
+	bordaURLMx.Unlock()
+
 	bordaClientMx.Lock()
 	if bordaClient == nil {
 		log.Debugf("Creating new borda client with report interval %v", reportInterval)
-		bordaClient = createBordaClient(reportInterval)
+		bordaClient = createBordaClient(reportInterval, url)
 	} else {
 		log.Debugf("Updating report interval to %v", reportInterval)
 		bordaClient.SetBatchInterval(reportInterval)
@@ -226,7 +245,7 @@ func startBorda(reportToBorda borda.Submitter, enabled EnabledFunc) {
 	})
 }
 
-func createBordaClient(reportInterval time.Duration) *borda.Client {
+func createBordaClient(reportInterval time.Duration, url string) *borda.Client {
 	rt := proxied.ChainedThenFronted()
 	rt.SetMasqueradeTimeout(30 * time.Second)
 	return borda.NewClient(&borda.Options{
@@ -240,6 +259,7 @@ func createBordaClient(reportInterval time.Duration) *borda.Client {
 			}),
 		},
 		BeforeSubmit: BeforeSubmit,
+		URL:          url,
 	})
 }
 
