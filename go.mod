@@ -19,7 +19,7 @@ require (
 	github.com/frankban/quicktest v1.11.3 // indirect
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
-	github.com/getlantern/borda v0.0.0-20211118145443-aeeab8933313
+	github.com/getlantern/borda v0.0.0-20210122163308-eccb55d42214
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
 	github.com/getlantern/byteexec v0.0.0-20200509011419-2f5ed5531ada // indirect
 	github.com/getlantern/cmux/v2 v2.0.0-20200905031936-c55b16ee8462
@@ -79,7 +79,9 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/golang/snappy v0.0.2 // indirect
 	github.com/google/gopacket v1.1.17
+	github.com/google/uuid v1.2.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/huandu/xstrings v1.3.2 // indirect
@@ -98,12 +100,14 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/testify v1.7.0
+	github.com/ugorji/go v1.1.7 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
 	golang.org/x/net v0.0.0-20211111160137-58aab5ef257a
 	golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e
 	google.golang.org/genproto v0.0.0-20210406143921-e86de6bf7a46 // indirect
 	google.golang.org/grpc v1.37.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
