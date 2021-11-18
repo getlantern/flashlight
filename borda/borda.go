@@ -66,6 +66,10 @@ var (
 	bordaClient   *borda.Client
 	bordaClientMx sync.Mutex
 
+	// Overrides any configured report interval. Intended for use only by tests.
+	overrideReportInterval   time.Duration
+	overrideReportIntervalMx sync.Mutex
+
 	once sync.Once
 
 	// Regexp based on code from https://codverter.com/blog/articles/tech/20190105-extract-ipv4-ipv6-ip-addresses-using-regex.html
@@ -106,10 +110,26 @@ func SetURL(url string) {
 	bordaURLMx.Unlock()
 }
 
+// SetOverrideReportIntervalForTesting sets a report interval which overrides any interval provided
+// to Configure. This is only intended for use by tests.
+func SetOverrideReportIntervalForTesting(reportInterval time.Duration) {
+	overrideReportIntervalMx.Lock()
+	overrideReportInterval = reportInterval
+	overrideReportIntervalMx.Unlock()
+}
+
 // Configure starts borda reporting if reportInterval > 0. The service never stops once enabled.
 // The service will check enabled each time before it reports to borda, however.
 func Configure(reportInterval time.Duration, enabled EnabledFunc) {
 	log.Debugf("Supplied report interval is %v", reportInterval)
+
+	overrideReportIntervalMx.Lock()
+	if overrideReportInterval != 0 {
+		log.Debugf("Overriding report interval; new interval is %v", overrideReportInterval)
+		reportInterval = overrideReportInterval
+	}
+	overrideReportIntervalMx.Unlock()
+
 	if common.InDevelopment() {
 		if reportInterval > 1*time.Minute {
 			log.Debug("In development, will report everything to borda every 1 minutes")
