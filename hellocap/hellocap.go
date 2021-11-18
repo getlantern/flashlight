@@ -67,13 +67,18 @@ func getBrowserHello(ctx context.Context, browser browser) ([]byte, error) {
 	}
 	defer s.Close()
 
+	_, port, err := net.SplitHostPort(s.address())
+	if err != nil {
+		return nil, fmt.Errorf("failed to split hello-capture server address: %w", err)
+	}
+
 	go func() {
 		if err := s.listenAndServeTLS(); err != nil {
 			serverErrChan <- err
 		}
 	}()
 	go func() {
-		if err := browser.get(ctx, fmt.Sprintf("https://%s", s.address())); err != nil {
+		if err := browser.get(ctx, fmt.Sprintf("https://localhost:%s", port)); err != nil {
 			browserErrChan <- err
 		}
 	}()

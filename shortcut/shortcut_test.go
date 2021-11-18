@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"testing"
+	"time"
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/shortcut"
@@ -56,10 +57,14 @@ func TestUnconfiguredCountry(t *testing.T) {
 		bytes.NewReader([]byte("")),
 	)
 
-	method, _ := sc.RouteMethod(context.Background(), "10.10.1.1:80")
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	method, _ := sc.RouteMethod(ctx, "10.10.1.1:80")
 	assert.Equal(t, shortcut.Direct, method)
+	cancel()
 
 	configure("gb")
-	method, _ = Allow(context.Background(), "10.10.1.1:80")
+	ctx, cancel = context.WithTimeout(context.Background(), 2*time.Second)
+	method, _ = Allow(ctx, "10.10.1.1:80")
 	assert.Equal(t, shortcut.Direct, method)
+	cancel()
 }
