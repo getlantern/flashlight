@@ -19,7 +19,7 @@ require (
 	github.com/frankban/quicktest v1.11.3 // indirect
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
-	github.com/getlantern/borda v0.0.0-20211117051529-4afc82a78e61
+	github.com/getlantern/borda v0.0.0-20211118145443-aeeab8933313
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
 	github.com/getlantern/byteexec v0.0.0-20200509011419-2f5ed5531ada // indirect
 	github.com/getlantern/cmux/v2 v2.0.0-20200905031936-c55b16ee8462
