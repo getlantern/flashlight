@@ -111,9 +111,9 @@ func SetURL(url string) {
 func Configure(reportInterval time.Duration, enabled EnabledFunc) {
 	log.Debugf("Supplied report interval is %v", reportInterval)
 	if common.InDevelopment() {
-		if reportInterval > 1*time.Second {
-			log.Debug("In development, will report everything to borda every second")
-			reportInterval = 1 * time.Second
+		if reportInterval > 1*time.Minute {
+			log.Debug("In development, will report everything to borda every 1 minutes")
+			reportInterval = 1 * time.Minute
 		}
 		enabled = func(ctx map[string]interface{}) bool {
 			return true
