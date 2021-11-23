@@ -51,6 +51,8 @@ type ReplicaOptionsRoot struct {
 	// This is the default. Can I use the name Default and have mapstructure handle it as the
 	// embedded/root struct?
 	ReplicaOptions
+	// Options tailored to country. This could be used to pattern match any arbitrary string really.
+	// mapstructure should ignore the field name.
 	ByCountry map[string]ReplicaOptions
 }
 
@@ -61,7 +63,8 @@ type ReplicaOptions struct {
 	StaticPeerAddrs []string
 	// Merged with the webseed URLs when the metadata and data buckets are merged.
 	MetadataBaseUrls []string
-	// Default endpoint, if nothing else is found
+	// The replica-rust endpoint to use. There's only one because object uploads and ownership are
+	// fixed to a specific bucket, and replica-rust endpoints are 1:1 with a bucket.
 	ReplicaRustEndpoint string
 }
 
