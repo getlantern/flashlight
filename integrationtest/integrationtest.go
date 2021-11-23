@@ -44,6 +44,9 @@ const (
 
 	obfs4SubDir = ".obfs4"
 
+	// The default (1024) eats up a good chunk of the race detector's cap of 8192 goroutines.
+	obfs4HandshakeConcurrency = 100
+
 	shadowsocksSecret   = "foobarbaz"
 	shadowsocksUpstream = "local"
 	shadowsocksCipher   = "chacha20-ietf-poly1305"
@@ -218,21 +221,22 @@ func (helper *Helper) startProxyServer() error {
 	}
 
 	s1 := &proxy.Proxy{
-		TestingLocal:             true,
-		HTTPAddr:                 helper.HTTPSProxyServerAddr,
-		HTTPMultiplexAddr:        helper.HTTPSSmuxProxyServerAddr,
-		HTTPUTPAddr:              helper.HTTPSUTPAddr,
-		Obfs4Addr:                helper.OBFS4ProxyServerAddr,
-		Obfs4UTPAddr:             helper.OBFS4UTPProxyServerAddr,
-		Obfs4Dir:                 filepath.Join(helper.ConfigDir, obfs4SubDir),
-		LampshadeAddr:            helper.LampshadeProxyServerAddr,
-		LampshadeUTPAddr:         helper.LampshadeUTPProxyServerAddr,
-		QUICIETFAddr:             helper.QUICIETFProxyServerAddr,
-		WSSAddr:                  helper.WSSProxyServerAddr,
-		TLSMasqAddr:              helper.TLSMasqProxyServerAddr,
-		ShadowsocksAddr:          helper.ShadowsocksProxyServerAddr,
-		ShadowsocksMultiplexAddr: helper.ShadowsocksmuxProxyServerAddr,
-		ShadowsocksSecret:        shadowsocksSecret,
+		TestingLocal:              true,
+		HTTPAddr:                  helper.HTTPSProxyServerAddr,
+		HTTPMultiplexAddr:         helper.HTTPSSmuxProxyServerAddr,
+		HTTPUTPAddr:               helper.HTTPSUTPAddr,
+		Obfs4Addr:                 helper.OBFS4ProxyServerAddr,
+		Obfs4UTPAddr:              helper.OBFS4UTPProxyServerAddr,
+		Obfs4Dir:                  filepath.Join(helper.ConfigDir, obfs4SubDir),
+		Obfs4HandshakeConcurrency: obfs4HandshakeConcurrency,
+		LampshadeAddr:             helper.LampshadeProxyServerAddr,
+		LampshadeUTPAddr:          helper.LampshadeUTPProxyServerAddr,
+		QUICIETFAddr:              helper.QUICIETFProxyServerAddr,
+		WSSAddr:                   helper.WSSProxyServerAddr,
+		TLSMasqAddr:               helper.TLSMasqProxyServerAddr,
+		ShadowsocksAddr:           helper.ShadowsocksProxyServerAddr,
+		ShadowsocksMultiplexAddr:  helper.ShadowsocksmuxProxyServerAddr,
+		ShadowsocksSecret:         shadowsocksSecret,
 
 		TLSMasqSecret:     tlsmasqServerSecret,
 		TLSMasqOriginAddr: helper.tlsMasqOriginAddr,
