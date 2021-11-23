@@ -48,6 +48,13 @@ type FeatureOptions interface {
 }
 
 type ReplicaOptions struct {
+	// This is the default. Can I use the name Default and have mapstructure handle it as the
+	// embedded/root struct?
+	ReplicaOptionsLeaf
+	ByCountry map[string]ReplicaOptionsLeaf
+}
+
+type ReplicaOptionsLeaf struct {
 	// Use infohash and old-style prefixing simultaneously for now. Later, the old-style can be removed.
 	WebseedBaseUrls []string
 	Trackers        []string
@@ -55,9 +62,21 @@ type ReplicaOptions struct {
 	// Merged with the webseed URLs when the metadata and data buckets are merged.
 	MetadataBaseUrls []string
 	// Default endpoint, if nothing else is found
-	ReplicaRustDefaultEndpoint string
-	// map of region to endpoint url
-	ReplicaRustEndpoints map[string]string
+	ReplicaRustEndpoint string
+}
+
+func (gc *ReplicaOptionsLeaf) MetainfoUrls(prefix string) (ret []string) {
+	for _, s := range gc.WebseedBaseUrls {
+		ret = append(ret, fmt.Sprintf("%s%s/torrent", s, prefix))
+	}
+	return
+}
+
+func (gc *ReplicaOptionsLeaf) WebseedUrls(prefix string) (ret []string) {
+	for _, s := range gc.WebseedBaseUrls {
+		ret = append(ret, fmt.Sprintf("%s%s/data/", s, prefix))
+	}
+	return
 }
 
 func (ro *ReplicaOptions) fromMap(m map[string]interface{}) error {
