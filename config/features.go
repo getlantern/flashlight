@@ -47,14 +47,14 @@ type FeatureOptions interface {
 	fromMap(map[string]interface{}) error
 }
 
-type ReplicaOptions struct {
+type ReplicaOptionsRoot struct {
 	// This is the default. Can I use the name Default and have mapstructure handle it as the
 	// embedded/root struct?
-	ReplicaOptionsLeaf
-	ByCountry map[string]ReplicaOptionsLeaf
+	ReplicaOptions
+	ByCountry map[string]ReplicaOptions
 }
 
-type ReplicaOptionsLeaf struct {
+type ReplicaOptions struct {
 	// Use infohash and old-style prefixing simultaneously for now. Later, the old-style can be removed.
 	WebseedBaseUrls []string
 	Trackers        []string
@@ -65,14 +65,14 @@ type ReplicaOptionsLeaf struct {
 	ReplicaRustEndpoint string
 }
 
-func (gc *ReplicaOptionsLeaf) MetainfoUrls(prefix string) (ret []string) {
+func (gc *ReplicaOptions) MetainfoUrls(prefix string) (ret []string) {
 	for _, s := range gc.WebseedBaseUrls {
 		ret = append(ret, fmt.Sprintf("%s%s/torrent", s, prefix))
 	}
 	return
 }
 
-func (gc *ReplicaOptionsLeaf) WebseedUrls(prefix string) (ret []string) {
+func (gc *ReplicaOptions) WebseedUrls(prefix string) (ret []string) {
 	for _, s := range gc.WebseedBaseUrls {
 		ret = append(ret, fmt.Sprintf("%s%s/data/", s, prefix))
 	}
