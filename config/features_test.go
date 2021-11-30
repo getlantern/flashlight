@@ -123,3 +123,90 @@ featureoptions:
 	require.NoError(t, gl.UnmarshalFeatureOptions(FeaturePingProxies, &opts2))
 	require.Equal(t, time.Hour, opts2.Interval)
 }
+
+const replicaGlobalConfigSample = `
+featureoptions:
+  trafficlog:
+    capturebytes: 10485760
+    savebytes: 10485760
+  replica:
+    # Uses ISO 3166 country codes
+    # https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes
+    # Also, quotes are necessary around key names, else Norway (NO) will be
+    # interpreted as a boolean
+
+    # These are the default options
+
+    metadatabaseurls: &DefaultUrls
+    - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
+    - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
+    - https://d3mm73d1kmj7zd.cloudfront.net/
+    replicarustendpoint: https://replica-search.lantern.io/
+    staticpeeraddrs: []
+    trackers:
+    - https://tracker.gbitt.info:443/announce
+    - http://tracker.opentrackr.org:1337/announce
+    - udp://tracker.leechers-paradise.org:6969/announce
+    webseedbaseurls: *DefaultUrls
+
+    # These are for compatibility with clients that don't load all options per-country.
+    replicarustdefaultendpoint: https://replica-search.lantern.io/
+    replicarustendpoints:
+      "RU": https://replica-search-aws.lantern.io/
+      "IR": https://replica-search-aws.lantern.io/
+
+    # Here follows options per-country
+
+    "IR":
+      metadatabaseurls:
+      - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
+      - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
+      - https://d3mm73d1kmj7zd.cloudfront.net/
+      replicarustendpoint: https://replica-search-aws.lantern.io/
+      staticpeeraddrs: ["1.1.1.1:42069"]
+      trackers: ["shiraz.persia:360"]
+      webseedbaseurls:
+      - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
+      - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
+      - https://d3mm73d1kmj7zd.cloudfront.net/
+    "CN":
+      metadatabaseurls:
+      - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
+      - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
+      replicarustendpoint: https://replica-search.lantern.io/
+      staticpeeraddrs: []
+      trackers: []
+      webseedbaseurls:
+      - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
+      - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
+    "RU":
+      metadatabaseurls:
+      - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
+      - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
+      - https://d3mm73d1kmj7zd.cloudfront.net/
+      replicarustendpoint: https://replica-search-aws.lantern.io/
+      staticpeeraddrs: []
+      trackers:
+      - https://tracker.gbitt.info:443/announce
+      - http://tracker.opentrackr.org:1337/announce
+      - udp://tracker.leechers-paradise.org:6969/announce
+      webseedbaseurls:
+      - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
+      - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
+      - https://d3mm73d1kmj7zd.cloudfront.net/
+`
+
+func TestReplicaByCountry(t *testing.T) {
+	require := require.New(t)
+	assert := assert.New(t)
+	// gi, err := newGlobalUnmarshaler(nil)([]byte(replicaGlobalConfigSample))
+	// require.NoError(err)
+	// g := gi.(*Global)
+	var g Global
+	require.NoError(yaml.Unmarshal([]byte(replicaGlobalConfigSample), &g))
+	var fos ReplicaOptionsRoot
+	require.NoError(g.UnmarshalFeatureOptions(FeatureReplica, &fos))
+	// spew.Dump(fos)
+	assert.Contains(fos.ByCountry, "RU")
+	assert.NotContains(fos.ByCountry, "AU")
+}

@@ -13,6 +13,7 @@ require (
 	github.com/anacrolix/sync v0.2.0 // indirect
 	github.com/andybalholm/brotli v1.0.4
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff
@@ -99,7 +100,7 @@ require (
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/go-server-timing v1.0.0
-	github.com/mitchellh/mapstructure v1.1.2
+	github.com/mitchellh/mapstructure v1.4.2
 	github.com/montanaflynn/stats v0.6.3 // indirect
 	github.com/pborman/uuid v1.2.1
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect

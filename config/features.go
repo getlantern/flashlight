@@ -50,10 +50,19 @@ type FeatureOptions interface {
 type ReplicaOptionsRoot struct {
 	// This is the default. Can I use the name Default and have mapstructure handle it as the
 	// embedded/root struct?
-	ReplicaOptions
+	ReplicaOptions `mapstructure:",squash"`
 	// Options tailored to country. This could be used to pattern match any arbitrary string really.
 	// mapstructure should ignore the field name.
-	ByCountry map[string]ReplicaOptions
+	ByCountry map[string]ReplicaOptions `mapstructure:",remain"`
+	// Deprecated. An unmatched country uses the embedded ReplicaOptions.ReplicaRustEndpoint.
+	// Removing this will break unmarshalling config.
+	ReplicaRustDefaultEndpoint string
+	// Deprecated. Use ByCountry.ReplicaRustEndpoint.
+	ReplicaRustEndpoints map[string]string
+}
+
+func (ro *ReplicaOptionsRoot) fromMap(m map[string]interface{}) error {
+	return mapstructure.Decode(m, ro)
 }
 
 type ReplicaOptions struct {
@@ -80,34 +89,6 @@ func (gc *ReplicaOptions) WebseedUrls(prefix string) (ret []string) {
 		ret = append(ret, fmt.Sprintf("%s%s/data/", s, prefix))
 	}
 	return
-}
-
-func (ro *ReplicaOptions) fromMap(m map[string]interface{}) error {
-	return mapstructure.Decode(m, &ro)
-}
-
-func (ro *ReplicaOptions) GetWebseedBaseUrls() []string {
-	return ro.WebseedBaseUrls
-}
-
-func (ro *ReplicaOptions) GetTrackers() []string {
-	return ro.Trackers
-}
-
-func (ro *ReplicaOptions) GetStaticPeerAddrs() []string {
-	return ro.StaticPeerAddrs
-}
-
-func (ro *ReplicaOptions) GetMetadataBaseUrls() []string {
-	return ro.MetadataBaseUrls
-}
-
-func (ro *ReplicaOptions) GetReplicaRustDefaultEndpoint() string {
-	return ro.ReplicaRustDefaultEndpoint
-}
-
-func (ro *ReplicaOptions) GetReplicaRustEndpoints() map[string]string {
-	return ro.ReplicaRustEndpoints
 }
 
 type GoogleSearchAdsOptions struct {
