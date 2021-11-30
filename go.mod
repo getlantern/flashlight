@@ -58,7 +58,7 @@ require (
 	github.com/getlantern/keyman v0.0.0-20210622061955-aa0d47d4932c
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
 	github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210601195915-e04471aa4920
-	github.com/getlantern/lantern_aws/salt/update_masquerades v0.0.0-00010101000000-000000000000 // indirect
+	github.com/getlantern/lantern_aws/salt/update_masquerades v0.0.0-20211130035655-0ef580db2763 // indirect
 	github.com/getlantern/measured v0.0.0-20210507000559-ec5307b2b8be
 	github.com/getlantern/mitm v0.0.0-20210622063317-e6510574903b
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
@@ -145,5 +145,3 @@ replace github.com/eycorsican/go-tun2socks => github.com/getlantern/go-tun2socks
 
 // v0.5.6 has a security issue and using require leaves a reference to it in go.sum
 replace github.com/ulikunitz/xz => github.com/ulikunitz/xz v0.5.8
-
-replace github.com/getlantern/lantern_aws/salt/update_masquerades => ../lantern_aws/salt/update_masquerades
