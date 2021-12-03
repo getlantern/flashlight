@@ -324,6 +324,8 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 			// util.DumpResponse(resp) can be called here to examine the response
 			atomic.StoreInt64(&frontedRTT, int64(elapsed))
 			switchToChainedIfRequired()
+		} else {
+			log.Debugf("Fronted request failed: %v", req.URL.String())
 		}
 	}
 
@@ -336,6 +338,8 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 			log.Debugf("Chained request succeeded in %v", elapsed)
 			atomic.StoreInt64(&chainedRTT, int64(elapsed))
 			switchToChainedIfRequired()
+		} else {
+			log.Debugf("Chained request failed: %v", req.URL.String())
 		}
 	}
 
