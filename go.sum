@@ -344,8 +344,8 @@ github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd/go.mod h1:wKdY0ikO
 github.com/getlantern/netx v0.0.0-20201229185957-3fadd2c8f5ba/go.mod h1:g7yY/ImU8M+7lS09wVG3GTsxNvtPMTvkeWZVfxowtMo=
 github.com/getlantern/netx v0.0.0-20210803075350-eb4fa6261e47/go.mod h1:g7yY/ImU8M+7lS09wVG3GTsxNvtPMTvkeWZVfxowtMo=
 github.com/getlantern/netx v0.0.0-20210806160745-b824e2cad607/go.mod h1:g7yY/ImU8M+7lS09wVG3GTsxNvtPMTvkeWZVfxowtMo=
-github.com/getlantern/netx v0.0.0-20210813193214-fc6827f83767 h1:7fnU/Yla61j5SqwXajy8REgN8cNasWtpmNAPc7NJx4Q=
-github.com/getlantern/netx v0.0.0-20210813193214-fc6827f83767/go.mod h1:WEXF4pfIfnHBUAKwLa4DW7kcEINtG6wjUkbL2btwXZQ=
+github.com/getlantern/netx v0.0.0-20211206143627-7ccfeb739cbd h1:z5IehLDMqMwJ0oeFIaMHhySRU8r1lRMh7WQ0Wn0LioA=
+github.com/getlantern/netx v0.0.0-20211206143627-7ccfeb739cbd/go.mod h1:WEXF4pfIfnHBUAKwLa4DW7kcEINtG6wjUkbL2btwXZQ=
 github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
 github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6 h1:QthAQCekS1YOeYWSvoHI6ZatlG4B+GBDLxV/2ZkBsTA=
 github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
@@ -398,8 +398,8 @@ github.com/getlantern/tinywss v0.0.0-20200121221108-851921f95ad7/go.mod h1:ZLyPO
 github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4 h1:73U3J4msGw3cXeKtCEbY7hbOdD6aX8gJv8BOu+VagF8=
 github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4/go.mod h1:f8WmDYKFOaC5/y0d3GWl6UKf1ZbSlIoMzkuC8x7pUhg=
 github.com/getlantern/tlsdialer/v3 v3.0.0/go.mod h1:nznxIhqehmOa3l8YAeEiXoVL57LtRVdbzafVCqIL+PM=
-github.com/getlantern/tlsdialer/v3 v3.0.1 h1:nyq8Cq5gIWZ1iONwPuUwhHG4yKFXHfxItx+j0sIvdqo=
-github.com/getlantern/tlsdialer/v3 v3.0.1/go.mod h1:ZK1keXRsQsvmyCUCnVdmPOXH47OTlyEbSlGrV5C0urA=
+github.com/getlantern/tlsdialer/v3 v3.0.3 h1:OXzzAqO8YojBOu2Kk8wquX2zbFmgJjji41RpaT6knLg=
+github.com/getlantern/tlsdialer/v3 v3.0.3/go.mod h1:hwA0X81pnrgx7GEwddaGWSxqr6eLBm7A0rrUMK2J7KY=
 github.com/getlantern/tlsmasq v0.4.5 h1:dFh3AxZdicyo8Sqy1/iZLpWiGuJGew43SKaVSL7o6QA=
 github.com/getlantern/tlsmasq v0.4.5/go.mod h1:qgXekW+O2Eag1/hsAndpV/xdY1XXZaoIj7FhXskbxdY=
 github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836/go.mod h1:1ZJE0mXEdPyyuF1daUTDBo2nVWB/6nuZy7IcNmRnHrc=
