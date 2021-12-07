@@ -56,6 +56,26 @@ func init() {
 	netx.EnableNAT64AutoDiscovery()
 }
 
+// HandledErrorType is used to differentiate error types to handlers configured via
+// Flashlight.SetErrorHandler.
+type HandledErrorType int
+
+const (
+	ErrorTypeProxySaveFailure  HandledErrorType = iota
+	ErrorTypeConfigSaveFailure HandledErrorType = iota
+)
+
+func (t HandledErrorType) String() string {
+	switch t {
+	case ErrorTypeProxySaveFailure:
+		return "proxy save failure"
+	case ErrorTypeConfigSaveFailure:
+		return "config save failure"
+	default:
+		return fmt.Sprintf("unrecognized error type %d", t)
+	}
+}
+
 type Flashlight struct {
 	configDir         string
 	flagsAsMap        map[string]interface{}
@@ -69,6 +89,7 @@ type Flashlight struct {
 	autoReport        func() bool
 	client            *client.Client
 	op                *fops.Op
+	errorHandler      func(HandledErrorType, error)
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
@@ -189,7 +210,17 @@ func (f *Flashlight) startConfigFetch() func() {
 	}
 	rt := proxied.ParallelPreferChained()
 
-	stopConfig := config.Init(f.configDir, f.flagsAsMap, f.userConfig, proxiesDispatch, globalDispatch, rt)
+	onProxiesSaveError := func(err error) {
+		f.errorHandler(ErrorTypeProxySaveFailure, err)
+	}
+	onConfigSaveError := func(err error) {
+		f.errorHandler(ErrorTypeConfigSaveFailure, err)
+	}
+
+	stopConfig := config.Init(
+		f.configDir, f.flagsAsMap, f.userConfig,
+		proxiesDispatch, onProxiesSaveError,
+		globalDispatch, onConfigSaveError, rt)
 	return stopConfig
 }
 
@@ -278,6 +309,9 @@ func New(
 		onBordaConfigured: make(chan bool, 1),
 		autoReport:        autoReport,
 		op:                fops.Begin("client_started"),
+		errorHandler: func(t HandledErrorType, err error) {
+			log.Errorf("%v: %v", t, err)
+		},
 	}
 
 	var grabber dnsgrab.Server
@@ -457,6 +491,19 @@ func (f *Flashlight) RunClientListeners(httpProxyAddr, socksProxyAddr string,
 		log.Errorf("Error running client proxy: %v", err)
 		onError(err)
 	}
+}
+
+// SetErrorHandler configures error handling. All errors provided to the handler are significant,
+// but not enough to stop operation of the Flashlight instance. This method must be called before
+// calling Run. All errors provided to the handler will be of a HandledErrorType defined in this
+// package. The handler may be called multiple times concurrently.
+//
+// If no handler is configured, these errors will be logged on the ERROR level.
+func (f *Flashlight) SetErrorHandler(handler func(t HandledErrorType, err error)) {
+	if handler == nil {
+		return
+	}
+	f.errorHandler = handler
 }
 
 // Stops the local proxy

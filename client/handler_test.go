@@ -13,6 +13,7 @@ import (
 	"github.com/andybalholm/brotli"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/proxy/v2/filters"
+	sc "github.com/getlantern/shortcut"
 	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/require"
 
@@ -162,8 +163,8 @@ func newClientForDiversion() *Client {
 		func() bool { return true },
 		func() bool { return false },
 		func() bool { return false },
-		func(ctx context.Context, addr string) (bool, net.IP) {
-			return false, nil
+		func(ctx context.Context, addr string) (sc.Method, net.IP) {
+			return sc.Proxy, nil
 		},
 		func() bool { return true },
 		func() bool { return true },

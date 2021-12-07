@@ -6,6 +6,7 @@ import (
 	"compress/gzip"
 	"crypto/sha256"
 	"crypto/tls"
+	_ "embed"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
@@ -24,7 +25,6 @@ import (
 
 	"github.com/getlantern/golog"
 	proxy "github.com/getlantern/http-proxy-lantern/v2"
-	"github.com/getlantern/quicwrapper"
 	"github.com/getlantern/tlsdefaults"
 	"github.com/getlantern/waitforserver"
 	"github.com/getlantern/yaml"
@@ -44,7 +44,8 @@ const (
 
 	obfs4SubDir = ".obfs4"
 
-	oquicKey = "tAqXDihxfJDqyHy35k2NhImetkzKmoC7MFEELrYi6LI="
+	// The default (1024) eats up a good chunk of the race detector's cap of 8192 goroutines.
+	obfs4HandshakeConcurrency = 100
 
 	shadowsocksSecret   = "foobarbaz"
 	shadowsocksUpstream = "local"
@@ -59,6 +60,10 @@ const (
 var (
 	log               = golog.LoggerFor("testsupport")
 	tlsmasqOriginAddr string
+	//go:embed global-cfg.yaml
+	globalCfg []byte
+	//go:embed proxies-template.yaml
+	proxiesTemplate []byte
 )
 
 // Helper is a helper for running integration tests that provides its own web,
@@ -74,7 +79,6 @@ type Helper struct {
 	LampshadeProxyServerAddr      string
 	LampshadeUTPProxyServerAddr   string
 	QUICIETFProxyServerAddr       string
-	OQUICProxyServerAddr          string
 	WSSProxyServerAddr            string
 	ShadowsocksProxyServerAddr    string
 	ShadowsocksmuxProxyServerAddr string
@@ -117,7 +121,6 @@ func NewHelper(t *testing.T, basePort int) (*Helper, error) {
 		LampshadeProxyServerAddr:      nextListenAddr(),
 		LampshadeUTPProxyServerAddr:   nextListenAddr(),
 		QUICIETFProxyServerAddr:       nextListenAddr(),
-		OQUICProxyServerAddr:          nextListenAddr(),
 		WSSProxyServerAddr:            nextListenAddr(),
 		ShadowsocksProxyServerAddr:    nextListenAddr(),
 		ShadowsocksmuxProxyServerAddr: nextListenAddr(),
@@ -217,31 +220,23 @@ func (helper *Helper) startProxyServer() error {
 		return err
 	}
 
-	oqDefaults := quicwrapper.DefaultOQuicConfig([]byte(""))
-
 	s1 := &proxy.Proxy{
-		TestingLocal:             true,
-		HTTPAddr:                 helper.HTTPSProxyServerAddr,
-		HTTPMultiplexAddr:        helper.HTTPSSmuxProxyServerAddr,
-		HTTPUTPAddr:              helper.HTTPSUTPAddr,
-		Obfs4Addr:                helper.OBFS4ProxyServerAddr,
-		Obfs4UTPAddr:             helper.OBFS4UTPProxyServerAddr,
-		Obfs4Dir:                 filepath.Join(helper.ConfigDir, obfs4SubDir),
-		LampshadeAddr:            helper.LampshadeProxyServerAddr,
-		LampshadeUTPAddr:         helper.LampshadeUTPProxyServerAddr,
-		QUICIETFAddr:             helper.QUICIETFProxyServerAddr,
-		WSSAddr:                  helper.WSSProxyServerAddr,
-		TLSMasqAddr:              helper.TLSMasqProxyServerAddr,
-		ShadowsocksAddr:          helper.ShadowsocksProxyServerAddr,
-		ShadowsocksMultiplexAddr: helper.ShadowsocksmuxProxyServerAddr,
-		ShadowsocksSecret:        shadowsocksSecret,
-
-		OQUICAddr:              helper.OQUICProxyServerAddr,
-		OQUICKey:               oquicKey,
-		OQUICCipher:            oqDefaults.Cipher,
-		OQUICAggressivePadding: uint64(oqDefaults.AggressivePadding),
-		OQUICMaxPaddingHint:    uint64(oqDefaults.MaxPaddingHint),
-		OQUICMinPadded:         uint64(oqDefaults.MinPadded),
+		TestingLocal:              true,
+		HTTPAddr:                  helper.HTTPSProxyServerAddr,
+		HTTPMultiplexAddr:         helper.HTTPSSmuxProxyServerAddr,
+		HTTPUTPAddr:               helper.HTTPSUTPAddr,
+		Obfs4Addr:                 helper.OBFS4ProxyServerAddr,
+		Obfs4UTPAddr:              helper.OBFS4UTPProxyServerAddr,
+		Obfs4Dir:                  filepath.Join(helper.ConfigDir, obfs4SubDir),
+		Obfs4HandshakeConcurrency: obfs4HandshakeConcurrency,
+		LampshadeAddr:             helper.LampshadeProxyServerAddr,
+		LampshadeUTPAddr:          helper.LampshadeUTPProxyServerAddr,
+		QUICIETFAddr:              helper.QUICIETFProxyServerAddr,
+		WSSAddr:                   helper.WSSProxyServerAddr,
+		TLSMasqAddr:               helper.TLSMasqProxyServerAddr,
+		ShadowsocksAddr:           helper.ShadowsocksProxyServerAddr,
+		ShadowsocksMultiplexAddr:  helper.ShadowsocksmuxProxyServerAddr,
+		ShadowsocksSecret:         shadowsocksSecret,
 
 		TLSMasqSecret:     tlsmasqServerSecret,
 		TLSMasqOriginAddr: helper.tlsMasqOriginAddr,
@@ -346,7 +341,7 @@ func (helper *Helper) writeGlobalConfig(resp http.ResponseWriter, req *http.Requ
 	resp.WriteHeader(http.StatusOK)
 
 	w := gzip.NewWriter(resp)
-	_, err := w.Write([]byte(globalCfg))
+	_, err := w.Write(globalCfg)
 	if err != nil {
 		helper.t.Error(err)
 	}
@@ -418,7 +413,7 @@ func (helper *Helper) buildProxies(proto string) (map[string]*chained.ChainedSer
 		return proxies, nil
 	}
 	var srv chained.ChainedServerInfo
-	err := yaml.Unmarshal([]byte(proxiesTemplate), &srv)
+	err := yaml.Unmarshal(proxiesTemplate, &srv)
 	if err != nil {
 		return nil, fmt.Errorf("Could not unmarshal config %v", err)
 	}
@@ -453,12 +448,6 @@ func (helper *Helper) buildProxies(proto string) (map[string]*chained.ChainedSer
 		} else if proto == "quic_ietf" {
 			srv.Addr = helper.QUICIETFProxyServerAddr
 			srv.PluggableTransport = "quic_ietf"
-		} else if proto == "oquic" {
-			srv.Addr = helper.OQUICProxyServerAddr
-			srv.PluggableTransport = "oquic"
-			srv.PluggableTransportSettings = map[string]string{
-				"oquic_key": oquicKey,
-			}
 		} else if proto == "wss" {
 			srv.Addr = helper.WSSProxyServerAddr
 			srv.PluggableTransport = "wss"

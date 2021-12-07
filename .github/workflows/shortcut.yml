@@ -1,11 +1,14 @@
-name: Update Global Config
+name: Update Shortcut ip lists
 
 on:
   schedule:
-    - cron: "0 */12 * * *"
+    - cron: "0 3 * * 6"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+
+env:
+  MAXMIND_LICENSE_KEY: ${{ secrets.MAXMIND_LICENSE_KEY }}
 
 jobs:
 
@@ -23,12 +26,12 @@ jobs:
       with:
         ref: devel
     - run: |
-        curl https://globalconfig.flashlightproxy.com/global.yaml.gz | gunzip > ./config/generated/embedded-global.yaml
-        cd ./config
-        go test -run TestGlobal
+        cd ./shortcut
+        ./genlist.sh
+        go test -run TestShortcutResources
         git config user.name github-actions
         git config user.email github-actions@github.com
-        git add generated/embedded-global.yaml
-        git commit -m "pushing auto-generated embedded global config"
+        git add resources/*
+        git commit -m "pushing auto-generated shortcut ip lists"
         echo "pushing to devel"
         git push origin devel

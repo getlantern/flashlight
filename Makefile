@@ -1,5 +1,4 @@
 DISABLE_PORT_RANDOMIZATION ?=
-GOBINDATA_BIN ?= $(shell which go-bindata)
 
 SHELL := /bin/bash
 SOURCES := $(shell find . -name '*[^_test].go')

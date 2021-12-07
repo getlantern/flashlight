@@ -2,10 +2,14 @@ package status
 
 import (
 	"bytes"
+	_ "embed"
 	"errors"
 	"html/template"
 	"strings"
 )
+
+//go:embed generic_error.html
+var generic_error_html string
 
 type errorAccesingPageT struct {
 	ServerName   string
@@ -23,20 +27,13 @@ func normalizeError(err error) string {
 // ErrorAccessingPage creates and returns a generic "error accessing page" error.
 func ErrorAccessingPage(server string, errMessage error) ([]byte, error) {
 	var err error
-	var buf []byte
 	var tmpl *template.Template
 
 	if errMessage == nil {
 		errMessage = errors.New("Unknown error.")
 	}
 
-	buf, err = Asset("generic_error.html")
-
-	if err != nil {
-		return nil, err
-	}
-
-	tmpl, err = template.New("status_error").Parse(string(buf))
+	tmpl, err = template.New("status_error").Parse(generic_error_html)
 	if err != nil {
 		return nil, err
 	}

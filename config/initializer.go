@@ -31,15 +31,19 @@ var (
 // passes those to InitWithURLs, which initializes the config setup for both
 // fetching per-user proxies as well as the global config. It returns a function
 // that can be used to stop the reading of configs.
-func Init(configDir string, flags map[string]interface{},
-	userConfig common.UserConfig, proxiesDispatch func(interface{}, Source),
-	origGlobalDispatch func(interface{}, Source), rt http.RoundTripper) (stop func()) {
+func Init(
+	configDir string, flags map[string]interface{}, userConfig common.UserConfig,
+	proxiesDispatch func(interface{}, Source), onProxiesSaveError func(error),
+	origGlobalDispatch func(interface{}, Source), onGlobalSaveError func(error),
+	rt http.RoundTripper) (stop func()) {
+
 	staging := isStaging(flags)
 	proxyConfigURL := checkOverrides(flags, getProxyURL(staging), "proxies.yaml.gz")
 	globalConfigURL := checkOverrides(flags, getGlobalURL(staging), "global.yaml.gz")
 
-	return InitWithURLs(configDir, flags, userConfig, proxiesDispatch,
-		origGlobalDispatch, proxyConfigURL, globalConfigURL, rt)
+	return InitWithURLs(
+		configDir, flags, userConfig, proxiesDispatch, onProxiesSaveError,
+		origGlobalDispatch, onGlobalSaveError, proxyConfigURL, globalConfigURL, rt)
 }
 
 type cfgWithSource struct {
@@ -51,10 +55,12 @@ type cfgWithSource struct {
 // as well as the global config given a set of URLs for fetching proxy and
 // global config. It returns a function that can be used to stop the reading of
 // configs.
-func InitWithURLs(configDir string, flags map[string]interface{},
-	userConfig common.UserConfig, origProxiesDispatch func(interface{}, Source),
-	origGlobalDispatch func(interface{}, Source), proxyURL string,
-	globalURL string, rt http.RoundTripper) (stop func()) {
+func InitWithURLs(
+	configDir string, flags map[string]interface{}, userConfig common.UserConfig,
+	origProxiesDispatch func(interface{}, Source), onProxiesSaveError func(error),
+	origGlobalDispatch func(interface{}, Source), onGlobalSaveError func(error),
+	proxyURL string, globalURL string, rt http.RoundTripper) (stop func()) {
+
 	var mx sync.RWMutex
 	globalConfigPollInterval := DefaultGlobalConfigPollInterval
 	proxyConfigPollInterval := DefaultProxyConfigPollInterval
@@ -102,6 +108,7 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 	// These are the options for fetching the per-user proxy config.
 	proxyOptions := &options{
 		saveDir:      configDir,
+		onSaveError:  onProxiesSaveError,
 		obfuscate:    obfuscate(flags),
 		name:         "proxies.yaml",
 		originURL:    proxyURL,
@@ -123,6 +130,7 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 	// These are the options for fetching the global config.
 	globalOptions := &options{
 		saveDir:      configDir,
+		onSaveError:  onGlobalSaveError,
 		obfuscate:    obfuscate(flags),
 		name:         "global.yaml",
 		originURL:    globalURL,

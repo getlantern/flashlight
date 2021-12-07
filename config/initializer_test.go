@@ -34,14 +34,15 @@ func TestInit(t *testing.T) {
 		assert.True(t, len(global.Client.MasqueradeSets) > 1)
 		gotGlobal.Set(true)
 	}
-	stop := Init(".", flags, newTestUserConfig(), proxiesDispatch, globalDispatch, &http.Transport{
-		Proxy: func(req *http.Request) (*url.URL, error) {
-			// the same token should also be configured on staging
-			// config-server, staging proxies and staging DDF distributions.
-			req.Header.Add(common.CfgSvrAuthTokenHeader, "staging-token")
-			return nil, nil
-		},
-	})
+	stop := Init(
+		".", flags, newTestUserConfig(), proxiesDispatch, nil, globalDispatch, nil, &http.Transport{
+			Proxy: func(req *http.Request) (*url.URL, error) {
+				// the same token should also be configured on staging
+				// config-server, staging proxies and staging DDF distributions.
+				req.Header.Add(common.CfgSvrAuthTokenHeader, "staging-token")
+				return nil, nil
+			},
+		})
 	defer stop()
 
 	_, valid := gotProxies.Get(time.Second * 12)
@@ -80,7 +81,10 @@ func TestInitWithURLs(t *testing.T) {
 
 		proxiesDispatch := func(interface{}, Source) {}
 		globalDispatch := func(interface{}, Source) {}
-		stop := InitWithURLs(inTempDir("."), flags, newTestUserConfig(), proxiesDispatch, globalDispatch,
+		stop := InitWithURLs(
+			inTempDir("."), flags, newTestUserConfig(),
+			proxiesDispatch, nil,
+			globalDispatch, nil,
 			proxyConfigURL, globalConfigURL, &http.Transport{})
 		defer stop()
 

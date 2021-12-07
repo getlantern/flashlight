@@ -20,6 +20,7 @@ import (
 	"github.com/getlantern/detour"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mockconn"
+	"github.com/getlantern/shortcut"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -89,8 +90,8 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 		func() bool { return true },
 		func() bool { return false },
 		func() bool { return false },
-		func(ctx context.Context, addr string) (bool, net.IP) {
-			return false, nil
+		func(ctx context.Context, addr string) (shortcut.Method, net.IP) {
+			return shortcut.Proxy, nil
 		},
 		func() bool { return true },
 		func() bool { return true },
@@ -191,9 +192,9 @@ func TestDialShortcut(t *testing.T) {
 	client := newClient()
 	shortcutVisited := 0
 
-	client.allowShortcutTo = func(ctx context.Context, addr string) (bool, net.IP) {
+	client.shortcutMethod = func(ctx context.Context, addr string) (shortcut.Method, net.IP) {
 		shortcutVisited++
-		return true, net.ParseIP(addr)
+		return shortcut.Direct, net.ParseIP(addr)
 	}
 
 	req, _ := http.NewRequest("GET", site.URL, nil)
@@ -232,9 +233,9 @@ func TestDialShortcut(t *testing.T) {
 	assert.Equal(t, 404, nestedResp.StatusCode, "should dial proxy if the shortcutted site is unreachable")
 
 	client.useShortcut = func() bool { return true }
-	client.allowShortcutTo = func(context.Context, string) (bool, net.IP) {
+	client.shortcutMethod = func(context.Context, string) (shortcut.Method, net.IP) {
 		shortcutVisited++
-		return false, nil
+		return shortcut.Proxy, nil
 	}
 	req, _ = http.NewRequest("CONNECT", "http://unknown3:80", nil)
 	res, _ = roundTrip(client, req)
@@ -282,8 +283,8 @@ func TestLeakingDomainsRequiringProxy(t *testing.T) {
 	proxiedCONNECTPorts = append(proxiedCONNECTPorts, port)
 	client := newClient()
 
-	client.allowShortcutTo = func(ctx context.Context, addr string) (bool, net.IP) {
-		return false, nil
+	client.shortcutMethod = func(ctx context.Context, addr string) (shortcut.Method, net.IP) {
+		return shortcut.Proxy, nil
 	}
 	client.useShortcut = func() bool { return false }
 
@@ -350,11 +351,11 @@ func TestTimeoutCheckingShortcut(t *testing.T) {
 	client.requestTimeout = requestTimeout
 	client.useDetour = func() bool { return false }
 	client.useShortcut = func() bool { return true }
-	client.allowShortcutTo = func(ctx context.Context, addr string) (bool, net.IP) {
+	client.shortcutMethod = func(ctx context.Context, addr string) (shortcut.Method, net.IP) {
 		// In theory allowShortcut should never exceed the context deadline,
 		// but it could happen in cases like computer resuming from sleeping.
 		time.Sleep(requestTimeout * 2)
-		return false, nil
+		return shortcut.Unknown, nil
 	}
 
 	dialer := mockconn.SucceedingDialer([]byte("whatever"))
