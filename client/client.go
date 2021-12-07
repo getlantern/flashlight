@@ -138,7 +138,7 @@ type Client struct {
 	statsTracker stats.Tracker
 
 	// There will be one op in the map per open connection.
-	opsMap opsMap
+	opsMap *opsMap
 
 	iptool            iptool.Tool
 	allowPrivateHosts func() bool
@@ -206,7 +206,7 @@ func NewClient(
 		rewriteToHTTPS:       httpseverywhere.Default(),
 		rewriteLRU:           rewriteLRU,
 		statsTracker:         statsTracker,
-		opsMap:               opsMap{},
+		opsMap:               newOpsMap(),
 		allowPrivateHosts:    allowPrivateHosts,
 		lang:                 lang,
 		adSwapTargetURL:      adSwapTargetURL,
