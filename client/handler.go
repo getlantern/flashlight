@@ -20,7 +20,7 @@ import (
 	"github.com/andybalholm/brotli"
 
 	"github.com/getlantern/idletiming"
-	"github.com/getlantern/proxy/filters"
+	"github.com/getlantern/proxy/v2/filters"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
@@ -34,12 +34,14 @@ var adSwapJavaScriptInjections = map[string]string{
 }
 
 func (client *Client) handle(conn net.Conn) error {
-	op, ctx := ops.BeginWithNewBeam("proxy", context.Background())
+	op := ops.Begin("proxy")
+	client.opsMap.put(conn, op)
+	defer client.opsMap.delete(conn)
 	// Use idletiming on client connections to make sure we don't get dangling server connections when clients disappear without our knowledge
 	conn = idletiming.Conn(conn, chained.IdleTimeout, func() {
 		log.Debugf("Client connection idle for %v, closed", chained.IdleTimeout)
 	})
-	err := client.proxy.Handle(ctx, conn, conn)
+	err := client.proxy.Handle(context.Background(), conn, conn)
 	if err != nil {
 		log.Error(op.FailIf(err))
 	}
@@ -61,11 +63,11 @@ func normalizeExoAd(req *http.Request) (*http.Request, bool) {
 	return req, false
 }
 
-func (client *Client) filter(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
+func (client *Client) filter(cs *filters.ConnectionState, req *http.Request, next filters.Next) (*http.Response, *filters.ConnectionState, error) {
 	if client.isHTTPProxyPort(req) {
 		log.Debugf("Reject proxy request to myself: %s", req.Host)
 		// Not reveal any error text to the application.
-		return filters.Fail(ctx, req, http.StatusBadRequest, errors.New(""))
+		return filters.Fail(cs, req, http.StatusBadRequest, errors.New(""))
 	}
 
 	trackYoutubeWatches(req)
@@ -79,11 +81,13 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 
 	if common.Platform == "android" && req.URL != nil && req.URL.Host == "localhost" &&
 		strings.HasPrefix(req.URL.Path, "/pro/") {
-		return client.interceptProRequest(ctx, req)
+		return client.interceptProRequest(cs, req)
 	}
 
-	op := ops.FromContext(ctx)
-	op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
+	op, ok := client.opsMap.get(cs.Downstream())
+	if ok {
+		op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
+	}
 
 	// Disable Ad swapping for now given that Ad blocking is completely
 	// removed.  A limited form of Ad blocking should be re-introduced before
@@ -97,7 +101,7 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 	// }
 
 	isConnect := req.Method == http.MethodConnect
-	if isConnect || ctx.IsMITMing() {
+	if isConnect || cs.IsMITMing() {
 		// CONNECT requests are often used for HTTPS requests. If we're MITMing the
 		// connection, we've stripped the CONNECT and actually performed the MITM
 		// at this point, so we have to check for that and skip redirecting to
@@ -116,7 +120,7 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 						log.Debugf("Not httpseverywhere redirecting to %v to avoid redirect loop", httpsURL)
 					} else {
 						client.rewriteLRU.Add(httpsURL, time.Now())
-						return client.redirectHTTPS(ctx, req, httpsURL, op)
+						return client.redirectHTTPS(cs, req, httpsURL, op)
 					}
 				}
 			}
@@ -126,10 +130,10 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 	}
 
 	if client.googleAdsFilter() && strings.Contains(strings.ToLower(req.Host), ".google.") && req.Method == "GET" && req.URL.Path == "/search" {
-		return client.divertGoogleSearchAds(ctx, req, next)
+		return client.divertGoogleSearchAds(cs, req, next)
 	}
 
-	return next(ctx, req)
+	return next(cs, req)
 }
 
 type PartnerAd struct {
@@ -231,38 +235,38 @@ func (client *Client) getTrackAdUrl(originalUrl string, campaign string) string 
 	return newUrl.String()
 }
 
-func (client *Client) divertGoogleSearchAds(initialContext filters.Context, req *http.Request, next filters.Next) (resp *http.Response, ctx filters.Context, err error) {
+func (client *Client) divertGoogleSearchAds(cs *filters.ConnectionState, req *http.Request, next filters.Next) (*http.Response, *filters.ConnectionState, error) {
 	log.Debug("Processing google search ads")
 	client.googleAdsOptionsLock.RLock()
 	opts := client.googleAdsOptions
 	client.googleAdsOptionsLock.RUnlock()
-	resp, ctx, err = next(initialContext, req)
+	resp, cs, err := next(cs, req)
 
 	// if both requests succeed, extract partner ads and inject them
 	if err == nil && opts != nil {
 		body := bytes.NewBuffer(nil)
 		if _, err = io.Copy(body, brotli.NewReader(resp.Body)); err != nil {
-			return
+			return resp, cs, err
 		}
 		_ = resp.Body.Close()
 		resp.Body = ioutil.NopCloser(bytes.NewBufferString(body.String())) // restore the body, since we consumed it. In case we don't modify anything
 		var doc *goquery.Document
 		doc, err = goquery.NewDocumentFromReader(body)
 		if err != nil {
-			return
+			return resp, cs, err
 		}
 
 		// find existing ads based on the pattern in config
 		adNode := doc.Find(opts.Pattern)
 		if len(adNode.Nodes) == 0 {
-			return
+			return resp, cs, err
 		}
 
 		// extract search query
 		var query string
 		query, err = url.QueryUnescape(req.URL.Query().Get("q"))
 		if err != nil {
-			return
+			return resp, cs, err
 		}
 		// inject new ads
 		adNode.ReplaceWithHtml(client.generateAds(opts, strings.Split(query, " ")))
@@ -271,13 +275,13 @@ func (client *Client) divertGoogleSearchAds(initialContext filters.Context, req 
 		var htmlResult string
 		htmlResult, err = doc.Html()
 		if err != nil {
-			return
+			return resp, cs, err
 		}
 
 		resp.Header.Del("Content-Encoding")
 		resp.Body = io.NopCloser(bytes.NewBufferString(htmlResult))
 	}
-	return
+	return resp, cs, err
 }
 
 func (client *Client) isHTTPProxyPort(r *http.Request) bool {
@@ -311,12 +315,12 @@ func (client *Client) isHTTPProxyPort(r *http.Request) bool {
 
 // interceptProRequest specifically looks for and properly handles pro server
 // requests (similar to desktop's APIHandler)
-func (client *Client) interceptProRequest(ctx filters.Context, r *http.Request) (*http.Response, filters.Context, error) {
+func (client *Client) interceptProRequest(cs *filters.ConnectionState, r *http.Request) (*http.Response, *filters.ConnectionState, error) {
 	log.Debugf("Intercepting request to pro server: %v", r.URL.Path)
 	r.URL.Path = r.URL.Path[4:]
 	pro.PrepareProRequest(r, client.user)
 	r.Header.Del("Origin")
-	resp, err := pro.GetHTTPClient().Do(r.WithContext(ctx))
+	resp, err := pro.GetHTTPClient().Do(r)
 	if err != nil {
 		log.Errorf("Error intercepting request to pro server: %v", err)
 		resp = &http.Response{
@@ -324,22 +328,24 @@ func (client *Client) interceptProRequest(ctx filters.Context, r *http.Request) 
 			Close:      true,
 		}
 	}
-	return filters.ShortCircuit(ctx, r, resp)
+	return filters.ShortCircuit(cs, r, resp)
 }
 
-func (client *Client) easyblock(ctx filters.Context, req *http.Request) (*http.Response, filters.Context, error) {
+func (client *Client) easyblock(cs *filters.ConnectionState, req *http.Request) (*http.Response, *filters.ConnectionState, error) {
 	log.Debugf("Blocking %v on %v", req.URL, req.Host)
 	client.statsTracker.IncAdsBlocked()
 	resp := &http.Response{
 		StatusCode: http.StatusForbidden,
 		Close:      true,
 	}
-	return filters.ShortCircuit(ctx, req, resp)
+	return filters.ShortCircuit(cs, req, resp)
 }
 
-func (client *Client) redirectHTTPS(ctx filters.Context, req *http.Request, httpsURL string, op *ops.Op) (*http.Response, filters.Context, error) {
+func (client *Client) redirectHTTPS(cs *filters.ConnectionState, req *http.Request, httpsURL string, op *ops.Op) (*http.Response, *filters.ConnectionState, error) {
 	log.Debugf("httpseverywhere redirecting to %v", httpsURL)
-	op.Set("forcedhttps", true)
+	if op != nil {
+		op.Set("forcedhttps", true)
+	}
 	client.statsTracker.IncHTTPSUpgrades()
 	// Tell the browser to only cache the redirect for a day. The browser
 	// generally caches permanent redirects permanently, but it will obey caching
@@ -352,7 +358,7 @@ func (client *Client) redirectHTTPS(ctx filters.Context, req *http.Request, http
 	resp.Header.Set("Location", httpsURL)
 	resp.Header.Set("Cache-Control", "max-age:86400")
 	resp.Header.Set("Expires", time.Now().Add(time.Duration(24)*time.Hour).Format(http.TimeFormat))
-	return filters.ShortCircuit(ctx, req, resp)
+	return filters.ShortCircuit(cs, req, resp)
 }
 
 func (client *Client) adSwapURL(req *http.Request) string {
@@ -374,7 +380,7 @@ func (client *Client) adSwapURL(req *http.Request) string {
 	return fmt.Sprintf("%v?lang=%v&url=%v%v", jsURL, url.QueryEscape(lang), url.QueryEscape(targetURL), extra)
 }
 
-func (client *Client) redirectAdSwap(ctx filters.Context, req *http.Request, adSwapURL string, op *ops.Op) (*http.Response, filters.Context, error) {
+func (client *Client) redirectAdSwap(cs *filters.ConnectionState, req *http.Request, adSwapURL string, op *ops.Op) (*http.Response, *filters.ConnectionState, error) {
 	op.Set("adswapped", true)
 	resp := &http.Response{
 		StatusCode: http.StatusTemporaryRedirect,
@@ -382,7 +388,7 @@ func (client *Client) redirectAdSwap(ctx filters.Context, req *http.Request, adS
 		Close:      true,
 	}
 	resp.Header.Set("Location", adSwapURL)
-	return filters.ShortCircuit(ctx, req, resp)
+	return filters.ShortCircuit(cs, req, resp)
 }
 
 type SearchEngine struct {

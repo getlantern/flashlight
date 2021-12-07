@@ -33,8 +33,8 @@ import (
 	"github.com/getlantern/iptool"
 	"github.com/getlantern/mitm"
 	"github.com/getlantern/netx"
-	"github.com/getlantern/proxy"
-	"github.com/getlantern/proxy/filters"
+	"github.com/getlantern/proxy/v2"
+	"github.com/getlantern/proxy/v2/filters"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
@@ -137,6 +137,9 @@ type Client struct {
 
 	statsTracker stats.Tracker
 
+	// There will be one op in the map per open connection.
+	opsMap *opsMap
+
 	iptool            iptool.Tool
 	allowPrivateHosts func() bool
 	lang              func() string
@@ -203,6 +206,7 @@ func NewClient(
 		rewriteToHTTPS:       httpseverywhere.Default(),
 		rewriteLRU:           rewriteLRU,
 		statsTracker:         statsTracker,
+		opsMap:               newOpsMap(),
 		allowPrivateHosts:    allowPrivateHosts,
 		lang:                 lang,
 		adSwapTargetURL:      adSwapTargetURL,
@@ -738,7 +742,7 @@ func (client *Client) portForAddress(addr string) (int, error) {
 	return port, nil
 }
 
-func errorResponse(ctx filters.Context, req *http.Request, read bool, err error) *http.Response {
+func errorResponse(_ *filters.ConnectionState, req *http.Request, _ bool, err error) *http.Response {
 	var htmlerr []byte
 
 	if req == nil {
