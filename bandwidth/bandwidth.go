@@ -1,6 +1,7 @@
 package bandwidth
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -57,6 +58,8 @@ func Track(resp *http.Response) {
 	mutex.Unlock()
 
 	xbq := resp.Header.Get(common.XBQHeaderv2)
+	xbq = fmt.Sprintf("%d/%d/%d/%d", 400, 500, time.Now().Unix()*1000, 60000)
+	log.Debugf("Faked XBQ header to: %v\n", xbq)
 	if xbq == "" {
 		log.Tracef("Response missing XBQ header, can't read bandwidth quota")
 		return
