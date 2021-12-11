@@ -25,41 +25,41 @@ func TestValidate(t *testing.T) {
 }
 
 func TestIncludes(t *testing.T) {
-	assert.True(t, ClientGroup{}.Includes(0, true, "whatever"), "zero value should include all combinations")
-	assert.True(t, ClientGroup{}.Includes(111, false, "whatever"), "zero value should include all combinations")
-	assert.True(t, ClientGroup{UserCeil: 0.12}.Includes(111, false, "whatever"), "match user range")
-	assert.False(t, ClientGroup{UserCeil: 0.11}.Includes(111, false, "whatever"), "user range does not match")
-	assert.False(t, ClientGroup{UserCeil: 0.11}.Includes(0, false, "whatever"), "unknown user ID should not belong to any user range")
+	assert.True(t, ClientGroup{}.Includes(common.DefaultAppName, 0, true, "whatever"), "zero value should include all combinations")
+	assert.True(t, ClientGroup{}.Includes(common.DefaultAppName, 111, false, "whatever"), "zero value should include all combinations")
+	assert.True(t, ClientGroup{UserCeil: 0.12}.Includes(common.DefaultAppName, 111, false, "whatever"), "match user range")
+	assert.False(t, ClientGroup{UserCeil: 0.11}.Includes(common.DefaultAppName, 111, false, "whatever"), "user range does not match")
+	assert.False(t, ClientGroup{UserCeil: 0.11}.Includes(common.DefaultAppName, 0, false, "whatever"), "unknown user ID should not belong to any user range")
 
-	assert.True(t, ClientGroup{FreeOnly: true}.Includes(111, false, "whatever"), "user status met")
-	assert.False(t, ClientGroup{ProOnly: true}.Includes(111, false, "whatever"), "user status unmet")
-	assert.True(t, ClientGroup{ProOnly: true}.Includes(111, true, "whatever"), "user status met")
-	assert.False(t, ClientGroup{FreeOnly: true}.Includes(111, true, "whatever"), "user status unmet")
+	assert.True(t, ClientGroup{FreeOnly: true}.Includes(common.DefaultAppName, 111, false, "whatever"), "user status met")
+	assert.False(t, ClientGroup{ProOnly: true}.Includes(common.DefaultAppName, 111, false, "whatever"), "user status unmet")
+	assert.True(t, ClientGroup{ProOnly: true}.Includes(common.DefaultAppName, 111, true, "whatever"), "user status met")
+	assert.False(t, ClientGroup{FreeOnly: true}.Includes(common.DefaultAppName, 111, true, "whatever"), "user status unmet")
 
 	// The default AppName is "Default"
-	assert.True(t, ClientGroup{Application: common.AppName}.Includes(111, true, "whatever"), "application met, case insensitive")
-	assert.True(t, ClientGroup{Application: strings.ToUpper(common.AppName)}.Includes(111, true, "whatever"), "application met, case insensitive")
-	assert.False(t, ClientGroup{Application: "Beam"}.Includes(111, true, "whatever"), "application unmet, case insensitive")
-	assert.False(t, ClientGroup{Application: "beam"}.Includes(111, true, "whatever"), "application unmet, case insensitive")
+	assert.True(t, ClientGroup{Application: (common.DefaultAppName)}.Includes(common.DefaultAppName, 111, true, "whatever"), "application met, case insensitive")
+	assert.True(t, ClientGroup{Application: strings.ToUpper(common.DefaultAppName)}.Includes(common.DefaultAppName, 111, true, "whatever"), "application met, case insensitive")
+	assert.False(t, ClientGroup{Application: "Beam"}.Includes(common.DefaultAppName, 111, true, "whatever"), "application unmet, case insensitive")
+	assert.False(t, ClientGroup{Application: "beam"}.Includes(common.DefaultAppName, 111, true, "whatever"), "application unmet, case insensitive")
 
 	// The client version is 9999.99.99-dev when in development mode
-	assert.True(t, ClientGroup{VersionConstraints: "> 5.1.0"}.Includes(111, true, "whatever"), "version met")
-	assert.True(t, ClientGroup{VersionConstraints: "> 5.1.0 < 10000.0.0"}.Includes(111, true, "whatever"), "version met")
-	assert.False(t, ClientGroup{VersionConstraints: "< 5.1.0"}.Includes(111, true, "whatever"), "version unmet")
+	assert.True(t, ClientGroup{VersionConstraints: "> 5.1.0"}.Includes(common.DefaultAppName, 111, true, "whatever"), "version met")
+	assert.True(t, ClientGroup{VersionConstraints: "> 5.1.0 < 10000.0.0"}.Includes(common.DefaultAppName, 111, true, "whatever"), "version met")
+	assert.False(t, ClientGroup{VersionConstraints: "< 5.1.0"}.Includes(common.DefaultAppName, 111, true, "whatever"), "version unmet")
 
 	// Platforms tests are likely run
-	assert.True(t, ClientGroup{Platforms: "linux,darwin,windows"}.Includes(111, true, "whatever"), "platform met")
+	assert.True(t, ClientGroup{Platforms: "linux,darwin,windows"}.Includes(common.DefaultAppName, 111, true, "whatever"), "platform met")
 	// Platforms tests are unlikely run
-	assert.False(t, ClientGroup{Platforms: "ios,android"}.Includes(111, true, "whatever"), "platform unmet")
+	assert.False(t, ClientGroup{Platforms: "ios,android"}.Includes(common.DefaultAppName, 111, true, "whatever"), "platform unmet")
 
-	assert.True(t, ClientGroup{GeoCountries: "ir   , cn"}.Includes(111, true, "IR"), "country met")
-	assert.False(t, ClientGroup{GeoCountries: "us"}.Includes(111, true, "IR"), "country unmet")
+	assert.True(t, ClientGroup{GeoCountries: "ir   , cn"}.Includes(common.DefaultAppName, 111, true, "IR"), "country met")
+	assert.False(t, ClientGroup{GeoCountries: "us"}.Includes(common.DefaultAppName, 111, true, "IR"), "country unmet")
 
 	// Fraction calculation should be stable
 	g := ClientGroup{Fraction: 0.1}
 	hits := 0
 	for i := 0; i < 1000; i++ {
-		if g.Includes(111, true, "whatever") {
+		if g.Includes(common.DefaultAppName, 111, true, "whatever") {
 			hits++
 		}
 	}
@@ -85,10 +85,10 @@ featuresenabled:
 	if !assert.NoError(t, yaml.Unmarshal([]byte(yml), gl)) {
 		return
 	}
-	assert.True(t, gl.FeatureEnabled(FeatureReplica, 111, false, "au"), "met the first group")
-	assert.True(t, gl.FeatureEnabled(FeatureReplica, 111, true, ""), "met the second group")
-	assert.False(t, gl.FeatureEnabled(FeatureReplica, 211, false, "au"), "unmet both groups")
-	assert.False(t, gl.FeatureEnabled(FeatureReplica, 111, false, ""), "unmet both groups")
+	assert.True(t, gl.FeatureEnabled(FeatureReplica, common.DefaultAppName, 111, false, "au"), "met the first group")
+	assert.True(t, gl.FeatureEnabled(FeatureReplica, common.DefaultAppName, 111, true, ""), "met the second group")
+	assert.False(t, gl.FeatureEnabled(FeatureReplica, common.DefaultAppName, 211, false, "au"), "unmet both groups")
+	assert.False(t, gl.FeatureEnabled(FeatureReplica, common.DefaultAppName, 111, false, ""), "unmet both groups")
 }
 
 func TestUnmarshalFeatureOptions(t *testing.T) {

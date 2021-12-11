@@ -269,7 +269,7 @@ func (g ClientGroup) Validate() error {
 
 //Includes checks if the ClientGroup includes the user, device and country
 //combination, assuming the group has been validated.
-func (g ClientGroup) Includes(userID int64, isPro bool, geoCountry string) bool {
+func (g ClientGroup) Includes(appName string, userID int64, isPro bool, geoCountry string) bool {
 	if g.UserCeil > 0 {
 		// Unknown user ID doesn't belong to any user range
 		if userID == 0 {
@@ -287,7 +287,7 @@ func (g ClientGroup) Includes(userID int64, isPro bool, geoCountry string) bool 
 	if g.ProOnly && !isPro {
 		return false
 	}
-	if g.Application != "" && strings.ToLower(g.Application) != strings.ToLower(common.AppName) {
+	if g.Application != "" && strings.ToLower(g.Application) != strings.ToLower(appName) {
 		return false
 	}
 	if g.VersionConstraints != "" {

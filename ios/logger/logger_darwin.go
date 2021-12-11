@@ -17,6 +17,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/golog"
@@ -31,9 +32,10 @@ func init() {
 // through lantern.log.5 already exist so that they are writeable from the Go
 // side.
 func ConfigureFileLogging(fullLogFilePath string) error {
-	logFileDirectory, _ := filepath.Split(fullLogFilePath)
+	logFileDirectory, filename := filepath.Split(fullLogFilePath)
+	appName := strings.Split(filename, ".")[0]
 	werr, wout := defaultLoggers()
-	return logging.EnableFileLoggingWith(werr, wout, logFileDirectory, 10, 10)
+	return logging.EnableFileLoggingWith(werr, wout, appName, logFileDirectory, 10, 10)
 }
 
 func defaultLoggers() (io.WriteCloser, io.WriteCloser) {

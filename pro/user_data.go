@@ -123,7 +123,7 @@ func newUserWithClient(uc common.UserConfig, hc *http.Client) (*client.User, err
 	logger.Debugf("Creating new user with device ID '%v'", deviceID)
 
 	// use deviceID, ignore userID, token
-	user := common.NewUserConfigData(deviceID, 0, "", uc.GetInternalHeaders(), uc.GetLanguage())
+	user := common.NewUserConfigData(uc.GetAppName(), deviceID, 0, "", uc.GetInternalHeaders(), uc.GetLanguage())
 	resp, err := client.NewClient(hc, PrepareProRequestWithOptions).UserCreate(user)
 	if err != nil {
 		return nil, err
