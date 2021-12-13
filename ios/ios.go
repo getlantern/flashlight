@@ -290,6 +290,7 @@ func userConfigFor(userID int, proToken, deviceID string) *UserConfig {
 	// TODO: plug in implementation of fetching timezone for iOS to work around https://github.com/golang/go/issues/20455
 	return &UserConfig{
 		UserConfigData: *common.NewUserConfigData(
+			"Lantern",
 			deviceID,
 			int64(userID),
 			proToken,

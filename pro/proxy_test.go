@@ -15,12 +15,12 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/testutils"
 	"github.com/getlantern/flashlight/pro/client"
+	"github.com/getlantern/flashlight/testutils"
 )
 
 func TestProxy(t *testing.T) {
-	uc := common.NewUserConfigData("device", 0, "token", nil, "en-US")
+	uc := common.NewUserConfigData(common.DefaultAppName, "device", 0, "token", nil, "en-US")
 	m := &testutils.MockRoundTripper{Header: http.Header{}, Body: strings.NewReader("GOOD")}
 	httpClient = &http.Client{Transport: m}
 	l, err := net.Listen("tcp", "localhost:0")

@@ -17,7 +17,6 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/rotator"
 
-	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/util"
 )
 
@@ -43,8 +42,8 @@ func init() {
 	resetLogs.Store(func() {})
 }
 
-// RotatedLogsUnder creates rotated file logger under logdir.
-func RotatedLogsUnder(logdir string) (io.WriteCloser, error) {
+// RotatedLogsUnder creates rotated file logger under logdir using the given appName
+func RotatedLogsUnder(appName, logdir string) (io.WriteCloser, error) {
 	actualLogDirMx.Lock()
 	actualLogDir = logdir
 	actualLogDirMx.Unlock()
@@ -58,7 +57,7 @@ func RotatedLogsUnder(logdir string) (io.WriteCloser, error) {
 		}
 	}
 
-	rotator := rotator.NewSizeRotator(filepath.Join(logdir, strings.ToLower(common.AppName)+".log"))
+	rotator := rotator.NewSizeRotator(filepath.Join(logdir, strings.ToLower(appName)+".log"))
 	// Set log files to 4 MB
 	rotator.RotationSize = 4 * 1024 * 1024
 	// Keep up to 5 log files
@@ -78,9 +77,9 @@ func Timestamped(w io.Writer) {
 }
 
 // EnableFileLogging configures golog to write to rotated files under the
-// logdir, in addition to standard outputs.
-func EnableFileLogging(logdir string) {
-	err := EnableFileLoggingWith(os.Stdout, os.Stderr, logdir, 100, 1000)
+// logdir for the given appName, in addition to standard outputs.
+func EnableFileLogging(appName, logdir string) {
+	err := EnableFileLoggingWith(os.Stdout, os.Stderr, appName, logdir, 100, 1000)
 	if err != nil {
 		log.Error(err)
 	}
@@ -88,9 +87,9 @@ func EnableFileLogging(logdir string) {
 
 // EnableFileLoggingWith is similar to EnableFileLogging but allows overriding
 // standard outputs and setting buffer depths for error and debug log channels.
-func EnableFileLoggingWith(werr io.WriteCloser, wout io.WriteCloser, logdir string, debugBufferDepth, errorBufferDepth int) error {
+func EnableFileLoggingWith(werr io.WriteCloser, wout io.WriteCloser, appName, logdir string, debugBufferDepth, errorBufferDepth int) error {
 	golog.SetPrepender(Timestamped)
-	rotator, err := RotatedLogsUnder(logdir)
+	rotator, err := RotatedLogsUnder(appName, logdir)
 	if err != nil {
 		return err
 	}

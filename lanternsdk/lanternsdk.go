@@ -104,7 +104,7 @@ func start(appName, configDir, deviceID string, proxyAll bool) error {
 		log.Debug("Stopping running Lantern")
 		runner.Stop()
 	} else {
-		logging.EnableFileLogging(configDir)
+		logging.EnableFileLogging(appName, configDir)
 		appdir.SetHomeDir(configDir)
 		increaseFilesLimit()
 
@@ -120,6 +120,7 @@ func start(appName, configDir, deviceID string, proxyAll bool) error {
 		}
 
 		userConfig := &common.UserConfigData{
+			AppName:  appName,
 			DeviceID: deviceID,
 			UserID:   0,       // not used for sdk clients
 			Token:    "",      // not used for sdk clients

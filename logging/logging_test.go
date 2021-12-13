@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -115,7 +116,7 @@ func TestCloseAndInit(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 	for i := 0; i < 10; i++ {
-		EnableFileLogging(tmpDir)
+		EnableFileLogging(common.DefaultAppName, tmpDir)
 		Close()
 	}
 }

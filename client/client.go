@@ -49,8 +49,6 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.client")
 
-	translationAppName = strings.ToUpper(common.AppName)
-
 	addr                = eventual.NewValue()
 	socksAddr           = eventual.NewValue()
 	proxiedCONNECTPorts = []int{
@@ -292,6 +290,8 @@ func (c *Client) MITMOptions() *mitm.Opts {
 				domains = append(domains, "*.google."+suffix)
 			}
 		}
+
+		translationAppName := strings.ToUpper(c.user.GetAppName())
 		return &mitm.Opts{
 			PKFile:             filepath.Join(c.configDir, "mitmkey.pem"),
 			CertFile:           filepath.Join(c.configDir, "mitmcert.pem"),

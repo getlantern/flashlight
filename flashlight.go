@@ -176,6 +176,7 @@ func (f *Flashlight) calcFeature(global *config.Global, country, feature string)
 		return enabled
 	}
 	return global.FeatureEnabled(feature,
+		f.userConfig.GetAppName(),
 		f.userConfig.GetUserID(),
 		f.isPro(),
 		country)
@@ -281,7 +282,7 @@ func New(
 	adTrackUrl func() string,
 	eventWithLabel func(category, action, label string),
 ) (*Flashlight, error) {
-
+	log.Debugf("Running in app: %v", appName)
 	log.Debugf("Using configdir: %v", configDir)
 
 	if onProxiesUpdate == nil {
