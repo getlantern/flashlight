@@ -20,6 +20,7 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tlsmasq"
 	"github.com/getlantern/tlsmasq/ptlshs"
+	"github.com/getlantern/tlsutil"
 	tls "github.com/refraction-networking/utls"
 )
 
@@ -144,6 +145,10 @@ func (impl *tlsMasqImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, 
 	case err := <-errc:
 		if err != nil {
 			conn.Close()
+			var alertErr tlsutil.UnexpectedAlertError
+			if stderrors.As(err, &alertErr) {
+				log.Debugf("received alert from origin in tlsmasq handshake: %v", alertErr.Alert)
+			}
 			return nil, errors.New("handshake failed: %v", err)
 		}
 		return conn, nil
