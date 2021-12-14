@@ -121,6 +121,20 @@ func ChainedThenFrontedWith(rootCA string) RoundTripper {
 	return dual(false, rootCA)
 }
 
+// Uses ParallelPreferChained for idempotent requests (HEAD and GET) and
+// ChainedThenFronted for all others.
+func ParallelForIdempotent() http.RoundTripper {
+	parallel := ParallelPreferChained()
+	sequential := ChainedThenFronted()
+
+	return AsRoundTripper(func(req *http.Request) (*http.Response, error) {
+		if req.Method == "GET" || req.Method == "HEAD" {
+			return parallel.RoundTrip(req)
+		}
+		return sequential.RoundTrip(req)
+	})
+}
+
 // dual creates a new http.RoundTripper that attempts to send
 // requests to both chained and fronted servers either in parallel or not.
 func dual(parallel bool, rootCA string) RoundTripper {
