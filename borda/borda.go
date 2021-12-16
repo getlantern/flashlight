@@ -240,6 +240,7 @@ func createBordaClient(reportInterval time.Duration) *borda.Client {
 			}),
 		},
 		BeforeSubmit: BeforeSubmit,
+		URL:          "https://borda.lantern.io/measurements",
 	})
 }
 
