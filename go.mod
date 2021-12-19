@@ -20,7 +20,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
 	github.com/getlantern/bbrconn v0.0.0-20210901194755-12169918fdf9 // indirect
-	github.com/getlantern/borda v0.0.0-20211215231243-5f83ff47aeec
+	github.com/getlantern/borda v0.0.0-20211219040702-422f5797af3d
 	github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493
 	github.com/getlantern/byteexec v0.0.0-20200509011419-2f5ed5531ada // indirect
 	github.com/getlantern/cmux/v2 v2.0.0-20200905031936-c55b16ee8462
