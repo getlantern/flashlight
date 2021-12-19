@@ -207,6 +207,8 @@ github.com/getlantern/bbrconn v0.0.0-20210901194755-12169918fdf9/go.mod h1:HMPEg
 github.com/getlantern/borda v0.0.0-20210122163308-eccb55d42214/go.mod h1:+iverSc+d82rWwcvQl3RK50UHsaN95/T7bSzWre/vGA=
 github.com/getlantern/borda v0.0.0-20211215231243-5f83ff47aeec h1:0cwTFZInxcGSGVzNBVX+EYX6ful71BG5uyJst8uC8p0=
 github.com/getlantern/borda v0.0.0-20211215231243-5f83ff47aeec/go.mod h1:D9RU8vsZEbexE853SZd+U31ESTqY0uFnB31PIze0Zks=
+github.com/getlantern/borda v0.0.0-20211219040702-422f5797af3d h1:Jr2bUkTvY4HhispwWVQQ4n0gfOBUpROshrKfowxRAik=
+github.com/getlantern/borda v0.0.0-20211219040702-422f5797af3d/go.mod h1:D9RU8vsZEbexE853SZd+U31ESTqY0uFnB31PIze0Zks=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
 github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493 h1:8WjDNmpDLFVsAfcnHxqF4pfVKkdAQxyJ9iCHB4LxSfc=
 github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
