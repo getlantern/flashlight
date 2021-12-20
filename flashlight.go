@@ -423,6 +423,7 @@ func (f *Flashlight) StartBackgroundServices() func() {
 	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
 
 	stopConfigFetch := f.startConfigFetch()
+	geolookup.EnablePersistence(filepath.Join(f.configDir, "latestgeoinfo.json"))
 	geolookup.Refresh()
 
 	return func() {
