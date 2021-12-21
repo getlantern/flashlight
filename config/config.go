@@ -272,7 +272,7 @@ func (conf *config) fetchConfig(stopCh chan bool, dispatch func(interface{}), fe
 		log.Errorf("Error fetching config: %v", err)
 		return sleepTime
 	} else {
-		log.Debugf("Fetched config! %v", cfg)
+		log.Debugf("Fetched config!")
 
 		// Push these to channels to avoid race conditions that might occur if
 		// we did these on go routines, for example.
