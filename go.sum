@@ -205,8 +205,6 @@ github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0/go.mod h1:HMPEg
 github.com/getlantern/bbrconn v0.0.0-20210901194755-12169918fdf9 h1:IJKppG1QLU1rqbcwWG6YEMVB/QRzz+aUSXQDX5+Lsts=
 github.com/getlantern/bbrconn v0.0.0-20210901194755-12169918fdf9/go.mod h1:HMPEgWG0J3goTYFWoTohloqZ3BQywXMElZnd9EROxxU=
 github.com/getlantern/borda v0.0.0-20210122163308-eccb55d42214/go.mod h1:+iverSc+d82rWwcvQl3RK50UHsaN95/T7bSzWre/vGA=
-github.com/getlantern/borda v0.0.0-20211215231243-5f83ff47aeec h1:0cwTFZInxcGSGVzNBVX+EYX6ful71BG5uyJst8uC8p0=
-github.com/getlantern/borda v0.0.0-20211215231243-5f83ff47aeec/go.mod h1:D9RU8vsZEbexE853SZd+U31ESTqY0uFnB31PIze0Zks=
 github.com/getlantern/borda v0.0.0-20211219040702-422f5797af3d h1:Jr2bUkTvY4HhispwWVQQ4n0gfOBUpROshrKfowxRAik=
 github.com/getlantern/borda v0.0.0-20211219040702-422f5797af3d/go.mod h1:D9RU8vsZEbexE853SZd+U31ESTqY0uFnB31PIze0Zks=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
@@ -258,8 +256,6 @@ github.com/getlantern/event v0.0.0-20210901195647-a7e3145142e6/go.mod h1:iToZ3dq
 github.com/getlantern/eventual v0.0.0-20180125201821-84b02499361b/go.mod h1:O8T3zFEcY6+LRXFcVV4q8mEu2tDIixG8edC84DfswBc=
 github.com/getlantern/eventual v1.0.0 h1:q56jlZhiDeWvdrc0QJ12AaWqcu/Z67wDDjdAUKGnYqc=
 github.com/getlantern/eventual v1.0.0/go.mod h1:xL9T/pQI7i44INFSsKf4zDNz5bXA7P18j1cNd5qy/yI=
-github.com/getlantern/eventual/v2 v2.0.1 h1:aI7NNIbLkJBfq2L30ofB/s9nJcxMOPTd2LMdmv4kCbs=
-github.com/getlantern/eventual/v2 v2.0.1/go.mod h1:o1VZHRk8UArBra+pwPSi23WrahBG4qgg4/ew6Mmlq84=
 github.com/getlantern/eventual/v2 v2.0.2 h1:7b3N2oQBVqSHwm/8u7C8b6W+OkkjgZSmwUc1AdIkrHc=
 github.com/getlantern/eventual/v2 v2.0.2/go.mod h1:o1VZHRk8UArBra+pwPSi23WrahBG4qgg4/ew6Mmlq84=
 github.com/getlantern/fdcount v0.0.0-20170105153814-6a6cb5839bc5/go.mod h1:XZwE+iIlAgr64OFbXKFNCllBwV4wEipPx8Hlo2gZdbM=
@@ -302,8 +298,6 @@ github.com/getlantern/gotun v0.0.0-20190809092752-6d35bb1397ee/go.mod h1:zvsZQrs
 github.com/getlantern/grtrack v0.0.0-20160824195228-cbf67d3fa0fd/go.mod h1:RkQEgBdrJCH5tYJP2D+a/aJ216V3c9q8w/tCJtEiDoY=
 github.com/getlantern/grtrack v0.0.0-20210901195719-bdf9e1d12dac h1:WsJhOWm1hJEAqts1OAhEPctQpy7Y0Eiu05mV84ixekc=
 github.com/getlantern/grtrack v0.0.0-20210901195719-bdf9e1d12dac/go.mod h1:RkQEgBdrJCH5tYJP2D+a/aJ216V3c9q8w/tCJtEiDoY=
-github.com/getlantern/hellosplitter v0.1.0 h1:wmlHQsCDLgBlKTNpn2JcWJbaw0XDxQbv0FZwUd4Gi9E=
-github.com/getlantern/hellosplitter v0.1.0/go.mod h1:8TgRrwnkkz8PNiqMQVOorGtmIBXBSj7YrRCuDP8NXLg=
 github.com/getlantern/hellosplitter v0.1.1 h1:eV01w6T9Ca7wjctte71hNBST+lsbSGKf82yxSed3XJ4=
 github.com/getlantern/hellosplitter v0.1.1/go.mod h1:8TgRrwnkkz8PNiqMQVOorGtmIBXBSj7YrRCuDP8NXLg=
 github.com/getlantern/hex v0.0.0-20190417191902-c6586a6fe0b7 h1:micT5vkcr9tOVk1FiH8SWKID8ultN44Z+yzd2y/Vyb0=
@@ -445,7 +439,6 @@ github.com/getlantern/tlsresumption v0.0.0-20211216020551-6a3f901d86b9 h1:onWhy3
 github.com/getlantern/tlsresumption v0.0.0-20211216020551-6a3f901d86b9/go.mod h1:HsendE/ereHNDfzgO2DcEDSlPF4aDZ9aIMSKgWKa9dc=
 github.com/getlantern/tlsutil v0.2.0/go.mod h1:Vxsyr9DVnYwsqHaEzMYkg9fT8aBrnO2eI+gdICMQbQU=
 github.com/getlantern/tlsutil v0.5.0/go.mod h1:lVgvr4nxuQ1ocOho90UB6LnHFlpP16TXAGpHR8Z0QnI=
-github.com/getlantern/tlsutil v0.5.1 h1:0VmSrmYth5zX6I37zyxi1XZbDS30V4gOLt+eDQoWN3M=
 github.com/getlantern/tlsutil v0.5.1/go.mod h1:lVgvr4nxuQ1ocOho90UB6LnHFlpP16TXAGpHR8Z0QnI=
 github.com/getlantern/tlsutil v0.5.2 h1:BeYPkbgrcT4E51zCGePpHBBWFel7aglmNZvBb8kTVbk=
 github.com/getlantern/tlsutil v0.5.2/go.mod h1:lVgvr4nxuQ1ocOho90UB6LnHFlpP16TXAGpHR8Z0QnI=
