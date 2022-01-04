@@ -551,20 +551,26 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		return conn, err
 	}
 
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		host = addr
+	}
+	host = strings.ToLower(strings.TrimSpace(host))
+	routingRuleForDomain := domainrouting.RuleFor(host)
+
+	if routingRuleForDomain == domainrouting.MustDirect {
+		log.Debugf("Proxying to %v per domain routing rules (MustDirect)", host)
+		op.Set("force_direct", true)
+		op.Set("force_direct_reason", "routingrule")
+		return dialDirect(ctx, "tcp", addr)
+	}
+
 	if shouldForceProxying() {
 		log.Tracef("Proxying to %v because everything is forced to be proxied", addr)
 		op.Set("force_proxied", true)
 		op.Set("force_proxied_reason", "forceproxying")
 		return dialProxied(ctx, "whatever", addr)
 	}
-
-	host, _, err := net.SplitHostPort(addr)
-	if err != nil {
-		host = addr
-	}
-	host = strings.ToLower(strings.TrimSpace(host))
-
-	routingRuleForDomain := domainrouting.RuleFor(host)
 
 	if routingRuleForDomain == domainrouting.MustProxy {
 		log.Tracef("Proxying to %v per domain routing rules (MustProxy)", addr)
