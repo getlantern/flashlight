@@ -1,10 +1,13 @@
 package config
 
 import (
+	"bytes"
 	"strings"
 	"testing"
+	"text/template"
 	"time"
 
+	masquerades "github.com/getlantern/lantern_aws/salt/update_masquerades"
 	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -122,4 +125,26 @@ featureoptions:
 	var opts2 PingProxiesOptions
 	require.NoError(t, gl.UnmarshalFeatureOptions(FeaturePingProxies, &opts2))
 	require.Equal(t, time.Hour, opts2.Interval)
+}
+
+func TestReplicaByCountry(t *testing.T) {
+	require := require.New(t)
+	assert := assert.New(t)
+	var w bytes.Buffer
+	// We could write into a pipe, but that requires concurrency and we're old-school in tests.
+	require.NoError(template.Must(template.New("").Parse(masquerades.CloudYamlTmpl)).Execute(&w, nil))
+	var g Global
+	require.NoError(yaml.Unmarshal(w.Bytes(), &g))
+	var fos ReplicaOptionsRoot
+	require.NoError(g.UnmarshalFeatureOptions(FeatureReplica, &fos))
+	assert.Contains(fos.ByCountry, "RU")
+	assert.NotContains(fos.ByCountry, "AU")
+	assert.NotEmpty(fos.ByCountry)
+	globalTrackers := fos.Trackers
+	assert.NotEmpty(globalTrackers)
+	// Check the countries pull in the trackers using the anchor. Just change this if they stop
+	// using the same trackers. I really don't want this to break out the gate is all.
+	assert.Equal(fos.ByCountry["CN"].Trackers, globalTrackers)
+	assert.Equal(fos.ByCountry["RU"].Trackers, globalTrackers)
+	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
 }

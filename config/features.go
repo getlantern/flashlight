@@ -47,6 +47,23 @@ type FeatureOptions interface {
 	fromMap(map[string]interface{}) error
 }
 
+type ReplicaOptionsRoot struct {
+	// This is the default.
+	ReplicaOptions `mapstructure:",squash"`
+	// Options tailored to country. This could be used to pattern match any arbitrary string really.
+	// mapstructure should ignore the field name.
+	ByCountry map[string]ReplicaOptions `mapstructure:",remain"`
+	// Deprecated. An unmatched country uses the embedded ReplicaOptions.ReplicaRustEndpoint.
+	// Removing this will break unmarshalling config.
+	ReplicaRustDefaultEndpoint string
+	// Deprecated. Use ByCountry.ReplicaRustEndpoint.
+	ReplicaRustEndpoints map[string]string
+}
+
+func (ro *ReplicaOptionsRoot) fromMap(m map[string]interface{}) error {
+	return mapstructure.Decode(m, ro)
+}
+
 type ReplicaOptions struct {
 	// Use infohash and old-style prefixing simultaneously for now. Later, the old-style can be removed.
 	WebseedBaseUrls []string
@@ -54,14 +71,9 @@ type ReplicaOptions struct {
 	StaticPeerAddrs []string
 	// Merged with the webseed URLs when the metadata and data buckets are merged.
 	MetadataBaseUrls []string
-	// Default endpoint, if nothing else is found
-	ReplicaRustDefaultEndpoint string
-	// map of region to endpoint url
-	ReplicaRustEndpoints map[string]string
-}
-
-func (ro *ReplicaOptions) fromMap(m map[string]interface{}) error {
-	return mapstructure.Decode(m, &ro)
+	// The replica-rust endpoint to use. There's only one because object uploads and ownership are
+	// fixed to a specific bucket, and replica-rust endpoints are 1:1 with a bucket.
+	ReplicaRustEndpoint string
 }
 
 func (ro *ReplicaOptions) GetWebseedBaseUrls() []string {
@@ -80,12 +92,8 @@ func (ro *ReplicaOptions) GetMetadataBaseUrls() []string {
 	return ro.MetadataBaseUrls
 }
 
-func (ro *ReplicaOptions) GetReplicaRustDefaultEndpoint() string {
-	return ro.ReplicaRustDefaultEndpoint
-}
-
-func (ro *ReplicaOptions) GetReplicaRustEndpoints() map[string]string {
-	return ro.ReplicaRustEndpoints
+func (ro *ReplicaOptions) GetReplicaRustEndpoint() string {
+	return ro.ReplicaRustEndpoint
 }
 
 type GoogleSearchAdsOptions struct {
