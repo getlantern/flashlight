@@ -77,18 +77,24 @@ type ReplicaOptions struct {
 	ReplicaRustEndpoint string
 }
 
-func (gc *ReplicaOptions) MetainfoUrls(prefix string) (ret []string) {
-	for _, s := range gc.WebseedBaseUrls {
-		ret = append(ret, fmt.Sprintf("%s%s/torrent", s, prefix))
-	}
-	return
+func (ro *ReplicaOptions) GetWebseedBaseUrls() []string {
+	return ro.WebseedBaseUrls
 }
 
-func (gc *ReplicaOptions) WebseedUrls(prefix string) (ret []string) {
-	for _, s := range gc.WebseedBaseUrls {
-		ret = append(ret, fmt.Sprintf("%s%s/data/", s, prefix))
-	}
-	return
+func (ro *ReplicaOptions) GetTrackers() []string {
+	return ro.Trackers
+}
+
+func (ro *ReplicaOptions) GetStaticPeerAddrs() []string {
+	return ro.StaticPeerAddrs
+}
+
+func (ro *ReplicaOptions) GetMetadataBaseUrls() []string {
+	return ro.MetadataBaseUrls
+}
+
+func (ro *ReplicaOptions) GetReplicaRustEndpoint() string {
+	return ro.ReplicaRustEndpoint
 }
 
 type GoogleSearchAdsOptions struct {
