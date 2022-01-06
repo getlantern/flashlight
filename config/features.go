@@ -48,8 +48,7 @@ type FeatureOptions interface {
 }
 
 type ReplicaOptionsRoot struct {
-	// This is the default. Can I use the name Default and have mapstructure handle it as the
-	// embedded/root struct?
+	// This is the default.
 	ReplicaOptions `mapstructure:",squash"`
 	// Options tailored to country. This could be used to pattern match any arbitrary string really.
 	// mapstructure should ignore the field name.
