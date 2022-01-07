@@ -68,10 +68,11 @@ func EnablePersistence(geoFile string) {
 	mx.Lock()
 	defer mx.Unlock()
 
-	log.Debugf("Will persist geolocation info to %v", persistToFile)
-
 	// use this file going forward
 	persistToFile = geoFile
+
+	log.Debugf("Will persist geolocation info to %v", persistToFile)
+
 	// initialize from file if necessary
 	knownCountry := GetCountry(0)
 	if knownCountry == "" {

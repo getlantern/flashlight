@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/eventual/v2"
 	"github.com/getlantern/fronted"
 	"github.com/stretchr/testify/require"
 )
@@ -124,13 +123,13 @@ func TestFronted(t *testing.T) {
 	require.Equal(t, "FM", country, "Should immediately get persisted country")
 	select {
 	case <-ch:
-	// okay
-	default:
+		// okay
+	case <-time.After(5 * time.Second):
 		t.Error("should update watcher after enabling persistence")
 	}
 
 	// clear initial value to make sure we read value from network
-	currentGeoInfo = eventual.NewValue()
+	currentGeoInfo.Reset()
 	Refresh()
 	country = GetCountry(60 * time.Second)
 	ip := GetIP(5 * time.Second)
@@ -140,8 +139,8 @@ func TestFronted(t *testing.T) {
 
 	select {
 	case <-ch:
-	// okay
-	default:
+		// okay
+	case <-time.After(5 * time.Second):
 		t.Error("should update watcher after network refresh")
 	}
 
