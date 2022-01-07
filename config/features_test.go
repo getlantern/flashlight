@@ -127,6 +127,24 @@ featureoptions:
 	require.Equal(t, time.Hour, opts2.Interval)
 }
 
+func TestUnmarshalAnalyticsOptions(t *testing.T) {
+	yml := `
+featureoptions:
+  analytics:
+    providers:
+      ga: 1.0
+      matomo: 0.1
+`
+	gl := NewGlobal()
+	require.NoError(t, yaml.Unmarshal([]byte(yml), gl))
+
+	var opts AnalyticsOptions
+	require.NoError(t, gl.UnmarshalFeatureOptions(FeatureAnalytics, &opts))
+	log.Debugf("%+v", opts)
+
+	require.Equal(t, float32(0.1), opts.GetSampleRate(MATOMO))
+}
+  
 func TestReplicaByCountry(t *testing.T) {
 	require := require.New(t)
 	assert := assert.New(t)

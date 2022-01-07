@@ -117,10 +117,10 @@ func init() {
 }
 
 func run() {
-	for _ = range refreshRequest {
+	for range refreshRequest {
 		gi := lookup()
 		if gi.IP == GetIP(0) {
-			log.Debug("public IP doesn't change, not update")
+			log.Debug("public IP did not change - not notifying watchers")
 			continue
 		}
 		mx.Lock()
