@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/getlantern/eventual/v2"
 	"github.com/getlantern/fronted"
 	"github.com/stretchr/testify/require"
 )
@@ -129,7 +130,7 @@ func TestFronted(t *testing.T) {
 	}
 
 	// clear initial value to make sure we read value from network
-	currentGeoInfo.Reset()
+	currentGeoInfo = eventual.NewValue()
 	Refresh()
 	country = GetCountry(60 * time.Second)
 	ip := GetIP(5 * time.Second)
