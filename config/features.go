@@ -32,6 +32,7 @@ const (
 	FeatureGoogleSearchAds      = "googlesearchads"
 	FeatureYinbiWallet          = "yinbiwallet"
 	FeatureYinbi                = "yinbi"
+	FeatureAnalytics            = "analytics"
 )
 
 var (
@@ -45,6 +46,23 @@ var (
 // FeatureOptions is an interface implemented by all feature options
 type FeatureOptions interface {
 	fromMap(map[string]interface{}) error
+}
+
+// AnalyticsOptions is the configuration for analytics providers such as Google Analytics or Matomo.
+type AnalyticsOptions struct {
+	// Providers maps provider names to their sampling rates.
+	Providers map[string]float32 `mapstructure:"providers"`
+}
+
+const GA = "ga"
+const MATOMO = "matomo"
+
+func (ao *AnalyticsOptions) fromMap(m map[string]interface{}) error {
+	return mapstructure.Decode(m, &ao)
+}
+
+func (ao *AnalyticsOptions) GetSampleRate(key string) float32 {
+	return ao.Providers[key]
 }
 
 type ReplicaOptions struct {
@@ -271,7 +289,7 @@ func (g ClientGroup) Validate() error {
 	if g.VersionConstraints != "" {
 		_, err := semver.ParseRange(g.VersionConstraints)
 		if err != nil {
-			return fmt.Errorf("Error parsing version constraints: %v", err)
+			return fmt.Errorf("error parsing version constraints: %v", err)
 		}
 	}
 	return nil
