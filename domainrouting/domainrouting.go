@@ -1,6 +1,7 @@
 package domainrouting
 
 import (
+	"github.com/getlantern/errors"
 	"strings"
 	"sync"
 	"time"
@@ -24,10 +25,11 @@ const (
 
 var (
 	// Rules
-	None      = Rule("")
-	Direct    = Rule("d")
-	Proxy     = Rule("p")
-	MustProxy = Rule("m")
+	None       = Rule("")
+	Direct     = Rule("d")
+	Proxy      = Rule("p")
+	MustProxy  = Rule("m")
+	MustDirect = Rule("md")
 
 	// Requests to these domains require proxies for security purposes and to
 	// ensure that config-server requests in particular always go through a proxy
@@ -76,7 +78,43 @@ func Configure(rules Rules, proxiedSites *ProxiedSitesConfig) {
 	mx.Unlock()
 }
 
-// RuleFor returns the Rule most applicable to the given domain. If no such rule is defined,
+// AddRules adds the given rules to the current rules.
+func AddRules(newRules Rules) error {
+	mx.Lock()
+	defer mx.Unlock()
+	rules := getCurrentRules(initTimeout)
+	if rules == nil {
+		return errors.New("Rules not yet initialized")
+	}
+	for k, v := range rules.ToMap() {
+		newRules[k] = v.(Rule)
+	}
+
+	currentRules.Set(buildTree(newRules))
+	return nil
+}
+
+// RemoveRules removes the domains from the current rules.
+func RemoveRules(oldRules Rules) error {
+	mx.Lock()
+	defer mx.Unlock()
+	rules := getCurrentRules(initTimeout)
+	if rules == nil {
+		return errors.New("Rules not yet initialized")
+	}
+	m := rules.ToMap()
+	for domain := range oldRules {
+		delete(m, dotted(strings.ToLower(domain)))
+	}
+	newRules := Rules{}
+	for k, v := range m {
+		newRules[k] = v.(Rule)
+	}
+	currentRules.Set(buildTree(newRules))
+	return nil
+}
+
+// RuleFor returns the Rule most applicable to the given domain. If no such rule is defined, returns None
 func RuleFor(domain string) Rule {
 	mx.RLock()
 	rules := getCurrentRules(initTimeout)

@@ -39,6 +39,9 @@ type Global struct {
 	// DomainRoutingRules specifies routing rules for specific domains, such as forcing proxing, forcing direct dials, etc.
 	DomainRoutingRules domainrouting.Rules
 
+	// NamedDomainRoutingRules specifies routing rules for specific domains, grouped by name.
+	NamedDomainRoutingRules map[string]domainrouting.Rules
+
 	// TrustedCAs are trusted CAs for domain fronting domains only.
 	TrustedCAs []*fronted.CA
 

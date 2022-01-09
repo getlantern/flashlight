@@ -4068,6 +4068,14 @@ client:
   masqueradesets:
     cloudflare: []
     cloudfront: *id001
+nameddomainroutingrules:
+  google_play:
+    play.google.com: md
+    android.com: md
+    gvt1.com: md
+    gvt2.com: md
+    gvt3.com: md
+    android.clients.google.com: md
 domainroutingrules:
   .ir: d
   115.com: d
