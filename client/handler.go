@@ -70,7 +70,6 @@ func (client *Client) filter(cs *filters.ConnectionState, req *http.Request, nex
 		return filters.Fail(cs, req, http.StatusBadRequest, errors.New(""))
 	}
 
-	trackYoutubeWatches(req)
 	client.trackSearches(req)
 	// Add the scheme back for CONNECT requests. It is cleared
 	// intentionally by the standard library, see
@@ -425,30 +424,4 @@ func (client *Client) trackSearches(req *http.Request) {
 			break
 		}
 	}
-}
-
-func trackYoutubeWatches(req *http.Request) {
-	video := youtubeVideoFor(req)
-	if video != "" {
-		op := ops.Begin("youtube_view").Set("video", video)
-		defer op.End()
-		log.Debugf("Requested YouTube video")
-	}
-}
-
-func youtubeVideoFor(req *http.Request) string {
-	if !strings.Contains(strings.ToLower(req.Host), "youtube") && !strings.Contains(strings.ToLower(req.URL.Host), "youtube") {
-		// not a youtube domain
-		return ""
-	}
-	if req.URL.Path != "/watch" {
-		// not a watch url
-		return ""
-	}
-	candidate := req.URL.Query().Get("v")
-	if len(candidate) < 11 {
-		// invalid/corrupt video id
-		return ""
-	}
-	return candidate[0:11]
 }

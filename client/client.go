@@ -508,7 +508,7 @@ func (client *Client) Stop() error {
 func (client *Client) dial(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {
 	op := ops.BeginWithBeam("proxied_dialer", ctx)
 	op.Set("local_proxy_type", "http")
-	op.Origin(addr, "")
+	op.OriginPort(addr, "")
 	defer op.End()
 	ctx, cancel := context.WithTimeout(ctx, client.requestTimeout)
 	defer cancel()
