@@ -27,6 +27,10 @@ func InitInstrumentedResponseWriter(w http.ResponseWriter, label string) *Instru
 	}
 }
 
+func (w *InstrumentedResponseWriter) Set(key string, value interface{}) {
+	w.Op.Set(key, value)
+}
+
 func (w *InstrumentedResponseWriter) Finish() {
 	totalTime := time.Now().Sub(w.start).Milliseconds()
 	w.Op.SetMetricPercentile(fmt.Sprintf("%s_response_time_ms", w.label), float64(totalTime))
