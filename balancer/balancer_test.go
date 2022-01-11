@@ -309,5 +309,5 @@ func doTestConn(t *testing.T, conn net.Conn) {
 }
 
 func newBalancer(dialers ...Dialer) *Balancer {
-	return New(func() bool { return true }, 1*time.Second, dialers...)
+	return New(func() bool { return true }, 10*time.Second, dialers...)
 }
