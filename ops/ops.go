@@ -259,12 +259,11 @@ func (op *Op) OriginFromRequest(req *http.Request) *Op {
 	if req.Method != http.MethodConnect {
 		defaultPort = "80"
 	}
-	return op.Origin(req.Host, defaultPort)
+	return op.OriginPort(req.Host, defaultPort)
 }
 
 // Origin attaches the origin to the Context
-func (op *Op) Origin(origin string, defaultPort string) *Op {
-	op.Set("origin", origin)
+func (op *Op) OriginPort(origin string, defaultPort string) *Op {
 	host, port, _ := net.SplitHostPort(origin)
 	if host == "" && !strings.Contains(origin, ":") {
 		host = origin
@@ -272,7 +271,7 @@ func (op *Op) Origin(origin string, defaultPort string) *Op {
 	if port == "0" || port == "" {
 		port = defaultPort
 	}
-	op.Set("origin_host", host).Set("origin_port", port)
+	op.Set("origin_port", port)
 	return op
 }
 
