@@ -92,10 +92,9 @@ type ReplicaOptions struct {
 	// The replica-rust endpoint to use. There's only one because object uploads and ownership are
 	// fixed to a specific bucket, and replica-rust endpoints are 1:1 with a bucket.
 	ReplicaRustEndpoint string
-	// A set of info hashes (20 bytes, hex-encoded) by proxy country to which proxies should
-	// announce themselves.
+	// A set of info hashes (20 bytes, hex-encoded) to which proxies should announce themselves.
 	ProxyAnnounceTargets []string
-	// A set of info hashes per client country where p2p-proxy peers can be found.
+	// A set of info hashes where p2p-proxy peers can be found.
 	ProxyPeerInfoHashes []string
 }
 
