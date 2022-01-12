@@ -144,17 +144,11 @@ featureoptions:
 
 	require.Equal(t, float32(0.1), opts.GetSampleRate(MATOMO))
 }
-  
+
 func TestReplicaByCountry(t *testing.T) {
 	require := require.New(t)
 	assert := assert.New(t)
-	var w bytes.Buffer
-	// We could write into a pipe, but that requires concurrency and we're old-school in tests.
-	require.NoError(template.Must(template.New("").Parse(masquerades.CloudYamlTmpl)).Execute(&w, nil))
-	var g Global
-	require.NoError(yaml.Unmarshal(w.Bytes(), &g))
-	var fos ReplicaOptionsRoot
-	require.NoError(g.UnmarshalFeatureOptions(FeatureReplica, &fos))
+	fos := getReplicaOptionsRoot(require)
 	assert.Contains(fos.ByCountry, "RU")
 	assert.NotContains(fos.ByCountry, "AU")
 	assert.NotEmpty(fos.ByCountry)
@@ -165,4 +159,27 @@ func TestReplicaByCountry(t *testing.T) {
 	assert.Equal(fos.ByCountry["CN"].Trackers, globalTrackers)
 	assert.Equal(fos.ByCountry["RU"].Trackers, globalTrackers)
 	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
+}
+
+func getReplicaOptionsRoot(require *require.Assertions) (fos ReplicaOptionsRoot) {
+	var w bytes.Buffer
+	// We could write into a pipe, but that requires concurrency and we're old-school in tests.
+	require.NoError(template.Must(template.New("").Parse(masquerades.CloudYamlTmpl)).Execute(&w, nil))
+	var g Global
+	require.NoError(yaml.Unmarshal(w.Bytes(), &g))
+	require.NoError(g.UnmarshalFeatureOptions(FeatureReplica, &fos))
+	return
+}
+
+func TestReplicaProxying(t *testing.T) {
+	require := require.New(t)
+	assert := assert.New(t)
+	fos := getReplicaOptionsRoot(require)
+	numInfohashes := len(fos.ProxyAnnounceTargets)
+	// The default is to announce as a proxy.
+	assert.True(numInfohashes > 0)
+	// The default is not to look for proxies
+	assert.Empty(fos.ProxyPeerInfoHashes)
+	// Iran looks for peers from the default countries.
+	assert.Len(fos.ByCountry["IR"].ProxyPeerInfoHashes, numInfohashes)
 }
