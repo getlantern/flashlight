@@ -93,6 +93,7 @@ type Flashlight struct {
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
+	log.Debugf("Got global config from %v", src)
 	f.mxGlobal.Lock()
 	f.global = cfg
 	f.mxGlobal.Unlock()

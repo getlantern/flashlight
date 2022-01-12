@@ -29,7 +29,7 @@ type Flags struct {
 	YinbiAddr          string        `flag:"yinbiaddr" help:"if specified, indicates the address to use for the Yinbi server"`
 	Headless           bool          `help:"if true, lantern will run with no ui"`
 	Startup            bool          `help:"if true, Lantern was automatically run on system startup"`
-	PprofAddr          string        `flag:"pprofaddr" help:"pprof address to listen on, not activate pprof if empty"`
+	Pprof              bool          `flag:"pprof" help:"if true, run a pprof server on port 6060"`
 	ForceProxyAddr     string        `flag:"force-proxy-addr" help:"if specified, force chained proxying to use this address instead of the configured one, assuming an HTTP proxy"`
 	ForceAuthToken     string        `flag:"force-auth-token" help:"if specified, force chained proxying to use this auth token instead of the configured one"`
 	ForceConfigCountry string        `flag:"force-config-country" help:"if specified, force config fetches to pretend they're coming from this 2 letter country-code"`
