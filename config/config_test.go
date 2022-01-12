@@ -17,6 +17,19 @@ import (
 	"github.com/getlantern/flashlight/config/generated"
 )
 
+func TestEmptyEmbedded(t *testing.T) {
+	withTempDir(t, func(inTempDir func(string) string) {
+		opts := &options{
+			name: "test",
+		}
+		configPath := inTempDir(opts.name)
+		conf := newConfig(configPath, opts)
+
+		_, err := conf.embedded([]byte(``))
+		assert.Error(t, err, "should get error if embedded config is empty")
+	})
+}
+
 func TestEmbeddedIsNewer(t *testing.T) {
 	withTempDir(t, func(inTempDir func(string) string) {
 		opts := &options{

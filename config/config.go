@@ -140,8 +140,8 @@ func pipeConfig(opts *options) (stop func()) {
 	conf := newConfig(configPath, opts)
 
 	sendEmbedded := func() bool {
-		if embedded, errr := conf.embedded(opts.embeddedData); errr != nil {
-			log.Errorf("Could not load embedded config %v", errr)
+		if embedded, err := conf.embedded(opts.embeddedData); err != nil {
+			log.Errorf("Could not load embedded config %v", err)
 			return false
 		} else {
 			log.Debugf("Sending embedded config for %v", opts.name)
@@ -151,8 +151,8 @@ func pipeConfig(opts *options) (stop func()) {
 	}
 
 	sendSaved := func() bool {
-		if saved, proxyErr := conf.saved(); proxyErr != nil {
-			log.Debugf("Could not load stored config %v", proxyErr)
+		if saved, err := conf.saved(); err != nil {
+			log.Debugf("Could not load stored config %v", err)
 			return false
 		} else {
 			log.Debugf("Sending saved config for %v", opts.name)
