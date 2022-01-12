@@ -38,7 +38,7 @@ func TestMain(m *testing.M) {
 }
 
 func newTestUserConfig() *common.UserConfigData {
-	return common.NewUserConfigData("device", 1234, "protoken", nil, "en-US")
+	return common.NewUserConfigData(common.DefaultAppName, "device", 1234, "protoken", nil, "en-US")
 }
 
 type testImpl struct {

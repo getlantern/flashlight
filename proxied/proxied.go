@@ -57,7 +57,7 @@ func success(resp *http.Response) bool {
 func changeUserAgent(req *http.Request) {
 	secondary := req.Header.Get("User-Agent")
 	ua := strings.TrimSpace(fmt.Sprintf("%s/%s (%s/%s) %s",
-		common.AppName, common.Version, common.Platform, runtime.GOARCH, secondary))
+		common.DefaultAppName, common.Version, common.Platform, runtime.GOARCH, secondary))
 	req.Header.Set("User-Agent", ua)
 }
 
@@ -121,6 +121,20 @@ func ChainedThenFrontedWith(rootCA string) RoundTripper {
 	return dual(false, rootCA)
 }
 
+// Uses ParallelPreferChained for idempotent requests (HEAD and GET) and
+// ChainedThenFronted for all others.
+func ParallelForIdempotent() http.RoundTripper {
+	parallel := ParallelPreferChained()
+	sequential := ChainedThenFronted()
+
+	return AsRoundTripper(func(req *http.Request) (*http.Response, error) {
+		if req.Method == "GET" || req.Method == "HEAD" {
+			return parallel.RoundTrip(req)
+		}
+		return sequential.RoundTrip(req)
+	})
+}
+
 // dual creates a new http.RoundTripper that attempts to send
 // requests to both chained and fronted servers either in parallel or not.
 func dual(parallel bool, rootCA string) RoundTripper {
@@ -180,14 +194,16 @@ func (cf *chainedAndFronted) RoundTrip(req *http.Request) (*http.Response, error
 
 	resp, err := cf.getFetcher().RoundTrip(req)
 	op.Response(resp)
+
+	// On errors, we don't know if the exiting fetcher is a dual fetcher, a chained fetcher, or what, but
+	// we should use a dual fetcher either way to maximize the chances of success on future runs.
 	if err != nil {
 		log.Error(err)
-		// If there's an error, switch back to using the dual fetcher.
-		log.Debug("Switching back to dual fetcher because of error on chained request")
+		log.Debug("Switching or continuing to use dual fetcher because of error on request")
 		cf.setFetcher(newDualFetcher(cf))
 	} else if !success(resp) {
 		log.Error(resp.Status)
-		log.Debug("Switching back to dual fetcher because of unexpected response status on chained request")
+		log.Debug("Switching or continuing to use dual fetcher because of unexpected response status on chained request")
 		cf.setFetcher(newDualFetcher(cf))
 	}
 	return resp, err
@@ -262,7 +278,7 @@ func (df *dualFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 // do will attempt to execute the specified HTTP request using both
 // chained and fronted servers.
 func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT http.RoundTripper) (*http.Response, error) {
-	log.Debugf("Using dual fronter")
+	log.Debugf("Using dual fronter for request to: %#v", req.URL.Host)
 	op := ops.BeginWithBeam("dualfetcher", req.Context()).Request(req)
 	defer op.End()
 
@@ -322,6 +338,8 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 			// util.DumpResponse(resp) can be called here to examine the response
 			atomic.StoreInt64(&frontedRTT, int64(elapsed))
 			switchToChainedIfRequired()
+		} else {
+			log.Debugf("Fronted request failed: %v", req.URL.String())
 		}
 	}
 
@@ -334,6 +352,8 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 			log.Debugf("Chained request succeeded in %v", elapsed)
 			atomic.StoreInt64(&chainedRTT, int64(elapsed))
 			switchToChainedIfRequired()
+		} else {
+			log.Debugf("Chained request failed: %v", req.URL.String())
 		}
 	}
 

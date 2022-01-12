@@ -328,11 +328,15 @@ func (bd *balancedDial) dial(ctx context.Context, start time.Time) (conn net.Con
 		if conn != nil {
 			return conn, nil
 		}
-		attempts++
 		if time.Now().After(deadline) {
 			break
 		}
-		if !bd.advanceToNextDialer() {
+		attempts++
+		if !bd.advanceToNextDialer(attempts) {
+			break
+		}
+		// check deadline again after advancing, as we may have slept for a while
+		if time.Now().After(deadline) {
 			break
 		}
 	}
@@ -343,7 +347,7 @@ func (bd *balancedDial) dial(ctx context.Context, start time.Time) (conn net.Con
 // advanceToNextDialer advances this balancedDial to the next dialer, cycling
 // back to the beginning if necessary. If all dialers have failed upstream, this
 // method returns false.
-func (bd *balancedDial) advanceToNextDialer() bool {
+func (bd *balancedDial) advanceToNextDialer(attempts int) bool {
 	if len(bd.failedUpstream) == len(bd.dialers) {
 		// all dialers failed upstream, give up
 		return false
@@ -353,7 +357,8 @@ func (bd *balancedDial) advanceToNextDialer() bool {
 		bd.idx++
 		if bd.idx >= len(bd.dialers) {
 			bd.idx = 0
-			time.Sleep(250 * time.Millisecond)
+			// back off
+			time.Sleep(time.Duration(attempts) * 250 * time.Millisecond)
 		}
 		if bd.failedUpstream[bd.idx] != nil {
 			// this dialer failed upstream, don't bother trying again

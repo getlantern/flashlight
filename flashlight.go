@@ -150,6 +150,44 @@ func (f *Flashlight) EnabledFeatures() map[string]bool {
 	return featuresEnabled
 }
 
+// EnableNamedDomainRules adds named domain rules specified as arguments to the domainrouting rules table
+func (f *Flashlight) EnableNamedDomainRules(names ...string) {
+	f.mxGlobal.RLock()
+	global := f.global
+	f.mxGlobal.RUnlock()
+	if global == nil {
+		return
+	}
+	for _, name := range names {
+		if v, ok := global.NamedDomainRoutingRules[name]; !ok {
+			if err := domainrouting.AddRules(v); err != nil {
+				_ = log.Errorf("Unable to add named domain routing rules: %v", err)
+			}
+		} else {
+			log.Debugf("Named domain routing rule %s is not defined in global config", name)
+		}
+	}
+}
+
+// DisableNamedDomainRules removes named domain rules specified as arguments from the domainrouting rules table
+func (f *Flashlight) DisableNamedDomainRules(names ...string) {
+	f.mxGlobal.RLock()
+	global := f.global
+	f.mxGlobal.RUnlock()
+	if global == nil {
+		return
+	}
+	for _, name := range names {
+		if v, ok := global.NamedDomainRoutingRules[name]; !ok {
+			if err := domainrouting.RemoveRules(v); err != nil {
+				_ = log.Errorf("Unable to remove named domain routing rules: %v", err)
+			}
+		} else {
+			log.Debugf("Named domain routing rule %s is not defined in global config", name)
+		}
+	}
+}
+
 // FeatureEnabled returns true if the input feature is enabled for this flashlight instance. Feature
 // names are tracked in the config package.
 func (f *Flashlight) FeatureEnabled(feature string) bool {
@@ -176,6 +214,7 @@ func (f *Flashlight) calcFeature(global *config.Global, country, feature string)
 		return enabled
 	}
 	return global.FeatureEnabled(feature,
+		f.userConfig.GetAppName(),
 		f.userConfig.GetUserID(),
 		f.isPro(),
 		country)
@@ -281,7 +320,7 @@ func New(
 	adTrackUrl func() string,
 	eventWithLabel func(category, action, label string),
 ) (*Flashlight, error) {
-
+	log.Debugf("Running in app: %v", appName)
 	log.Debugf("Using configdir: %v", configDir)
 
 	if onProxiesUpdate == nil {
@@ -422,6 +461,7 @@ func (f *Flashlight) StartBackgroundServices() func() {
 	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
 
 	stopConfigFetch := f.startConfigFetch()
+	geolookup.EnablePersistence(filepath.Join(f.configDir, "latestgeoinfo.json"))
 	geolookup.Refresh()
 
 	return func() {

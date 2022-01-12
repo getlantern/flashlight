@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/pem"
+	stderrors "errors"
 	"net"
 	"strings"
 	"sync"
@@ -19,6 +20,7 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tlsmasq"
 	"github.com/getlantern/tlsmasq/ptlshs"
+	"github.com/getlantern/tlsutil"
 	tls "github.com/refraction-networking/utls"
 )
 
@@ -143,6 +145,10 @@ func (impl *tlsMasqImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, 
 	case err := <-errc:
 		if err != nil {
 			conn.Close()
+			var alertErr tlsutil.UnexpectedAlertError
+			if stderrors.As(err, &alertErr) {
+				log.Debugf("received alert from origin in tlsmasq handshake: %v", alertErr.Alert)
+			}
 			return nil, errors.New("handshake failed: %v", err)
 		}
 		return conn, nil
@@ -165,15 +171,14 @@ func (h *utlsHandshaker) Handshake(conn net.Conn) (*ptlshs.HandshakeResult, erro
 	defer h.roller.updateTo(r)
 
 	isHelloErr := func(err error) bool {
-		if strings.Contains(err.Error(), "hello spec") {
-			// These errors are created below.
+		// We assume that everything other than timeouts or transient network errors might be
+		// related to the hello. This may be a little aggressive, but it's better that the client is
+		// willing to try other hellos, rather than get stuck in a loop on a bad one.
+		var netErr net.Error
+		if !stderrors.As(err, &netErr) {
 			return true
 		}
-		if strings.Contains(err.Error(), "tls: ") {
-			// A TLS-level error is likely related to a bad hello.
-			return true
-		}
-		return false
+		return !netErr.Temporary() && !netErr.Timeout()
 	}
 
 	currentHello := r.current()

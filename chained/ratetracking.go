@@ -44,7 +44,7 @@ func (p *proxy) withRateTracking(wrapped net.Conn, origin string, ctx context.Co
 		op.End()
 
 		// record xfer data with origin
-		op = ops.BeginWithBeam("xfer", ctx).Origin(origin, "")
+		op = ops.BeginWithBeam("xfer", ctx).OriginPort(origin, "")
 		op.SetMetric("client_bytes_sent", borda.Sum(stats.SentTotal)).
 			SetMetric("client_bps_sent_min", borda.Min(stats.SentMin)).
 			SetMetric("client_bps_sent_max", borda.Max(stats.SentMax)).

@@ -33,8 +33,8 @@ import (
 	"github.com/getlantern/iptool"
 	"github.com/getlantern/mitm"
 	"github.com/getlantern/netx"
-	"github.com/getlantern/proxy"
-	"github.com/getlantern/proxy/filters"
+	"github.com/getlantern/proxy/v2"
+	"github.com/getlantern/proxy/v2/filters"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
@@ -48,8 +48,6 @@ import (
 
 var (
 	log = golog.LoggerFor("flashlight.client")
-
-	translationAppName = strings.ToUpper(common.AppName)
 
 	addr                = eventual.NewValue()
 	socksAddr           = eventual.NewValue()
@@ -137,6 +135,9 @@ type Client struct {
 
 	statsTracker stats.Tracker
 
+	// There will be one op in the map per open connection.
+	opsMap *opsMap
+
 	iptool            iptool.Tool
 	allowPrivateHosts func() bool
 	lang              func() string
@@ -203,6 +204,7 @@ func NewClient(
 		rewriteToHTTPS:       httpseverywhere.Default(),
 		rewriteLRU:           rewriteLRU,
 		statsTracker:         statsTracker,
+		opsMap:               newOpsMap(),
 		allowPrivateHosts:    allowPrivateHosts,
 		lang:                 lang,
 		adSwapTargetURL:      adSwapTargetURL,
@@ -288,6 +290,8 @@ func (c *Client) MITMOptions() *mitm.Opts {
 				domains = append(domains, "*.google."+suffix)
 			}
 		}
+
+		translationAppName := strings.ToUpper(c.user.GetAppName())
 		return &mitm.Opts{
 			PKFile:             filepath.Join(c.configDir, "mitmkey.pem"),
 			CertFile:           filepath.Join(c.configDir, "mitmcert.pem"),
@@ -504,7 +508,7 @@ func (client *Client) Stop() error {
 func (client *Client) dial(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {
 	op := ops.BeginWithBeam("proxied_dialer", ctx)
 	op.Set("local_proxy_type", "http")
-	op.Origin(addr, "")
+	op.OriginPort(addr, "")
 	defer op.End()
 	ctx, cancel := context.WithTimeout(ctx, client.requestTimeout)
 	defer cancel()
@@ -547,20 +551,26 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		return conn, err
 	}
 
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		host = addr
+	}
+	host = strings.ToLower(strings.TrimSpace(host))
+	routingRuleForDomain := domainrouting.RuleFor(host)
+
+	if routingRuleForDomain == domainrouting.MustDirect {
+		log.Debugf("Proxying to %v per domain routing rules (MustDirect)", host)
+		op.Set("force_direct", true)
+		op.Set("force_direct_reason", "routingrule")
+		return dialDirect(ctx, "tcp", addr)
+	}
+
 	if shouldForceProxying() {
 		log.Tracef("Proxying to %v because everything is forced to be proxied", addr)
 		op.Set("force_proxied", true)
 		op.Set("force_proxied_reason", "forceproxying")
 		return dialProxied(ctx, "whatever", addr)
 	}
-
-	host, _, err := net.SplitHostPort(addr)
-	if err != nil {
-		host = addr
-	}
-	host = strings.ToLower(strings.TrimSpace(host))
-
-	routingRuleForDomain := domainrouting.RuleFor(host)
 
 	if routingRuleForDomain == domainrouting.MustProxy {
 		log.Tracef("Proxying to %v per domain routing rules (MustProxy)", addr)
@@ -738,7 +748,7 @@ func (client *Client) portForAddress(addr string) (int, error) {
 	return port, nil
 }
 
-func errorResponse(ctx filters.Context, req *http.Request, read bool, err error) *http.Response {
+func errorResponse(_ *filters.ConnectionState, req *http.Request, _ bool, err error) *http.Response {
 	var htmlerr []byte
 
 	if req == nil {

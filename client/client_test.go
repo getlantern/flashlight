@@ -69,7 +69,7 @@ func init() {
 }
 
 func newTestUserConfig() *common.UserConfigData {
-	return common.NewUserConfigData("device", 1234, "protoken", nil, "en-US")
+	return common.NewUserConfigData(common.DefaultAppName, "device", 1234, "protoken", nil, "en-US")
 }
 
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
