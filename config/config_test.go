@@ -17,42 +17,6 @@ import (
 	"github.com/getlantern/flashlight/config/generated"
 )
 
-func TestEmptyEmbedded(t *testing.T) {
-	withTempDir(t, func(inTempDir func(string) string) {
-		opts := &options{
-			name: "test",
-		}
-		configPath := inTempDir(opts.name)
-		conf := newConfig(configPath, opts)
-
-		_, err := conf.embedded([]byte(``))
-		assert.Error(t, err, "should get error if embedded config is empty")
-	})
-}
-
-func TestEmbeddedIsNewer(t *testing.T) {
-	withTempDir(t, func(inTempDir func(string) string) {
-		opts := &options{
-			name: "test",
-		}
-		configPath := inTempDir(opts.name)
-		conf := newConfig(configPath, opts)
-
-		// No embedded config.
-		assert.False(t, embeddedIsNewer(conf, opts))
-
-		opts.embeddedData = generated.EmbeddedProxies
-
-		// No proxies on disk.
-		assert.True(t, embeddedIsNewer(conf, opts))
-
-		conf.doSaveOne(opts.embeddedData)
-
-		// Saved new proxies file -- make sure we use that.
-		assert.False(t, embeddedIsNewer(conf, opts))
-	})
-}
-
 // TestInvalidFile test an empty or malformed config file
 func TestInvalidFile(t *testing.T) {
 	logger := golog.LoggerFor("config-test")
