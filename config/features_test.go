@@ -132,8 +132,14 @@ func TestUnmarshalAnalyticsOptions(t *testing.T) {
 featureoptions:
   analytics:
     providers:
-      ga: 1.0
-      matomo: 0.1
+      ga: 
+        endpoint: "https://ssl.google-analytics.com/collect"
+        samplerate: 1.0
+        config:
+          k1: 2
+          k2: 3
+      matomo: 
+        samplerate: 0.1
 `
 	gl := NewGlobal()
 	require.NoError(t, yaml.Unmarshal([]byte(yml), gl))
@@ -142,9 +148,15 @@ featureoptions:
 	require.NoError(t, gl.UnmarshalFeatureOptions(FeatureAnalytics, &opts))
 	log.Debugf("%+v", opts)
 
-	require.Equal(t, float32(0.1), opts.GetSampleRate(MATOMO))
+	mat := opts.GetProvider(MATOMO)
+	ga := opts.GetProvider(GA)
+	require.Equal(t, float32(0.1), mat.SampleRate)
+	require.Equal(t, 2, ga.Config["k1"])
+	require.Equal(t, "https://ssl.google-analytics.com/collect", ga.Endpoint)
+
+	require.Nil(t, mat.Config["k1"])
 }
-  
+
 func TestReplicaByCountry(t *testing.T) {
 	require := require.New(t)
 	assert := assert.New(t)
