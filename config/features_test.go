@@ -140,6 +140,9 @@ featureoptions:
           k2: 3
       matomo: 
         samplerate: 0.1
+        config:
+          idsite: 1
+          token_auth: "418290ccds0d01"
 `
 	gl := NewGlobal()
 	require.NoError(t, yaml.Unmarshal([]byte(yml), gl))
@@ -154,6 +157,7 @@ featureoptions:
 	require.Equal(t, 2, ga.Config["k1"])
 	require.Equal(t, "https://ssl.google-analytics.com/collect", ga.Endpoint)
 
+	require.Equal(t, 1, mat.Config["idsite"])
 	require.Nil(t, mat.Config["k1"])
 }
 
