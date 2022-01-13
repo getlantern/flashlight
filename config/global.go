@@ -136,7 +136,7 @@ func (cfg *Global) validate() error {
 		return err
 	}
 	if len(cfg.TrustedCAs) == 0 {
-		return errors.New("No trusted CAs")
+		return errors.New("no trusted CAs")
 	}
 	for _, groups := range cfg.FeaturesEnabled {
 		for _, g := range groups {

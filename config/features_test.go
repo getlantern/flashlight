@@ -133,6 +133,7 @@ featureoptions:
   analytics:
     providers:
       ga: 
+        endpoint: "https://ssl.google-analytics.com/collect"
         samplerate: 1.0
         config:
           k1: 2
@@ -151,6 +152,7 @@ featureoptions:
 	ga := opts.GetProvider(GA)
 	require.Equal(t, float32(0.1), mat.SampleRate)
 	require.Equal(t, 2, ga.Config["k1"])
+	require.Equal(t, "https://ssl.google-analytics.com/collect", ga.Endpoint)
 
 	require.Nil(t, mat.Config["k1"])
 }
