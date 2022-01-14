@@ -48,10 +48,16 @@ type FeatureOptions interface {
 	fromMap(map[string]interface{}) error
 }
 
+type AnalyticsProvider struct {
+	SampleRate float32
+	Endpoint   string
+	Config     map[string]interface{}
+}
+
 // AnalyticsOptions is the configuration for analytics providers such as Google Analytics or Matomo.
 type AnalyticsOptions struct {
 	// Providers maps provider names to their sampling rates.
-	Providers map[string]float32 `mapstructure:"providers"`
+	Providers map[string]*AnalyticsProvider
 }
 
 const GA = "ga"
@@ -61,7 +67,7 @@ func (ao *AnalyticsOptions) fromMap(m map[string]interface{}) error {
 	return mapstructure.Decode(m, &ao)
 }
 
-func (ao *AnalyticsOptions) GetSampleRate(key string) float32 {
+func (ao *AnalyticsOptions) GetProvider(key string) *AnalyticsProvider {
 	return ao.Providers[key]
 }
 

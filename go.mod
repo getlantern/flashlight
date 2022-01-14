@@ -57,7 +57,7 @@ require (
 	github.com/getlantern/keyman v0.0.0-20210622061955-aa0d47d4932c
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
 	github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210601195915-e04471aa4920
-	github.com/getlantern/lantern_aws/salt/update_masquerades v0.0.0-20220112233123-ca9f7472f93e
+	github.com/getlantern/lantern_aws/salt/update_masquerades v0.0.0-20220112222211-ffdec280f479
 	github.com/getlantern/measured v0.0.0-20210507000559-ec5307b2b8be
 	github.com/getlantern/mitm v0.0.0-20210622063317-e6510574903b
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
@@ -112,7 +112,8 @@ require (
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
 	golang.org/x/net v0.0.0-20211111160137-58aab5ef257a
-	golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e
+	golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac
+	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20210406143921-e86de6bf7a46 // indirect
 	google.golang.org/grpc v1.37.0 // indirect
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
