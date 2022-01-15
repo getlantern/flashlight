@@ -13,6 +13,7 @@ import (
 
 	"github.com/getlantern/rot13"
 	"github.com/getlantern/yaml"
+	"github.com/getsentry/sentry-go"
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
@@ -78,6 +79,7 @@ type options struct {
 	// marshaler marshals application specific config to bytes, defaults to
 	// yaml.Marshal
 	marshaler func(interface{}) ([]byte, error)
+
 	//  unmarshaler unmarshals application specific data structure.
 	unmarshaler func([]byte) (interface{}, error)
 
@@ -137,17 +139,36 @@ func pipeConfig(opts *options) (stop func()) {
 	log.Tracef("Obfuscating %v", opts.obfuscate)
 	conf := newConfig(configPath, opts)
 
-	if saved, proxyErr := conf.saved(); proxyErr != nil {
-		log.Debugf("Could not load stored config %v", proxyErr)
-		if embedded, errr := conf.embedded(opts.embeddedData); errr != nil {
-			log.Errorf("Could not load embedded config %v", errr)
+	sendEmbedded := func() bool {
+		if embedded, err := conf.embedded(opts.embeddedData); err != nil {
+			log.Errorf("Could not load embedded config %v", err)
+			return false
 		} else {
 			log.Debugf("Sending embedded config for %v", opts.name)
 			dispatch(embedded, Embedded)
+			return true
+		}
+	}
+
+	sendSaved := func() bool {
+		if saved, err := conf.saved(); err != nil {
+			log.Debugf("Could not load stored config %v", err)
+			return false
+		} else {
+			log.Debugf("Sending saved config for %v", opts.name)
+			dispatch(saved, Saved)
+			return true
+		}
+	}
+
+	if embeddedIsNewer(conf, opts) {
+		if !sendEmbedded() {
+			sendSaved()
 		}
 	} else {
-		log.Debugf("Sending saved config for %v", opts.name)
-		dispatch(saved, Saved)
+		if !sendSaved() {
+			sendEmbedded()
+		}
 	}
 
 	// Now continually poll for new configs and pipe them back to the dispatch
@@ -163,6 +184,30 @@ func pipeConfig(opts *options) (stop func()) {
 
 	return func() {
 		close(stopCh)
+	}
+}
+
+// Checks to see if our embedded config is newer than our saved config. If it is, use that. This could happen,
+// for example, if the user has successfully auto-updated or installed a new version by any means, but
+// where there's some blocking event or bug preventing new configs from being fetched.
+func embeddedIsNewer(conf *config, opts *options) bool {
+	if opts.embeddedData == nil {
+		sentry.CaptureException(fmt.Errorf("no embedded config"))
+		return false
+	}
+
+	if saved, err := os.Stat(conf.filePath); os.IsNotExist(err) {
+		return true
+	} else {
+		if exePath, err := os.Executable(); err != nil {
+			return false
+		} else {
+			if exe, err := os.Stat(exePath); err != nil {
+				return false
+			} else {
+				return saved.ModTime().Before(exe.ModTime())
+			}
+		}
 	}
 }
 
@@ -192,9 +237,7 @@ func yamlRoundTrip(o interface{}) interface{} {
 
 // newConfig create a new ProxyConfig instance that saves and looks for
 // saved data at the specified path.
-func newConfig(filePath string,
-	opts *options,
-) Config {
+func newConfig(filePath string, opts *options) *config {
 	cfg := &config{
 		filePath:    filePath,
 		obfuscate:   opts.obfuscate,
@@ -203,7 +246,7 @@ func newConfig(filePath string,
 	}
 	if cfg.unmarshaler == nil {
 		cfg.unmarshaler = func([]byte) (interface{}, error) {
-			return nil, errors.New("No unmarshaler")
+			return nil, errors.New("no unmarshaler")
 		}
 	}
 
@@ -215,7 +258,7 @@ func newConfig(filePath string,
 func (conf *config) saved() (interface{}, error) {
 	infile, err := os.Open(conf.filePath)
 	if err != nil {
-		err = fmt.Errorf("Unable to open config file %v for reading: %v", conf.filePath, err)
+		err = fmt.Errorf("unable to open config file %v for reading: %w", conf.filePath, err)
 		log.Error(err.Error())
 		return nil, err
 	}
@@ -228,12 +271,12 @@ func (conf *config) saved() (interface{}, error) {
 
 	bytes, err := ioutil.ReadAll(in)
 	if err != nil {
-		err = fmt.Errorf("Error reading config from %v: %v", conf.filePath, err)
+		err = fmt.Errorf("error reading config from %v: %w", conf.filePath, err)
 		log.Error(err.Error())
 		return nil, err
 	}
 	if len(bytes) == 0 {
-		return nil, fmt.Errorf("Config exists but is empty at %v", conf.filePath)
+		return nil, fmt.Errorf("config exists but is empty at %v", conf.filePath)
 	}
 
 	log.Debugf("Returning saved config at %v", conf.filePath)
@@ -302,12 +345,12 @@ func (conf *config) saveOne(in interface{}) error {
 func (conf *config) doSaveOne(in interface{}) error {
 	bytes, err := yaml.Marshal(in)
 	if err != nil {
-		return fmt.Errorf("Unable to marshal config yaml: %v", err)
+		return fmt.Errorf("unable to marshal config yaml: %w", err)
 	}
 
 	outfile, err := os.OpenFile(conf.filePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
-		return fmt.Errorf("Unable to open file %v for writing: %v", conf.filePath, err)
+		return fmt.Errorf("unable to open file %v for writing: %w", conf.filePath, err)
 	}
 	defer outfile.Close()
 
@@ -317,7 +360,7 @@ func (conf *config) doSaveOne(in interface{}) error {
 	}
 	_, err = out.Write(bytes)
 	if err != nil {
-		return fmt.Errorf("Unable to write yaml to file %v: %v", conf.filePath, err)
+		return fmt.Errorf("unable to write yaml to file %v: %w", conf.filePath, err)
 	}
 	log.Debugf("Wrote file at %v", conf.filePath)
 	return nil
