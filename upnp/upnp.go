@@ -37,17 +37,17 @@ type RouterClient interface {
 //
 // You'll need to call this function every 'defaultLeaseWindow' seconds, else
 // the port forwarding will expire
-func ForwardPortWithUpnp(ctx context.Context, port uint16) error {
+func ForwardPortWithUpnp(ctx context.Context, port uint16) (atleastOneIpWorked bool, errs []error) {
 	cl, err := pickRouterClient(ctx)
 	if err != nil {
-		return log.Errorf("picking router client")
+		return false, []error{log.Errorf("picking router client")}
 	}
 	log.Debugf("Got UPNP router client: %+v", cl)
 
 	for _, proto := range []string{"ip4", "ip6"} {
 		ips, err := getRoutableLocalIPs(proto)
 		if err != nil {
-			return log.Errorf("getting routable local ips")
+			return false, []error{log.Errorf("getting routable local ips")}
 		}
 		log.Debugf("Got host's local IPs for proto [%v]: %v", proto, ips)
 
@@ -64,11 +64,12 @@ func ForwardPortWithUpnp(ctx context.Context, port uint16) error {
 				// XXX <10-01-22, soltzen> Because of the lease window, we need to call
 				// this function every X seconds to keep the UPNP port alive
 			); err != nil {
-				return log.Errorf("adding port map to client: %v", err)
+				errs = append(errs, log.Errorf("adding port map to client: %v", err))
 			}
+			atleastOneIpWorked = true
 		}
 	}
-	return nil
+	return atleastOneIpWorked, errs
 }
 
 func pickRouterClient(ctx context.Context) (RouterClient, error) {
