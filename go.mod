@@ -76,6 +76,7 @@ require (
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/google/gopacket v1.1.17
 	github.com/hashicorp/golang-lru v0.5.4
+	github.com/huin/goupnp v1.0.3-0.20220113221608-730ab6506b9d
 	github.com/jaffee/commandeer v0.5.0
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
@@ -255,7 +256,7 @@ require (
 	go.uber.org/zap v1.19.1 // indirect
 	golang.org/x/crypto v0.0.0-20220131195533-30dcbda58838 // indirect
 	golang.org/x/mod v0.4.2 // indirect
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
+	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	golang.org/x/tools v0.1.8-0.20211022200916-316ba0b74098 // indirect
