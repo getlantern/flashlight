@@ -7,7 +7,6 @@ import (
 	"text/template"
 	"time"
 
-	masquerades "github.com/getlantern/lantern_aws/salt/update_masquerades"
 	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -180,7 +179,7 @@ func TestReplicaByCountry(t *testing.T) {
 func getReplicaOptionsRoot(require *require.Assertions) (fos ReplicaOptionsRoot) {
 	var w bytes.Buffer
 	// We could write into a pipe, but that requires concurrency and we're old-school in tests.
-	require.NoError(template.Must(template.New("").Parse(masquerades.CloudYamlTmpl)).Execute(&w, nil))
+	require.NoError(template.Must(template.New("").Parse(replicaGlobalConfig)).Execute(&w, nil))
 	var g Global
 	require.NoError(yaml.Unmarshal(w.Bytes(), &g))
 	require.NoError(g.UnmarshalFeatureOptions(FeatureReplica, &fos))
@@ -199,3 +198,91 @@ func TestReplicaProxying(t *testing.T) {
 	// Iran looks for peers from the default countries.
 	assert.Len(fos.ByCountry["IR"].ProxyPeerInfoHashes, numInfohashes)
 }
+
+var replicaGlobalConfig = `
+featuresenabled:
+  replica:
+    # DE, AU and CN are mainly there since members of Replica team live there
+    # XXX 13-01-22 @soltzen: Adding CA because of the NCC auditor testing. This can be removed afterwards
+    - label: replica-desktop
+      geocountries: cn,au,ir,de,ru,by,ca
+      platforms: darwin,windows,linux
+      # this filter works only for Lantern 6.1+
+      application: lantern
+    # US, DE, AU and GR are mainly there since members of Replica team live there
+    - label: replica-android
+      geocountries: ir,us,au,de,gr,ca
+      platforms: android
+    - label: all-beam
+      application: beam
+      versionconstraints: "<4.0.0"
+featureoptions:
+  replica:
+    # Uses ISO 3166 country codes
+    # https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes
+    # Also, quotes are necessary around key names, else Norway (NO) will be
+    # interpreted as a boolean
+
+    # These are the default options
+
+    metadatabaseurls: &AllReplicaBaseUrls
+    - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
+    - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
+    - https://s3.eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
+    - https://s3-eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
+    - https://d3mm73d1kmj7zd.cloudfront.net/
+    replicarustendpoint: &GlobalReplicaRust https://replica-search.lantern.io/
+    staticpeeraddrs: []
+    trackers: &GlobalTrackers
+    - https://tracker.gbitt.info:443/announce
+    - http://tracker.opentrackr.org:1337/announce
+    - udp://tracker.leechers-paradise.org:6969/announce
+    webseedbaseurls: *AllReplicaBaseUrls
+    proxyannouncetargets: &GlobalProxyInfohashes
+    - 94c3fe9ead4625e0529c334bbb90568accb35ce3
+    - 77c89c352dcca36846c77541d9e2c6b4aa944790
+    - dbea91bb2d2953dc8c46272eb32cb4781ec588c5
+
+    # These are for compatibility with clients that don't load all options per-country.
+    replicarustdefaultendpoint: *GlobalReplicaRust
+    replicarustendpoints:
+      "RU": &FrankfurtReplicaRust https://replica-search-aws.lantern.io/
+      "IR": *FrankfurtReplicaRust
+      "DE": *FrankfurtReplicaRust
+
+    # Here follows options per-country
+
+    "IR":
+      proxypeerinfohashes: *GlobalProxyInfohashes
+      metadatabaseurls: *AllReplicaBaseUrls
+      replicarustendpoint: *FrankfurtReplicaRust
+      staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
+      trackers: *GlobalTrackers
+      webseedbaseurls: *AllReplicaBaseUrls
+    "CN":
+      proxypeerinfohashes: *GlobalProxyInfohashes
+      metadatabaseurls:
+      - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
+      - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
+      replicarustendpoint: *GlobalReplicaRust
+      staticpeeraddrs: []
+      trackers: *GlobalTrackers
+      webseedbaseurls:
+      - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
+      - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
+    "RU":
+      proxypeerinfohashes: *GlobalProxyInfohashes
+      metadatabaseurls: *AllReplicaBaseUrls
+      replicarustendpoint: *FrankfurtReplicaRust
+      staticpeeraddrs: [*IranReplicaPeer]
+      trackers: *GlobalTrackers
+      webseedbaseurls: *AllReplicaBaseUrls
+
+# This is the original global config, still here for compatibility with very old clients.
+replica:
+  webseedbaseurls: *AllReplicaBaseUrls
+  trackers: *GlobalTrackers
+  staticpeeraddrs: []
+  metadatabaseurls: *AllReplicaBaseUrls
+  replicaserviceendpoint: *GlobalReplicaRust
+`
