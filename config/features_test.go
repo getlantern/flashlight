@@ -2,6 +2,10 @@ package config
 
 import (
 	"bytes"
+	"compress/gzip"
+	"io"
+	"io/ioutil"
+	"net/http"
 	"strings"
 	"testing"
 	"text/template"
@@ -187,15 +191,38 @@ func getReplicaOptionsRoot(require *require.Assertions) (fos ReplicaOptionsRoot)
 	return
 }
 
+func fetchGlobalConfig(require *require.Assertions) Global {
+	resp, err := http.Get("https://globalconfig.flashlightproxy.com/global.yaml.gz")
+	require.NoError(err)
+	require.Equal(http.StatusOK, resp.StatusCode)
+	b, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	require.NoError(err)
+	buff := bytes.NewBuffer(b)
+	var r io.Reader
+	r, err = gzip.NewReader(buff)
+	require.NoError(err)
+	var unzippedBuff bytes.Buffer
+	_, err = unzippedBuff.ReadFrom(r)
+	require.NoError(err)
+	resData := unzippedBuff.Bytes()
+	var g Global
+	require.NoError(yaml.Unmarshal(resData, &g))
+	return g
+}
+
 func TestReplicaProxying(t *testing.T) {
 	require := require.New(t)
 	assert := assert.New(t)
-	fos := getReplicaOptionsRoot(require)
-	numInfohashes := len(fos.ProxyAnnounceTargets)
+
+	g := fetchGlobalConfig(require)
+	var opts ReplicaOptionsRoot
+	require.NoError(g.UnmarshalFeatureOptions(FeatureReplica, &opts))
+	numInfohashes := len(opts.ProxyAnnounceTargets)
 	// The default is to announce as a proxy.
 	assert.True(numInfohashes > 0)
 	// The default is not to look for proxies
-	assert.Empty(fos.ProxyPeerInfoHashes)
+	assert.Empty(opts.ProxyPeerInfoHashes)
 	// Iran looks for peers from the default countries.
-	assert.Len(fos.ByCountry["IR"].ProxyPeerInfoHashes, numInfohashes)
+	assert.Len(opts.ByCountry["IR"].ProxyPeerInfoHashes, numInfohashes)
 }
