@@ -111,6 +111,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
+	golang.org/x/mobile v0.0.0-20210831151748-9cba7bc03c0f
 	golang.org/x/net v0.0.0-20211111160137-58aab5ef257a
 	golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac
 	golang.org/x/text v0.3.7 // indirect
@@ -145,3 +146,7 @@ replace github.com/eycorsican/go-tun2socks => github.com/getlantern/go-tun2socks
 
 // v0.5.6 has a security issue and using require leaves a reference to it in go.sum
 replace github.com/ulikunitz/xz => github.com/ulikunitz/xz v0.5.8
+
+// We use a fork of gomobile that allows reusing the cache directory for faster builds, based
+// on this unmerged PR against gomobile - https://github.com/golang/mobile/pull/58.
+replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336-0bdf708b6d0f

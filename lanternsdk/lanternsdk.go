@@ -2,6 +2,7 @@
 package lanternsdk
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"strconv"
@@ -13,10 +14,14 @@ import (
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/golog"
+
+	// import gomobile just to make sure it stays in go.mod
+	_ "golang.org/x/mobile/bind/java"
 )
 
 var (
@@ -163,4 +168,28 @@ func start(appName, configDir, deviceID string, proxyAll bool) error {
 		nil,           // onError
 	)
 	return nil
+}
+
+func ReportIssueAndroid(appName, configDir, deviceID, androidDevice, androidModel, androidVersion, userEmail, description string, maxLogMB int) error {
+	msg := &email.Message{
+		Template:   "user-send-logs",
+		Subject:    "LanternSDK Issue",
+		To: 		"support@lantern.jitbit.com",
+		From:       userEmail,
+		MaxLogSize: fmt.Sprintf("%dMB", maxLogMB),
+		Vars: map[string]interface{}{
+			"userid":         0,
+			"protoken":       "",
+			"prouser":        "no",
+			"issue":          "Cannot access blocked sites",
+			"report":         description,
+			"deviceID":       deviceID,
+			"emailaddress":   userEmail,
+			"appversion":     fmt.Sprintf("%s %s", appName, common.Version),
+			"androiddevice":  androidDevice,
+			"androidmodel":   androidModel,
+			"androidversion": androidVersion,
+		},
+	}
+	return email.Send(msg)
 }

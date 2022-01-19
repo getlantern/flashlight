@@ -52,20 +52,6 @@ define build-tags
 	EXTRA_LDFLAGS=$$(echo $$EXTRA_LDFLAGS | xargs) && echo "Extra ldflags: $$EXTRA_LDFLAGS"
 endef
 
-.PHONY: vendor git-lfs
-
-git-lfs:
-	@if [ "$(shell which git-lfs)" = "" ]; then \
-		echo "Missing Git LFS. See https://git-lfs.github.com" && exit 1; \
-	fi
-	@if ! git config -l | grep -q "filter.lfs"; then \
-		echo "git-lfs installation is incomplete. Run 'git lfs install'." && exit 1; \
-	fi
-
-# vendor installs vendored dependencies using go modules
-vendor: | git-lfs
-	GO111MODULE=on go mod vendor
-
 test-and-cover: $(SOURCES)
 	@echo "mode: count" > profile.cov && \
 	TP=$$(go list ./...) && \
@@ -77,22 +63,22 @@ test-and-cover: $(SOURCES)
 	done
 
 test: $(SOURCES)
-	@TP=$$(go list ./... | grep -v /vendor/) && \
+	@TP=$$(go list ./...) && \
 	for pkg in $$TP; do \
 		GO111MODULE=on go test -failfast -race -v -tags="headless" $$pkg || exit 1; \
 	done
 
 define prep-for-mobile
-	go mod vendor && \
-	GO111MODULE=off go get -u golang.org/x/mobile/cmd/gomobile && \
-	GO111MODULE=off go get -u golang.org/x/mobile/cmd/gobind
+	go env -w 'GOPRIVATE=github.com/getlantern/*'
+	go install golang.org/x/mobile/cmd/gomobile
+	gomobile init
 endef
 
 lanternsdk-android.aar: $(SOURCES)
 	@$(call build-tags) && \
 	$(call prep-for-mobile) && \
 	echo "Running gomobile with `which gomobile` version `GO111MODULE=off gomobile version` ..." && \
-	GO111MODULE=off gomobile bind -o=lanternsdk-android.aar -target=android -tags='headless publicsdk' -ldflags="$$EXTRA_LDFLAGS -s -w" github.com/getlantern/flashlight/lanternsdk
+	gomobile bind -cache `pwd`/.gomobilecache -o=lanternsdk-android.aar -target=android -tags='headless publicsdk' -ldflags="$$EXTRA_LDFLAGS -s -w" github.com/getlantern/flashlight/lanternsdk
 
 # we build the LanternSDK.framework in two steps to use XCFramework
 # See https://stackoverflow.com/questions/63942997/generate-xcframework-file-with-gomobile
@@ -100,7 +86,7 @@ Lanternsdk.xcframework: $(SOURCES)
 	@$(call build-tags) && \
 	$(call prep-for-mobile) && \
 	echo "Running gomobile with `which gomobile` version `GO111MODULE=off gomobile version` ..." && \
-	GO111MODULE=off gomobile bind -o=Lanternsdk.xcframework -target=ios -tags='headless publicsdk' -ldflags="$$EXTRA_LDFLAGS -s -w" github.com/getlantern/flashlight/lanternsdk
+	gomobile bind -cache `pwd`/.gomobilecache -o=Lanternsdk.xcframework -target=ios -tags='headless publicsdk' -ldflags="$$EXTRA_LDFLAGS -s -w" github.com/getlantern/flashlight/lanternsdk
 
 clean:
-	rm -rf lanternsdk-android.aar Lanternsdk.xcframework vendor
+	rm -rf lanternsdk-android.aar Lanternsdk.xcframework
