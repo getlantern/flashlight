@@ -1,13 +1,10 @@
 package config
 
 import (
-	"bytes"
 	"strings"
 	"testing"
-	"text/template"
 	"time"
 
-	masquerades "github.com/getlantern/lantern_aws/salt/update_masquerades"
 	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -159,43 +156,4 @@ featureoptions:
 
 	require.Equal(t, 1, mat.Config["idsite"])
 	require.Nil(t, mat.Config["k1"])
-}
-
-func TestReplicaByCountry(t *testing.T) {
-	require := require.New(t)
-	assert := assert.New(t)
-	fos := getReplicaOptionsRoot(require)
-	assert.Contains(fos.ByCountry, "RU")
-	assert.NotContains(fos.ByCountry, "AU")
-	assert.NotEmpty(fos.ByCountry)
-	globalTrackers := fos.Trackers
-	assert.NotEmpty(globalTrackers)
-	// Check the countries pull in the trackers using the anchor. Just change this if they stop
-	// using the same trackers. I really don't want this to break out the gate is all.
-	assert.Equal(fos.ByCountry["CN"].Trackers, globalTrackers)
-	assert.Equal(fos.ByCountry["RU"].Trackers, globalTrackers)
-	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
-}
-
-func getReplicaOptionsRoot(require *require.Assertions) (fos ReplicaOptionsRoot) {
-	var w bytes.Buffer
-	// We could write into a pipe, but that requires concurrency and we're old-school in tests.
-	require.NoError(template.Must(template.New("").Parse(masquerades.CloudYamlTmpl)).Execute(&w, nil))
-	var g Global
-	require.NoError(yaml.Unmarshal(w.Bytes(), &g))
-	require.NoError(g.UnmarshalFeatureOptions(FeatureReplica, &fos))
-	return
-}
-
-func TestReplicaProxying(t *testing.T) {
-	require := require.New(t)
-	assert := assert.New(t)
-	fos := getReplicaOptionsRoot(require)
-	numInfohashes := len(fos.ProxyAnnounceTargets)
-	// The default is to announce as a proxy.
-	assert.True(numInfohashes > 0)
-	// The default is not to look for proxies
-	assert.Empty(fos.ProxyPeerInfoHashes)
-	// Iran looks for peers from the default countries.
-	assert.Len(fos.ByCountry["IR"].ProxyPeerInfoHashes, numInfohashes)
 }
