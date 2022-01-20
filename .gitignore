@@ -46,3 +46,4 @@ Ios.framework
 .vscode
 Lanternsdk*framework*
 xcuserdata
+.gomobilecache

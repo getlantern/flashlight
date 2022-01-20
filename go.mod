@@ -57,7 +57,7 @@ require (
 	github.com/getlantern/keyman v0.0.0-20210622061955-aa0d47d4932c
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
 	github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210601195915-e04471aa4920
-	github.com/getlantern/lantern_aws/salt/update_masquerades v0.0.0-20211130095655-b01287455a3f
+	github.com/getlantern/lantern_aws/salt/update_masquerades v0.0.0-20220112233123-ca9f7472f93e
 	github.com/getlantern/measured v0.0.0-20210507000559-ec5307b2b8be
 	github.com/getlantern/mitm v0.0.0-20210622063317-e6510574903b
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
@@ -112,6 +112,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
+	golang.org/x/mobile v0.0.0-20210831151748-9cba7bc03c0f
 	golang.org/x/net v0.0.0-20211111160137-58aab5ef257a
 	golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac
 	google.golang.org/genproto v0.0.0-20210406143921-e86de6bf7a46 // indirect
@@ -145,3 +146,7 @@ replace github.com/eycorsican/go-tun2socks => github.com/getlantern/go-tun2socks
 
 // v0.5.6 has a security issue and using require leaves a reference to it in go.sum
 replace github.com/ulikunitz/xz => github.com/ulikunitz/xz v0.5.8
+
+// We use a fork of gomobile that allows reusing the cache directory for faster builds, based
+// on this unmerged PR against gomobile - https://github.com/golang/mobile/pull/58.
+replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336-0bdf708b6d0f
