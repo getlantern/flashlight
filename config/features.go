@@ -32,6 +32,7 @@ const (
 	FeatureGoogleSearchAds      = "googlesearchads"
 	FeatureYinbiWallet          = "yinbiwallet"
 	FeatureYinbi                = "yinbi"
+	FeatureAnalytics            = "analytics"
 )
 
 var (
@@ -47,6 +48,46 @@ type FeatureOptions interface {
 	fromMap(map[string]interface{}) error
 }
 
+type AnalyticsProvider struct {
+	SampleRate float32
+	Endpoint   string
+	Config     map[string]interface{}
+}
+
+// AnalyticsOptions is the configuration for analytics providers such as Google Analytics or Matomo.
+type AnalyticsOptions struct {
+	// Providers maps provider names to their sampling rates.
+	Providers map[string]*AnalyticsProvider
+}
+
+const GA = "ga"
+const MATOMO = "matomo"
+
+func (ao *AnalyticsOptions) fromMap(m map[string]interface{}) error {
+	return mapstructure.Decode(m, &ao)
+}
+
+func (ao *AnalyticsOptions) GetProvider(key string) *AnalyticsProvider {
+	return ao.Providers[key]
+}
+
+type ReplicaOptionsRoot struct {
+	// This is the default.
+	ReplicaOptions `mapstructure:",squash"`
+	// Options tailored to country. This could be used to pattern match any arbitrary string really.
+	// mapstructure should ignore the field name.
+	ByCountry map[string]ReplicaOptions `mapstructure:",remain"`
+	// Deprecated. An unmatched country uses the embedded ReplicaOptions.ReplicaRustEndpoint.
+	// Removing this will break unmarshalling config.
+	ReplicaRustDefaultEndpoint string
+	// Deprecated. Use ByCountry.ReplicaRustEndpoint.
+	ReplicaRustEndpoints map[string]string
+}
+
+func (ro *ReplicaOptionsRoot) fromMap(m map[string]interface{}) error {
+	return mapstructure.Decode(m, ro)
+}
+
 type ReplicaOptions struct {
 	// Use infohash and old-style prefixing simultaneously for now. Later, the old-style can be removed.
 	WebseedBaseUrls []string
@@ -54,28 +95,33 @@ type ReplicaOptions struct {
 	StaticPeerAddrs []string
 	// Merged with the webseed URLs when the metadata and data buckets are merged.
 	MetadataBaseUrls []string
-	// Default endpoint, if nothing else is found
-	ReplicaRustDefaultEndpoint string
-	// map of region to endpoint url
-	ReplicaRustEndpoints map[string]string
+	// The replica-rust endpoint to use. There's only one because object uploads and ownership are
+	// fixed to a specific bucket, and replica-rust endpoints are 1:1 with a bucket.
+	ReplicaRustEndpoint string
+	// A set of info hashes (20 bytes, hex-encoded) to which proxies should announce themselves.
+	ProxyAnnounceTargets []string
+	// A set of info hashes where p2p-proxy peers can be found.
+	ProxyPeerInfoHashes []string
 }
 
-func (gc *ReplicaOptions) MetainfoUrls(prefix string) (ret []string) {
-	for _, s := range gc.WebseedBaseUrls {
-		ret = append(ret, fmt.Sprintf("%s%s/torrent", s, prefix))
-	}
-	return
+func (ro *ReplicaOptions) GetWebseedBaseUrls() []string {
+	return ro.WebseedBaseUrls
 }
 
-func (gc *ReplicaOptions) WebseedUrls(prefix string) (ret []string) {
-	for _, s := range gc.WebseedBaseUrls {
-		ret = append(ret, fmt.Sprintf("%s%s/data/", s, prefix))
-	}
-	return
+func (ro *ReplicaOptions) GetTrackers() []string {
+	return ro.Trackers
 }
 
-func (ro *ReplicaOptions) fromMap(m map[string]interface{}) error {
-	return mapstructure.Decode(m, &ro)
+func (ro *ReplicaOptions) GetStaticPeerAddrs() []string {
+	return ro.StaticPeerAddrs
+}
+
+func (ro *ReplicaOptions) GetMetadataBaseUrls() []string {
+	return ro.MetadataBaseUrls
+}
+
+func (ro *ReplicaOptions) GetReplicaRustEndpoint() string {
+	return ro.ReplicaRustEndpoint
 }
 
 type GoogleSearchAdsOptions struct {
@@ -261,7 +307,7 @@ func (g ClientGroup) Validate() error {
 	if g.VersionConstraints != "" {
 		_, err := semver.ParseRange(g.VersionConstraints)
 		if err != nil {
-			return fmt.Errorf("Error parsing version constraints: %v", err)
+			return fmt.Errorf("error parsing version constraints: %v", err)
 		}
 	}
 	return nil
@@ -269,7 +315,7 @@ func (g ClientGroup) Validate() error {
 
 //Includes checks if the ClientGroup includes the user, device and country
 //combination, assuming the group has been validated.
-func (g ClientGroup) Includes(userID int64, isPro bool, geoCountry string) bool {
+func (g ClientGroup) Includes(appName string, userID int64, isPro bool, geoCountry string) bool {
 	if g.UserCeil > 0 {
 		// Unknown user ID doesn't belong to any user range
 		if userID == 0 {
@@ -287,7 +333,7 @@ func (g ClientGroup) Includes(userID int64, isPro bool, geoCountry string) bool 
 	if g.ProOnly && !isPro {
 		return false
 	}
-	if g.Application != "" && strings.ToLower(g.Application) != strings.ToLower(common.AppName) {
+	if g.Application != "" && strings.ToLower(g.Application) != strings.ToLower(appName) {
 		return false
 	}
 	if g.VersionConstraints != "" {

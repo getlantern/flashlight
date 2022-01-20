@@ -21,7 +21,6 @@ func (l *optimisticListener) Accept() (net.Conn, error) {
 	for {
 		conn, err := l.Listener.Accept()
 		if err == nil {
-			wait = minWait
 			return conn, nil
 		}
 		l.closedMx.Lock()

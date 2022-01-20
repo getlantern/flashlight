@@ -3,7 +3,6 @@ package ops
 import (
 	"fmt"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/getlantern/ops"
@@ -32,12 +31,9 @@ func TestRequest(t *testing.T) {
 	if assert.Len(t, ctxs, len(methods)) {
 		for i, ctx := range ctxs {
 			method := methods[i]
-			host := hosts[i]
 			port := expectedPorts[i]
 			assert.Equal(t, method, ctx["http_method"])
 			assert.Equal(t, "HTTP/1.1", ctx["http_proto"])
-			assert.Equal(t, host, ctx["origin"])
-			assert.Equal(t, strings.Split(host, ":")[0], ctx["origin_host"])
 			assert.Equal(t, port, ctx["origin_port"])
 		}
 	}

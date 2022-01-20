@@ -32,7 +32,6 @@ config/proxies.yaml
 config/generated/masquerades.go
 profile.cov
 profile_tmp.cov
-shortcut/resources/*_ipv*.txt
 lantern-linux
 lantern.zip
 .DS_store
@@ -47,3 +46,4 @@ Ios.framework
 .vscode
 Lanternsdk*framework*
 xcuserdata
+.gomobilecache

@@ -12,7 +12,8 @@ import (
 
 	"github.com/andybalholm/brotli"
 	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/proxy/filters"
+	"github.com/getlantern/proxy/v2/filters"
+	sc "github.com/getlantern/shortcut"
 	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/require"
 
@@ -143,18 +144,6 @@ func TestRejectHTTPProxyPort(t *testing.T) {
 	assert.True(t, client.isHTTPProxyPort(req))
 }
 
-func TestVideoForYoutubeURL(t *testing.T) {
-	getVideo := func(url string) string {
-		req, _ := http.NewRequest(http.MethodGet, url, nil)
-		return youtubeVideoFor(req)
-	}
-	assert.Equal(t, "ixmjlbXvi30", getVideo("https://www.youtube.com/watch?v=ixmjlbXvi30"), "simple correct url")
-	assert.Equal(t, "ixmjlbXvi30", getVideo("https://www.youtube.com/watch?v=ixmjlbXvi30%23list=PLaYqF7AnyNPebzL8P8M_9a3F7O61JPEcN"), "url with spurious anchor")
-	assert.Empty(t, getVideo("https://www.youtube.com/watch?v=ixmjlbXvi3"), "video too short")
-	assert.Empty(t, getVideo("https://www.youtube.com/watch?vy=ixmjlbXvi30"), "wrong parameter name")
-	assert.Empty(t, getVideo("https://www.ytube.com/watch?v=ixmjlbXvi30"), "wrong domain")
-}
-
 func newClientForDiversion() *Client {
 	client, _ := NewClient(
 		tempConfigDir,
@@ -162,8 +151,8 @@ func newClientForDiversion() *Client {
 		func() bool { return true },
 		func() bool { return false },
 		func() bool { return false },
-		func(ctx context.Context, addr string) (bool, net.IP) {
-			return false, nil
+		func(ctx context.Context, addr string) (sc.Method, net.IP) {
+			return sc.Proxy, nil
 		},
 		func() bool { return true },
 		func() bool { return true },
@@ -274,8 +263,8 @@ func TestAdDiversion(t *testing.T) {
 		}
 	}
 
-	nextForVar := func(v string) func(ctx filters.Context, req *http.Request) (*http.Response, filters.Context, error) {
-		return func(ctx filters.Context, req *http.Request) (*http.Response, filters.Context, error) {
+	nextForVar := func(v string) func(cs *filters.ConnectionState, req *http.Request) (*http.Response, *filters.ConnectionState, error) {
+		return func(_ *filters.ConnectionState, req *http.Request) (*http.Response, *filters.ConnectionState, error) {
 			w := httptest.NewRecorder()
 			handlerForVar(v)(w, req)
 			resp := w.Result()

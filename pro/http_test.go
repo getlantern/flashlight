@@ -20,7 +20,7 @@ func TestClient(t *testing.T) {
 	// Just use the default transport since otherwise test setup is difficult.
 	// This means it does not actually touch the proxying code, but that should
 	// be tested separately.
-	client := getHTTPClient(http.DefaultTransport, http.DefaultTransport)
+	client := getHTTPClient(http.DefaultTransport)
 	res, e := client.Do(req)
 
 	if !assert.NoError(t, e) {

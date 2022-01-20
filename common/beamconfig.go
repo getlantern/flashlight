@@ -3,8 +3,7 @@
 package common
 
 const (
-	// AppName is the name of this specific app.
-	AppName = "Beam"
+	DefaultAppName = "Beam"
 
 	// ProAvailable specifies whether the user can purchase pro with this version.
 	ProAvailable = false

@@ -2,6 +2,7 @@ package common
 
 // AuthConfig retrieves any custom info for interacting with internal services.
 type AuthConfig interface {
+	GetAppName() string
 	GetDeviceID() string
 	GetUserID() int64
 	GetToken() string
@@ -19,6 +20,7 @@ type UserConfig interface {
 // NullAuthConfig is useful for testing
 type NullAuthConfig struct{}
 
+func (a NullAuthConfig) GetAppName() string              { return DefaultAppName }
 func (a NullAuthConfig) GetDeviceID() string             { return "" }
 func (a NullAuthConfig) GetUserID() int64                { return int64(10) }
 func (a NullAuthConfig) GetToken() string                { return "" }

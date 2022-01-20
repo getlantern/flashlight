@@ -51,7 +51,7 @@ func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth
 	}
 
 	req.Header.Set(PlatformHeader, Platform)
-	req.Header.Set(AppHeader, AppName)
+	req.Header.Set(AppHeader, uc.GetAppName())
 	req.Header.Add(SupportedDataCaps, "monthly")
 	req.Header.Add(SupportedDataCaps, "weekly")
 	req.Header.Add(SupportedDataCaps, "daily")

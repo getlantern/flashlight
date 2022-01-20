@@ -18,6 +18,7 @@ import (
 
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getlantern/shortcut"
 
 	lru "github.com/hashicorp/golang-lru"
 
@@ -32,8 +33,8 @@ import (
 	"github.com/getlantern/iptool"
 	"github.com/getlantern/mitm"
 	"github.com/getlantern/netx"
-	"github.com/getlantern/proxy"
-	"github.com/getlantern/proxy/filters"
+	"github.com/getlantern/proxy/v2"
+	"github.com/getlantern/proxy/v2/filters"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
@@ -47,8 +48,6 @@ import (
 
 var (
 	log = golog.LoggerFor("flashlight.client")
-
-	translationAppName = strings.ToUpper(common.AppName)
 
 	addr                = eventual.NewValue()
 	socksAddr           = eventual.NewValue()
@@ -87,7 +86,7 @@ var (
 	// See http://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address
 	validHostnameRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
-	errLanternOff = fmt.Errorf("Lantern is off")
+	errLanternOff = fmt.Errorf("lantern is off")
 
 	forceProxying int64
 )
@@ -126,7 +125,7 @@ type Client struct {
 	allowProbes          func() bool
 	proxyAll             func() bool
 	useShortcut          func() bool
-	allowShortcutTo      func(ctx context.Context, addr string) (bool, net.IP)
+	shortcutMethod       func(ctx context.Context, addr string) (shortcut.Method, net.IP)
 	useDetour            func() bool
 	allowHTTPSEverywhere func() bool
 	user                 common.UserConfig
@@ -135,6 +134,9 @@ type Client struct {
 	rewriteLRU     *lru.Cache
 
 	statsTracker stats.Tracker
+
+	// There will be one op in the map per open connection.
+	opsMap *opsMap
 
 	iptool            iptool.Tool
 	allowPrivateHosts func() bool
@@ -168,7 +170,7 @@ func NewClient(
 	allowProbes func() bool,
 	proxyAll func() bool,
 	useShortcut func() bool,
-	allowShortcutTo func(ctx context.Context, addr string) (bool, net.IP),
+	shortcutMethod func(ctx context.Context, addr string) (shortcut.Method, net.IP),
 	useDetour func() bool,
 	allowHTTPSEverywhere func() bool,
 	allowMITM func() bool,
@@ -195,13 +197,14 @@ func NewClient(
 		allowProbes:          allowProbes,
 		proxyAll:             proxyAll,
 		useShortcut:          useShortcut,
-		allowShortcutTo:      allowShortcutTo,
+		shortcutMethod:       shortcutMethod,
 		useDetour:            useDetour,
 		allowHTTPSEverywhere: allowHTTPSEverywhere,
 		user:                 userConfig,
 		rewriteToHTTPS:       httpseverywhere.Default(),
 		rewriteLRU:           rewriteLRU,
 		statsTracker:         statsTracker,
+		opsMap:               newOpsMap(),
 		allowPrivateHosts:    allowPrivateHosts,
 		lang:                 lang,
 		adSwapTargetURL:      adSwapTargetURL,
@@ -287,6 +290,8 @@ func (c *Client) MITMOptions() *mitm.Opts {
 				domains = append(domains, "*.google."+suffix)
 			}
 		}
+
+		translationAppName := strings.ToUpper(c.user.GetAppName())
 		return &mitm.Opts{
 			PKFile:             filepath.Join(c.configDir, "mitmkey.pem"),
 			CertFile:           filepath.Join(c.configDir, "mitmcert.pem"),
@@ -380,7 +385,7 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 		requestedAddr = "127.0.0.1:0"
 		log.Debugf("About to listen at '%s'", requestedAddr)
 		if l, err = net.Listen("tcp", requestedAddr); err != nil {
-			return fmt.Errorf("Unable to listen: %q", err)
+			return fmt.Errorf("unable to listen: %q", err)
 		}
 	}
 	defer l.Close()
@@ -405,7 +410,7 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 				time.Sleep(100 * time.Millisecond)
 				continue
 			}
-			return fmt.Errorf("Unable to accept connection: %v", err)
+			return fmt.Errorf("unable to accept connection: %v", err)
 		}
 		go client.handle(conn)
 	}
@@ -420,7 +425,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 	var err error
 	var l net.Listener
 	if l, err = net.Listen("tcp", requestedAddr); err != nil {
-		return fmt.Errorf("Unable to listen: %q", err)
+		return fmt.Errorf("unable to listen: %q", err)
 	}
 	l = &optimisticListener{Listener: l}
 	defer l.Close()
@@ -452,7 +457,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 	}
 	server, err := socks5.New(conf)
 	if err != nil {
-		return fmt.Errorf("Unable to create SOCKS5 server: %v", err)
+		return fmt.Errorf("unable to create SOCKS5 server: %v", err)
 	}
 
 	log.Debugf("About to start SOCKS5 client proxy at %v", listenAddr)
@@ -503,7 +508,7 @@ func (client *Client) Stop() error {
 func (client *Client) dial(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {
 	op := ops.BeginWithBeam("proxied_dialer", ctx)
 	op.Set("local_proxy_type", "http")
-	op.Origin(addr, "")
+	op.OriginPort(addr, "")
 	defer op.End()
 	ctx, cancel := context.WithTimeout(ctx, client.requestTimeout)
 	defer cancel()
@@ -546,20 +551,26 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		return conn, err
 	}
 
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		host = addr
+	}
+	host = strings.ToLower(strings.TrimSpace(host))
+	routingRuleForDomain := domainrouting.RuleFor(host)
+
+	if routingRuleForDomain == domainrouting.MustDirect {
+		log.Debugf("Proxying to %v per domain routing rules (MustDirect)", host)
+		op.Set("force_direct", true)
+		op.Set("force_direct_reason", "routingrule")
+		return dialDirect(ctx, "tcp", addr)
+	}
+
 	if shouldForceProxying() {
 		log.Tracef("Proxying to %v because everything is forced to be proxied", addr)
 		op.Set("force_proxied", true)
 		op.Set("force_proxied_reason", "forceproxying")
 		return dialProxied(ctx, "whatever", addr)
 	}
-
-	host, _, err := net.SplitHostPort(addr)
-	if err != nil {
-		host = addr
-	}
-	host = strings.ToLower(strings.TrimSpace(host))
-
-	routingRuleForDomain := domainrouting.RuleFor(host)
 
 	if routingRuleForDomain == domainrouting.MustProxy {
 		log.Tracef("Proxying to %v per domain routing rules (MustProxy)", addr)
@@ -606,17 +617,21 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 	// It's roughly requestTimeout (20s) / 5 = 4s to leave enough time
 	// to try dialing via proxies. Not hardcode to 4s to avoid break test
 	// code which may have a shorter requestTimeout.
-	directTimeout := dl.Sub(time.Now()) / 5
+	directTimeout := time.Until(dl) / 5
 	cappedCTX, cancel := context.WithTimeout(ctx, directTimeout)
 	defer cancel()
 
 	dialDirectForDetour := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		if client.useShortcut() {
-			if allow, ip := client.allowShortcutTo(cappedCTX, addr); allow {
+			method, ip := client.shortcutMethod(cappedCTX, addr)
+			switch method {
+			case shortcut.Direct:
 				// Arbitrarily have a larger timeout if the address is eligible for shortcut.
 				shortcutCTX, cancel := context.WithTimeout(ctx, directTimeout*2)
 				defer cancel()
 				return dialDirectForShortcut(shortcutCTX, network, addr, ip)
+			case shortcut.Proxy:
+				return dialProxied(ctx, "whatever", addr)
 			}
 		}
 		log.Tracef("Dialing %v directly for detour", addr)
@@ -636,12 +651,16 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		dialer = func(ctx context.Context, network, addr string) (net.Conn, error) {
 			var conn net.Conn
 			var err error
-			if allow, ip := client.allowShortcutTo(cappedCTX, addr); allow {
+			method, ip := client.shortcutMethod(cappedCTX, addr)
+			switch method {
+			case shortcut.Direct:
 				// Don't cap the context if the address is eligible for shortcut.
 				conn, err = dialDirectForShortcut(ctx, network, addr, ip)
 				if err == nil {
 					return conn, err
 				}
+			case shortcut.Proxy:
+				return dialProxied(ctx, network, addr)
 			}
 			select {
 			case <-ctx.Done():
@@ -679,7 +698,7 @@ func (client *Client) isPortProxyable(port int) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("Port %d not proxyable", port)
+	return fmt.Errorf("port %d not proxyable", port)
 }
 
 // isAddressProxyable largely replicates the logic in the old PAC file
@@ -689,7 +708,7 @@ func (client *Client) isAddressProxyable(addr string) error {
 	}
 	host, _, err := net.SplitHostPort(addr)
 	if err != nil {
-		return fmt.Errorf("Unable to split host and port for %v, considering private: %v", addr, err)
+		return fmt.Errorf("unable to split host and port for %v, considering private: %v", addr, err)
 	}
 
 	ip := net.ParseIP(host)
@@ -720,16 +739,16 @@ func (client *Client) isAddressProxyable(addr string) error {
 func (client *Client) portForAddress(addr string) (int, error) {
 	_, portString, err := net.SplitHostPort(addr)
 	if err != nil {
-		return 0, fmt.Errorf("Unable to determine port for address %v: %v", addr, err)
+		return 0, fmt.Errorf("unable to determine port for address %v: %v", addr, err)
 	}
 	port, err := strconv.Atoi(portString)
 	if err != nil {
-		return 0, fmt.Errorf("Unable to parse port %v for address %v: %v", addr, port, err)
+		return 0, fmt.Errorf("unable to parse port %v for address %v: %v", addr, port, err)
 	}
 	return port, nil
 }
 
-func errorResponse(ctx filters.Context, req *http.Request, read bool, err error) *http.Response {
+func errorResponse(_ *filters.ConnectionState, req *http.Request, _ bool, err error) *http.Response {
 	var htmlerr []byte
 
 	if req == nil {
