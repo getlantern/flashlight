@@ -3,8 +3,10 @@ package lanternsdk
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -19,6 +21,7 @@ import (
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/rot13"
 
 	// import gomobile just to make sure it stays in go.mod
 	_ "golang.org/x/mobile/bind/java"
@@ -174,7 +177,7 @@ func ReportIssueAndroid(appName, configDir, deviceID, androidDevice, androidMode
 	msg := &email.Message{
 		Template:   "user-send-logs",
 		Subject:    "LanternSDK Issue",
-		To: 		"support@lantern.jitbit.com",
+		To:         "support@lantern.jitbit.com",
 		From:       userEmail,
 		MaxLogSize: fmt.Sprintf("%dMB", maxLogMB),
 		Vars: map[string]interface{}{
@@ -190,6 +193,19 @@ func ReportIssueAndroid(appName, configDir, deviceID, androidDevice, androidMode
 			"androidmodel":   androidModel,
 			"androidversion": androidVersion,
 		},
+	}
+	proxiesYamlFile, err := os.Open(filepath.Join(configDir, "proxies.yaml"))
+	if err != nil {
+		log.Errorf("Unable to read proxies.yaml for reporting issue: %v", err)
+	} else {
+		defer proxiesYamlFile.Close()
+		r := rot13.NewReader(proxiesYamlFile)
+		bytes, err := ioutil.ReadAll(r)
+		if err != nil {
+			log.Errorf("Unable to decode proxies.yaml for reporting issue: %v", err)
+		} else {
+			msg.Proxies = bytes
+		}
 	}
 	return email.Send(msg)
 }
