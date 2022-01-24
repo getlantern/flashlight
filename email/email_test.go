@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/flashlight/config/generated"
+	"github.com/getlantern/flashlight/embeddedconfig"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
@@ -61,7 +61,7 @@ func TestSubmitIssue(t *testing.T) {
 	// example by setting its address to 0.0.0.0 in /etc/hosts.
 	if false {
 		cfg := &config.Global{}
-		err := yaml.Unmarshal(generated.GlobalConfig, cfg)
+		err := yaml.Unmarshal(embeddedconfig.Global, cfg)
 		if !assert.NoError(t, err) {
 			return
 		}

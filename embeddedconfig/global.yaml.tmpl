@@ -1,0 +1,306 @@
+# cloud.yaml contains the default configuration that's made available on the
+# internet.
+uiaddr: 127.0.0.1:16823
+bordareportinterval: 5m0s
+bordasamplepercentage: 0.01
+pingsamplepercentage: 0 # back compatiblity for Lantern 5.7.2 and below
+globalconfigpollinterval: 1h0m0s
+proxyconfigpollinterval: 1m0s
+logglysamplepercentage: 0.0001 # back compatiblity for Lantern before 3.6.0
+reportissueemail: support@lantern.jitbit.com
+
+# featuresenabled selectively enables certain features to some of the clients.
+#
+# The available features are:
+# - proxybench
+# - pingproxies
+# - trafficlog
+# - noborda
+# - noprobeproxies
+# - noshortcut
+# - nodetour
+# - nohttpseverywhere
+#
+# Note - if noshortcut and nodetour are enabled, then all traffic will be proxied (no split tunneling)
+#
+# Each feature can be enabled on a *list* of client groups each defined by a
+# combination of the following criteria. The zero value of each criterion means
+# wildcard match. See flashlight/config/features.go for reference.
+# - label: Meaningful string useful for collecting metrics
+# - userfloor: 0-1. Together with userceil, defines a range of userIDs the group includes.
+# - userceil: 0-1.
+# - versionconstraints: A semantic version range of Lantern client, parsed by https://github.com/blang/semver.
+# - platforms: Comma separated list of Lantern client platforms. Case-insensitive.
+# - freeonly: Only if the current Lantern user is Free.
+# - proonly: Only if the current Lantern user is Pro. Feature is disabled if both freeonly and proonly are set.
+# - geocountries: Comma separated list of geolocated country of Lantern clients. Case-insensitive.
+# - fraction: The fraction of clients to included when all other criteria are met.
+#
+# For example
+# ------------------------------
+#
+# featuresenabled:
+#   proxybench:
+#     - fraction: 0.01 # it used to be governed by bordasamplepercentage
+#   nodetour:
+#     - label: stealth
+#       platforms: android
+#       geocountries: ir
+#     - label: stealth
+#       geocountries: cn
+#   noshortcut:
+#     - label: stealth
+#       platforms: android
+#       geocountries: ir
+#   noprobeproxies:
+#     - label: stealth
+#       geocountries: cn,ir
+#
+
+featuresenabled:
+  yinbi:
+    - label: yinbi
+      application: lantern
+      versionconstraints: "<1.0.0"
+  googlesearchads:
+    - label: lantern-ads
+      application: lantern
+      versionconstraints: ">6.7.7"
+      platforms: darwin,windows
+      geocountries: cn,ir
+  replica:
+    # DE, AU and CN are mainly there since members of Replica team live there
+    # XXX 13-01-22 @soltzen: Adding CA because of the NCC auditor testing. This can be removed afterwards
+    - label: replica-desktop
+      geocountries: cn,au,ir,de,ru,by,ca
+      platforms: darwin,windows,linux
+      # this filter works only for Lantern 6.1+
+      application: lantern
+    # US, DE, AU and GR are mainly there since members of Replica team live there
+    - label: replica-android
+      geocountries: ir,us,au,de,gr,ca
+      platforms: android
+    - label: all-beam
+      application: beam
+      versionconstraints: "<4.0.0"
+  chat:
+    # US, DE and GR are mainly there since members of the Chat team live there
+    - label: chat-android
+      geocountries: ir,us,de,gr
+      platforms: android
+  nodetour:
+    - label: hk-privacy
+      geocountries: hk
+    - label: stealth
+      geocountries: us,cn
+  noshortcut:
+    - label: hk-privacy
+      geocountries: hk
+    - label: stealth
+      platforms: android
+      geocountries: ir
+  noprobeproxies:
+    - label: stealth
+      geocountries: ir
+    - label: stealth
+      geocountries: us,cn
+      platforms: windows,darwin,linux
+      userfloor: 0.5
+      userceil: 1.0
+  proxybench:
+    - label: proxybench
+      userfloor: 0
+      userceil: 0.05
+      geocountries: ir
+  trackyoutube:
+    - label: cn-trackyoutube
+      userfloor: 0
+      userceil: 0.05
+      geocountries: cn
+featureoptions:
+  trafficlog:
+    capturebytes: 10485760
+    savebytes: 10485760
+  replica:
+    # Uses ISO 3166 country codes
+    # https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes
+    # Also, quotes are necessary around key names, else Norway (NO) will be
+    # interpreted as a boolean
+
+    # These are the default options
+
+    metadatabaseurls: &AllReplicaBaseUrls
+    - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
+    - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
+    - https://s3.eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
+    - https://s3-eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
+    - https://d3mm73d1kmj7zd.cloudfront.net/
+    replicarustendpoint: &GlobalReplicaRust https://replica-search.lantern.io/
+    staticpeeraddrs: []
+    trackers: &GlobalTrackers
+    - https://tracker.gbitt.info:443/announce
+    - http://tracker.opentrackr.org:1337/announce
+    - udp://tracker.leechers-paradise.org:6969/announce
+    webseedbaseurls: *AllReplicaBaseUrls
+    proxyannouncetargets: &GlobalProxyInfohashes
+    - 94c3fe9ead4625e0529c334bbb90568accb35ce3
+    - 77c89c352dcca36846c77541d9e2c6b4aa944790
+    - dbea91bb2d2953dc8c46272eb32cb4781ec588c5
+
+    # These are for compatibility with clients that don't load all options per-country.
+    replicarustdefaultendpoint: *GlobalReplicaRust
+    replicarustendpoints:
+      "RU": &FrankfurtReplicaRust https://replica-search-aws.lantern.io/
+      "IR": *FrankfurtReplicaRust
+
+    # Here follows options per-country
+
+    "IR":
+      proxypeerinfohashes: *GlobalProxyInfohashes
+      metadatabaseurls: *AllReplicaBaseUrls
+      replicarustendpoint: *FrankfurtReplicaRust
+      staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
+      trackers: *GlobalTrackers
+      webseedbaseurls: *AllReplicaBaseUrls
+    "CN":
+      proxypeerinfohashes: *GlobalProxyInfohashes
+      metadatabaseurls:
+      - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
+      - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
+      replicarustendpoint: *GlobalReplicaRust
+      staticpeeraddrs: []
+      trackers: *GlobalTrackers
+      webseedbaseurls:
+      - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
+      - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
+    "RU":
+      proxypeerinfohashes: *GlobalProxyInfohashes
+      metadatabaseurls: *AllReplicaBaseUrls
+      replicarustendpoint: *FrankfurtReplicaRust
+      staticpeeraddrs: [*IranReplicaPeer]
+      trackers: *GlobalTrackers
+      webseedbaseurls: *AllReplicaBaseUrls
+    "DE":
+      proxypeerinfohashes: *GlobalProxyInfohashes
+      metadatabaseurls: *AllReplicaBaseUrls
+      replicarustendpoint: *FrankfurtReplicaRust
+      staticpeeraddrs: []
+      trackers: *GlobalTrackers
+      webseedbaseurls: *AllReplicaBaseUrls
+
+adsettings:
+  nativebannerzoneid: 5d3787399a1a710001b1ba32
+  standardbannerzoneid: 5d377f199a1a710001b1ba2e
+  interstitialzoneid: 5d3b4d641d796f000149f41a
+  daystosuppress: 0
+  percentage: 100 # show ads % of the time
+  countries:
+      ir: free
+      ae: none
+client:
+  firetweetversion: "{{.ftVersion}}"
+  frontedservers: []
+  chainedservers: {{range .fallbacks}}
+    fallback-{{.ip}}:
+      addr: {{.ip}}
+      cert: "{{.cert}}"
+      authtoken: "{{.auth_token}}"
+      pipelined: true
+      weight: 1000000
+      qos: 10
+      trusted: true{{end}}
+  fronted:
+    providers: {{range $pid, $p := .providers}}
+      {{$pid}}:
+        hostaliases: {{range $k, $v := $p.HostAliases}}
+          {{$k}}: {{$v}}{{end}}
+        testurl: {{$p.TestURL}}{{if $p.Validator}}
+        validator:{{if $p.Validator.RejectStatus}}
+          rejectstatus: [{{range $i, $e := $p.Validator.RejectStatus}}{{if $i}}, {{end}}{{$e}}{{end}}]{{end}}{{end}}
+        masquerades: {{if eq $pid "cloudfront"}}&cfmasq{{end}}{{range $p.Masquerades}}
+        - domain: {{.Domain}}
+          ipaddress: {{.IpAddress}}{{end}}{{else}}{}{{end}}
+  masqueradesets:
+    cloudflare: []
+    {{if .providers.cloudfront}}cloudfront: *cfmasq{{else}}cloudfront: {{range .cloudfrontMasquerades}}
+    - domain: {{.Domain}}
+      ipaddress: {{.IpAddress}}{{else}}[]{{end}}{{end}}
+
+nameddomainroutingrules:
+  google_play:
+    play.google.com: md
+    android.com: md
+    gvt1.com: md
+    gvt2.com: md
+    gvt3.com: md
+    android.clients.google.com: md
+
+domainroutingrules:
+  huya.com: d
+  douyucdn2.cn: d
+  apple.com: d
+  microsoft.com: d
+  officecdn-microsoft-com.akamaized.net: d
+  115.com: d
+  56.com: d
+  td-service.appcloudbox.net: d
+  sp.yostore.net: d
+  goload.wecloud.io: d
+  uxip.meizu.com: d
+  api.launcher.cocos.com: d
+  videodown.baofeng.com: d
+  tj.colymas.com: d
+  update.bloxy.cn: d
+  foodanddrink.tile.appex.bing.com: d
+  router.asus.com: d
+  sqm.msn.com: d
+  aupl.download.windowsupdate.com: d
+  baidu.com: d
+  aparat.com: d
+  tmall.com: d
+  qq.com: d
+  sohu.com: d
+  taobao.com: d
+  360.cn: d
+  jd.com: d
+  weibo.com: d
+  sina.com.cn: d
+  xinhuanet.com: d
+  panda.tv: d
+  zhanqi.tv: d
+  csdn.net: d
+  huanqiu.com: d
+  tianya.cn: d
+  yy.com: d
+  bilibili.com: d
+  17ok.com: d
+  so.com: d
+  1688.com: d
+  digikala.com: d
+  varzesh3.com: d
+  telewebion.com: d
+  namnak.com: d
+  rokna.net: d
+  donya-e-eqtesad.com: d
+  namasha.com: d
+  filimo.com: d
+  tejaratnews.com: d
+  .ir: d
+
+proxiedsites:
+  delta:
+    additions: []
+    deletions: []
+  cloud:{{range $domain := .proxiedsites }}
+  - {{$domain}}{{end}}
+trustedcas: {{range .cas}}
+- commonname: "{{.CommonName}}"
+  cert: "{{.Cert}}"{{end}}
+
+# This is the original global config, still here for compatibility with very old clients.
+replica:
+  webseedbaseurls: *AllReplicaBaseUrls
+  trackers: *GlobalTrackers
+  staticpeeraddrs: []
+  metadatabaseurls: *AllReplicaBaseUrls
+  replicaserviceendpoint: *GlobalReplicaRust
