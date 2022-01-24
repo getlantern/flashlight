@@ -1,0 +1,36 @@
+cloudfront:
+  ping: 'http://d157vud77ygy87.cloudfront.net/ping'
+  rejectStatus: 403
+  mapping:
+    api.getiantem.org: d2n32kma9hyo9f.cloudfront.net
+    api-staging.getiantem.org: d16igwq64x5e11.cloudfront.net
+    borda.lantern.io: d157vud77ygy87.cloudfront.net
+    config.getiantem.org: d2wi0vwulmtn99.cloudfront.net
+    config-staging.getiantem.org: d33pfmbpauhmvd.cloudfront.net
+    geo.getiantem.org: d3u5fqukq7qrhd.cloudfront.net
+    globalconfig.flashlightproxy.com: d24ykmup0867cj.cloudfront.net
+    update.getlantern.org: d2yl1zps97e5mx.cloudfront.net
+    github.com: d2yl1zps97e5mx.cloudfront.net
+    github-production-release-asset-2e65be.s3.amazonaws.com: d37kom4pw4aa7b.cloudfront.net
+    mandrillapp.com: d2rh3u0miqci5a.cloudfront.net
+    replica-search.lantern.io: d7kybcoknm3oo.cloudfront.net
+    replica-search-staging.lantern.io: d36vwf34kviguu.cloudfront.net
+    replica-search-aws.lantern.io: d380ddt46en4sh.cloudfront.net
+akamai:
+  ping: 'https://fronted-ping.dsa.akamai.getiantem.org/ping'
+  rejectStatus: 403
+  mapping:
+    api.getiantem.org: api.dsa.akamai.getiantem.org
+    api-staging.getiantem.org: api-staging.dsa.akamai.getiantem.org
+    borda.lantern.io: borda.dsa.akamai.getiantem.org
+    config.getiantem.org: config.dsa.akamai.getiantem.org
+    config-staging.getiantem.org: config-staging.dsa.akamai.getiantem.org
+    geo.getiantem.org: geo.dsa.akamai.getiantem.org
+    globalconfig.flashlightproxy.com: globalconfig.dsa.akamai.getiantem.org
+    update.getlantern.org: update.dsa.akamai.getiantem.org
+    github.com: github.dsa.akamai.getiantem.org
+    github-production-release-asset-2e65be.s3.amazonaws.com: github-release-asset.dsa.akamai.getiantem.org
+    mandrillapp.com: mandrillapp.dsa.akamai.getiantem.org
+    replica-search.lantern.io: replica-search.dsa.akamai.lantern.io
+    replica-search-aws.lantern.io: replica-search-aws.dsa.akamai.lantern.io
+    replica-search-staging.lantern.io: replica-search-staging.dsa.akamai.lantern.io

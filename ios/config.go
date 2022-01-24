@@ -22,8 +22,8 @@ import (
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/flashlight/config/generated"
 	"github.com/getlantern/flashlight/email"
+	"github.com/getlantern/flashlight/embeddedconfig"
 	"github.com/getlantern/flashlight/geolookup"
 )
 
@@ -195,13 +195,13 @@ func (cf *configurer) readUserConfig() (*UserConfig, error) {
 
 func (cf *configurer) openGlobal() (*config.Global, string, bool, error) {
 	cfg := &config.Global{}
-	etag, updated, err := cf.openConfig(globalYaml, cfg, generated.GlobalConfig)
+	etag, updated, err := cf.openConfig(globalYaml, cfg, embeddedconfig.Global)
 	return cfg, etag, updated, err
 }
 
 func (cf *configurer) openProxies() (map[string]*chained.ChainedServerInfo, string, bool, error) {
 	cfg := make(map[string]*chained.ChainedServerInfo)
-	etag, updated, err := cf.openConfig(proxiesYaml, cfg, generated.EmbeddedProxies)
+	etag, updated, err := cf.openConfig(proxiesYaml, cfg, embeddedconfig.Proxies)
 	return cfg, etag, updated, err
 }
 
