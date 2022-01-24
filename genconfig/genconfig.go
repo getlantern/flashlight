@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
@@ -27,9 +26,6 @@ import (
 	"github.com/getlantern/tlsdialer/v3"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/balancer"
-	"github.com/getlantern/flashlight/chained"
-	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/embeddedconfig"
 
@@ -52,8 +48,6 @@ var (
 	proxiedSitesDir    = flag.String("proxiedsites", "proxiedsites", "Path to directory containing proxied site lists, which will be combined and proxied by Lantern")
 	minFreq            = flag.Float64("minfreq", 3.0, "Minimum frequency (percentage) for including CA cert in list of trusted certs, defaults to 3.0%")
 	numberOfWorkers    = flag.Int("numworkers", 50, "Number of worker threads")
-	fallbacksFile      = flag.String("fallbacks", "fallbacks.yaml", "File containing yaml dict of fallback information")
-	fallbacksOutFile   = flag.String("fallbacks-out", "", "Path, if any, to write the go-formatted fallback configuration.")
 
 	enabledProviders   stringsFlag // --enable-provider in init()
 	masqueradesInFiles stringsFlag // --masquerades in init()
@@ -66,7 +60,6 @@ var (
 
 	blacklist    = make(filter)
 	proxiedSites = make(filter)
-	fallbacks    map[string]*chained.ChainedServerInfo
 	ftVersion    string
 	showAds      = false
 
@@ -169,7 +162,6 @@ func main() {
 	loadMasquerades()
 	loadProxiedSitesList()
 	loadBlacklist()
-	loadFallbacks()
 	loadFtVersion()
 
 	yamlTmpl := string(embeddedconfig.GlobalTemplate)
@@ -184,30 +176,17 @@ func main() {
 	}
 	defer os.RemoveAll(tempConfigDir)
 
-	model, err := buildModel(tempConfigDir, "cloud.yaml", cas, false)
+	model, err := buildModel(tempConfigDir, "cloud.yaml", cas)
 	if err != nil {
 		log.Fatalf("Invalid configuration: %s", err)
 	}
 	generateTemplate(model, yamlTmpl, "cloud.yaml")
-	model, err = buildModel(tempConfigDir, "lantern.yaml", cas, true)
-	if err != nil {
-		log.Fatalf("Invalid configuration: %s", err)
-	}
-	generateTemplate(model, yamlTmpl, "lantern.yaml")
 	if *masqueradesOutFile != "" {
 		masqueradesTmpl := loadTemplate("masquerades.go.tmpl")
 		generateTemplate(model, masqueradesTmpl, *masqueradesOutFile)
 		_, err = run("gofmt", "-w", *masqueradesOutFile)
 		if err != nil {
 			log.Errorf("Unable to format %s: %s", *masqueradesOutFile, err)
-		}
-	}
-	if *fallbacksOutFile != "" {
-		fallbacksTmpl := loadTemplate("fallbacks.go.tmpl")
-		generateTemplate(model, fallbacksTmpl, *fallbacksOutFile)
-		_, err = run("gofmt", "-w", *fallbacksOutFile)
-		if err != nil {
-			log.Errorf("Unable to format %s: %s", *fallbacksOutFile, err)
 		}
 	}
 }
@@ -298,22 +277,6 @@ func loadBlacklist() {
 	}
 	for _, domain := range strings.Split(string(blacklistBytes), "\n") {
 		blacklist[domain] = true
-	}
-}
-
-func loadFallbacks() {
-	if *fallbacksFile == "" {
-		log.Error("Please specify a fallbacks file")
-		flag.Usage()
-		os.Exit(2)
-	}
-	fallbacksBytes, err := ioutil.ReadFile(*fallbacksFile)
-	if err != nil {
-		log.Fatalf("Unable to read fallbacks file at %s: %s", *fallbacksFile, err)
-	}
-	err = yaml.Unmarshal(fallbacksBytes, &fallbacks)
-	if err != nil {
-		log.Fatalf("Unable to unmarshal yaml from %v: %v", *fallbacksFile, err)
 	}
 }
 
@@ -539,7 +502,7 @@ func doVetMasquerades(certPool *x509.CertPool, inCh chan *masquerade, outCh chan
 	wg.Done()
 }
 
-func buildModel(configDir string, configName string, cas map[string]*castat, useFallbacks bool) (map[string]interface{}, error) {
+func buildModel(configDir string, configName string, cas map[string]*castat) (map[string]interface{}, error) {
 	casList := make([]*castat, 0, len(cas))
 	for _, ca := range cas {
 		casList = append(casList, ca)
@@ -582,59 +545,14 @@ func buildModel(configDir string, configName string, cas map[string]*castat, use
 		ps = append(ps, site)
 	}
 	sort.Strings(ps)
-	fbs := make([]map[string]interface{}, 0, len(fallbacks))
-	if useFallbacks {
-		for name, f := range fallbacks {
-			fb := make(map[string]interface{})
-			fb["ip"] = f.Addr
-			fb["auth_token"] = f.AuthToken
-
-			cert := f.Cert
-			// Replace newlines in cert with newline literals
-			fb["cert"] = strings.Replace(cert, "\n", "\\n", -1)
-
-			info := f
-			userConfig := common.NewUserConfigData("lantern", defaultDeviceID, 0, "", nil, "en-US")
-			dialer, err := chained.CreateDialer(configDir, name, info, userConfig)
-			if err != nil {
-				log.Debugf("Skipping fallback %v because of error building dialer: %v", f.Addr, err)
-				continue
-			}
-			if fallbackOK(f, dialer) {
-				fbs = append(fbs, fb)
-			}
-		}
-	}
 	return map[string]interface{}{
 		"cas":                   casList,
 		"cloudfrontMasquerades": cfMasquerades,
 		"providers":             enabledProviders,
 		"proxiedsites":          ps,
-		"fallbacks":             fbs,
 		"showAds":               showAds,
 		"ftVersion":             ftVersion,
 	}, nil
-}
-
-func fallbackOK(f *chained.ChainedServerInfo, dialer balancer.Dialer) bool {
-	timeout := 30 * time.Second
-	deadline := time.Now().Add(timeout)
-	for {
-		if time.Now().After(deadline) {
-			return false
-		}
-		ctx, cancel := context.WithDeadline(context.Background(), deadline)
-		defer cancel()
-		conn, _, err := dialer.DialContext(ctx, "tcp", "http://www.google.com")
-		if err != nil {
-			log.Debugf("Skipping fallback %v because dialing Google failed: %v", f.Addr, err)
-			return false
-		}
-		if err := conn.Close(); err != nil {
-			log.Debugf("Error closing connection: %v", err)
-		}
-		return true
-	}
 }
 
 func generateTemplate(model map[string]interface{}, tmplString string, filename string) {
