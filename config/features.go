@@ -32,7 +32,8 @@ const (
 	FeatureGoogleSearchAds      = "googlesearchads"
 	FeatureYinbiWallet          = "yinbiwallet"
 	FeatureYinbi                = "yinbi"
-	FeatureAnalytics            = "analytics"
+	FeatureGoogleAnalytics      = "googleanalytics"
+	FeatureMatomo               = "matomo"
 )
 
 var (
@@ -46,29 +47,6 @@ var (
 // FeatureOptions is an interface implemented by all feature options
 type FeatureOptions interface {
 	fromMap(map[string]interface{}) error
-}
-
-type AnalyticsProvider struct {
-	SampleRate float32
-	Endpoint   string
-	Config     map[string]interface{}
-}
-
-// AnalyticsOptions is the configuration for analytics providers such as Google Analytics or Matomo.
-type AnalyticsOptions struct {
-	// Providers maps provider names to their sampling rates.
-	Providers map[string]*AnalyticsProvider
-}
-
-const GA = "ga"
-const MATOMO = "matomo"
-
-func (ao *AnalyticsOptions) fromMap(m map[string]interface{}) error {
-	return mapstructure.Decode(m, &ao)
-}
-
-func (ao *AnalyticsOptions) GetProvider(key string) *AnalyticsProvider {
-	return ao.Providers[key]
 }
 
 type ReplicaOptionsRoot struct {
@@ -321,9 +299,9 @@ func (g ClientGroup) Includes(appName string, userID int64, isPro bool, geoCount
 		if userID == 0 {
 			return false
 		}
-		percision := 1000.0
-		remainder := userID % int64(percision)
-		if remainder < int64(g.UserFloor*percision) || remainder >= int64(g.UserCeil*percision) {
+		precision := 1000.0
+		remainder := userID % int64(precision)
+		if remainder < int64(g.UserFloor*precision) || remainder >= int64(g.UserCeil*precision) {
 			return false
 		}
 	}
