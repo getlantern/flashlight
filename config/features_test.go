@@ -127,44 +127,15 @@ featureoptions:
 	require.Equal(t, time.Hour, opts2.Interval)
 }
 
-func TestUnmarshalAnalyticsOptions(t *testing.T) {
-	yml := `
-featureoptions:
-  analytics:
-    providers:
-      ga: 
-        endpoint: "https://ssl.google-analytics.com/collect"
-        samplerate: 1.0
-        config:
-          k1: 2
-          k2: 3
-      matomo: 
-        samplerate: 0.1
-        config:
-          idsite: 1
-          token_auth: "418290ccds0d01"
-`
-	gl := NewGlobal()
-	require.NoError(t, yaml.Unmarshal([]byte(yml), gl))
-
-	var opts AnalyticsOptions
-	require.NoError(t, gl.UnmarshalFeatureOptions(FeatureAnalytics, &opts))
-	log.Debugf("%+v", opts)
-
-	mat := opts.GetProvider(MATOMO)
-	ga := opts.GetProvider(GA)
-	require.Equal(t, float32(0.1), mat.SampleRate)
-	require.Equal(t, 2, ga.Config["k1"])
-	require.Equal(t, "https://ssl.google-analytics.com/collect", ga.Endpoint)
-
-	require.Equal(t, 1, mat.Config["idsite"])
-	require.Nil(t, mat.Config["k1"])
+func TestMatomoEnabled(t *testing.T) {
+	gl := globalFromTemplate(t)
+	assert.True(t, gl.FeatureEnabled(FeatureMatomo, common.DefaultAppName, 1, false, "us"), "Matomo is enabled for a low User ID")
+	assert.False(t, gl.FeatureEnabled(FeatureMatomo, common.DefaultAppName, 500, false, "us"), "Matomo is disabled for a high User ID")
 }
 
 func TestReplicaByCountry(t *testing.T) {
-	require := require.New(t)
 	assert := assert.New(t)
-	fos := getReplicaOptionsRoot(require)
+	fos := getReplicaOptionsRoot(t)
 	assert.Contains(fos.ByCountry, "RU")
 	assert.NotContains(fos.ByCountry, "AU")
 	assert.NotEmpty(fos.ByCountry)
@@ -177,20 +148,9 @@ func TestReplicaByCountry(t *testing.T) {
 	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
 }
 
-func getReplicaOptionsRoot(require *require.Assertions) (fos ReplicaOptionsRoot) {
-	var w bytes.Buffer
-	// We could write into a pipe, but that requires concurrency and we're old-school in tests.
-	require.NoError(template.Must(template.New("").Parse(embeddedconfig.GlobalTemplate)).Execute(&w, nil))
-	var g Global
-	require.NoError(yaml.Unmarshal(w.Bytes(), &g))
-	require.NoError(g.UnmarshalFeatureOptions(FeatureReplica, &fos))
-	return
-}
-
 func TestReplicaProxying(t *testing.T) {
-	require := require.New(t)
 	assert := assert.New(t)
-	fos := getReplicaOptionsRoot(require)
+	fos := getReplicaOptionsRoot(t)
 	numInfohashes := len(fos.ProxyAnnounceTargets)
 	// The default is to announce as a proxy.
 	assert.True(numInfohashes > 0)
@@ -198,4 +158,19 @@ func TestReplicaProxying(t *testing.T) {
 	assert.Empty(fos.ProxyPeerInfoHashes)
 	// Iran looks for peers from the default countries.
 	assert.Len(fos.ByCountry["IR"].ProxyPeerInfoHashes, numInfohashes)
+}
+
+func getReplicaOptionsRoot(t *testing.T) (fos ReplicaOptionsRoot) {
+	g := globalFromTemplate(t)
+	require.NoError(t, g.UnmarshalFeatureOptions(FeatureReplica, &fos))
+	return
+}
+
+func globalFromTemplate(t *testing.T) *Global {
+	var w bytes.Buffer
+	// We could write into a pipe, but that requires concurrency and we're old-school in tests.
+	require.NoError(t, template.Must(template.New("").Parse(embeddedconfig.GlobalTemplate)).Execute(&w, nil))
+	g := &Global{}
+	require.NoError(t, yaml.Unmarshal(w.Bytes(), g))
+	return g
 }
