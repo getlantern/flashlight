@@ -537,8 +537,13 @@ func reportProxyDial(delta time.Duration, err error) {
 		errText := err.Error()
 		potentialBlocking =
 			!strings.Contains(errText, "network is down") &&
+				!strings.Contains(errText, "no route to host") &&
 				!strings.Contains(errText, "unreachable") &&
-				!strings.Contains(errText, "Bad status code on CONNECT response")
+				!strings.Contains(errText, "Bad status code on CONNECT response") &&
+				!strings.Contains(errText, "Unable to protect") &&
+				!strings.Contains(errText, "INTERNAL_ERROR") &&
+				!strings.Contains(errText, "operation not permitted") &&
+				!strings.Contains(errText, "forbidden")
 	}
 	if success || potentialBlocking {
 		innerOp := ops.Begin("proxy_dial")
