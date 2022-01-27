@@ -24755,6 +24755,7 @@ featuresenabled:
   - geocountries: ir,us,de,gr
     label: chat-android
     platforms: android
+    versionconstraints: ">=7.0.0"
   googlesearchads:
   - application: lantern
     geocountries: cn,ir
@@ -24793,6 +24794,7 @@ featuresenabled:
   - geocountries: ir,us,au,de,gr,ca
     label: replica-android
     platforms: android
+    versionconstraints: ">=7.0.0"
   - application: beam
     label: all-beam
     versionconstraints: <4.0.0

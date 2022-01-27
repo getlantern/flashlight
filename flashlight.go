@@ -217,6 +217,7 @@ func (f *Flashlight) calcFeature(global *config.Global, country, feature string)
 	return global.FeatureEnabled(feature,
 		common.Platform,
 		f.userConfig.GetAppName(),
+		common.Version,
 		f.userConfig.GetUserID(),
 		f.isPro(),
 		country)

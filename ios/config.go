@@ -119,6 +119,7 @@ func (cf *configurer) configure(userID int, proToken string, refreshProxies bool
 				config.FeatureNoProbeProxies,
 				common.Platform,
 				cf.uc.AppName,
+				common.Version,
 				int64(cf.uc.UserID),
 				cf.uc.Token != "",
 				cf.uc.Country)
