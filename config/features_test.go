@@ -168,6 +168,12 @@ func TestChatEnabled(t *testing.T) {
 	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "6.9.7", 1, false, "ir"), "Chat is disabled for a low User ID in Iran running 6.9.7")
 }
 
+func TestReplicaEnabled(t *testing.T) {
+	gl := globalFromTemplate(t)
+	assert.True(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "ir"), "Replica is enabled in Iran when running 7.0.0")
+	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "6.9.7", 1, false, "ir"), "Replica is not enabled in Iran when running 6.9.7")
+}
+
 func getReplicaOptionsRoot(t *testing.T) (fos ReplicaOptionsRoot) {
 	g := globalFromTemplate(t)
 	require.NoError(t, g.UnmarshalFeatureOptions(FeatureReplica, &fos))
