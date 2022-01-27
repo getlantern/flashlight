@@ -34,6 +34,7 @@ const (
 	FeatureYinbi                = "yinbi"
 	FeatureGoogleAnalytics      = "googleanalytics"
 	FeatureMatomo               = "matomo"
+	FeatureChat                 = "chat"
 )
 
 var (
@@ -293,7 +294,7 @@ func (g ClientGroup) Validate() error {
 
 //Includes checks if the ClientGroup includes the user, device and country
 //combination, assuming the group has been validated.
-func (g ClientGroup) Includes(appName string, userID int64, isPro bool, geoCountry string) bool {
+func (g ClientGroup) Includes(platform, appName string, userID int64, isPro bool, geoCountry string) bool {
 	if g.UserCeil > 0 {
 		// Unknown user ID doesn't belong to any user range
 		if userID == 0 {
@@ -323,7 +324,7 @@ func (g ClientGroup) Includes(appName string, userID int64, isPro bool, geoCount
 			return false
 		}
 	}
-	if g.Platforms != "" && !csvContains(g.Platforms, common.Platform) {
+	if g.Platforms != "" && !csvContains(g.Platforms, platform) {
 		return false
 	}
 	if g.GeoCountries != "" && !csvContains(g.GeoCountries, geoCountry) {

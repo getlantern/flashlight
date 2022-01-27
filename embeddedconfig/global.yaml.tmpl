@@ -84,10 +84,12 @@ featuresenabled:
       application: beam
       versionconstraints: "<4.0.0"
   chat:
-    # US, DE and GR are mainly there since members of the Chat team live there
-    - label: chat-android
-      geocountries: ir,us,de,gr
+    # Currently limited to a subset of Iranian users
+    - label: chat-android-developers
+      geocountries: ir
       platforms: android
+      userfloor: 0
+      userceil: 0.01
   nodetour:
     - label: hk-privacy
       geocountries: hk
