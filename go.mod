@@ -11,6 +11,7 @@ require (
 	github.com/andybalholm/brotli v1.0.4
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/dustin/go-humanize v1.0.0
+	github.com/elazarl/goproxy v0.0.0-20220115173737-adb46da277ac
 	github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
