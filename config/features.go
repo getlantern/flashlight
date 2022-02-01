@@ -100,6 +100,14 @@ func (ro *ReplicaOptions) GetReplicaRustEndpoint() string {
 	return ro.ReplicaRustEndpoint
 }
 
+func (ro *ReplicaOptions) GetProxyAnnounceTargets() []string {
+	return ro.ProxyAnnounceTargets
+}
+
+func (ro *ReplicaOptions) GetProxyPeerInfoHashes() []string {
+	return ro.ProxyPeerInfoHashes
+}
+
 type GoogleSearchAdsOptions struct {
 	Pattern     string `mapstructure:"pattern"`
 	BlockFormat string `mapstructure:"block_format"`
