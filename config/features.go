@@ -107,6 +107,14 @@ func (ro *ReplicaOptions) GetCustomCA() string {
 	return ro.CustomCA
 }
 
+func (ro *ReplicaOptions) GetProxyAnnounceTargets() []string {
+	return ro.ProxyAnnounceTargets
+}
+
+func (ro *ReplicaOptions) GetProxyPeerInfoHashes() []string {
+	return ro.ProxyPeerInfoHashes
+}
+
 type GoogleSearchAdsOptions struct {
 	Pattern     string                 `mapstructure:"pattern"`
 	BlockFormat string                 `mapstructure:"block_format"`
