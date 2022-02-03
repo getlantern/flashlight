@@ -29,6 +29,11 @@ const (
 )
 
 var (
+	EnvironmentDevelopment = "development"
+	EnvironmentProduction  = "production"
+)
+
+var (
 	// GlobalURL URL for fetching the global config.
 	GlobalURL = "https://globalconfig.flashlightproxy.com/global.yaml.gz"
 
@@ -46,6 +51,11 @@ var (
 	log = golog.LoggerFor("flashlight.common")
 
 	forceAds bool
+
+	// Set by the linker using -ldflags in the project's Makefile.
+	// Defaults to 'production' so as not to mistakingly push development work
+	// to a production environment
+	Environment = "production"
 )
 
 func init() {
