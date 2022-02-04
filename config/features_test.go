@@ -162,16 +162,16 @@ func TestReplicaProxying(t *testing.T) {
 
 func TestChatEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
-	assert.True(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "ir"), "Chat is enabled for a low User ID in Iran running 7.0.0")
-	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 500, false, "ir"), "Chat is disabled for a high User ID in Iran running 7.0.0")
-	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "us"), "Chat is disabled for a low User ID outside Iran running 7.0.0")
-	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "6.9.7", 1, false, "ir"), "Chat is disabled for a low User ID in Iran running 6.9.7")
-	assert.True(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "99.0.0", 1, false, "ir"), "Chat is enabled for a low User ID in Iran running QA version 99.0.0")
+	assert.True(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "ae"), "Chat is enabled in UAE when running 7.0.0")
+	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "us"), "Chat is disabled outside UAE when running 7.0.0")
+	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "6.9.7", 1, false, "ae"), "Chat is disabled in Iran when running 6.9.7")
+	assert.True(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "99.0.0", 1, false, "us"), "Chat is enabled in USA when running QA version 99.0.0")
 }
 
 func TestReplicaEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
 	assert.True(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "7.0.0", 1, false, "ru"), "Replica is enabled in Russia when running 7.0.0")
+	assert.True(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "7.0.0", 1, false, "ir"), "Replica is enabled in Iran when running 7.0.0")
 	assert.False(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "7.0.0", 1, false, "us"), "Replica is not enabled in USA when running 7.0.0")
 	assert.False(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "6.9.7", 1, false, "ru"), "Replica is not enabled in Russia when running 6.9.7")
 	assert.True(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "99.0.0", 1, false, "ru"), "Replica is enabled in Russia when running QA version 99.0.0")
