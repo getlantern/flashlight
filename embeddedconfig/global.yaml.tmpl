@@ -77,22 +77,28 @@ featuresenabled:
       platforms: darwin,windows,linux
       # this filter works only for Lantern 6.1+
       application: lantern
-    # US, DE, AU and GR are mainly there since members of Replica team live there
     - label: replica-android
-      geocountries: ir,us,au,de,gr,ca
+      geocountries: ru
       platforms: android
       versionconstraints: ">=7.0.0"
+    - label: replica-android-qa
+      platforms: android
+      versionconstraints: ">=99.0.0"
     - label: all-beam
       application: beam
       versionconstraints: "<4.0.0"
   chat:
     # Currently limited to a subset of Iranian users
-    - label: chat-android-developers
+    - label: chat-android
       geocountries: ir
       platforms: android
       versionconstraints: ">=7.0.0"
       userfloor: 0
       userceil: 0.01
+    - label: chat-android-qa
+      platforms: android
+      versionconstraints: ">=99.0.0"
+    # For building 
   nodetour:
     - label: hk-privacy
       geocountries: hk
