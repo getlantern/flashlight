@@ -160,13 +160,6 @@ func TestReplicaProxying(t *testing.T) {
 	assert.Len(fos.ByCountry["IR"].ProxyPeerInfoHashes, numInfohashes)
 }
 
-func TestChatEnabled(t *testing.T) {
-	gl := globalFromTemplate(t)
-	assert.True(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, 1, false, "ir"), "Chat is enabled for a low User ID in Iran")
-	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, 500, false, "ir"), "Chat is disabled for a high User ID in Iran")
-	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, 1, false, "us"), "Chat is disabled for a low User ID outside Iran")
-}
-
 func getReplicaOptionsRoot(t *testing.T) (fos ReplicaOptionsRoot) {
 	g := globalFromTemplate(t)
 	require.NoError(t, g.UnmarshalFeatureOptions(FeatureReplica, &fos))
