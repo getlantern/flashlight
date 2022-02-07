@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/anacrolix/dht/v2"
+	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
 )
 
@@ -142,6 +143,8 @@ func (p2pCtx *CensoredP2pCtx) GetPeers(ctx context.Context) error {
 //   - Else, mark the last successful peer and return the response
 // - In all cases, drop all peers we failed to connect through
 func (p2pCtx *CensoredP2pCtx) RoundTrip(req *http.Request) (*http.Response, error) {
+	op := ops.Begin("censored_peer_p2p_roundtripper")
+	defer op.End()
 	log.Debugf("Censored peer: Running RoundTrip for req: %s", req.URL.String())
 	tryRequestWithPeer := func(req *http.Request, p *Peer) (*http.Response, error) {
 		if AreAllPeersOnLocalhost {
@@ -151,15 +154,20 @@ func (p2pCtx *CensoredP2pCtx) RoundTrip(req *http.Request) (*http.Response, erro
 
 		proxyUrl, err := url.Parse("http://" + p.String())
 		if err != nil {
-			return nil, log.Errorf("during url parsing for peer [%v]: %v", p, err)
+			return nil, log.Errorf("during url parsing for peer [%v]: %v",
+				p, op.FailIf(err))
 		}
 		p2pCtx.httpClient.Transport = &http.Transport{
 			Proxy: http.ProxyURL(proxyUrl),
 		}
+		startTime := time.Now()
 		resp, err := p2pCtx.httpClient.Do(req)
 		if err != nil {
-			return nil, log.Errorf("while running request using peer [%v] as proxy: %v", p, err)
+			return nil, log.Errorf("while running request using peer [%v] as proxy: %v",
+				p, op.FailIf(err))
 		}
+		op.SetMetricAvg("rtt_in_ms", float64(time.Since(startTime).Milliseconds()))
+		op.SetMetricAvg("rtt_content_length", float64(resp.ContentLength))
 		return resp, nil
 	}
 

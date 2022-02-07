@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/anacrolix/dht/v2"
 	"github.com/elazarl/goproxy"
@@ -59,6 +60,13 @@ func (p2pCtx *FreeP2pCtx) StartConnectProxy(errChan chan error) (int, error) {
 		return 0, log.Errorf("starting p2p CONNECT proxy: %v", err)
 	}
 	proxy := goproxy.NewProxyHttpServer()
+	proxy.NonproxyHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		// XXX <16-02-22, soltzen> This occurs when non-CONNECT HTTP methods
+		// are used against this proxy. One option is to use a 404, but the
+		// other is to just sleep and do nothing for a bit
+		// w.WriteHeader(404)
+		time.Sleep(10)
+	})
 	// proxy.Verbose = true
 	go func() {
 		log.Debugf("Free peer: Starting p2p CONNECT proxy on %s", ln.Addr())
