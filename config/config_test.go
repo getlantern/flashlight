@@ -41,7 +41,7 @@ func TestEmbeddedIsNewer(t *testing.T) {
 		// No embedded config.
 		assert.False(t, embeddedIsNewer(conf, opts))
 
-		opts.embeddedData = generated.EmbeddedProxies
+		opts.embeddedData = []byte("test")
 
 		// No proxies on disk.
 		assert.True(t, embeddedIsNewer(conf, opts))
