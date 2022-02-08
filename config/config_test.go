@@ -14,7 +14,7 @@ import (
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/config/generated"
+	"github.com/getlantern/flashlight/embeddedconfig"
 )
 
 func TestEmptyEmbedded(t *testing.T) {
@@ -136,7 +136,7 @@ func TestEmbedded(t *testing.T) {
 			unmarshaler: newProxiesUnmarshaler(),
 		})
 
-		_, err := cfg.embedded(generated.EmbeddedProxies)
+		_, err := cfg.embedded(embeddedconfig.Proxies)
 		assert.NotNil(t, err)
 	})
 }

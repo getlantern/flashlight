@@ -160,7 +160,7 @@ func (f *Flashlight) EnableNamedDomainRules(names ...string) {
 		return
 	}
 	for _, name := range names {
-		if v, ok := global.NamedDomainRoutingRules[name]; !ok {
+		if v, ok := global.NamedDomainRoutingRules[name]; ok {
 			if err := domainrouting.AddRules(v); err != nil {
 				_ = log.Errorf("Unable to add named domain routing rules: %v", err)
 			}
@@ -215,7 +215,9 @@ func (f *Flashlight) calcFeature(global *config.Global, country, feature string)
 		return enabled
 	}
 	return global.FeatureEnabled(feature,
+		common.Platform,
 		f.userConfig.GetAppName(),
+		common.Version,
 		f.userConfig.GetUserID(),
 		f.isPro(),
 		country)

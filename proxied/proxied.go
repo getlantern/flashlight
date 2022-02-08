@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"runtime"
@@ -297,7 +298,7 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 			responses <- resp
 			return resp, nil
 		} else if success(resp) {
-			log.Debugf("Got successful HTTP call!")
+			log.Debugf("Got successful HTTP call for req.URL.Host [%s]", req.URL.Host)
 			responses <- resp
 			return resp, nil
 		}
@@ -305,6 +306,13 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 		// it will return a 502.
 		err = errors.New(resp.Status)
 		if resp.Body != nil {
+			// Dump response body so we know what went wrong
+			b, err := httputil.DumpResponse(resp, true)
+			if err != nil {
+				log.Debugf("Failed to drain body to get failed response body for req.URL.Host [%s]", req.URL.Host)
+			}
+			log.Debugf("Got a failed response from running request with req.URL.Host [%s] | status code: [%d] | body: %s",
+				req.URL.Host, resp.StatusCode, string(b))
 			_ = resp.Body.Close()
 		}
 		errs <- err
@@ -349,7 +357,7 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 		start := time.Now()
 		if _, err := request(false, chainedRT, req); err == nil {
 			elapsed := time.Since(start)
-			log.Debugf("Chained request succeeded in %v", elapsed)
+			log.Debugf("Chained request for req.URL [%s] succeeded in %v", req.URL.String(), elapsed)
 			atomic.StoreInt64(&chainedRTT, int64(elapsed))
 			switchToChainedIfRequired()
 		} else {

@@ -57,12 +57,11 @@ require (
 	github.com/getlantern/keyman v0.0.0-20210622061955-aa0d47d4932c
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
 	github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210601195915-e04471aa4920
-	github.com/getlantern/lantern_aws/salt/update_masquerades v0.0.0-20220112233123-ca9f7472f93e
 	github.com/getlantern/measured v0.0.0-20210507000559-ec5307b2b8be
 	github.com/getlantern/mitm v0.0.0-20210622063317-e6510574903b
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
-	github.com/getlantern/multipath v0.0.0-20211105161347-48cd80ec7050
+	github.com/getlantern/multipath v0.0.0-20220119171839-238498e77dc4
 	github.com/getlantern/netx v0.0.0-20211206143627-7ccfeb739cbd
 	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
