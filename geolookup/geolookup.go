@@ -46,6 +46,7 @@ type GeoInfo struct {
 func GetIP(timeout time.Duration) string {
 	gi, err := getGeoInfo(timeout)
 	if err != nil {
+		log.Debugf("Could not get IP: %v", err)
 		return ""
 	}
 	return gi.IP
@@ -56,6 +57,7 @@ func GetIP(timeout time.Duration) string {
 func GetCountry(timeout time.Duration) string {
 	gi, err := getGeoInfo(timeout)
 	if err != nil {
+		log.Debugf("Could not get country: %v", err)
 		return ""
 	}
 	return gi.City.Country.IsoCode
@@ -70,11 +72,9 @@ func getGeoInfo(timeout time.Duration) (*GeoInfo, error) {
 
 	gi, err := currentGeoInfo.Get(ctx)
 	if err != nil {
-		log.Debugf("Could not lookup IP: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("could not get geoinfo with timeout %v: %w", timeout, err)
 	}
 	if gi == nil {
-		log.Debugf("No geo info after %v", timeout)
 		return nil, fmt.Errorf("no geo info after %v", timeout)
 	}
 	return gi.(*GeoInfo), nil
