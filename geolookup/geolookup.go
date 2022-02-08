@@ -64,6 +64,8 @@ func GetCountry(timeout time.Duration) string {
 }
 
 func getGeoInfo(timeout time.Duration) (*GeoInfo, error) {
+	// We need to specially handle negative timeouts because some callers may use
+	// eventual.Forever (aka -1), expecting it to block forever.
 	if timeout < 0 {
 		timeout = maxTimeout
 	}
