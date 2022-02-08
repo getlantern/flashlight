@@ -45,7 +45,7 @@ var (
 		config.FeatureGoogleSearchAds:      false,
 		config.FeaturePingProxies:          false,
 		config.FeatureNoBorda:              true,
-		config.FeatureNoProbeProxies:       true,
+		config.FeatureProbeProxies:         false,
 		config.FeatureDetour:               false,
 		config.FeatureNoHTTPSEverywhere:    true,
 		config.FeatureProxyWhitelistedOnly: true,
@@ -396,7 +396,7 @@ func New(
 	}
 
 	useShortcut := func() bool {
-		return !_proxyAll() && !f.FeatureEnabled(config.FeatureNoShortcut) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !_proxyAll() && f.FeatureEnabled(config.FeatureShortcut) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	useDetour := func() bool {
@@ -411,7 +411,7 @@ func New(
 	cl, err := client.NewClient(
 		f.configDir,
 		disconnected,
-		func() bool { return !f.FeatureEnabled(config.FeatureNoProbeProxies) },
+		func() bool { return f.FeatureEnabled(config.FeatureProbeProxies) },
 		proxyAll,
 		useShortcut,
 		shortcut.Allow,

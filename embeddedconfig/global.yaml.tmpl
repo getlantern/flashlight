@@ -16,9 +16,9 @@ reportissueemail: support@lantern.jitbit.com
 # - pingproxies
 # - trafficlog
 # - noborda
-# - noprobeproxies
-# - noshortcut
-# - nodetour
+# - probeproxies
+# - shortcut
+# - detour
 # - nohttpseverywhere
 #
 # Note - if noshortcut and nodetour are enabled, then all traffic will be proxied (no split tunneling)
@@ -42,18 +42,17 @@ reportissueemail: support@lantern.jitbit.com
 # featuresenabled:
 #   proxybench:
 #     - fraction: 0.01 # it used to be governed by bordasamplepercentage
-#   nodetour:
-#     - label: stealth
-#       platforms: android
+#   detour:
+#     - label: detour-ir
+#       platforms: windows,darwin,linux
 #       geocountries: ir
-#     - label: stealth
+#     - label: detour-cn
 #       geocountries: cn
-#   noshortcut:
-#     - label: stealth
-#       platforms: android
-#       geocountries: ir
-#   noprobeproxies:
-#     - label: stealth
+#   shortcut:
+#     - label: shortcut-cn
+#       geocountries: cn,ir
+#   probeproxies:
+#     - label: probeproxies
 #       geocountries: cn,ir
 #
 
@@ -97,10 +96,20 @@ featuresenabled:
       platforms: android
       versionconstraints: ">=99.0.0"
     # For building 
-  # Newer clients have to have detour enabled in order to use it (previously, detour was enabled by default unless nodetour was set)
+  ######## New-Style configuration for detour, shortcut and probeproxies. These are disabled by default and have to be enabled in the config. ########
   detour:
     - label: cn-detour
       geocountries: cn
+  shortcut:
+    - label: cn-shortcut
+      geocountries: cn
+    - lable: ir-desktop-shortcut
+      geocountries: ir
+      platforms: windows,darwin,linux
+  # probeproxies is not enabled anywhere
+  ######## End of New-Style configuration for detour, shortcut and probeproxies ########
+
+  ######## Old-Style configuration for detour, shortcut and probeproxies. These are enabled by default and have to be disabled in the config. ########
   nodetour:
     - label: hk-privacy
       geocountries: hk
@@ -124,6 +133,8 @@ featuresenabled:
       platforms: windows,darwin,linux
       userfloor: 0.5
       userceil: 1.0
+  ######## End of Old-Style configuration for detour, shortcut and probeproxies ########
+
   proxybench:
     - label: proxybench
       userfloor: 0

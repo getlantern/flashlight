@@ -115,8 +115,8 @@ func (cf *configurer) configure(userID int, proToken string, refreshProxies bool
 		go func() {
 			cf.uc.Country = geolookup.GetCountry(1 * time.Minute)
 			log.Debugf("Successful geolookup: country %s", cf.uc.Country)
-			cf.uc.AllowProbes = !global.FeatureEnabled(
-				config.FeatureNoProbeProxies,
+			cf.uc.AllowProbes = global.FeatureEnabled(
+				config.FeatureProbeProxies,
 				common.Platform,
 				cf.uc.AppName,
 				common.Version,
