@@ -196,18 +196,20 @@ func embeddedIsNewer(conf *config, opts *options) bool {
 		return false
 	}
 
-	if saved, err := os.Stat(conf.filePath); os.IsNotExist(err) {
+	saved, err := os.Stat(conf.filePath)
+	if os.IsNotExist(err) {
 		return true
+	}
+
+	exePath, err := os.Executable()
+	if err != nil {
+		return false
+	}
+
+	if exe, err := os.Stat(exePath); err != nil {
+		return false
 	} else {
-		if exePath, err := os.Executable(); err != nil {
-			return false
-		} else {
-			if exe, err := os.Stat(exePath); err != nil {
-				return false
-			} else {
-				return saved.ModTime().Before(exe.ModTime())
-			}
-		}
+		return saved.ModTime().Before(exe.ModTime())
 	}
 }
 
