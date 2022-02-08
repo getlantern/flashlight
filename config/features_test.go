@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 	"text/template"
@@ -131,6 +132,26 @@ func TestMatomoEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
 	assert.True(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, common.Version, 1, false, "us"), "Matomo is enabled for a low User ID")
 	assert.False(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, common.Version, 500, false, "us"), "Matomo is disabled for a high User ID")
+}
+
+func TestNoDetour(t *testing.T) {
+	gl := globalFromTemplate(t)
+	for _, country := range []string{"hk", "us", "cn", "uz"} {
+		for _, os := range []string{"android", "windows", "darwin", "linux"} {
+			assert.True(t, gl.FeatureEnabled(FeatureNoDetour, os, common.DefaultAppName, common.Version, 1, false, country), fmt.Sprintf("detour is disabled for %s in %s", os, country))
+		}
+	}
+}
+
+func TestNoShortcut(t *testing.T) {
+	gl := globalFromTemplate(t)
+	for _, country := range []string{"hk", "ir", "uz"} {
+		for _, os := range []string{"android", "windows", "darwin", "linux"} {
+			if country != "ir" || os == "android" {
+				assert.True(t, gl.FeatureEnabled(FeatureNoShortcut, os, common.DefaultAppName, common.Version, 1, false, country), fmt.Sprintf("shortcut is disabled for %s in %s", os, country))
+			}
+		}
+	}
 }
 
 func TestReplicaByCountry(t *testing.T) {
