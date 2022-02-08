@@ -46,7 +46,7 @@ var (
 		config.FeaturePingProxies:          false,
 		config.FeatureNoBorda:              true,
 		config.FeatureNoProbeProxies:       true,
-		config.FeatureNoDetour:             true,
+		config.FeatureDetour:               false,
 		config.FeatureNoHTTPSEverywhere:    true,
 		config.FeatureProxyWhitelistedOnly: true,
 	}
@@ -400,7 +400,7 @@ func New(
 	}
 
 	useDetour := func() bool {
-		return !_proxyAll() && !f.FeatureEnabled(config.FeatureNoDetour) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !_proxyAll() && f.FeatureEnabled(config.FeatureDetour) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	proxyAll := func() bool {

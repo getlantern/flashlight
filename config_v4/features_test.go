@@ -134,11 +134,11 @@ func TestMatomoEnabled(t *testing.T) {
 	assert.False(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, common.Version, 500, false, "us"), "Matomo is disabled for a high User ID")
 }
 
-func TestDetour(t *testing.T) {
+func TestNoDetour(t *testing.T) {
 	gl := globalFromTemplate(t)
-	for _, country := range []string{"cn"} {
+	for _, country := range []string{"hk", "us", "cn", "uz"} {
 		for _, os := range []string{"android", "windows", "darwin", "linux"} {
-			assert.True(t, gl.FeatureEnabled(FeatureDetour, os, common.DefaultAppName, common.Version, 1, false, country), fmt.Sprintf("detour is enabled for %s in %s", os, country))
+			assert.True(t, gl.FeatureEnabled(FeatureNoDetour, os, common.DefaultAppName, common.Version, 1, false, country), fmt.Sprintf("detour is disabled for %s in %s", os, country))
 		}
 	}
 }

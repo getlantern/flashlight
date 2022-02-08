@@ -23,7 +23,7 @@ const (
 	FeatureNoBorda              = "noborda"
 	FeatureNoProbeProxies       = "noprobeproxies"
 	FeatureNoShortcut           = "noshortcut"
-	FeatureDetour               = "detour"
+	FeatureNoDetour             = "nodetour"
 	FeatureNoHTTPSEverywhere    = "nohttpseverywhere"
 	FeatureReplica              = "replica"
 	FeatureProxyWhitelistedOnly = "proxywhitelistedonly"

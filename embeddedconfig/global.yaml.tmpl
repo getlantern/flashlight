@@ -97,6 +97,10 @@ featuresenabled:
       platforms: android
       versionconstraints: ">=99.0.0"
     # For building 
+  # Newer clients have to have detour enabled in order to use it (previously, detour was enabled by default unless nodetour was set)
+  detour:
+    - label: cn-detour
+      geocountries: cn
   nodetour:
     - label: hk-privacy
       geocountries: hk
