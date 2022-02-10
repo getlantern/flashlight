@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/getlantern/flashlight/config"
 	"io/ioutil"
 	"math"
 	"net"
@@ -16,7 +17,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/shortcut"
 
@@ -155,10 +155,10 @@ type Client struct {
 	adTrackUrl           func() string
 	allowGoogleSearchAds func() bool
 	allowMITM            func() bool
+	fetchAds             func(opts *config.GoogleSearchAdsOptions, keywords ...string) string
 	eventWithLabel       func(category, action, label string)
-
-	httpWg  sync.WaitGroup
-	socksWg sync.WaitGroup
+	httpWg               sync.WaitGroup
+	socksWg              sync.WaitGroup
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -181,7 +181,7 @@ func NewClient(
 	lang func() string,
 	adSwapTargetURL func() string,
 	reverseDNS func(addr string) (string, error),
-	adTrackUrl func() string,
+	fetchAds func(opts *config.GoogleSearchAdsOptions, keyword ...string) string,
 	eventWithLabel func(category, action, label string),
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
@@ -213,12 +213,12 @@ func NewClient(
 		chPingProxiesConf:    make(chan pingProxiesConf, 1),
 		googleAdsOptions:     nil,
 		googleAdsOptionsLock: sync.RWMutex{},
-		adTrackUrl:           adTrackUrl,
+		fetchAds:             fetchAds,
 		allowGoogleSearchAds: allowGoogleSearchAds,
 		allowMITM:            allowMITM,
-		eventWithLabel:       eventWithLabel,
 		httpListener:         eventual.NewValue(),
 		socksListener:        eventual.NewValue(),
+		eventWithLabel:       eventWithLabel,
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -232,6 +232,7 @@ func NewClient(
 		Dial:         client.dial,
 		MITMOpts:     client.MITMOptions(),
 		ShouldMITM: func(req *http.Request, upstreamAddr string) bool {
+			return true
 			userAgent := req.Header.Get("User-Agent")
 			// Only MITM certain browsers
 			// See http://useragentstring.com/pages/useragentstring.php
