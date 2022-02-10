@@ -166,7 +166,7 @@ func (client *Client) divertGoogleSearchAds(cs *filters.ConnectionState, req *ht
 			return resp, cs, err
 		}
 		// inject new ads
-		adNode.ReplaceWithHtml(client.fetchAds(opts, strings.Split(query, " ")...))
+		adNode.ReplaceWithHtml(client.fetchAds(opts, query))
 
 		// serialize DOM to string
 		var htmlResult string

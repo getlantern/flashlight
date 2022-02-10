@@ -155,7 +155,7 @@ type Client struct {
 	adTrackUrl           func() string
 	allowGoogleSearchAds func() bool
 	allowMITM            func() bool
-	fetchAds             func(opts *config.GoogleSearchAdsOptions, keywords ...string) string
+	fetchAds             func(opts *config.GoogleSearchAdsOptions, query string) string
 	eventWithLabel       func(category, action, label string)
 	httpWg               sync.WaitGroup
 	socksWg              sync.WaitGroup
@@ -181,7 +181,7 @@ func NewClient(
 	lang func() string,
 	adSwapTargetURL func() string,
 	reverseDNS func(addr string) (string, error),
-	fetchAds func(opts *config.GoogleSearchAdsOptions, keyword ...string) string,
+	fetchAds func(opts *config.GoogleSearchAdsOptions, query string) string,
 	eventWithLabel func(category, action, label string),
 ) (*Client, error) {
 	// A small LRU to detect redirect loop

@@ -143,7 +143,7 @@ func TestRejectHTTPProxyPort(t *testing.T) {
 	assert.True(t, client.isHTTPProxyPort(req))
 }
 
-func newClientForDiversion(fetchAds func(opts *config.GoogleSearchAdsOptions, keyword ...string) string, opts *config.GoogleSearchAdsOptions) *Client {
+func newClientForDiversion(fetchAds func(opts *config.GoogleSearchAdsOptions, query string) string, opts *config.GoogleSearchAdsOptions) *Client {
 	client, _ := NewClient(
 		tempConfigDir,
 		func() bool { return false },
@@ -219,7 +219,7 @@ func TestAdDiversion(t *testing.T) {
 		}
 	}
 
-	c := newClientForDiversion(func(opts *config.GoogleSearchAdsOptions, keyword ...string) string {
+	c := newClientForDiversion(func(opts *config.GoogleSearchAdsOptions, query string) string {
 		return ""
 	}, googleAdOpts)
 
@@ -228,7 +228,7 @@ func TestAdDiversion(t *testing.T) {
 	body, _ := io.ReadAll(resp.Body)
 	require.Equal(t, NotAGooglePage, string(body)) // when we can't detect ads - it should return the result untouched
 
-	c = newClientForDiversion(func(opts *config.GoogleSearchAdsOptions, keyword ...string) string {
+	c = newClientForDiversion(func(opts *config.GoogleSearchAdsOptions, query string) string {
 		return "<div><a href=\"https://tracker/ads?ad_campaign=campaign&amp;ad_url=url\">name</a></div>"
 	}, googleAdOpts)
 

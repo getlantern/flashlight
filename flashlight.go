@@ -320,7 +320,7 @@ func New(
 	lang func() string,
 	adSwapTargetURL func() string,
 	reverseDNS func(host string) (string, error),
-	fetchAds func(opts *config.GoogleSearchAdsOptions, keyword ...string) string,
+	fetchAds func(opts *config.GoogleSearchAdsOptions, query string) string,
 	eventWithLabel func(category, action, label string),
 ) (*Flashlight, error) {
 	log.Debugf("Running in app: %v", appName)
