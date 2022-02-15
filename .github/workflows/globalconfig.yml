@@ -1,6 +1,9 @@
 name: Update Global Config
 
 on:
+  push:
+    paths:
+      - 'embeddedconfig/global.yaml.tmpl'
   schedule:
     - cron: "0 */12 * * *"
 
