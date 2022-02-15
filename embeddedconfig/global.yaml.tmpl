@@ -152,7 +152,7 @@ featureoptions:
     - https://s3.eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
     - https://s3-eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
     - https://d3mm73d1kmj7zd.cloudfront.net/
-    replicarustendpoint: &GlobalReplicaRust https://replica-search.lantern.io/
+    replicarustendpoint: &GlobalReplicaRust http://replica-search-aws.lantern.io/
     staticpeeraddrs: []
     trackers: &GlobalTrackers
     - https://tracker.gbitt.info:443/announce
@@ -167,7 +167,7 @@ featureoptions:
     # These are for compatibility with clients that don't load all options per-country.
     replicarustdefaultendpoint: *GlobalReplicaRust
     replicarustendpoints:
-      "RU": &FrankfurtReplicaRust https://replica-search-aws.lantern.io/
+      "RU": &FrankfurtReplicaRust http://replica-search-aws.lantern.io/
       "IR": *FrankfurtReplicaRust
 
     # Here follows options per-country
