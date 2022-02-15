@@ -688,17 +688,23 @@ func (b *Balancer) KeepLookingForSucceedingDialer() {
 			dialers := b.dialers
 			b.mu.RUnlock()
 			hasSucceedingDialer := false
+			triedAllDialers := true
 			for _, dialer := range dialers {
 				if dialer.Succeeding() {
 					hasSucceedingDialer = true
-					break
+				}
+				if dialer.Attempts() == 0 {
+					triedAllDialers = false
 				}
 			}
-			select {
-			case b.hasSucceedingDialer <- hasSucceedingDialer:
-				// okay
-			default:
-				// channel full
+			if hasSucceedingDialer || triedAllDialers {
+				// only report if we've got a succeeding dialer, or if we've actually tried all dialers
+				select {
+				case b.hasSucceedingDialer <- hasSucceedingDialer:
+					// okay
+				default:
+					// channel full
+				}
 			}
 		case <-b.closeCh:
 			return
