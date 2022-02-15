@@ -411,8 +411,8 @@ github.com/getlantern/proxybench v0.0.0-20211216020518-199a8fc0d220 h1:VVYKU4PXx
 github.com/getlantern/proxybench v0.0.0-20211216020518-199a8fc0d220/go.mod h1:0q8eYDExExu4OEUGbKFbitxZ3UXbGHzewQ9o/ywIJaE=
 github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683 h1:Asfm7ajzavuSZC+5b+tPwXwyvlw188NM9hKM7wNMNGg=
 github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683/go.mod h1:GtXRvtMItoflWGLPE7GNq+AdL7BnmpaaNLtDQVD1XHU=
-github.com/getlantern/quic-go v0.0.0-20211103152344-c9ce5bfd4854 h1:NcM7YfPqBHkQr9gPIPzxG1EZPV241mWPuASN6u0m6OA=
-github.com/getlantern/quic-go v0.0.0-20211103152344-c9ce5bfd4854/go.mod h1:paZuzjXCE5mj6sikVLMvqXk8lJV2AsqtJ6bDhjEfxx0=
+github.com/getlantern/quic-go v0.7.1-0.20220215050330-93bd217f5741 h1:zf5WHpIQaokNyQgEmYea5WxfhpgE/tBcc5xEImeT+Pw=
+github.com/getlantern/quic-go v0.7.1-0.20220215050330-93bd217f5741/go.mod h1:YtzP8bxRVCBlO77yRanE264+fY/T2U9ZlW1AaHOsMOg=
 github.com/getlantern/quicwrapper v0.0.0-20211104133553-140f96139f9f h1:Ixj+JVreqTbCKqoAAcXmRPWeNgaDxZyOG/ySJq4YOQc=
 github.com/getlantern/quicwrapper v0.0.0-20211104133553-140f96139f9f/go.mod h1:wlL9u6eUd/sS38+mPBgLq2zSE4hWpigpDzodN9IwDFA=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c h1:IkjF+RwRs8B/RsuD638eUFO2K/227OO2B1FLXGp17Ro=
@@ -729,6 +729,8 @@ github.com/marten-seemann/qtls-go1-16 v0.1.4 h1:xbHbOGGhrenVtII6Co8akhLEdrawwB2i
 github.com/marten-seemann/qtls-go1-16 v0.1.4/go.mod h1:gNpI2Ol+lRS3WwSOtIUUtRwZEQMXjYK+dQSBFbethAk=
 github.com/marten-seemann/qtls-go1-17 v0.1.0 h1:P9ggrs5xtwiqXv/FHNwntmuLMNq3KaSIG93AtAZ48xk=
 github.com/marten-seemann/qtls-go1-17 v0.1.0/go.mod h1:fz4HIxByo+LlWcreM4CZOYNuz3taBQ8rN2X6FqvaWo8=
+github.com/marten-seemann/qtls-go1-18 v0.1.0-beta.1 h1:EnzzN9fPUkUck/1CuY1FlzBaIYMoiBsdwTNmNGkwUUM=
+github.com/marten-seemann/qtls-go1-18 v0.1.0-beta.1/go.mod h1:PUhIQk19LoFt2174H4+an8TYvWOGjb/hHwphBeaDHwI=
 github.com/matryer/is v1.2.0/go.mod h1:2fLPjFQM9rhQ15aVEtbuwhJinnOqrmgXPNdZsdwlWXA=
 github.com/mattn/go-colorable v0.1.2/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=
 github.com/mattn/go-colorable v0.1.8/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=

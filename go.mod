@@ -119,7 +119,7 @@ require (
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
-replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.0.0-20211103152344-c9ce5bfd4854
+replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20220215050330-93bd217f5741
 
 replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20211116192935-1abdc4b1acab
 
