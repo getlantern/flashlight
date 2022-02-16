@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math"
 	"net"
@@ -452,7 +453,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 			if errOnReply != nil {
 				return op.FailIf(log.Errorf("Unable to reply success to SOCKS5 client: %v", errOnReply))
 			}
-			return op.FailIf(client.proxy.Connect(ctx, req.BufConn, conn, addr))
+			return op.FailIf(client.Connect(ctx, req.BufConn, conn, addr))
 		},
 	}
 	server, err := socks5.New(conf)
@@ -462,6 +463,13 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 
 	log.Debugf("About to start SOCKS5 client proxy at %v", listenAddr)
 	return server.Serve(l)
+}
+
+// Connects a downstream connection to the given origin and copies data bidirectionally.
+// downstreamReader is a Reader that wraps downstream. Ideally, this is a buffered reader like
+// from bufio.
+func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reader, downstream net.Conn, origin string) error {
+	return client.proxy.Connect(dialCtx, downstreamReader, downstream, origin)
 }
 
 // Configure updates the client's configuration. Configure can be called
