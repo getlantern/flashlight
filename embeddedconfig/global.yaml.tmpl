@@ -96,7 +96,7 @@ featuresenabled:
     - label: chat-android-qa
       platforms: android
       versionconstraints: ">=99.0.0"
-    # For building 
+    # For building
   nodetour:
     - label: hk-privacy
       geocountries: hk
@@ -111,7 +111,7 @@ featuresenabled:
       platforms: android
       geocountries: ir
     - label: shortcut-broken
-      geocountries: uz  
+      geocountries: uz
   noprobeproxies:
     - label: stealth
       geocountries: ir
@@ -144,7 +144,12 @@ featureoptions:
     # Also, quotes are necessary around key names, else Norway (NO) will be
     # interpreted as a boolean
 
-    # These are the default options
+    # These are the default options.
+    #
+    # XXX 16-02-22, soltzen: Note that we're using "http://replica-search", not https, so we can have
+    # the forward proxy in lantern-desktop (working client-side) add the
+    # necessary headers. This doesn't mean that connections to replica-search are
+    # unencrypted. See here: https://github.com/getlantern/flashlight/pull/1198
 
     metadatabaseurls: &AllReplicaBaseUrls
     - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
