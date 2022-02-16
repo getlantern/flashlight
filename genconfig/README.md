@@ -2,7 +2,7 @@
 
 This package is used during generation of the lantern global configuration.
 Currently this is run from cloudmasters and managed by this salt module:
-https://github.com/getlantern/lantern_aws/blob/main/salt/update_masquerades
+https://github.com/getlantern/lantern-infrastructure/blob/main/salt/update_masquerades
 
 A production binary suitable for cloudmasters can be created by running `make dist`.
 The resulting binary `dist-bin/genconfig` can be used to update the corresponding
