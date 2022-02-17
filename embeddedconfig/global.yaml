@@ -4125,7 +4125,7 @@ featureoptions:
       \   <div>\n                    <span style=\"font-weight: bold;\">Ad<span style=\"\
       padding:0 5px\">\xB7</span></span><span style=\"color: #202124;\">@ADLINK</span>\n\
       \                </div>\n                <a style=\"padding-top: 4px; font-size:\
-      \ 18px;line-height: 26px;\" href=\"@LINK\">@TITLE</a>\n                <p>@DESCRIPTION</p>\n\
+      \ 18px;line-height: 26px;\" href=\"@LINK\">@TITLE</a>\n                \
       \            </div>\n        "
     block_format: "\n            <div style=\"width: 600px;\">\n              @LINKS\n\
       \            </div>\n        "

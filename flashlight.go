@@ -320,7 +320,7 @@ func New(
 	lang func() string,
 	adSwapTargetURL func() string,
 	reverseDNS func(host string) (string, error),
-	adTrackUrl func() string,
+	fetchAds func(opts *config.GoogleSearchAdsOptions, query string) string,
 	eventWithLabel func(category, action, label string),
 ) (*Flashlight, error) {
 	log.Debugf("Running in app: %v", appName)
@@ -431,7 +431,7 @@ func New(
 		lang,
 		adSwapTargetURL,
 		reverseDNS,
-		adTrackUrl,
+		fetchAds,
 		eventWithLabel,
 	)
 	if err != nil {

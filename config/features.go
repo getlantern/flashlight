@@ -3,8 +3,6 @@ package config
 import (
 	"fmt"
 	"math/rand"
-	"reflect"
-	"regexp"
 	"strings"
 	"time"
 
@@ -103,44 +101,13 @@ func (ro *ReplicaOptions) GetReplicaRustEndpoint() string {
 }
 
 type GoogleSearchAdsOptions struct {
-	Pattern     string                 `mapstructure:"pattern"`
-	BlockFormat string                 `mapstructure:"block_format"`
-	AdFormat    string                 `mapstructure:"ad_format"`
-	Partners    map[string][]PartnerAd `mapstructure:"partners"`
-}
-
-type PartnerAd struct {
-	Name        string
-	URL         string
-	Campaign    string
-	Description string
-	Keywords    []*regexp.Regexp
-	Probability float32
+	Pattern     string `mapstructure:"pattern"`
+	BlockFormat string `mapstructure:"block_format"`
+	AdFormat    string `mapstructure:"ad_format"`
 }
 
 func (o *GoogleSearchAdsOptions) fromMap(m map[string]interface{}) error {
-	// since keywords can be regexp and we don't want to compile them each time we compare, define a custom decode hook
-	// that will convert string to regexp and error out on syntax issues
-	config := &mapstructure.DecoderConfig{
-		DecodeHook: func(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
-			if t != reflect.TypeOf(regexp.Regexp{}) {
-				return data, nil
-			}
-			r, err := regexp.Compile(fmt.Sprintf("%v", data))
-			if err != nil {
-				return nil, err
-			}
-			return r, nil
-		},
-		Result: o,
-	}
-
-	decoder, err := mapstructure.NewDecoder(config)
-	if err != nil {
-		return err
-	}
-
-	return decoder.Decode(m)
+	return mapstructure.Decode(m, o)
 }
 
 type PingProxiesOptions struct {
