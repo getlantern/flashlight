@@ -140,7 +140,7 @@ func (client *Client) divertGoogleSearchAds(cs *filters.ConnectionState, req *ht
 	resp, cs, err := next(cs, req)
 
 	// if both requests succeed, extract partner ads and inject them
-	if err == nil && opts != nil {
+	if err == nil && opts != nil && client.fetchAds != nil {
 		body := bytes.NewBuffer(nil)
 		if _, err = io.Copy(body, brotli.NewReader(resp.Body)); err != nil {
 			return resp, cs, err

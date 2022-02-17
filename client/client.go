@@ -157,6 +157,7 @@ type Client struct {
 	allowMITM            func() bool
 	fetchAds             func(opts *config.GoogleSearchAdsOptions, query string) string
 	eventWithLabel       func(category, action, label string)
+	
 	httpWg               sync.WaitGroup
 	socksWg              sync.WaitGroup
 }
@@ -216,9 +217,9 @@ func NewClient(
 		fetchAds:             fetchAds,
 		allowGoogleSearchAds: allowGoogleSearchAds,
 		allowMITM:            allowMITM,
+		eventWithLabel:       eventWithLabel,
 		httpListener:         eventual.NewValue(),
 		socksListener:        eventual.NewValue(),
-		eventWithLabel:       eventWithLabel,
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -232,7 +233,6 @@ func NewClient(
 		Dial:         client.dial,
 		MITMOpts:     client.MITMOptions(),
 		ShouldMITM: func(req *http.Request, upstreamAddr string) bool {
-			return true
 			userAgent := req.Header.Get("User-Agent")
 			// Only MITM certain browsers
 			// See http://useragentstring.com/pages/useragentstring.php
