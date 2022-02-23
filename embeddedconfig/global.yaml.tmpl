@@ -177,13 +177,20 @@ featureoptions:
 
     # Here follows options per-country
 
-    "IR":
+    "DE": &FrankfurtBase
       proxypeerinfohashes: *GlobalProxyInfohashes
       metadatabaseurls: *AllReplicaBaseUrls
       replicarustendpoint: *FrankfurtReplicaRust
-      staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
+      staticpeeraddrs: []
       trackers: *GlobalTrackers
       webseedbaseurls: *AllReplicaBaseUrls
+    "RU": *FrankfurtBase
+    "LT": *FrankfurtBase
+    "EE": *FrankfurtBase
+    "BY": *FrankfurtBase
+    "IR":
+      <<: *FrankfurtBase
+      staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
     "CN":
       proxypeerinfohashes: *GlobalProxyInfohashes
       metadatabaseurls:
@@ -195,34 +202,6 @@ featureoptions:
       webseedbaseurls:
       - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
       - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
-    "RU":
-      proxypeerinfohashes: *GlobalProxyInfohashes
-      metadatabaseurls: *AllReplicaBaseUrls
-      replicarustendpoint: *FrankfurtReplicaRust
-      staticpeeraddrs: []
-      trackers: *GlobalTrackers
-      webseedbaseurls: *AllReplicaBaseUrls
-    "DE":
-      proxypeerinfohashes: *GlobalProxyInfohashes
-      metadatabaseurls: *AllReplicaBaseUrls
-      replicarustendpoint: *FrankfurtReplicaRust
-      staticpeeraddrs: []
-      trackers: *GlobalTrackers
-      webseedbaseurls: *AllReplicaBaseUrls
-    "LT":
-      proxypeerinfohashes: *GlobalProxyInfohashes
-      metadatabaseurls: *AllReplicaBaseUrls
-      replicarustendpoint: *FrankfurtReplicaRust
-      staticpeeraddrs: []
-      trackers: *GlobalTrackers
-      webseedbaseurls: *AllReplicaBaseUrls
-    "EE":
-      proxypeerinfohashes: *GlobalProxyInfohashes
-      metadatabaseurls: *AllReplicaBaseUrls
-      replicarustendpoint: *FrankfurtReplicaRust
-      staticpeeraddrs: []
-      trackers: *GlobalTrackers
-      webseedbaseurls: *AllReplicaBaseUrls
 
 adsettings:
   nativebannerzoneid: 5d3787399a1a710001b1ba32
