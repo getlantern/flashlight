@@ -108,3 +108,12 @@ go-mobile automatically sets the `ios` build tag when building for iOS. In our c
 ### Architecture
 
 ![Overview](https://user-images.githubusercontent.com/1143966/117667942-72c80a80-b173-11eb-8c0d-829f2ccd8cde.png)
+
+## Cmd binaries: check-upnp
+
+Checks if UPNP can run on your machine.
+
+- Run it like this: `go run cmd/check-upnp/main.go --p2p-registrar-endpoint=https://replica-p2p-registrar.fly.dev`
+  - Where `https://replica-p2p-registrar.fly.dev` is a Fly.io app running https://github.com/getlantern/replica-p2p-registrar
+    - app: https://fly.io/apps/replica-p2p-registrar
+    - credentials: [accounts@getlantern.org (Myles Horton's Personal account)](https://my.1password.com/vaults/all/allitems/pyxw6eag2veopldhxhst3mxeie)
