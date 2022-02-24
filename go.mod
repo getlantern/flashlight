@@ -8,6 +8,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.7.0
 	github.com/anacrolix/dht/v2 v2.15.1
 	github.com/anacrolix/go-libutp v1.0.5
+	github.com/anacrolix/publicip v0.2.0
 	github.com/andybalholm/brotli v1.0.4
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/dchest/siphash v1.2.1 // indirect
