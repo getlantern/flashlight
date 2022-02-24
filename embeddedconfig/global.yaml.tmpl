@@ -72,7 +72,7 @@ featuresenabled:
     # XXX 13-01-22 @soltzen: Adding CA because of the NCC auditor testing. This can be removed afterwards
     # XXX 31-01-22 @soltzen: Adding AM because @tina was there and she required temporary access. I'll remove it after her work is done
     - label: replica-desktop
-      geocountries: cn,au,ir,de,ru,by,ca,am
+      geocountries: cn,au,ir,de,ru,by,ca,ee,lt
       platforms: darwin,windows,linux
       # this filter works only for Lantern 6.1+
       application: lantern
@@ -124,7 +124,7 @@ featuresenabled:
       platforms: android
       geocountries: ir
     - label: shortcut-broken
-      geocountries: uz  
+      geocountries: uz
   noprobeproxies:
     - label: stealth
       geocountries: ir
@@ -159,7 +159,12 @@ featureoptions:
     # Also, quotes are necessary around key names, else Norway (NO) will be
     # interpreted as a boolean
 
-    # These are the default options
+    # These are the default options.
+    #
+    # XXX 16-02-22, soltzen: Note that we're using "http://replica-search", not https, so we can have
+    # the forward proxy in lantern-desktop (working client-side) add the
+    # necessary headers. This doesn't mean that connections to replica-search are
+    # unencrypted. See here: https://github.com/getlantern/flashlight/pull/1198
 
     metadatabaseurls: &AllReplicaBaseUrls
     - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
@@ -167,7 +172,7 @@ featureoptions:
     - https://s3.eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
     - https://s3-eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
     - https://d3mm73d1kmj7zd.cloudfront.net/
-    replicarustendpoint: &GlobalReplicaRust https://replica-search.lantern.io/
+    replicarustendpoint: &GlobalReplicaRust http://replica-search.lantern.io/
     staticpeeraddrs: []
     trackers: &GlobalTrackers
     - https://tracker.gbitt.info:443/announce
@@ -182,18 +187,25 @@ featureoptions:
     # These are for compatibility with clients that don't load all options per-country.
     replicarustdefaultendpoint: *GlobalReplicaRust
     replicarustendpoints:
-      "RU": &FrankfurtReplicaRust https://replica-search-aws.lantern.io/
+      "RU": &FrankfurtReplicaRust http://replica-search-aws.lantern.io/
       "IR": *FrankfurtReplicaRust
 
     # Here follows options per-country
 
-    "IR":
+    "DE": &FrankfurtBase
       proxypeerinfohashes: *GlobalProxyInfohashes
       metadatabaseurls: *AllReplicaBaseUrls
       replicarustendpoint: *FrankfurtReplicaRust
-      staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
+      staticpeeraddrs: []
       trackers: *GlobalTrackers
       webseedbaseurls: *AllReplicaBaseUrls
+    "RU": *FrankfurtBase
+    "LT": *FrankfurtBase
+    "EE": *FrankfurtBase
+    "BY": *FrankfurtBase
+    "IR":
+      <<: *FrankfurtBase
+      staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
     "CN":
       proxypeerinfohashes: *GlobalProxyInfohashes
       metadatabaseurls:
@@ -205,27 +217,6 @@ featureoptions:
       webseedbaseurls:
       - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
       - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
-    "RU":
-      proxypeerinfohashes: *GlobalProxyInfohashes
-      metadatabaseurls: *AllReplicaBaseUrls
-      replicarustendpoint: *FrankfurtReplicaRust
-      staticpeeraddrs: [*IranReplicaPeer]
-      trackers: *GlobalTrackers
-      webseedbaseurls: *AllReplicaBaseUrls
-    "DE":
-      proxypeerinfohashes: *GlobalProxyInfohashes
-      metadatabaseurls: *AllReplicaBaseUrls
-      replicarustendpoint: *FrankfurtReplicaRust
-      staticpeeraddrs: []
-      trackers: *GlobalTrackers
-      webseedbaseurls: *AllReplicaBaseUrls
-    "AM":
-      proxypeerinfohashes: *GlobalProxyInfohashes
-      metadatabaseurls: *AllReplicaBaseUrls
-      replicarustendpoint: *FrankfurtReplicaRust
-      staticpeeraddrs: [*IranReplicaPeer]
-      trackers: *GlobalTrackers
-      webseedbaseurls: *AllReplicaBaseUrls
 
 adsettings:
   nativebannerzoneid: 5d3787399a1a710001b1ba32

@@ -161,7 +161,7 @@ func pipeConfig(opts *options) (stop func()) {
 		}
 	}
 
-	if embeddedIsNewer(conf, opts) {
+	if embeddedIsNewer(conf, opts) && !opts.sticky {
 		if !sendEmbedded() {
 			sendSaved()
 		}
