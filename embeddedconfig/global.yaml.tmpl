@@ -174,10 +174,14 @@ featureoptions:
     - https://d3mm73d1kmj7zd.cloudfront.net/
     replicarustendpoint: &GlobalReplicaRust http://replica-search.lantern.io/
     staticpeeraddrs: []
+    # This list is compiled from data from dht-indexer, and https://github.com/ngosang/trackerslist. We want to cover several transports (schemes here), support announces for Replica content and otherwise, and ensure results for regional differences. To that end a China tracker would be nice if it wasn't a vulnerability.
     trackers: &GlobalTrackers
-    - https://tracker.gbitt.info:443/announce
-    - http://tracker.opentrackr.org:1337/announce
-    - udp://tracker.leechers-paradise.org:6969/announce
+      # This is the best tracker out there (other than DHT)
+    - udp://tracker.opentrackr.org:1337/announce
+      # A current high performer
+    - udp://9.rarbg.com:2810/announce
+      # A solid fallback
+    - http://tracker.openbittorrent.com:80/announce
     webseedbaseurls: *AllReplicaBaseUrls
     proxyannouncetargets: &GlobalProxyInfohashes
     - 94c3fe9ead4625e0529c334bbb90568accb35ce3
