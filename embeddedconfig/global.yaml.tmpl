@@ -185,9 +185,9 @@ featureoptions:
     - dbea91bb2d2953dc8c46272eb32cb4781ec588c5
 
     # These are for compatibility with clients that don't load all options per-country.
-    replicarustdefaultendpoint: *FrankfurtReplicaRust
+    replicarustdefaultendpoint: &FrankfurtReplicaRust http://replica-search-aws.lantern.io/
     replicarustendpoints:
-      "RU": &FrankfurtReplicaRust http://replica-search-aws.lantern.io/
+      "RU": *FrankfurtReplicaRust
       "IR": *FrankfurtReplicaRust
 
     # Here follows options per-country
