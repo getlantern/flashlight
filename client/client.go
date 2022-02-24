@@ -17,10 +17,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/flashlight/geolookup"
-	"github.com/getlantern/shortcut"
-
 	lru "github.com/hashicorp/golang-lru"
 
 	"github.com/getlantern/detour"
@@ -36,12 +32,15 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy/v2"
 	"github.com/getlantern/proxy/v2/filters"
+	"github.com/getlantern/shortcut"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/domainrouting"
+	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/status"
@@ -156,6 +155,7 @@ type Client struct {
 	adTrackUrl           func() string
 	allowGoogleSearchAds func() bool
 	allowMITM            func() bool
+	fetchAds             func(opts *config.GoogleSearchAdsOptions, query string) string
 	eventWithLabel       func(category, action, label string)
 
 	httpWg  sync.WaitGroup
@@ -182,7 +182,7 @@ func NewClient(
 	lang func() string,
 	adSwapTargetURL func() string,
 	reverseDNS func(addr string) (string, error),
-	adTrackUrl func() string,
+	fetchAds func(opts *config.GoogleSearchAdsOptions, query string) string,
 	eventWithLabel func(category, action, label string),
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
@@ -214,7 +214,7 @@ func NewClient(
 		chPingProxiesConf:    make(chan pingProxiesConf, 1),
 		googleAdsOptions:     nil,
 		googleAdsOptionsLock: sync.RWMutex{},
-		adTrackUrl:           adTrackUrl,
+		fetchAds:             fetchAds,
 		allowGoogleSearchAds: allowGoogleSearchAds,
 		allowMITM:            allowMITM,
 		eventWithLabel:       eventWithLabel,
