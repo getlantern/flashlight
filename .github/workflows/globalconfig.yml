@@ -2,6 +2,8 @@ name: Update Global Config
 
 on:
   push:
+    branches:
+      - devel
     paths:
       - 'embeddedconfig/global.yaml.tmpl'
   schedule:
