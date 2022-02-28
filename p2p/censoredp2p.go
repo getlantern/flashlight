@@ -4,13 +4,16 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/anacrolix/dht/v2"
+	"github.com/getlantern/flashlight/quicproxy"
 	"github.com/getlantern/golog"
 )
 
@@ -37,6 +40,7 @@ type CensoredP2pCtx struct {
 	maxRetriesOnFailedRoundTrip int
 	closeOnce                   sync.Once
 	closeChan                   chan struct{}
+	ForwardProxyServer          *quicproxy.QuicForwardProxy
 }
 
 // NewCensoredP2pCtx creates a new context for a censored peer.
@@ -122,6 +126,27 @@ func NewCensoredP2pCtx(
 	}, nil
 }
 
+func (p2pCtx *CensoredP2pCtx) StartForwardProxy(errChan chan<- error) error {
+	s, err := quicproxy.NewForwardProxy(
+		"0",  // port
+		true, // verbose
+		// insecureSkipVerify
+		// TODO <21-02-22, soltzen> For the POC, this is fine, but in
+		// production, it'll be great if the reverse proxy we're connecting to
+		// has a certificate signed by a Lantern CA, which we can also add here.
+		// Or, we can just perform cert pinning with the public key of the
+		// reverse proxy obtained through the DHT. See here:
+		// https://github.com/getlantern/lantern-internal/issues/5230
+		true,
+		errChan,
+	)
+	if err != nil {
+		return log.Errorf("%v", err)
+	}
+	p2pCtx.ForwardProxyServer = s
+	return nil
+}
+
 // GetPeers attempts to fetch peers for the assigned infohashes in
 // CensoredP2pCtx.infohashes.
 func (p2pCtx *CensoredP2pCtx) GetPeers(ctx context.Context) error {
@@ -149,7 +174,10 @@ func (p2pCtx *CensoredP2pCtx) RoundTrip(req *http.Request) (*http.Response, erro
 			p.IP = net.IPv4(127, 0, 0, 1)
 		}
 
-		proxyUrl, err := url.Parse("http://" + p.String())
+		p2pCtx.ForwardProxyServer.SetReverseProxyUrl(
+			fmt.Sprintf("http://%s:%d", p.IP.To4().String(), p.Port),
+		)
+		proxyUrl, err := url.Parse("http://localhost:" + strconv.Itoa(p2pCtx.ForwardProxyServer.Port))
 		if err != nil {
 			return nil, log.Errorf("during url parsing for peer [%v]: %v", p, err)
 		}
@@ -247,7 +275,8 @@ func attemptAndRetryIfFailed(maxRetries int, retryDelay time.Duration, f func(in
 	}
 }
 
-func (p2pCtx *CensoredP2pCtx) Close() {
+// Close shutsdown this peer's resources.
+func (p2pCtx *CensoredP2pCtx) Close(ctx context.Context) {
 	p2pCtx.closeOnce.Do(func() {
 		log.Debugf("Censored peer: Closing...")
 		if p2pCtx.dhtServer != nil {
@@ -256,6 +285,13 @@ func (p2pCtx *CensoredP2pCtx) Close() {
 		if p2pCtx.PeersRepo != nil {
 			p2pCtx.PeersRepo.Close()
 		}
+		if p2pCtx.ForwardProxyServer != nil {
+			err := p2pCtx.ForwardProxyServer.Shutdown(ctx)
+			if err != nil {
+				log.Debugf("Error while closing forward proxy server: %v", err)
+			}
+		}
+
 		close(p2pCtx.closeChan)
 	})
 }
