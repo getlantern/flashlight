@@ -6,6 +6,7 @@ import (
 	stderr "errors"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"strings"
 
 	"github.com/elazarl/goproxy"
@@ -52,6 +53,15 @@ func NewReverseProxy(
 				ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 				log.Debugf("reverse proxy: Proxying request: %s", req.URL.String())
 				return req, nil
+			}))
+		p.OnResponse().Do(
+			goproxy.FuncRespHandler(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
+				b, err := httputil.DumpResponse(resp, true)
+				if err != nil {
+					panic(err)
+				}
+				log.Debugf("reverse proxy: Proxying response: %s", string(b))
+				return resp
 			}))
 	}
 

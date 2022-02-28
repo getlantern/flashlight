@@ -41,7 +41,7 @@ func NewForwardProxy(
 	// Make a new proxy that uses a QUIC dialer and proxies traffic to a reverseProxyUrl
 	p := goproxy.NewProxyHttpServer()
 	p.Verbose = verbose
-	p.Tr.Dial = newQuicDialer(insecureSkipVerify).Dial
+	p.Tr.Dial = NewQuicDialer(insecureSkipVerify).Dial
 	// TODO <11-02-22, soltzen> Add cert pinning later
 	// p.Tr.DialTLS = dialTlsAndCheckPinnedCert(
 	// 	reverseProxyPubKeyHash,
@@ -113,7 +113,7 @@ type quicDialer struct {
 	sync.Mutex
 }
 
-func newQuicDialer(insecureSkipVerify bool) *quicDialer {
+func NewQuicDialer(insecureSkipVerify bool) *quicDialer {
 	return &quicDialer{
 		insecureSkipVerify: insecureSkipVerify,
 	}
