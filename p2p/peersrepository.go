@@ -86,15 +86,19 @@ func (pr *PeersRepository) StartCollectionAndFlushRoutines() {
 				default:
 				}
 
-				log.Debugf("Received peer: %+v", p)
-				if pr.Len() >= pr.maxPeers {
+				pr.mu.Lock()
+				if len(pr.set) >= pr.maxPeers {
 					// XXX <18-01-22, soltzen> If this message occurs in logs
 					// many times, increase the maxPeers limit
-					log.Debugf("Max p2p peers limit reached [%v]: ignoring peer: %+v", pr.maxPeers, p)
+					log.Debugf("Max p2p peers limit reached [%v]: ignoring peer: %+v",
+						pr.maxPeers, p)
+					pr.mu.Unlock()
 					continue
 				}
-				pr.mu.Lock()
-				pr.set[p.String()] = p
+				if _, ok := pr.set[p.String()]; !ok {
+					log.Debugf("Received new peer: %+v", p)
+					pr.set[p.String()] = p
+				}
 				pr.mu.Unlock()
 			}
 		}()
