@@ -92,6 +92,7 @@ require (
 	github.com/huin/goupnp v1.0.3-0.20220113221608-730ab6506b9d
 	github.com/jaffee/commandeer v0.5.0
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
+	github.com/lucas-clemente/quic-go v0.19.3
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/go-server-timing v1.0.0
