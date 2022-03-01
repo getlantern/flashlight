@@ -175,7 +175,7 @@ featureoptions:
     replicarustendpoint: &GlobalReplicaRust http://replica-search.lantern.io/
     staticpeeraddrs: []
     # This list is compiled from data from dht-indexer, and https://github.com/ngosang/trackerslist. We want to cover several transports (schemes here), support announces for Replica content and otherwise, and ensure results for regional differences. To that end a China tracker would be nice if it wasn't a vulnerability.
-    # HTTP(S) proxies must be added to the domain routing rules if they have non-standard ports.
+    # http(s) proxies must be added to the domain routing rules if they have non-standard ports.
     trackers: &GlobalTrackers
       # This is the best tracker out there (other than DHT)
     - udp://tracker.opentrackr.org:1337/announce
@@ -338,7 +338,7 @@ domainroutingrules:
   status-log.vskit.tv: d
   api.maccms.com: d
 
-  # BitTorrent trackers that we want to always proxy to. They often have non-standard ports. See the GlobalTrackers alias for example. I don't think we proxy UDP, and I don't think UDP trackers support proxies, however listing their domains here probably has no effect. Similarly listing HTTP(S) trackers on standard ports probably has no effect.
+  # Replica http(s) BitTorrent trackers that run on non-standard ports (80 and 443?) should be listed here.
   tracker.opentrackr.org: p
   9.rarbg.com: p
   tracker.openbittorrent.com: p
