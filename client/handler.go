@@ -36,7 +36,7 @@ func (client *Client) handle(conn net.Conn) error {
 	defer client.opsMap.delete(conn)
 	// Use idletiming on client connections to make sure we don't get dangling server connections when clients disappear without our knowledge
 	conn = idletiming.Conn(conn, chained.IdleTimeout, func() {
-		log.Debugf("Client connection idle for %v, closed", chained.IdleTimeout)
+		log.Debugf("Client connection to %v idle for %v, closed", conn.RemoteAddr(), chained.IdleTimeout)
 	})
 	err := client.proxy.Handle(context.Background(), conn, conn)
 	if err != nil {
