@@ -35,11 +35,11 @@ type routerClient interface {
 	)
 }
 
-type UpnpClient struct {
+type Client struct {
 	lastWorkingRouterClients []routerClient
 }
 
-func New() *UpnpClient { return &UpnpClient{} }
+func New() *Client { return &Client{} }
 
 // ForwardPortWithUpnp is the entrypoint for using this package: provide a
 // context and the port you'd need to punch through.
@@ -56,7 +56,7 @@ func New() *UpnpClient { return &UpnpClient{} }
 //
 // TODO <23-02-22, soltzen> Would be nice to have a context here, though that's
 // not easy to add since RouterClients don't include it
-func (ucl *UpnpClient) ForwardPortWithUpnp(port uint16, layer4Proto string) error {
+func (ucl *Client) ForwardPortWithUpnp(port uint16, layer4Proto string) error {
 	// layer 4 protocols must be capitalized in this function
 	layer4Proto = strings.ToUpper(layer4Proto)
 	if layer4Proto != "TCP" && layer4Proto != "UDP" {
