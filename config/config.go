@@ -192,7 +192,7 @@ func pipeConfig(opts *options) (stop func()) {
 // where there's some blocking event or bug preventing new configs from being fetched.
 func embeddedIsNewer(conf *config, opts *options) bool {
 	if opts.embeddedData == nil {
-		sentry.CaptureException(fmt.Errorf("no embedded config"))
+		sentry.CaptureException(log.Errorf("no embedded config for %v", opts.name))
 		return false
 	}
 
