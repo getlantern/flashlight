@@ -90,6 +90,9 @@ type options struct {
 	// embeddedData is the data for embedded configs, using tarfs.
 	embeddedData []byte
 
+	// whether or not embedded data is required.
+	embeddedRequired bool
+
 	// sleep the time to sleep between config fetches.
 	sleep func() time.Duration
 
@@ -192,7 +195,9 @@ func pipeConfig(opts *options) (stop func()) {
 // where there's some blocking event or bug preventing new configs from being fetched.
 func embeddedIsNewer(conf *config, opts *options) bool {
 	if opts.embeddedData == nil {
-		sentry.CaptureException(log.Errorf("no embedded config for %v", opts.name))
+		if opts.embeddedRequired {
+			sentry.CaptureException(log.Errorf("no embedded config for %v", opts.name))
+		}
 		return false
 	}
 
