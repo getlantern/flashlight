@@ -207,7 +207,6 @@ featureoptions:
       staticpeeraddrs: []
       trackers: *GlobalTrackers
       webseedbaseurls: *AllReplicaBaseUrls
-    "RU": *FrankfurtBase
     "LT": *FrankfurtBase
     "EE": *FrankfurtBase
     "BY": *FrankfurtBase 
@@ -266,6 +265,9 @@ featureoptions:
     "IR":
       <<: *FrankfurtBase
       staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
+    "RU":
+      <<: *FrankfurtBase
+      staticpeeraddrs: [&RussiaReplicaPeers "94.242.59.118:42069"]
     "CN":
       proxypeerinfohashes: *GlobalProxyInfohashes
       metadatabaseurls:
