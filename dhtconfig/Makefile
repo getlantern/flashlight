@@ -35,7 +35,7 @@ dht-private-key:
 	openssl rand -hex 32 > $@
 
 bin/dht:
-	GOBIN=`realpath bin` go install github.com/anacrolix/dht/v2/cmd/dht@caf059837e9bba2e47993e3945c2b211610dd2f7
+	GOBIN=`realpath bin` go install github.com/anacrolix/dht/v2/cmd/dht@3791ab26c002c8c358b29130693d7812cb420cca
 
 bin/torrent:
 	GOBIN=`realpath bin` go install github.com/anacrolix/torrent/cmd/torrent@latest
