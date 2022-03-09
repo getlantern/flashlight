@@ -138,8 +138,8 @@ github.com/anacrolix/dht/v2 v2.10.5-0.20210902001729-06cc4fe90e53/go.mod h1:zHji
 github.com/anacrolix/dht/v2 v2.10.6-0.20211007004332-99263ec9c1c8/go.mod h1:WID4DexLrucfnwzv1OV8REzgoCpyVDwEczxIOrUeFrY=
 github.com/anacrolix/dht/v2 v2.14.1-0.20211220010335-4062f7927abf/go.mod h1:zJgaiAU2yhzmchZE2mY8WyZ64LK/F/D9MAeN0ct73qQ=
 github.com/anacrolix/dht/v2 v2.15.2-0.20220123034220-0538803801cb/go.mod h1:GCylVI6WTvbxvhY7pBoHiE5dmjfDWkhqbobDpjND01A=
-github.com/anacrolix/dht/v2 v2.16.1 h1:Q/mL3wP+zZwgo0B3W21JDY3X51KE3xwv3UUjqTf4VJY=
-github.com/anacrolix/dht/v2 v2.16.1/go.mod h1:7FOQ1dkRmAMb0LQM8T0hGXc9bQ4RD2/0CB3wcVyBxhk=
+github.com/anacrolix/dht/v2 v2.16.2-0.20220309100244-caf059837e9b h1:An77GMEhZqRq0k0HLthILcrxlw+kj0gyWg7Oa5wVRxM=
+github.com/anacrolix/dht/v2 v2.16.2-0.20220309100244-caf059837e9b/go.mod h1:7FOQ1dkRmAMb0LQM8T0hGXc9bQ4RD2/0CB3wcVyBxhk=
 github.com/anacrolix/envpprof v0.0.0-20180404065416-323002cec2fa/go.mod h1:KgHhUaQMc8cC0+cEflSgCFNFbKwi5h54gqtVn8yhP7c=
 github.com/anacrolix/envpprof v1.0.0/go.mod h1:KgHhUaQMc8cC0+cEflSgCFNFbKwi5h54gqtVn8yhP7c=
 github.com/anacrolix/envpprof v1.0.1/go.mod h1:My7T5oSqVfEn4MD4Meczkw/f5lSIndGAKu/0SM/rkf4=

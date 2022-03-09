@@ -6,7 +6,7 @@ require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/PuerkitoBio/goquery v1.7.0
-	github.com/anacrolix/dht/v2 v2.16.1
+	github.com/anacrolix/dht/v2 v2.16.2-0.20220309100244-caf059837e9b
 	github.com/anacrolix/go-libutp v1.2.0
 	github.com/anacrolix/log v0.13.0 // indirect
 	github.com/anacrolix/missinggo/v2 v2.5.2
