@@ -20,6 +20,12 @@ type dhtFetcher struct {
 	filePath        string
 }
 
+type localhostPeerAddr struct{}
+
+func (localhostPeerAddr) String() string {
+	return "localhost:42069"
+}
+
 func (d dhtFetcher) fetch() (retB []byte, sleep time.Duration, err error) {
 	// There's some noise around default noSleep and default sleep times that I don't quite follow.
 	// We can override this value for specific cases below should they warrant better handling.
@@ -45,6 +51,11 @@ func (d dhtFetcher) fetch() (retB []byte, sleep time.Duration, err error) {
 	t, _ := d.dhtResources.torrentClient.AddTorrentOpt(torrent.AddTorrentOpts{
 		InfoHash: bep46Payload.Ih,
 	})
+	// Add a local seed, assuming that trackers will fail due to same IP.
+	t.AddPeers([]torrent.PeerInfo{{
+		Addr:    localhostPeerAddr{},
+		Trusted: true,
+	}})
 	select {
 	case <-t.GotInfo():
 	case <-ctx.Done():
