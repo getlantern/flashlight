@@ -174,7 +174,7 @@ func TestPollProxies(t *testing.T) {
 		dispatch := func(cfg interface{}) {
 			proxyChan <- cfg
 		}
-		go cfg.configFetcher(nil, dispatch, fetcher, func() time.Duration { return 1 * time.Hour })
+		go cfg.configFetcher(nil, dispatch, fetcher, func() time.Duration { return 1 * time.Hour }, log)
 		proxies := (<-proxyChan).(map[string]*chained.ChainedServerInfo)
 
 		assert.True(t, len(proxies) > 0)
@@ -284,7 +284,7 @@ func TestPollIntervals(t *testing.T) {
 		dispatch := func(cfg interface{}) {}
 
 		stopChan := make(chan bool)
-		go cfg.configFetcher(stopChan, dispatch, fetcher, func() time.Duration { return pollInterval })
+		go cfg.configFetcher(stopChan, dispatch, fetcher, func() time.Duration { return pollInterval }, log)
 		time.Sleep(waitTime)
 		close(stopChan)
 
