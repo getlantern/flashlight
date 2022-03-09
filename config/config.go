@@ -186,26 +186,31 @@ func pipeConfig(opts *options) (stop func()) {
 		}
 	}
 
-	// Now continually poll for new configs and pipe them back to the dispatch
+	// Now continually poll for new configs and pipe them back to the dispatch function.
 	if !opts.sticky {
 		fetcher := newHttpFetcher(opts.userConfig, opts.rt, opts.originURL)
-		fetcher := newFetcher(opts.userConfig, opts.rt, opts.originURL)
-		go conf.configFetcher(stopCh, func(cfg interface{}) {
-			dispatch(cfg, Fetched)
-		}, fetcher, opts.sleep, golog.LoggerFor(packageLogPrefix+".fetched"))
+		go conf.configFetcher(stopCh,
+			func(cfg interface{}) {
+				dispatch(cfg, Fetched)
+			}, fetcher, opts.sleep,
+			golog.LoggerFor(fmt.Sprintf("%v.%v.fetcher.http", packageLogPrefix, opts.name)))
 
 		dhtFetcher := dhtFetcher{
 			dhtResources: opts.dhtResources,
 			filePath:     opts.name,
 		}
+		// TODO: Expose target as configuration. For now this is linked to a specific DHT private key and salt.
 		err := dhtFetcher.configDhtTarget.UnmarshalText([]byte("c384439ab2239a3dd4294351540e647fdec8af5f"))
 		if err != nil {
 			panic(err)
 		}
-		go conf.configFetcher(stopCh, func(cfg interface{}) {
-			dispatch(cfg, Dht)
-		}, dhtFetcher, opts.sleep, golog.LoggerFor(packageLogPrefix+".dht"))
-
+		go conf.configFetcher(
+			stopCh,
+			func(cfg interface{}) {
+				dispatch(cfg, Dht)
+			},
+			dhtFetcher, opts.sleep,
+			golog.LoggerFor(fmt.Sprintf("%v.%v.fetcher.dht", packageLogPrefix, opts.name)))
 	} else {
 		log.Debugf("Using sticky config")
 	}
