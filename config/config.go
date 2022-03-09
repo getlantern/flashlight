@@ -187,9 +187,8 @@ func pipeConfig(opts *options) (stop func()) {
 	}
 
 	// Now continually poll for new configs and pipe them back to the dispatch
-	// function.
 	if !opts.sticky {
-
+		fetcher := newHttpFetcher(opts.userConfig, opts.rt, opts.originURL)
 		fetcher := newFetcher(opts.userConfig, opts.rt, opts.originURL)
 		go conf.configFetcher(stopCh, func(cfg interface{}) {
 			dispatch(cfg, Fetched)

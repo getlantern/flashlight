@@ -46,9 +46,9 @@ type fetcher struct {
 
 var noSleep = 0 * time.Second
 
-// newFetcher creates a new configuration fetcher with the specified
+// newHttpFetcher creates a new configuration fetcher with the specified
 // interface for obtaining the user ID and token if those are populated.
-func newFetcher(conf common.UserConfig, rt http.RoundTripper, originURL string) Fetcher {
+func newHttpFetcher(conf common.UserConfig, rt http.RoundTripper, originURL string) Fetcher {
 	log.Debugf("Will poll for config at %v", originURL)
 
 	// Force detour to whitelist chained domain
