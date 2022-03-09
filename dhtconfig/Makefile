@@ -3,18 +3,21 @@ TORRENT_CREATE = bin/torrent-create
 DHT = bin/dht
 TORRENT = bin/torrent
 SEQ = 0
+SALT = globalconfig
 
-publish: $(CONFIG_INFO_NAME).infohash bin/dht dht-private-key
+all: deps publish
+
+publish: $(CONFIG_INFO_NAME).infohash dht-private-key
 	# TODO: Update the salt to "config" once we aren't hardcoding the target infohash.
 	$(DHT) put-mutable-infohash \
 		--key `cat dht-private-key` \
-		--salt globalconfig \
+		--salt $(SALT) \
 		--info-hash "`cat $(CONFIG_INFO_NAME).infohash`" \
 		--seq '$(SEQ)' \
 	| tee $(CONFIG_INFO_NAME).target
 
-$(CONFIG_INFO_NAME).torrent: $(CONFIG_INFO_NAME) $(CONFIG_INFO_NAME)/global.yaml $(CONFIG_INFO_NAME)/proxies.yaml $(TORRENT_CREATE)
-	$(TORRENT_CREATE) root > $@
+$(CONFIG_INFO_NAME).torrent: $(CONFIG_INFO_NAME) $(CONFIG_INFO_NAME)/global.yaml $(CONFIG_INFO_NAME)/proxies.yaml
+	$(TORRENT_CREATE) $(CONFIG_INFO_NAME) > $@
 
 $(CONFIG_INFO_NAME):
 	mkdir $@
@@ -32,7 +35,7 @@ dht-private-key:
 	openssl rand -hex 32 > $@
 
 bin/dht:
-	GOBIN=`realpath bin` go install github.com/anacrolix/dht/v2/cmd/dht@latest
+	GOBIN=`realpath bin` go install github.com/anacrolix/dht/v2/cmd/dht@caf059837e9bba2e47993e3945c2b211610dd2f7
 
 bin/torrent:
 	GOBIN=`realpath bin` go install github.com/anacrolix/torrent/cmd/torrent@latest
@@ -41,4 +44,6 @@ bin/torrent-create:
 	GOBIN=`realpath bin` go install github.com/anacrolix/torrent/cmd/torrent-create@latest
 
 get:
-	$(DHT) get `head -n 1 globalconfig.target` --salt globalconfig --extract-infohash
+	$(DHT) get `head -n 1 $(CONFIG_INFO_NAME).target` --salt $(SALT) --extract-infohash
+
+deps: bin/dht bin/torrent bin/torrent-create
