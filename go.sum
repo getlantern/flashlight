@@ -209,6 +209,7 @@ github.com/anacrolix/squirrel v0.1.0/go.mod h1:YzgVvikMdFD441oTWlNG189bpKabO9Sbf
 github.com/anacrolix/squirrel v0.1.1-0.20210914065657-81bc5ecdc43a/go.mod h1:YzgVvikMdFD441oTWlNG189bpKabO9Sbf3uCSVgca04=
 github.com/anacrolix/squirrel v0.2.1-0.20211119092713-2efaee06d169/go.mod h1:dJyE7VefQvX0KAKMkOQDGOVEs91a+LvXQ2BjEKl/DIw=
 github.com/anacrolix/squirrel v0.4.0/go.mod h1:dJyE7VefQvX0KAKMkOQDGOVEs91a+LvXQ2BjEKl/DIw=
+github.com/anacrolix/squirrel v0.4.1-0.20220122230132-14b040773bac h1:eddZTnM9TIy3Z9ARLeDMlUpEjcs0ZdoFMXSG0ChAHvE=
 github.com/anacrolix/squirrel v0.4.1-0.20220122230132-14b040773bac/go.mod h1:YzgVvikMdFD441oTWlNG189bpKabO9Sbf3uCSVgca04=
 github.com/anacrolix/stm v0.1.0/go.mod h1:ZKz7e7ERWvP0KgL7WXfRjBXHNRhlVRlbBQecqFtPq+A=
 github.com/anacrolix/stm v0.1.1-0.20191106051447-e749ba3531cf/go.mod h1:zoVQRvSiGjGoTmbM0vSLIiaKjWtNPeTvXUSdJQA4hsg=

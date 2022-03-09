@@ -2,10 +2,14 @@ package config
 
 import (
 	"errors"
+	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
+	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/yaml"
 
@@ -107,8 +111,17 @@ func InitWithURLs(
 		proxiesDispatchCh <- cfgWithSource{cfg, src}
 	}
 
+	cacheDir, err := os.UserCacheDir()
+	if err != nil {
+		cacheDir = os.TempDir()
+	}
+	cacheDir = filepath.Join(cacheDir, common.DefaultAppName, "dhtconfig", "data")
+	os.MkdirAll(cacheDir, 0o700)
 	// This should move into the parameters for this function, but for now it's appropriate.
-	dhtResources, err := newDhtStuff()
+	dhtResources, err := newDhtStuff(
+		// Can this be provided without blocking?
+		net.ParseIP(geolookup.GetIP(0)),
+		cacheDir)
 	if err != nil {
 		// Probably log and move on instead.
 		panic(err)
