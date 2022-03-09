@@ -1,3 +1,6 @@
+# For now the info name is generalized even though we only include the global
+# config. Only the file path names are used by flashlight so this is
+# arbitrary for now.
 CONFIG_INFO_NAME = config
 TORRENT_CREATE = bin/torrent-create
 DHT = bin/dht
@@ -16,7 +19,8 @@ publish: $(CONFIG_INFO_NAME).infohash dht-private-key
 		--seq '$(SEQ)' \
 	| tee $(CONFIG_INFO_NAME).target
 
-$(CONFIG_INFO_NAME).torrent: $(CONFIG_INFO_NAME) $(CONFIG_INFO_NAME)/global.yaml $(CONFIG_INFO_NAME)/proxies.yaml
+
+$(CONFIG_INFO_NAME).torrent: $(CONFIG_INFO_NAME) $(CONFIG_INFO_NAME)/global.yaml
 	$(TORRENT_CREATE) $(CONFIG_INFO_NAME) > $@
 
 $(CONFIG_INFO_NAME):
@@ -25,8 +29,8 @@ $(CONFIG_INFO_NAME):
 $(CONFIG_INFO_NAME)/global.yaml:
 	curl https://globalconfig.flashlightproxy.com/global.yaml.gz | gunzip > $@
 
-$(CONFIG_INFO_NAME)/proxies.yaml:
-	curl https://config.getiantem.org/proxies.yaml.gz | gunzip > $@
+# $(CONFIG_INFO_NAME)/proxies.yaml:
+# 	curl https://config.getiantem.org/proxies.yaml.gz | gunzip > $@
 
 $(CONFIG_INFO_NAME).infohash: $(CONFIG_INFO_NAME).torrent
 	$(TORRENT) metainfo $< infohash | cut -d : -f 1 > $@

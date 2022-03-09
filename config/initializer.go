@@ -134,9 +134,9 @@ func InitWithURLs(
 			defer mx.RUnlock()
 			return proxyConfigPollInterval
 		},
-		sticky:       isSticky(flags),
-		rt:           rt,
-		dhtResources: dhtResources,
+		sticky: isSticky(flags),
+		rt:     rt,
+		// Proxies are not provided over the DHT (yet! ᕕ( ᐛ )ᕗ), so dhtResources are not provided.
 	}
 
 	stopProxies := pipeConfig(proxyOptions)
@@ -160,7 +160,7 @@ func InitWithURLs(
 		},
 		sticky:       isSticky(flags),
 		rt:           rt,
-		dhtResources: dhtResources,
+		dhtResources: &dhtResources,
 	}
 
 	stopGlobal := pipeConfig(globalOptions)

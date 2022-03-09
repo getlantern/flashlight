@@ -16,7 +16,7 @@ import (
 
 type dhtFetcher struct {
 	configDhtTarget krpc.ID
-	dhtResources    dhtStuff
+	dhtResources    *dhtStuff
 	filePath        string
 }
 
