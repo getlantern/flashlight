@@ -112,6 +112,6 @@ func newDhtStuff() (_ dhtStuff, err error) {
 		ds.Close()
 		return
 	}
-	tc.AddDhtServer(torrent.AnacrolixDhtServerWrapper{ds})
+	tc.AddDhtServer(torrent.AnacrolixDhtServerWrapper{Server: ds})
 	return dhtStuff{ds, tc}, nil
 }
