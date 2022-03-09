@@ -138,7 +138,11 @@ func newDhtStuff(publicIp net.IP, cacheDir string) (_ dhtStuff, err error) {
 		return
 	}
 	tc.AddDhtServer(torrent.AnacrolixDhtServerWrapper{ds})
-	return dhtStuff{ds, tc, ts}, nil
+	return dhtStuff{
+		dhtServer:      ds,
+		torrentClient:  tc,
+		torrentStorage: ts,
+	}, nil
 }
 
 func makeStorage(cacheDir string) (s storage.ClientImplCloser) {
