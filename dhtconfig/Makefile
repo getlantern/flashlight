@@ -34,12 +34,15 @@ $(CONFIG_INFO_NAME).infohash: $(CONFIG_INFO_NAME).torrent
 dht-private-key:
 	openssl rand -hex 32 > $@
 
+.PHONY: bin/dht
 bin/dht:
 	GOBIN=`realpath bin` go install github.com/anacrolix/dht/v2/cmd/dht@3791ab26c002c8c358b29130693d7812cb420cca
 
+.PHONY: bin/torrent
 bin/torrent:
 	GOBIN=`realpath bin` go install github.com/anacrolix/torrent/cmd/torrent@latest
 
+.PHONY: bin/torrent-create
 bin/torrent-create:
 	GOBIN=`realpath bin` go install github.com/anacrolix/torrent/cmd/torrent-create@latest
 
