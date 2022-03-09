@@ -28,13 +28,15 @@ func (localhostPeerAddr) String() string {
 
 func (d dhtFetcher) fetch() (retB []byte, sleep time.Duration, err error) {
 	// There's some noise around default noSleep and default sleep times that I don't quite follow.
-	// We can override this value for specific cases below should they warrant better handling.
-	sleep = 1 * time.Hour
+	// We can override this value for specific cases below should they warrant better handling. A
+	// shorter timeout for transient network issues is a good default.
+	sleep = 2 * time.Minute
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Minute)
 	defer cancel()
 	res, _, err := getput.Get(ctx, d.configDhtTarget, d.dhtResources.dhtServer, nil, []byte("globalconfig"))
 	if err != nil {
 		err = fmt.Errorf("getting latest infohash: %w", err)
+		return
 	}
 	var bep46Payload krpc.Bep46Payload
 	err = bencode.Unmarshal(res.V, &bep46Payload)
@@ -73,6 +75,8 @@ func (d dhtFetcher) fetch() (retB []byte, sleep time.Duration, err error) {
 	if f == nil {
 		// Well this is awkward.
 		err = fmt.Errorf("file not found in torrent")
+		// Fixing this would require a republish, which would be on the typical publishing schedule.
+		sleep = 0
 		return
 	}
 	r := f.NewReader()
@@ -88,6 +92,8 @@ func (d dhtFetcher) fetch() (retB []byte, sleep time.Duration, err error) {
 		err = fmt.Errorf("reading all torrent file: %w", err)
 		return
 	}
+	// Everything good, use the default!
+	sleep = 0
 	return
 }
 
