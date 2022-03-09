@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/getlantern/golog"
@@ -127,8 +128,16 @@ func pipeConfig(opts *options) (stop func()) {
 	// for remote configs.  There should never be mutual access by these
 	// goroutines, however, since the polling routine is started after the prior
 	// calls to dispatch return.
-	var lastCfg interface{}
+	var (
+		mu      sync.Mutex
+		lastCfg interface{}
+	)
 	dispatch := func(cfg interface{}, src Source) {
+		// It's not clear exactly how atomic this needs to be. I think we also need to synchronize
+		// on the dispatch and lastCfg update, further updates will have to wait until the current
+		// dispatch is completed.
+		mu.Lock()
+		defer mu.Unlock()
 		a := lastCfg
 		b := yamlRoundTrip(cfg)
 		if reflect.DeepEqual(a, b) {
