@@ -6,18 +6,17 @@ require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/PuerkitoBio/goquery v1.7.0
-	github.com/anacrolix/envpprof v1.1.1 // indirect
-	github.com/anacrolix/go-libutp v1.0.4
-	github.com/anacrolix/log v0.8.0 // indirect
-	github.com/anacrolix/mmsg v1.0.0 // indirect
-	github.com/anacrolix/sync v0.2.0 // indirect
+	github.com/anacrolix/dht/v2 v2.16.1
+	github.com/anacrolix/go-libutp v1.2.0
+	github.com/anacrolix/log v0.13.0 // indirect
+	github.com/anacrolix/missinggo/v2 v2.5.2
+	github.com/anacrolix/torrent v1.41.1-0.20220225085947-bf81f4a52868
 	github.com/andybalholm/brotli v1.0.4
-	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
+	github.com/blang/semver v3.5.1+incompatible
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff
-	github.com/frankban/quicktest v1.11.3 // indirect
-	github.com/fsnotify/fsnotify v1.4.9
+	github.com/fsnotify/fsnotify v1.5.1
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
 	github.com/getlantern/bbrconn v0.0.0-20210901194755-12169918fdf9 // indirect
 	github.com/getlantern/borda v0.0.0-20211219040702-422f5797af3d
@@ -42,10 +41,10 @@ require (
 	github.com/getlantern/geolookup v0.0.0-20210901195705-eec711834596
 	github.com/getlantern/go-ping v0.0.0-20210901195920-5415d0f18231
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
-	github.com/getlantern/golog v0.0.0-20210606115803-bce9f9fe5a5f
+	github.com/getlantern/golog v0.0.0-20211223150227-d4d95a44d873
 	github.com/getlantern/grtrack v0.0.0-20210901195719-bdf9e1d12dac // indirect
 	github.com/getlantern/hellosplitter v0.1.1
-	github.com/getlantern/hidden v0.0.0-20201229170000-e66e7f878730
+	github.com/getlantern/hidden v0.0.0-20220104173330-f221c5a24770
 	github.com/getlantern/http-proxy-lantern/v2 v2.6.50
 	github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
@@ -53,7 +52,7 @@ require (
 	github.com/getlantern/iptool v0.0.0-20210901195942-5e13a4786de9
 	github.com/getlantern/jibber_jabber v0.0.0-20210901195950-68955124cc42
 	github.com/getlantern/kcpwrapper v0.0.0-20201001150218-1427e1d39c25
-	github.com/getlantern/keepcurrent v0.0.0-20210901200020-9275de720d92 // indirect
+	github.com/getlantern/keepcurrent v0.0.0-20220215112059-5f8a2d8c6787 // indirect
 	github.com/getlantern/keyman v0.0.0-20210622061955-aa0d47d4932c
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
 	github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210601195915-e04471aa4920
@@ -89,14 +88,12 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
 	github.com/getsentry/sentry-go v0.12.0
+	github.com/go-errors/errors v1.4.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/gopacket v1.1.17
-	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4
-	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/jaffee/commandeer v0.5.0
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
-	github.com/lucas-clemente/quic-go v0.19.3 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/go-server-timing v1.0.0
@@ -112,10 +109,9 @@ require (
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
 	golang.org/x/mobile v0.0.0-20210831151748-9cba7bc03c0f
-	golang.org/x/net v0.0.0-20211111160137-58aab5ef257a
-	golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac
-	google.golang.org/genproto v0.0.0-20210406143921-e86de6bf7a46 // indirect
-	google.golang.org/grpc v1.37.0 // indirect
+	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
+	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e
+	google.golang.org/genproto v0.0.0-20210707164411-8c882eb9abba // indirect
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 

@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/getlantern/golog"
 	"github.com/getlantern/rot13"
 	"github.com/getlantern/yaml"
 	"github.com/getsentry/sentry-go"
@@ -26,6 +27,7 @@ const (
 	Saved    Source = "saved"
 	Embedded Source = "embedded"
 	Fetched  Source = "fetched"
+	Dht      Source = "dht"
 )
 
 // Config is an interface for getting proxy data saved locally, embedded
@@ -38,9 +40,8 @@ type Config interface {
 	// Embedded retrieves a yaml config embedded in the binary.
 	embedded([]byte) (interface{}, error)
 
-	// Poll polls for new configs from a remote server and saves them to disk for
-	// future runs.
-	poll(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, sleep func() time.Duration)
+	// Polls for new configs from a remote server and saves them to disk for future runs.
+	configFetcher(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, sleep func() time.Duration)
 }
 
 type config struct {
@@ -104,6 +105,8 @@ type options struct {
 	// dictate whether the fetcher will use dual fetching (from fronted and
 	// chained URLs) or not.
 	rt http.RoundTripper
+
+	dhtResources dhtStuff
 }
 
 // pipeConfig creates a new config pipeline for reading a specified type of
@@ -177,10 +180,24 @@ func pipeConfig(opts *options) (stop func()) {
 	// Now continually poll for new configs and pipe them back to the dispatch
 	// function.
 	if !opts.sticky {
+
 		fetcher := newFetcher(opts.userConfig, opts.rt, opts.originURL)
-		go conf.poll(stopCh, func(cfg interface{}) {
+		go conf.configFetcher(stopCh, func(cfg interface{}) {
 			dispatch(cfg, Fetched)
-		}, fetcher, opts.sleep)
+		}, fetcher, opts.sleep, golog.LoggerFor(packageLogPrefix+".fetched"))
+
+		dhtFetcher := dhtFetcher{
+			dhtResources: opts.dhtResources,
+			filePath:     opts.name,
+		}
+		err := dhtFetcher.configDhtTarget.UnmarshalText([]byte("c384439ab2239a3dd4294351540e647fdec8af5f"))
+		if err != nil {
+			panic(err)
+		}
+		go conf.configFetcher(stopCh, func(cfg interface{}) {
+			dispatch(cfg, Dht)
+		}, dhtFetcher, opts.sleep, golog.LoggerFor(packageLogPrefix+".dht"))
+
 	} else {
 		log.Debugf("Using sticky config")
 	}
@@ -294,9 +311,9 @@ func (conf *config) embedded(data []byte) (interface{}, error) {
 	return conf.unmarshaler(data)
 }
 
-func (conf *config) poll(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, defaultSleep func() time.Duration) {
+func (conf *config) configFetcher(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, defaultSleep func() time.Duration, log golog.Logger) {
 	for {
-		sleepDuration := conf.fetchConfig(stopCh, dispatch, fetcher)
+		sleepDuration := conf.fetchConfig(stopCh, dispatch, fetcher, log)
 		if sleepDuration == noSleep {
 			sleepDuration = defaultSleep()
 		}
@@ -310,7 +327,7 @@ func (conf *config) poll(stopCh chan bool, dispatch func(interface{}), fetcher F
 	}
 }
 
-func (conf *config) fetchConfig(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher) time.Duration {
+func (conf *config) fetchConfig(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, log golog.Logger) time.Duration {
 	if bytes, sleepTime, err := fetcher.fetch(); err != nil {
 		log.Errorf("Error fetching config: %v", err)
 		return sleepTime

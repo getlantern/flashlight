@@ -14,8 +14,10 @@ import (
 	"github.com/getlantern/flashlight/embeddedconfig"
 )
 
+const packageLogPrefix = "flashlight.config"
+
 var (
-	log = golog.LoggerFor("flashlight.config")
+	log = golog.LoggerFor(packageLogPrefix)
 
 	// DefaultProxyConfigPollInterval determines how frequently to fetch proxies.yaml
 	DefaultProxyConfigPollInterval = 1 * time.Minute
@@ -105,6 +107,16 @@ func InitWithURLs(
 		proxiesDispatchCh <- cfgWithSource{cfg, src}
 	}
 
+	// This should move into the parameters for this function, but for now it's appropriate.
+	dhtResources, err := newDhtStuff()
+	if err != nil {
+		// Probably log and move on instead.
+		panic(err)
+	}
+	http.HandleFunc("/flashlightTorrentClient", func(w http.ResponseWriter, r *http.Request) {
+		dhtResources.torrentClient.WriteStatus(w)
+	})
+
 	// These are the options for fetching the per-user proxy config.
 	proxyOptions := &options{
 		saveDir:          configDir,
@@ -122,8 +134,9 @@ func InitWithURLs(
 			defer mx.RUnlock()
 			return proxyConfigPollInterval
 		},
-		sticky: isSticky(flags),
-		rt:     rt,
+		sticky:       isSticky(flags),
+		rt:           rt,
+		dhtResources: dhtResources,
 	}
 
 	stopProxies := pipeConfig(proxyOptions)
@@ -145,8 +158,9 @@ func InitWithURLs(
 			defer mx.RUnlock()
 			return globalConfigPollInterval
 		},
-		sticky: isSticky(flags),
-		rt:     rt,
+		sticky:       isSticky(flags),
+		rt:           rt,
+		dhtResources: dhtResources,
 	}
 
 	stopGlobal := pipeConfig(globalOptions)
