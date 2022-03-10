@@ -619,3 +619,13 @@ func (tr serialTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	log.Errorf("Unable to roundtrip request to %v, out of transports", req.URL)
 	return
 }
+
+// DirectAfter returns a round-tripper that first tries the given rt, then tries
+// to connect directly using an http.Transport with the given timeout.
+func DirectAfter(rt http.RoundTripper, timeout time.Duration) http.RoundTripper {
+	drt := &http.Transport{
+		TLSHandshakeTimeout:   timeout,
+		ResponseHeaderTimeout: timeout,
+	}
+	return &serialTransport{rt, drt}
+}
