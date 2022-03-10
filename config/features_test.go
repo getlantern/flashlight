@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"strings"
 	"testing"
 	"text/template"
@@ -164,8 +165,10 @@ func TestReplicaByCountry(t *testing.T) {
 	assert.NotEmpty(globalTrackers)
 	// Check the countries pull in the trackers using the anchor. Just change this if they stop
 	// using the same trackers. I really don't want this to break out the gate is all.
+	russiaTrackers := []string{"http://retracker.bashtel.ru/announce", "udp://retracker.lanta-net.ru:2710/announce", "udp://tracker.cypherpunks.ru:6969/announce"}
+	sort.StringSlice(russiaTrackers).Sort()
 	assert.Equal(fos.ByCountry["CN"].Trackers, globalTrackers)
-	assert.Equal(fos.ByCountry["RU"].Trackers, globalTrackers)
+	assert.Equal(fos.ByCountry["RU"].Trackers, russiaTrackers)
 	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
 }
 

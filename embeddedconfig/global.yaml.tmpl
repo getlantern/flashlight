@@ -271,10 +271,10 @@ featureoptions:
       - *RussiaReplicaRust
       replicarustendpoint: *RussiaReplicaRust
       staticpeeraddrs: ["94.242.59.118:42069"]
-      trackers:
+      trackers: &RussiaTrackers
       - http://retracker.bashtel.ru/announce
-      - udp://tracker.cypherpunks.ru:6969/announce
       - udp://retracker.lanta-net.ru:2710/announce
+      - udp://tracker.cypherpunks.ru:6969/announce
       webseedbaseurls: *RussiaReplicaBaseUrls
     "CN":
       proxypeerinfohashes: *GlobalProxyInfohashes
