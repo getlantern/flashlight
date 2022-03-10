@@ -195,7 +195,7 @@ featureoptions:
     # These are for compatibility with clients that don't load all options per-country.
     replicarustdefaultendpoint: &FrankfurtReplicaRust http://replica-search-aws.lantern.io/
     replicarustendpoints:
-      "RU": *FrankfurtReplicaRust
+      "RU": &RussiaReplicaRust http://92.223.103.136/
       "IR": *FrankfurtReplicaRust
 
     # Here follows options per-country
@@ -265,9 +265,17 @@ featureoptions:
     "IR":
       <<: *FrankfurtBase
       staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
-    "RU":
-      <<: *FrankfurtBase
-      staticpeeraddrs: [&RussiaReplicaPeers "94.242.59.118:42069"]
+    "RU": 
+      proxypeerinfohashes: *GlobalProxyInfohashes
+      metadatabaseurls: &RussiaReplicaBaseUrls
+      - *RussiaReplicaRust
+      replicarustendpoint: *RussiaReplicaRust
+      staticpeeraddrs: ["94.242.59.118:42069"]
+      trackers:
+      - http://retracker.bashtel.ru/announce
+      - udp://tracker.cypherpunks.ru:6969/announce
+      - udp://retracker.lanta-net.ru:2710/announce
+      webseedbaseurls: *RussiaReplicaBaseUrls
     "CN":
       proxypeerinfohashes: *GlobalProxyInfohashes
       metadatabaseurls:
