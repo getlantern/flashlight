@@ -1,38 +1,37 @@
 # For now the info name is generalized even though we only include the global
 # config. Only the file path names are used by flashlight so this is
 # arbitrary for now.
-CONFIG_INFO_NAME = config
+INFO_NAME =
 TORRENT_CREATE = bin/torrent-create
 DHT = bin/dht
 TORRENT = bin/torrent
 SEQ = 0
 SALT = globalconfig
+NAME = globalconfig
 
 all: deps publish
 
-publish: $(CONFIG_INFO_NAME).infohash dht-private-key
+publish: $(NAME).infohash dht-private-key
 	# TODO: Update the salt to "config" once we aren't hardcoding the target infohash.
 	$(DHT) put-mutable-infohash \
 		--key `cat dht-private-key` \
 		--salt $(SALT) \
-		--info-hash "`cat $(CONFIG_INFO_NAME).infohash`" \
+		--info-hash "`cat $(NAME).infohash`" \
 		--seq '$(SEQ)' \
-	| tee $(CONFIG_INFO_NAME).target
+		--auto-seq \
+	| tee $(NAME).target
 
+$(NAME).torrent: $(NAME) $(NAME)/global.yaml.gz
+	$(TORRENT_CREATE) -i='$(CONFIG_INFO_NAME)' '-u=https://globalconfig.flashlightproxy.com/' $(NAME) > $@~
+	mv $@~ $@
 
-$(CONFIG_INFO_NAME).torrent: $(CONFIG_INFO_NAME) $(CONFIG_INFO_NAME)/global.yaml
-	$(TORRENT_CREATE) $(CONFIG_INFO_NAME) > $@
-
-$(CONFIG_INFO_NAME):
+$(NAME):
 	mkdir $@
 
-$(CONFIG_INFO_NAME)/global.yaml:
-	curl https://globalconfig.flashlightproxy.com/global.yaml.gz | gunzip > $@
+$(NAME)/global.yaml.gz:
+	curl https://globalconfig.flashlightproxy.com/global.yaml.gz -o $@
 
-# $(CONFIG_INFO_NAME)/proxies.yaml:
-# 	curl https://config.getiantem.org/proxies.yaml.gz | gunzip > $@
-
-$(CONFIG_INFO_NAME).infohash: $(CONFIG_INFO_NAME).torrent
+$(NAME).infohash: $(NAME).torrent
 	$(TORRENT) metainfo $< infohash | cut -d : -f 1 > $@
 
 dht-private-key:
@@ -40,7 +39,7 @@ dht-private-key:
 
 .PHONY: bin/dht
 bin/dht:
-	GOBIN=`realpath bin` go install github.com/anacrolix/dht/v2/cmd/dht@3791ab26c002c8c358b29130693d7812cb420cca
+	GOBIN=`realpath bin` go install github.com/anacrolix/dht/v2/cmd/dht@5fb252416efe1c24656b60a835cf680edbd67766
 
 .PHONY: bin/torrent
 bin/torrent:
@@ -51,6 +50,6 @@ bin/torrent-create:
 	GOBIN=`realpath bin` go install github.com/anacrolix/torrent/cmd/torrent-create@latest
 
 get:
-	$(DHT) get `head -n 1 $(CONFIG_INFO_NAME).target` --salt $(SALT) --extract-infohash
+	$(DHT) get `head -n 1 $(NAME).target` --salt $(SALT) --extract-infohash
 
 deps: bin/dht bin/torrent bin/torrent-create
