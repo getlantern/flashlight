@@ -24,6 +24,7 @@ type dhtFetcher struct {
 	configDhtTarget krpc.ID
 	dhtResources    *dhtStuff
 	filePath        string
+	webSeedUrls     []string
 }
 
 func (d dhtFetcher) fetch() (retB []byte, sleep time.Duration, err error) {
@@ -58,6 +59,7 @@ func (d dhtFetcher) fetch() (retB []byte, sleep time.Duration, err error) {
 		Addr:    localhostPeerAddr{},
 		Trusted: true,
 	}})
+	t.AddWebSeeds(d.webSeedUrls)
 	select {
 	case <-t.GotInfo():
 	case <-ctx.Done():
