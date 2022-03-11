@@ -2,9 +2,9 @@
 # config. Only the file path names are used by flashlight so this is
 # arbitrary for now.
 INFO_NAME =
-TORRENT_CREATE = bin/torrent-create
-DHT = bin/dht
-TORRENT = bin/torrent
+TORRENT_CREATE ?= bin/torrent-create
+DHT ?= bin/dht
+TORRENT ?= bin/torrent
 SEQ = 0
 SALT = globalconfig
 NAME = globalconfig
