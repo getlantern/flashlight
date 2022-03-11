@@ -8,10 +8,10 @@ require (
 	github.com/PuerkitoBio/goquery v1.7.0
 	github.com/anacrolix/dht/v2 v2.16.2-0.20220309100244-caf059837e9b
 	github.com/anacrolix/go-libutp v1.2.0
-	github.com/anacrolix/log v0.13.0 // indirect
 	github.com/anacrolix/missinggo/v2 v2.5.2
 	github.com/anacrolix/squirrel v0.4.1-0.20220122230132-14b040773bac
-	github.com/anacrolix/torrent v1.41.1-0.20220225085947-bf81f4a52868
+	// anacrolix/torrent must support banning bad webseeds due to multiple config versions sharing the webseed URL
+	github.com/anacrolix/torrent v1.41.1-0.20220311030531-ec2b1b2073df
 	github.com/andybalholm/brotli v1.0.4
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/dchest/siphash v1.2.1 // indirect
