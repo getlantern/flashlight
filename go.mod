@@ -28,7 +28,7 @@ require (
 	github.com/getlantern/common v1.1.1-0.20211216020417-0ac01e41560d
 	github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1
 	github.com/getlantern/dnsgrab v0.0.0-20211216020425-5d5e155a01a8
-	github.com/getlantern/domains v0.0.0-20211103190933-f91590174df9
+	github.com/getlantern/domains v0.0.0-20220311111720-94f59a903271
 	github.com/getlantern/elevate v0.0.0-20210901195629-ce58359e4d0e // indirect
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
 	github.com/getlantern/enhttp v0.0.0-20210901195634-6f89d45ee033

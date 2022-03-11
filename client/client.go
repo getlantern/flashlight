@@ -567,7 +567,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 	routingRuleForDomain := domainrouting.RuleFor(host)
 
 	if routingRuleForDomain == domainrouting.MustDirect {
-		log.Debugf("Proxying to %v per domain routing rules (MustDirect)", host)
+		log.Debugf("Forcing direct to %v per domain routing rules (MustDirect)", host)
 		op.Set("force_direct", true)
 		op.Set("force_direct_reason", "routingrule")
 		return dialDirect(ctx, "tcp", addr)
