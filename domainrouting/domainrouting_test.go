@@ -24,3 +24,27 @@ func TestBuildTree(t *testing.T) {
 
 	assert.EqualValues(t, expectedResult, result.ToMap())
 }
+
+func TestIPHandling(t *testing.T) {
+	rules := Rules{
+		"1.2.3.4": MustDirect,
+	}
+
+	Configure(rules, &ProxiedSitesConfig{})
+
+	assert.EqualValues(t, MustDirect, RuleFor("1.2.3.4"))
+
+	RemoveRules(rules)
+}
+
+func TestTLDHandling(t *testing.T) {
+	rules := Rules{
+		"ir": MustDirect,
+	}
+
+	Configure(rules, &ProxiedSitesConfig{})
+
+	assert.EqualValues(t, MustDirect, RuleFor("www.google.ir"))
+
+	RemoveRules(rules)
+}

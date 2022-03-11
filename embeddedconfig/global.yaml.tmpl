@@ -195,7 +195,7 @@ featureoptions:
     # These are for compatibility with clients that don't load all options per-country.
     replicarustdefaultendpoint: &FrankfurtReplicaRust http://replica-search-aws.lantern.io/
     replicarustendpoints:
-      "RU": *FrankfurtReplicaRust
+      "RU": &RussiaReplicaRust http://92.223.103.136:8080/
       "IR": *FrankfurtReplicaRust
 
     # Here follows options per-country
@@ -260,14 +260,21 @@ featureoptions:
     "SY": *FrankfurtBase
     "TW": *FrankfurtBase
     "TH": *FrankfurtBase
-    "TN": *FrankfurtBase
     "YE": *FrankfurtBase
     "IR":
       <<: *FrankfurtBase
       staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
-    "RU":
-      <<: *FrankfurtBase
-      staticpeeraddrs: [&RussiaReplicaPeers "94.242.59.118:42069"]
+    "RU": 
+      proxypeerinfohashes: *GlobalProxyInfohashes
+      metadatabaseurls: &RussiaReplicaBaseUrls
+      - *RussiaReplicaRust
+      replicarustendpoint: *RussiaReplicaRust
+      staticpeeraddrs: ["94.242.59.118:42069"]
+      trackers: &RussiaTrackers
+      - http://retracker.bashtel.ru/announce
+      - udp://retracker.lanta-net.ru:2710/announce
+      - udp://tracker.cypherpunks.ru:6969/announce
+      webseedbaseurls: *RussiaReplicaBaseUrls
     "CN":
       proxypeerinfohashes: *GlobalProxyInfohashes
       metadatabaseurls:
@@ -377,10 +384,15 @@ domainroutingrules:
   namasha.com: d
   filimo.com: d
   tejaratnews.com: d
-  .ir: d
+  ir: d
   yandexmetrica.com: d
   status-log.vskit.tv: d
   api.maccms.com: d
+
+  # Go direct in Russia for now
+  92.223.103.136: md
+  s-dt2.cloud.gcore.lu: md
+  retracker.bashtel.ru: md
 
   # Replica http(s) BitTorrent trackers that run on non-standard ports (80 and 443?) should be listed here.
   tracker.opentrackr.org: p
