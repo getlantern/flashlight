@@ -2,14 +2,11 @@ package config
 
 import (
 	"errors"
-	"net"
 	"net/http"
-	"os"
-	"path/filepath"
 	"sync"
 	"time"
 
-	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getlantern/dhtup"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/yaml"
 
@@ -41,7 +38,7 @@ func Init(
 	configDir string, flags map[string]interface{}, userConfig common.UserConfig,
 	proxiesDispatch func(interface{}, Source), onProxiesSaveError func(error),
 	origGlobalDispatch func(interface{}, Source), onGlobalSaveError func(error),
-	rt http.RoundTripper) (stop func()) {
+	rt http.RoundTripper, dhtupContext *dhtup.Context) (stop func()) {
 
 	staging := isStaging(flags)
 	proxyConfigURL := checkOverrides(flags, getProxyURL(staging), "proxies.yaml.gz")
@@ -49,7 +46,8 @@ func Init(
 
 	return InitWithURLs(
 		configDir, flags, userConfig, proxiesDispatch, onProxiesSaveError,
-		origGlobalDispatch, onGlobalSaveError, proxyConfigURL, globalConfigURL, rt)
+		origGlobalDispatch, onGlobalSaveError, proxyConfigURL, globalConfigURL, rt,
+		dhtupContext)
 }
 
 type cfgWithSource struct {
@@ -65,7 +63,8 @@ func InitWithURLs(
 	configDir string, flags map[string]interface{}, userConfig common.UserConfig,
 	origProxiesDispatch func(interface{}, Source), onProxiesSaveError func(error),
 	origGlobalDispatch func(interface{}, Source), onGlobalSaveError func(error),
-	proxyURL string, globalURL string, rt http.RoundTripper) (stop func()) {
+	proxyURL string, globalURL string, rt http.RoundTripper,
+	dhtupContext *dhtup.Context) (stop func()) {
 
 	var mx sync.RWMutex
 	globalConfigPollInterval := DefaultGlobalConfigPollInterval
@@ -111,25 +110,6 @@ func InitWithURLs(
 		proxiesDispatchCh <- cfgWithSource{cfg, src}
 	}
 
-	cacheDir, err := os.UserCacheDir()
-	if err != nil {
-		cacheDir = os.TempDir()
-	}
-	cacheDir = filepath.Join(cacheDir, common.DefaultAppName, "dhtconfig", "data")
-	os.MkdirAll(cacheDir, 0o700)
-	// This should move into the parameters for this function, but for now it's appropriate.
-	dhtResources, err := newDhtStuff(
-		// Can this be provided without blocking?
-		net.ParseIP(geolookup.GetIP(0)),
-		cacheDir)
-	if err != nil {
-		// Probably log and move on instead.
-		panic(err)
-	}
-	http.HandleFunc("/flashlightTorrentClient", func(w http.ResponseWriter, r *http.Request) {
-		dhtResources.torrentClient.WriteStatus(w)
-	})
-
 	// These are the options for fetching the per-user proxy config.
 	proxyOptions := &options{
 		saveDir:          configDir,
@@ -149,7 +129,7 @@ func InitWithURLs(
 		},
 		sticky: isSticky(flags),
 		rt:     rt,
-		// Proxies are not provided over the DHT (yet! ᕕ( ᐛ )ᕗ), so dhtResources are not provided.
+		// Proxies are not provided over the DHT (yet! ᕕ( ᐛ )ᕗ), so dhtupContext is not passed.
 	}
 
 	stopProxies := pipeConfig(proxyOptions)
@@ -173,7 +153,7 @@ func InitWithURLs(
 		},
 		sticky:       isSticky(flags),
 		rt:           rt,
-		dhtResources: &dhtResources,
+		dhtupContext: dhtupContext,
 	}
 
 	stopGlobal := pipeConfig(globalOptions)

@@ -6,12 +6,12 @@ require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/PuerkitoBio/goquery v1.7.0
-	github.com/anacrolix/dht/v2 v2.16.2-0.20220309100244-caf059837e9b
+	github.com/anacrolix/dht v1.0.1 // indirect
+	github.com/anacrolix/dht/v2 v2.16.2-0.20220311024416-dd658f18fd51
 	github.com/anacrolix/go-libutp v1.2.0
 	github.com/anacrolix/missinggo/v2 v2.5.2
-	github.com/anacrolix/squirrel v0.4.1-0.20220122230132-14b040773bac
 	// anacrolix/torrent must support banning bad webseeds due to multiple config versions sharing the webseed URL
-	github.com/anacrolix/torrent v1.41.1-0.20220311030531-ec2b1b2073df
+	github.com/anacrolix/torrent v1.41.1-0.20220311032305-a319506dda5e
 	github.com/andybalholm/brotli v1.0.4
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/dchest/siphash v1.2.1 // indirect
@@ -27,6 +27,7 @@ require (
 	github.com/getlantern/cmuxprivate v0.0.0-20211216020409-d29d0d38be54
 	github.com/getlantern/common v1.1.1-0.20211216020417-0ac01e41560d
 	github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1
+	github.com/getlantern/dhtup v0.0.0-00010101000000-000000000000
 	github.com/getlantern/dnsgrab v0.0.0-20211216020425-5d5e155a01a8
 	github.com/getlantern/domains v0.0.0-20211103190933-f91590174df9
 	github.com/getlantern/elevate v0.0.0-20210901195629-ce58359e4d0e // indirect
@@ -144,3 +145,7 @@ replace github.com/ulikunitz/xz => github.com/ulikunitz/xz v0.5.8
 // We use a fork of gomobile that allows reusing the cache directory for faster builds, based
 // on this unmerged PR against gomobile - https://github.com/golang/mobile/pull/58.
 replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336-0bdf708b6d0f
+
+replace github.com/anacrolix/torrent => ../../go/src/github.com/anacrolix/torrent
+
+replace github.com/getlantern/dhtup => ../dhtup

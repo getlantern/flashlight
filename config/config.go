@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/anacrolix/dht/v2/krpc"
+	"github.com/getlantern/dhtup"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/rot13"
 	"github.com/getlantern/yaml"
@@ -107,7 +109,17 @@ type options struct {
 	// chained URLs) or not.
 	rt http.RoundTripper
 
-	dhtResources *dhtStuff
+	dhtupContext *dhtup.Context
+}
+
+var globalConfigDhtTarget krpc.ID
+
+func init() {
+	// TODO: Expose this as configuration. For now it's based on a specific private key and salt.
+	err := globalConfigDhtTarget.UnmarshalText([]byte("c384439ab2239a3dd4294351540e647fdec8af5f"))
+	if err != nil {
+		panic(err)
+	}
 }
 
 // pipeConfig creates a new config pipeline for reading a specified type of
@@ -195,15 +207,15 @@ func pipeConfig(opts *options) (stop func()) {
 			}, fetcher, opts.sleep,
 			golog.LoggerFor(fmt.Sprintf("%v.%v.fetcher.http", packageLogPrefix, opts.name)))
 
-		if opts.dhtResources != nil {
+		if opts.dhtupContext != nil {
 			dhtFetcher := dhtFetcher{
-				dhtResources: opts.dhtResources,
-				filePath:     opts.name,
-			}
-			// TODO: Expose target as configuration. For now this is linked to a specific DHT private key and salt.
-			err := dhtFetcher.configDhtTarget.UnmarshalText([]byte("c384439ab2239a3dd4294351540e647fdec8af5f"))
-			if err != nil {
-				panic(err)
+				dhtupResource: dhtup.Resource{
+					DhtTarget:   globalConfigDhtTarget,
+					Context:     opts.dhtupContext,
+					FilePath:    opts.name,
+					WebSeedUrls: []string{"https://globalconfig.flashlightproxy.com/"},
+					Salt:        []byte("globalconfig"),
+				},
 			}
 			go conf.configFetcher(
 				stopCh,

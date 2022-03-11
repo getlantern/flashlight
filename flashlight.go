@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/getlantern/detour"
+	"github.com/getlantern/dhtup"
 	"github.com/getlantern/dnsgrab"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
@@ -90,6 +91,7 @@ type Flashlight struct {
 	client            *client.Client
 	op                *fops.Op
 	errorHandler      func(HandledErrorType, error)
+	dhtupContext      *dhtup.Context
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
@@ -262,7 +264,7 @@ func (f *Flashlight) startConfigFetch() func() {
 	stopConfig := config.Init(
 		f.configDir, f.flagsAsMap, f.userConfig,
 		proxiesDispatch, onProxiesSaveError,
-		globalDispatch, onConfigSaveError, rt)
+		globalDispatch, onConfigSaveError, rt, f.dhtupContext)
 	return stopConfig
 }
 
@@ -322,6 +324,7 @@ func New(
 	reverseDNS func(host string) (string, error),
 	fetchAds func(opts *config.GoogleSearchAdsOptions, query string) string,
 	eventWithLabel func(category, action, label string),
+	dhtupContext *dhtup.Context,
 ) (*Flashlight, error) {
 	log.Debugf("Running in app: %v", appName)
 	log.Debugf("Using configdir: %v", configDir)
@@ -354,6 +357,7 @@ func New(
 		errorHandler: func(t HandledErrorType, err error) {
 			log.Errorf("%v: %v", t, err)
 		},
+		dhtupContext: dhtupContext,
 	}
 
 	var grabber dnsgrab.Server
