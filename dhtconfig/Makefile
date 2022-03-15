@@ -8,6 +8,7 @@ TORRENT ?= bin/torrent
 SEQ = 0
 SALT = globalconfig
 NAME = globalconfig
+SHELL=/bin/bash -o pipefail
 
 all: deps publish
 
@@ -20,6 +21,9 @@ publish: $(NAME).infohash dht-private-key
 		--seq '$(SEQ)' \
 		--auto-seq \
 	| tee $(NAME).target
+	aws s3 cp --acl public-read \
+		$(NAME).torrent \
+		s3://globalconfig.flashlightproxy.com/
 
 $(NAME).torrent: $(NAME) $(NAME)/global.yaml.gz
 	$(TORRENT_CREATE) -i='$(CONFIG_INFO_NAME)' '-u=https://globalconfig.flashlightproxy.com/' $(NAME) > $@~
