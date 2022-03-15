@@ -39,7 +39,7 @@ dht-private-key:
 
 .PHONY: bin/dht
 bin/dht:
-	GOBIN=`realpath bin` go install github.com/anacrolix/dht/v2/cmd/dht@5fb252416efe1c24656b60a835cf680edbd67766
+	GOBIN=`realpath bin` go install github.com/anacrolix/dht/v2/cmd/dht@dd658f18fd516ba4ebefd2177b95eed5c1aeacb4
 
 .PHONY: bin/torrent
 bin/torrent:
@@ -47,7 +47,7 @@ bin/torrent:
 
 .PHONY: bin/torrent-create
 bin/torrent-create:
-	GOBIN=`realpath bin` go install github.com/anacrolix/torrent/cmd/torrent-create@latest
+	GOBIN=`realpath bin` go install github.com/anacrolix/torrent/cmd/torrent-create@a319506dda5e63b4aa09dde762750689dfb1520b
 
 get:
 	$(DHT) get `head -n 1 $(NAME).target` --salt $(SALT) --extract-infohash
