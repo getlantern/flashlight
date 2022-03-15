@@ -144,7 +144,8 @@ func TestReplicaByCountry(t *testing.T) {
 	// Check the countries pull in the trackers using the anchor. Just change this if they stop
 	// using the same trackers. I really don't want this to break out the gate is all.
 	assert.Equal(fos.ByCountry["CN"].Trackers, globalTrackers)
-	assert.Equal(fos.ByCountry["RU"].Trackers, globalTrackers)
+	// It's okay for Russia to have different trackers.
+	assert.NotEmpty(fos.ByCountry["RU"].Trackers)
 	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
 }
 

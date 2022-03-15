@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/getlantern/flashlight/config"
+	"io"
 	"io/ioutil"
 	"math"
 	"net"
@@ -16,9 +16,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"github.com/getlantern/flashlight/geolookup"
-	"github.com/getlantern/shortcut"
 
 	lru "github.com/hashicorp/golang-lru"
 
@@ -35,12 +32,15 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy/v2"
 	"github.com/getlantern/proxy/v2/filters"
+	"github.com/getlantern/shortcut"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/domainrouting"
+	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/status"
@@ -157,9 +157,9 @@ type Client struct {
 	allowMITM            func() bool
 	fetchAds             func(opts *config.GoogleSearchAdsOptions, query string) string
 	eventWithLabel       func(category, action, label string)
-	
-	httpWg               sync.WaitGroup
-	socksWg              sync.WaitGroup
+
+	httpWg  sync.WaitGroup
+	socksWg sync.WaitGroup
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -453,7 +453,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 			if errOnReply != nil {
 				return op.FailIf(log.Errorf("Unable to reply success to SOCKS5 client: %v", errOnReply))
 			}
-			return op.FailIf(client.proxy.Connect(ctx, req.BufConn, conn, addr))
+			return op.FailIf(client.Connect(ctx, req.BufConn, conn, addr))
 		},
 	}
 	server, err := socks5.New(conf)
@@ -463,6 +463,13 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 
 	log.Debugf("About to start SOCKS5 client proxy at %v", listenAddr)
 	return server.Serve(l)
+}
+
+// Connects a downstream connection to the given origin and copies data bidirectionally.
+// downstreamReader is a Reader that wraps downstream. Ideally, this is a buffered reader like
+// from bufio.
+func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reader, downstream net.Conn, origin string) error {
+	return client.proxy.Connect(dialCtx, downstreamReader, downstream, origin)
 }
 
 // Configure updates the client's configuration. Configure can be called
@@ -560,7 +567,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 	routingRuleForDomain := domainrouting.RuleFor(host)
 
 	if routingRuleForDomain == domainrouting.MustDirect {
-		log.Debugf("Proxying to %v per domain routing rules (MustDirect)", host)
+		log.Debugf("Forcing direct to %v per domain routing rules (MustDirect)", host)
 		op.Set("force_direct", true)
 		op.Set("force_direct_reason", "routingrule")
 		return dialDirect(ctx, "tcp", addr)

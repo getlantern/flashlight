@@ -17,7 +17,7 @@ If you're simply changing the contents of `global.yaml.tmpl` without any structu
 
 If you're making changes to structure of the configuration, you need to ensure that this stays backwards compatible with old clients. To this end, we keep copies of old versions of [config](config), for example [config_v1](config_v1). When making a structural change to the config, follow these steps:
 
-1. Back up the current version of `config`, for example `cp config config_v2`
+1. Back up the current version of `config`, for example `cp -R config config_v2`
 2. Update the code and tests in `config` as appropriate
 3. Make sure the tests in `config_v2`, `config_v1` etc. still work
 
