@@ -215,6 +215,12 @@ func pipeConfig(opts *options) (stop func()) {
 					FilePath:    opts.name,
 					WebSeedUrls: []string{"https://globalconfig.flashlightproxy.com/"},
 					Salt:        []byte("globalconfig"),
+					MetainfoUrls: []string{
+						// This won't work for changes until the CloudFlare caches are flushed as part of updates.
+						"https://globalconfig.flashlightproxy.com/globalconfig.torrent",
+						// Bypass CloudFlare cache.
+						"https://s3.ap-northeast-1.amazonaws.com/globalconfig.flashlightproxy.com/globalconfig.torrent",
+					},
 				},
 			}
 			go conf.configFetcher(

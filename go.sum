@@ -257,9 +257,8 @@ github.com/anacrolix/torrent v1.31.1-0.20210910222643-d957502528e0/go.mod h1:akZ
 github.com/anacrolix/torrent v1.35.1-0.20211104090255-eaeb38b18c6a/go.mod h1:97nxJW8NIeUyGdBvMOAl9cmcxi8xPez3nlE0RwSZcL0=
 github.com/anacrolix/torrent v1.40.0/go.mod h1:ejOLXT7fZE8ONHsoIYD7WS4/l6SEwtRGxcsP3dEu/Fk=
 github.com/anacrolix/torrent v1.41.1-0.20220309095723-02b6ee995497/go.mod h1:GZlCftqtWLz7EGJ3Oo+JP35jrU5zENxgvTCJ0w+SUSU=
-github.com/anacrolix/torrent v1.41.1-0.20220311032305-a319506dda5e/go.mod h1:Amyd4rM0trkSt9katy0kJXyi+H/S2dxCDcSRgTFQSt0=
-github.com/anacrolix/torrent v1.41.1-0.20220311032313-361300cc93af h1:tNBn2v1bQhYGrPKq7xxTt3LLe6XP/m6xD7VLaC9ycbg=
-github.com/anacrolix/torrent v1.41.1-0.20220311032313-361300cc93af/go.mod h1:n2lcE0lgo22qPQCRlmHCOIAxaaxv/MoqOqVUMHd/pwo=
+github.com/anacrolix/torrent v1.41.1-0.20220315024234-5a61d8f6ac93 h1:Vv5sPqioJrn6FvkNiMhjTQobnFSbJvHwwcKUqXXTXxA=
+github.com/anacrolix/torrent v1.41.1-0.20220315024234-5a61d8f6ac93/go.mod h1:n2lcE0lgo22qPQCRlmHCOIAxaaxv/MoqOqVUMHd/pwo=
 github.com/anacrolix/upnp v0.1.1/go.mod h1:LXsbsp5h+WGN7YR+0A7iVXm5BL1LYryDev1zuJMWYQo=
 github.com/anacrolix/upnp v0.1.2-0.20200416075019-5e9378ed1425/go.mod h1:Pz94W3kl8rf+wxH3IbCa9Sq+DTJr8OSbV2Q3/y51vYs=
 github.com/anacrolix/upnp v0.1.3-0.20220123035249-922794e51c96 h1:QAVZ3pN/J4/UziniAhJR2OZ9Ox5kOY2053tBbbqUPYA=
@@ -457,8 +456,8 @@ github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 h1:NRUJuo3v3WGC
 github.com/getlantern/context v0.0.0-20190109183933-c447772a6520/go.mod h1:L+mq6/vvYHKjCX2oez0CgEAJmbq1fbb/oNJIWQkBybY=
 github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1 h1:7Iij6/WnGBryEpBuhLEOwWFX61ubsx3ann4fRHKJTlY=
 github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1/go.mod h1:5iIcBTk/mor1hyVGucgUKLnH8ucQ0Gk+gmHog7g7NIw=
-github.com/getlantern/dhtup v0.0.0-20220311044209-ccbd496e8fc2 h1:3POB6zw8IeOBig+Wg38uWhvPkNDZCzqg1RHR9RhNogE=
-github.com/getlantern/dhtup v0.0.0-20220311044209-ccbd496e8fc2/go.mod h1:5zQFO8+sTYfE8ujPkAmOfrWxJket6LV6wq1bnJq9FKg=
+github.com/getlantern/dhtup v0.0.0-20220315025130-b4bce578771e h1:PYaoYG0ryibhmKmR4bmlC7ON/SKyr8R7R/an9pWF9Q0=
+github.com/getlantern/dhtup v0.0.0-20220315025130-b4bce578771e/go.mod h1:kcRQr3FB63mab+j6oSF9KwQmjwpc/dGmD5ILGR9j6Gs=
 github.com/getlantern/dns v0.0.0-20210120185712-8d005533efa0 h1:8DQSmWtwBy8Z0Zr/kiRJRhBPQO4LMN0mziCJd+8edhw=
 github.com/getlantern/dns v0.0.0-20210120185712-8d005533efa0/go.mod h1:nd1wZuSxVB7DZVqZT1hCFkdWcMqbuO5XQSd+1Duk/fs=
 github.com/getlantern/dnsgrab v0.0.0-20211216020425-5d5e155a01a8 h1:UKCd60g0A2N5t1EO45hNKR0fJ0QC9o33S476S3Aro9g=
