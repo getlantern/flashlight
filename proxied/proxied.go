@@ -60,6 +60,7 @@ func changeUserAgent(req *http.Request) {
 	ua := strings.TrimSpace(fmt.Sprintf("%s/%s (%s/%s) %s",
 		common.DefaultAppName, common.Version, common.Platform, runtime.GOARCH, secondary))
 	req.Header.Set("User-Agent", ua)
+	log.Debugf("Changed user-agent on request with headers: %v", req.Header)
 }
 
 // SetProxyAddr sets the eventual.Getter that's used to determine the proxy's
