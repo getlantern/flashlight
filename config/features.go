@@ -78,6 +78,7 @@ type ReplicaOptions struct {
 	ProxyAnnounceTargets []string
 	// A set of info hashes where p2p-proxy peers can be found.
 	ProxyPeerInfoHashes []string
+	CustomCA            string
 }
 
 func (ro *ReplicaOptions) GetWebseedBaseUrls() []string {
@@ -98,6 +99,10 @@ func (ro *ReplicaOptions) GetMetadataBaseUrls() []string {
 
 func (ro *ReplicaOptions) GetReplicaRustEndpoint() string {
 	return ro.ReplicaRustEndpoint
+}
+
+func (ro *ReplicaOptions) GetCustomCA() string {
+	return ro.CustomCA
 }
 
 type GoogleSearchAdsOptions struct {

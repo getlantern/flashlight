@@ -142,6 +142,7 @@ func dual(parallel bool, rootCA string) RoundTripper {
 	cf := &chainedAndFronted{
 		parallel:          parallel,
 		masqueradeTimeout: 5 * time.Minute,
+		rootCA:            rootCA,
 	}
 	cf.setFetcher(newDualFetcher(cf))
 	return cf
