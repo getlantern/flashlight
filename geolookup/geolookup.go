@@ -44,7 +44,7 @@ type GeoInfo struct {
 // GetIP gets the IP. If the IP hasn't been determined yet, waits up to the
 // given timeout for an IP to become available.
 func GetIP(timeout time.Duration) string {
-	gi, err := getGeoInfo(timeout)
+	gi, err := GetGeoInfo(timeout)
 	if err != nil {
 		log.Debugf("Could not get IP: %v", err)
 		return ""
@@ -55,7 +55,7 @@ func GetIP(timeout time.Duration) string {
 // GetCountry gets the country. If the country hasn't been determined yet, waits
 // up to the given timeout for a country to become available.
 func GetCountry(timeout time.Duration) string {
-	gi, err := getGeoInfo(timeout)
+	gi, err := GetGeoInfo(timeout)
 	if err != nil {
 		log.Debugf("Could not get country: %v", err)
 		return ""
@@ -63,7 +63,7 @@ func GetCountry(timeout time.Duration) string {
 	return gi.City.Country.IsoCode
 }
 
-func getGeoInfo(timeout time.Duration) (*GeoInfo, error) {
+func GetGeoInfo(timeout time.Duration) (*GeoInfo, error) {
 	// We need to specially handle negative timeouts because some callers may use
 	// eventual.Forever (aka -1), expecting it to block forever.
 	if timeout < 0 {
