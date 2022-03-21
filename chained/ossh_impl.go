@@ -57,5 +57,5 @@ func (impl *osshImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, err
 	if err != nil {
 		return nil, errors.New("failed to dial TCP: %v", err)
 	}
-	return ossh.Client(tcpConn, impl.cfg), nil
+	return ossh.Client(tcpConn, impl.cfg)
 }
