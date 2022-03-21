@@ -34,12 +34,9 @@ var (
 	corsAllowedMethods = []string{http.MethodGet, http.MethodPost, http.MethodOptions}
 )
 
-// AddCommonHeadersWithOptions sets standard http headers on a request bound
-// for an internal service, representing auth and other configuration
-// metadata.  The caller may specify overwriteAuth=false to prevent overwriting
-// any of the common 'auth' headers (DeviceIdHeader, ProTokenHeader, UserIdHeader)
-// that are already present in the given request.
-func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth bool) {
+// AddCommonNonUserHeaders adds all common headers that are not
+// user or device specific.
+func AddCommonNonUserHeaders(uc UserConfig, req *http.Request) {
 	req.Header.Set(VersionHeader, Version)
 	for k, v := range uc.GetInternalHeaders() {
 		if v != "" {
@@ -61,7 +58,15 @@ func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth
 	} else {
 		req.Header.Set(TimeZoneHeader, tz)
 	}
+}
 
+// AddCommonHeadersWithOptions sets standard http headers on a request bound
+// for an internal service, representing auth and other configuration
+// metadata.  The caller may specify overwriteAuth=false to prevent overwriting
+// any of the common 'auth' headers (DeviceIdHeader, ProTokenHeader, UserIdHeader)
+// that are already present in the given request.
+func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth bool) {
+	AddCommonNonUserHeaders(uc, req)
 	if overwriteAuth || req.Header.Get(DeviceIdHeader) == "" {
 		if deviceID := uc.GetDeviceID(); deviceID != "" {
 			req.Header.Set(DeviceIdHeader, deviceID)

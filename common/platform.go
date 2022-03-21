@@ -1,3 +1,4 @@
+//go:build !iosapp
 // +build !iosapp
 
 package common

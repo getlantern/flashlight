@@ -119,6 +119,12 @@ func PrepareProRequest(r *http.Request, uc common.UserConfig) {
 func prepareProRequest(r *http.Request, uc common.UserConfig, options bool) {
 	r.URL.Scheme = "http"
 	r.URL.Host = common.ProAPIHost
+	// XXX <03-02-22, soltzen> Requests coming from lantern-desktop's UI client
+	// will always carry lantern-desktop's server address (i.e.,
+	// [here](https://github.com/getlantern/lantern-desktop/blob/87370cca9c895d0e0296b4d16e292ad8adbdae33/server/defaults_static.go#L1))
+	// in their 'Host' header (like this: 'Host: localhost:16823'). This is
+	// problamatic for many servers (Replica's as well). So, best to either
+	// wipe it or assign it as the URL's host
 	r.Host = r.URL.Host
 	r.RequestURI = "" // http: Request.RequestURI can't be set in client requests.
 	r.Header.Set("Access-Control-Allow-Headers", strings.Join([]string{

@@ -9,8 +9,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"runtime"
@@ -25,6 +25,7 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
+	"github.com/getlantern/netx"
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
@@ -141,6 +142,7 @@ func dual(parallel bool, rootCA string) RoundTripper {
 	cf := &chainedAndFronted{
 		parallel:          parallel,
 		masqueradeTimeout: 5 * time.Minute,
+		rootCA:            rootCA,
 	}
 	cf.setFetcher(newDualFetcher(cf))
 	return cf
@@ -297,7 +299,7 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 			responses <- resp
 			return resp, nil
 		} else if success(resp) {
-			log.Debugf("Got successful HTTP call!")
+			log.Debugf("Got successful HTTP call for req.URL.Host [%s]", req.URL.Host)
 			responses <- resp
 			return resp, nil
 		}
@@ -305,6 +307,13 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 		// it will return a 502.
 		err = errors.New(resp.Status)
 		if resp.Body != nil {
+			// Dump response body so we know what went wrong
+			b, err := httputil.DumpResponse(resp, true)
+			if err != nil {
+				log.Debugf("Failed to drain body to get failed response body for req.URL.Host [%s]", req.URL.Host)
+			}
+			log.Debugf("Got a failed response from running request with req.URL.Host [%s] | status code: [%d] | body: %s",
+				req.URL.Host, resp.StatusCode, string(b))
 			_ = resp.Body.Close()
 		}
 		errs <- err
@@ -349,7 +358,7 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 		start := time.Now()
 		if _, err := request(false, chainedRT, req); err == nil {
 			elapsed := time.Since(start)
-			log.Debugf("Chained request succeeded in %v", elapsed)
+			log.Debugf("Chained request for req.URL [%s] succeeded in %v", req.URL.String(), elapsed)
 			atomic.StoreInt64(&chainedRTT, int64(elapsed))
 			switchToChainedIfRequired()
 		} else {
@@ -507,10 +516,7 @@ func ChainedNonPersistent(rootCA string) (http.RoundTripper, error) {
 // keepalive connections across requests.
 func chained(rootCA string, persistent bool) (http.RoundTripper, error) {
 	tr := &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   60 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
+		Dial:                netx.Dial,
 		TLSHandshakeTimeout: 10 * time.Second,
 
 		// This method is typically used for creating a one-off HTTP client

@@ -45,8 +45,8 @@ var (
 		config.FeatureGoogleSearchAds:      false,
 		config.FeaturePingProxies:          false,
 		config.FeatureNoBorda:              true,
-		config.FeatureNoProbeProxies:       true,
-		config.FeatureNoDetour:             true,
+		config.FeatureProbeProxies:         false,
+		config.FeatureDetour:               false,
 		config.FeatureNoHTTPSEverywhere:    true,
 		config.FeatureProxyWhitelistedOnly: true,
 	}
@@ -160,7 +160,7 @@ func (f *Flashlight) EnableNamedDomainRules(names ...string) {
 		return
 	}
 	for _, name := range names {
-		if v, ok := global.NamedDomainRoutingRules[name]; !ok {
+		if v, ok := global.NamedDomainRoutingRules[name]; ok {
 			if err := domainrouting.AddRules(v); err != nil {
 				_ = log.Errorf("Unable to add named domain routing rules: %v", err)
 			}
@@ -215,7 +215,9 @@ func (f *Flashlight) calcFeature(global *config.Global, country, feature string)
 		return enabled
 	}
 	return global.FeatureEnabled(feature,
+		common.Platform,
 		f.userConfig.GetAppName(),
+		common.Version,
 		f.userConfig.GetUserID(),
 		f.isPro(),
 		country)
@@ -318,7 +320,7 @@ func New(
 	lang func() string,
 	adSwapTargetURL func() string,
 	reverseDNS func(host string) (string, error),
-	adTrackUrl func() string,
+	fetchAds func(opts *config.GoogleSearchAdsOptions, query string) string,
 	eventWithLabel func(category, action, label string),
 ) (*Flashlight, error) {
 	log.Debugf("Running in app: %v", appName)
@@ -394,11 +396,11 @@ func New(
 	}
 
 	useShortcut := func() bool {
-		return !_proxyAll() && !f.FeatureEnabled(config.FeatureNoShortcut) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !_proxyAll() && f.FeatureEnabled(config.FeatureShortcut) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	useDetour := func() bool {
-		return !_proxyAll() && !f.FeatureEnabled(config.FeatureNoDetour) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !_proxyAll() && f.FeatureEnabled(config.FeatureDetour) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	proxyAll := func() bool {
@@ -409,7 +411,7 @@ func New(
 	cl, err := client.NewClient(
 		f.configDir,
 		disconnected,
-		func() bool { return !f.FeatureEnabled(config.FeatureNoProbeProxies) },
+		func() bool { return f.FeatureEnabled(config.FeatureProbeProxies) },
 		proxyAll,
 		useShortcut,
 		shortcut.Allow,
@@ -429,7 +431,7 @@ func New(
 		lang,
 		adSwapTargetURL,
 		reverseDNS,
-		adTrackUrl,
+		fetchAds,
 		eventWithLabel,
 	)
 	if err != nil {

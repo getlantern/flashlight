@@ -3,16 +3,15 @@ package config
 import (
 	"testing"
 
-	"github.com/getlantern/flashlight/config/generated"
-
+	"github.com/getlantern/flashlight/embeddedconfig"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGlobal(t *testing.T) {
+func TestEmbeddedGlobal(t *testing.T) {
 
 	globalFunc := newGlobalUnmarshaler(make(map[string]interface{}))
 
-	global, err := globalFunc(generated.GlobalConfig)
+	global, err := globalFunc(embeddedconfig.Global)
 	assert.NoError(t, err)
 
 	gl := global.(*Global)

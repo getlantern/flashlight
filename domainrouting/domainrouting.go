@@ -1,10 +1,11 @@
 package domainrouting
 
 import (
-	"github.com/getlantern/errors"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/getlantern/errors"
 
 	"github.com/getlantern/domains"
 	"github.com/getlantern/eventual"
@@ -149,6 +150,9 @@ func buildTree(rules Rules) *domains.Tree {
 	for domain, rule := range rules {
 		if rule == Direct {
 			log.Debugf("Will force direct traffic for %v", domain)
+		}
+		if rule == MustDirect {
+			log.Debugf("Will always force direct traffic for %v", domain)
 		}
 		result.Insert(dotted(strings.ToLower(domain)), rule)
 	}

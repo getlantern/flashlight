@@ -2,10 +2,13 @@ package geolookup
 
 import (
 	"io/ioutil"
+	"net"
+	"net/http"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/getlantern/eventual/v2"
 	"github.com/getlantern/fronted"
 	"github.com/stretchr/testify/require"
 )
@@ -105,7 +108,38 @@ const initialInfo = `
 }
 `
 
+func TestGetIP(t *testing.T) {
+	currentGeoInfo = eventual.NewValue()
+	roundTripper = &http.Transport{
+		Dial: (&net.Dialer{
+			Timeout: 10 * time.Second,
+		}).Dial,
+	}
+	ip := GetIP(0)
+	require.Equal(t, "", ip)
+	go Refresh()
+	ip = GetIP(-1)
+	addr := net.ParseIP(ip)
+	require.NotNil(t, addr)
+}
+
+func TestGetCountry(t *testing.T) {
+	currentGeoInfo = eventual.NewValue()
+	roundTripper = &http.Transport{
+		Dial: (&net.Dialer{
+			Timeout: 10 * time.Second,
+		}).Dial,
+	}
+
+	country := GetCountry(0)
+	require.Equal(t, "", country)
+	go Refresh()
+	country = GetCountry(-1)
+	require.NotEmpty(t, country)
+}
+
 func TestFronted(t *testing.T) {
+	currentGeoInfo = eventual.NewValue()
 	geoFile, err := ioutil.TempFile("", "")
 	require.NoError(t, err)
 	defer os.Remove(geoFile.Name())

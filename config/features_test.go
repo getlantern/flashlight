@@ -2,17 +2,18 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 	"text/template"
 	"time"
 
-	masquerades "github.com/getlantern/lantern_aws/salt/update_masquerades"
 	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/embeddedconfig"
 )
 
 func TestValidate(t *testing.T) {
@@ -28,41 +29,41 @@ func TestValidate(t *testing.T) {
 }
 
 func TestIncludes(t *testing.T) {
-	assert.True(t, ClientGroup{}.Includes(common.DefaultAppName, 0, true, "whatever"), "zero value should include all combinations")
-	assert.True(t, ClientGroup{}.Includes(common.DefaultAppName, 111, false, "whatever"), "zero value should include all combinations")
-	assert.True(t, ClientGroup{UserCeil: 0.12}.Includes(common.DefaultAppName, 111, false, "whatever"), "match user range")
-	assert.False(t, ClientGroup{UserCeil: 0.11}.Includes(common.DefaultAppName, 111, false, "whatever"), "user range does not match")
-	assert.False(t, ClientGroup{UserCeil: 0.11}.Includes(common.DefaultAppName, 0, false, "whatever"), "unknown user ID should not belong to any user range")
+	assert.True(t, ClientGroup{}.Includes(common.Platform, common.DefaultAppName, common.Version, 0, true, "whatever"), "zero value should include all combinations")
+	assert.True(t, ClientGroup{}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, false, "whatever"), "zero value should include all combinations")
+	assert.True(t, ClientGroup{UserCeil: 0.12}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, false, "whatever"), "match user range")
+	assert.False(t, ClientGroup{UserCeil: 0.11}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, false, "whatever"), "user range does not match")
+	assert.False(t, ClientGroup{UserCeil: 0.11}.Includes(common.Platform, common.DefaultAppName, common.Version, 0, false, "whatever"), "unknown user ID should not belong to any user range")
 
-	assert.True(t, ClientGroup{FreeOnly: true}.Includes(common.DefaultAppName, 111, false, "whatever"), "user status met")
-	assert.False(t, ClientGroup{ProOnly: true}.Includes(common.DefaultAppName, 111, false, "whatever"), "user status unmet")
-	assert.True(t, ClientGroup{ProOnly: true}.Includes(common.DefaultAppName, 111, true, "whatever"), "user status met")
-	assert.False(t, ClientGroup{FreeOnly: true}.Includes(common.DefaultAppName, 111, true, "whatever"), "user status unmet")
+	assert.True(t, ClientGroup{FreeOnly: true}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, false, "whatever"), "user status met")
+	assert.False(t, ClientGroup{ProOnly: true}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, false, "whatever"), "user status unmet")
+	assert.True(t, ClientGroup{ProOnly: true}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "user status met")
+	assert.False(t, ClientGroup{FreeOnly: true}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "user status unmet")
 
 	// The default AppName is "Default"
-	assert.True(t, ClientGroup{Application: (common.DefaultAppName)}.Includes(common.DefaultAppName, 111, true, "whatever"), "application met, case insensitive")
-	assert.True(t, ClientGroup{Application: strings.ToUpper(common.DefaultAppName)}.Includes(common.DefaultAppName, 111, true, "whatever"), "application met, case insensitive")
-	assert.False(t, ClientGroup{Application: "Beam"}.Includes(common.DefaultAppName, 111, true, "whatever"), "application unmet, case insensitive")
-	assert.False(t, ClientGroup{Application: "beam"}.Includes(common.DefaultAppName, 111, true, "whatever"), "application unmet, case insensitive")
+	assert.True(t, ClientGroup{Application: (common.DefaultAppName)}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "application met, case insensitive")
+	assert.True(t, ClientGroup{Application: strings.ToUpper(common.DefaultAppName)}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "application met, case insensitive")
+	assert.False(t, ClientGroup{Application: "Beam"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "application unmet, case insensitive")
+	assert.False(t, ClientGroup{Application: "beam"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "application unmet, case insensitive")
 
 	// The client version is 9999.99.99-dev when in development mode
-	assert.True(t, ClientGroup{VersionConstraints: "> 5.1.0"}.Includes(common.DefaultAppName, 111, true, "whatever"), "version met")
-	assert.True(t, ClientGroup{VersionConstraints: "> 5.1.0 < 10000.0.0"}.Includes(common.DefaultAppName, 111, true, "whatever"), "version met")
-	assert.False(t, ClientGroup{VersionConstraints: "< 5.1.0"}.Includes(common.DefaultAppName, 111, true, "whatever"), "version unmet")
+	assert.True(t, ClientGroup{VersionConstraints: "> 5.1.0"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "version met")
+	assert.True(t, ClientGroup{VersionConstraints: "> 5.1.0 < 10000.0.0"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "version met")
+	assert.False(t, ClientGroup{VersionConstraints: "< 5.1.0"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "version unmet")
 
 	// Platforms tests are likely run
-	assert.True(t, ClientGroup{Platforms: "linux,darwin,windows"}.Includes(common.DefaultAppName, 111, true, "whatever"), "platform met")
+	assert.True(t, ClientGroup{Platforms: "linux,darwin,windows"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "platform met")
 	// Platforms tests are unlikely run
-	assert.False(t, ClientGroup{Platforms: "ios,android"}.Includes(common.DefaultAppName, 111, true, "whatever"), "platform unmet")
+	assert.False(t, ClientGroup{Platforms: "ios,android"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "platform unmet")
 
-	assert.True(t, ClientGroup{GeoCountries: "ir   , cn"}.Includes(common.DefaultAppName, 111, true, "IR"), "country met")
-	assert.False(t, ClientGroup{GeoCountries: "us"}.Includes(common.DefaultAppName, 111, true, "IR"), "country unmet")
+	assert.True(t, ClientGroup{GeoCountries: "ir   , cn"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "IR"), "country met")
+	assert.False(t, ClientGroup{GeoCountries: "us"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "IR"), "country unmet")
 
 	// Fraction calculation should be stable
 	g := ClientGroup{Fraction: 0.1}
 	hits := 0
 	for i := 0; i < 1000; i++ {
-		if g.Includes(common.DefaultAppName, 111, true, "whatever") {
+		if g.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever") {
 			hits++
 		}
 	}
@@ -88,10 +89,10 @@ featuresenabled:
 	if !assert.NoError(t, yaml.Unmarshal([]byte(yml), gl)) {
 		return
 	}
-	assert.True(t, gl.FeatureEnabled(FeatureReplica, common.DefaultAppName, 111, false, "au"), "met the first group")
-	assert.True(t, gl.FeatureEnabled(FeatureReplica, common.DefaultAppName, 111, true, ""), "met the second group")
-	assert.False(t, gl.FeatureEnabled(FeatureReplica, common.DefaultAppName, 211, false, "au"), "unmet both groups")
-	assert.False(t, gl.FeatureEnabled(FeatureReplica, common.DefaultAppName, 111, false, ""), "unmet both groups")
+	assert.True(t, gl.FeatureEnabled(FeatureReplica, common.Platform, common.DefaultAppName, common.Version, 111, false, "au"), "met the first group")
+	assert.True(t, gl.FeatureEnabled(FeatureReplica, common.Platform, common.DefaultAppName, common.Version, 111, true, ""), "met the second group")
+	assert.False(t, gl.FeatureEnabled(FeatureReplica, common.Platform, common.DefaultAppName, common.Version, 211, false, "au"), "unmet both groups")
+	assert.False(t, gl.FeatureEnabled(FeatureReplica, common.Platform, common.DefaultAppName, common.Version, 111, false, ""), "unmet both groups")
 }
 
 func TestUnmarshalFeatureOptions(t *testing.T) {
@@ -127,44 +128,35 @@ featureoptions:
 	require.Equal(t, time.Hour, opts2.Interval)
 }
 
-func TestUnmarshalAnalyticsOptions(t *testing.T) {
-	yml := `
-featureoptions:
-  analytics:
-    providers:
-      ga: 
-        endpoint: "https://ssl.google-analytics.com/collect"
-        samplerate: 1.0
-        config:
-          k1: 2
-          k2: 3
-      matomo: 
-        samplerate: 0.1
-        config:
-          idsite: 1
-          token_auth: "418290ccds0d01"
-`
-	gl := NewGlobal()
-	require.NoError(t, yaml.Unmarshal([]byte(yml), gl))
+func TestMatomoEnabled(t *testing.T) {
+	gl := globalFromTemplate(t)
+	assert.True(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, common.Version, 1, false, "us"), "Matomo is enabled for a low User ID")
+	assert.False(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, common.Version, 500, false, "us"), "Matomo is disabled for a high User ID")
+}
 
-	var opts AnalyticsOptions
-	require.NoError(t, gl.UnmarshalFeatureOptions(FeatureAnalytics, &opts))
-	log.Debugf("%+v", opts)
+func TestDetour(t *testing.T) {
+	gl := globalFromTemplate(t)
+	for _, country := range []string{"cn"} {
+		for _, os := range []string{"android", "windows", "darwin", "linux"} {
+			assert.True(t, gl.FeatureEnabled(FeatureDetour, os, common.DefaultAppName, common.Version, 1, false, country), fmt.Sprintf("detour is enabled for %s in %s", os, country))
+		}
+	}
+}
 
-	mat := opts.GetProvider(MATOMO)
-	ga := opts.GetProvider(GA)
-	require.Equal(t, float32(0.1), mat.SampleRate)
-	require.Equal(t, 2, ga.Config["k1"])
-	require.Equal(t, "https://ssl.google-analytics.com/collect", ga.Endpoint)
-
-	require.Equal(t, 1, mat.Config["idsite"])
-	require.Nil(t, mat.Config["k1"])
+func TestShortcut(t *testing.T) {
+	gl := globalFromTemplate(t)
+	for _, country := range []string{"cn", "ir"} {
+		for _, os := range []string{"android", "windows", "darwin", "linux"} {
+			if country != "ir" || os != "android" {
+				assert.True(t, gl.FeatureEnabled(FeatureShortcut, os, common.DefaultAppName, common.Version, 1, false, country), fmt.Sprintf("shortcut is enabled for %s in %s", os, country))
+			}
+		}
+	}
 }
 
 func TestReplicaByCountry(t *testing.T) {
-	require := require.New(t)
 	assert := assert.New(t)
-	fos := getReplicaOptionsRoot(require)
+	fos := getReplicaOptionsRoot(t)
 	assert.Contains(fos.ByCountry, "RU")
 	assert.NotContains(fos.ByCountry, "AU")
 	assert.NotEmpty(fos.ByCountry)
@@ -172,25 +164,16 @@ func TestReplicaByCountry(t *testing.T) {
 	assert.NotEmpty(globalTrackers)
 	// Check the countries pull in the trackers using the anchor. Just change this if they stop
 	// using the same trackers. I really don't want this to break out the gate is all.
+	//russiaTrackers := []string{"http://retracker.bashtel.ru/announce", "udp://retracker.lanta-net.ru:2710/announce", "udp://tracker.cypherpunks.ru:6969/announce"}
+	//sort.StringSlice(russiaTrackers).Sort()
 	assert.Equal(fos.ByCountry["CN"].Trackers, globalTrackers)
 	assert.Equal(fos.ByCountry["RU"].Trackers, globalTrackers)
 	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
 }
 
-func getReplicaOptionsRoot(require *require.Assertions) (fos ReplicaOptionsRoot) {
-	var w bytes.Buffer
-	// We could write into a pipe, but that requires concurrency and we're old-school in tests.
-	require.NoError(template.Must(template.New("").Parse(masquerades.CloudYamlTmpl)).Execute(&w, nil))
-	var g Global
-	require.NoError(yaml.Unmarshal(w.Bytes(), &g))
-	require.NoError(g.UnmarshalFeatureOptions(FeatureReplica, &fos))
-	return
-}
-
 func TestReplicaProxying(t *testing.T) {
-	require := require.New(t)
 	assert := assert.New(t)
-	fos := getReplicaOptionsRoot(require)
+	fos := getReplicaOptionsRoot(t)
 	numInfohashes := len(fos.ProxyAnnounceTargets)
 	// The default is to announce as a proxy.
 	assert.True(numInfohashes > 0)
@@ -198,4 +181,37 @@ func TestReplicaProxying(t *testing.T) {
 	assert.Empty(fos.ProxyPeerInfoHashes)
 	// Iran looks for peers from the default countries.
 	assert.Len(fos.ByCountry["IR"].ProxyPeerInfoHashes, numInfohashes)
+}
+
+func TestChatEnabled(t *testing.T) {
+	gl := globalFromTemplate(t)
+	assert.True(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "ae"), "Chat is enabled in UAE when running 7.0.0")
+	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "us"), "Chat is disabled outside UAE when running 7.0.0")
+	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "6.9.7", 1, false, "ae"), "Chat is disabled in Iran when running 6.9.7")
+	assert.True(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "99.0.0", 1, false, "us"), "Chat is enabled in USA when running QA version 99.0.0")
+}
+
+func TestReplicaEnabled(t *testing.T) {
+	gl := globalFromTemplate(t)
+	assert.True(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "6.9.11", 1, false, "ru"), "Replica is enabled in Russia when running 6.9.11")
+	assert.True(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "7.0.0", 1, false, "ir"), "Replica is enabled in Iran when running 6.9.11")
+	assert.False(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "7.0.0", 1, false, "us"), "Replica is not enabled in USA when running 7.0.0")
+	assert.False(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "6.9.10", 1, false, "ru"), "Replica is not enabled in Russia when running 6.9.10")
+	assert.False(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "6.9.11", 1, false, "us"), "Replica is not enabled in USA when running 6.9.11")
+	assert.True(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "99.0.0", 1, false, "us"), "Replica is enabled in USA when running QA version 99.0.0")
+}
+
+func getReplicaOptionsRoot(t *testing.T) (fos ReplicaOptionsRoot) {
+	g := globalFromTemplate(t)
+	require.NoError(t, g.UnmarshalFeatureOptions(FeatureReplica, &fos))
+	return
+}
+
+func globalFromTemplate(t *testing.T) *Global {
+	var w bytes.Buffer
+	// We could write into a pipe, but that requires concurrency and we're old-school in tests.
+	require.NoError(t, template.Must(template.New("").Parse(embeddedconfig.GlobalTemplate)).Execute(&w, nil))
+	g := &Global{}
+	require.NoError(t, yaml.Unmarshal(w.Bytes(), g))
+	return g
 }

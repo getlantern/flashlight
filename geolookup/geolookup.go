@@ -3,8 +3,10 @@ package geolookup
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"math"
+	"net/http"
 	"os"
 	"sync"
 	"time"
@@ -25,10 +27,13 @@ var (
 	watchers       []chan bool
 	persistToFile  string
 	mx             sync.Mutex
+	roundTripper   http.RoundTripper = proxied.ParallelPreferChained()
+)
 
-	waitForProxyTimeout = 1 * time.Minute
-	retryWaitMillis     = 100
-	maxRetryWait        = 30 * time.Second
+const (
+	maxTimeout      = 10 * time.Minute
+	retryWaitMillis = 100
+	maxRetryWait    = 30 * time.Second
 )
 
 type GeoInfo struct {
@@ -39,27 +44,42 @@ type GeoInfo struct {
 // GetIP gets the IP. If the IP hasn't been determined yet, waits up to the
 // given timeout for an IP to become available.
 func GetIP(timeout time.Duration) string {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	gi, err := currentGeoInfo.Get(ctx)
-	if err != nil || gi == nil {
+	gi, err := getGeoInfo(timeout)
+	if err != nil {
+		log.Debugf("Could not get IP: %v", err)
 		return ""
 	}
-	return gi.(*GeoInfo).IP
+	return gi.IP
 }
 
 // GetCountry gets the country. If the country hasn't been determined yet, waits
 // up to the given timeout for a country to become available.
 func GetCountry(timeout time.Duration) string {
+	gi, err := getGeoInfo(timeout)
+	if err != nil {
+		log.Debugf("Could not get country: %v", err)
+		return ""
+	}
+	return gi.City.Country.IsoCode
+}
+
+func getGeoInfo(timeout time.Duration) (*GeoInfo, error) {
+	// We need to specially handle negative timeouts because some callers may use
+	// eventual.Forever (aka -1), expecting it to block forever.
+	if timeout < 0 {
+		timeout = maxTimeout
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	gi, err := currentGeoInfo.Get(ctx)
-	if err != nil || gi == nil {
-		return ""
+	if err != nil {
+		return nil, fmt.Errorf("could not get geoinfo with timeout %v: %w", timeout, err)
 	}
-	return gi.(*GeoInfo).City.Country.IsoCode
+	if gi == nil {
+		return nil, fmt.Errorf("no geo info after %v", timeout)
+	}
+	return gi.(*GeoInfo), nil
 }
 
 // EnablePersistence enables persistence of the current geo info to disk at the named file and
@@ -175,7 +195,7 @@ func lookup() *GeoInfo {
 func doLookup() (*GeoInfo, error) {
 	op := ops.Begin("geolookup")
 	defer op.End()
-	city, ip, err := geo.LookupIP("", proxied.ParallelPreferChained())
+	city, ip, err := geo.LookupIP("", roundTripper)
 
 	if err != nil {
 		log.Errorf("Could not lookup IP %v", err)

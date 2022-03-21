@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/getlantern/flashlight/config"
 	"io"
 	"io/ioutil"
 	"net"
@@ -103,7 +104,7 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 		func() string { return lang },
 		func() string { return adSwapTargetURL },
 		func(host string) (string, error) { return host, nil },
-		func() string { return "https://tracker/ads" },
+		func(options *config.GoogleSearchAdsOptions, query string) string { return "https://tracker/ads" },
 		func(category, action, label string) {},
 	)
 	return client

@@ -3,8 +3,6 @@ package config
 import (
 	"fmt"
 	"math/rand"
-	"reflect"
-	"regexp"
 	"strings"
 	"time"
 
@@ -13,7 +11,6 @@ import (
 	"github.com/blang/semver"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/common"
 )
 
 const (
@@ -22,9 +19,9 @@ const (
 	FeaturePingProxies          = "pingproxies"
 	FeatureTrafficLog           = "trafficlog"
 	FeatureNoBorda              = "noborda"
-	FeatureNoProbeProxies       = "noprobeproxies"
-	FeatureNoShortcut           = "noshortcut"
-	FeatureNoDetour             = "nodetour"
+	FeatureProbeProxies         = "probeproxies"
+	FeatureShortcut             = "shortcut"
+	FeatureDetour               = "detour"
 	FeatureNoHTTPSEverywhere    = "nohttpseverywhere"
 	FeatureReplica              = "replica"
 	FeatureProxyWhitelistedOnly = "proxywhitelistedonly"
@@ -32,7 +29,9 @@ const (
 	FeatureGoogleSearchAds      = "googlesearchads"
 	FeatureYinbiWallet          = "yinbiwallet"
 	FeatureYinbi                = "yinbi"
-	FeatureAnalytics            = "analytics"
+	FeatureGoogleAnalytics      = "googleanalytics"
+	FeatureMatomo               = "matomo"
+	FeatureChat                 = "chat"
 )
 
 var (
@@ -46,29 +45,6 @@ var (
 // FeatureOptions is an interface implemented by all feature options
 type FeatureOptions interface {
 	fromMap(map[string]interface{}) error
-}
-
-type AnalyticsProvider struct {
-	SampleRate float32
-	Endpoint   string
-	Config     map[string]interface{}
-}
-
-// AnalyticsOptions is the configuration for analytics providers such as Google Analytics or Matomo.
-type AnalyticsOptions struct {
-	// Providers maps provider names to their sampling rates.
-	Providers map[string]*AnalyticsProvider
-}
-
-const GA = "ga"
-const MATOMO = "matomo"
-
-func (ao *AnalyticsOptions) fromMap(m map[string]interface{}) error {
-	return mapstructure.Decode(m, &ao)
-}
-
-func (ao *AnalyticsOptions) GetProvider(key string) *AnalyticsProvider {
-	return ao.Providers[key]
 }
 
 type ReplicaOptionsRoot struct {
@@ -102,6 +78,7 @@ type ReplicaOptions struct {
 	ProxyAnnounceTargets []string
 	// A set of info hashes where p2p-proxy peers can be found.
 	ProxyPeerInfoHashes []string
+	CustomCA            string
 }
 
 func (ro *ReplicaOptions) GetWebseedBaseUrls() []string {
@@ -124,45 +101,18 @@ func (ro *ReplicaOptions) GetReplicaRustEndpoint() string {
 	return ro.ReplicaRustEndpoint
 }
 
-type GoogleSearchAdsOptions struct {
-	Pattern     string                 `mapstructure:"pattern"`
-	BlockFormat string                 `mapstructure:"block_format"`
-	AdFormat    string                 `mapstructure:"ad_format"`
-	Partners    map[string][]PartnerAd `mapstructure:"partners"`
+func (ro *ReplicaOptions) GetCustomCA() string {
+	return ro.CustomCA
 }
 
-type PartnerAd struct {
-	Name        string
-	URL         string
-	Campaign    string
-	Description string
-	Keywords    []*regexp.Regexp
-	Probability float32
+type GoogleSearchAdsOptions struct {
+	Pattern     string `mapstructure:"pattern"`
+	BlockFormat string `mapstructure:"block_format"`
+	AdFormat    string `mapstructure:"ad_format"`
 }
 
 func (o *GoogleSearchAdsOptions) fromMap(m map[string]interface{}) error {
-	// since keywords can be regexp and we don't want to compile them each time we compare, define a custom decode hook
-	// that will convert string to regexp and error out on syntax issues
-	config := &mapstructure.DecoderConfig{
-		DecodeHook: func(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
-			if t != reflect.TypeOf(regexp.Regexp{}) {
-				return data, nil
-			}
-			r, err := regexp.Compile(fmt.Sprintf("%v", data))
-			if err != nil {
-				return nil, err
-			}
-			return r, nil
-		},
-		Result: o,
-	}
-
-	decoder, err := mapstructure.NewDecoder(config)
-	if err != nil {
-		return err
-	}
-
-	return decoder.Decode(m)
+	return mapstructure.Decode(m, o)
 }
 
 type PingProxiesOptions struct {
@@ -315,15 +265,15 @@ func (g ClientGroup) Validate() error {
 
 //Includes checks if the ClientGroup includes the user, device and country
 //combination, assuming the group has been validated.
-func (g ClientGroup) Includes(appName string, userID int64, isPro bool, geoCountry string) bool {
+func (g ClientGroup) Includes(platform, appName, version string, userID int64, isPro bool, geoCountry string) bool {
 	if g.UserCeil > 0 {
 		// Unknown user ID doesn't belong to any user range
 		if userID == 0 {
 			return false
 		}
-		percision := 1000.0
-		remainder := userID % int64(percision)
-		if remainder < int64(g.UserFloor*percision) || remainder >= int64(g.UserCeil*percision) {
+		precision := 1000.0
+		remainder := userID % int64(precision)
+		if remainder < int64(g.UserFloor*precision) || remainder >= int64(g.UserCeil*precision) {
 			return false
 		}
 	}
@@ -341,11 +291,11 @@ func (g ClientGroup) Includes(appName string, userID int64, isPro bool, geoCount
 		if err != nil {
 			return false
 		}
-		if !expectedRange(semver.MustParse(common.Version)) {
+		if !expectedRange(semver.MustParse(version)) {
 			return false
 		}
 	}
-	if g.Platforms != "" && !csvContains(g.Platforms, common.Platform) {
+	if g.Platforms != "" && !csvContains(g.Platforms, platform) {
 		return false
 	}
 	if g.GeoCountries != "" && !csvContains(g.GeoCountries, geoCountry) {
