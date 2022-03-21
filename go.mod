@@ -44,7 +44,7 @@ require (
 	github.com/getlantern/grtrack v0.0.0-20210901195719-bdf9e1d12dac // indirect
 	github.com/getlantern/hellosplitter v0.1.1
 	github.com/getlantern/hidden v0.0.0-20201229170000-e66e7f878730
-	github.com/getlantern/http-proxy-lantern/v2 v2.6.55-0.20220120020510-c468d9dce083
+	github.com/getlantern/http-proxy-lantern/v2 v2.7.4-0.20220321175027-66e8fbf935c4
 	github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
 	github.com/getlantern/idletiming v0.0.0-20201229174729-33d04d220c4e
@@ -65,7 +65,7 @@ require (
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
 	github.com/getlantern/probe v0.0.0-20211216020459-69afa01c1c5c // indirect
 	github.com/getlantern/probednet v0.0.0-20211216020507-22fd9c1d3bf6 // indirect
-	github.com/getlantern/proxy/v2 v2.0.0
+	github.com/getlantern/proxy/v2 v2.0.1-0.20220303164029-b34b76e0e581
 	github.com/getlantern/proxybench v0.0.0-20211216020518-199a8fc0d220
 	github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683
 	github.com/getlantern/quicwrapper v0.0.0-20211104133553-140f96139f9f
@@ -109,9 +109,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd
 	golang.org/x/mobile v0.0.0-20210831151748-9cba7bc03c0f
 	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2
-	golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac
-	google.golang.org/genproto v0.0.0-20210406143921-e86de6bf7a46 // indirect
-	google.golang.org/grpc v1.37.0 // indirect
+	golang.org/x/sys v0.0.0-20220128215802-99c3d69c2c27
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
