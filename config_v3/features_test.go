@@ -130,7 +130,7 @@ featureoptions:
 func TestMatomoEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
 	assert.True(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, 1, false, "us"), "Matomo is enabled for a low User ID")
-	assert.False(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, 500, false, "us"), "Matomo is disabled for a high User ID")
+	assert.True(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, 500, false, "us"), "Matomo is enabled for a high User ID")
 }
 
 func TestReplicaByCountry(t *testing.T) {
