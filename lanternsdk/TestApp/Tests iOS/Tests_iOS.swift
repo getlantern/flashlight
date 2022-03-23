@@ -12,7 +12,7 @@ class Tests_iOS: XCTestCase {
 
     func testExample() throws {
         try doTestExample()
-        // run test again to make sure calling LanternsdkStart works
+        // run test again to make sure calling LanternsdkStart again still works
         try doTestExample()
     }
 
@@ -48,6 +48,25 @@ class Tests_iOS: XCTestCase {
                 XCTAssertNotEqual("", proxiedIP, "Should have gotten proxied IP")
                 XCTAssertNotEqual(plainIP, proxiedIP, "Plain and proxied IPs should differ")
             }
+        }
+    }
+    
+    func testReportIssue() throws {
+        let configDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(".lantern")
+        let deviceID = UIDevice.current.identifierForVendor!.uuidString
+        let iosModel = UIDevice.current.model
+        let iosVersion = UIDevice.current.systemVersion
+        var error: NSError?
+        LanternsdkReportIssueIos("TestApp",
+                                 configDir.path,
+                                 deviceID,
+                                 iosModel,
+                                 iosVersion,
+                                 "ox+test@getlantern.org",
+                                 5,
+                                 &error)
+        if let err = error {
+            throw err
         }
     }
 

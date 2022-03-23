@@ -45,4 +45,4 @@ Lanternsdk.xcframework: $(SOURCES)
 	gomobile bind -cache `pwd`/.gomobilecache -o=Lanternsdk.xcframework -target=ios -tags='headless publicsdk' -ldflags="$(LDFLAGS)" github.com/getlantern/flashlight/lanternsdk
 
 clean:
-	rm -rf lanternsdk-android.aar Lanternsdk.xcframework
+	rm -rf .gomobilecache lanternsdk-android.aar Lanternsdk.xcframework

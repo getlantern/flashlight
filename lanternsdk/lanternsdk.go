@@ -3,7 +3,6 @@ package lanternsdk
 
 import (
 	"fmt"
-	"github.com/getlantern/flashlight/config"
 	"io/ioutil"
 	"net"
 	"os"
@@ -11,6 +10,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/getlantern/flashlight/config"
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/errors"
@@ -175,25 +176,37 @@ func start(appName, configDir, deviceID string, proxyAll bool) error {
 }
 
 func ReportIssueAndroid(appName, configDir, deviceID, androidDevice, androidModel, androidVersion, userEmail, description string, maxLogMB int) error {
+	return reportIssue("user-send-logs", appName, configDir, deviceID, userEmail, maxLogMB, map[string]interface{}{
+		"report":         description,
+		"androiddevice":  androidDevice,
+		"androidmodel":   androidModel,
+		"androidversion": androidVersion,
+	})
+}
+
+func ReportIssueIos(appName, configDir, deviceID, iosModel, iosVersion, userEmail string, maxLogMB int) error {
+	return reportIssue("user-send-logs-ios", appName, configDir, deviceID, userEmail, maxLogMB, map[string]interface{}{
+		"iosmodel":   iosModel,
+		"iosversion": iosVersion,
+	})
+}
+
+func reportIssue(template, appName, configDir, deviceID, userEmail string, maxLogMB int, vars map[string]interface{}) error {
+	vars["userid"] = 0
+	vars["protoken"] = ""
+	vars["prouser"] = "no"
+	vars["issue"] = "Cannot access blocked sites"
+	vars["deviceID"] = deviceID
+	vars["emailaddress"] = userEmail
+	vars["appversion"] = fmt.Sprintf("%s %s", appName, common.Version)
+
 	msg := &email.Message{
-		Template:   "user-send-logs",
+		Template:   template,
 		Subject:    "LanternSDK Issue",
 		To:         "support@lantern.jitbit.com",
 		From:       userEmail,
 		MaxLogSize: fmt.Sprintf("%dMB", maxLogMB),
-		Vars: map[string]interface{}{
-			"userid":         0,
-			"protoken":       "",
-			"prouser":        "no",
-			"issue":          "Cannot access blocked sites",
-			"report":         description,
-			"deviceID":       deviceID,
-			"emailaddress":   userEmail,
-			"appversion":     fmt.Sprintf("%s %s", appName, common.Version),
-			"androiddevice":  androidDevice,
-			"androidmodel":   androidModel,
-			"androidversion": androidVersion,
-		},
+		Vars:       vars,
 	}
 	proxiesYamlFile, err := os.Open(filepath.Join(configDir, "proxies.yaml"))
 	if err != nil {
