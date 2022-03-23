@@ -68,7 +68,6 @@ featuresenabled:
       platforms: darwin,windows
       geocountries: cn,ir
   replica:
-    # DE, AU and CN are mainly there since members of Replica team live there
     # XXX 13-01-22 @soltzen: Adding CA because of the NCC auditor testing. This can be removed afterwards
     - label: replica-desktop
       geocountries: cn,au,ir,de,ru,by,ca,ee,lt,ua,ae,lv,md,ge,uz,kz,tr,tm,am,az,kg,tj,tn,us,uk,at,be,br,cr,dk,do,ec,eg,sv,fr,fi,gr,gt,hk,in,ie,it,jp,kp,li,lu,mx,mm,nl,nz,ni,ps,pl,es,se,ch,sy,tw,th,tn,ye
@@ -90,9 +89,8 @@ featuresenabled:
       application: beam
       versionconstraints: "<4.0.0"
   chat:
-    # Currently limited to a subset of Iranian users
     - label: chat-android
-      geocountries: ae
+      geocountries: ae,us,ca,de,ch,au
       platforms: android
       versionconstraints: ">=7.0.0"
     - label: chat-android-qa
