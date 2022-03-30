@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -27,7 +28,7 @@ func TestPeersRepository(t *testing.T) {
 		require.Equal(t, maxPeers, pr.Len())
 
 		// Assert that, after we wait for the first flush, all old peers are dropped
-		time.Sleep(keepUnusedPeersDuration)
+		time.Sleep(keepUnusedPeersDuration + 1*time.Second)
 		require.Equal(t, 0, pr.Len())
 	})
 
@@ -48,9 +49,11 @@ func TestPeersRepository(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 
 		// Mark the fifth peer (random choice) as the used peer
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		j := 0
 		var chosenPeer *Peer
-		pr.Loop(func(p *Peer) bool {
+		pr.Loop(ctx, func(p *Peer) bool {
 			if j == 5 {
 				pr.UsedPeer = p
 				chosenPeer = p
@@ -66,5 +69,21 @@ func TestPeersRepository(t *testing.T) {
 		require.Equal(t, 1, pr.Len())
 		// Assert our used peer's identity
 		require.Equal(t, chosenPeer, pr.UsedPeer)
+	})
+
+	t.Run("Assert that PeersRepository will timeout properly", func(t *testing.T) {
+		maxPeers := 10
+		flushDelay := 1 * time.Second
+		keepUnusedPeersDuration := 2 * time.Second
+		pr := NewPeersRepository(maxPeers, keepUnusedPeersDuration, flushDelay)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		pr.StartCollectionAndFlushRoutines()
+		pr.Loop(ctx, func(p *Peer) bool {
+			require.FailNow(t, "Shouldn't have received any peers")
+			return true
+		})
+		require.Error(t, context.DeadlineExceeded, ctx.Err())
+		require.Equal(t, 0, pr.Len())
 	})
 }
