@@ -8,7 +8,7 @@ TORRENT ?= bin/torrent
 SEQ = 0
 SALT = globalconfig
 NAME = globalconfig
-SHELL=/bin/bash -o pipefail
+SHELL=/bin/sh -o pipefail
 
 all: deps publish
 
@@ -21,7 +21,8 @@ publish: $(NAME).infohash dht-private-key
 		--seq '$(SEQ)' \
 		--auto-seq \
 	| tee $(NAME).target
-	aws s3 cp --acl public-read \
+	# TODO: Don't ignore this!
+	-aws s3 cp --acl public-read \
 		$(NAME).torrent \
 		s3://globalconfig.flashlightproxy.com/
 
@@ -41,19 +42,24 @@ $(NAME).infohash: $(NAME).torrent
 dht-private-key:
 	openssl rand -hex 32 > $@
 
+export GOBIN=$(shell echo `pwd`/bin)
+
 .PHONY: bin/dht
 bin/dht:
-	GOBIN=`realpath bin` go install github.com/anacrolix/dht/v2/cmd/dht@dd658f18fd516ba4ebefd2177b95eed5c1aeacb4
+	go install github.com/anacrolix/dht/v2/cmd/dht@dd658f18fd516ba4ebefd2177b95eed5c1aeacb4
 
 .PHONY: bin/torrent
 bin/torrent:
-	GOBIN=`realpath bin` go install github.com/anacrolix/torrent/cmd/torrent@latest
+	go install github.com/anacrolix/torrent/cmd/torrent@latest
 
 .PHONY: bin/torrent-create
 bin/torrent-create:
-	GOBIN=`realpath bin` go install github.com/anacrolix/torrent/cmd/torrent-create@a319506dda5e63b4aa09dde762750689dfb1520b
+	go install github.com/anacrolix/torrent/cmd/torrent-create@a319506dda5e63b4aa09dde762750689dfb1520b
 
 get:
 	$(DHT) get `head -n 1 $(NAME).target` --salt $(SALT) --extract-infohash
 
 deps: bin/dht bin/torrent bin/torrent-create
+
+seed:
+	$(TORRENT) download --seed $(NAME).torrent
