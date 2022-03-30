@@ -53,15 +53,19 @@ func NewReverseProxy(
 		// the free peer?
 		w.WriteHeader(http.StatusTeapot)
 	})
+	p.ConnectDial = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		log.Debugf("reverse proxy: Dialing %v", addr)
+		var d net.Dialer
+		return d.DialContext(ctx, network, addr)
+	}
 
 	if p.Verbose {
 		// Print the request we're proxying, just for debugging purposes
-		p.OnRequest().Do(
-			goproxy.FuncReqHandler(func(req *http.Request,
-				ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
-				log.Debugf("reverse proxy: Proxying request: %s", req.URL.String())
-				return req, nil
-			}))
+		p.OnRequest().HandleConnectFunc(
+			func(host string, ctx *goproxy.ProxyCtx) (*goproxy.ConnectAction, string) {
+				log.Debugf("Reverse proxy: Received CONNECT request for host %s", host)
+				return goproxy.OkConnect, host
+			})
 	}
 
 	// Listen with these certs

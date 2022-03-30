@@ -28,6 +28,32 @@ const defaultMaxPeers = 1024
 const defaultMaxRetriesOnFailedRoundTrip = 3
 const defaultRetryDelayOnFailedRoundTrip = 5 * time.Second
 
+// CensoredP2pCtx is the context for a censored peer.
+// There're two ways to funnel traffic through this object so it'll reach a free peer:
+//
+// - as an http.Transport. Use it like this:
+//   - with proxied.P2p()
+//
+// 				cl := &http.Client{
+// 					Timeout:   60 * time.Second,
+// 					Transport: proxied.P2p(censoredP2pCtx)}
+// 				resp, err := cl.Do(req)
+// 				require.NoError(t, err)
+//
+//   - with proxied.FrontedAndP2p()
+//
+// 				cl := &http.Client{
+// 					Timeout:   60 * time.Second,
+// 					Transport: proxied.P2p(censoredP2pCtx)}
+// 				resp, err := cl.Do(req)
+// 				require.NoError(t, err)
+//
+//
+// - Another way is to connect to it directly. See
+// [here](https://github.com/getlantern/replica-p2p/blob/689120875c42fcd4094b7af195909f27c30b4c9e/cmd/censoredpeer/main.go#L43)
+// for more info. This is really only useful if you want to use this censored
+// peer from outside of Go code, where you can't specify an http.Transport, but
+// only a proxy address (e.g., curl -x http://my.censoredpeer.proxy.addr https://google.com)
 type CensoredP2pCtx struct {
 	dhtServer                   *dht.Server
 	infohashes                  [][20]byte
@@ -124,9 +150,12 @@ func NewCensoredP2pCtx(
 	}, nil
 }
 
-func (p2pCtx *CensoredP2pCtx) StartForwardProxy(errChan chan<- error) error {
+func (p2pCtx *CensoredP2pCtx) StartForwardProxy(
+	port int,
+	interceptConnectDial bool,
+	errChan chan<- error,
+) error {
 	s, err := quicproxy.NewForwardProxy(
-		"0",  // port
 		true, // verbose
 		// insecureSkipVerify
 		// TODO <21-02-22, soltzen> For the POC, this is fine, but in
@@ -136,13 +165,54 @@ func (p2pCtx *CensoredP2pCtx) StartForwardProxy(errChan chan<- error) error {
 		// reverse proxy obtained through the DHT. See here:
 		// https://github.com/getlantern/lantern-internal/issues/5230
 		true,
-		errChan,
 	)
+	if err != nil {
+		return log.Errorf("%v", err)
+	}
+	if interceptConnectDial {
+		p2pCtx.interceptConnectDial(s)
+	}
+
+	err = s.Run(port, errChan)
 	if err != nil {
 		return log.Errorf("%v", err)
 	}
 	p2pCtx.ForwardProxyServer = s
 	return nil
+}
+
+func (p2pCtx *CensoredP2pCtx) interceptConnectDial(proxy *quicproxy.QuicForwardProxy) {
+	proxy.Proxy.ConnectDial = func(
+		ctx context.Context,
+		network, addr string,
+	) (c net.Conn, err error) {
+		// On a CONNECT request, loop through all the possible peers we
+		// have
+		p2pCtx.PeersRepo.Loop(ctx, func(p *Peer) bool {
+			// Dial to that proxy
+			u := fmt.Sprintf("http://%s:%d", p.IP.String(), p.Port)
+			log.Debugf("Next free peer to try to CONNECT to: %v", u)
+			c, err = proxy.Proxy.NewConnectDialToProxy(u)(ctx, network, addr)
+			if err != nil {
+				log.Debugf("Error dialing to proxy. Trying the next peer: %v", err)
+				// See if we exceeded our context deadline
+				select {
+				case <-ctx.Done():
+					err = ctx.Err()
+					// We've already assigned the error: we can exit safely
+					return true
+				default:
+					// Loop and try the next one
+					p2pCtx.PeersRepo.Drop(p)
+					return false
+				}
+			}
+			// Set active peer and exit successfully
+			p2pCtx.PeersRepo.UsedPeer = p
+			return true
+		})
+		return
+	}
 }
 
 // GetPeers attempts to fetch peers for the assigned infohashes in
@@ -167,14 +237,11 @@ func (p2pCtx *CensoredP2pCtx) GetPeers(ctx context.Context) error {
 func (p2pCtx *CensoredP2pCtx) RoundTrip(req *http.Request) (*http.Response, error) {
 	log.Debugf("Censored peer: Running RoundTrip for req: %s", req.URL.String())
 	tryRequestWithPeer := func(req *http.Request, p *Peer) (*http.Response, error) {
-		if AreAllPeersOnLocalhost {
-			log.Debugf("Censored peer: Detected that the free peer we're trying to proxy through is in the same LAN as us. This can happen during tests. Changing the free peer's IP to localhost to avoid router confusion")
-			p.IP = net.IPv4(127, 0, 0, 1)
-		}
-
+		// Dial this peer when p2pCtx.ForwardProxyServer receives a CONNECT
+		// request
 		p2pCtx.ForwardProxyServer.SetReverseProxyUrl(
-			fmt.Sprintf("http://%s:%d", p.IP.To4().String(), p.Port),
-		)
+			fmt.Sprintf("http://%s:%d", p.IP.To4().String(), p.Port))
+
 		proxyUrl, err := url.Parse("http://localhost:" + strconv.Itoa(p2pCtx.ForwardProxyServer.Port))
 		if err != nil {
 			return nil, log.Errorf("during url parsing for peer [%v]: %v", p, err)
