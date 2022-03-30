@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1.3
 
-FROM alpine:latest
+# i sleep
+FROM alpine:latest as builder
 
 # alpine doesn't have go 1.18 yet
 
@@ -17,7 +18,6 @@ WORKDIR /app
 RUN apk add make gcc
 RUN apk add musl-dev
 RUN apk add g++
-RUN apk add curl
 COPY Makefile .
 ENV GOWORK=off
 ENV GOMODCACHE=/gomodcache
@@ -26,7 +26,18 @@ RUN \
 	--mount=type=cache,target=$GOMODCACHE \
 	--mount=type=cache,target=$GOCACHE \
 	make deps
+
+
+# real shit
+FROM alpine
+
+RUN apk add curl aws-cli
+
+WORKDIR /app
+COPY --from=builder /app/bin/ ./
+COPY Makefile .
 # TODO take from secrets/env
 COPY dht-private-key .
+
 ENTRYPOINT ["make"]
 CMD ["publish", "seed"]
