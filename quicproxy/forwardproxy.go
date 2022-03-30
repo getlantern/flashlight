@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"net/url"
+	"strconv"
 	"sync"
 
 	"github.com/elazarl/goproxy"
@@ -29,49 +29,51 @@ import (
 type QuicForwardProxy struct {
 	// Unlike what the type name suggests, this actually implements an
 	// *http.Handler, **not** http.Server
-	proxy *goproxy.ProxyHttpServer
-	srv   *http.Server
+	Proxy *goproxy.ProxyHttpServer
 	Port  int
+
+	srv *http.Server
 }
 
 func (qfp *QuicForwardProxy) SetReverseProxyUrl(revProxyUrl string) {
 	log.Debugf("Setting reverse proxy URL to %s", revProxyUrl)
-	qfp.proxy.ConnectDial = qfp.proxy.NewConnectDialToProxy(revProxyUrl)
-	qfp.proxy.Tr.Proxy = func(req *http.Request) (*url.URL, error) {
-		return url.Parse(revProxyUrl)
-	}
+	qfp.Proxy.ConnectDial = qfp.Proxy.NewConnectDialToProxy(revProxyUrl)
 }
 
 func NewForwardProxy(
-	port string,
 	// reverseProxyPubKeyHash []byte,
 	verbose bool,
-	insecureSkipVerify bool,
-	errChan chan<- error) (*QuicForwardProxy, error) {
+	insecureSkipVerify bool) (*QuicForwardProxy, error) {
 	// Make a new proxy that uses a QUIC dialer and proxies traffic to a reverseProxyUrl
 	p := goproxy.NewProxyHttpServer()
 	p.Verbose = verbose
 	p.Tr.Dial = NewQuicDialer(insecureSkipVerify).Dial
+
 	// TODO <11-02-22, soltzen> Add cert pinning later
 	// p.Tr.DialTLS = dialTlsAndCheckPinnedCert(
 	// 	reverseProxyPubKeyHash,
 	// 	&tls.Config{InsecureSkipVerify: false},
 	// )
-	// Log incoming requests
-	p.OnRequest().Do(
-		goproxy.FuncReqHandler(func(req *http.Request,
-			ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
-			log.Debugf("Proxying request: %s", req.URL.String())
-			return req, nil
-		}))
+	// Log incoming CONNECT requests
+	p.OnRequest().HandleConnectFunc(
+		func(host string, ctx *goproxy.ProxyCtx) (*goproxy.ConnectAction, string) {
+			log.Debugf("Forward proxy: Received CONNECT request for host %s", host)
+			return goproxy.OkConnect, host
+		})
 
+	return &QuicForwardProxy{
+		Proxy: p,
+	}, nil
+}
+
+func (p *QuicForwardProxy) Run(port int, errChan chan<- error) error {
 	// Forward proxy is always on localhost
-	addr := "localhost:" + port
+	addr := "localhost:" + strconv.Itoa(port)
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
-		return nil, log.Errorf(" %v", err)
+		return log.Errorf(" %v", err)
 	}
-	srv := &http.Server{Addr: addr, Handler: p}
+	srv := &http.Server{Addr: addr, Handler: p.Proxy}
 	go func() {
 		err := srv.Serve(ln)
 		if err != nil &&
@@ -80,11 +82,9 @@ func NewForwardProxy(
 			errChan <- log.Errorf(" %v", err)
 		}
 	}()
-	return &QuicForwardProxy{
-		proxy: p,
-		srv:   srv,
-		Port:  ln.Addr().(*net.TCPAddr).Port,
-	}, nil
+	p.srv = srv
+	p.Port = ln.Addr().(*net.TCPAddr).Port
+	return nil
 }
 
 func dialTlsAndCheckPinnedCert(
@@ -133,9 +133,9 @@ func (d *quicDialer) Dial(network, addr string) (net.Conn, error) {
 	openStream := func(sess quic.Session) (quic.Stream, error) {
 		stream, err := sess.OpenStreamSync(context.TODO())
 		if err != nil {
-			s := fmt.Sprintf("while opening stream for %s: %v", addr, err)
-			d.sess.CloseWithError(500, s)
-			return nil, log.Errorf(s)
+			err = fmt.Errorf("while opening stream for %s: %v", addr, err)
+			d.sess.CloseWithError(500, err.Error())
+			return nil, err
 		}
 		return stream, nil
 	}

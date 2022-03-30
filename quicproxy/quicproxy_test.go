@@ -15,12 +15,11 @@ import (
 func TestQuicProxy(t *testing.T) {
 	errChan := make(chan error)
 	forwardProxySrv, err := NewForwardProxy(
-		"0",  // port
 		true, // verbose
 		true, // insecureSkipVerify
-		errChan,
 	)
 	require.NoError(t, err)
+	require.NoError(t, forwardProxySrv.Run(0, errChan))
 	go func() {
 		err := <-errChan
 		require.NoError(t, err)
