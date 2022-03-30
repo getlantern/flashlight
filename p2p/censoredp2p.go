@@ -271,23 +271,6 @@ func (p2pCtx *CensoredP2pCtx) RoundTrip(req *http.Request) (*http.Response, erro
 		return resp, nil
 	}
 
-	// Try the last successful peer we connected with, if any
-	if p2pCtx.PeersRepo.UsedPeer != nil {
-		log.Debugf("Censored Peer: Trying last successful peer: %s", p2pCtx.PeersRepo.UsedPeer.IP)
-		resp, err := tryRequestWithPeer(req, p2pCtx.PeersRepo.UsedPeer)
-		if err == nil {
-			log.Debugf(
-				"Censored peer: Successfully proxied a request through our last successful p2p peer [%+v]",
-				p2pCtx.PeersRepo.UsedPeer)
-			return resp, nil
-		}
-		log.Debugf(
-			"Censored peer: Failed to connect with our last peer [%+v]. Attempting to use another one",
-			p2pCtx.PeersRepo.UsedPeer)
-		p2pCtx.PeersRepo.Remove(p2pCtx.PeersRepo.UsedPeer)
-		p2pCtx.PeersRepo.UsedPeer = nil
-	}
-
 	var resp *http.Response
 	// Try to find any peer to connect from all available peers in each retry.
 	// If we found no peers to connect to, wait a bit and retry the loop again.
@@ -296,15 +279,15 @@ func (p2pCtx *CensoredP2pCtx) RoundTrip(req *http.Request) (*http.Response, erro
 		p2pCtx.retryDelayOnFailedRoundTrip,
 		func(attemptNumber int) bool {
 			log.Debugf("Attempting to proxy request through any available free peer (Attempt #%d)", attemptNumber)
-			peersToDrop := []*Peer{}
 			// Returning true means "Continue looping through the available peers."
 			// Returning false will terminate the loop
-			p2pCtx.PeersRepo.Loop(func(p *Peer) bool {
+			p2pCtx.PeersRepo.Loop(req.Context(), func(p *Peer) bool {
 				var err error
 				resp, err = tryRequestWithPeer(req, p)
 				if err != nil {
-					log.Debugf("Censored peer: Error while trying to proxy through a p2p peer [%+v]. Trying the next one: %v", p, err)
-					peersToDrop = append(peersToDrop, p)
+					log.Debugf(
+						"Censored peer: Error while proxying through a p2p peer [%+v]. Trying the next one: %v", p, err)
+					p2pCtx.PeersRepo.Drop(p)
 					// Try the next peer
 					return false
 				}
@@ -315,18 +298,6 @@ func (p2pCtx *CensoredP2pCtx) RoundTrip(req *http.Request) (*http.Response, erro
 				// anymore
 				return true
 			})
-
-			// Remove peers that never worked from our repository
-			// XXX <18-01-22, soltzen> We're removing peers away outside of
-			// `p2pCtx.PeersRepo.Loop()` since we have an RLock inside Loop()
-			// and we'll have another lock while removing elements. It's best
-			// to do those two operations separately to avoid races
-			if len(peersToDrop) != 0 {
-				log.Debugf("Attempting to drop %d peers", len(peersToDrop))
-			}
-			for _, p := range peersToDrop {
-				p2pCtx.PeersRepo.Remove(p)
-			}
 
 			// Retry if we got no response
 			if resp == nil {
