@@ -34,7 +34,6 @@ type CensoredP2pCtx struct {
 	PeersRepo                   *PeersRepository
 	PubIp                       string
 	roundtripTimeout            time.Duration
-	httpClient                  *http.Client
 	replicaP2pFunctions         ReplicaP2pFunctions
 	retryDelayOnFailedRoundTrip time.Duration
 	maxRetriesOnFailedRoundTrip int
@@ -121,7 +120,6 @@ func NewCensoredP2pCtx(
 		roundtripTimeout:            roundtripTimeout,
 		maxRetriesOnFailedRoundTrip: maxRetriesOnFailedRoundTrip,
 		retryDelayOnFailedRoundTrip: retryDelayOnFailedRoundTrip,
-		httpClient:                  &http.Client{Timeout: roundtripTimeout},
 		closeChan:                   make(chan struct{}),
 	}, nil
 }
@@ -181,10 +179,25 @@ func (p2pCtx *CensoredP2pCtx) RoundTrip(req *http.Request) (*http.Response, erro
 		if err != nil {
 			return nil, log.Errorf("during url parsing for peer [%v]: %v", p, err)
 		}
-		p2pCtx.httpClient.Transport = &http.Transport{
-			Proxy: http.ProxyURL(proxyUrl),
+		cl := &http.Client{
+			Timeout: p2pCtx.roundtripTimeout,
+			Transport: &http.Transport{
+				Proxy: http.ProxyURL(proxyUrl),
+			},
 		}
-		resp, err := p2pCtx.httpClient.Do(req)
+		// The flow of this request, starting from this point, goes like this:
+		// - The "cl" pointer above runs "req"
+		// - Before running the request, a CONNECT request is sent to
+		//   p2pCtx.ForwardProxyServer (i.e., our QuicForwardProxy)
+		// - QuicForwardProxy receives the CONNECT request and dials the "p"
+		//   peer, as specified in the
+		//   p2pCtx.ForwardProxyServer.Proxy.ConnectDial assignment above
+		// - QuicReverseProxy, running on the FreePeer side, receives the
+		//   CONNECT request and does its job
+		// - If all goes well, QuicReverseProxy responds to the CONNECT request
+		//   with a 200 OK (done transparently by Go's net/http library)
+		// - Now, "req" is sent to the "p" peer, and the response is returned
+		resp, err := cl.Do(req)
 		if err != nil {
 			return nil, log.Errorf("while running request using peer [%v] as proxy: %v", p, err)
 		}
