@@ -146,3 +146,7 @@ replace github.com/ulikunitz/xz => github.com/ulikunitz/xz v0.5.8
 // We use a fork of gomobile that allows reusing the cache directory for faster builds, based
 // on this unmerged PR against gomobile - https://github.com/golang/mobile/pull/58.
 replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336-0bdf708b6d0f
+
+replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220330104250-bffc7f58a7b2
+
+// replace github.com/elazarl/goproxy => ../goproxy

@@ -345,8 +345,6 @@ github.com/edsrzf/mmap-go v0.0.0-20170320065105-0bce6a688712/go.mod h1:YO35OhQPt
 github.com/edsrzf/mmap-go v1.0.0 h1:CEBF7HpRnUCSJgGUb5h1Gm7e3VkmVDrR8lvWVLtrOFw=
 github.com/edsrzf/mmap-go v1.0.0/go.mod h1:YO35OhQPt3KJa3ryjFM5Bs14WD66h8eGKpfaBNrHW5M=
 github.com/eknkc/amber v0.0.0-20171010120322-cdade1c07385/go.mod h1:0vRUJqYpeSZifjYj7uP3BG/gKcuzL9xWVV/Y+cK33KM=
-github.com/elazarl/goproxy v0.0.0-20220115173737-adb46da277ac h1:XDAn206aIqKPdF5YczuuJXSQPx+WOen0Pxbxp5Fq8Pg=
-github.com/elazarl/goproxy v0.0.0-20220115173737-adb46da277ac/go.mod h1:Ro8st/ElPeALwNFlcTpWmkr6IoMFfkjXAvTHpevnDsM=
 github.com/elazarl/goproxy/ext v0.0.0-20190711103511-473e67f1d7d2 h1:dWB6v3RcOy03t/bUadywsbyrQwCqZeNIEX6M1OtSZOM=
 github.com/elazarl/goproxy/ext v0.0.0-20190711103511-473e67f1d7d2/go.mod h1:gNh8nYJoAm43RfaxurUnxr+N1PwuFV3ZMl/efxlIlY8=
 github.com/elliotchance/orderedmap v1.2.0/go.mod h1:8hdSl6jmveQw8ScByd3AaNHNk51RhbTazdqtTty+NFw=
@@ -479,6 +477,8 @@ github.com/getlantern/golog v0.0.0-20210606115803-bce9f9fe5a5f h1:wsVt3P/boVKkPF
 github.com/getlantern/golog v0.0.0-20210606115803-bce9f9fe5a5f/go.mod h1:ZyIjgH/1wTCl+B+7yH1DqrWp6MPJqESmwmEQ89ZfhvA=
 github.com/getlantern/gonat v0.0.0-20201001145726-634575ba87fb h1:tDQA66mL1vTHKSMu3Ras/9Tk884ipPAhcdQHXpnDhxg=
 github.com/getlantern/gonat v0.0.0-20201001145726-634575ba87fb/go.mod h1:ysiamkJHyOrnlNmtDCCccH1NbFdgEBSJRg44DWiOxcY=
+github.com/getlantern/goproxy v0.0.0-20220330104250-bffc7f58a7b2 h1:v1C8KYzC8hEUvgwUhrEhwRIjVrz/WFn/bil/nHF8qek=
+github.com/getlantern/goproxy v0.0.0-20220330104250-bffc7f58a7b2/go.mod h1:Ro8st/ElPeALwNFlcTpWmkr6IoMFfkjXAvTHpevnDsM=
 github.com/getlantern/gotun v0.0.0-20190809092752-6d35bb1397ee/go.mod h1:zvsZQrsl7Yrmi+ENk5WZFT7dQaYtihAcI0H/9+LacqQ=
 github.com/getlantern/grtrack v0.0.0-20160824195228-cbf67d3fa0fd/go.mod h1:RkQEgBdrJCH5tYJP2D+a/aJ216V3c9q8w/tCJtEiDoY=
 github.com/getlantern/grtrack v0.0.0-20210901195719-bdf9e1d12dac h1:WsJhOWm1hJEAqts1OAhEPctQpy7Y0Eiu05mV84ixekc=
