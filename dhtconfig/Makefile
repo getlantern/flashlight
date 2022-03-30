@@ -34,7 +34,7 @@ $(NAME):
 	mkdir $@
 
 $(NAME)/global.yaml.gz:
-	curl https://globalconfig.flashlightproxy.com/global.yaml.gz -o $@
+	curl -Ssf https://globalconfig.flashlightproxy.com/global.yaml.gz -o $@
 
 $(NAME).infohash: $(NAME).torrent
 	$(TORRENT) metainfo $< infohash | cut -d : -f 1 > $@
@@ -50,7 +50,7 @@ bin/dht:
 
 .PHONY: bin/torrent
 bin/torrent:
-	go install github.com/anacrolix/torrent/cmd/torrent@latest
+	go install github.com/anacrolix/torrent/cmd/torrent@dd1ca6f51475529b432dba669bd84444f97043be
 
 .PHONY: bin/torrent-create
 bin/torrent-create:
@@ -62,4 +62,5 @@ get:
 deps: bin/dht bin/torrent bin/torrent-create
 
 seed:
-	$(TORRENT) download --seed $(NAME).torrent
+	@echo seeding $$(cat $(NAME).infohash)
+	cd globalconfig && exec ../$(TORRENT) download --seed --no-progress ../$(NAME).torrent

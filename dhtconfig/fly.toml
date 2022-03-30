@@ -1,40 +1,22 @@
-# fly.toml file generated for globalconfig-dht on 2022-03-30T15:39:06+11:00
-
 app = "globalconfig-dht"
 
-kill_signal = "SIGINT"
+# make doesn't pass SIGINT?
+kill_signal = "SIGKILL"
 kill_timeout = 5
-processes = []
-
-[env]
 
 [experimental]
-  allowed_public_ports = []
-  auto_rollback = true
+  # TODO: Write a script that does this in a loop instead so we can reuse VMs
+  entrypoint = ["timeout", "3600", "make"]
 
 [[services]]
-  http_checks = []
-  internal_port = 8080
-  processes = ["app"]
+  internal_port = 42069
   protocol = "tcp"
-  script_checks = []
-
-  [services.concurrency]
-    hard_limit = 25
-    soft_limit = 20
-    type = "connections"
-
-  [[services.ports]]
-    force_https = true
-    handlers = ["http"]
-    port = 80
-
-  [[services.ports]]
-    handlers = ["tls", "http"]
-    port = 443
 
   [[services.tcp_checks]]
-    grace_period = "1s"
+    grace_period = "1m"
     interval = "15s"
-    restart_limit = 0
     timeout = "2s"
+
+[[services]]
+  internal_port = 42069
+  protocol = "udp"

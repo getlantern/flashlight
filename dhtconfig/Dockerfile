@@ -32,9 +32,11 @@ RUN \
 FROM alpine
 
 RUN apk add curl aws-cli
+RUN apk add make
+RUN apk add gcompat
 
 WORKDIR /app
-COPY --from=builder /app/bin/ ./
+COPY --from=builder /app/bin/ bin/
 COPY Makefile .
 # TODO take from secrets/env
 COPY dht-private-key .
