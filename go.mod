@@ -189,7 +189,6 @@ require (
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/klauspost/reedsolomon v1.9.9 // indirect
 	github.com/libp2p/go-buffer-pool v0.0.2 // indirect
-	github.com/lucas-clemente/quic-go v0.19.3 // indirect
 	github.com/marten-seemann/qtls-go1-16 v0.1.4 // indirect
 	github.com/marten-seemann/qtls-go1-17 v0.1.0 // indirect
 	github.com/marten-seemann/qtls-go1-18 v0.1.0-beta.1 // indirect
@@ -300,4 +299,7 @@ replace github.com/ulikunitz/xz => github.com/ulikunitz/xz v0.5.8
 // on this unmerged PR against gomobile - https://github.com/golang/mobile/pull/58.
 replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336-0bdf708b6d0f
 
+replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220330104250-bffc7f58a7b2
+
 // replace github.com/getlantern/dhtup => ../dhtup
+// replace github.com/elazarl/goproxy => ../goproxy
