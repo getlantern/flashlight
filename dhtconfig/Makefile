@@ -71,7 +71,7 @@ deps: bin/dht bin/torrent bin/torrent-create
 
 seed:
 	@echo seeding $$(cat $(NAME).infohash)
-	cd globalconfig && exec ../$(TORRENT) download --seed --no-progress ../$(NAME).torrent
+	cd globalconfig && ../$(TORRENT) download --seed --no-progress ../$(NAME).torrent
 
 clean:
 	rm -rvf $(NAME)

@@ -1,0 +1,22 @@
+#!/bin/sh
+set -ux
+# See if Docker passes CMD to us even though we set entrypoint in fly.toml
+for arg in "$@"; do echo cmd "$arg"; done
+# We're duplicating some stuff from the Makefile here. But a lot of it belongs in the caller to
+# handle multiple resources.
+export NAME=globalconfig
+: "${TORRENT:=bin/torrent}"
+while true; do
+  make clean publish || exit $?
+  echo seeding $(cat "$NAME.infohash")
+  # Not sure about the ../$TORRENT. The intention is to allow alternate invocations, this presumes
+  # that it starts with a path. We have to invoke this directly in the shell, make doesn't forward
+  # the signal from timeout.
+  ( cd globalconfig \
+    && timeout --foreground 3600 ../$TORRENT download --seed --no-progress "../$NAME.torrent"
+  )
+  a=$?
+  echo "$a"
+  # timeout returns 124 if it timed out.
+  [ "$a" -eq 124 ] || exit "$a"
+done

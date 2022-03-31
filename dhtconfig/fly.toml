@@ -5,17 +5,19 @@ kill_signal = "SIGKILL"
 kill_timeout = 5
 
 [experimental]
-  # TODO: Write a script that does this in a loop instead so we can reuse VMs
-  entrypoint = ["timeout", "3600", "make"]
+  entrypoint = ["./run"]
+  cmd = []
 
 [[services]]
   internal_port = 42069
   protocol = "tcp"
 
   [[services.tcp_checks]]
-    grace_period = "1m"
-    interval = "15s"
-    timeout = "2s"
+    # Wait for first publish
+    grace_period = "5m"
+    # How do we handle down time during DHT publishes?
+    interval = "60s"
+    timeout = "5m"
 
 [[services]]
   internal_port = 42069

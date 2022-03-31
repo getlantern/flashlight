@@ -36,10 +36,13 @@ RUN apk add make
 RUN apk add gcompat
 
 WORKDIR /app
+# We need GNU timeout
+RUN apk add coreutils
 COPY --from=builder /app/bin/ bin/
 COPY Makefile .
 # TODO take from secrets/env
 COPY dht-private-key .
+COPY run ./
 
 ENTRYPOINT ["make"]
 CMD ["publish", "seed"]
