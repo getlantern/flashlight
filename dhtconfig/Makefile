@@ -10,9 +10,11 @@ SALT = globalconfig
 NAME = globalconfig
 SHELL=/bin/sh -o pipefail
 
-all: deps publish
+all: deps clean publish
 
-publish: $(NAME).infohash dht-private-key
+publish: put-dht put-source
+
+put-dht: $(NAME).infohash dht-private-key
 	# TODO: Update the salt to "config" once we aren't hardcoding the target infohash.
 	$(DHT) put-mutable-infohash \
 		--key `cat dht-private-key` \
@@ -21,8 +23,9 @@ publish: $(NAME).infohash dht-private-key
 		--seq '$(SEQ)' \
 		--auto-seq \
 	| tee $(NAME).target
-	# TODO: Don't ignore this!
-	-aws s3 cp --acl public-read \
+
+put-source: $(NAME).torrent
+	aws s3 cp --acl public-read \
 		$(NAME).torrent \
 		s3://globalconfig.flashlightproxy.com/
 
