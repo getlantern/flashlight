@@ -26,6 +26,10 @@ publish: $(NAME).infohash dht-private-key
 		$(NAME).torrent \
 		s3://globalconfig.flashlightproxy.com/
 
+# TODO: This should be possible without publishing. Don't publish to get this unless your config is
+# up to date.
+#$(NAME).target: publish
+
 $(NAME).torrent: $(NAME) $(NAME)/global.yaml.gz
 	# We need this dir to only contain what we expect. I'm uncomfortable with
 	# recursively blowing it away.
@@ -59,7 +63,8 @@ bin/torrent:
 bin/torrent-create:
 	go install github.com/anacrolix/torrent/cmd/torrent-create@a319506dda5e63b4aa09dde762750689dfb1520b
 
-get:
+# Can't publish without a target
+get: $(NAME).target
 	$(DHT) get `head -n 1 $(NAME).target` --salt $(SALT) --extract-infohash
 
 deps: bin/dht bin/torrent bin/torrent-create
