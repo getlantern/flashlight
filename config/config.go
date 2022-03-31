@@ -9,8 +9,12 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sync"
 	"time"
 
+	"github.com/anacrolix/dht/v2/krpc"
+	"github.com/getlantern/dhtup"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/rot13"
 	"github.com/getlantern/yaml"
 	"github.com/getsentry/sentry-go"
@@ -26,6 +30,7 @@ const (
 	Saved    Source = "saved"
 	Embedded Source = "embedded"
 	Fetched  Source = "fetched"
+	Dht      Source = "dht"
 )
 
 // Config is an interface for getting proxy data saved locally, embedded
@@ -38,9 +43,8 @@ type Config interface {
 	// Embedded retrieves a yaml config embedded in the binary.
 	embedded([]byte) (interface{}, error)
 
-	// Poll polls for new configs from a remote server and saves them to disk for
-	// future runs.
-	poll(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, sleep func() time.Duration)
+	// Polls for new configs from a remote server and saves them to disk for future runs.
+	configFetcher(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, sleep func() time.Duration)
 }
 
 type config struct {
@@ -104,6 +108,18 @@ type options struct {
 	// dictate whether the fetcher will use dual fetching (from fronted and
 	// chained URLs) or not.
 	rt http.RoundTripper
+
+	dhtupContext *dhtup.Context
+}
+
+var globalConfigDhtTarget krpc.ID
+
+func init() {
+	// TODO: Expose this as configuration. For now it's based on a specific private key and salt.
+	err := globalConfigDhtTarget.UnmarshalText([]byte("c384439ab2239a3dd4294351540e647fdec8af5f"))
+	if err != nil {
+		panic(err)
+	}
 }
 
 // pipeConfig creates a new config pipeline for reading a specified type of
@@ -124,8 +140,16 @@ func pipeConfig(opts *options) (stop func()) {
 	// for remote configs.  There should never be mutual access by these
 	// goroutines, however, since the polling routine is started after the prior
 	// calls to dispatch return.
-	var lastCfg interface{}
+	var (
+		mu      sync.Mutex
+		lastCfg interface{}
+	)
 	dispatch := func(cfg interface{}, src Source) {
+		// It's not clear exactly how atomic this needs to be. I think we also need to synchronize
+		// on the dispatch and lastCfg update, further updates will have to wait until the current
+		// dispatch is completed.
+		mu.Lock()
+		defer mu.Unlock()
 		a := lastCfg
 		b := yamlRoundTrip(cfg)
 		if reflect.DeepEqual(a, b) {
@@ -174,13 +198,39 @@ func pipeConfig(opts *options) (stop func()) {
 		}
 	}
 
-	// Now continually poll for new configs and pipe them back to the dispatch
-	// function.
+	// Now continually poll for new configs and pipe them back to the dispatch function.
 	if !opts.sticky {
-		fetcher := newFetcher(opts.userConfig, opts.rt, opts.originURL)
-		go conf.poll(stopCh, func(cfg interface{}) {
-			dispatch(cfg, Fetched)
-		}, fetcher, opts.sleep)
+		fetcher := newHttpFetcher(opts.userConfig, opts.rt, opts.originURL)
+		go conf.configFetcher(stopCh,
+			func(cfg interface{}) {
+				dispatch(cfg, Fetched)
+			}, fetcher, opts.sleep,
+			golog.LoggerFor(fmt.Sprintf("%v.%v.fetcher.http", packageLogPrefix, opts.name)))
+
+		if opts.dhtupContext != nil {
+			dhtFetcher := dhtFetcher{
+				dhtupResource: dhtup.Resource{
+					DhtTarget:   globalConfigDhtTarget,
+					Context:     opts.dhtupContext,
+					FilePath:    opts.name,
+					WebSeedUrls: []string{"https://globalconfig.flashlightproxy.com/"},
+					Salt:        []byte("globalconfig"),
+					MetainfoUrls: []string{
+						// This won't work for changes until the CloudFlare caches are flushed as part of updates.
+						"https://globalconfig.flashlightproxy.com/globalconfig.torrent",
+						// Bypass CloudFlare cache.
+						"https://s3.ap-northeast-1.amazonaws.com/globalconfig.flashlightproxy.com/globalconfig.torrent",
+					},
+				},
+			}
+			go conf.configFetcher(
+				stopCh,
+				func(cfg interface{}) {
+					dispatch(cfg, Dht)
+				},
+				dhtFetcher, opts.sleep,
+				golog.LoggerFor(fmt.Sprintf("%v.%v.fetcher.dht", packageLogPrefix, opts.name)))
+		}
 	} else {
 		log.Debugf("Using sticky config")
 	}
@@ -294,9 +344,9 @@ func (conf *config) embedded(data []byte) (interface{}, error) {
 	return conf.unmarshaler(data)
 }
 
-func (conf *config) poll(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, defaultSleep func() time.Duration) {
+func (conf *config) configFetcher(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, defaultSleep func() time.Duration, log golog.Logger) {
 	for {
-		sleepDuration := conf.fetchConfig(stopCh, dispatch, fetcher)
+		sleepDuration := conf.fetchConfig(stopCh, dispatch, fetcher, log)
 		if sleepDuration == noSleep {
 			sleepDuration = defaultSleep()
 		}
@@ -310,7 +360,7 @@ func (conf *config) poll(stopCh chan bool, dispatch func(interface{}), fetcher F
 	}
 }
 
-func (conf *config) fetchConfig(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher) time.Duration {
+func (conf *config) fetchConfig(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, log golog.Logger) time.Duration {
 	if bytes, sleepTime, err := fetcher.fetch(); err != nil {
 		log.Errorf("Error fetching config: %v", err)
 		return sleepTime
