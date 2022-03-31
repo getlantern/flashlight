@@ -53,7 +53,7 @@ export GOBIN=$(shell echo `pwd`/bin)
 
 .PHONY: bin/dht
 bin/dht:
-	go install github.com/anacrolix/dht/v2/cmd/dht@dd658f18fd516ba4ebefd2177b95eed5c1aeacb4
+	go install github.com/anacrolix/dht/v2/cmd/dht@23b6f6fdc25fad4cf9433a7e86b9b523bc3f22a1
 
 .PHONY: bin/torrent
 bin/torrent:
