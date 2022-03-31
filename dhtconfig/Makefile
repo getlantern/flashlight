@@ -27,6 +27,9 @@ publish: $(NAME).infohash dht-private-key
 		s3://globalconfig.flashlightproxy.com/
 
 $(NAME).torrent: $(NAME) $(NAME)/global.yaml.gz
+	# We need this dir to only contain what we expect. I'm uncomfortable with
+	# recursively blowing it away.
+	rm -fv $(NAME)/.torrent.db
 	$(TORRENT_CREATE) -i='$(CONFIG_INFO_NAME)' '-u=https://globalconfig.flashlightproxy.com/' $(NAME) > $@~
 	mv $@~ $@
 
