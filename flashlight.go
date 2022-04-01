@@ -559,6 +559,7 @@ func (f *Flashlight) Stop() error {
 }
 
 func (f *Flashlight) applyClientConfig(cfg *config.Global) {
+	f.client.DNSResolutionMapForDirectDialsEventual.Set(cfg.Client.DNSResolutionMapForDirectDials)
 	certs, err := cfg.TrustedCACerts()
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)

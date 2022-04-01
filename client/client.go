@@ -21,7 +21,7 @@ import (
 
 	"github.com/getlantern/detour"
 	"github.com/getlantern/errors"
-	eventual "github.com/getlantern/eventual/v2"
+	"github.com/getlantern/eventual/v2"
 	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
@@ -160,6 +160,8 @@ type Client struct {
 
 	httpWg  sync.WaitGroup
 	socksWg sync.WaitGroup
+
+	DNSResolutionMapForDirectDialsEventual eventual.Value
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -191,35 +193,36 @@ func NewClient(
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
 	client := &Client{
-		configDir:            configDir,
-		requestTimeout:       requestTimeout,
-		bal:                  balancer.New(allowProbes, time.Duration(requestTimeout)),
-		disconnected:         disconnected,
-		allowProbes:          allowProbes,
-		proxyAll:             proxyAll,
-		useShortcut:          useShortcut,
-		shortcutMethod:       shortcutMethod,
-		useDetour:            useDetour,
-		allowHTTPSEverywhere: allowHTTPSEverywhere,
-		user:                 userConfig,
-		rewriteToHTTPS:       httpseverywhere.Default(),
-		rewriteLRU:           rewriteLRU,
-		statsTracker:         statsTracker,
-		opsMap:               newOpsMap(),
-		allowPrivateHosts:    allowPrivateHosts,
-		lang:                 lang,
-		adSwapTargetURL:      adSwapTargetURL,
-		googleAdsFilter:      allowGoogleSearchAds,
-		reverseDNS:           reverseDNS,
-		chPingProxiesConf:    make(chan pingProxiesConf, 1),
-		googleAdsOptions:     nil,
-		googleAdsOptionsLock: sync.RWMutex{},
-		fetchAds:             fetchAds,
-		allowGoogleSearchAds: allowGoogleSearchAds,
-		allowMITM:            allowMITM,
-		eventWithLabel:       eventWithLabel,
-		httpListener:         eventual.NewValue(),
-		socksListener:        eventual.NewValue(),
+		configDir:                              configDir,
+		requestTimeout:                         requestTimeout,
+		bal:                                    balancer.New(allowProbes, time.Duration(requestTimeout)),
+		disconnected:                           disconnected,
+		allowProbes:                            allowProbes,
+		proxyAll:                               proxyAll,
+		useShortcut:                            useShortcut,
+		shortcutMethod:                         shortcutMethod,
+		useDetour:                              useDetour,
+		allowHTTPSEverywhere:                   allowHTTPSEverywhere,
+		user:                                   userConfig,
+		rewriteToHTTPS:                         httpseverywhere.Default(),
+		rewriteLRU:                             rewriteLRU,
+		statsTracker:                           statsTracker,
+		opsMap:                                 newOpsMap(),
+		allowPrivateHosts:                      allowPrivateHosts,
+		lang:                                   lang,
+		adSwapTargetURL:                        adSwapTargetURL,
+		googleAdsFilter:                        allowGoogleSearchAds,
+		reverseDNS:                             reverseDNS,
+		chPingProxiesConf:                      make(chan pingProxiesConf, 1),
+		googleAdsOptions:                       nil,
+		googleAdsOptionsLock:                   sync.RWMutex{},
+		fetchAds:                               fetchAds,
+		allowGoogleSearchAds:                   allowGoogleSearchAds,
+		allowMITM:                              allowMITM,
+		eventWithLabel:                         eventWithLabel,
+		httpListener:                           eventual.NewValue(),
+		socksListener:                          eventual.NewValue(),
+		DNSResolutionMapForDirectDialsEventual: eventual.NewValue(),
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -518,9 +521,24 @@ func (client *Client) dial(ctx context.Context, isConnect bool, network, addr st
 	op.Set("local_proxy_type", "http")
 	op.OriginPort(addr, "")
 	defer op.End()
-	ctx, cancel := context.WithTimeout(ctx, client.requestTimeout)
+
+	// Fetch DNS resolution map, if any
+	// XXX <01-04-2022, soltzen> Do this fetch now, so it won't be affected by
+	// the context timeout of client.doDial()
+	var dnsResolutionMapForDirectDials map[string]string
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	return client.doDial(op, ctx, isConnect, addr)
+	tmp, err := client.DNSResolutionMapForDirectDialsEventual.Get(ctx)
+	if err != nil {
+		log.Debugf("Timed out before waiting for dnsResolutionMapEventual to be set")
+		dnsResolutionMapForDirectDials = nil
+	} else {
+		dnsResolutionMapForDirectDials = tmp.(map[string]string)
+	}
+
+	ctx, cancel = context.WithTimeout(ctx, client.requestTimeout)
+	defer cancel()
+	return client.doDial(op, ctx, isConnect, addr, dnsResolutionMapForDirectDials)
 }
 
 // doDial is the ultimate place to dial an origin site. It takes following steps:
@@ -529,10 +547,20 @@ func (client *Client) dial(ctx context.Context, isConnect bool, network, addr st
 // * If the host or port is configured not proxyable, dial directly.
 // * If the site is allowed by shortcut, dial directly. If it failed before the deadline, try proxying.
 // * Try dial the site directly with 1/5th of the requestTimeout, then try proxying.
-func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, addr string) (net.Conn, error) {
+func (client *Client) doDial(
+	op *ops.Op,
+	ctx context.Context,
+	isCONNECT bool,
+	addr string,
+	dnsResolutionMapForDirectDials map[string]string) (net.Conn, error) {
 
 	dialDirect := func(ctx context.Context, network, addr string) (net.Conn, error) {
-		return netx.DialContext(ctx, network, addr)
+		if v, ok := dnsResolutionMapForDirectDials[addr]; ok {
+			log.Debugf("Bypassed DNS resolution: dialing %v as %v", addr, v)
+			return netx.DialContext(ctx, network, v)
+		} else {
+			return netx.DialContext(ctx, network, addr)
+		}
 	}
 
 	dialProxied := func(ctx context.Context, _unused, addr string) (net.Conn, error) {

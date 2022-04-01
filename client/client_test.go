@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/getlantern/flashlight/config"
 	"io"
 	"io/ioutil"
 	"net"
@@ -17,6 +16,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/getlantern/flashlight/config"
 
 	"github.com/getlantern/detour"
 	"github.com/getlantern/golog"
