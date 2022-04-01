@@ -29,9 +29,8 @@ put-source: $(NAME).torrent
 		$(NAME).torrent \
 		s3://globalconfig.flashlightproxy.com/
 
-# TODO: This should be possible without publishing. Don't publish to get this unless your config is
-# up to date.
-#$(NAME).target: publish
+$(NAME).target: dht-private-key
+	$(DHT) derive-put-target mutable --private --key "$$(cat dht-private-key)" --salt "$(SALT)" > "$@"
 
 $(NAME).torrent: $(NAME) $(NAME)/global.yaml.gz
 	# We need this dir to only contain what we expect. I'm uncomfortable with
@@ -56,7 +55,7 @@ export GOBIN=$(shell echo `pwd`/bin)
 
 .PHONY: bin/dht
 bin/dht:
-	go install github.com/anacrolix/dht/v2/cmd/dht@23b6f6fdc25fad4cf9433a7e86b9b523bc3f22a1
+	go install github.com/anacrolix/dht/v2/cmd/dht@114cb152af7c452f70f90f3e81c41495a855a70e
 
 .PHONY: bin/torrent
 bin/torrent:
@@ -66,7 +65,6 @@ bin/torrent:
 bin/torrent-create:
 	go install github.com/anacrolix/torrent/cmd/torrent-create@a319506dda5e63b4aa09dde762750689dfb1520b
 
-# Can't publish without a target
 get: $(NAME).target
 	$(DHT) get `head -n 1 $(NAME).target` --salt $(SALT) --extract-infohash
 
