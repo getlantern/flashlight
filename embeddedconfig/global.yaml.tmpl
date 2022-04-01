@@ -324,6 +324,16 @@ client:
     {{if .providers.cloudfront}}cloudfront: *cfmasq{{else}}cloudfront: {{range .cloudfrontMasquerades}}
     - domain: {{.Domain}}
       ipaddress: {{.IpAddress}}{{else}}[]{{end}}{{end}}
+  dnsresolutionmapfordirectdials:
+    # This is a map of domain names to IP addresses.
+    # ss7hc6jm.io refers to a replica-rust instance running in RU
+    # See this cloudflare A record:
+    # https://dash.cloudflare.com/1c693b3f1031ed33f68653b1e67dfbef/ss7hc6jm.io/dns
+    www.ss7hc6jm.io:443: 92.223.103.136:443
+    ss7hc6jm.io:443: 92.223.103.136:443
+    www.ss7hc6jm.io:80: 92.223.103.136:80
+    ss7hc6jm.io:80: 92.223.103.136:80
+
 
 nameddomainroutingrules:
   google_play:
