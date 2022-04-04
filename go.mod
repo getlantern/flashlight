@@ -13,7 +13,7 @@ require (
 	github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
-	github.com/getlantern/borda v0.0.0-20211219040702-422f5797af3d
+	github.com/getlantern/borda v0.0.0-20220308134056-c4a5602f778e
 	github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493
 	github.com/getlantern/cmux/v2 v2.0.0-20200905031936-c55b16ee8462
 	github.com/getlantern/cmuxprivate v0.0.0-20211216020409-d29d0d38be54
@@ -54,7 +54,7 @@ require (
 	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
 	github.com/getlantern/proxy/v2 v2.0.1-0.20220303164029-b34b76e0e581
-	github.com/getlantern/proxybench v0.0.0-20211216020518-199a8fc0d220
+	github.com/getlantern/proxybench v0.0.0-20220404140110-f49055cb86de
 	github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683
 	github.com/getlantern/quicwrapper v0.0.0-20211104133553-140f96139f9f
 	github.com/getlantern/rot13 v0.0.0-20210901200056-01bce62cb8bb
@@ -83,7 +83,7 @@ require (
 	github.com/pborman/uuid v1.2.1
 	github.com/refraction-networking/utls v1.0.0
 	github.com/shadowsocks/go-shadowsocks2 v0.1.4-0.20201002022019-75d43273f5a5
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
 	gitlab.com/yawning/obfs4.git v0.0.0-20220204003609-77af0cba934d
 	golang.org/x/mobile v0.0.0-20210831151748-9cba7bc03c0f
@@ -95,11 +95,9 @@ require (
 require (
 	crawshaw.io/sqlite v0.3.3-0.20210127221821-98b1f83c5508 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1.0.20210721174708-390f27c3be20 // indirect
-	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212 // indirect
 	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
 	github.com/RoaringBitmap/roaring v0.9.4 // indirect
 	github.com/Yawning/chacha20 v0.0.0-20170904085104-e3b1f968fc63 // indirect
-	github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412 // indirect
 	github.com/anacrolix/chansync v0.3.0 // indirect
 	github.com/anacrolix/envpprof v1.1.1 // indirect
 	github.com/anacrolix/log v0.13.1 // indirect
@@ -159,9 +157,9 @@ require (
 	github.com/getlantern/ring v0.0.0-20210901200052-aea475211e37 // indirect
 	github.com/getlantern/sqlparser v0.0.0-20171012210704-a879d8035f3c // indirect
 	github.com/getlantern/testredis v0.0.0-20210901200107-a4ed71579e17 // indirect
-	github.com/getlantern/wal v0.0.0-20201015162539-cf5efe18aa38 // indirect
+	github.com/getlantern/wal v0.0.0-20220217194315-e4eac848dbd1 // indirect
 	github.com/getlantern/withtimeout v0.0.0-20160829163843-511f017cd913 // indirect
-	github.com/getlantern/zenodb v0.0.0-20211215215526-2d2e544b4425 // indirect
+	github.com/getlantern/zenodb v0.0.0-20220217194355-df46cc148a8c // indirect
 	github.com/go-errors/errors v1.4.0 // indirect
 	github.com/go-redis/redis/v8 v8.11.3 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
@@ -204,7 +202,7 @@ require (
 	github.com/oschwald/geoip2-golang v1.5.0 // indirect
 	github.com/oschwald/maxminddb-golang v1.8.0 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
-	github.com/pierrec/lz4/v4 v4.1.2 // indirect
+	github.com/pierrec/lz4/v4 v4.1.8 // indirect
 	github.com/pion/datachannel v1.5.2 // indirect
 	github.com/pion/dtls/v2 v2.1.2 // indirect
 	github.com/pion/ice/v2 v2.1.20 // indirect
