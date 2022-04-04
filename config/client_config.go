@@ -20,6 +20,12 @@ type ClientConfig struct {
 	// Legacy masquerade configuration
 	// included to test presence for older clients
 	MasqueradeSets map[string][]*fronted.Masquerade
+
+	// DNS host-to-ip mappings to bypass DNS when resolving hostnames
+	// This only works for direct dials (i.e., domain routing rules that are
+	// MustDirect or 'md':
+	// https://github.com/getlantern/flashlight/blob/f82d9ab04da841e4a2833783b244948a8daa547e/domainrouting/domainrouting.go#L33
+	DNSResolutionMapForDirectDials map[string]string
 }
 
 // Configuration structure for direct domain fronting
