@@ -11,8 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/flashlight/config"
-
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight"
@@ -155,9 +153,9 @@ func start(appName, configDir, deviceID string, proxyAll bool) error {
 			func() bool { return false }, // isPro
 			func() string { return "" },  // lang, only used for desktop
 			func() string { return "" },  // adSwapTargetURL, only used for desktop
-			func(addr string) (string, error) { return addr, nil },                       // no dnsgrab reverse lookups on external sdk
-			func(opts *config.GoogleSearchAdsOptions, query string) string { return "" }, // no MITM on mobile, so no ads, only used for desktop
-			func(category, action, label string) {},                                      // no event tracking, only on desktop
+			func(addr string) (string, error) { return addr, nil }, // no dnsgrab reverse lookups on external sdk
+			func() string { return "" },                            // ad url, only used for desktop
+			func(category, action, label string) {},                // no event tracking, only on desktop
 			nil,
 		)
 		if err != nil {

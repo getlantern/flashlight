@@ -17,8 +17,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/flashlight/config"
-
 	"github.com/getlantern/detour"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mockconn"
@@ -105,7 +103,7 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 		func() string { return lang },
 		func() string { return adSwapTargetURL },
 		func(host string) (string, error) { return host, nil },
-		func(options *config.GoogleSearchAdsOptions, query string) string { return "https://tracker/ads" },
+		func() string { return "https://tracker/ads" },
 		func(category, action, label string) {},
 	)
 	return client

@@ -322,7 +322,7 @@ func New(
 	lang func() string,
 	adSwapTargetURL func() string,
 	reverseDNS func(host string) (string, error),
-	fetchAds func(opts *config.GoogleSearchAdsOptions, query string) string,
+	adTrackUrl func() string,
 	eventWithLabel func(category, action, label string),
 	dhtupContext *dhtup.Context,
 ) (*Flashlight, error) {
@@ -435,7 +435,7 @@ func New(
 		lang,
 		adSwapTargetURL,
 		reverseDNS,
-		fetchAds,
+		adTrackUrl,
 		eventWithLabel,
 	)
 	if err != nil {
