@@ -59,7 +59,7 @@ bin/dht:
 
 .PHONY: bin/torrent
 bin/torrent:
-	go install github.com/anacrolix/torrent/cmd/torrent@dd1ca6f51475529b432dba669bd84444f97043be
+	go install github.com/anacrolix/torrent/cmd/torrent@v1.42.0
 
 .PHONY: bin/torrent-create
 bin/torrent-create:

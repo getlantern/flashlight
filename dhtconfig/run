@@ -13,7 +13,11 @@ while true; do
   # that it starts with a path. We have to invoke this directly in the shell, make doesn't forward
   # the signal from timeout.
   ( cd globalconfig \
-    && timeout --foreground 3600 ../$TORRENT download --seed --no-progress "../$NAME.torrent"
+    && timeout --foreground 3600 \
+      env GOPPROF=http=:5000 \
+      ../$TORRENT download \
+        --seed --no-progress --public-ip "$FLY_PUBLIC_IP" \
+        "../$NAME.torrent"
   )
   a=$?
   echo "$a"

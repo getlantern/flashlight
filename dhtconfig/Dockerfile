@@ -34,6 +34,7 @@ FROM alpine
 RUN apk add curl aws-cli
 RUN apk add make
 RUN apk add gcompat
+RUN apk add bash
 
 WORKDIR /app
 # We need GNU timeout
@@ -43,6 +44,8 @@ COPY Makefile .
 # TODO take from secrets/env
 COPY dht-private-key .
 COPY run ./
+# This lets us override stuff with local builds
+COPY docker-build/ /
 
 ENTRYPOINT ["make"]
 CMD ["publish", "seed"]

@@ -7,10 +7,15 @@ kill_timeout = 5
 [experimental]
   entrypoint = ["./run"]
   cmd = []
+  # 42070 is for testing public port behaviour
+  allowed_public_ports = [42069, 42070]
 
 [[services]]
   internal_port = 42069
   protocol = "tcp"
+
+  [[services.ports]]
+    port = 42069
 
   [[services.tcp_checks]]
     # Wait for first publish
@@ -22,3 +27,6 @@ kill_timeout = 5
 [[services]]
   internal_port = 42069
   protocol = "udp"
+
+  [[services.ports]]
+    port = 42069
