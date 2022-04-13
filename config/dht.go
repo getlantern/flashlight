@@ -7,6 +7,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/anacrolix/missinggo"
 	"github.com/getlantern/dhtup"
 )
 
@@ -31,19 +32,19 @@ func (d dhtFetcher) fetchTemporary() (retB []byte, temporary bool, err error) {
 	// The only reason this is here is it might vary on how big the payload is.
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Minute)
 	defer cancel()
-	r, temporary, err := d.dhtupResource.Open(ctx)
+	contextedReader, temporary, err := d.dhtupResource.Open(ctx)
 	if err != nil {
 		err = fmt.Errorf("opening dht resource: %w", err)
 		return
 	}
-	defer r.Close()
-	r, err = gzip.NewReader(r)
+	gzipReader, err := gzip.NewReader(
+		missinggo.ContextedReader{R: contextedReader, Ctx: ctx})
 	if err != nil {
 		temporary = false
 		err = fmt.Errorf("opening gzip: %w", err)
 		return
 	}
-	retB, err = io.ReadAll(r)
+	retB, err = io.ReadAll(gzipReader)
 	if err != nil {
 		err = fmt.Errorf("reading all: %w", err)
 	}
