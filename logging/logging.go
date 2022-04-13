@@ -5,9 +5,11 @@ package logging
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -165,29 +167,97 @@ func newPipedWriteCloser(w io.WriteCloser, nPending int) io.WriteCloser {
 	return pwc
 }
 
-// ZipLogFiles zip the Lantern log files to the writer. All files will be
+// ZipLogFiles zips the Lantern log files to the writer. All files will be
 // placed under the folder in the archieve.  It will stop and return if the
 // newly added file would make the extracted files exceed maxBytes in total.
-func ZipLogFiles(w io.Writer, underFolder string, maxBytes int64) error {
+//
+// It also returns up to maxTextBytes of plain text from the end of the most recent log file.
+func ZipLogFiles(w io.Writer, underFolder string, maxBytes int64, maxTextBytes int64) (string, error) {
 	actualLogDirMx.RLock()
 	logdir := actualLogDir
 	actualLogDirMx.RUnlock()
 
-	return ZipLogFilesFrom(w, maxBytes, map[string]string{"logs": logdir})
+	return ZipLogFilesFrom(w, maxBytes, maxTextBytes, map[string]string{"logs": logdir})
 }
 
 // ZipLogFilesFrom zips the log files from the given dirs to the writer. It will
 // stop and return if the newly added file would make the extracted files exceed
 // maxBytes in total.
-func ZipLogFilesFrom(w io.Writer, maxBytes int64, dirs map[string]string) error {
+//
+// It also returns up to maxTextBytes of plain text from the end of the most recent log file.
+func ZipLogFilesFrom(w io.Writer, maxBytes int64, maxTextBytes int64, dirs map[string]string) (string, error) {
 	globs := make(map[string]string, len(dirs))
 	for baseDir, dir := range dirs {
 		globs[baseDir] = fmt.Sprintf(filepath.Join(dir, "*"))
 	}
-	return util.ZipFiles(w, util.ZipOptions{
+	err := util.ZipFiles(w, util.ZipOptions{
 		Globs:    globs,
 		MaxBytes: maxBytes,
 	})
+	if err != nil {
+		return "", err
+	}
+
+	if maxTextBytes <= 0 {
+		return "", nil
+	}
+
+	// Get info for all log files
+	allFiles := make(byDate, 0)
+	for _, glob := range globs {
+		matched, err := filepath.Glob(glob)
+		if err != nil {
+			log.Errorf("Unable to list files at glob %v: %v", glob, err)
+			continue
+		}
+		for _, file := range matched {
+			fi, err := os.Stat(file)
+			if err != nil {
+				log.Errorf("Unable to stat file %v: %v", file, err)
+				continue
+			}
+			allFiles = append(allFiles, &fileInfo{
+				file:    file,
+				size:    fi.Size(),
+				modTime: fi.ModTime().Unix(),
+			})
+		}
+	}
+
+	if len(allFiles) > 0 {
+		// Sort by recency
+		sort.Sort(allFiles)
+
+		mostRecent := allFiles[0]
+		log.Debugf("Grabbing log tail from %v", mostRecent.file)
+
+		mostRecentFile, err := os.Open(mostRecent.file)
+		if err != nil {
+			log.Errorf("Unable to open most recent log file %v: %v", mostRecent.file, err)
+			return "", nil
+		}
+		defer mostRecentFile.Close()
+
+		seekTo := mostRecent.size - maxTextBytes
+		if seekTo > 0 {
+			log.Debugf("Seeking to %d in %v", seekTo, mostRecent.file)
+			_, err = mostRecentFile.Seek(seekTo, os.SEEK_CUR)
+			if err != nil {
+				log.Errorf("Unable to seek to tail of file %v: %v", mostRecent.file, err)
+				return "", nil
+			}
+		}
+		tail, err := ioutil.ReadAll(mostRecentFile)
+		if err != nil {
+			log.Errorf("Unable to read tail of file %v: %v", mostRecent.file, err)
+			return "", nil
+		}
+
+		log.Debugf("Got %d bytes of log tail from %v", len(tail), mostRecentFile)
+		return string(tail), nil
+	}
+
+	return "", nil
 }
 
 // Close stops logging.
@@ -233,3 +303,14 @@ func (t *nonStopWriteCloser) Write(p []byte) (int, error) {
 func (t *nonStopWriteCloser) Close() error {
 	return nil
 }
+
+type fileInfo struct {
+	file    string
+	size    int64
+	modTime int64
+}
+type byDate []*fileInfo
+
+func (a byDate) Len() int           { return len(a) }
+func (a byDate) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byDate) Less(i, j int) bool { return a[i].modTime > a[j].modTime }
