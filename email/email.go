@@ -31,7 +31,9 @@ var (
 	// Number of runes(code points - characters of variable length bytes depending on encoding) allowed in fileName length
 	maxNameLength uint = 60
 	// Number of bytes allowed in file attachment (8 mb)
-	maxFileSize      float64 = 8 * math.Pow(10, 6)
+	maxFileSize float64 = 8 * math.Pow(10, 6)
+	// Limit text logtail to 1MB
+	maxLogTailSize   = 1024768
 	defaultRecipient string
 	httpClient       = &http.Client{}
 	mu               sync.RWMutex
@@ -197,14 +199,18 @@ func sendTemplate(msg *Message) error {
 		if size, err := util.ParseFileSize(msg.MaxLogSize); err != nil {
 			log.Error(err)
 		} else {
+			log.Debug("Zipping log files for sending email")
 			buf := &bytes.Buffer{}
 			folder := prefix(msg) + "_logs"
-			if logging.ZipLogFiles(buf, folder, size) == nil {
+			if logtail, err := logging.ZipLogFiles(buf, folder, size, int64(maxLogTailSize)); err == nil {
 				mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
 					Type:    "application/zip",
 					Name:    folder + ".zip",
 					Content: base64.StdEncoding.EncodeToString(buf.Bytes()),
 				})
+				mmsg.GlobalMergeVars = append(mmsg.GlobalMergeVars, &mandrill.Variable{Name: "logtail", Content: logtail})
+			} else {
+				log.Errorf("Unable to zip log files: %v", err)
 			}
 		}
 	}
