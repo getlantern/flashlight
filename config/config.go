@@ -209,9 +209,9 @@ func pipeConfig(opts *options) (stop func()) {
 
 		if opts.dhtupContext != nil {
 			dhtFetcher := dhtFetcher{
-				dhtupResource: dhtup.Resource{
+				dhtupResource: dhtup.NewResource(dhtup.ResourceInput{
 					DhtTarget:   globalConfigDhtTarget,
-					Context:     opts.dhtupContext,
+					DhtContext:  opts.dhtupContext,
 					FilePath:    opts.name,
 					WebSeedUrls: []string{"https://globalconfig.flashlightproxy.com/"},
 					Salt:        []byte("globalconfig"),
@@ -221,7 +221,7 @@ func pipeConfig(opts *options) (stop func()) {
 						// Bypass CloudFlare cache.
 						"https://s3.ap-northeast-1.amazonaws.com/globalconfig.flashlightproxy.com/globalconfig.torrent",
 					},
-				},
+				}),
 			}
 			go conf.configFetcher(
 				stopCh,

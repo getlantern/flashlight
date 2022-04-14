@@ -7,6 +7,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.7.0
 	github.com/anacrolix/dht/v2 v2.16.2-0.20220311024416-dd658f18fd51
 	github.com/anacrolix/go-libutp v1.2.0
+	github.com/anacrolix/missinggo v1.3.0
 	github.com/andybalholm/brotli v1.0.4
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/dustin/go-humanize v1.0.0
@@ -19,7 +20,7 @@ require (
 	github.com/getlantern/cmuxprivate v0.0.0-20211216020409-d29d0d38be54
 	github.com/getlantern/common v1.1.1-0.20211216020417-0ac01e41560d
 	github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1
-	github.com/getlantern/dhtup v0.0.0-20220315025130-b4bce578771e
+	github.com/getlantern/dhtup v0.0.0-20220413100524-9755a1f0e0f5
 	github.com/getlantern/dnsgrab v0.0.0-20211216020425-5d5e155a01a8
 	github.com/getlantern/domains v0.0.0-20220311111720-94f59a903271
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
@@ -101,7 +102,6 @@ require (
 	github.com/anacrolix/chansync v0.3.0 // indirect
 	github.com/anacrolix/envpprof v1.1.1 // indirect
 	github.com/anacrolix/log v0.13.1 // indirect
-	github.com/anacrolix/missinggo v1.3.0 // indirect
 	github.com/anacrolix/missinggo/perf v1.0.0 // indirect
 	github.com/anacrolix/missinggo/v2 v2.5.2 // indirect
 	github.com/anacrolix/mmsg v1.0.0 // indirect
@@ -293,3 +293,5 @@ replace github.com/ulikunitz/xz => github.com/ulikunitz/xz v0.5.8
 // We use a fork of gomobile that allows reusing the cache directory for faster builds, based
 // on this unmerged PR against gomobile - https://github.com/golang/mobile/pull/58.
 replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336-0bdf708b6d0f
+
+// replace github.com/getlantern/dhtup => ../dhtup
