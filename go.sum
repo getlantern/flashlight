@@ -488,8 +488,8 @@ github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 h1:NRUJuo3v3WGC
 github.com/getlantern/context v0.0.0-20190109183933-c447772a6520/go.mod h1:L+mq6/vvYHKjCX2oez0CgEAJmbq1fbb/oNJIWQkBybY=
 github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1 h1:7Iij6/WnGBryEpBuhLEOwWFX61ubsx3ann4fRHKJTlY=
 github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1/go.mod h1:5iIcBTk/mor1hyVGucgUKLnH8ucQ0Gk+gmHog7g7NIw=
-github.com/getlantern/dhtup v0.0.0-20220413100524-9755a1f0e0f5 h1:8vPw4rwKj+2wfAezwaAAJ5vMDQbgHjM/lOau+afM9FE=
-github.com/getlantern/dhtup v0.0.0-20220413100524-9755a1f0e0f5/go.mod h1:v9KTUJYdxVxvsTHYCOBJBU5tFmduOg9vNTdFne/pDzM=
+github.com/getlantern/dhtup v0.0.0-20220414120328-ca805e79cd5b h1:XhKUM4XQuTC/zIvrQw3dmqiDtJzOYB4OpRPI39XhqwA=
+github.com/getlantern/dhtup v0.0.0-20220414120328-ca805e79cd5b/go.mod h1:v9KTUJYdxVxvsTHYCOBJBU5tFmduOg9vNTdFne/pDzM=
 github.com/getlantern/dns v0.0.0-20210120185712-8d005533efa0 h1:8DQSmWtwBy8Z0Zr/kiRJRhBPQO4LMN0mziCJd+8edhw=
 github.com/getlantern/dns v0.0.0-20210120185712-8d005533efa0/go.mod h1:nd1wZuSxVB7DZVqZT1hCFkdWcMqbuO5XQSd+1Duk/fs=
 github.com/getlantern/dnsgrab v0.0.0-20211216020425-5d5e155a01a8 h1:UKCd60g0A2N5t1EO45hNKR0fJ0QC9o33S476S3Aro9g=
