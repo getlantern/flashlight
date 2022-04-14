@@ -78,6 +78,7 @@ func (t HandledErrorType) String() string {
 }
 
 type Flashlight struct {
+	DhtupContext      *dhtup.Context
 	configDir         string
 	flagsAsMap        map[string]interface{}
 	userConfig        common.UserConfig
@@ -91,7 +92,6 @@ type Flashlight struct {
 	client            *client.Client
 	op                *fops.Op
 	errorHandler      func(HandledErrorType, error)
-	dhtupContext      *dhtup.Context
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
@@ -264,7 +264,7 @@ func (f *Flashlight) startConfigFetch() func() {
 	stopConfig := config.Init(
 		f.configDir, f.flagsAsMap, f.userConfig,
 		proxiesDispatch, onProxiesSaveError,
-		globalDispatch, onConfigSaveError, rt, f.dhtupContext)
+		globalDispatch, onConfigSaveError, rt, f.DhtupContext)
 	return stopConfig
 }
 
@@ -357,7 +357,7 @@ func New(
 		errorHandler: func(t HandledErrorType, err error) {
 			log.Errorf("%v: %v", t, err)
 		},
-		dhtupContext: dhtupContext,
+		DhtupContext: dhtupContext,
 	}
 
 	var grabber dnsgrab.Server
