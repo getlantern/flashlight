@@ -32,13 +32,14 @@ func (d dhtFetcher) fetchTemporary() (retB []byte, temporary bool, err error) {
 	// The only reason this is here is it might vary on how big the payload is.
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Minute)
 	defer cancel()
-	contextedReader, temporary, err := d.dhtupResource.Open(ctx)
+	r, temporary, err := d.dhtupResource.Open(ctx)
 	if err != nil {
 		err = fmt.Errorf("opening dht resource: %w", err)
 		return
 	}
+	defer r.Close()
 	gzipReader, err := gzip.NewReader(
-		missinggo.ContextedReader{R: contextedReader, Ctx: ctx})
+		missinggo.ContextedReader{R: r, Ctx: ctx})
 	if err != nil {
 		temporary = false
 		err = fmt.Errorf("opening gzip: %w", err)
