@@ -210,16 +210,18 @@ func pipeConfig(opts *options) (stop func()) {
 		if opts.dhtupContext != nil {
 			dhtFetcher := dhtFetcher{
 				dhtupResource: dhtup.NewResource(dhtup.ResourceInput{
-					DhtTarget:   globalConfigDhtTarget,
-					DhtContext:  opts.dhtupContext,
-					FilePath:    opts.name,
-					WebSeedUrls: []string{"https://globalconfig.flashlightproxy.com/"},
+					DhtTarget:  globalConfigDhtTarget,
+					DhtContext: opts.dhtupContext,
+					FilePath:   opts.name,
+					// Empty this to force data to be obtained through peers.
+					WebSeedUrls: []string{"https://globalconfig.flashlightproxy.com/dhtup/"},
 					Salt:        []byte("globalconfig"),
+					// Empty this to force metainfo to be obtained via peers.
 					MetainfoUrls: []string{
 						// This won't work for changes until the CloudFlare caches are flushed as part of updates.
-						"https://globalconfig.flashlightproxy.com/globalconfig.torrent",
+						"https://globalconfig.flashlightproxy.com/dhtup/globalconfig.torrent",
 						// Bypass CloudFlare cache.
-						"https://s3.ap-northeast-1.amazonaws.com/globalconfig.flashlightproxy.com/globalconfig.torrent",
+						"https://s3.ap-northeast-1.amazonaws.com/globalconfig.flashlightproxy.com/dhtup/globalconfig.torrent",
 					},
 				}),
 			}
