@@ -21,9 +21,30 @@ jobs:
     - name: Granting private modules access
       run: |
           git config --global url."https://${{ secrets.GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-    - name: Run Unit tests
+
+      # Install gotestfmt on the VM running the action.
+    - name: Set up gotestfmt
+      uses: haveyoudebuggedit/gotestfmt-action@v1
+      with:
+        # Optional: pass GITHUB_TOKEN to avoid rate limiting.
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Run tests with nice formatting. Save the original log in /tmp/gotest.log
+    - name: Run tests
       run: |
-        go test -race -failfast -tags="headless" -coverprofile=profile.cov ./...
+        set -euo pipefail
+        go test -race -failfast -tags="headless" -coverprofile=profile.cov -v ./... 2>&1 | tee /tmp/gotest.log | gotestfmt
+
+      # Upload the original go test log as an artifact for later review.
+    - name: Upload test log
+      uses: actions/upload-artifact@v2
+      if: always()
+      with:
+        name: test-log
+        path: /tmp/gotest.log
+        if-no-files-found: error
+
+
     - name: Install goveralls
       env:
         GO111MODULE: off
