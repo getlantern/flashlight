@@ -24,7 +24,7 @@ jobs:
 
       # Install gotestfmt on the VM running the action.
     - name: Set up gotestfmt
-      uses: haveyoudebuggedit/gotestfmt-action@v1
+      uses: haveyoudebuggedit/gotestfmt-action@v2
       with:
         # Optional: pass GITHUB_TOKEN to avoid rate limiting.
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -33,7 +33,7 @@ jobs:
     - name: Run tests
       run: |
         set -euo pipefail
-        go test -race -failfast -tags="headless" -coverprofile=profile.cov -v ./... 2>&1 | tee /tmp/gotest.log | gotestfmt
+        go test -json -race -failfast -tags="headless" -coverprofile=profile.cov -v ./... 2>&1 | tee /tmp/gotest.log | gotestfmt
 
       # Upload the original go test log as an artifact for later review.
     - name: Upload test log
@@ -45,6 +45,9 @@ jobs:
         if-no-files-found: error
 
 
+    - name: Run Unit tests
+      run: |
+        go test -race -failfast -tags="headless" -coverprofile=profile.cov ./...
     - name: Install goveralls
       env:
         GO111MODULE: off
