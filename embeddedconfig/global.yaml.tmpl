@@ -279,9 +279,13 @@ featureoptions:
       replicarustendpoint: &RussiaReplicaRust "https://ss7hc6jm.io"
       staticpeeraddrs: ["94.242.59.118:42069"]
       trackers: &RussiaTrackers
+      # These trackers are picks from myles
       - http://retracker.bashtel.ru/announce
       - udp://retracker.lanta-net.ru:2710/announce
       - udp://tracker.cypherpunks.ru:6969/announce
+      # These trackers are from dhtup
+      - udp://opentor.org:2710/announce
+      - http://tracker4.itzmx.com:2710/announce
       webseedbaseurls: *RussiaReplicaBaseUrls
     "CN":
       proxypeerinfohashes: *GlobalProxyInfohashes
