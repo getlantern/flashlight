@@ -203,7 +203,7 @@ featureoptions:
     # These are for compatibility with clients that don't load all options per-country.
     replicarustdefaultendpoint: &FrankfurtReplicaRust http://replica-search-aws.lantern.io/
     replicarustendpoints:
-      "RU": &RussiaReplicaRust http://92.223.103.136:8080/
+      "RU": *RussiaReplicaRust
       "IR": *FrankfurtReplicaRust
 
     # Here follows options per-country
@@ -275,8 +275,8 @@ featureoptions:
     "RU": 
       proxypeerinfohashes: *GlobalProxyInfohashes
       metadatabaseurls: &RussiaReplicaBaseUrls
-      - https://s-dt2.cloud.gcore.lu
-      replicarustendpoint: *RussiaReplicaRust
+      - https://s-dt2.cloud.gcore.lu/replica/
+      replicarustendpoint: &RussiaReplicaRust "https://ss7hc6jm.io"
       staticpeeraddrs: ["94.242.59.118:42069"]
       trackers: &RussiaTrackers
       - http://retracker.bashtel.ru/announce
