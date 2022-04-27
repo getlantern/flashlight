@@ -181,6 +181,13 @@ func TestReplicaProxying(t *testing.T) {
 	assert.Len(fos.ByCountry["IR"].ProxyPeerInfoHashes, numInfohashes)
 }
 
+func TestRussia(t *testing.T) {
+	assert := assert.New(t)
+	fos := getReplicaOptionsRoot(t)
+	// This checks that the alias propagates to the old config correctly.
+	assert.Equal(fos.ByCountry["RU"].ReplicaRustEndpoint, fos.ReplicaRustEndpoints["RU"])
+}
+
 func TestChatEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
 	assert.True(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "ae"), "Chat is enabled in UAE when running 7.0.0")
