@@ -203,7 +203,7 @@ featureoptions:
     # These are for compatibility with clients that don't load all options per-country.
     replicarustdefaultendpoint: &FrankfurtReplicaRust http://replica-search-aws.lantern.io/
     replicarustendpoints:
-      "RU": *FrankfurtReplicaRust
+      "RU": &RussiaReplicaRust http://92.223.103.136:8080/
       "IR": *FrankfurtReplicaRust
 
     # Here follows options per-country
