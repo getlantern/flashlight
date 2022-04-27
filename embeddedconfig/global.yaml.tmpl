@@ -273,8 +273,16 @@ featureoptions:
       <<: *FrankfurtBase
       staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
     "RU": 
-      <<: *FrankfurtBase
-      staticpeeraddrs: [&RussiaReplicaPeers "94.242.59.118:42069"]
+      proxypeerinfohashes: *GlobalProxyInfohashes
+      metadatabaseurls: &RussiaReplicaBaseUrls
+      - *RussiaReplicaRust
+      replicarustendpoint: *RussiaReplicaRust
+      staticpeeraddrs: ["94.242.59.118:42069"]
+      trackers: &RussiaTrackers
+      - http://retracker.bashtel.ru/announce
+      - udp://retracker.lanta-net.ru:2710/announce
+      - udp://tracker.cypherpunks.ru:6969/announce
+      webseedbaseurls: *RussiaReplicaBaseUrls
     "CN":
       proxypeerinfohashes: *GlobalProxyInfohashes
       metadatabaseurls:
