@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/anacrolix/dht/v2"
-	"github.com/getlantern/flashlight/quicproxy"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/quicproxy"
 )
 
 var log = golog.LoggerFor("flashlight-p2p")

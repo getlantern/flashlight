@@ -8,8 +8,8 @@ import (
 	"sync"
 
 	"github.com/anacrolix/dht/v2"
-	"github.com/getlantern/flashlight/quicproxy"
 	"github.com/getlantern/flashlight/upnp"
+	"github.com/getlantern/quicproxy"
 )
 
 type FreeP2pCtx struct {

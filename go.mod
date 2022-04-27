@@ -12,7 +12,7 @@ require (
 	github.com/andybalholm/brotli v1.0.4
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/dustin/go-humanize v1.0.0
-	github.com/elazarl/goproxy v0.0.0-20220115173737-adb46da277ac
+	github.com/elazarl/goproxy v0.0.0-20220417044921-416226498f94 // indirect
 	github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
@@ -59,7 +59,9 @@ require (
 	github.com/getlantern/proxy/v2 v2.0.1-0.20220303164029-b34b76e0e581
 	github.com/getlantern/proxybench v0.0.0-20220404140110-f49055cb86de
 	github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683
+	github.com/getlantern/quicproxy v0.0.0-20220427095244-8bb0d524216d
 	github.com/getlantern/quicwrapper v0.0.0-20211104133553-140f96139f9f
+	github.com/getlantern/ring v0.0.0-20210901200052-aea475211e37 // indirect
 	github.com/getlantern/rot13 v0.0.0-20210901200056-01bce62cb8bb
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/safechannels v0.0.0-20201218194342-b4e5383e9627
@@ -80,7 +82,7 @@ require (
 	github.com/huin/goupnp v1.0.3-0.20220113221608-730ab6506b9d
 	github.com/jaffee/commandeer v0.5.0
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
-	github.com/lucas-clemente/quic-go v0.19.3
+	github.com/lucas-clemente/quic-go v0.27.0 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/go-server-timing v1.0.0
@@ -159,7 +161,6 @@ require (
 	github.com/getlantern/probe v0.0.0-20211216020459-69afa01c1c5c // indirect
 	github.com/getlantern/probednet v0.0.0-20211216020507-22fd9c1d3bf6 // indirect
 	github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c // indirect
-	github.com/getlantern/ring v0.0.0-20210901200052-aea475211e37 // indirect
 	github.com/getlantern/sqlparser v0.0.0-20171012210704-a879d8035f3c // indirect
 	github.com/getlantern/testredis v0.0.0-20210901200107-a4ed71579e17 // indirect
 	github.com/getlantern/wal v0.0.0-20220217194315-e4eac848dbd1 // indirect
@@ -189,9 +190,9 @@ require (
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/klauspost/reedsolomon v1.9.9 // indirect
 	github.com/libp2p/go-buffer-pool v0.0.2 // indirect
-	github.com/marten-seemann/qtls-go1-16 v0.1.4 // indirect
-	github.com/marten-seemann/qtls-go1-17 v0.1.0 // indirect
-	github.com/marten-seemann/qtls-go1-18 v0.1.0-beta.1 // indirect
+	github.com/marten-seemann/qtls-go1-16 v0.1.5 // indirect
+	github.com/marten-seemann/qtls-go1-17 v0.1.1 // indirect
+	github.com/marten-seemann/qtls-go1-18 v0.1.1 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mdlayher/netlink v1.1.0 // indirect
 	github.com/mholt/archiver/v3 v3.5.1 // indirect
