@@ -185,7 +185,7 @@ featureoptions:
     - https://d3mm73d1kmj7zd.cloudfront.net/
     replicarustendpoint: &GlobalReplicaRust http://replica-search.lantern.io/
     staticpeeraddrs: []
-    # This list is from https://github.com/getlantern/dhtup/blob/main/trackers.go.
+    # This list is from https://github.com/getlantern/dhtup/blob/c8fde3e1a38abcb9709df07194ea2de3ae33bdbe/trackers.go#L14
     # We want to cover several transports (schemes here), support announces for Replica content and otherwise, and ensure results for regional differences. To that end a China tracker would be nice if it wasn't a vulnerability.
     # http(s) proxies must be added to the domain routing rules if they have non-standard ports.
     trackers: &GlobalTrackers
