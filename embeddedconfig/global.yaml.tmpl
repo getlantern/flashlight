@@ -185,15 +185,15 @@ featureoptions:
     - https://d3mm73d1kmj7zd.cloudfront.net/
     replicarustendpoint: &GlobalReplicaRust http://replica-search.lantern.io/
     staticpeeraddrs: []
-    # This list is compiled from data from dht-indexer, and https://github.com/ngosang/trackerslist. We want to cover several transports (schemes here), support announces for Replica content and otherwise, and ensure results for regional differences. To that end a China tracker would be nice if it wasn't a vulnerability.
+    # This list is from https://github.com/getlantern/dhtup/blob/c8fde3e1a38abcb9709df07194ea2de3ae33bdbe/trackers.go#L14
+    # We want to cover several transports (schemes here), support announces for Replica content and otherwise, and ensure results for regional differences. To that end a China tracker would be nice if it wasn't a vulnerability.
     # http(s) proxies must be added to the domain routing rules if they have non-standard ports.
     trackers: &GlobalTrackers
-      # This is the best tracker out there (other than DHT)
+    - udp://opentor.org:2710/announce
+    - http://tracker4.itzmx.com:2710/announce
     - udp://tracker.opentrackr.org:1337/announce
-      # A current high performer
-    - udp://9.rarbg.com:2810/announce
-      # A solid fallback
-    - http://tracker.openbittorrent.com:80/announce
+    - https://tracker.nanoha.org:443/announce
+    - http://t.nyaatracker.com:80/announce
     webseedbaseurls: *AllReplicaBaseUrls
     proxyannouncetargets: &GlobalProxyInfohashes
     - 94c3fe9ead4625e0529c334bbb90568accb35ce3
@@ -408,6 +408,7 @@ domainroutingrules:
   tracker.opentrackr.org: p
   9.rarbg.com: p
   tracker.openbittorrent.com: p
+  tracker4.itzmx.com: p
 
 proxiedsites:
   delta:
