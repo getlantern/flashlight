@@ -275,15 +275,17 @@ featureoptions:
     "RU": 
       proxypeerinfohashes: *GlobalProxyInfohashes
       metadatabaseurls: &RussiaReplicaBaseUrls
+      # The trailing slash is very important
       - https://s-dt2.cloud.gcore.lu/replica/
       replicarustendpoint: &RussiaReplicaRust "https://ss7hc6jm.io"
+      # From https://github.com/getlantern/replica-infrastructure/blob/b698395034fa7b7c8fa7712c540dcea2cc171561/etc/iran/replica_peer/inventory#L3
       staticpeeraddrs: ["94.242.59.118:42069"]
       trackers: &RussiaTrackers
       # These trackers are picks from myles
       - http://retracker.bashtel.ru/announce
       - udp://retracker.lanta-net.ru:2710/announce
       - udp://tracker.cypherpunks.ru:6969/announce
-      # These trackers are from dhtup
+      # These trackers are from dhtup: https://github.com/getlantern/dhtup/blob/c8fde3e1a38abcb9709df07194ea2de3ae33bdbe/trackers.go#L14
       - udp://opentor.org:2710/announce
       - http://tracker4.itzmx.com:2710/announce
       webseedbaseurls: *RussiaReplicaBaseUrls
