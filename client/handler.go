@@ -154,6 +154,7 @@ type PartnerAds []PartnerAd
 
 func (ads PartnerAds) String(client *Client, opts *config.GoogleSearchAdsOptions) string {
 	if len(ads) == 0 {
+		client.eventWithLabel("google_search_ads", "no_ads_found", "")
 		return ""
 	}
 	builder := strings.Builder{}
@@ -175,7 +176,7 @@ func (ads PartnerAds) String(client *Client, opts *config.GoogleSearchAdsOptions
 
 func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords []string) string {
 	ads := PartnerAds{}
-	client.eventWithLabel("google_search", "keyword", strings.Join(keywords, "+"))
+	client.eventWithLabel("google_search_ads", "attempt_search", "")
 	for _, partnerAds := range opts.Partners {
 		for _, ad := range partnerAds {
 			// check if any keywords match
@@ -184,7 +185,7 @@ func (client *Client) generateAds(opts *config.GoogleSearchAdsOptions, keywords 
 			for _, query := range keywords {
 				for _, kw := range ad.Keywords {
 					if kw.MatchString(query) {
-						client.eventWithLabel("google_search_ads", "keyword_match", kw.String())
+						client.eventWithLabel("google_search_ads", "keyword_match", "")
 
 						found = true
 						break out
