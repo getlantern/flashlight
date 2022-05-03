@@ -1,6 +1,6 @@
 module github.com/getlantern/flashlight
 
-go 1.17
+go 1.18
 
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.2.0
@@ -42,7 +42,7 @@ require (
 	github.com/getlantern/idletiming v0.0.0-20201229174729-33d04d220c4e
 	github.com/getlantern/iptool v0.0.0-20210901195942-5e13a4786de9
 	github.com/getlantern/jibber_jabber v0.0.0-20210901195950-68955124cc42
-	github.com/getlantern/kcpwrapper v0.0.0-20201001150218-1427e1d39c25
+	github.com/getlantern/kcpwrapper v0.0.0-20220503142841-b0e764933966
 	github.com/getlantern/keyman v0.0.0-20210622061955-aa0d47d4932c
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
 	github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210601195915-e04471aa4920
@@ -89,7 +89,7 @@ require (
 	gitlab.com/yawning/obfs4.git v0.0.0-20220204003609-77af0cba934d
 	golang.org/x/mobile v0.0.0-20210831151748-9cba7bc03c0f
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
-	golang.org/x/sys v0.0.0-20220128215802-99c3d69c2c27
+	golang.org/x/sys v0.0.0-20220502124256-b6088ccd6cba
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
@@ -145,7 +145,7 @@ require (
 	github.com/getlantern/grtrack v0.0.0-20210901195719-bdf9e1d12dac // indirect
 	github.com/getlantern/hex v0.0.0-20220104173244-ad7e4b9194dc // indirect
 	github.com/getlantern/http-proxy v0.0.3-0.20211022035117-86faba795750 // indirect
-	github.com/getlantern/kcp-go v2.0.3-0.20171025115649-19559e0e938c+incompatible // indirect
+	github.com/getlantern/kcp-go/v5 v5.0.0-20220503142114-f0c1cd6e1b54 // indirect
 	github.com/getlantern/keepcurrent v0.0.0-20220215112059-5f8a2d8c6787 // indirect
 	github.com/getlantern/msgpack v3.1.4+incompatible // indirect
 	github.com/getlantern/packetforward v0.0.0-20201001150407-c68a447b0360 // indirect
@@ -180,7 +180,9 @@ require (
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/juju/ratelimit v1.0.1 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/klauspost/cpuid v1.3.1 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
+	github.com/klauspost/reedsolomon v1.9.9 // indirect
 	github.com/libp2p/go-buffer-pool v0.0.2 // indirect
 	github.com/lucas-clemente/quic-go v0.19.3 // indirect
 	github.com/marten-seemann/qtls-go1-16 v0.1.4 // indirect
@@ -193,6 +195,7 @@ require (
 	github.com/mikioh/tcpinfo v0.0.0-20180831101334-131b59fef27f // indirect
 	github.com/mikioh/tcpopt v0.0.0-20180707144150-7178f18b4ea8 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/mmcloughlin/avo v0.0.0-20200803215136-443f81d77104 // indirect
 	github.com/montanaflynn/stats v0.6.3 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/nwaples/rardecode v1.1.0 // indirect
@@ -234,9 +237,8 @@ require (
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/templexxx/cpufeat v0.0.0-20180724012125-cef66df7f161 // indirect
-	github.com/templexxx/reedsolomon v0.0.0-20170927015403-7092926d7d05 // indirect
-	github.com/templexxx/xor v0.0.0-20191217153810-f85b25db303b // indirect
+	github.com/templexxx/cpu v0.0.8 // indirect
+	github.com/templexxx/xorsimd v0.4.1 // indirect
 	github.com/ti-mo/conntrack v0.3.0 // indirect
 	github.com/ti-mo/netfilter v0.3.1 // indirect
 	github.com/tjfoc/gmsm v1.3.2 // indirect
