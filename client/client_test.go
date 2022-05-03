@@ -80,6 +80,7 @@ func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, 
 }
 
 func newClient() *Client {
+	TimeoutWaitingForDNSResolutionMap = 1 * time.Millisecond // For testing, don't wait for a code that won't be run anyways
 	return newClientWithLangAndAdSwapTargetURL(testLang, testAdSwapTargetURL)
 }
 

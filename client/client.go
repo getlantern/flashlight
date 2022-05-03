@@ -515,6 +515,8 @@ func (client *Client) Stop() error {
 	return socksError
 }
 
+var TimeoutWaitingForDNSResolutionMap = 5 * time.Second
+
 func (client *Client) dial(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {
 	op := ops.BeginWithBeam("proxied_dialer", ctx)
 	op.Set("local_proxy_type", "http")
@@ -525,9 +527,10 @@ func (client *Client) dial(ctx context.Context, isConnect bool, network, addr st
 	// XXX <01-04-2022, soltzen> Do this fetch now, so it won't be affected by
 	// the context timeout of client.doDial()
 	var dnsResolutionMapForDirectDials map[string]string
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-	tmp, err := client.DNSResolutionMapForDirectDialsEventual.Get(ctx)
+
+	ctx1, cancel1 := context.WithTimeout(ctx, TimeoutWaitingForDNSResolutionMap)
+	defer cancel1()
+	tmp, err := client.DNSResolutionMapForDirectDialsEventual.Get(ctx1)
 	if err != nil {
 		log.Debugf("Timed out before waiting for dnsResolutionMapEventual to be set")
 		dnsResolutionMapForDirectDials = nil
@@ -535,9 +538,9 @@ func (client *Client) dial(ctx context.Context, isConnect bool, network, addr st
 		dnsResolutionMapForDirectDials = tmp.(map[string]string)
 	}
 
-	ctx, cancel = context.WithTimeout(ctx, client.requestTimeout)
-	defer cancel()
-	return client.doDial(op, ctx, isConnect, addr, dnsResolutionMapForDirectDials)
+	ctx2, cancel2 := context.WithTimeout(ctx, client.requestTimeout)
+	defer cancel2()
+	return client.doDial(op, ctx2, isConnect, addr, dnsResolutionMapForDirectDials)
 }
 
 // doDial is the ultimate place to dial an origin site. It takes following steps:
