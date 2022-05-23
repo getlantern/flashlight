@@ -5,10 +5,10 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -21,6 +21,11 @@ import (
 
 var (
 	forceCountry atomic.Value
+)
+
+const (
+	defaultSleep = 120 * time.Second
+	minSleep     = 60 * time.Second
 )
 
 // ForceCountry forces config fetches to pretend client is running in the
@@ -74,6 +79,7 @@ func (cf *fetcher) fetch() ([]byte, time.Duration, error) {
 }
 
 func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op) ([]byte, time.Duration, error) {
+	start := time.Now()
 	log.Debugf("Fetching cloud config from %v", cf.originURL)
 
 	sleepTime := noSleep
@@ -109,15 +115,13 @@ func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op) ([]byte, time.Durati
 		return nil, sleepTime, fmt.Errorf("Unable to fetch cloud config at %s: %s", url, err)
 	}
 
-	sleepVal := resp.Header.Get("X-Lantern-Config-Sleep")
-	if sleepVal != "" {
-		seconds, err := strconv.ParseInt(sleepVal, 10, 64)
-		if err != nil {
-			log.Errorf("Could not parse sleep val: %v", err)
-		} else {
-			sleepTime = time.Duration(seconds) * time.Second
-		}
+	sleepTime = defaultSleep - time.Since(start)
+	if sleepTime < minSleep {
+		sleepTime = minSleep
 	}
+
+	// Add jitter.
+	sleepTime += time.Duration(rand.Int63n(int64(minSleep)))
 
 	dump, dumperr := httputil.DumpResponse(resp, false)
 	if dumperr != nil {
