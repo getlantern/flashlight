@@ -151,7 +151,7 @@ func TestSwitchingToChained(t *testing.T) {
 
 	cf.getFetcher().(*dualFetcher).do(req, chained, &delayedRT{fronted, 100 * time.Millisecond})
 	time.Sleep(100 * time.Millisecond)
-	_, valid = cf.getFetcher().(*chainedFetcher)
+	_, valid = cf.getFetcher().(*chainedRoundTripper)
 	assert.True(t, valid, "should switch to chained fetcher")
 }
 

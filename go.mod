@@ -5,10 +5,9 @@ go 1.18
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.2.0
 	github.com/PuerkitoBio/goquery v1.7.0
-	github.com/anacrolix/dht/v2 v2.16.2-0.20220311024416-dd658f18fd51
+	github.com/anacrolix/dht/v2 v2.17.1-0.20220426014940-bf548049b40e
 	github.com/anacrolix/go-libutp v1.2.0
 	github.com/anacrolix/missinggo/v2 v2.7.0
-	github.com/anacrolix/publicip v0.2.0
 	github.com/andybalholm/brotli v1.0.4
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/dustin/go-humanize v1.0.0
@@ -22,7 +21,7 @@ require (
 	github.com/getlantern/cmuxprivate v0.0.0-20211216020409-d29d0d38be54
 	github.com/getlantern/common v1.1.1-0.20211216020417-0ac01e41560d
 	github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1
-	github.com/getlantern/dhtup v0.0.0-20220425111551-c8fde3e1a38a
+	github.com/getlantern/dhtup v0.0.0-20220627142103-ed614929df34
 	github.com/getlantern/dnsgrab v0.0.0-20211216020425-5d5e155a01a8
 	github.com/getlantern/domains v0.0.0-20220311111720-94f59a903271
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
@@ -60,7 +59,7 @@ require (
 	github.com/getlantern/proxy/v2 v2.0.1-0.20220303164029-b34b76e0e581
 	github.com/getlantern/proxybench v0.0.0-20220404140110-f49055cb86de
 	github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683
-	github.com/getlantern/quicproxy v0.0.0-20220427095244-8bb0d524216d
+	github.com/getlantern/quicproxy v0.0.0-20220706115310-e874efcd6d64
 	github.com/getlantern/quicwrapper v0.0.0-20220427102501-537d4dc89543
 	github.com/getlantern/ring v0.0.0-20210901200052-aea475211e37 // indirect
 	github.com/getlantern/rot13 v0.0.0-20210901200056-01bce62cb8bb
@@ -80,10 +79,10 @@ require (
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/google/gopacket v1.1.17
 	github.com/hashicorp/golang-lru v0.5.4
-	github.com/huin/goupnp v1.0.3-0.20220113221608-730ab6506b9d
+	github.com/huin/goupnp v1.0.3 // indirect
 	github.com/jaffee/commandeer v0.5.0
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
-	github.com/lucas-clemente/quic-go v0.27.0 // indirect
+	github.com/lucas-clemente/quic-go v0.27.1 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/go-server-timing v1.0.0
@@ -97,33 +96,39 @@ require (
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
 	gitlab.com/yawning/obfs4.git v0.0.0-20220204003609-77af0cba934d
 	golang.org/x/mobile v0.0.0-20210831151748-9cba7bc03c0f
-	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
-	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
-	golang.org/x/sys v0.0.0-20220502124256-b6088ccd6cba
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
+	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29 // indirect
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
+
+require github.com/getlantern/libp2p v0.0.0-00010101000000-000000000000
 
 require (
 	crawshaw.io/sqlite v0.3.3-0.20210127221821-98b1f83c5508 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1.0.20210721174708-390f27c3be20 // indirect
 	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
-	github.com/RoaringBitmap/roaring v0.9.4 // indirect
+	github.com/RoaringBitmap/roaring v1.0.1-0.20220510143707-3f418c4f42a4 // indirect
 	github.com/Yawning/chacha20 v0.0.0-20170904085104-e3b1f968fc63 // indirect
+	github.com/ajwerner/btree v0.0.0-20211221152037-f427b3e689c0 // indirect
 	github.com/anacrolix/chansync v0.3.0 // indirect
-	github.com/anacrolix/envpprof v1.1.1 // indirect
-	github.com/anacrolix/log v0.13.1 // indirect
+	github.com/anacrolix/envpprof v1.2.1 // indirect
+	github.com/anacrolix/generics v0.0.0-20220510042907-b50562b436ec // indirect
+	github.com/anacrolix/log v0.13.2-0.20220426014722-7b7d13a55d55 // indirect
 	github.com/anacrolix/missinggo v1.3.0 // indirect
 	github.com/anacrolix/missinggo/perf v1.0.0 // indirect
 	github.com/anacrolix/mmsg v1.0.0 // indirect
-	github.com/anacrolix/multiless v0.2.0 // indirect
+	github.com/anacrolix/multiless v0.2.1-0.20211218050420-533661eef5dc // indirect
+	github.com/anacrolix/publicip v0.2.0 // indirect
 	github.com/anacrolix/squirrel v0.4.1-0.20220122230132-14b040773bac // indirect
 	github.com/anacrolix/stm v0.3.0 // indirect
 	github.com/anacrolix/sync v0.4.0 // indirect
-	github.com/anacrolix/torrent v1.41.1-0.20220315024234-5a61d8f6ac93 // indirect
+	github.com/anacrolix/torrent v1.43.1 // indirect
 	github.com/anacrolix/upnp v0.1.3-0.20220123035249-922794e51c96 // indirect
 	github.com/anacrolix/utp v0.1.0 // indirect
 	github.com/andybalholm/cascadia v1.1.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
+	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/benbjohnson/immutable v0.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.2.0 // indirect
@@ -165,6 +170,7 @@ require (
 	github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c // indirect
 	github.com/getlantern/sqlparser v0.0.0-20171012210704-a879d8035f3c // indirect
 	github.com/getlantern/testredis v0.0.0-20210901200107-a4ed71579e17 // indirect
+	github.com/getlantern/upnp v0.0.0-20220531140457-71a975af1fad // indirect
 	github.com/getlantern/wal v0.0.0-20220217194315-e4eac848dbd1 // indirect
 	github.com/getlantern/withtimeout v0.0.0-20160829163843-511f017cd913 // indirect
 	github.com/getlantern/zenodb v0.0.0-20220217194355-df46cc148a8c // indirect
@@ -184,6 +190,7 @@ require (
 	github.com/gonum/stat v0.0.0-20180125090729-ec9c8a1062f4 // indirect
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/uuid v1.3.0 // indirect
+	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/juju/ratelimit v1.0.1 // indirect
@@ -192,6 +199,7 @@ require (
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/klauspost/reedsolomon v1.9.9 // indirect
 	github.com/libp2p/go-buffer-pool v0.0.2 // indirect
+	github.com/lispad/go-generics-tools v1.0.0 // indirect
 	github.com/marten-seemann/qtls-go1-16 v0.1.5 // indirect
 	github.com/marten-seemann/qtls-go1-17 v0.1.1 // indirect
 	github.com/marten-seemann/qtls-go1-18 v0.1.1 // indirect
@@ -247,6 +255,7 @@ require (
 	github.com/templexxx/xorsimd v0.4.1 // indirect
 	github.com/ti-mo/conntrack v0.3.0 // indirect
 	github.com/ti-mo/netfilter v0.3.1 // indirect
+	github.com/tidwall/btree v0.7.2-0.20211211132910-4215444137fc // indirect
 	github.com/tjfoc/gmsm v1.3.2 // indirect
 	github.com/tkuchiki/go-timezone v0.2.0 // indirect
 	github.com/ulikunitz/xz v0.5.9 // indirect
@@ -258,10 +267,11 @@ require (
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.19.1 // indirect
 	golang.org/x/crypto v0.0.0-20220131195533-30dcbda58838 // indirect
-	golang.org/x/mod v0.4.2 // indirect
+	golang.org/x/exp v0.0.0-20220428152302-39d4317da171 // indirect
+	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
-	golang.org/x/tools v0.1.8-0.20211022200916-316ba0b74098 // indirect
+	golang.org/x/tools v0.1.10 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220207164111-0872dc986b00 // indirect
@@ -300,7 +310,14 @@ replace github.com/ulikunitz/xz => github.com/ulikunitz/xz v0.5.8
 // on this unmerged PR against gomobile - https://github.com/golang/mobile/pull/58.
 replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336-0bdf708b6d0f
 
-replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220330104250-bffc7f58a7b2
+replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220602100809-d4833a9d9175
+
+// replace github.com/elazarl/goproxy => ../goproxy
 
 // replace github.com/getlantern/dhtup => ../dhtup
-// replace github.com/elazarl/goproxy => ../goproxy
+
+replace github.com/getlantern/libp2p => ../libp2p
+
+// replace github.com/getlantern/geolookup => ../geolookup
+
+// replace github.com/getlantern/quicproxy => ../quicproxy

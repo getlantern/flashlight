@@ -14,6 +14,7 @@ import (
 	"github.com/getlantern/eventual/v2"
 	geo "github.com/getlantern/geolookup"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/libp2p/p2p"
 
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
@@ -27,7 +28,7 @@ var (
 	watchers       []chan bool
 	persistToFile  string
 	mx             sync.Mutex
-	roundTripper   http.RoundTripper = proxied.ParallelPreferChained()
+	roundTripper   http.RoundTripper
 )
 
 const (
@@ -39,6 +40,10 @@ const (
 type GeoInfo struct {
 	IP   string
 	City *geo.City
+}
+
+func init() {
+	SetDefaultRoundTripper()
 }
 
 // GetIP gets the IP. If the IP hasn't been determined yet, waits up to the
@@ -74,7 +79,11 @@ func GetGeoInfo(timeout time.Duration) (*GeoInfo, error) {
 
 	gi, err := currentGeoInfo.Get(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("could not get geoinfo with timeout %v: %w", timeout, err)
+		return nil, fmt.Errorf(
+			"could not get geoinfo with timeout %v: %w",
+			timeout,
+			err,
+		)
 	}
 	if gi == nil {
 		return nil, fmt.Errorf("no geo info after %v", timeout)
@@ -103,7 +112,11 @@ func EnablePersistence(geoFile string) {
 			gi := &GeoInfo{}
 			decodeErr := dec.Decode(gi)
 			if decodeErr != nil {
-				log.Errorf("Error initializing geolocation info from %v: %v", persistToFile, decodeErr)
+				log.Errorf(
+					"Error initializing geolocation info from %v: %v",
+					persistToFile,
+					decodeErr,
+				)
 				return
 			}
 			setGeoInfo(gi, false)
@@ -162,12 +175,19 @@ func setGeoInfo(gi *GeoInfo, persist bool) {
 	if persist && persistToFile != "" {
 		b, err := json.Marshal(gi)
 		if err != nil {
-			log.Errorf("Unable to marshal geolocation info to JSON for persisting: %v", err)
+			log.Errorf(
+				"Unable to marshal geolocation info to JSON for persisting: %v",
+				err,
+			)
 			return
 		}
 		writeErr := ioutil.WriteFile(persistToFile, b, 0644)
 		if writeErr != nil {
-			log.Errorf("Error persisting geolocation info to %v: %v", persistToFile, err)
+			log.Errorf(
+				"Error persisting geolocation info to %v: %v",
+				persistToFile,
+				err,
+			)
 		}
 	}
 }
@@ -179,7 +199,14 @@ func lookup() *GeoInfo {
 		gi, err := doLookup()
 		if err != nil {
 			log.Debugf("Unable to get current location: %s", err)
-			wait := time.Duration(math.Pow(2, float64(consecutiveFailures))*float64(retryWaitMillis)) * time.Millisecond
+			wait := time.Duration(
+				math.Pow(
+					2,
+					float64(consecutiveFailures),
+				)*float64(
+					retryWaitMillis,
+				),
+			) * time.Millisecond
 			if wait > maxRetryWait {
 				wait = maxRetryWait
 			}
@@ -202,4 +229,71 @@ func doLookup() (*GeoInfo, error) {
 		return nil, op.FailIf(err)
 	}
 	return &GeoInfo{ip, city}, nil
+}
+
+func SetDefaultRoundTripper() {
+	roundTripper = proxied.ParallelPreferChained()
+}
+
+// SetParallelFlowRoundTripper sets this package to use the "Parallel Flow"
+// roundtripper, which means run the following roundtrippers in parallel and
+// return whichever one you can find:
+// - "chained" (preferred)
+//   - Runs the requests proxied through Lantern proxies
+//   - This is preferred, meaning we'll take whatever it returns immediately,
+//     and, if this returned, subsequent requests will always go through this,
+//     until they fail, in which case, we'll restart trying with the rest
+// - "fronted"
+//   - Runs the request through domain-fronting
+// - "p2p"
+//   - Runs the request through the P2P flow (see
+//     https://docs.google.com/document/d/1JUjZHgpnunmwG3wUwlSmCKFwOGOXkkwyGd7cgrOJzbs/edit)
+//
+// Leave masqueradeTimeout empty to use the default value
+func SetParallelFlowRoundTripper(
+	cpc *p2p.CensoredP2pCtx,
+	masqueradeTimeout time.Duration,
+	addDebugHeaders bool,
+	onStartRoundTripFunc proxied.OnStartRoundTrip,
+	onCompleteRoundTripFunc proxied.OnCompleteRoundTrip,
+) error {
+	chained, err := proxied.ChainedNonPersistent("")
+	if err != nil {
+		return fmt.Errorf(
+			"SetParallelFlowRoundTripper: Could not create chained roundTripper: %v",
+			err,
+		)
+	}
+
+	roundTripper = proxied.NewProxiedFlow(&proxied.ProxiedFlowInput{
+		AddDebugHeaders:         true,
+		OnStartRoundTripFunc:    onStartRoundTripFunc,
+		OnCompleteRoundTripFunc: onCompleteRoundTripFunc,
+	}).
+		Add(proxied.FlowComponentID_Chained, chained, true).
+		Add(proxied.FlowComponentID_Fronted, proxied.Fronted(masqueradeTimeout), false).
+		Add(proxied.FlowComponentID_P2P, cpc, false)
+	return nil
+}
+
+// SetP2PRoundTripper sets this package to use the "P2P" roundtripper only.
+// This is useful for local testing. Use "SetParallelFlowRoundTripper" for
+// production.
+//
+// "P2P" here means run the request through the P2P flow (see
+// https://docs.google.com/document/d/1JUjZHgpnunmwG3wUwlSmCKFwOGOXkkwyGd7cgrOJzbs/edit)
+//
+// Leave masqueradeTimeout empty to use the default value
+func SetP2PRoundTripper(
+	cpc *p2p.CensoredP2pCtx,
+	addDebugHeaders bool,
+	onStartRoundTripFunc proxied.OnStartRoundTrip,
+	onCompleteRoundTripFunc proxied.OnCompleteRoundTrip,
+) error {
+	roundTripper = proxied.NewProxiedFlow(&proxied.ProxiedFlowInput{
+		AddDebugHeaders:         true,
+		OnStartRoundTripFunc:    onStartRoundTripFunc,
+		OnCompleteRoundTripFunc: onCompleteRoundTripFunc,
+	}).Add(proxied.FlowComponentID_P2P, cpc, false)
+	return nil
 }
