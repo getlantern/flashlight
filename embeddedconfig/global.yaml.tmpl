@@ -57,6 +57,16 @@ reportissueemail: support@lantern.jitbit.com
 #
 
 featuresenabled:
+  p2preepeer:
+  - geocountries: de
+    label: p2pcensoredpeer
+    platforms: darwin,windows,linux
+    versionconstraints: '>=99.0.0'
+  p2pcensoredpeer:
+  - geocountries: de
+    label: p2pfreepeer
+    platforms: darwin,windows,linux
+    versionconstraints: '>=99.0.0'
   yinbi:
     - label: yinbi
       application: lantern
@@ -151,6 +161,14 @@ featuresenabled:
       userfloor: 0
       userceil: 1
 featureoptions:
+  p2pcensoredpeer:
+    bep46_targets:
+    - 94c3fe9ead4625e0529c334bbb90568accb35ce3
+    - 77c89c352dcca36846c77541d9e2c6b4aa944790
+    - dbea91bb2d2953dc8c46272eb32cb4781ec588c5
+  p2pfreepeer:
+    registrar_endpoint: 'https://p2pregistrar-production.fly.dev'
+
   googlesearchads:
     ad_format: "\n            <div style=\"padding-bottom: 8px;\">\n             \
       \   <div>\n                    <span style=\"font-weight: bold;\">Ad<span style=\"\

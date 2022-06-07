@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/p2p"
+	"github.com/getlantern/libp2p/p2p"
 )
 
 const DebugTransportIdResponseHeader = "TransportId"
@@ -52,43 +52,6 @@ type frontedP2pRoundTripper struct {
 
 func (conn *frontedP2pRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	// Define a couple of helper functions
-	doRequestFunc := func(
-		ctx context.Context,
-		transportId TransportId,
-		interceptorFunc InterceptorFunc,
-		cl *http.Client,
-		req *http.Request,
-		respChan chan *http.Response,
-		errChan chan error,
-		addDebugHeaders bool,
-	) {
-		// Run request
-		if interceptorFunc != nil {
-			interceptorFunc(transportId, cl, req)
-		}
-		resp, err := cl.Do(req)
-		// Check If context is cancelled before anything: if so, exit silently
-		select {
-		case <-ctx.Done():
-			log.Debugf("Ignoring returned response after ctx is done")
-			return
-		default:
-		}
-		if err != nil {
-			errChan <- fmt.Errorf("during roundtrip of request [%v]: %w",
-				req.URL, err)
-			return
-		}
-		if addDebugHeaders {
-			resp.Header.Set(
-				DebugTransportIdResponseHeader,
-				string(transportId))
-		}
-		respChan <- resp
-	}
-
-	respChan := make(chan *http.Response)
-	errChan := make(chan error)
 	ctx, cancel := context.WithCancel(context.Background())
 	// Prep Fronted request
 	reqFronted := req.WithContext(ctx)
@@ -99,12 +62,14 @@ func (conn *frontedP2pRoundTripper) RoundTrip(req *http.Request) (*http.Response
 	clP2p := &http.Client{Transport: conn.p2pCtx}
 
 	// Run Requests
-	go doRequestFunc(ctx,
+	respChan := make(chan *http.Response)
+	errChan := make(chan error)
+	go runRequest(ctx,
 		TransportId_Fronted,
 		conn.interceptorFunc,
 		clFronted, reqFronted,
 		respChan, errChan, conn.addDebugHeaders)
-	go doRequestFunc(ctx,
+	go runRequest(ctx,
 		TransportId_P2p,
 		conn.interceptorFunc,
 		clP2p, reqP2p,
@@ -143,4 +108,40 @@ looper:
 		return resp, nil
 	}
 	panic("unreachable code")
+}
+
+func runRequest(
+	ctx context.Context,
+	transportId TransportId,
+	interceptorFunc InterceptorFunc,
+	cl *http.Client,
+	req *http.Request,
+	respChan chan *http.Response,
+	errChan chan error,
+	addDebugHeaders bool,
+) {
+	// log.Debugf("runRequest with %v\n", transportId)
+	if interceptorFunc != nil {
+		interceptorFunc(transportId, cl, req)
+	}
+
+	resp, err := cl.Do(req)
+	// Check If context is cancelled before anything: if so, exit silently
+	select {
+	case <-ctx.Done():
+		// log.Debugf("Ignoring returned response after ctx is done")
+		return
+	default:
+	}
+	if err != nil {
+		errChan <- fmt.Errorf("during roundtrip of request [%v]: %w",
+			req.URL, err)
+		return
+	}
+	if addDebugHeaders {
+		resp.Header.Set(
+			DebugTransportIdResponseHeader,
+			string(transportId))
+	}
+	respChan <- resp
 }

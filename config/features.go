@@ -34,6 +34,8 @@ const (
 	FeatureGoogleAnalytics      = "googleanalytics"
 	FeatureMatomo               = "matomo"
 	FeatureChat                 = "chat"
+	FeatureP2pFreePeer          = "p2pfreepeer"
+	FeatureP2pCensoredPeer      = "p2pcensoredpeer"
 )
 
 var (
@@ -113,6 +115,32 @@ func (ro *ReplicaOptions) GetProxyAnnounceTargets() []string {
 
 func (ro *ReplicaOptions) GetProxyPeerInfoHashes() []string {
 	return ro.ProxyPeerInfoHashes
+}
+
+type P2pFreePeerOptions struct {
+	RegistrarEndpoint string `mapstructure:"registrar_endpoint"`
+}
+
+func (o *P2pFreePeerOptions) fromMap(m map[string]interface{}) error {
+	registrarEndpoint, err := somethingFromMap[string](m, "registrar_endpoint")
+	if err != nil {
+		return err
+	}
+	o.RegistrarEndpoint = registrarEndpoint
+	return nil
+}
+
+type P2pCensoredPeerOptions struct {
+	Bep46Targets []string `mapstructure:"bep46_targets"`
+}
+
+func (o *P2pCensoredPeerOptions) fromMap(m map[string]interface{}) error {
+	bep46Targets, err := somethingFromMap[[]string](m, "bep46_targets")
+	if err != nil {
+		return err
+	}
+	o.Bep46Targets = bep46Targets
+	return nil
 }
 
 type GoogleSearchAdsOptions struct {
@@ -207,11 +235,11 @@ type TrafficLogOptions struct {
 
 func (o *TrafficLogOptions) fromMap(m map[string]interface{}) error {
 	var err error
-	o.CaptureBytes, err = intFromMap(m, "capturebytes")
+	o.CaptureBytes, err = somethingFromMap[int](m, "capturebytes")
 	if err != nil {
 		return errors.New("error unmarshaling 'capturebytes': %v", err)
 	}
-	o.SaveBytes, err = intFromMap(m, "savebytes")
+	o.SaveBytes, err = somethingFromMap[int](m, "savebytes")
 	if err != nil {
 		return errors.New("error unmarshaling 'savebytes': %v", err)
 	}
@@ -219,7 +247,7 @@ func (o *TrafficLogOptions) fromMap(m map[string]interface{}) error {
 	if err != nil {
 		return errors.New("error unmarshaling 'capturesaveduration': %v", err)
 	}
-	o.Reinstall, err = boolFromMap(m, "reinstall")
+	o.Reinstall, err = somethingFromMap[bool](m, "reinstall")
 	if err != nil {
 		return errors.New("error unmarshaling 'reinstall': %v", err)
 	}
@@ -227,7 +255,7 @@ func (o *TrafficLogOptions) fromMap(m map[string]interface{}) error {
 	if err != nil {
 		return errors.New("error unmarshaling 'waittimesincefailedinstall': %v", err)
 	}
-	o.UserDenialThreshold, err = intFromMap(m, "userdenialthreshold")
+	o.UserDenialThreshold, err = somethingFromMap[int](m, "userdenialthreshold")
 	if err != nil {
 		return errors.New("error unmarshaling 'userdenialthreshold': %v", err)
 	}
@@ -358,38 +386,24 @@ func csvContains(csv, s string) bool {
 	return false
 }
 
-func boolFromMap(m map[string]interface{}, name string) (bool, error) {
+func somethingFromMap[T any](m map[string]interface{}, name string) (T, error) {
+	var ret T
 	v, exists := m[name]
 	if !exists {
-		return false, errAbsentOption
+		return ret, errAbsentOption
 	}
-	b, ok := v.(bool)
+	var ok bool
+	ret, ok = v.(T)
 	if !ok {
-		return false, errMalformedOption
+		return ret, errMalformedOption
 	}
-	return b, nil
-}
-
-func intFromMap(m map[string]interface{}, name string) (int, error) {
-	v, exists := m[name]
-	if !exists {
-		return 0, errAbsentOption
-	}
-	i, ok := v.(int)
-	if !ok {
-		return 0, errMalformedOption
-	}
-	return i, nil
+	return ret, nil
 }
 
 func durationFromMap(m map[string]interface{}, name string) (time.Duration, error) {
-	v, exists := m[name]
-	if !exists {
-		return 0, errAbsentOption
-	}
-	s, ok := v.(string)
-	if !ok {
-		return 0, errMalformedOption
+	s, err := somethingFromMap[string](m, name)
+	if err != nil {
+		return 0, err
 	}
 	d, err := time.ParseDuration(s)
 	if err != nil {

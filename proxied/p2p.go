@@ -3,7 +3,7 @@ package proxied
 import (
 	"net/http"
 
-	"github.com/getlantern/flashlight/p2p"
+	"github.com/getlantern/libp2p/p2p"
 )
 
 // P2p returns an http.RoundTripper capable of proxying requests through peers.

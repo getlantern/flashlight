@@ -181,11 +181,17 @@ func TestReplicaProxying(t *testing.T) {
 	assert.Len(fos.ByCountry["IR"].ProxyPeerInfoHashes, numInfohashes)
 }
 
-func TestRussia(t *testing.T) {
+// TestReplicaConfigBackwardsCompatibility checks if the old Replica config format (with "ReplicaRustEndpoints") still work with the new config, which has country-specific configs (using ByCountry["RU"]
+func TestReplicaConfigBackwardsCompatibility(t *testing.T) {
 	assert := assert.New(t)
 	fos := getReplicaOptionsRoot(t)
 	// This checks that the alias propagates to the old config correctly.
 	assert.Equal(fos.ByCountry["RU"].ReplicaRustEndpoint, fos.ReplicaRustEndpoints["RU"])
+}
+
+func TestP2p(t *testing.T) {
+	gl := globalFromTemplate(t)
+	assert.True(t, gl.FeatureEnabled(FeatureP2pFreePeer, "android", common.DefaultAppName, "7.0.0", 1, false, "ae"), "Chat is enabled in UAE when running 7.0.0")
 }
 
 func TestChatEnabled(t *testing.T) {
