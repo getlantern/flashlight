@@ -29,6 +29,7 @@ import (
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/goroutines"
 	fops "github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/otel"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/stats"
@@ -103,6 +104,7 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	f.applyClientConfig(cfg)
 	f.applyProxyBench(cfg)
 	f.applyBorda(cfg)
+	f.applyOtel(cfg)
 	select {
 	case f.onBordaConfigured <- true:
 		// okay
@@ -301,6 +303,12 @@ func (f *Flashlight) applyBorda(cfg *config.Global) {
 		return _enableBorda(ctx)
 	}
 	borda.Configure(cfg.BordaReportInterval, enableBorda)
+}
+
+func (f *Flashlight) applyOtel(cfg *config.Global) {
+	if cfg.Otel != nil && f.FeatureEnabled(config.FeatureOtel) {
+		otel.Configure(cfg.Otel)
+	}
 }
 
 // New creates a client proxy.

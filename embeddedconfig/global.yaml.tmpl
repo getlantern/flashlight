@@ -57,6 +57,10 @@ reportissueemail: support@lantern.jitbit.com
 #
 
 featuresenabled:
+  otel:
+    - label: opentelemetry
+      userfloor: 0
+      userceil: 0.01
   yinbi:
     - label: yinbi
       application: lantern
@@ -427,3 +431,14 @@ replica:
   staticpeeraddrs: []
   metadatabaseurls: *AllReplicaBaseUrls
   replicaserviceendpoint: *GlobalReplicaRust
+
+otel:
+  endpoint: api.honeycomb.io:443
+  headers:
+    x-honeycomb-team: GKSJeT1vfWEWgGzPoxiKLE
+  samplerate: 1000
+  opsamplerates:
+    client_started: 1
+    client_stopped: 1
+    report_issue: 1
+  
