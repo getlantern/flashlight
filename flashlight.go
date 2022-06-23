@@ -77,6 +77,10 @@ func (t HandledErrorType) String() string {
 	}
 }
 
+type ProxyListener interface {
+	OnProxies(map[string]*chained.ChainedServerInfo)
+}
+
 type Flashlight struct {
 	configDir         string
 	flagsAsMap        map[string]interface{}
@@ -92,6 +96,8 @@ type Flashlight struct {
 	op                *fops.Op
 	errorHandler      func(HandledErrorType, error)
 	dhtupContext      *dhtup.Context
+	mxProxyListeners  sync.RWMutex
+	proxyListeners    []ProxyListener
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
@@ -238,9 +244,24 @@ func (f *Flashlight) FeatureOptions(feature string, opts config.FeatureOptions) 
 	return global.UnmarshalFeatureOptions(feature, opts)
 }
 
+func (f *Flashlight) AddProxyListener(listener ProxyListener) {
+	f.mxProxyListeners.Lock()
+	defer f.mxProxyListeners.Unlock()
+	f.proxyListeners = append(f.proxyListeners, listener)
+}
+
+func (f *Flashlight) notifyProxyListeners(proxies map[string]*chained.ChainedServerInfo) {
+	f.mxProxyListeners.RLock()
+	defer f.mxProxyListeners.RUnlock()
+	for _, l := range f.proxyListeners {
+		go l.OnProxies(proxies)
+	}
+}
+
 func (f *Flashlight) startConfigFetch() func() {
 	proxiesDispatch := func(conf interface{}, src config.Source) {
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
+		f.notifyProxyListeners(proxyMap)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
 		dialers := f.client.Configure(proxyMap)
 		if dialers != nil {
