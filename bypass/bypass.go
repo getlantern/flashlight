@@ -1,5 +1,8 @@
 package bypass
 
+// bypass periodically sends traffic to the bypass blocking detection server. It uses domain fronting
+// and proxy traffic ratio to determine if proxies are blocked. It randomizes the intervals between
+// calls to the server and also randomizes the length of requests.
 import (
 	"bytes"
 	"crypto/rand"
