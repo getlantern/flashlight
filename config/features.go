@@ -34,6 +34,7 @@ const (
 	FeatureGoogleAnalytics      = "googleanalytics"
 	FeatureMatomo               = "matomo"
 	FeatureChat                 = "chat"
+	FeatureOtel                 = "otel"
 )
 
 var (
