@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/json"
+	"io"
 	"math/big"
 	"net/http"
 	"sync"
@@ -11,25 +12,25 @@ import (
 
 	mrand "math/rand"
 
-	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
 )
 
 var log = golog.LoggerFor("bypass")
 
 type bypass struct {
-	client    *http.Client
 	infos     map[string]*chained.ChainedServerInfo
 	proxies   []*proxy
 	mxProxies sync.Mutex
 }
 
-type proxy struct {
-	*chained.ChainedServerInfo
-	name       string
-	done       chan bool
-	randString string
+// Starts client access to the bypass server. The client periodically sends traffic to the server both via
+// domain fronting and proxying to determine if proxies are blocked.
+func Start(listen func(func(map[string]*chained.ChainedServerInfo))) func() {
+	b := &bypass{proxies: make([]*proxy, 0)}
+	listen(b.OnProxies)
+	return b.reset
 }
 
 func (b *bypass) OnProxies(infos map[string]*chained.ChainedServerInfo) {
@@ -39,7 +40,7 @@ func (b *bypass) OnProxies(infos map[string]*chained.ChainedServerInfo) {
 	for k, v := range infos {
 		p := b.newProxy(k, v)
 		b.proxies = append(b.proxies, p)
-		go p.start(b.client)
+		go p.start()
 	}
 }
 
@@ -48,21 +49,8 @@ func (b *bypass) newProxy(name string, info *chained.ChainedServerInfo) *proxy {
 		ChainedServerInfo: info,
 		name:              name,
 		done:              make(chan bool),
+		rt:                proxied.Parallel(),
 	}
-}
-
-func randomizedString() string {
-	const charset = "abcdefghijklmnopqrstuvwxyz"
-	size, err := rand.Int(rand.Reader, big.NewInt(300))
-	if err != nil {
-		return ""
-	}
-
-	bytes := make([]byte, size.Int64())
-	for i := range bytes {
-		bytes[i] = charset[mrand.Intn(len(charset))]
-	}
-	return string(bytes)
 }
 
 func (b *bypass) reset() {
@@ -72,35 +60,54 @@ func (b *bypass) reset() {
 	b.proxies = make([]*proxy, 0)
 }
 
-// Starts client access to the bypass server. The client periodically sends traffic to the server both via
-// domain fronting and proxying to determine if proxies are blocked.
-func Start(listen func(flashlight.ProxyListener)) {
-	StartWith(http.DefaultClient, listen)
+type proxy struct {
+	*chained.ChainedServerInfo
+	name       string
+	done       chan bool
+	randString string
+	rt         http.RoundTripper
 }
 
-func StartWith(client *http.Client, listen func(flashlight.ProxyListener)) {
-	b := &bypass{client: client, proxies: make([]*proxy, 0)}
-	listen(b)
-}
-
-func (p *proxy) start(client *http.Client) {
+func (p *proxy) start() {
 	p.callRandomly(func() {
-		// We include a random length string here to make it harder for censors to identify lantern based on
-		// consistent packet lengths.
-		p.randString = randomizedString()
-
-		// Just posting all the info about the server allows us to control these fields fully on the server
-		// side.
-		infoJson, err := json.Marshal(p)
+		req, err := p.newRequest()
 		if err != nil {
-			log.Errorf("Unable to marshal chained server info: %v", err)
+			log.Errorf("Unable to create reques: %v", err)
 			return
 		}
-
-		// TODO: Randomize length of the post.
-		client.Post("https://bypass.iantem.io/v1/", "application/json",
-			bytes.NewBuffer(infoJson))
+		resp, err := p.rt.RoundTrip(req)
+		if err != nil {
+			log.Errorf("Unable to post chained server info: %v", err)
+			return
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 200 {
+			log.Errorf("Unexpected response code: %v", resp.Status)
+		}
+		io.ReadAll(resp.Body)
 	})
+}
+
+func (p *proxy) newRequest() (*http.Request, error) {
+	// We include a random length string here to make it harder for censors to identify lantern based on
+	// consistent packet lengths.
+	p.randString = randomizedString()
+
+	// Just posting all the info about the server allows us to control these fields fully on the server
+	// side.
+	infoJson, err := json.Marshal(p)
+	if err != nil {
+		log.Errorf("Unable to marshal chained server info: %v", err)
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", "https://bypass.iantem.io/v1/", bytes.NewBuffer(infoJson))
+	if err != nil {
+		log.Errorf("Unable to create request: %v", err)
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	return req, nil
 }
 
 func (p *proxy) stop() {
@@ -116,4 +123,18 @@ func (p *proxy) callRandomly(f func()) {
 			f()
 		}
 	}
+}
+
+func randomizedString() string {
+	const charset = "abcdefghijklmnopqrstuvwxyz"
+	size, err := rand.Int(rand.Reader, big.NewInt(300))
+	if err != nil {
+		return ""
+	}
+
+	bytes := make([]byte, size.Int64())
+	for i := range bytes {
+		bytes[i] = charset[mrand.Intn(len(charset))]
+	}
+	return string(bytes)
 }
