@@ -72,12 +72,14 @@ type proxy struct {
 }
 
 func (p *proxy) start() {
+	log.Debugf("Starting bypass for proxy %v", p.name)
 	p.callRandomly(func() {
 		req, err := p.newRequest()
 		if err != nil {
 			log.Errorf("Unable to create reques: %v", err)
 			return
 		}
+		log.Debugf("Sending traffic to bypass server: %v", p.name)
 		resp, err := p.rt.RoundTrip(req)
 		if err != nil {
 			log.Errorf("Unable to post chained server info: %v", err)
