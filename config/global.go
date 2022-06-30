@@ -7,6 +7,7 @@ import (
 
 	"github.com/getlantern/flashlight/browsers/simbrowser"
 	"github.com/getlantern/flashlight/domainrouting"
+	"github.com/getlantern/flashlight/otel"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/keyman"
 )
@@ -61,6 +62,9 @@ type Global struct {
 	// Market share data used by the simbrowser package when picking a browser to simulate.
 	GlobalBrowserMarketShareData   simbrowser.MarketShareData
 	RegionalBrowserMarketShareData map[simbrowser.CountryCode]simbrowser.MarketShareData
+
+	// Configuration for OpenTelemetry
+	Otel *otel.Config
 }
 
 // NewGlobal creates a new global config with otherwise nil values set.
