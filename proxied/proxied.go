@@ -90,14 +90,6 @@ type RoundTripper interface {
 	SetMasqueradeTimeout(time.Duration)
 }
 
-// Parellel creates a new http.RoundTripper that attempts to send requests
-// through both chained and direct fronted routes in parallel. This does
-// not warn about non-idempotent requests and does not switch to chained proxying
-// only if chained succeeds.
-func Parallel() RoundTripper {
-	return dualRoundTripper(true, "", false, false)
-}
-
 // Fronted creates a new http.RoundTripper that sends requests only through
 // domain fronting.
 func Fronted() http.RoundTripper {
@@ -153,18 +145,16 @@ func ParallelForIdempotent() http.RoundTripper {
 // dual creates a new http.RoundTripper that attempts to send
 // requests to both chained and fronted servers either in parallel or not.
 func dual(parallel bool, rootCA string) RoundTripper {
-	return dualRoundTripper(parallel, rootCA, true, true)
+	return dualRoundTripper(parallel, rootCA)
 }
 
 // dualRoundTripper creates a new http.RoundTripper that attempts to send
 // requests to both chained and fronted servers either in parallel or not.
-func dualRoundTripper(parallel bool, rootCA string, checkIdempotency, preferChained bool) RoundTripper {
+func dualRoundTripper(parallel bool, rootCA string) RoundTripper {
 	cf := &chainedAndFronted{
 		parallel:          parallel,
 		masqueradeTimeout: 5 * time.Minute,
 		rootCA:            rootCA,
-		checkIdempotency:  checkIdempotency,
-		preferChained:     preferChained,
 	}
 	cf.setFetcher(newDualFetcher(cf))
 	return cf
@@ -186,8 +176,6 @@ type chainedAndFronted struct {
 	mu                sync.RWMutex
 	rootCA            string
 	masqueradeTimeout time.Duration
-	checkIdempotency  bool
-	preferChained     bool
 }
 
 func (cf *chainedAndFronted) getFetcher() http.RoundTripper {
@@ -291,7 +279,7 @@ func (f frontedRT) RoundTrip(req *http.Request) (*http.Response, error) {
 // chained and fronted servers, simply returning the first response to
 // arrive.
 func (df *dualFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
-	if df.cf.parallel && df.cf.checkIdempotency && !isIdempotentMethod(req) {
+	if df.cf.parallel && !isIdempotentMethod(req) {
 		return nil, errors.New("Use ParallelPreferChained for non-idempotent method")
 	}
 	directRT, err := ChainedNonPersistent(df.rootCA)
@@ -347,9 +335,6 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 	frontedRTT := int64(100000 * time.Hour)
 	chainedRTT := int64(100000 * time.Hour)
 	switchToChainedIfRequired := func() {
-		if !df.cf.preferChained {
-			return
-		}
 		// 3 is arbitraily chosen to check if chained speed is reasonable
 		// comparing to fronted
 		if atomic.LoadInt64(&chainedRTT) <= 3*atomic.LoadInt64(&frontedRTT) {
