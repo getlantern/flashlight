@@ -32,7 +32,7 @@ type bypass struct {
 	mxProxies sync.Mutex
 }
 
-// Starts client access to the bypass server. The client periodically sends traffic to the server both via
+// Start sends periodic traffic to the bypass server. The client periodically sends traffic to the server both via
 // domain fronting and proxying to determine if proxies are blocked.
 func Start(listen func(func(map[string]*chained.ChainedServerInfo)), configDir string, userConfig common.UserConfig) func() {
 	mrand.Seed(time.Now().UnixNano())
