@@ -145,12 +145,6 @@ func ParallelForIdempotent() http.RoundTripper {
 // dual creates a new http.RoundTripper that attempts to send
 // requests to both chained and fronted servers either in parallel or not.
 func dual(parallel bool, rootCA string) RoundTripper {
-	return dualRoundTripper(parallel, rootCA)
-}
-
-// dualRoundTripper creates a new http.RoundTripper that attempts to send
-// requests to both chained and fronted servers either in parallel or not.
-func dualRoundTripper(parallel bool, rootCA string) RoundTripper {
 	cf := &chainedAndFronted{
 		parallel:          parallel,
 		masqueradeTimeout: 5 * time.Minute,
