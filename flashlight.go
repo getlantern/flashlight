@@ -489,7 +489,7 @@ func (f *Flashlight) StartBackgroundServices() func() {
 	// goroutines if the # exceeds 800 and is increasing.
 	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
 
-	stopBypass := bypass.Start(f.AddProxyListener)
+	stopBypass := bypass.Start(f.AddProxyListener, f.configDir, f.userConfig)
 
 	stopConfigFetch := f.startConfigFetch()
 	geolookup.EnablePersistence(filepath.Join(f.configDir, "latestgeoinfo.json"))
