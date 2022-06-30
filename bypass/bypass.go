@@ -51,7 +51,10 @@ func (b *bypass) OnProxies(infos map[string]*chained.ChainedServerInfo, configDi
 	defer b.mxProxies.Unlock()
 	b.reset()
 	for k, v := range infos {
-		p := b.newProxy(k, v, configDir, userConfig)
+		info := new(chained.ChainedServerInfo)
+		*info = *v
+		info.Cert = "" // Just save a little space by not sending the cert.
+		p := b.newProxy(k, info, configDir, userConfig)
 		b.proxies = append(b.proxies, p)
 		go p.start()
 	}
