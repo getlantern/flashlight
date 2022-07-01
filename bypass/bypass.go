@@ -12,6 +12,7 @@ import (
 	"math/big"
 	"net"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -91,16 +92,14 @@ type proxy struct {
 
 func (p *proxy) start() {
 	log.Debugf("Starting bypass for proxy %v", p.name)
-	p.callRandomly(func() {
-		p.sendToBypass()
-	})
+	p.callRandomly(p.sendToBypass)
 }
 
-func (p *proxy) sendToBypass() {
+func (p *proxy) sendToBypass() int64 {
 	req, err := p.newRequest()
 	if err != nil {
 		log.Errorf("Unable to create request: %v", err)
-		return
+		return 0
 	}
 
 	// We alternate between domain fronting and proxying to ensure that, in aggregate, we
@@ -117,13 +116,27 @@ func (p *proxy) sendToBypass() {
 	resp, err := rt.RoundTrip(req)
 	if err != nil {
 		log.Errorf("Unable to post chained server info: %v", err)
-		return
+		return 0
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeerr := resp.Body.Close(); closeerr != nil {
+			log.Errorf("Error closing response body: %v", closeerr)
+		}
+	}()
+
+	var sleepTime int64
+	sleepVal := resp.Header.Get("X-Lantern-Sleep")
+	if sleepVal != "" {
+		sleepTime, err = strconv.ParseInt(sleepVal, 10, 64)
+		if err != nil {
+			log.Errorf("Could not parse sleep val: %v", err)
+		}
+	}
 	if resp.StatusCode != 200 {
 		log.Errorf("Unexpected response code: %v", resp.Status)
 	}
 	io.ReadAll(resp.Body)
+	return sleepTime
 }
 
 func proxyRoundTripper(name string, info *chained.ChainedServerInfo, configDir string, userConfig common.UserConfig) http.RoundTripper {
@@ -169,6 +182,11 @@ func (p *proxy) newRequest() (*http.Request, error) {
 		log.Errorf("Unable to create request: %v", err)
 		return nil, err
 	}
+
+	// make sure to close the connection after reading the Body
+	// this prevents the occasional EOFs errors we're seeing with
+	// successive requests
+	req.Close = true
 	req.Header.Set("Content-Type", "application/json")
 	return req, nil
 }
@@ -177,14 +195,23 @@ func (p *proxy) stop() {
 	p.done <- true
 }
 
-// callRandomly calls the given function at a random interval between 2 and 7 minutes.
-func (p *proxy) callRandomly(f func()) {
+// callRandomly calls the given function at a random interval between 2 and 7 minutes, unless
+// the server overrides the sleep interval in the X-Lantern-Sleep header.
+func (p *proxy) callRandomly(f func() int64) {
+	var sleepTime int64
+	var sleep = func() <-chan time.Time {
+		if sleepTime > 0 {
+			return time.After(time.Duration(sleepTime) * time.Second)
+		}
+		return time.After(120 + time.Duration(mrand.Intn(60*5))*time.Second)
+	}
+
 	for {
 		select {
 		case <-p.done:
 			return
-		case <-time.After(120 + time.Duration(mrand.Intn(60*5))*time.Second):
-			f()
+		case <-sleep():
+			sleepTime = f()
 		}
 	}
 }
