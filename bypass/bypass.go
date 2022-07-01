@@ -6,10 +6,8 @@ package bypass
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
 	"encoding/json"
 	"io"
-	"math/big"
 	"net"
 	"net/http"
 	"strconv"
@@ -68,6 +66,7 @@ func (b *bypass) newProxy(name string, info *chained.ChainedServerInfo, configDi
 		done:              make(chan bool),
 		toggle:            atomic.NewBool(mrand.Float32() < 0.5),
 		dfRoundTripper:    proxied.Fronted(),
+		userConfig:        userConfig,
 		proxyRoundTripper: proxyRoundTripper(name, info, configDir, userConfig),
 	}
 }
@@ -88,6 +87,7 @@ type proxy struct {
 	proxyRoundTripper http.RoundTripper
 	configDir         string
 	toggle            *atomic.Bool
+	userConfig        common.UserConfig
 }
 
 func (p *proxy) start() {
@@ -96,7 +96,7 @@ func (p *proxy) start() {
 }
 
 func (p *proxy) sendToBypass() int64 {
-	req, err := p.newRequest()
+	req, err := p.newRequest(p.userConfig)
 	if err != nil {
 		log.Errorf("Unable to create request: %v", err)
 		return 0
@@ -164,11 +164,7 @@ func (rt rt) RoundTrip(req *http.Request) (*http.Response, error) {
 	return rt(req)
 }
 
-func (p *proxy) newRequest() (*http.Request, error) {
-	// We include a random length string here to make it harder for censors to identify lantern based on
-	// consistent packet lengths.
-	p.randString = randomizedString()
-
+func (p *proxy) newRequest(userConfig common.UserConfig) (*http.Request, error) {
 	// Just posting all the info about the server allows us to control these fields fully on the server
 	// side.
 	infoJson, err := json.Marshal(p)
@@ -182,6 +178,7 @@ func (p *proxy) newRequest() (*http.Request, error) {
 		log.Errorf("Unable to create request: %v", err)
 		return nil, err
 	}
+	common.AddCommonHeaders(userConfig, req)
 
 	// make sure to close the connection after reading the Body
 	// this prevents the occasional EOFs errors we're seeing with
@@ -214,18 +211,4 @@ func (p *proxy) callRandomly(f func() int64) {
 			sleepTime = f()
 		}
 	}
-}
-
-func randomizedString() string {
-	const charset = "abcdefghijklmnopqrstuvwxyz"
-	size, err := rand.Int(rand.Reader, big.NewInt(300))
-	if err != nil {
-		return ""
-	}
-
-	bytes := make([]byte, size.Int64())
-	for i := range bytes {
-		bytes[i] = charset[mrand.Intn(len(charset))]
-	}
-	return string(bytes)
 }
