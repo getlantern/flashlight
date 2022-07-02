@@ -193,14 +193,15 @@ func (p *proxy) stop() {
 }
 
 // callRandomly calls the given function at a random interval between 2 and 7 minutes, unless
-// the server overrides the sleep interval in the X-Lantern-Sleep header.
+// the provided function overrides the default sleep.
 func (p *proxy) callRandomly(f func() int64) {
 	var sleepTime int64
+	var elapsed time.Duration
 	var sleep = func() <-chan time.Time {
 		if sleepTime > 0 {
 			return time.After(time.Duration(sleepTime) * time.Second)
 		}
-		return time.After(120 + time.Duration(mrand.Intn(60*5))*time.Second)
+		return time.After(elapsed + 120 + time.Duration(mrand.Intn(60*5))*time.Second)
 	}
 
 	for {
@@ -208,7 +209,9 @@ func (p *proxy) callRandomly(f func() int64) {
 		case <-p.done:
 			return
 		case <-sleep():
+			start := time.Now()
 			sleepTime = f()
+			elapsed = time.Since(start)
 		}
 	}
 }
