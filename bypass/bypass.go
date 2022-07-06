@@ -196,9 +196,8 @@ func (p *proxy) newRequest(userConfig common.UserConfig) (*http.Request, error) 
 	}
 	common.AddCommonHeaders(userConfig, req)
 
-	// make sure to close the connection after reading the Body
-	// this prevents the occasional EOFs errors we're seeing with
-	// successive requests
+	// make sure to close the connection after reading the Body this prevents the occasional
+	// EOFs errors we're seeing with successive requests
 	req.Close = true
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Content-Encoding", "gzip")
