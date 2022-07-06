@@ -24,7 +24,10 @@ import (
 	"go.uber.org/atomic"
 )
 
-var log = golog.LoggerFor("bypass")
+var (
+	log      = golog.LoggerFor("bypass")
+	endpoint = "https://bypass.iantem.io/v1/"
+)
 
 type bypass struct {
 	infos     map[string]*chained.ChainedServerInfo
@@ -53,7 +56,6 @@ func (b *bypass) OnProxies(infos map[string]*chained.ChainedServerInfo, configDi
 	for k, v := range infos {
 		info := new(chained.ChainedServerInfo)
 		*info = *v
-		info.Cert = "" // Just save a little space by not sending the cert.
 		p := b.newProxy(k, info, configDir, userConfig)
 		b.proxies = append(b.proxies, p)
 		go p.start()
@@ -124,6 +126,8 @@ func (p *proxy) sendToBypass() int64 {
 			log.Errorf("Error closing response body: %v", closeerr)
 		}
 	}()
+	log.Debugf("Got response: %#v", resp)
+	io.Copy(io.Discard, resp.Body)
 
 	var sleepTime int64
 	sleepVal := resp.Header.Get("X-Lantern-Sleep")
@@ -133,10 +137,9 @@ func (p *proxy) sendToBypass() int64 {
 			log.Errorf("Could not parse sleep val: %v", err)
 		}
 	}
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		log.Errorf("Unexpected response code: %v", resp.Status)
 	}
-	io.ReadAll(resp.Body)
 	return sleepTime
 }
 
@@ -153,7 +156,6 @@ func proxyRoundTripper(name string, info *chained.ChainedServerInfo, configDir s
 
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.Proxy = nil
-	transport.DisableCompression = false
 	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 		pc, _, err := dialer.DialContext(ctx, network, addr)
 		return pc, err
@@ -170,7 +172,10 @@ func (rt rt) RoundTrip(req *http.Request) (*http.Response, error) {
 func (p *proxy) newRequest(userConfig common.UserConfig) (*http.Request, error) {
 	// Just posting all the info about the server allows us to control these fields fully on the server
 	// side.
-	infoJson, err := json.Marshal(p.ChainedServerInfo)
+	info := new(chained.ChainedServerInfo)
+	*info = *p.ChainedServerInfo
+	info.Cert = "" // Just save a little space by not sending the cert.
+	infoJson, err := json.Marshal(info)
 	if err != nil {
 		log.Errorf("Unable to marshal chained server info: %v", err)
 		return nil, err
@@ -189,7 +194,7 @@ func (p *proxy) newRequest(userConfig common.UserConfig) (*http.Request, error) 
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", "https://bypass.iantem.io/v1/", &buf)
+	req, err := http.NewRequest("POST", endpoint, &buf)
 	if err != nil {
 		log.Errorf("Unable to create request: %v", err)
 		return nil, err
