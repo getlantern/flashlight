@@ -5,6 +5,7 @@ package bypass
 // the intervals between calls to the server and also randomizes the length of requests.
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"io"
@@ -151,6 +152,8 @@ func proxyRoundTripper(name string, info *chained.ChainedServerInfo, configDir s
 	}
 
 	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.Proxy = nil
+	transport.DisableCompression = false
 	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 		pc, _, err := dialer.DialContext(ctx, network, addr)
 		return pc, err
@@ -167,13 +170,26 @@ func (rt rt) RoundTrip(req *http.Request) (*http.Response, error) {
 func (p *proxy) newRequest(userConfig common.UserConfig) (*http.Request, error) {
 	// Just posting all the info about the server allows us to control these fields fully on the server
 	// side.
-	infoJson, err := json.Marshal(p)
+	infoJson, err := json.Marshal(p.ChainedServerInfo)
 	if err != nil {
 		log.Errorf("Unable to marshal chained server info: %v", err)
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", "https://bypass.iantem.io/v1/", bytes.NewBuffer(infoJson))
+	var buf bytes.Buffer
+	gw := gzip.NewWriter(&buf)
+	defer gw.Close()
+	written, err := gw.Write(infoJson)
+	if err != nil {
+		log.Errorf("Unable to write chained server info: %v", err)
+		return nil, err
+	}
+	if written != len(infoJson) {
+		log.Errorf("Did not write all of chained server info: %v", err)
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", "https://bypass.iantem.io/v1/", &buf)
 	if err != nil {
 		log.Errorf("Unable to create request: %v", err)
 		return nil, err
@@ -185,6 +201,8 @@ func (p *proxy) newRequest(userConfig common.UserConfig) (*http.Request, error) 
 	// successive requests
 	req.Close = true
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Encoding", "gzip")
+
 	return req, nil
 }
 
