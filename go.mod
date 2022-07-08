@@ -5,7 +5,7 @@ go 1.18
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.2.0
 	github.com/PuerkitoBio/goquery v1.7.0
-	github.com/anacrolix/dht/v2 v2.16.2-0.20220311024416-dd658f18fd51
+	github.com/anacrolix/dht/v2 v2.18.0
 	github.com/anacrolix/go-libutp v1.2.0
 	github.com/anacrolix/missinggo v1.3.0
 	github.com/andybalholm/brotli v1.0.4
@@ -106,7 +106,7 @@ require (
 	github.com/Yawning/chacha20 v0.0.0-20170904085104-e3b1f968fc63 // indirect
 	github.com/anacrolix/chansync v0.3.0 // indirect
 	github.com/anacrolix/envpprof v1.1.1 // indirect
-	github.com/anacrolix/log v0.13.1 // indirect
+	github.com/anacrolix/log v0.13.2-0.20220426014722-7b7d13a55d55 // indirect
 	github.com/anacrolix/missinggo/perf v1.0.0 // indirect
 	github.com/anacrolix/missinggo/v2 v2.5.2 // indirect
 	github.com/anacrolix/mmsg v1.0.0 // indirect
