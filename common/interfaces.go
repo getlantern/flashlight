@@ -32,7 +32,7 @@ var _ AuthConfig = (*NullAuthConfig)(nil)
 type NullUserConfig struct{ NullAuthConfig }
 
 func (s NullUserConfig) GetTimeZone() (string, error) {
-	panic("implement me")
+	return "", nil
 }
 
 func (s NullUserConfig) GetLanguage() string                   { return "" }
