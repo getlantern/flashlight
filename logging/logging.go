@@ -44,6 +44,17 @@ func init() {
 	resetLogs.Store(func() {})
 }
 
+// FlashlightLogger is a logger that uses golog.Logger to log messages. It
+// implements a logging interface that packages like quicproxy and libp2p
+// use.
+// See here for more info:
+// - https://github.com/getlantern/quicproxy/blob/d393da079842dda222d5c0ddbc1ba33e55c46e8b/README.md#L40
+type FlashlightLogger struct{ golog.Logger }
+
+func (l FlashlightLogger) Printf(format string, a ...any) { l.Debugf(format, a...) }
+func (l FlashlightLogger) Infof(format string, a ...any)  { l.Debugf(format, a...) }
+func (l FlashlightLogger) Errorf(format string, a ...any) { l.Errorf(format, a...) }
+
 // RotatedLogsUnder creates rotated file logger under logdir using the given appName
 func RotatedLogsUnder(appName, logdir string) (io.WriteCloser, error) {
 	actualLogDirMx.Lock()
