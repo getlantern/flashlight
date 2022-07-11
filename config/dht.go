@@ -7,7 +7,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/anacrolix/missinggo"
+	"github.com/anacrolix/missinggo/v2"
 	"github.com/getlantern/dhtup"
 )
 

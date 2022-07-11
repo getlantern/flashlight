@@ -8,11 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchellh/mapstructure"
-
+	"github.com/anacrolix/dht/v2/krpc"
 	"github.com/blang/semver"
-
 	"github.com/getlantern/errors"
+	"github.com/mitchellh/mapstructure"
 )
 
 const (
@@ -35,6 +34,8 @@ const (
 	FeatureMatomo               = "matomo"
 	FeatureChat                 = "chat"
 	FeatureOtel                 = "otel"
+	FeatureP2PFreePeer          = "p2pfreepeer"
+	FeatureP2PCensoredPeer      = "p2pcensoredpeer"
 )
 
 var (
@@ -77,10 +78,6 @@ type ReplicaOptions struct {
 	// The replica-rust endpoint to use. There's only one because object uploads and ownership are
 	// fixed to a specific bucket, and replica-rust endpoints are 1:1 with a bucket.
 	ReplicaRustEndpoint string
-	// A set of info hashes (20 bytes, hex-encoded) to which proxies should announce themselves.
-	ProxyAnnounceTargets []string
-	// A set of info hashes where p2p-proxy peers can be found.
-	ProxyPeerInfoHashes []string
 	CustomCA            string
 }
 
@@ -106,6 +103,59 @@ func (ro *ReplicaOptions) GetReplicaRustEndpoint() string {
 
 func (ro *ReplicaOptions) GetCustomCA() string {
 	return ro.CustomCA
+}
+
+// XXX <11-07-2022, soltzen> DEPREACTED in favor of
+// github.com/getlantern/libp2p
+func (ro *ReplicaOptions) GetProxyAnnounceTargets() []string {
+	return nil
+}
+
+// XXX <11-07-2022, soltzen> DEPREACTED in favor of
+// github.com/getlantern/libp2p
+func (ro *ReplicaOptions) GetProxyPeerInfoHashes() []string {
+	return nil
+}
+
+type P2PFreePeerOptions struct {
+	RegistrarEndpoint string `mapstructure:"registrar_endpoint"`
+}
+
+func (o *P2PFreePeerOptions) fromMap(m map[string]interface{}) error {
+	registrarEndpoint, err := somethingFromMap[string](m, "registrar_endpoint")
+	if err != nil {
+		return err
+	}
+	o.RegistrarEndpoint = registrarEndpoint
+	return nil
+}
+
+type Bep46TargetAndSalt struct {
+	Target krpc.ID
+	Salt   string
+}
+
+type P2PCensoredPeerOptions struct {
+	Bep46TargetsAndSalts []string `mapstructure:"bep46_targets_and_salts"`
+	WebseedURLPrefixes   []string `mapstructure:"webseed_url_prefixes"`
+	SourceURLPrefixes    []string `mapstructure:"source_url_prefixes"`
+}
+
+func (o *P2PCensoredPeerOptions) fromMap(m map[string]interface{}) error {
+	var err error
+	o.Bep46TargetsAndSalts, err = stringArrFromMap(m, "bep46_targets_and_salts")
+	if err != nil {
+		return err
+	}
+	o.WebseedURLPrefixes, err = stringArrFromMap(m, "webseed_url_prefixes")
+	if err != nil {
+		return err
+	}
+	o.SourceURLPrefixes, err = stringArrFromMap(m, "source_url_prefixes")
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 type GoogleSearchAdsOptions struct {
@@ -200,11 +250,11 @@ type TrafficLogOptions struct {
 
 func (o *TrafficLogOptions) fromMap(m map[string]interface{}) error {
 	var err error
-	o.CaptureBytes, err = intFromMap(m, "capturebytes")
+	o.CaptureBytes, err = somethingFromMap[int](m, "capturebytes")
 	if err != nil {
 		return errors.New("error unmarshaling 'capturebytes': %v", err)
 	}
-	o.SaveBytes, err = intFromMap(m, "savebytes")
+	o.SaveBytes, err = somethingFromMap[int](m, "savebytes")
 	if err != nil {
 		return errors.New("error unmarshaling 'savebytes': %v", err)
 	}
@@ -212,7 +262,7 @@ func (o *TrafficLogOptions) fromMap(m map[string]interface{}) error {
 	if err != nil {
 		return errors.New("error unmarshaling 'capturesaveduration': %v", err)
 	}
-	o.Reinstall, err = boolFromMap(m, "reinstall")
+	o.Reinstall, err = somethingFromMap[bool](m, "reinstall")
 	if err != nil {
 		return errors.New("error unmarshaling 'reinstall': %v", err)
 	}
@@ -220,7 +270,7 @@ func (o *TrafficLogOptions) fromMap(m map[string]interface{}) error {
 	if err != nil {
 		return errors.New("error unmarshaling 'waittimesincefailedinstall': %v", err)
 	}
-	o.UserDenialThreshold, err = intFromMap(m, "userdenialthreshold")
+	o.UserDenialThreshold, err = somethingFromMap[int](m, "userdenialthreshold")
 	if err != nil {
 		return errors.New("error unmarshaling 'userdenialthreshold': %v", err)
 	}
@@ -351,42 +401,44 @@ func csvContains(csv, s string) bool {
 	return false
 }
 
-func boolFromMap(m map[string]interface{}, name string) (bool, error) {
+func somethingFromMap[T any](m map[string]interface{}, name string) (T, error) {
+	var ret T
 	v, exists := m[name]
 	if !exists {
-		return false, errAbsentOption
+		return ret, errAbsentOption
 	}
-	b, ok := v.(bool)
+	var ok bool
+	ret, ok = v.(T)
 	if !ok {
-		return false, errMalformedOption
+		return ret, errMalformedOption
 	}
-	return b, nil
-}
-
-func intFromMap(m map[string]interface{}, name string) (int, error) {
-	v, exists := m[name]
-	if !exists {
-		return 0, errAbsentOption
-	}
-	i, ok := v.(int)
-	if !ok {
-		return 0, errMalformedOption
-	}
-	return i, nil
+	return ret, nil
 }
 
 func durationFromMap(m map[string]interface{}, name string) (time.Duration, error) {
-	v, exists := m[name]
-	if !exists {
-		return 0, errAbsentOption
-	}
-	s, ok := v.(string)
-	if !ok {
-		return 0, errMalformedOption
+	s, err := somethingFromMap[string](m, name)
+	if err != nil {
+		return 0, err
 	}
 	d, err := time.ParseDuration(s)
 	if err != nil {
 		return 0, errMalformedOption
 	}
 	return d, nil
+}
+
+func stringArrFromMap(m map[string]interface{}, key string) (ret []string, err error) {
+	arr, err := somethingFromMap[[]interface{}](m, key)
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range arr {
+		t, ok := v.(string)
+		if !ok {
+			return nil, fmt.Errorf(
+				"stringArrFromMap: not a valid string target: %+v", m)
+		}
+		ret = append(ret, t)
+	}
+	return ret, nil
 }

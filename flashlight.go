@@ -28,15 +28,20 @@ import (
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/goroutines"
+	"github.com/getlantern/flashlight/logging"
 	fops "github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/otel"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/stats"
+	p2pLogger "github.com/getlantern/libp2p/logger"
+	"github.com/getlantern/quicproxy"
 )
 
 var (
-	log = golog.LoggerFor("flashlight")
+	log              = golog.LoggerFor("flashlight")
+	quicProxyLogger  = golog.LoggerFor("flashlight.quicproxy")
+	replicaP2pLogger = golog.LoggerFor("flashlight.libp2p")
 
 	startProxyBenchOnce sync.Once
 
@@ -56,6 +61,10 @@ var (
 
 func init() {
 	netx.EnableNAT64AutoDiscovery()
+
+	// Init logger for different packages
+	quicproxy.Log = logging.FlashlightLogger{Logger: quicProxyLogger}
+	p2pLogger.Log = logging.FlashlightLogger{Logger: replicaP2pLogger}
 }
 
 // HandledErrorType is used to differentiate error types to handlers configured via
