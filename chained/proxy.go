@@ -13,13 +13,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	config "github.com/getlantern/common"
 	"github.com/getlantern/ema"
 	"github.com/getlantern/enhttp"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/idletiming"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 
@@ -283,7 +283,7 @@ type proxy struct {
 	multiplexed         bool
 	addr                string
 	authToken           string
-	location            config.ServerLocation
+	location            apipb.ProxyLocation
 	user                common.UserConfig
 	trusted             bool
 	bias                int

@@ -41,7 +41,6 @@ require (
 	github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493
 	github.com/getlantern/cmux/v2 v2.0.0-20200905031936-c55b16ee8462
 	github.com/getlantern/cmuxprivate v0.0.0-20211216020409-d29d0d38be54
-	github.com/getlantern/common v1.1.2-0.20220712105647-0bba5bc53d7d
 	github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1
 	github.com/getlantern/dhtup v0.0.0-20220425111551-c8fde3e1a38a
 	github.com/getlantern/dnsgrab v0.0.0-20211216020425-5d5e155a01a8
@@ -103,11 +102,11 @@ require (
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/go-server-timing v1.0.0
-	github.com/mitchellh/mapstructure v1.4.2
+	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pborman/uuid v1.2.1
 	github.com/refraction-networking/utls v1.0.0
 	github.com/shadowsocks/go-shadowsocks2 v0.1.4-0.20201002022019-75d43273f5a5
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.7.2
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
 	gitlab.com/yawning/obfs4.git v0.0.0-20220204003609-77af0cba934d
 	go.opentelemetry.io/otel v1.7.0
@@ -115,10 +114,11 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.7.0
 	go.opentelemetry.io/otel/sdk v1.7.0
 	go.opentelemetry.io/otel/trace v1.7.0
-	go.uber.org/atomic v1.7.0
+	go.uber.org/atomic v1.9.0
 	golang.org/x/mobile v0.0.0-20210831151748-9cba7bc03c0f
-	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2
-	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a
+	golang.org/x/net v0.0.0-20220630215102-69896b714898
+	golang.org/x/sys v0.0.0-20220704084225-05e143d24a9e
+	google.golang.org/protobuf v1.28.0
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
@@ -149,7 +149,7 @@ require (
 	github.com/bits-and-blooms/bitset v1.2.0 // indirect
 	github.com/bradfitz/iter v0.0.0-20191230175014-e8f45d346db8 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
-	github.com/cespare/xxhash/v2 v2.1.1 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cheekybits/genny v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
@@ -157,7 +157,7 @@ require (
 	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
 	github.com/dvyukov/go-fuzz v0.0.0-20210429054444-fca39067bc72 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
-	github.com/felixge/httpsnoop v1.0.0 // indirect
+	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/getlantern/bbrconn v0.0.0-20210901194755-12169918fdf9 // indirect
 	github.com/getlantern/byteexec v0.0.0-20200509011419-2f5ed5531ada // indirect
 	github.com/getlantern/bytemap v0.0.0-20210122162547-b07440a617f0 // indirect
@@ -178,6 +178,7 @@ require (
 	github.com/getlantern/http-proxy v0.0.3-0.20211022035117-86faba795750 // indirect
 	github.com/getlantern/kcp-go/v5 v5.0.0-20220503142114-f0c1cd6e1b54 // indirect
 	github.com/getlantern/keepcurrent v0.0.0-20220215112059-5f8a2d8c6787 // indirect
+	github.com/getlantern/lantern-cloud v0.0.0-20220712165514-2ee1d944469a
 	github.com/getlantern/msgpack v3.1.4+incompatible // indirect
 	github.com/getlantern/packetforward v0.0.0-20201001150407-c68a447b0360 // indirect
 	github.com/getlantern/pcapper v0.0.0-20210901200029-bf37dc0a4259 // indirect
@@ -200,7 +201,7 @@ require (
 	github.com/golang/gddo v0.0.0-20190419222130-af0f2af80721 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/golang/snappy v0.0.3 // indirect
+	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gonum/blas v0.0.0-20180125090452-e7c5890b24cf // indirect
 	github.com/gonum/floats v0.0.0-20180125090339-7de1f4ea7ab5 // indirect
 	github.com/gonum/internal v0.0.0-20180125090855-fda53f8d2571 // indirect
@@ -260,17 +261,16 @@ require (
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v1.11.0 // indirect
+	github.com/prometheus/client_golang v1.12.2 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
-	github.com/prometheus/common v0.30.0 // indirect
-	github.com/prometheus/procfs v0.7.2 // indirect
+	github.com/prometheus/common v0.32.1 // indirect
+	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/rs/dnscache v0.0.0-20210201191234-295bba877686 // indirect
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/templexxx/cpu v0.0.8 // indirect
 	github.com/templexxx/xorsimd v0.4.1 // indirect
 	github.com/ti-mo/conntrack v0.3.0 // indirect
@@ -288,17 +288,16 @@ require (
 	go.uber.org/goleak v1.1.12 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.19.1 // indirect
-	golang.org/x/crypto v0.0.0-20220131195533-30dcbda58838 // indirect
+	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
 	golang.org/x/mod v0.4.2 // indirect
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
+	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
+	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect
 	golang.org/x/tools v0.1.8-0.20211022200916-316ba0b74098 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd // indirect
-	google.golang.org/grpc v1.46.2 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
+	google.golang.org/genproto v0.0.0-20220630174209-ad1d48641aa7 // indirect
+	google.golang.org/grpc v1.47.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
