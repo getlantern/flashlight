@@ -6,12 +6,7 @@ replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.
 
 replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20211116192935-1abdc4b1acab
 
-// git.apache.org isn't working at the moment, use mirror (should probably switch back once we can)
-replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110319-2566ecd5d999
-
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358
-
-replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20210430190606-84f1a4e5b695
 
 //replace github.com/getlantern/yinbi-server => ../yinbi-server
 
@@ -23,9 +18,6 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2021
 replace crawshaw.io/sqlite => github.com/getlantern/sqlite v0.0.0-20220301112206-cb2f8bc7cb56
 
 replace github.com/eycorsican/go-tun2socks => github.com/getlantern/go-tun2socks v1.16.12-0.20201218023150-b68f09e5ae93
-
-// v0.5.6 has a security issue and using require leaves a reference to it in go.sum
-replace github.com/ulikunitz/xz => github.com/ulikunitz/xz v0.5.8
 
 // We use a fork of gomobile that allows reusing the cache directory for faster builds, based
 // on this unmerged PR against gomobile - https://github.com/golang/mobile/pull/58.
