@@ -132,8 +132,6 @@ func extractParams(s *ChainedServerInfo) (addr, transport, network string, err e
 	case "http", "https", "utphttp", "utphttps":
 		transport = strings.TrimRight(transport, "s")
 		if s.Cert == "" {
-		} else if len(s.KCPSettings) > 0 {
-			transport = "kcp"
 		} else {
 			transport = transport + "s"
 		}
@@ -170,9 +168,6 @@ func createImpl(configDir, name, addr, transport string, s *ChainedServerInfo, u
 		if s.Cert == "" {
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", addr)
 			impl = newHTTPImpl(addr, coreDialer)
-		} else if len(s.KCPSettings) > 0 {
-			log.Errorf("KCP configured for %s, not using tls", addr)
-			impl, err = newKCPImpl(s, reportDialCore)
 		} else {
 			log.Tracef("Cert configured for %s, will dial with tls", addr)
 			impl, err = newHTTPSImpl(configDir, name, addr, s, uc, coreDialer)
@@ -213,7 +208,7 @@ func createImpl(configDir, name, addr, transport string, s *ChainedServerInfo, u
 		log.Debugf("Enabling preconnecting for %v", name)
 		// give ourselves a large margin for making sure we're not using idled preconnected connections
 		expiration := IdleTimeout / 2
-		impl = newPreconnectingDialer(name, s.MaxPreconnect, expiration, impl)
+		impl = newPreconnectingDialer(name, int(s.MaxPreconnect), expiration, impl)
 	}
 
 	return impl, err
@@ -312,11 +307,11 @@ func newProxy(name, addr, protocol, network string, s *ChainedServerInfo, uc com
 		network:          network,
 		multiplexed:      s.MultiplexedAddr != "",
 		addr:             addr,
-		location:         s.Location,
+		location:         *s.Location,
 		authToken:        s.AuthToken,
 		user:             uc,
 		trusted:          s.Trusted,
-		bias:             s.Bias,
+		bias:             int(s.Bias),
 		dialOrigin:       defaultDialOrigin,
 		emaRTT:           ema.NewDuration(0, rttAlpha),
 		emaRTTDev:        ema.NewDuration(0, rttDevAlpha),
@@ -331,11 +326,6 @@ func newProxy(name, addr, protocol, network string, s *ChainedServerInfo, uc com
 		// By default, do not prefer ENHTTP proxies. Use a very low bias as domain-
 		// fronting is our very-last resort.
 		p.bias = -10
-	} else if len(s.KCPSettings) > 0 && p.bias == 0 {
-		// KCP consumes a lot of bandwidth, so we want to bias against using it
-		// unless everything else is blocked. However, we prefer it to
-		// domain-fronting. We only default the bias if none was configured.
-		p.bias = -1
 	}
 
 	if s.ENHTTPURL != "" {

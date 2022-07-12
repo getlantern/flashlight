@@ -1,3 +1,4 @@
+//go:build !iosapp
 // +build !iosapp
 
 package chained
@@ -6,9 +7,7 @@ import (
 	"context"
 	"net"
 
-	"github.com/mitchellh/mapstructure"
-
-	"github.com/getlantern/idletiming"
+	"github.com/getlantern/errors"
 	"github.com/getlantern/kcpwrapper"
 
 	"github.com/getlantern/flashlight/ops"
@@ -29,24 +28,7 @@ type kcpImpl struct {
 }
 
 func newKCPImpl(s *ChainedServerInfo, reportDialCore reportDialCoreFn) (proxyImpl, error) {
-	var cfg KCPConfig
-	err := mapstructure.Decode(s.KCPSettings, &cfg)
-	if err != nil {
-		return nil, log.Errorf("Could not decode kcp transport settings?: %v", err)
-	}
-	addIdleTiming := func(conn net.Conn) net.Conn {
-		log.Debug("Wrapping KCP with idletiming")
-		return idletiming.Conn(conn, IdleTimeout*2, func() {
-			log.Debug("KCP connection idled")
-		})
-	}
-	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig, addIdleTiming)
-	return &kcpImpl{
-		reportDialCore: reportDialCore,
-		// Fix address (comes across as kcp-placeholder)
-		addr:    cfg.RemoteAddr,
-		dialKCP: dialKCP,
-	}, nil
+	return nil, errors.New("KCP not supported")
 }
 
 func (impl *kcpImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {

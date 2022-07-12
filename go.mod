@@ -2,6 +2,37 @@ module github.com/getlantern/flashlight
 
 go 1.18
 
+replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20220215050330-93bd217f5741
+
+replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20211116192935-1abdc4b1acab
+
+// git.apache.org isn't working at the moment, use mirror (should probably switch back once we can)
+replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110319-2566ecd5d999
+
+replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358
+
+replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20210430190606-84f1a4e5b695
+
+//replace github.com/getlantern/yinbi-server => ../yinbi-server
+
+//replace github.com/getlantern/auth-server => ../auth-server
+
+//replace github.com/getlantern/lantern-server => ../lantern-server
+
+// For https://github.com/crawshaw/sqlite/pull/112 and https://github.com/crawshaw/sqlite/pull/103.
+replace crawshaw.io/sqlite => github.com/getlantern/sqlite v0.0.0-20220301112206-cb2f8bc7cb56
+
+replace github.com/eycorsican/go-tun2socks => github.com/getlantern/go-tun2socks v1.16.12-0.20201218023150-b68f09e5ae93
+
+// v0.5.6 has a security issue and using require leaves a reference to it in go.sum
+replace github.com/ulikunitz/xz => github.com/ulikunitz/xz v0.5.8
+
+// We use a fork of gomobile that allows reusing the cache directory for faster builds, based
+// on this unmerged PR against gomobile - https://github.com/golang/mobile/pull/58.
+replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336-0bdf708b6d0f
+
+// replace github.com/getlantern/dhtup => ../dhtup
+
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.2.0
 	github.com/PuerkitoBio/goquery v1.7.0
@@ -18,7 +49,7 @@ require (
 	github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493
 	github.com/getlantern/cmux/v2 v2.0.0-20200905031936-c55b16ee8462
 	github.com/getlantern/cmuxprivate v0.0.0-20211216020409-d29d0d38be54
-	github.com/getlantern/common v1.1.1-0.20211216020417-0ac01e41560d
+	github.com/getlantern/common v1.1.2-0.20220712105647-0bba5bc53d7d
 	github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1
 	github.com/getlantern/dhtup v0.0.0-20220425111551-c8fde3e1a38a
 	github.com/getlantern/dnsgrab v0.0.0-20211216020425-5d5e155a01a8
@@ -29,7 +60,7 @@ require (
 	github.com/getlantern/event v0.0.0-20210901195647-a7e3145142e6
 	github.com/getlantern/eventual v1.0.0
 	github.com/getlantern/eventual/v2 v2.0.2
-	github.com/getlantern/fronted v0.0.0-20210806163345-971f7e536246
+	github.com/getlantern/fronted v0.0.0-20220707102541-0478ae49d9d3
 	github.com/getlantern/geolookup v0.0.0-20210901195705-eec711834596
 	github.com/getlantern/go-ping v0.0.0-20210901195920-5415d0f18231
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
@@ -279,34 +310,3 @@ require (
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
-
-replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20220215050330-93bd217f5741
-
-replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20211116192935-1abdc4b1acab
-
-// git.apache.org isn't working at the moment, use mirror (should probably switch back once we can)
-replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110319-2566ecd5d999
-
-replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358
-
-replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20210430190606-84f1a4e5b695
-
-//replace github.com/getlantern/yinbi-server => ../yinbi-server
-
-//replace github.com/getlantern/auth-server => ../auth-server
-
-//replace github.com/getlantern/lantern-server => ../lantern-server
-
-// For https://github.com/crawshaw/sqlite/pull/112 and https://github.com/crawshaw/sqlite/pull/103.
-replace crawshaw.io/sqlite => github.com/getlantern/sqlite v0.0.0-20220301112206-cb2f8bc7cb56
-
-replace github.com/eycorsican/go-tun2socks => github.com/getlantern/go-tun2socks v1.16.12-0.20201218023150-b68f09e5ae93
-
-// v0.5.6 has a security issue and using require leaves a reference to it in go.sum
-replace github.com/ulikunitz/xz => github.com/ulikunitz/xz v0.5.8
-
-// We use a fork of gomobile that allows reusing the cache directory for faster builds, based
-// on this unmerged PR against gomobile - https://github.com/golang/mobile/pull/58.
-replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336-0bdf708b6d0f
-
-// replace github.com/getlantern/dhtup => ../dhtup

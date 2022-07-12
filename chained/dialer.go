@@ -125,6 +125,7 @@ func (p *proxy) DialContext(ctx context.Context, network, addr string) (conn net
 		Set("dial_type", network)
 	defer op.End()
 
+	log.Debugf("Dialing origin address %s for proxy %s", addr, p.Label())
 	conn, err = p.dialOrigin(op, ctx, p, network, addr)
 	if err != nil {
 		op.Set("idled", idletiming.IsIdled(conn))

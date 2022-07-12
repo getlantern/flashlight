@@ -498,10 +498,6 @@ func (helper *Helper) buildProxies(proto string) (map[string]*chained.ChainedSer
 		} else {
 			srv.Addr = helper.HTTPSProxyServerAddr
 		}
-
-		if proto == "kcp" {
-			srv.KCPSettings = kcpConf
-		}
 	}
 	return map[string]*chained.ChainedServerInfo{"proxy-" + proto: &srv}, nil
 }
