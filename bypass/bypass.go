@@ -5,9 +5,7 @@ package bypass
 // the intervals between calls to the server and also randomizes the length of requests.
 import (
 	"bytes"
-	"compress/gzip"
 	"context"
-	"encoding/json"
 	"io"
 	"net"
 	"net/http"
@@ -17,16 +15,19 @@ import (
 
 	mrand "math/rand"
 
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"go.uber.org/atomic"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
 	log      = golog.LoggerFor("bypass")
-	endpoint = "https://bypass.iantem.io/v1/"
+	endpoint = "https://bypass.iantem.io/v1/proxy"
 )
 
 type bypass struct {
@@ -114,6 +115,7 @@ func (p *proxy) sendToBypass() int64 {
 	} else {
 		rt = p.dfRoundTripper
 	}
+	rt = p.proxyRoundTripper
 
 	log.Debugf("Sending traffic to bypass server: %v", p.name)
 	resp, err := rt.RoundTrip(req)
@@ -127,7 +129,13 @@ func (p *proxy) sendToBypass() int64 {
 		}
 	}()
 	log.Debugf("Got response: %#v", resp)
-	io.Copy(io.Discard, resp.Body)
+
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Error(err)
+	}
+	log.Debugf("Response body: %v", string(b))
+	//io.Copy(io.Discard, resp.Body)
 
 	var sleepTime int64
 	sleepVal := resp.Header.Get("X-Lantern-Sleep")
@@ -157,7 +165,7 @@ func proxyRoundTripper(name string, info *chained.ChainedServerInfo, configDir s
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.Proxy = nil
 	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-		pc, _, err := dialer.DialContext(ctx, network, addr)
+		pc, _, err := dialer.DialContext(ctx, balancer.NetworkConnect, addr)
 		return pc, err
 	}
 	return transport
@@ -175,26 +183,20 @@ func (p *proxy) newRequest(userConfig common.UserConfig) (*http.Request, error) 
 	info := new(chained.ChainedServerInfo)
 	*info = *p.ChainedServerInfo
 	info.Cert = "" // Just save a little space by not sending the cert.
-	infoJson, err := json.Marshal(info)
+
+	commonInfo := apipb.ProxyConfig(*info)
+	infopb, err := proto.Marshal(&commonInfo)
 	if err != nil {
 		log.Errorf("Unable to marshal chained server info: %v", err)
 		return nil, err
 	}
 
-	var buf bytes.Buffer
-	gw := gzip.NewWriter(&buf)
-	defer gw.Close()
-	written, err := gw.Write(infoJson)
 	if err != nil {
 		log.Errorf("Unable to write chained server info: %v", err)
 		return nil, err
 	}
-	if written != len(infoJson) {
-		log.Errorf("Did not write all of chained server info: %v", err)
-		return nil, err
-	}
 
-	req, err := http.NewRequest("POST", endpoint, &buf)
+	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(infopb))
 	if err != nil {
 		log.Errorf("Unable to create request: %v", err)
 		return nil, err
@@ -204,8 +206,8 @@ func (p *proxy) newRequest(userConfig common.UserConfig) (*http.Request, error) 
 	// make sure to close the connection after reading the Body this prevents the occasional
 	// EOFs errors we're seeing with successive requests
 	req.Close = true
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Content-Encoding", "gzip")
+	req.Header.Set("Content-Type", "application/x-protobuf")
+	log.Debugf("Sending request: %#v", req)
 
 	return req, nil
 }
@@ -223,7 +225,7 @@ func (p *proxy) callRandomly(f func() int64) {
 		if sleepTime > 0 {
 			return time.After(time.Duration(sleepTime) * time.Second)
 		}
-		return time.After(elapsed + 120 + time.Duration(mrand.Intn(60*5))*time.Second)
+		return time.After(elapsed + 1 + time.Duration(mrand.Intn(1))*time.Second)
 	}
 
 	for {
