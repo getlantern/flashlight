@@ -2,6 +2,8 @@ cloudfront:
   ping: 'http://d157vud77ygy87.cloudfront.net/ping'
   rejectStatus: 403
   mapping:
+    telemetry.iantem.io: d1a8iiu5dqt0h3.cloudfront.net
+    api.iantem.io: d1a8iiu5dqt0h3.cloudfront.net
     bypass.iantem.io: d1a8iiu5dqt0h3.cloudfront.net
     api.getiantem.org: d2n32kma9hyo9f.cloudfront.net
     api-staging.getiantem.org: d16igwq64x5e11.cloudfront.net
@@ -25,6 +27,8 @@ akamai:
   ping: 'https://fronted-ping.dsa.akamai.getiantem.org/ping'
   rejectStatus: 403
   mapping:
+    telemetry.iantem.io: iantem.io.edgesuite.net
+    api.iantem.io: iantem.io.edgesuite.net
     bypass.iantem.io: iantem.io.edgesuite.net
     api.getiantem.org: api.dsa.akamai.getiantem.org
     api-staging.getiantem.org: api-staging.dsa.akamai.getiantem.org
