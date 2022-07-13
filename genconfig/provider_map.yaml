@@ -2,6 +2,7 @@ cloudfront:
   ping: 'http://d157vud77ygy87.cloudfront.net/ping'
   rejectStatus: 403
   mapping:
+    bypass.iantem.io: d1a8iiu5dqt0h3.cloudfront.net
     api.getiantem.org: d2n32kma9hyo9f.cloudfront.net
     api-staging.getiantem.org: d16igwq64x5e11.cloudfront.net
     borda.lantern.io: d157vud77ygy87.cloudfront.net
@@ -16,10 +17,15 @@ cloudfront:
     replica-search.lantern.io: d7kybcoknm3oo.cloudfront.net
     replica-search-staging.lantern.io: d36vwf34kviguu.cloudfront.net
     replica-search-aws.lantern.io: d380ddt46en4sh.cloudfront.net
+    replica-frankfurt.lantern.io: d3mm73d1kmj7zd.cloudfront.net
+    replica-search-ir.lantern.io: d2989l3kuj93v8.cloudfront.net
+    replica-thumbnailer-ir.lantern.io: d132le39uhgr75.cloudfront.net
+    replica-thumbnailer.lantern.io: d2b627m7r9v7iw.cloudfront.net
 akamai:
   ping: 'https://fronted-ping.dsa.akamai.getiantem.org/ping'
   rejectStatus: 403
   mapping:
+    bypass.iantem.io: iantem.io.edgesuite.net
     api.getiantem.org: api.dsa.akamai.getiantem.org
     api-staging.getiantem.org: api-staging.dsa.akamai.getiantem.org
     borda.lantern.io: borda.dsa.akamai.getiantem.org
@@ -32,5 +38,9 @@ akamai:
     github-production-release-asset-2e65be.s3.amazonaws.com: github-release-asset.dsa.akamai.getiantem.org
     mandrillapp.com: mandrillapp.dsa.akamai.getiantem.org
     replica-search.lantern.io: replica-search.dsa.akamai.lantern.io
-    replica-search-aws.lantern.io: replica-search-aws.dsa.akamai.lantern.io
     replica-search-staging.lantern.io: replica-search-staging.dsa.akamai.lantern.io
+    replica-search-aws.lantern.io: replica-search-aws.dsa.akamai.lantern.io
+    replica-frankfurt.lantern.io: replica-frankfurt.dsa.akamai.lantern.io
+    replica-search-ir.lantern.io: replica-search-ir.dsa.akamai.lantern.io
+    replica-thumbnailer-ir.lantern.io: replica-thumbnailer-ir.dsa.akamai.lantern.io
+    replica-thumbnailer.lantern.io: replica-thumbnailer.dsa.akamai.lantern.io
