@@ -21,12 +21,16 @@ If you're making changes to structure of the configuration, you need to ensure t
 2. Update the code and tests in `config` as appropriate
 3. Make sure the tests in `config_v2`, `config_v1` etc. still work
 
+## Adding new domain fronting mappings
+
+In addition to adding the domains that forward on Cloudfront and Akamai, you also have to add the appropriate lines to [this](https://github.com/getlantern/flashlight/blob/devel/genconfig/provider_map.yaml).
+
 ## Building
 You can build an SDK for use by external applications either for Android or for iOS.
 
 ### Prerequisites
 
-* [Go 1.16](https://golang.org/dl/) is the minimum supported version of Go
+* [Go 1.18](https://golang.org/dl/) is the minimum supported version of Go
 * [GNU Make](https://www.gnu.org/software/make/) if you want to use the Makefile
 * Dependencies are managed with Go Modules.
 * Force git to use ssh instead of https by running
