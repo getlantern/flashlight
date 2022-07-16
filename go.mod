@@ -106,7 +106,7 @@ require (
 	github.com/pborman/uuid v1.2.1
 	github.com/refraction-networking/utls v1.0.0
 	github.com/shadowsocks/go-shadowsocks2 v0.1.4-0.20201002022019-75d43273f5a5
-	github.com/stretchr/testify v1.7.2
+	github.com/stretchr/testify v1.8.0
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
 	gitlab.com/yawning/obfs4.git v0.0.0-20220204003609-77af0cba934d
 	go.opentelemetry.io/otel v1.7.0
@@ -177,7 +177,7 @@ require (
 	github.com/getlantern/hex v0.0.0-20220104173244-ad7e4b9194dc // indirect
 	github.com/getlantern/http-proxy v0.0.3-0.20211022035117-86faba795750 // indirect
 	github.com/getlantern/kcp-go/v5 v5.0.0-20220503142114-f0c1cd6e1b54 // indirect
-	github.com/getlantern/keepcurrent v0.0.0-20220215112059-5f8a2d8c6787 // indirect
+	github.com/getlantern/keepcurrent v0.0.0-20220716105246-a0f01ed60e13 // indirect
 	github.com/getlantern/lantern-cloud v0.0.0-20220712165514-2ee1d944469a
 	github.com/getlantern/msgpack v3.1.4+incompatible // indirect
 	github.com/getlantern/packetforward v0.0.0-20201001150407-c68a447b0360 // indirect

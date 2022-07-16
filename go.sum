@@ -537,8 +537,8 @@ github.com/getlantern/kcp-go/v5 v5.0.0-20220503142114-f0c1cd6e1b54/go.mod h1:KFB
 github.com/getlantern/kcpwrapper v0.0.0-20220503142841-b0e764933966 h1:2JIEmUghZ9chENs5JmcHahPDioC5U8ZHLQKJRlfKUpM=
 github.com/getlantern/kcpwrapper v0.0.0-20220503142841-b0e764933966/go.mod h1:RZpRkvvJxOFO4NsrUBalcGGioaG84GZT/0UURXEfIhY=
 github.com/getlantern/keepcurrent v0.0.0-20200810061110-d1e504f19555/go.mod h1:C9e6r1QaHifmpNCoMX48D/Ed9jXY9FEMsyQ/n4qplcI=
-github.com/getlantern/keepcurrent v0.0.0-20220215112059-5f8a2d8c6787 h1:EEvFOypU6xK17bU3ZI731lcf8f9j4JV0F8jT4odLHuc=
-github.com/getlantern/keepcurrent v0.0.0-20220215112059-5f8a2d8c6787/go.mod h1:QCr1hstALXk4Wms6/dy30p3o2oKYkIaIrV5LVDFmBGc=
+github.com/getlantern/keepcurrent v0.0.0-20220716105246-a0f01ed60e13 h1:lW8TlfaDr+EnIkRaTlmMLiZBUXMDeD/C8iAPJNFqcA0=
+github.com/getlantern/keepcurrent v0.0.0-20220716105246-a0f01ed60e13/go.mod h1:EtJEobtQH/HiQsZLyRjlrnq/fu7vfgnTMzhbmUqkZ3M=
 github.com/getlantern/keyman v0.0.0-20180207174507-f55e7280e93a/go.mod h1:FMf0g72BHs14jVcD8i8ubEk4sMB6JdidBn67d44i3ws=
 github.com/getlantern/keyman v0.0.0-20200819205636-76fef27c39f1/go.mod h1:FMf0g72BHs14jVcD8i8ubEk4sMB6JdidBn67d44i3ws=
 github.com/getlantern/keyman v0.0.0-20210622061955-aa0d47d4932c h1:42BHUoilinoKRbOvTsWBY9nr1+Y2cAxK7BkMdmIMvlM=
@@ -1364,6 +1364,7 @@ github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271/go.mod h1:AZpEONHx3
 github.com/streadway/handy v0.0.0-20190108123426-d5acb3125c2a/go.mod h1:qNTQ5P5JnDBl6z3cMAg/SywNDC5ABu5ApDIw6lUbRmI=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.1.1/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/objx v0.4.0/go.mod h1:YvHI0jy2hoMjB+UWwv71VJQ9isScKT/TqJzVSSt89Yw=
 github.com/stretchr/testify v1.2.0/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.2.1/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
@@ -1373,8 +1374,8 @@ github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
-github.com/stretchr/testify v1.7.2 h1:4jaiDzPyXQvSd7D0EjG45355tLlV3VOECpq10pLC+8s=
-github.com/stretchr/testify v1.7.2/go.mod h1:R6va5+xMeoiuVRoj+gSkQ7d3FALtqAAGI1FQKckRals=
+github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=
+github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/syncthing/syncthing v0.14.48-rc.4/go.mod h1:nw3siZwHPA6M8iSfjDCWQ402eqvEIasMQOE8nFOxy7M=
 github.com/syndtr/goleveldb v0.0.0-20160425020131-cfa635847112/go.mod h1:Z4AUp2Km+PwemOoO/VB5AOx9XSsIItzFjoJlOSiYmn0=
 github.com/syndtr/goleveldb v1.0.0 h1:fBdIW9lB4Iz0n9khmH8w27SJ3QEJ7+IgjPEwGSZiFdE=
