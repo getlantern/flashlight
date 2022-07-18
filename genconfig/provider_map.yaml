@@ -25,7 +25,7 @@ akamai:
   ping: 'https://fronted-ping.dsa.akamai.getiantem.org/ping'
   rejectStatus: 403
   mapping:
-    iantem.io: iantem.io.edgesuite.net
+    iantem.io: nonexistent.iantem.io
     api.getiantem.org: api.dsa.akamai.getiantem.org
     api-staging.getiantem.org: api-staging.dsa.akamai.getiantem.org
     borda.lantern.io: borda.dsa.akamai.getiantem.org
