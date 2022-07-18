@@ -307,7 +307,6 @@ func newProxy(name, addr, protocol, network string, s *ChainedServerInfo, uc com
 		network:          network,
 		multiplexed:      s.MultiplexedAddr != "",
 		addr:             addr,
-		location:         *s.Location,
 		authToken:        s.AuthToken,
 		user:             uc,
 		trusted:          s.Trusted,
@@ -320,6 +319,10 @@ func newProxy(name, addr, protocol, network string, s *ChainedServerInfo, uc com
 		numPreconnected:  func() int { return 0 },
 		closeCh:          make(chan bool, 1),
 		consecSuccesses:  1, // be optimistic
+	}
+	// Make sure we don't panic if there's no location.
+	if s.Location != nil {
+		p.location = *s.Location
 	}
 
 	if p.bias == 0 && s.ENHTTPURL != "" {
