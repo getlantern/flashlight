@@ -97,6 +97,10 @@ featuresenabled:
       geocountries: ae,us,ca,de,ch,au,in,pk
       platforms: android
       versionconstraints: ">=7.0.0"
+    - label: chat-android-with-china
+      geocountries: ae,us,ca,de,ch,au,in,pk,cn
+      platforms: android
+      versionconstraints: ">=7.1.0"
     - label: chat-android-qa
       platforms: android
       versionconstraints: ">=99.0.0"
@@ -433,9 +437,7 @@ replica:
   replicaserviceendpoint: *GlobalReplicaRust
 
 otel:
-  endpoint: api.honeycomb.io:443
-  headers:
-    x-honeycomb-team: GKSJeT1vfWEWgGzPoxiKLE
+  endpoint: telemetry.iantem.io:443
   samplerate: 1000
   opsamplerates:
     client_started: 1
