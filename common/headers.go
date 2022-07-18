@@ -30,6 +30,7 @@ const (
 	ProxyDialTimeoutHeader              = "X-Lantern-Dial-Timeout"
 	ClientCountryHeader                 = "X-Lantern-Client-Country"
 	RandomNoiseHeader                   = "X-Lantern-Rand"
+	SleepHeader                         = "X-Lantern-Sleep"
 	XBQHeader                           = "XBQ"
 	XBQHeaderv2                         = "XBQv2"
 )
