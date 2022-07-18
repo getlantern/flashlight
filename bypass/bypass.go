@@ -26,8 +26,11 @@ import (
 )
 
 var (
-	log      = golog.LoggerFor("bypass")
-	endpoint = "https://iantem.io/bypass/v1/proxy"
+	log = golog.LoggerFor("bypass")
+
+	// The way lantern-cloud is configured, we need separate URLs for domain fronted vs proxied traffic.
+	dfEndpoint    = "https://iantem.io/bypass/v1/proxy"
+	proxyEndpoint = "https://bypass.iantem.io/v1/proxy"
 )
 
 type bypass struct {
@@ -102,22 +105,25 @@ func (p *proxy) start() {
 }
 
 func (p *proxy) sendToBypass() int64 {
-	req, err := p.newRequest(p.userConfig)
-	if err != nil {
-		log.Errorf("Unable to create request: %v", err)
-		return 0
-	}
-
 	// We alternate between domain fronting and proxying to ensure that, in aggregate, we
 	// send both equally. We avoid sending both a domain fronted and a proxied request
 	// in rapid succession to avoid the blocking detection itself being a signal.
 	var rt http.RoundTripper
+	var endpoint string
 	if p.toggle.Toggle() {
 		log.Debug("Using proxy directly")
 		rt = p.proxyRoundTripper
+		endpoint = proxyEndpoint
 	} else {
 		rt = p.dfRoundTripper
 		log.Debug("Using domain fronting")
+		endpoint = dfEndpoint
+	}
+
+	req, err := p.newRequest(p.userConfig, endpoint)
+	if err != nil {
+		log.Errorf("Unable to create request: %v", err)
+		return 0
 	}
 
 	log.Debugf("Sending traffic for bypass server: %v", p.name)
@@ -147,7 +153,7 @@ func (p *proxy) sendToBypass() int64 {
 		// If we don't get a 200, we'll revert to the default sleep time.
 		return -1
 	} else {
-		log.Debugf("Successfully sent traffic for bypass server: %v", p.name)
+		log.Debugf("Successfully got response from: %v", p.name)
 	}
 	return sleepTime
 }
@@ -166,7 +172,13 @@ func proxyRoundTripper(name string, info *chained.ChainedServerInfo, configDir s
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.Proxy = nil
 	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		log.Debugf("Dialing chained server at: %s", addr)
 		pc, _, err := dialer.DialContext(ctx, balancer.NetworkConnect, addr)
+		if err != nil {
+			log.Errorf("Unable to dial chained server: %v", err)
+		} else {
+			log.Debug("Successfully dialed chained server")
+		}
 		return pc, err
 	}
 	return transport
@@ -178,7 +190,7 @@ func (rt rt) RoundTrip(req *http.Request) (*http.Response, error) {
 	return rt(req)
 }
 
-func (p *proxy) newRequest(userConfig common.UserConfig) (*http.Request, error) {
+func (p *proxy) newRequest(userConfig common.UserConfig, endpoint string) (*http.Request, error) {
 	// Just posting all the info about the server allows us to control these fields fully on the server
 	// side.
 	info := new(chained.ChainedServerInfo)
@@ -197,6 +209,7 @@ func (p *proxy) newRequest(userConfig common.UserConfig) (*http.Request, error) 
 		return nil, err
 	}
 
+	log.Debugf("Creating request for endpoint: %v", endpoint)
 	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(infopb))
 	if err != nil {
 		log.Errorf("Unable to create request: %v", err)
@@ -227,7 +240,7 @@ func (p *proxy) callRandomly(f func() int64) {
 		defer func() {
 			calls.Inc()
 		}()
-		base := 60
+		base := 20
 		// If we just started up, we want to send traffic a little quicker to make sure we factor in users
 		// that don't run for very long.
 		if calls.Load() == 0 {
