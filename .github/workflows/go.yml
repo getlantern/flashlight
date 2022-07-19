@@ -43,11 +43,6 @@ jobs:
         name: test-log
         path: /tmp/gotest.log
         if-no-files-found: error
-
-
-    - name: Run Unit tests
-      run: |
-        go test -race -failfast -tags="headless" -coverprofile=profile.cov ./...
     - name: Install goveralls
       env:
         GO111MODULE: off
