@@ -147,7 +147,7 @@ func (p *proxy) sendToBypass() int64 {
 		}
 	}
 	if resp.StatusCode != http.StatusOK {
-		log.Errorf("Unexpected response code: %v", resp.Status)
+		log.Errorf("Unexpected response code %v: for response %#v", resp.Status, resp)
 		// If we don't get a 200, we'll revert to the default sleep time.
 		return -1
 	} else {
@@ -219,7 +219,7 @@ func (p *proxy) newRequest(userConfig common.UserConfig, endpoint string) (*http
 	// EOFs errors we're seeing with successive requests
 	req.Close = true
 	req.Header.Set("Content-Type", "application/x-protobuf")
-	log.Debugf("Sending request: %#v", req)
+	log.Debug("Sending request")
 
 	return req, nil
 }
