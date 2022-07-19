@@ -25,13 +25,11 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var (
-	log = golog.LoggerFor("bypass")
+var log = golog.LoggerFor("bypass")
 
-	// The way lantern-cloud is configured, we need separate URLs for domain fronted vs proxied traffic.
-	dfEndpoint    = "https://iantem.io/bypass/v1/proxy"
-	proxyEndpoint = "https://bypass.iantem.io/v1/proxy"
-)
+// The way lantern-cloud is configured, we need separate URLs for domain fronted vs proxied traffic.
+const dfEndpoint = "https://iantem.io/bypass/v1/proxy"
+const proxyEndpoint = "https://bypass.iantem.io/v1/proxy"
 
 type bypass struct {
 	infos     map[string]*chained.ChainedServerInfo
