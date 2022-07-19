@@ -51,9 +51,9 @@ func init() {
 // - https://github.com/getlantern/quicproxy/blob/d393da079842dda222d5c0ddbc1ba33e55c46e8b/README.md#L40
 type FlashlightLogger struct{ golog.Logger }
 
-func (l FlashlightLogger) Printf(format string, a ...any) { l.Debugf(format, a...) }
-func (l FlashlightLogger) Infof(format string, a ...any)  { l.Debugf(format, a...) }
-func (l FlashlightLogger) Errorf(format string, a ...any) { l.Errorf(format, a...) }
+func (l FlashlightLogger) Printf(format string, a ...any) { l.Logger.Debugf(format, a...) }
+func (l FlashlightLogger) Infof(format string, a ...any)  { l.Logger.Debugf(format, a...) }
+func (l FlashlightLogger) Errorf(format string, a ...any) { l.Logger.Errorf(format, a...) }
 
 // RotatedLogsUnder creates rotated file logger under logdir using the given appName
 func RotatedLogsUnder(appName, logdir string) (io.WriteCloser, error) {
