@@ -90,6 +90,12 @@ type RoundTripper interface {
 	SetMasqueradeTimeout(time.Duration)
 }
 
+// Fronted creates a new http.RoundTripper that sends requests only through
+// domain fronting.
+func Fronted() http.RoundTripper {
+	return &frontedRT{masqueradeTimeout: 5 * time.Minute}
+}
+
 // ParallelPreferChained creates a new http.RoundTripper that attempts to send
 // requests through both chained and direct fronted routes in parallel. Once a
 // chained request succeeds, subsequent requests will only go through Chained
@@ -495,7 +501,7 @@ func readResponses(finalResponse chan *http.Response, responses chan *http.Respo
 }
 
 // ChainedPersistent creates an http.RoundTripper that uses keepalive
-// connectionspersists and proxies through chained servers. If rootCA is
+// connections persists and proxies through chained servers. If rootCA is
 // specified, the RoundTripper will validate the server's certificate on TLS
 // connections against that RootCA.
 func ChainedPersistent(rootCA string) (http.RoundTripper, error) {

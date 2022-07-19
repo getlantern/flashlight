@@ -17,6 +17,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 )
 
 var (
@@ -54,6 +55,11 @@ func newDialer(dialServer func(ctx context.Context) (net.Conn, error)) (func(net
 	p, err := newProxy("test", "addr:567", "proto", "netw", &ChainedServerInfo{
 		AuthToken: "token",
 		Trusted:   true,
+		Location: &apipb.ProxyLocation{
+			City:        "city",
+			Country:     "country",
+			CountryCode: "countryCode",
+		},
 	}, newTestUserConfig())
 	if err != nil {
 		return nil, err

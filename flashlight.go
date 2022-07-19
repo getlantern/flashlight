@@ -20,6 +20,7 @@ import (
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/borda"
+	"github.com/getlantern/flashlight/bypass"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
@@ -78,6 +79,10 @@ func (t HandledErrorType) String() string {
 	}
 }
 
+type ProxyListener interface {
+	OnProxies(map[string]*chained.ChainedServerInfo)
+}
+
 type Flashlight struct {
 	configDir         string
 	flagsAsMap        map[string]interface{}
@@ -93,6 +98,8 @@ type Flashlight struct {
 	op                *fops.Op
 	errorHandler      func(HandledErrorType, error)
 	dhtupContext      *dhtup.Context
+	mxProxyListeners  sync.RWMutex
+	proxyListeners    []func(map[string]*chained.ChainedServerInfo)
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
@@ -240,9 +247,24 @@ func (f *Flashlight) FeatureOptions(feature string, opts config.FeatureOptions) 
 	return global.UnmarshalFeatureOptions(feature, opts)
 }
 
+func (f *Flashlight) AddProxyListener(listener func(map[string]*chained.ChainedServerInfo)) {
+	f.mxProxyListeners.Lock()
+	defer f.mxProxyListeners.Unlock()
+	f.proxyListeners = append(f.proxyListeners, listener)
+}
+
+func (f *Flashlight) notifyProxyListeners(proxies map[string]*chained.ChainedServerInfo) {
+	f.mxProxyListeners.RLock()
+	defer f.mxProxyListeners.RUnlock()
+	for _, l := range f.proxyListeners {
+		go l(proxies)
+	}
+}
+
 func (f *Flashlight) startConfigFetch() func() {
 	proxiesDispatch := func(conf interface{}, src config.Source) {
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
+		f.notifyProxyListeners(proxyMap)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
 		dialers := f.client.Configure(proxyMap)
 		if dialers != nil {
@@ -475,6 +497,8 @@ func (f *Flashlight) StartBackgroundServices() func() {
 	// goroutines if the # exceeds 800 and is increasing.
 	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
 
+	stopBypass := bypass.Start(f.AddProxyListener, f.configDir, f.userConfig)
+
 	stopConfigFetch := f.startConfigFetch()
 	geolookup.EnablePersistence(filepath.Join(f.configDir, "latestgeoinfo.json"))
 	geolookup.Refresh()
@@ -482,6 +506,7 @@ func (f *Flashlight) StartBackgroundServices() func() {
 	return func() {
 		stopConfigFetch()
 		stopMonitor()
+		stopBypass()
 	}
 }
 

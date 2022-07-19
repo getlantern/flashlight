@@ -39,7 +39,7 @@ func multiplexed(wrapped proxyImpl, name string, s *ChainedServerInfo) (proxyImp
 			defer op.End()
 			return wrapped.dialServer(op, ctx)
 		},
-		PoolSize: poolSize,
+		PoolSize: int(poolSize),
 		Protocol: proto,
 	})
 	return &multiplexedImpl{wrapped, multiplexedDial}, nil

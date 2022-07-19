@@ -1,9 +1,13 @@
 package common
 
 import (
+	"crypto/rand"
+	"math/big"
 	"net/http"
 	"strconv"
 	"strings"
+
+	mrand "math/rand"
 )
 
 const (
@@ -25,6 +29,8 @@ const (
 	PlatformHeader                      = "X-Lantern-Platform"
 	ProxyDialTimeoutHeader              = "X-Lantern-Dial-Timeout"
 	ClientCountryHeader                 = "X-Lantern-Client-Country"
+	RandomNoiseHeader                   = "X-Lantern-Rand"
+	SleepHeader                         = "X-Lantern-Sleep"
 	XBQHeader                           = "XBQ"
 	XBQHeaderv2                         = "XBQv2"
 )
@@ -58,6 +64,9 @@ func AddCommonNonUserHeaders(uc UserConfig, req *http.Request) {
 	} else {
 		req.Header.Set(TimeZoneHeader, tz)
 	}
+	// We include a random length string here to make it harder for censors to identify lantern
+	// based on consistent packet lengths.
+	req.Header.Add(RandomNoiseHeader, randomizedString())
 }
 
 // AddCommonHeadersWithOptions sets standard http headers on a request bound
@@ -135,4 +144,20 @@ func CORSMiddleware(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, req)
 	})
+}
+
+// randomizedString returns a random string to avoid consistent packet lengths censors
+// may use to detect Lantern.
+func randomizedString() string {
+	const charset = "abcdefghijklmnopqrstuvwxyz"
+	size, err := rand.Int(rand.Reader, big.NewInt(300))
+	if err != nil {
+		return ""
+	}
+
+	bytes := make([]byte, size.Int64())
+	for i := range bytes {
+		bytes[i] = charset[mrand.Intn(len(charset))]
+	}
+	return string(bytes)
 }

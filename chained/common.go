@@ -8,8 +8,8 @@ package chained
 import (
 	"strconv"
 
-	"github.com/getlantern/common"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	tls "github.com/refraction-networking/utls"
 )
 
@@ -19,7 +19,7 @@ var (
 
 // ChainedServerInfo contains all the data for connecting to a given chained
 // server.
-type ChainedServerInfo common.ChainedServerInfo
+type ChainedServerInfo apipb.ProxyConfig
 
 func _setting(settings map[string]string, name string) string {
 	if settings == nil {
