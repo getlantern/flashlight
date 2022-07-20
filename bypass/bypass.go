@@ -126,17 +126,20 @@ func (p *proxy) sendToBypass() int64 {
 
 	log.Debugf("Sending traffic for bypass server: %v", p.name)
 	resp, err := rt.RoundTrip(req)
-	if err != nil {
+	if err != nil || resp == nil {
 		log.Errorf("Unable to post chained server info: %v", err)
 		return 0
 	}
 	defer func() {
-		if closeerr := resp.Body.Close(); closeerr != nil {
-			log.Errorf("Error closing response body: %v", closeerr)
+		if resp.Body != nil {
+			if closeerr := resp.Body.Close(); closeerr != nil {
+				log.Errorf("Error closing response body: %v", closeerr)
+			}
 		}
 	}()
-
-	io.Copy(io.Discard, resp.Body)
+	if resp.Body != nil {
+		io.Copy(io.Discard, resp.Body)
+	}
 
 	var sleepTime int64
 	sleepVal := resp.Header.Get(common.SleepHeader)
