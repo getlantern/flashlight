@@ -261,8 +261,7 @@ func (comp *ProxiedFlowComponent) Run(
 			),
 			id: comp.id}
 	}
-	// Accept 1xx, 2xx and 3xx responses only
-	if resp.StatusCode/100 >= 4 {
+	if resp.StatusCode >= 400 {
 		body := "nil"
 		if copiedReq.Body != nil {
 			b, err := io.ReadAll(resp.Body)
