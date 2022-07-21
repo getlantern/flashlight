@@ -44,6 +44,7 @@ type Flags struct {
 	Experiments             []string      `flag:"enabled-experiments" help:"comma separated list of experiments to enable"`
 	P2PBep46TargetsAndSalts []string      `flag:"p2p-bep46-targets-and-salts" help:"comma separated list of BEP46Targets (in the form of 'target1:salt1,target2:salt2,...') to use when p2pcensoredpeer feature is enabled. This overrides other sources like global-config"`
 	P2PRegistrarEndpoint    string        `flag:"p2p-registrar-endpoint" help:"Endpoint to use when p2pfreepeer feature is enabled. This overrides other sources"`
+	P2PDomainWhitelist      []string      `flag:"p2p-domain-whitelist" help:"comma separated list of domains to whitelist when p2pfreepeer feature is enabled. This overrides other sources. If nothing is supplied, FreePeerCtx defaults to only whitelisting geolookups"`
 	P2PWebseedURLPrefixes   []string      `flag:"p2p-webseed-url-prefixes" help:"comma separated list of webseed url prefixes to use when p2pcensoredpeer feature is enabled. This overrides other sources like global-config"`
 	P2PSourceURLPrefixes    []string      `flag:"p2p-source-url-prefixes" help:"comma separated list of source url prefixes to use when p2pcensoredpeer feature is enabled. This overrides other sources like global-config"`
 }

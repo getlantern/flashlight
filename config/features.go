@@ -118,15 +118,21 @@ func (ro *ReplicaOptions) GetProxyPeerInfoHashes() []string {
 }
 
 type P2PFreePeerOptions struct {
-	RegistrarEndpoint string `mapstructure:"registrar_endpoint"`
+	RegistrarEndpoint string   `mapstructure:"registrar_endpoint"`
+	DomainWhitelist   []string `mapstructure:"domain_whitelist"`
 }
 
 func (o *P2PFreePeerOptions) fromMap(m map[string]interface{}) error {
-	registrarEndpoint, err := somethingFromMap[string](m, "registrar_endpoint")
+	var err error
+	o.RegistrarEndpoint, err = somethingFromMap[string](m, "registrar_endpoint")
 	if err != nil {
 		return err
 	}
-	o.RegistrarEndpoint = registrarEndpoint
+
+	o.DomainWhitelist, err = stringArrFromMap(m, "domain_whitelist")
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
