@@ -163,7 +163,7 @@ func proxyRoundTripper(name string, info *chained.ChainedServerInfo, configDir s
 	dialer, err := chained.CreateDialer(configDir, name, info, userConfig)
 	if err != nil {
 		log.Errorf("Unable to create dialer: %v", err)
-		return rt(func(r *http.Request) (*http.Response, error) {
+		return common.RoundTripperFunc(func(r *http.Request) (*http.Response, error) {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 			}, nil
@@ -183,12 +183,6 @@ func proxyRoundTripper(name string, info *chained.ChainedServerInfo, configDir s
 		return pc, err
 	}
 	return transport
-}
-
-type rt func(*http.Request) (*http.Response, error)
-
-func (rt rt) RoundTrip(req *http.Request) (*http.Response, error) {
-	return rt(req)
 }
 
 func (p *proxy) newRequest(userConfig common.UserConfig, endpoint string) (*http.Request, error) {
