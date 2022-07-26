@@ -122,6 +122,8 @@ require (
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
+require golang.org/x/exp v0.0.0-20220328175248-053ad81199eb // indirect
+
 require (
 	crawshaw.io/sqlite v0.3.3-0.20210127221821-98b1f83c5508 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1.0.20210721174708-390f27c3be20 // indirect
@@ -266,6 +268,7 @@ require (
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/rs/dnscache v0.0.0-20210201191234-295bba877686 // indirect
+	github.com/samber/lo v1.25.0
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8 // indirect
@@ -289,11 +292,11 @@ require (
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.19.1 // indirect
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
-	golang.org/x/mod v0.4.2 // indirect
+	golang.org/x/mod v0.6.0-dev.0.20211013180041-c96bc1413d57 // indirect
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect
-	golang.org/x/tools v0.1.8-0.20211022200916-316ba0b74098 // indirect
+	golang.org/x/tools v0.1.8-0.20211029000441-d6a9af8af023 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220630174209-ad1d48641aa7 // indirect

@@ -55,18 +55,19 @@ func (b *bypass) OnProxies(infos map[string]*chained.ChainedServerInfo, configDi
 	b.mxProxies.Lock()
 	defer b.mxProxies.Unlock()
 	b.reset()
+	dialers := chained.CreateDialersMap(configDir, infos, userConfig)
 	for k, v := range infos {
 		info := new(chained.ChainedServerInfo)
 		*info = *v
 		// Set the name in the info since we know it here.
 		info.Name = k
-		p := b.newProxy(k, info, configDir, userConfig)
+		p := b.newProxy(k, info, configDir, userConfig, dialers[k])
 		b.proxies = append(b.proxies, p)
 		go p.start()
 	}
 }
 
-func (b *bypass) newProxy(name string, info *chained.ChainedServerInfo, configDir string, userConfig common.UserConfig) *proxy {
+func (b *bypass) newProxy(name string, info *chained.ChainedServerInfo, configDir string, userConfig common.UserConfig, dialer balancer.Dialer) *proxy {
 	return &proxy{
 		ChainedServerInfo: info,
 		name:              name,
@@ -74,7 +75,7 @@ func (b *bypass) newProxy(name string, info *chained.ChainedServerInfo, configDi
 		toggle:            atomic.NewBool(mrand.Float32() < 0.5),
 		dfRoundTripper:    proxied.Fronted(),
 		userConfig:        userConfig,
-		proxyRoundTripper: proxyRoundTripper(name, info, configDir, userConfig),
+		proxyRoundTripper: proxyRoundTripper(name, info, configDir, userConfig, dialer),
 	}
 }
 
@@ -159,17 +160,7 @@ func (p *proxy) sendToBypass() int64 {
 	return sleepTime
 }
 
-func proxyRoundTripper(name string, info *chained.ChainedServerInfo, configDir string, userConfig common.UserConfig) http.RoundTripper {
-	dialer, err := chained.CreateDialer(configDir, name, info, userConfig)
-	if err != nil {
-		log.Errorf("Unable to create dialer: %v", err)
-		return common.RoundTripperFunc(func(r *http.Request) (*http.Response, error) {
-			return &http.Response{
-				StatusCode: http.StatusOK,
-			}, nil
-		})
-	}
-
+func proxyRoundTripper(name string, info *chained.ChainedServerInfo, configDir string, userConfig common.UserConfig, dialer balancer.Dialer) http.RoundTripper {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.Proxy = nil
 	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {

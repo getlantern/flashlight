@@ -22,6 +22,7 @@ import (
 	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
+	"github.com/samber/lo"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
@@ -72,7 +73,12 @@ func (c nopCloser) close() {}
 
 // CreateDialers creates a list of Proxies (balancer.Dialer) with supplied server info.
 func CreateDialers(configDir string, proxies map[string]*ChainedServerInfo, uc common.UserConfig) []balancer.Dialer {
-	dialers := make([]balancer.Dialer, 0, len(proxies))
+	return lo.Values(CreateDialersMap(configDir, proxies, uc))
+}
+
+// CreateDialersMap creates a map of Proxies (balancer.Dialer) with supplied server info.
+func CreateDialersMap(configDir string, proxies map[string]*ChainedServerInfo, uc common.UserConfig) map[string]balancer.Dialer {
+	mappedDialers := make(map[string]balancer.Dialer)
 	groups := groupByMultipathEndpoint(proxies)
 	for endpoint, group := range groups {
 		if endpoint == "" {
@@ -84,7 +90,7 @@ func CreateDialers(configDir string, proxies map[string]*ChainedServerInfo, uc c
 					continue
 				}
 				log.Debugf("Adding chained server: %v", dialer.JustifiedLabel())
-				dialers = append(dialers, dialer)
+				mappedDialers[name] = dialer
 			}
 		} else {
 			log.Debugf("Adding %d chained servers for multipath endpoint %s", len(group), endpoint)
@@ -93,10 +99,10 @@ func CreateDialers(configDir string, proxies map[string]*ChainedServerInfo, uc c
 				log.Errorf("Unable to configure multipath server to %v. Received error: %v", endpoint, err)
 				continue
 			}
-			dialers = append(dialers, dialer)
+			mappedDialers[endpoint] = dialer
 		}
 	}
-	return dialers
+	return mappedDialers
 }
 
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
