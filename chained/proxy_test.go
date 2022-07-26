@@ -1,6 +1,7 @@
 package chained
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,4 +30,17 @@ func TestTrusted(t *testing.T) {
 	d, _ = CreateDialer(tempConfigDir, "test-proxy", si, newTestUserConfig())
 	assert.True(t, d.Trusted(), "OBFS4 proxy should be trusted if explicitly declared")
 	assert.Contains(t, d.JustifiedLabel(), trustedSuffix)
+}
+
+func TestCreateDialersMap(t *testing.T) {
+	proxies := map[string]*ChainedServerInfo{
+		"proxy1": {Addr: "1.1.1.1", AuthToken: "abcd", Cert: "", PluggableTransport: "https"},
+		"proxy2": {Addr: "2.2.2.2", AuthToken: "abcd", Cert: "", PluggableTransport: "https"},
+	}
+	dialers := CreateDialers(tempConfigDir, proxies, newTestUserConfig())
+	assert.Equal(t, 2, len(dialers))
+	for _, d := range dialers {
+		assert.NotNil(t, d)
+		assert.True(t, strings.HasPrefix(d.Name(), "proxy"))
+	}
 }
