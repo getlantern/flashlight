@@ -57,11 +57,16 @@ func (b *bypass) OnProxies(infos map[string]*chained.ChainedServerInfo, configDi
 	b.reset()
 	dialers := chained.CreateDialersMap(configDir, infos, userConfig)
 	for k, v := range infos {
+		dialer := dialers[k]
+		if dialer == nil {
+			log.Errorf("No dialer for %v", k)
+			continue
+		}
 		info := new(chained.ChainedServerInfo)
 		*info = *v
 		// Set the name in the info since we know it here.
 		info.Name = k
-		p := b.newProxy(k, info, configDir, userConfig, dialers[k])
+		p := b.newProxy(k, info, configDir, userConfig, dialer)
 		b.proxies = append(b.proxies, p)
 		go p.start()
 	}
