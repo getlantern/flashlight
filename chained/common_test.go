@@ -40,7 +40,6 @@ func TestCopyConfigs(t *testing.T) {
 			},
 		},
 	}
-	//assert.EqualValues(t, proxies, CopyConfigs(proxies))
 	assert.True(t, proto.Equal(proxies["pc1"], CopyConfigs(proxies)["pc1"]))
 	assert.True(t, proto.Equal(proxies["pc2"], CopyConfigs(proxies)["pc2"]))
 }
