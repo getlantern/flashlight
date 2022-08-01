@@ -22,6 +22,7 @@ import (
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/bypass"
+	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
@@ -99,7 +100,7 @@ type Flashlight struct {
 	errorHandler      func(HandledErrorType, error)
 	dhtupContext      *dhtup.Context
 	mxProxyListeners  sync.RWMutex
-	proxyListeners    []func(map[string]*apipb.ProxyConfig)
+	proxyListeners    []func(map[string]*apipb.ProxyConfig, config.Source)
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
@@ -247,29 +248,27 @@ func (f *Flashlight) FeatureOptions(feature string, opts config.FeatureOptions) 
 	return global.UnmarshalFeatureOptions(feature, opts)
 }
 
-func (f *Flashlight) AddProxyListener(listener func(map[string]*apipb.ProxyConfig)) {
+func (f *Flashlight) addProxyListener(listener func(proxies map[string]*apipb.ProxyConfig, src config.Source)) {
 	f.mxProxyListeners.Lock()
 	defer f.mxProxyListeners.Unlock()
 	f.proxyListeners = append(f.proxyListeners, listener)
 }
 
-func (f *Flashlight) notifyProxyListeners(proxies map[string]*apipb.ProxyConfig) {
+func (f *Flashlight) notifyProxyListeners(proxies map[string]*apipb.ProxyConfig, src config.Source) {
 	f.mxProxyListeners.RLock()
 	defer f.mxProxyListeners.RUnlock()
 	for _, l := range f.proxyListeners {
-		go l(proxies)
+		// Make absolutely sure we don't hit data races with different go routines
+		// accessing shared data -- give each go routine it's own copy.
+		proxiesCopy := chained.CopyConfigs(proxies)
+		go l(proxiesCopy, src)
 	}
 }
 
 func (f *Flashlight) startConfigFetch() func() {
 	proxiesDispatch := func(conf interface{}, src config.Source) {
 		proxyMap := conf.(map[string]*apipb.ProxyConfig)
-		f.notifyProxyListeners(proxyMap)
-		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
-		dialers := f.client.Configure(proxyMap)
-		if dialers != nil {
-			f.onProxiesUpdate(dialers, src)
-		}
+		f.notifyProxyListeners(proxyMap, src)
 	}
 	globalDispatch := func(conf interface{}, src config.Source) {
 		cfg := conf.(*config.Global)
@@ -387,8 +386,17 @@ func New(
 		errorHandler: func(t HandledErrorType, err error) {
 			log.Errorf("%v: %v", t, err)
 		},
-		dhtupContext: dhtupContext,
+		dhtupContext:   dhtupContext,
+		proxyListeners: make([]func(map[string]*apipb.ProxyConfig, config.Source), 0),
 	}
+
+	f.addProxyListener(func(proxies map[string]*apipb.ProxyConfig, src config.Source) {
+		log.Debug("Applying proxy config with proxies")
+		dialers := f.client.Configure(chained.CopyConfigs(proxies))
+		if dialers != nil {
+			f.onProxiesUpdate(dialers, src)
+		}
+	})
 
 	var grabber dnsgrab.Server
 	var grabberErr error
@@ -497,7 +505,7 @@ func (f *Flashlight) StartBackgroundServices() func() {
 	// goroutines if the # exceeds 800 and is increasing.
 	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
 
-	stopBypass := bypass.Start(f.AddProxyListener, f.configDir, f.userConfig)
+	stopBypass := bypass.Start(f.addProxyListener, f.configDir, f.userConfig)
 
 	stopConfigFetch := f.startConfigFetch()
 	geolookup.EnablePersistence(filepath.Join(f.configDir, "latestgeoinfo.json"))

@@ -19,6 +19,7 @@ import (
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
 	"go.uber.org/atomic"
@@ -39,13 +40,13 @@ type bypass struct {
 
 // Start sends periodic traffic to the bypass server. The client periodically sends traffic to the server both via
 // domain fronting and proxying to determine if proxies are blocked.
-func Start(listen func(func(map[string]*apipb.ProxyConfig)), configDir string, userConfig common.UserConfig) func() {
+func Start(listen func(func(map[string]*apipb.ProxyConfig, config.Source)), configDir string, userConfig common.UserConfig) func() {
 	mrand.Seed(time.Now().UnixNano())
 	b := &bypass{
 		infos:   make(map[string]*apipb.ProxyConfig),
 		proxies: make([]*proxy, 0),
 	}
-	listen(func(infos map[string]*apipb.ProxyConfig) {
+	listen(func(infos map[string]*apipb.ProxyConfig, src config.Source) {
 		b.OnProxies(infos, configDir, userConfig)
 	})
 	return b.reset

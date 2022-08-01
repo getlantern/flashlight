@@ -16,6 +16,16 @@ import (
 
 var log = golog.LoggerFor("chained")
 
+// CopyConfigs makes a safe copy of the config to avoid any data corruption for other users of the config.
+func CopyConfigs(proxies map[string]*apipb.ProxyConfig) map[string]*apipb.ProxyConfig {
+	proxiesCopy := make(map[string]*apipb.ProxyConfig)
+
+	for k, v := range proxies {
+		proxiesCopy[k] = proto.Clone(v).(*apipb.ProxyConfig)
+	}
+	return proxiesCopy
+}
+
 // CopyConfig makes a safe copy of the config to avoid any data corruption for other users of the config.
 func CopyConfig(pc *apipb.ProxyConfig) *apipb.ProxyConfig {
 	return proto.Clone(pc).(*apipb.ProxyConfig)
