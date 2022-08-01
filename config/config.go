@@ -16,8 +16,8 @@ import (
 	"github.com/getlantern/dhtup"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/rot13"
-	"github.com/getlantern/yaml"
 	"github.com/getsentry/sentry-go"
+	"gopkg.in/yaml.v3"
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
@@ -50,7 +50,7 @@ type Config interface {
 type config struct {
 	filePath    string
 	obfuscate   bool
-	saveChan    chan interface{}
+	saveChan    chan []byte
 	unmarshaler func([]byte) (interface{}, error)
 }
 
@@ -300,7 +300,7 @@ func newConfig(filePath string, opts *options) *config {
 	cfg := &config{
 		filePath:    filePath,
 		obfuscate:   opts.obfuscate,
-		saveChan:    make(chan interface{}),
+		saveChan:    make(chan []byte),
 		unmarshaler: opts.unmarshaler,
 	}
 	if cfg.unmarshaler == nil {
@@ -376,10 +376,9 @@ func (conf *config) fetchConfig(stopCh chan bool, dispatch func(interface{}), fe
 	} else {
 		log.Debugf("Fetched config!")
 
-		// Push these to channels to avoid race conditions that might occur if
-		// we did these on go routines, for example.
-		conf.saveChan <- cfg
-		log.Debugf("Sent to save chan")
+		// At this point we know the raw bytes were successfully decoded as valid yaml, so just save them directly.
+		conf.saveChan <- bytes
+		log.Debug("Sent to save chan")
 		dispatch(cfg)
 		return sleepTime
 	}
@@ -395,18 +394,13 @@ func (conf *config) save(onError func(error)) {
 	}
 }
 
-func (conf *config) saveOne(in interface{}) error {
+func (conf *config) saveOne(in []byte) error {
 	op := ops.Begin("save_config")
 	defer op.End()
 	return op.FailIf(conf.doSaveOne(in))
 }
 
-func (conf *config) doSaveOne(in interface{}) error {
-	bytes, err := yaml.Marshal(in)
-	if err != nil {
-		return fmt.Errorf("unable to marshal config yaml: %w", err)
-	}
-
+func (conf *config) doSaveOne(in []byte) error {
 	outfile, err := os.OpenFile(conf.filePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		return fmt.Errorf("unable to open file %v for writing: %w", conf.filePath, err)
@@ -417,7 +411,7 @@ func (conf *config) doSaveOne(in interface{}) error {
 	if conf.obfuscate {
 		out = rot13.NewWriter(outfile)
 	}
-	_, err = out.Write(bytes)
+	_, err = out.Write(in)
 	if err != nil {
 		return fmt.Errorf("unable to write yaml to file %v: %w", conf.filePath, err)
 	}

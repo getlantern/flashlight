@@ -21,7 +21,7 @@ func CopyConfigs(proxies map[string]*apipb.ProxyConfig) map[string]*apipb.ProxyC
 	proxiesCopy := make(map[string]*apipb.ProxyConfig)
 
 	for k, v := range proxies {
-		proxiesCopy[k] = proto.Clone(v).(*apipb.ProxyConfig)
+		proxiesCopy[k] = CopyConfig(v)
 	}
 	return proxiesCopy
 }
