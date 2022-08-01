@@ -14,6 +14,7 @@ import (
 	"github.com/getlantern/dnsgrab/persistentcache"
 	"github.com/getlantern/errors"
 
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/buffers"
@@ -271,7 +272,7 @@ func (c *client) loadDialers() ([]balancer.Dialer, error) {
 	cf := &configurer{configFolderPath: c.configDir}
 	chained.PersistSessionStates(c.configDir)
 
-	proxies := make(map[string]*chained.ChainedServerInfo)
+	proxies := make(map[string]*apipb.ProxyConfig)
 	_, _, err := cf.openConfig(proxiesYaml, proxies, []byte{})
 	if err != nil {
 		return nil, err

@@ -19,7 +19,7 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/email"
@@ -201,8 +201,8 @@ func (cf *configurer) openGlobal() (*config.Global, string, bool, error) {
 	return cfg, etag, updated, err
 }
 
-func (cf *configurer) openProxies() (map[string]*chained.ChainedServerInfo, string, bool, error) {
-	cfg := make(map[string]*chained.ChainedServerInfo)
+func (cf *configurer) openProxies() (map[string]*apipb.ProxyConfig, string, bool, error) {
+	cfg := make(map[string]*apipb.ProxyConfig)
 	etag, updated, err := cf.openConfig(proxiesYaml, cfg, embeddedconfig.Proxies)
 	return cfg, etag, updated, err
 }
@@ -261,8 +261,8 @@ func (cf *configurer) updateGlobal(rt http.RoundTripper, cfg *config.Global, eta
 	return cfg, didFetch
 }
 
-func (cf *configurer) updateProxies(cfg map[string]*chained.ChainedServerInfo, etag string) (map[string]*chained.ChainedServerInfo, bool) {
-	updated := make(map[string]*chained.ChainedServerInfo)
+func (cf *configurer) updateProxies(cfg map[string]*apipb.ProxyConfig, etag string) (map[string]*apipb.ProxyConfig, bool) {
+	updated := make(map[string]*apipb.ProxyConfig)
 	didFetch, err := cf.updateFromWeb(cf.rt, proxiesYaml, etag, updated, "http://config.getiantem.org/proxies.yaml.gz")
 	if err != nil {
 		log.Error(err)

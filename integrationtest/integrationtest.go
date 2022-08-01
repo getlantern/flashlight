@@ -29,7 +29,7 @@ import (
 	"github.com/getlantern/waitforserver"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/client"
 )
 
@@ -395,11 +395,11 @@ func (helper *Helper) writeConfig() error {
 	return ioutil.WriteFile(filename, out, 0644)
 }
 
-func (helper *Helper) buildProxies(proto string) (map[string]*chained.ChainedServerInfo, error) {
+func (helper *Helper) buildProxies(proto string) (map[string]*apipb.ProxyConfig, error) {
 	protos := strings.Split(proto, ",")
 	// multipath
 	if len(protos) > 1 {
-		proxies := make(map[string]*chained.ChainedServerInfo)
+		proxies := make(map[string]*apipb.ProxyConfig)
 		for _, p := range protos {
 			cfgs, err := helper.buildProxies(p)
 			if err != nil {
@@ -412,7 +412,7 @@ func (helper *Helper) buildProxies(proto string) (map[string]*chained.ChainedSer
 		}
 		return proxies, nil
 	}
-	var srv chained.ChainedServerInfo
+	var srv apipb.ProxyConfig
 	err := yaml.Unmarshal(proxiesTemplate, &srv)
 	if err != nil {
 		return nil, fmt.Errorf("Could not unmarshal config %v", err)
@@ -499,7 +499,7 @@ func (helper *Helper) buildProxies(proto string) (map[string]*chained.ChainedSer
 			srv.Addr = helper.HTTPSProxyServerAddr
 		}
 	}
-	return map[string]*chained.ChainedServerInfo{"proxy-" + proto: &srv}, nil
+	return map[string]*apipb.ProxyConfig{"proxy-" + proto: &srv}, nil
 }
 
 func (helper *Helper) startTLSMasqOrigin() error {
