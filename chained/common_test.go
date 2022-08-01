@@ -3,7 +3,7 @@ package chained
 import (
 	"testing"
 
-	"github.com/getlantern/flashlight/api/apipb"
+	"github.com/getlantern/common/apipb"
 	"github.com/stretchr/testify/assert"
 )
 

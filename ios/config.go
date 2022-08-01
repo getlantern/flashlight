@@ -19,7 +19,7 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/api/apipb"
+	"github.com/getlantern/common/apipb"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/email"

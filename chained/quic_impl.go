@@ -9,7 +9,7 @@ import (
 	"net"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/api/apipb"
+	"github.com/getlantern/common/apipb"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/quicwrapper"

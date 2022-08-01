@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/getlantern/flashlight/api/apipb"
+	"github.com/getlantern/common/apipb"
 	"github.com/getlantern/rot13"
 	"github.com/getlantern/yaml"
 )

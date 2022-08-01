@@ -14,7 +14,7 @@ import (
 	"github.com/getlantern/dnsgrab/persistentcache"
 	"github.com/getlantern/errors"
 
-	"github.com/getlantern/flashlight/api/apipb"
+	"github.com/getlantern/common/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/buffers"

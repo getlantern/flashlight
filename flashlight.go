@@ -18,7 +18,7 @@ import (
 	"github.com/getlantern/ops"
 	"github.com/getlantern/proxybench"
 
-	"github.com/getlantern/flashlight/api/apipb"
+	"github.com/getlantern/common/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/bypass"
