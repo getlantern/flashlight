@@ -19,7 +19,7 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/yaml"
@@ -83,7 +83,7 @@ func readRemote(target string) ([]byte, error) {
 }
 
 func parseProxies(bytes []byte) {
-	cfg := make(map[string]*chained.ChainedServerInfo)
+	cfg := make(map[string]*apipb.ProxyConfig)
 	err := yaml.Unmarshal(bytes, cfg)
 	if err != nil {
 		fail("Unable to parse proxies config: %v", err)

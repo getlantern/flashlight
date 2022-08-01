@@ -9,7 +9,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/embeddedconfig"
 )
@@ -174,7 +174,7 @@ func newGlobalUnmarshaler(flags map[string]interface{}) func(bytes []byte) (inte
 
 func newProxiesUnmarshaler() func(bytes []byte) (interface{}, error) {
 	return func(bytes []byte) (interface{}, error) {
-		servers := make(map[string]*chained.ChainedServerInfo)
+		servers := make(map[string]*apipb.ProxyConfig)
 		if err := yaml.Unmarshal(bytes, servers); err != nil {
 			return nil, err
 		}

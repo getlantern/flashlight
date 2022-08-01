@@ -11,10 +11,9 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/rot13"
 	"github.com/getlantern/yaml"
-
-	"github.com/getlantern/flashlight/chained"
 )
 
 // withTempDir creates a temporary directory, executes the given function and
@@ -84,8 +83,8 @@ func newGlobalConfig(t *testing.T) *Global {
 	return global
 }
 
-func newProxiesConfig(t *testing.T) map[string]*chained.ChainedServerInfo {
-	proxies := make(map[string]*chained.ChainedServerInfo)
+func newProxiesConfig(t *testing.T) map[string]*apipb.ProxyConfig {
+	proxies := make(map[string]*apipb.ProxyConfig)
 	err := yaml.Unmarshal([]byte(proxiesYamlTemplate), proxies)
 	abortOnError(t, err)
 	return proxies

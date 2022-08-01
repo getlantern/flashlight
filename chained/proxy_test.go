@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,11 +13,14 @@ var (
 )
 
 func TestTrusted(t *testing.T) {
-	d, _ := CreateDialer(tempConfigDir, "test-proxy", &ChainedServerInfo{Addr: "1.1.1.1", AuthToken: "abcd", Cert: "", PluggableTransport: ""}, newTestUserConfig())
+	d, _ := CreateDialer(tempConfigDir, "test-proxy",
+		&apipb.ProxyConfig{Addr: "1.1.1.1", AuthToken: "abcd", Cert: "", PluggableTransport: ""},
+		newTestUserConfig())
 	assert.False(t, d.Trusted(), "HTTP proxy should not be trusted")
 	assert.NotContains(t, d.JustifiedLabel(), trustedSuffix)
 
-	si := &ChainedServerInfo{Addr: "1.1.1.1", AuthToken: "abcd", Cert: obfs4Cert,
+	si := &apipb.ProxyConfig{
+		Addr: "1.1.1.1", AuthToken: "abcd", Cert: obfs4Cert,
 		PluggableTransport: "obfs4",
 		PluggableTransportSettings: map[string]string{
 			"iat-mode": "0",
@@ -33,9 +37,13 @@ func TestTrusted(t *testing.T) {
 }
 
 func TestCreateDialersMap(t *testing.T) {
-	proxies := map[string]*ChainedServerInfo{
-		"proxy1": {Addr: "1.1.1.1", AuthToken: "abcd", Cert: "", PluggableTransport: "https"},
-		"proxy2": {Addr: "2.2.2.2", AuthToken: "abcd", Cert: "", PluggableTransport: "https"},
+	proxies := map[string]*apipb.ProxyConfig{
+		"proxy1": &apipb.ProxyConfig{
+			Addr: "2.2.2.2", AuthToken: "abcd", Cert: "", PluggableTransport: "https",
+		},
+		"proxy2": &apipb.ProxyConfig{
+			Addr: "2.2.2.2", AuthToken: "abcd", Cert: "", PluggableTransport: "https",
+		},
 	}
 	dialers := CreateDialers(tempConfigDir, proxies, newTestUserConfig())
 	assert.Equal(t, 2, len(dialers))

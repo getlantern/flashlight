@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/common"
 )
 
@@ -19,7 +20,7 @@ func TestProbe(t *testing.T) {
 				requests = append(requests, req)
 			}))
 
-		proxy, err := CreateDialer(tempConfigDir, "test-proxy", &ChainedServerInfo{
+		proxy, err := CreateDialer(tempConfigDir, "test-proxy", &apipb.ProxyConfig{
 			Addr: server.Listener.Addr().String(),
 		}, &common.UserConfigData{})
 		assert.NoError(t, err)
@@ -48,7 +49,7 @@ func TestProbe(t *testing.T) {
 func TestProbeFailing(t *testing.T) {
 	uc := &common.UserConfigData{}
 	addr := "localhost:1"
-	proxy, err := CreateDialer(tempConfigDir, "test-proxy", &ChainedServerInfo{Addr: addr}, uc)
+	proxy, err := CreateDialer(tempConfigDir, "test-proxy", &apipb.ProxyConfig{Addr: addr}, uc)
 	assert.NoError(t, err)
 	assert.False(t, proxy.Probe(false),
 		"testing against non-existent port should have failed")
@@ -58,7 +59,7 @@ func TestProbeFailing(t *testing.T) {
 			rw.WriteHeader(http.StatusServiceUnavailable)
 		}))
 	addr = server.Listener.Addr().String()
-	proxy, err = CreateDialer(tempConfigDir, "test-proxy", &ChainedServerInfo{Addr: addr}, uc)
+	proxy, err = CreateDialer(tempConfigDir, "test-proxy", &apipb.ProxyConfig{Addr: addr}, uc)
 	assert.NoError(t, err)
 	// Disable below to avoid wasting 20s in CI
 	// assert.False(t, proxy.Probe(false),

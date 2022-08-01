@@ -8,27 +8,28 @@ import (
 
 	tls "github.com/refraction-networking/utls"
 
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/browsers/simbrowser"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/tlsresumption"
 )
 
-// Generates TLS configuration for connecting to proxy specified by the ChainedServerInfo. This
+// Generates TLS configuration for connecting to proxy specified by the apipb.ProxyConfig. This
 // function may block while determining things like how to mimic the default browser's client hello.
 //
 // Returns a slice of ClientHellos to be used for dialing. These hellos are in priority order: the
 // first hello is the "ideal" one and the remaining hellos serve as backup in case something is
 // wrong with the previous hellos. There will always be at least one hello. For each hello, the
 // ClientHelloSpec will be non-nil if and only if the ClientHelloID is tls.HelloCustom.
-func tlsConfigForProxy(ctx context.Context, configDir, proxyName string, s *ChainedServerInfo, uc common.UserConfig) (
+func tlsConfigForProxy(ctx context.Context, configDir, proxyName string, pc *apipb.ProxyConfig, uc common.UserConfig) (
 	*tls.Config, []helloSpec) {
 
-	configuredHelloID := s.clientHelloID()
+	configuredHelloID := clientHelloID(pc)
 	var ss *tls.ClientSessionState
 	var err error
-	if s.TLSClientSessionState != "" {
-		ss, err = tlsresumption.ParseClientSessionState(s.TLSClientSessionState)
+	if pc.TLSClientSessionState != "" {
+		ss, err = tlsresumption.ParseClientSessionState(pc.TLSClientSessionState)
 		if err != nil {
 			log.Errorf("Unable to parse serialized client session state, continuing with normal handshake: %v", err)
 		} else {
@@ -65,12 +66,12 @@ func tlsConfigForProxy(ctx context.Context, configDir, proxyName string, s *Chai
 	//  4. ApplyPreset configures the cipher suites according to the ClientHelloSpec:
 	//     https://github.com/getlantern/utls/blob/1abdc4b1acab98e8776ae9a5201f67968ffa01dc/u_parrots.go#L1034-L1040
 
-	cipherSuites := orderedCipherSuitesFromConfig(s)
+	cipherSuites := orderedCipherSuitesFromConfig(pc)
 
 	cfg := &tls.Config{
 		ClientSessionCache: sessionCache,
 		CipherSuites:       cipherSuites,
-		ServerName:         s.TLSServerNameIndicator,
+		ServerName:         pc.TLSServerNameIndicator,
 		InsecureSkipVerify: true,
 		KeyLogWriter:       getTLSKeyLogWriter(),
 	}
@@ -106,11 +107,11 @@ func getBrowserHello(ctx context.Context, configDir string, uc common.UserConfig
 	return helloSpec{simbrowser.ChooseForUser(ctx, uc).ClientHelloID, nil}
 }
 
-func orderedCipherSuitesFromConfig(s *ChainedServerInfo) []uint16 {
+func orderedCipherSuitesFromConfig(pc *apipb.ProxyConfig) []uint16 {
 	if common.Platform == "android" {
-		return s.mobileOrderedCipherSuites()
+		return mobileOrderedCipherSuites(pc)
 	}
-	return s.desktopOrderedCipherSuites()
+	return desktopOrderedCipherSuites(pc)
 }
 
 // Write the session keys to file if SSLKEYLOGFILE is set, same as browsers.

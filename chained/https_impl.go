@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/hellosplitter"
@@ -29,17 +30,17 @@ type httpsImpl struct {
 	sync.Mutex
 }
 
-func newHTTPSImpl(configDir, name, addr string, s *ChainedServerInfo, uc common.UserConfig, dialCore coreDialer) (proxyImpl, error) {
+func newHTTPSImpl(configDir, name, addr string, pc *apipb.ProxyConfig, uc common.UserConfig, dialCore coreDialer) (proxyImpl, error) {
 	const timeout = 5 * time.Second
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
+	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(pc.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", addr))
 	}
-	tlsConfig, hellos := tlsConfigForProxy(ctx, configDir, name, s, uc)
+	tlsConfig, hellos := tlsConfigForProxy(ctx, configDir, name, pc, uc)
 	if len(hellos) == 0 {
 		return nil, log.Error(errors.New("expected at least one hello"))
 	}
@@ -50,7 +51,7 @@ func newHTTPSImpl(configDir, name, addr string, s *ChainedServerInfo, uc common.
 		x509cert:                cert.X509(),
 		tlsConfig:               tlsConfig,
 		roller:                  &helloRoller{hellos: hellos},
-		tlsClientHelloSplitting: s.TLSClientHelloSplitting,
+		tlsClientHelloSplitting: pc.TLSClientHelloSplitting,
 	}, nil
 }
 

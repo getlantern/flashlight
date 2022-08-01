@@ -3,7 +3,7 @@ package bypass
 import (
 	"testing"
 
-	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/common"
 
 	"github.com/stretchr/testify/assert"
@@ -11,7 +11,7 @@ import (
 
 func TestHTTPRequest(t *testing.T) {
 	p := &proxy{
-		ChainedServerInfo: &chained.ChainedServerInfo{
+		ProxyConfig: &apipb.ProxyConfig{
 			Addr: "http://cookies.com",
 		},
 	}

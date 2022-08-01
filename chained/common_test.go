@@ -3,16 +3,17 @@ package chained
 import (
 	"testing"
 
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPTSettingsNil(t *testing.T) {
-	s := &ChainedServerInfo{}
-	assert.False(t, s.ptSettingBool("bool"))
+	s := &apipb.ProxyConfig{}
+	assert.False(t, ptSettingBool(s, "bool"))
 }
 
 func TestPTSettings(t *testing.T) {
-	s := &ChainedServerInfo{
+	s := &apipb.ProxyConfig{
 		PluggableTransportSettings: map[string]string{
 			"true":        "true",
 			"false":       "false",
@@ -26,23 +27,23 @@ func TestPTSettings(t *testing.T) {
 			"badbool": "notbool",
 		},
 	}
-	assert.True(t, s.ptSettingBool("true"))
-	assert.False(t, s.ptSettingBool("false"))
-	assert.False(t, s.ptSettingBool("empty"))
-	assert.False(t, s.ptSettingBool("unknown"))
-	assert.False(t, s.ptSettingBool("2"))
-	assert.Equal(t, 2, s.ptSettingInt("2"))
-	assert.Equal(t, 0, s.ptSettingInt("empty"))
-	assert.Equal(t, 0, s.ptSettingInt("unknown"))
-	assert.Equal(t, 0, s.ptSettingInt("false"))
+	assert.True(t, ptSettingBool(s, "true"))
+	assert.False(t, ptSettingBool(s, "false"))
+	assert.False(t, ptSettingBool(s, "empty"))
+	assert.False(t, ptSettingBool(s, "unknown"))
+	assert.False(t, ptSettingBool(s, "2"))
+	assert.Equal(t, 2, ptSettingInt(s, "2"))
+	assert.Equal(t, 0, ptSettingInt(s, "empty"))
+	assert.Equal(t, 0, ptSettingInt(s, "unknown"))
+	assert.Equal(t, 0, ptSettingInt(s, "false"))
 
-	assert.False(t, s.ptSettingBool("falsestring"))
-	assert.True(t, s.ptSettingBool("truestring"))
-	assert.Equal(t, 2, s.ptSettingInt("2string"))
+	assert.False(t, ptSettingBool(s, "falsestring"))
+	assert.True(t, ptSettingBool(s, "truestring"))
+	assert.Equal(t, 2, ptSettingInt(s, "2string"))
 
-	assert.Equal(t, 0, s.ptSettingInt("badint"))
-	assert.False(t, s.ptSettingBool("badbool"))
+	assert.Equal(t, 0, ptSettingInt(s, "badint"))
+	assert.False(t, ptSettingBool(s, "badbool"))
 
-	assert.Equal(t, "", s.ptSetting("empty"))
-	assert.Equal(t, "2", s.ptSetting("2"))
+	assert.Equal(t, "", ptSetting(s, "empty"))
+	assert.Equal(t, "2", ptSetting(s, "2"))
 }

@@ -547,8 +547,6 @@ github.com/getlantern/keyman v0.0.0-20210622061955-aa0d47d4932c h1:42BHUoilinoKR
 github.com/getlantern/keyman v0.0.0-20210622061955-aa0d47d4932c/go.mod h1:lzCwzxjE8ciu+2bZku7kcCKfOYAXUs4stPn3elouYNI=
 github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a h1:z7G1v79GB1qRrkcbzF0nrLzV/+dwdGmamEZAp0ff+z0=
 github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a/go.mod h1:cGOfTjvllC9bcwS7cVW6tGT6fXc8Dki384uFjm7XBnw=
-github.com/getlantern/lantern-cloud v0.0.0-20220712165514-2ee1d944469a h1:cWFqf6OkzselZQOx4N9C5Q/YYEBsvP65hiOy74rdCus=
-github.com/getlantern/lantern-cloud v0.0.0-20220712165514-2ee1d944469a/go.mod h1:BO2dBIFWbD5rP5HuHVwQ5iNoAuzORr4lJzKtWvNs7NM=
 github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210601195915-e04471aa4920 h1:VHBRvnYWECSPUMEIvpn24q3kMgpSR6zLgDMIMthWNFQ=
 github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210601195915-e04471aa4920/go.mod h1:JludU10BDqs/5iHmTlQF4+ToAouyyIK868mA6Okrqco=
 github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358 h1:ZPe/LMCpCEuHtfBp2NP3/A9KRXQJbTxeSOVWmcBzXIc=
@@ -1361,6 +1359,7 @@ github.com/spf13/jwalterweatherman v1.0.0/go.mod h1:cQK4TGJAtQXfYWX+Ddv3mKDzgVb6
 github.com/spf13/pflag v1.0.1/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnInEg4=
 github.com/spf13/pflag v1.0.3/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnInEg4=
 github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
+github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
 github.com/spf13/viper v1.4.0/go.mod h1:PTJ7Z/lr49W6bUbkmS1V3by4uWynFiR9p7+dSq/yZzE=
 github.com/stephens2424/writerset v1.0.2/go.mod h1:aS2JhsMn6eA7e82oNmW4rfsgAOp9COBTTl8mzkwADnc=
 github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=

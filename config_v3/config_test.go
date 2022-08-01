@@ -12,7 +12,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/embeddedconfig"
 )
@@ -84,7 +84,7 @@ func TestSaved(t *testing.T) {
 		pr, err := cfg.saved()
 		assert.Nil(t, err)
 
-		proxies := pr.(map[string]*chained.ChainedServerInfo)
+		proxies := pr.(map[string]*apipb.ProxyConfig)
 		chained := proxies["fallback-104.236.192.114"]
 		assert.True(t, chained != nil)
 		assert.Equal(t, "104.236.192.114:443", chained.Addr)
@@ -139,7 +139,7 @@ func TestPollProxies(t *testing.T) {
 			proxyChan <- cfg
 		}
 		go cfg.poll(nil, dispatch, fetcher, func() time.Duration { return 1 * time.Hour })
-		proxies := (<-proxyChan).(map[string]*chained.ChainedServerInfo)
+		proxies := (<-proxyChan).(map[string]*apipb.ProxyConfig)
 
 		assert.True(t, len(proxies) > 0)
 		for _, val := range proxies {

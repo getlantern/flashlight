@@ -122,7 +122,10 @@ require (
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
-require golang.org/x/exp v0.0.0-20220328175248-053ad81199eb // indirect
+require (
+	github.com/spf13/pflag v1.0.5 // indirect
+	golang.org/x/exp v0.0.0-20220328175248-053ad81199eb // indirect
+)
 
 require (
 	crawshaw.io/sqlite v0.3.3-0.20210127221821-98b1f83c5508 // indirect
@@ -180,7 +183,6 @@ require (
 	github.com/getlantern/http-proxy v0.0.3-0.20211022035117-86faba795750 // indirect
 	github.com/getlantern/kcp-go/v5 v5.0.0-20220503142114-f0c1cd6e1b54 // indirect
 	github.com/getlantern/keepcurrent v0.0.0-20220716105246-a0f01ed60e13 // indirect
-	github.com/getlantern/lantern-cloud v0.0.0-20220712165514-2ee1d944469a
 	github.com/getlantern/msgpack v3.1.4+incompatible // indirect
 	github.com/getlantern/packetforward v0.0.0-20201001150407-c68a447b0360 // indirect
 	github.com/getlantern/pcapper v0.0.0-20210901200029-bf37dc0a4259 // indirect

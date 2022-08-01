@@ -34,6 +34,7 @@ import (
 	"github.com/getlantern/proxy/v2/filters"
 	"github.com/getlantern/shortcut"
 
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
@@ -477,7 +478,7 @@ func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reade
 // Configure updates the client's configuration. Configure can be called
 // before or after ListenAndServe, and can be called multiple times. If
 // no error occurred, then the new dialers are returned.
-func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo) []balancer.Dialer {
+func (client *Client) Configure(proxies map[string]*apipb.ProxyConfig) []balancer.Dialer {
 	log.Debug("Configure() called")
 	dialers, err := client.initBalancer(proxies)
 	if err != nil {

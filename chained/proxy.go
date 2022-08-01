@@ -17,16 +17,16 @@ import (
 	"github.com/getlantern/enhttp"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/fronted"
-	"github.com/getlantern/idletiming"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
-	"github.com/getlantern/mtime"
-	"github.com/getlantern/netx"
-	"github.com/samber/lo"
-
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/fronted"
+	"github.com/getlantern/idletiming"
+	"github.com/getlantern/mtime"
+	"github.com/getlantern/netx"
+	"github.com/samber/lo"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -72,12 +72,12 @@ type nopCloser struct{}
 func (c nopCloser) close() {}
 
 // CreateDialers creates a list of Proxies (balancer.Dialer) with supplied server info.
-func CreateDialers(configDir string, proxies map[string]*ChainedServerInfo, uc common.UserConfig) []balancer.Dialer {
+func CreateDialers(configDir string, proxies map[string]*apipb.ProxyConfig, uc common.UserConfig) []balancer.Dialer {
 	return lo.Values(CreateDialersMap(configDir, proxies, uc))
 }
 
 // CreateDialersMap creates a map of Proxies (balancer.Dialer) with supplied server info.
-func CreateDialersMap(configDir string, proxies map[string]*ChainedServerInfo, uc common.UserConfig) map[string]balancer.Dialer {
+func CreateDialersMap(configDir string, proxies map[string]*apipb.ProxyConfig, uc common.UserConfig) map[string]balancer.Dialer {
 	mappedDialers := make(map[string]balancer.Dialer)
 	groups := groupByMultipathEndpoint(proxies)
 	for endpoint, group := range groups {
@@ -106,7 +106,7 @@ func CreateDialersMap(configDir string, proxies map[string]*ChainedServerInfo, u
 }
 
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
-func CreateDialer(configDir, name string, s *ChainedServerInfo, uc common.UserConfig) (balancer.Dialer, error) {
+func CreateDialer(configDir, name string, s *apipb.ProxyConfig, uc common.UserConfig) (balancer.Dialer, error) {
 	addr, transport, network, err := extractParams(s)
 	if err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ func CreateDialer(configDir, name string, s *ChainedServerInfo, uc common.UserCo
 	return p, nil
 }
 
-func extractParams(s *ChainedServerInfo) (addr, transport, network string, err error) {
+func extractParams(s *apipb.ProxyConfig) (addr, transport, network string, err error) {
 	if theForceAddr != "" && theForceToken != "" {
 		forceProxy(s)
 	}
@@ -150,7 +150,7 @@ func extractParams(s *ChainedServerInfo) (addr, transport, network string, err e
 	return
 }
 
-func createImpl(configDir, name, addr, transport string, s *ChainedServerInfo, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func createImpl(configDir, name, addr, transport string, s *apipb.ProxyConfig, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	coreDialer := func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error) {
 		return reportDialCore(op, func() (net.Conn, error) {
 			return netx.DialContext(ctx, "tcp", addr)
@@ -227,7 +227,7 @@ func ForceProxy(forceAddr string, forceToken string) {
 	theForceAddr, theForceToken = forceAddr, forceToken
 }
 
-func forceProxy(s *ChainedServerInfo) {
+func forceProxy(s *apipb.ProxyConfig) {
 	s.Addr = theForceAddr
 	s.AuthToken = theForceToken
 	s.Cert = ""
@@ -289,7 +289,7 @@ type proxy struct {
 	multiplexed         bool
 	addr                string
 	authToken           string
-	location            apipb.ProxyLocation
+	location            *apipb.ProxyLocation
 	user                common.UserConfig
 	trusted             bool
 	bias                int
@@ -306,7 +306,7 @@ type proxy struct {
 	mx                  sync.Mutex
 }
 
-func newProxy(name, addr, protocol, network string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+func newProxy(name, addr, protocol, network string, s *apipb.ProxyConfig, uc common.UserConfig) (*proxy, error) {
 	p := &proxy{
 		name:             name,
 		protocol:         protocol,
@@ -328,7 +328,7 @@ func newProxy(name, addr, protocol, network string, s *ChainedServerInfo, uc com
 	}
 	// Make sure we don't panic if there's no location.
 	if s.Location != nil {
-		p.location = *s.Location
+		p.location = proto.Clone(s.Location).(*apipb.ProxyLocation)
 	}
 
 	if p.bias == 0 && s.ENHTTPURL != "" {

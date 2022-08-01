@@ -1,3 +1,4 @@
+//go:build !iosapp
 // +build !iosapp
 
 package chained
@@ -17,6 +18,7 @@ import (
 	"github.com/getlantern/errors"
 	shadowsocks "github.com/getlantern/lantern-shadowsocks/client"
 
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/ops"
 )
 
@@ -32,10 +34,10 @@ type shadowsocksImpl struct {
 	rngmx          sync.Mutex
 }
 
-func newShadowsocksImpl(name, addr string, s *ChainedServerInfo, reportDialCore reportDialCoreFn) (proxyImpl, error) {
-	secret := s.ptSetting("shadowsocks_secret")
-	cipher := s.ptSetting("shadowsocks_cipher")
-	upstream := s.ptSetting("shadowsocks_upstream")
+func newShadowsocksImpl(name, addr string, pc *apipb.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+	secret := ptSetting(pc, "shadowsocks_secret")
+	cipher := ptSetting(pc, "shadowsocks_cipher")
+	upstream := ptSetting(pc, "shadowsocks_upstream")
 	if upstream == "" {
 		upstream = defaultShadowsocksUpstreamSuffix
 	}
