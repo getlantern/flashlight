@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/keyman"
@@ -25,8 +26,8 @@ type lampshadeImpl struct {
 	setOp          func(op *ops.Op)
 }
 
-func newLampshadeImpl(name, addr string, s *ChainedServerInfo, reportDialCore reportDialCoreFn) (proxyImpl, error) {
-	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
+func newLampshadeImpl(name, addr string, pc *apipb.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(pc.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", addr))
 	}
@@ -34,7 +35,7 @@ func newLampshadeImpl(name, addr string, s *ChainedServerInfo, reportDialCore re
 	if !ok {
 		return nil, errors.New("Public key is not an RSA public key!")
 	}
-	cipherCode := lampshade.Cipher(s.ptSettingInt(fmt.Sprintf("cipher_%v", runtime.GOARCH)))
+	cipherCode := lampshade.Cipher(ptSettingInt(pc, fmt.Sprintf("cipher_%v", runtime.GOARCH)))
 	if cipherCode == 0 {
 		if runtime.GOARCH == "amd64" {
 			// On 64-bit Intel, default to AES128_GCM which is hardware accelerated
@@ -44,10 +45,10 @@ func newLampshadeImpl(name, addr string, s *ChainedServerInfo, reportDialCore re
 			cipherCode = lampshade.ChaCha20Poly1305
 		}
 	}
-	windowSize := s.ptSettingInt("windowsize")
-	maxPadding := s.ptSettingInt("maxpadding")
-	maxStreamsPerConn := uint16(s.ptSettingInt("streams"))
-	idleInterval, parseErr := time.ParseDuration(s.ptSetting("idleinterval"))
+	windowSize := ptSettingInt(pc, "windowsize")
+	maxPadding := ptSettingInt(pc, "maxpadding")
+	maxStreamsPerConn := uint16(ptSettingInt(pc, "streams"))
+	idleInterval, parseErr := time.ParseDuration(ptSetting(pc, "idleinterval"))
 	if parseErr != nil || idleInterval < 0 {
 		// This should be less than the server's IdleTimeout to avoid trying to use
 		// a connection that was just idled. The client's IdleTimeout is already set
@@ -55,17 +56,17 @@ func newLampshadeImpl(name, addr string, s *ChainedServerInfo, reportDialCore re
 		idleInterval = IdleTimeout
 		log.Debugf("%s: defaulted idleinterval to %v", name, idleInterval)
 	}
-	pingInterval, parseErr := time.ParseDuration(s.ptSetting("pinginterval"))
+	pingInterval, parseErr := time.ParseDuration(ptSetting(pc, "pinginterval"))
 	if parseErr != nil || pingInterval < 0 {
 		pingInterval = 15 * time.Second
 		log.Debugf("%s: defaulted pinginterval to %v", name, pingInterval)
 	}
-	maxLiveConns := s.ptSettingInt("maxliveconns")
+	maxLiveConns := ptSettingInt(pc, "maxliveconns")
 	if maxLiveConns <= 0 {
 		maxLiveConns = 5
 		log.Debugf("%s: defaulted maxliveconns to %v", name, maxLiveConns)
 	}
-	redialSessionInterval, parseErr := time.ParseDuration(s.ptSetting("redialsessioninterval"))
+	redialSessionInterval, parseErr := time.ParseDuration(ptSetting(pc, "redialsessioninterval"))
 	if parseErr != nil || redialSessionInterval < 0 {
 		redialSessionInterval = 5 * time.Second
 		log.Debugf("%s: defaulted redialsessioninterval to %v", name, redialSessionInterval)

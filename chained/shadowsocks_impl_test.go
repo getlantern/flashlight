@@ -1,3 +1,4 @@
+//go:build !iosapp
 // +build !iosapp
 
 package chained
@@ -8,12 +9,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/shadowsocks/go-shadowsocks2/socks"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGenerateUpstream(t *testing.T) {
-	info := &ChainedServerInfo{
+	info := &apipb.ProxyConfig{
 		PluggableTransportSettings: map[string]string{
 			"shadowsocks_secret":   "foo",
 			"shadowsocks_cipher":   "chacha20-ietf-poly1305",

@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
@@ -48,7 +49,7 @@ func (impl *multipathImpl) FormatStats() []string {
 	return impl.dialer.(multipath.Stats).FormatStats()
 }
 
-func CreateMPDialer(configDir, endpoint string, ss map[string]*ChainedServerInfo, uc common.UserConfig) (balancer.Dialer, error) {
+func CreateMPDialer(configDir, endpoint string, ss map[string]*apipb.ProxyConfig, uc common.UserConfig) (balancer.Dialer, error) {
 	if len(ss) < 1 {
 		return nil, errors.New("no dialers")
 	}
@@ -82,12 +83,12 @@ func CreateMPDialer(configDir, endpoint string, ss map[string]*ChainedServerInfo
 	return p, nil
 }
 
-func groupByMultipathEndpoint(proxies map[string]*ChainedServerInfo) map[string]map[string]*ChainedServerInfo {
-	groups := make(map[string]map[string]*ChainedServerInfo)
+func groupByMultipathEndpoint(proxies map[string]*apipb.ProxyConfig) map[string]map[string]*apipb.ProxyConfig {
+	groups := make(map[string]map[string]*apipb.ProxyConfig)
 	for name, s := range proxies {
 		group, exists := groups[s.MultipathEndpoint]
 		if !exists {
-			group = make(map[string]*ChainedServerInfo)
+			group = make(map[string]*apipb.ProxyConfig)
 			groups[s.MultipathEndpoint] = group
 		}
 		group[name] = s

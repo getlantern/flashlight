@@ -10,6 +10,7 @@ import (
 	"github.com/getlantern/psmux"
 	"github.com/xtaci/smux"
 
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/ops"
 )
 
@@ -22,7 +23,7 @@ type multiplexedImpl struct {
 	multiplexedDial cmux.DialFN
 }
 
-func multiplexed(wrapped proxyImpl, name string, s *ChainedServerInfo) (proxyImpl, error) {
+func multiplexed(wrapped proxyImpl, name string, s *apipb.ProxyConfig) (proxyImpl, error) {
 	log.Debugf("Enabling multiplexing for %v", name)
 	poolSize := s.MultiplexedPhysicalConns
 	if poolSize < 1 {
@@ -51,7 +52,7 @@ func (impl *multiplexedImpl) dialServer(op *ops.Op, ctx context.Context) (net.Co
 
 // createMultiplexedProtocol configures a cmux multiplexing protocol
 // according to settings.
-func createMultiplexedProtocol(s *ChainedServerInfo) (cmux.Protocol, error) {
+func createMultiplexedProtocol(s *apipb.ProxyConfig) (cmux.Protocol, error) {
 	protocol := s.MultiplexedProtocol
 	if protocol == "" {
 		protocol = defaultMuxProtocol
@@ -67,65 +68,65 @@ func createMultiplexedProtocol(s *ChainedServerInfo) (cmux.Protocol, error) {
 	}
 }
 
-func configureSmux(s *ChainedServerInfo) (cmux.Protocol, error) {
+func configureSmux(pc *apipb.ProxyConfig) (cmux.Protocol, error) {
 	config := smux.DefaultConfig()
 	config.KeepAliveInterval = IdleTimeout / 2
 	config.KeepAliveTimeout = IdleTimeout
-	config.KeepAliveDisabled = s.muxSettingBool("keepalivedisabled")
-	if v := s.muxSettingInt("version"); v > 0 {
+	config.KeepAliveDisabled = muxSettingBool(pc, "keepalivedisabled")
+	if v := muxSettingInt(pc, "version"); v > 0 {
 		config.Version = v
 	}
-	if v := s.muxSettingInt("maxframesize"); v > 0 {
+	if v := muxSettingInt(pc, "maxframesize"); v > 0 {
 		config.MaxFrameSize = v
 	}
-	if v := s.muxSettingInt("maxreceivebuffer"); v > 0 {
+	if v := muxSettingInt(pc, "maxreceivebuffer"); v > 0 {
 		config.MaxReceiveBuffer = v
 	}
-	if v := s.muxSettingInt("maxstreambuffer"); v > 0 {
+	if v := muxSettingInt(pc, "maxstreambuffer"); v > 0 {
 		config.MaxStreamBuffer = v
 	}
 	return cmux.NewSmuxProtocol(config), nil
 }
 
-func configurePsmux(s *ChainedServerInfo) (cmux.Protocol, error) {
+func configurePsmux(pc *apipb.ProxyConfig) (cmux.Protocol, error) {
 	config := psmux.DefaultConfig()
 	config.KeepAliveInterval = IdleTimeout / 2
 	config.KeepAliveTimeout = IdleTimeout
-	config.KeepAliveDisabled = s.muxSettingBool("keepalivedisabled")
-	if v := s.muxSettingInt("version"); v > 0 {
+	config.KeepAliveDisabled = muxSettingBool(pc, "keepalivedisabled")
+	if v := muxSettingInt(pc, "version"); v > 0 {
 		config.Version = v
 	}
-	if v := s.muxSettingInt("maxframesize"); v > 0 {
+	if v := muxSettingInt(pc, "maxframesize"); v > 0 {
 		config.MaxFrameSize = v
 	}
-	if v := s.muxSettingInt("maxreceivebuffer"); v > 0 {
+	if v := muxSettingInt(pc, "maxreceivebuffer"); v > 0 {
 		config.MaxReceiveBuffer = v
 	}
-	if v := s.muxSettingInt("maxstreambuffer"); v > 0 {
+	if v := muxSettingInt(pc, "maxstreambuffer"); v > 0 {
 		config.MaxStreamBuffer = v
 	}
-	if v := s.muxSettingFloat("maxpaddingratio"); v != 0.0 {
+	if v := muxSettingFloat(pc, "maxpaddingratio"); v != 0.0 {
 		if v < 0 { // explicit disable
 			config.MaxPaddingRatio = 0.0
 		} else {
 			config.MaxPaddingRatio = v
 		}
 	}
-	if v := s.muxSettingInt("maxpaddedsize"); v != 0 {
+	if v := muxSettingInt(pc, "maxpaddedsize"); v != 0 {
 		if v < 0 { // explicit disable
 			config.MaxPaddedSize = 0
 		} else {
 			config.MaxPaddedSize = v
 		}
 	}
-	if v := s.muxSettingInt("aggressivepadding"); v != 0 {
+	if v := muxSettingInt(pc, "aggressivepadding"); v != 0 {
 		if v < 0 { // explicit disable
 			config.AggressivePadding = 0
 		} else {
 			config.AggressivePadding = v
 		}
 	}
-	if v := s.muxSettingFloat("aggressivepaddingratio"); v != 0.0 {
+	if v := muxSettingFloat(pc, "aggressivepaddingratio"); v != 0.0 {
 		if v < 0 { // explicit disable
 			config.AggressivePaddingRatio = 0.0
 		} else {

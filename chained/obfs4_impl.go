@@ -6,6 +6,7 @@ import (
 	"net"
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/ops"
 	"gitlab.com/yawning/obfs4.git/transports/base"
 	"gitlab.com/yawning/obfs4.git/transports/obfs4"
@@ -19,8 +20,8 @@ type obfs4Impl struct {
 	args     interface{}
 }
 
-func newOBFS4Impl(name, addr string, s *ChainedServerInfo, dialCore coreDialer) (proxyImpl, error) {
-	if s.Cert == "" {
+func newOBFS4Impl(name, addr string, pc *apipb.ProxyConfig, dialCore coreDialer) (proxyImpl, error) {
+	if pc.Cert == "" {
 		return nil, fmt.Errorf("No Cert configured for obfs4 server, can't connect")
 	}
 
@@ -30,8 +31,8 @@ func newOBFS4Impl(name, addr string, s *ChainedServerInfo, dialCore coreDialer) 
 	}
 
 	ptArgs := &pt.Args{}
-	ptArgs.Add("cert", s.Cert)
-	ptArgs.Add("iat-mode", s.ptSetting("iat-mode"))
+	ptArgs.Add("cert", pc.Cert)
+	ptArgs.Add("iat-mode", ptSetting(pc, "iat-mode"))
 
 	args, err := cf.ParseArgs(ptArgs)
 	if err != nil {

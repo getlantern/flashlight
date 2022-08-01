@@ -5,13 +5,14 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
 )
 
 // initBalancer takes hosts from cfg.ChainedServers and it uses them to create a
 // balancer. Returns the new dialers.
-func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo) ([]balancer.Dialer, error) {
+func (client *Client) initBalancer(proxies map[string]*apipb.ProxyConfig) ([]balancer.Dialer, error) {
 	if len(proxies) == 0 {
 		return nil, fmt.Errorf("No chained servers configured, not initializing balancer")
 	}

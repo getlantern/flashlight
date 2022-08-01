@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/hellosplitter"
@@ -32,7 +33,7 @@ type tlsMasqImpl struct {
 	tlsClientHelloSplitting bool
 }
 
-func newTLSMasqImpl(configDir, name, addr string, s *ChainedServerInfo, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newTLSMasqImpl(configDir, name, addr string, pc *apipb.ProxyConfig, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	const timeout = 5 * time.Second
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -47,7 +48,7 @@ func newTLSMasqImpl(configDir, name, addr string, s *ChainedServerInfo, uc commo
 	}
 
 	suites := []uint16{}
-	suiteStrings := strings.Split(s.ptSetting("tlsmasq_suites"), ",")
+	suiteStrings := strings.Split(ptSetting(pc, "tlsmasq_suites"), ",")
 	if len(suiteStrings) == 1 && suiteStrings[0] == "" {
 		return nil, errors.New("no cipher suites specified")
 	}
@@ -58,12 +59,12 @@ func newTLSMasqImpl(configDir, name, addr string, s *ChainedServerInfo, uc commo
 		}
 		suites = append(suites, suite)
 	}
-	versStr := s.ptSetting("tlsmasq_tlsminversion")
+	versStr := ptSetting(pc, "tlsmasq_tlsminversion")
 	minVersion, err := decodeUint16(versStr)
 	if err != nil {
 		return nil, errors.New("bad TLS version string '%s': %v", versStr, err)
 	}
-	secretString := s.ptSetting("tlsmasq_secret")
+	secretString := ptSetting(pc, "tlsmasq_secret")
 	secretBytes, err := hex.DecodeString(strings.TrimPrefix(secretString, "0x"))
 	if err != nil {
 		return nil, errors.New("bad server-secret string '%s': %v", secretString, err)
@@ -73,12 +74,12 @@ func newTLSMasqImpl(configDir, name, addr string, s *ChainedServerInfo, uc commo
 		return nil, errors.New("expected %d-byte secret string, got %d bytes", len(secret), len(secretBytes))
 	}
 	copy(secret[:], secretBytes)
-	sni := s.ptSetting("tlsmasq_sni")
+	sni := ptSetting(pc, "tlsmasq_sni")
 	if sni == "" {
 		return nil, errors.New("server name indicator must be configured")
 	}
 	// It's okay if this is unset - it'll just result in us using the default.
-	nonceTTL := time.Duration(s.ptSettingInt("tlsmasq_noncettl"))
+	nonceTTL := time.Duration(ptSettingInt(pc, "tlsmasq_noncettl"))
 
 	host, _, err := net.SplitHostPort(addr)
 	if err != nil {
@@ -86,10 +87,10 @@ func newTLSMasqImpl(configDir, name, addr string, s *ChainedServerInfo, uc commo
 	}
 
 	// Add the proxy cert to the root CAs as proxy certs are self-signed.
-	if s.Cert == "" {
+	if pc.Cert == "" {
 		return nil, errors.New("no proxy certificate configured")
 	}
-	block, rest := pem.Decode([]byte(s.Cert))
+	block, rest := pem.Decode([]byte(pc.Cert))
 	if block == nil {
 		return nil, errors.New("failed to decode proxy certificate as PEM block")
 	}
@@ -103,7 +104,7 @@ func newTLSMasqImpl(configDir, name, addr string, s *ChainedServerInfo, uc commo
 	pool := x509.NewCertPool()
 	pool.AddCert(cert)
 
-	pCfg, hellos := tlsConfigForProxy(ctx, configDir, name, s, uc)
+	pCfg, hellos := tlsConfigForProxy(ctx, configDir, name, pc, uc)
 	pCfg.ServerName = sni
 	pCfg.InsecureSkipVerify = InsecureSkipVerifyTLSMasqOrigin
 
@@ -122,7 +123,7 @@ func newTLSMasqImpl(configDir, name, addr string, s *ChainedServerInfo, uc commo
 		},
 	}
 
-	return &tlsMasqImpl{reportDialCore: reportDialCore, addr: addr, cfg: cfg, tlsClientHelloSplitting: s.TLSClientHelloSplitting}, nil
+	return &tlsMasqImpl{reportDialCore: reportDialCore, addr: addr, cfg: cfg, tlsClientHelloSplitting: pc.TLSClientHelloSplitting}, nil
 }
 
 func (impl *tlsMasqImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {

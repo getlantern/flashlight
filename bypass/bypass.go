@@ -15,12 +15,12 @@ import (
 
 	mrand "math/rand"
 
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"go.uber.org/atomic"
 	"google.golang.org/protobuf/proto"
 )
@@ -32,26 +32,26 @@ const dfEndpoint = "https://iantem.io/bypass/v1/proxy"
 const proxyEndpoint = "https://bypass.iantem.io/v1/proxy"
 
 type bypass struct {
-	infos     map[string]*chained.ChainedServerInfo
+	infos     map[string]*apipb.ProxyConfig
 	proxies   []*proxy
 	mxProxies sync.Mutex
 }
 
 // Start sends periodic traffic to the bypass server. The client periodically sends traffic to the server both via
 // domain fronting and proxying to determine if proxies are blocked.
-func Start(listen func(func(map[string]*chained.ChainedServerInfo)), configDir string, userConfig common.UserConfig) func() {
+func Start(listen func(func(map[string]*apipb.ProxyConfig)), configDir string, userConfig common.UserConfig) func() {
 	mrand.Seed(time.Now().UnixNano())
 	b := &bypass{
-		infos:   make(map[string]*chained.ChainedServerInfo),
+		infos:   make(map[string]*apipb.ProxyConfig),
 		proxies: make([]*proxy, 0),
 	}
-	listen(func(infos map[string]*chained.ChainedServerInfo) {
+	listen(func(infos map[string]*apipb.ProxyConfig) {
 		b.OnProxies(infos, configDir, userConfig)
 	})
 	return b.reset
 }
 
-func (b *bypass) OnProxies(infos map[string]*chained.ChainedServerInfo, configDir string, userConfig common.UserConfig) {
+func (b *bypass) OnProxies(infos map[string]*apipb.ProxyConfig, configDir string, userConfig common.UserConfig) {
 	b.mxProxies.Lock()
 	defer b.mxProxies.Unlock()
 	b.reset()
@@ -62,25 +62,27 @@ func (b *bypass) OnProxies(infos map[string]*chained.ChainedServerInfo, configDi
 			log.Errorf("No dialer for %v", k)
 			continue
 		}
-		info := new(chained.ChainedServerInfo)
-		*info = *v
+
+		pc := chained.CopyConfig(v)
 		// Set the name in the info since we know it here.
-		info.Name = k
-		p := b.newProxy(k, info, configDir, userConfig, dialer)
+		pc.Name = k
+		// Kill the cert to avoid it taking up unnecessary space.
+		pc.Cert = ""
+		p := b.newProxy(k, pc, configDir, userConfig, dialer)
 		b.proxies = append(b.proxies, p)
 		go p.start()
 	}
 }
 
-func (b *bypass) newProxy(name string, info *chained.ChainedServerInfo, configDir string, userConfig common.UserConfig, dialer balancer.Dialer) *proxy {
+func (b *bypass) newProxy(name string, pc *apipb.ProxyConfig, configDir string, userConfig common.UserConfig, dialer balancer.Dialer) *proxy {
 	return &proxy{
-		ChainedServerInfo: info,
+		ProxyConfig:       pc,
 		name:              name,
 		done:              make(chan bool),
 		toggle:            atomic.NewBool(mrand.Float32() < 0.5),
 		dfRoundTripper:    proxied.Fronted(),
 		userConfig:        userConfig,
-		proxyRoundTripper: proxyRoundTripper(name, info, configDir, userConfig, dialer),
+		proxyRoundTripper: proxyRoundTripper(name, pc, configDir, userConfig, dialer),
 	}
 }
 
@@ -92,7 +94,7 @@ func (b *bypass) reset() {
 }
 
 type proxy struct {
-	*chained.ChainedServerInfo
+	*apipb.ProxyConfig
 	name              string
 	done              chan bool
 	randString        string
@@ -165,7 +167,7 @@ func (p *proxy) sendToBypass() int64 {
 	return sleepTime
 }
 
-func proxyRoundTripper(name string, info *chained.ChainedServerInfo, configDir string, userConfig common.UserConfig, dialer balancer.Dialer) http.RoundTripper {
+func proxyRoundTripper(name string, info *apipb.ProxyConfig, configDir string, userConfig common.UserConfig, dialer balancer.Dialer) http.RoundTripper {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.Proxy = nil
 	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -184,12 +186,7 @@ func proxyRoundTripper(name string, info *chained.ChainedServerInfo, configDir s
 func (p *proxy) newRequest(userConfig common.UserConfig, endpoint string) (*http.Request, error) {
 	// Just posting all the info about the server allows us to control these fields fully on the server
 	// side.
-	info := new(chained.ChainedServerInfo)
-	*info = *p.ChainedServerInfo
-	info.Cert = "" // Just save a little space by not sending the cert.
-
-	commonInfo := apipb.ProxyConfig(*info)
-	infopb, err := proto.Marshal(&commonInfo)
+	infopb, err := proto.Marshal(p.ProxyConfig)
 	if err != nil {
 		log.Errorf("Unable to marshal chained server info: %v", err)
 		return nil, err

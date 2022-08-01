@@ -1,3 +1,4 @@
+//go:build !iosapp
 // +build !iosapp
 
 package chained
@@ -8,6 +9,7 @@ import (
 	"net"
 
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/quicwrapper"
@@ -19,15 +21,15 @@ type quicImpl struct {
 	dialer         *quicwrapper.Client
 }
 
-func newQUICImpl(name, addr string, s *ChainedServerInfo, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newQUICImpl(name, addr string, pc *apipb.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	tlsConf := &gtls.Config{
-		ServerName:         s.TLSServerNameIndicator,
+		ServerName:         pc.TLSServerNameIndicator,
 		InsecureSkipVerify: true,
 		KeyLogWriter:       getTLSKeyLogWriter(),
 	}
 
 	disablePathMTUDiscovery := true
-	if s.ptSettingBool("path_mtu_discovery") == true {
+	if ptSettingBool(pc, "path_mtu_discovery") == true {
 		disablePathMTUDiscovery = false
 	}
 
@@ -37,7 +39,7 @@ func newQUICImpl(name, addr string, s *ChainedServerInfo, reportDialCore reportD
 		DisablePathMTUDiscovery: disablePathMTUDiscovery,
 	}
 
-	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
+	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(pc.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", addr))
 	}

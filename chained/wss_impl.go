@@ -8,6 +8,7 @@ import (
 	"net/url"
 
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tinywss"
@@ -21,22 +22,22 @@ type wssImpl struct {
 	dialer         tinywss.Client
 }
 
-func newWSSImpl(addr string, s *ChainedServerInfo, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newWSSImpl(addr string, pc *apipb.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	var rt tinywss.RoundTripHijacker
 	var err error
 
-	url := s.ptSetting("url")
-	force_http := s.ptSettingBool("force_http")
+	url := ptSetting(pc, "url")
+	force_http := ptSettingBool(pc, "force_http")
 
 	if force_http {
 		log.Debugf("Using wss http direct")
-		rt, err = wssHTTPRoundTripper(s)
+		rt, err = wssHTTPRoundTripper(pc)
 		if err != nil {
 			return nil, err
 		}
 	} else {
 		log.Debugf("Using wss https direct")
-		rt, err = wssHTTPSRoundTripper(s)
+		rt, err = wssHTTPSRoundTripper(pc)
 		if err != nil {
 			return nil, err
 		}
@@ -47,9 +48,9 @@ func newWSSImpl(addr string, s *ChainedServerInfo, reportDialCore reportDialCore
 		RoundTrip:         rt,
 		KeepAliveInterval: IdleTimeout / 2,
 		KeepAliveTimeout:  IdleTimeout,
-		Multiplexed:       s.ptSettingBool("multiplexed"),
-		MaxFrameSize:      s.ptSettingInt("max_frame_size"),
-		MaxReceiveBuffer:  s.ptSettingInt("max_receive_buffer"),
+		Multiplexed:       ptSettingBool(pc, "multiplexed"),
+		MaxFrameSize:      ptSettingInt(pc, "max_frame_size"),
+		MaxReceiveBuffer:  ptSettingInt(pc, "max_receive_buffer"),
 	}
 
 	client := tinywss.NewClient(opts)
@@ -67,7 +68,7 @@ func (impl *wssImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, erro
 	})
 }
 
-func wssHTTPRoundTripper(s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
+func wssHTTPRoundTripper(s *apipb.ProxyConfig) (tinywss.RoundTripHijacker, error) {
 	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
 		log.Debugf("tinywss HTTP Roundtripper dialing %v", addr)
 		// the configured proxy address is always contacted
@@ -75,22 +76,22 @@ func wssHTTPRoundTripper(s *ChainedServerInfo) (tinywss.RoundTripHijacker, error
 	}), nil
 }
 
-func wssHTTPSRoundTripper(s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
-	serverName := s.TLSServerNameIndicator
+func wssHTTPSRoundTripper(pc *apipb.ProxyConfig) (tinywss.RoundTripHijacker, error) {
+	serverName := pc.TLSServerNameIndicator
 	sendServerName := true
 	if serverName == "" {
 		sendServerName = false
-		u, err := url.Parse(s.ptSetting("url"))
+		u, err := url.Parse(ptSetting(pc, "url"))
 		if err != nil {
-			return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
+			return nil, log.Error(errors.Wrap(err).With("addr", pc.Addr))
 		}
 		serverName = u.Hostname()
 	}
 
-	forceValidateName := s.ptSetting("force_validate_name")
-	helloID := s.clientHelloID()
+	forceValidateName := ptSetting(pc, "force_validate_name")
+	helloID := clientHelloID(pc)
 	certPool := x509.NewCertPool()
-	rest := []byte(s.Cert)
+	rest := []byte(pc.Cert)
 	var block *pem.Block
 	for {
 		block, rest = pem.Decode(rest)
@@ -99,14 +100,14 @@ func wssHTTPSRoundTripper(s *ChainedServerInfo) (tinywss.RoundTripHijacker, erro
 		}
 		cert, err := x509.ParseCertificate(block.Bytes)
 		if err != nil {
-			return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
+			return nil, log.Error(errors.Wrap(err).With("addr", pc.Addr))
 		}
 		certPool.AddCert(cert)
 	}
 
 	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
 		tlsConf := &tls.Config{
-			CipherSuites: orderedCipherSuitesFromConfig(s),
+			CipherSuites: orderedCipherSuitesFromConfig(pc),
 			ServerName:   serverName,
 			RootCAs:      certPool,
 			KeyLogWriter: getTLSKeyLogWriter(),

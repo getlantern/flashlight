@@ -14,10 +14,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 )
 
 var (
@@ -52,7 +52,7 @@ func (impl *testImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, err
 }
 
 func newDialer(dialServer func(ctx context.Context) (net.Conn, error)) (func(network, addr string) (net.Conn, error), error) {
-	p, err := newProxy("test", "addr:567", "proto", "netw", &ChainedServerInfo{
+	p, err := newProxy("test", "addr:567", "proto", "netw", &apipb.ProxyConfig{
 		AuthToken: "token",
 		Trusted:   true,
 		Location: &apipb.ProxyLocation{
@@ -153,7 +153,7 @@ func TestBadMethodToServer(t *testing.T) {
 }
 
 func TestBadAddressToServer(t *testing.T) {
-	p, err := newProxy("test", "addr:567", "proto", "netw", &ChainedServerInfo{
+	p, err := newProxy("test", "addr:567", "proto", "netw", &apipb.ProxyConfig{
 		AuthToken: "token",
 		Trusted:   true,
 	}, newTestUserConfig())

@@ -18,10 +18,10 @@ import (
 	"github.com/getlantern/ops"
 	"github.com/getlantern/proxybench"
 
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/bypass"
-	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
@@ -80,7 +80,7 @@ func (t HandledErrorType) String() string {
 }
 
 type ProxyListener interface {
-	OnProxies(map[string]*chained.ChainedServerInfo)
+	OnProxies(map[string]*apipb.ProxyConfig)
 }
 
 type Flashlight struct {
@@ -99,7 +99,7 @@ type Flashlight struct {
 	errorHandler      func(HandledErrorType, error)
 	dhtupContext      *dhtup.Context
 	mxProxyListeners  sync.RWMutex
-	proxyListeners    []func(map[string]*chained.ChainedServerInfo)
+	proxyListeners    []func(map[string]*apipb.ProxyConfig)
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
@@ -247,13 +247,13 @@ func (f *Flashlight) FeatureOptions(feature string, opts config.FeatureOptions) 
 	return global.UnmarshalFeatureOptions(feature, opts)
 }
 
-func (f *Flashlight) AddProxyListener(listener func(map[string]*chained.ChainedServerInfo)) {
+func (f *Flashlight) AddProxyListener(listener func(map[string]*apipb.ProxyConfig)) {
 	f.mxProxyListeners.Lock()
 	defer f.mxProxyListeners.Unlock()
 	f.proxyListeners = append(f.proxyListeners, listener)
 }
 
-func (f *Flashlight) notifyProxyListeners(proxies map[string]*chained.ChainedServerInfo) {
+func (f *Flashlight) notifyProxyListeners(proxies map[string]*apipb.ProxyConfig) {
 	f.mxProxyListeners.RLock()
 	defer f.mxProxyListeners.RUnlock()
 	for _, l := range f.proxyListeners {
@@ -263,7 +263,7 @@ func (f *Flashlight) notifyProxyListeners(proxies map[string]*chained.ChainedSer
 
 func (f *Flashlight) startConfigFetch() func() {
 	proxiesDispatch := func(conf interface{}, src config.Source) {
-		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
+		proxyMap := conf.(map[string]*apipb.ProxyConfig)
 		f.notifyProxyListeners(proxyMap)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
 		dialers := f.client.Configure(proxyMap)

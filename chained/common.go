@@ -8,18 +8,18 @@ package chained
 import (
 	"strconv"
 
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	tls "github.com/refraction-networking/utls"
+	"google.golang.org/protobuf/proto"
 )
 
-var (
-	log = golog.LoggerFor("chained")
-)
+var log = golog.LoggerFor("chained")
 
-// ChainedServerInfo contains all the data for connecting to a given chained
-// server.
-type ChainedServerInfo apipb.ProxyConfig
+// CopyConfig makes a safe copy of the config to avoid any data corruption for other users of the config.
+func CopyConfig(pc *apipb.ProxyConfig) *apipb.ProxyConfig {
+	return proto.Clone(pc).(*apipb.ProxyConfig)
+}
 
 func _setting(settings map[string]string, name string) string {
 	if settings == nil {
@@ -67,44 +67,44 @@ func _settingBool(settings map[string]string, name string) bool {
 	return val
 }
 
-func (s *ChainedServerInfo) ptSetting(name string) string {
-	return _setting(s.PluggableTransportSettings, name)
+func ptSetting(pc *apipb.ProxyConfig, name string) string {
+	return _setting(pc.PluggableTransportSettings, name)
 }
 
-func (s *ChainedServerInfo) ptSettingInt(name string) int {
-	return _settingInt(s.PluggableTransportSettings, name)
+func ptSettingInt(pc *apipb.ProxyConfig, name string) int {
+	return _settingInt(pc.PluggableTransportSettings, name)
 }
 
-func (s *ChainedServerInfo) ptSettingBool(name string) bool {
-	return _settingBool(s.PluggableTransportSettings, name)
+func ptSettingBool(pc *apipb.ProxyConfig, name string) bool {
+	return _settingBool(pc.PluggableTransportSettings, name)
 }
 
-func (s *ChainedServerInfo) ptSettingFloat(name string) float64 {
-	return _settingFloat(s.PluggableTransportSettings, name)
+func ptSettingFloat(pc *apipb.ProxyConfig, name string) float64 {
+	return _settingFloat(pc.PluggableTransportSettings, name)
 }
 
-func (s *ChainedServerInfo) muxSetting(name string) string {
-	return _setting(s.MultiplexedSettings, name)
+func muxSetting(pc *apipb.ProxyConfig, name string) string {
+	return _setting(pc.MultiplexedSettings, name)
 }
 
-func (s *ChainedServerInfo) muxSettingInt(name string) int {
-	return _settingInt(s.MultiplexedSettings, name)
+func muxSettingInt(pc *apipb.ProxyConfig, name string) int {
+	return _settingInt(pc.MultiplexedSettings, name)
 }
 
-func (s *ChainedServerInfo) muxSettingBool(name string) bool {
-	return _settingBool(s.MultiplexedSettings, name)
+func muxSettingBool(pc *apipb.ProxyConfig, name string) bool {
+	return _settingBool(pc.MultiplexedSettings, name)
 }
 
-func (s *ChainedServerInfo) muxSettingFloat(name string) float64 {
-	return _settingFloat(s.MultiplexedSettings, name)
+func muxSettingFloat(pc *apipb.ProxyConfig, name string) float64 {
+	return _settingFloat(pc.MultiplexedSettings, name)
 }
 
-func (s *ChainedServerInfo) desktopOrderedCipherSuites() []uint16 {
-	return ciphersFromNames(s.TLSDesktopOrderedCipherSuiteNames)
+func desktopOrderedCipherSuites(pc *apipb.ProxyConfig) []uint16 {
+	return ciphersFromNames(pc.TLSDesktopOrderedCipherSuiteNames)
 }
 
-func (s *ChainedServerInfo) mobileOrderedCipherSuites() []uint16 {
-	return ciphersFromNames(s.TLSMobileOrderedCipherSuiteNames)
+func mobileOrderedCipherSuites(pc *apipb.ProxyConfig) []uint16 {
+	return ciphersFromNames(pc.TLSMobileOrderedCipherSuiteNames)
 }
 
 func ciphersFromNames(cipherNames []string) []uint16 {
@@ -122,8 +122,8 @@ func ciphersFromNames(cipherNames []string) []uint16 {
 	return ciphers
 }
 
-func (s *ChainedServerInfo) clientHelloID() tls.ClientHelloID {
-	chid := availableClientHelloIDs[s.TLSClientHelloID]
+func clientHelloID(pc *apipb.ProxyConfig) tls.ClientHelloID {
+	chid := availableClientHelloIDs[pc.TLSClientHelloID]
 	if chid.Client == "" {
 		chid = tls.HelloGolang
 	}

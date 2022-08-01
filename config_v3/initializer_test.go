@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/common"
 	"github.com/stretchr/testify/assert"
 )
@@ -25,7 +25,7 @@ func TestInit(t *testing.T) {
 	// Note these dispatch functions will receive multiple configs -- local ones,
 	// embedded ones, and remote ones.
 	proxiesDispatch := func(cfg interface{}, src Source) {
-		proxies := cfg.(map[string]*chained.ChainedServerInfo)
+		proxies := cfg.(map[string]*apipb.ProxyConfig)
 		assert.True(t, len(proxies) > 0)
 		gotProxies.Set(true)
 	}
