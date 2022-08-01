@@ -8,7 +8,7 @@ import (
 	"time"
 
 	borda "github.com/getlantern/borda/client"
-	"github.com/getlantern/flashlight/api/apipb"
+	"github.com/getlantern/common/apipb"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/mockconn"
 	"github.com/stretchr/testify/assert"

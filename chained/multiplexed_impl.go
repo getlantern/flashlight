@@ -10,7 +10,7 @@ import (
 	"github.com/getlantern/psmux"
 	"github.com/xtaci/smux"
 
-	"github.com/getlantern/flashlight/api/apipb"
+	"github.com/getlantern/common/apipb"
 	"github.com/getlantern/flashlight/ops"
 )
 

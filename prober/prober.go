@@ -39,7 +39,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/api/apipb"
+	"github.com/getlantern/common/apipb"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 )

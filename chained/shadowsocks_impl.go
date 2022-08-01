@@ -18,7 +18,7 @@ import (
 	"github.com/getlantern/errors"
 	shadowsocks "github.com/getlantern/lantern-shadowsocks/client"
 
-	"github.com/getlantern/flashlight/api/apipb"
+	"github.com/getlantern/common/apipb"
 	"github.com/getlantern/flashlight/ops"
 )
 

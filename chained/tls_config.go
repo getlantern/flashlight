@@ -8,7 +8,7 @@ import (
 
 	tls "github.com/refraction-networking/utls"
 
-	"github.com/getlantern/flashlight/api/apipb"
+	"github.com/getlantern/common/apipb"
 	"github.com/getlantern/flashlight/browsers/simbrowser"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
