@@ -39,6 +39,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/yaml"
 
+	"github.com/getlantern/flashlight/api/apipb"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 )
@@ -56,7 +57,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to read config from %v: %v", os.Args[1], err)
 	}
-	server := &chained.ChainedServerInfo{}
+	server := &apipb.ProxyConfig{}
 	err = yaml.Unmarshal(cfg, server)
 	if err != nil {
 		log.Fatalf("Unable to read yaml config: %v", err)
