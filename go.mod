@@ -2,6 +2,8 @@ module github.com/getlantern/flashlight
 
 go 1.18
 
+replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220602100809-d4833a9d9175
+
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20220215050330-93bd217f5741
 
 replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20211116192935-1abdc4b1acab
