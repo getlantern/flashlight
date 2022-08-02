@@ -23815,7 +23815,7 @@ featuresenabled:
     label: shortcut-broken
   otel:
   - label: opentelemetry
-    userceil: 0.01
+    userceil: 0
     userfloor: 0
   proxybench:
   - geocountries: ir
