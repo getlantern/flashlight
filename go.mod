@@ -2,9 +2,9 @@ module github.com/getlantern/flashlight
 
 go 1.18
 
-replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220602100809-d4833a9d9175
+replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220805074304-4a43a9ed4ec6
 
-replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20220215050330-93bd217f5741
+replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.27.1-0.20220428155905-cb005872fecc
 
 replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20211116192935-1abdc4b1acab
 
@@ -84,7 +84,7 @@ require (
 	github.com/getlantern/proxy/v2 v2.0.1-0.20220303164029-b34b76e0e581
 	github.com/getlantern/proxybench v0.0.0-20220404140110-f49055cb86de
 	github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683
-	github.com/getlantern/quicproxy v0.0.0-20220711173408-e74ee950661e
+	github.com/getlantern/quicproxy v0.0.0-20220808081037-32e9be8ec447
 	github.com/getlantern/quicwrapper v0.0.0-20220427102501-537d4dc89543
 	github.com/getlantern/ring v0.0.0-20210901200052-aea475211e37 // indirect
 	github.com/getlantern/rot13 v0.0.0-20210901200056-01bce62cb8bb
@@ -132,7 +132,7 @@ require (
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
-require github.com/getlantern/libp2p v0.0.0-20220719122304-3f0d2f34bcd3
+require github.com/getlantern/libp2p v0.0.0-20220812130221-acb5114a5f9c
 
 require golang.org/x/exp v0.0.0-20220428152302-39d4317da171 // indirect
 
