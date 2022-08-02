@@ -211,9 +211,7 @@ func TestP2pEnabledAndFeatures(t *testing.T) {
 
 	var cpOpts P2PCensoredPeerOptions
 	require.NoError(t, gl.UnmarshalFeatureOptions(FeatureP2PCensoredPeer, &cpOpts))
-	require.NotEqual(t, 0, len(cpOpts.Bep46TargetsAndSalts))
-	require.NotEqual(t, 0, len(cpOpts.WebseedURLPrefixes))
-	require.NotEqual(t, 0, len(cpOpts.SourceURLPrefixes))
+	require.NotEqual(t, 0, len(cpOpts.Bep44TargetsAndSalts))
 }
 
 func TestChatEnabled(t *testing.T) {

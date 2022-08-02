@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/anacrolix/dht/v2/krpc"
 	"github.com/blang/semver"
 	"github.com/getlantern/errors"
 	"github.com/mitchellh/mapstructure"
@@ -140,28 +139,13 @@ func (o *P2PFreePeerOptions) fromMap(m map[string]interface{}) error {
 	return nil
 }
 
-type Bep46TargetAndSalt struct {
-	Target krpc.ID
-	Salt   string
-}
-
 type P2PCensoredPeerOptions struct {
-	Bep46TargetsAndSalts []string `mapstructure:"bep46_targets_and_salts"`
-	WebseedURLPrefixes   []string `mapstructure:"webseed_url_prefixes"`
-	SourceURLPrefixes    []string `mapstructure:"source_url_prefixes"`
+	Bep44TargetsAndSalts []string `mapstructure:"bep44_targets_and_salts"`
 }
 
 func (o *P2PCensoredPeerOptions) fromMap(m map[string]interface{}) error {
 	var err error
-	o.Bep46TargetsAndSalts, err = stringArrFromMap(m, "bep46_targets_and_salts")
-	if err != nil {
-		return err
-	}
-	o.WebseedURLPrefixes, err = stringArrFromMap(m, "webseed_url_prefixes")
-	if err != nil {
-		return err
-	}
-	o.SourceURLPrefixes, err = stringArrFromMap(m, "source_url_prefixes")
+	o.Bep44TargetsAndSalts, err = stringArrFromMap(m, "bep44_targets_and_salts")
 	if err != nil {
 		return err
 	}
