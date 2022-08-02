@@ -46,7 +46,11 @@ type URLTestInput struct {
 // against a collection of always-live FreePeers (like this demo:
 // https://github.com/getlantern/p2pregistrar/blob/c76cae4501e486d623e7225ba2caaa68aa5b48ca/README.md?plain=1#L352)
 func TestP2PRoundTrippers(t *testing.T) {
-	freeP2pCtx, censoredP2pCtx := p2p.InitTestP2PPeers(t)
+	freeP2pCtx, censoredP2pCtx := p2p.InitTestPeers(
+		t,
+		t.TempDir(),
+		nil, // InitTestPeersInput: nil to use sane defaults
+	)
 	t.Cleanup(func() {
 		freeP2pCtx.Close(context.Background())
 		censoredP2pCtx.Close(context.Background())

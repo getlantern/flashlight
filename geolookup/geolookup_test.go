@@ -200,7 +200,11 @@ func TestFronted(t *testing.T) {
 }
 
 func TestP2PGeolookup(t *testing.T) {
-	freeP2pCtx, censoredP2pCtx := p2p.InitTestP2PPeers(t)
+	freeP2pCtx, censoredP2pCtx := p2p.InitTestPeers(
+		t,
+		t.TempDir(),
+		nil, // InitTestPeersInput: nil to use sane defaults
+	)
 	t.Cleanup(func() {
 		freeP2pCtx.Close(context.Background())
 		censoredP2pCtx.Close(context.Background())
