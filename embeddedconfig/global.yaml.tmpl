@@ -199,10 +199,6 @@ featureoptions:
     - https://tracker.nanoha.org:443/announce
     - http://t.nyaatracker.com:80/announce
     webseedbaseurls: *AllReplicaBaseUrls
-    proxyannouncetargets: &GlobalProxyInfohashes
-    - 94c3fe9ead4625e0529c334bbb90568accb35ce3
-    - 77c89c352dcca36846c77541d9e2c6b4aa944790
-    - dbea91bb2d2953dc8c46272eb32cb4781ec588c5
 
     # These are for compatibility with clients that don't load all options per-country.
     replicarustdefaultendpoint: &FrankfurtReplicaRust http://replica-search-aws.lantern.io/
@@ -213,7 +209,6 @@ featureoptions:
     # Here follows options per-country
 
     "DE": &FrankfurtBase
-      proxypeerinfohashes: *GlobalProxyInfohashes
       metadatabaseurls: *AllReplicaBaseUrls
       replicarustendpoint: *FrankfurtReplicaRust
       staticpeeraddrs: []
@@ -281,7 +276,6 @@ featureoptions:
       <<: *FrankfurtBase
       staticpeeraddrs: [&RussiaReplicaPeers "94.242.59.118:42069"]
     "CN":
-      proxypeerinfohashes: *GlobalProxyInfohashes
       metadatabaseurls:
       - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
       - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
