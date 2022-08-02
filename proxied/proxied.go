@@ -89,12 +89,6 @@ type RoundTripper interface {
 	SetMasqueradeTimeout(time.Duration)
 }
 
-// Fronted creates a new http.RoundTripper that sends requests only through
-// domain fronting.
-func Fronted() http.RoundTripper {
-	return &frontedRT{masqueradeTimeout: 5 * time.Minute}
-}
-
 // ParallelPreferChained creates a new http.RoundTripper that attempts to send
 // requests through both chained and direct fronted routes in parallel. Once a
 // chained request succeeds, subsequent requests will only go through Chained
