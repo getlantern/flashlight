@@ -13,6 +13,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/getlantern/common/apipb"
 	"github.com/getlantern/ema"
 	"github.com/getlantern/enhttp"
 	"github.com/getlantern/errors"
