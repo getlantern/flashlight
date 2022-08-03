@@ -250,7 +250,7 @@ func SetDefaultRoundTripper() {
 //
 // Leave masqueradeTimeout empty to use the default value
 func SetParallelFlowRoundTripper(
-	cpc *p2p.CensoredP2pCtx,
+	cpc *p2p.CensoredPeerCtx,
 	masqueradeTimeout time.Duration,
 	addDebugHeaders bool,
 	onStartRoundTripFunc proxied.OnStartRoundTrip,
@@ -284,7 +284,7 @@ func SetParallelFlowRoundTripper(
 //
 // Leave masqueradeTimeout empty to use the default value
 func SetP2PRoundTripper(
-	cpc *p2p.CensoredP2pCtx,
+	cpc *p2p.CensoredPeerCtx,
 	addDebugHeaders bool,
 	onStartRoundTripFunc proxied.OnStartRoundTrip,
 	onCompleteRoundTripFunc proxied.OnCompleteRoundTrip,
