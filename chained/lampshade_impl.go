@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/common/apipb"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/keyman"
