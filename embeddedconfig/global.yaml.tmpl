@@ -57,6 +57,26 @@ reportissueemail: support@lantern.jitbit.com
 #
 
 featuresenabled:
+  p2pfreepeer:
+    - label: p2pfreepeer-desktop
+      application: lantern
+      versionconstraints: ">6.10.5"
+      platforms: darwin,windows,linux
+      # XXX 2022-08-08, soltzen: These countries are quite open and have little censorship
+      geocountries: de,us,is,ee,ca,cr,tw,fr,uk,ge,au,za,rs,ch,jp,pt,be,dk,ie,lu,hu,it,no,cz,pl,nl,se,fi,nz
+      # XXX 2022-08-08, soltzen: Small testbed for phase 1 of the project: https://docs.google.com/document/d/1JUjZHgpnunmwG3wUwlSmCKFwOGOXkkwyGd7cgrOJzbs/edit#heading=h.lf1udh61ebmc
+      userfloor: 0
+      userceil: 0.01
+  p2pcensoredpeer:
+    - label: p2pcensoredpeer-desktop
+      application: lantern
+      versionconstraints: ">6.10.5"
+      platforms: darwin,windows,linux
+      # XXX 2022-08-20, soltzen: See discussion here https://github.com/getlantern/flashlight/pull/1234#discussion_r939949673
+      geocountries: ir
+      # XXX 2022-08-08, soltzen: Small testbed for phase 1 of the project: https://docs.google.com/document/d/1JUjZHgpnunmwG3wUwlSmCKFwOGOXkkwyGd7cgrOJzbs/edit#heading=h.lf1udh61ebmc
+      userfloor: 0
+      userceil: 0.01
   yinbi:
     - label: yinbi
       application: lantern
@@ -68,7 +88,6 @@ featuresenabled:
       platforms: darwin,windows
       geocountries: cn,ir
   replica:
-    # XXX 13-01-22 @soltzen: Adding CA because of the NCC auditor testing. This can be removed afterwards
     - label: replica-desktop
       geocountries: cn,au,ir,de,ru,by,ca,ee,lt,ua,ae,lv,md,ge,uz,kz,tr,tm,am,az,kg,tj,tn,us,uk,at,be,br,cr,dk,do,ec,eg,sv,fr,fi,gr,gt,hk,in,ie,it,jp,kp,li,lu,mx,mm,nl,nz,ni,ps,pl,es,se,ch,sy,tw,th,tn,ye,cz
       platforms: darwin,windows,linux
@@ -168,6 +187,25 @@ featureoptions:
   trafficlog:
     capturebytes: 10485760
     savebytes: 10485760
+  p2pfreepeer:
+    registrar_endpoint: https://p2pregistrar-production.fly.dev
+    domain_whitelist:
+    # Allow geolookups for phase 1: https://docs.google.com/document/d/1JUjZHgpnunmwG3wUwlSmCKFwOGOXkkwyGd7cgrOJzbs/edit#heading=h.lf1udh61ebmc
+    - geo.getiantem.org
+    # For the health-check routine. See those two links for more info:
+    #   - https://github.com/getlantern/p2pregistrar/blob/2ddb7bc76947770c470fd2a69ef5e71516b27278/README.md#L30
+    #   - https://github.com/getlantern/p2pregistrar/blob/2ddb7bc76947770c470fd2a69ef5e71516b27278/proxypool/proxypool.go#L74
+    - google.com/humans
+  p2pcensoredpeer:
+    # Values taken from a running p2pregistrar instance in production through its /debug/db endpoint
+    # See: https://github.com/getlantern/p2pregistrar/blob/94e9a48cf9f05e7a0a8497b82c247ebb21ea18c3/README.md#L509
+    # This fetch was done on 2022-08-05
+    bep44_targets_and_salts:
+    - beffce8ec0ace6c2c2e08abfc83595fc5140c4ce:b6167705d6972dad8c514a04b9f5f107
+    - b6c0c014c4b41ff31f60716b49df0c50164ce515:7c0b42e4b3e90b0604101f8369964347
+    - 88dca5df6c9b343369bd3d2280b7dc5ecad74e44:f12f2c5523c80b12d710e9e882ccb677
+    - 57e6a964e54e83b60600315e6a49dd02ba4f3339:b11dcce385d45a3d5c8617e538007b50
+    - d4182b1ee32c0e3ea983a8ca3dec8ed9debc5492:1eaab0eb71e274ec480e764518a0cf65
   replica:
     # Uses ISO 3166 country codes
     # https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes
