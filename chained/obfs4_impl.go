@@ -6,7 +6,7 @@ import (
 	"net"
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
-	"github.com/getlantern/common/apipb"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/ops"
 	"gitlab.com/yawning/obfs4.git/transports/base"
 	"gitlab.com/yawning/obfs4.git/transports/obfs4"

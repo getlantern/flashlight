@@ -3,7 +3,7 @@ package chained
 import (
 	"testing"
 
-	"github.com/getlantern/common/apipb"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
 )

@@ -8,7 +8,7 @@ package chained
 import (
 	"strconv"
 
-	"github.com/getlantern/common/apipb"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/golog"
 	tls "github.com/refraction-networking/utls"
 	"google.golang.org/protobuf/proto"

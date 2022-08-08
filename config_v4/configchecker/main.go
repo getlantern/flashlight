@@ -19,7 +19,7 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/getlantern/common/apipb"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/yaml"

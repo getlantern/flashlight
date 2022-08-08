@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/common/apipb"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/common"
 	"github.com/stretchr/testify/assert"
 )

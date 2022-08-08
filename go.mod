@@ -41,7 +41,6 @@ require (
 	github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493
 	github.com/getlantern/cmux/v2 v2.0.0-20200905031936-c55b16ee8462
 	github.com/getlantern/cmuxprivate v0.0.0-20211216020409-d29d0d38be54
-	github.com/getlantern/common v1.1.3
 	github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1
 	github.com/getlantern/dhtup v0.0.0-20220627142103-ed614929df34
 	github.com/getlantern/dnsgrab v0.0.0-20211216020425-5d5e155a01a8
@@ -68,6 +67,7 @@ require (
 	github.com/getlantern/kcpwrapper v0.0.0-20220503142841-b0e764933966
 	github.com/getlantern/keyman v0.0.0-20210622061955-aa0d47d4932c
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
+	github.com/getlantern/lantern-cloud v0.0.0-20220803204346-2e54b8cbc8fb
 	github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210601195915-e04471aa4920
 	github.com/getlantern/measured v0.0.0-20210507000559-ec5307b2b8be
 	github.com/getlantern/mitm v0.0.0-20210622063317-e6510574903b
@@ -117,16 +117,13 @@ require (
 	go.opentelemetry.io/otel/trace v1.7.0
 	go.uber.org/atomic v1.9.0
 	golang.org/x/mobile v0.0.0-20210831151748-9cba7bc03c0f
-	golang.org/x/net v0.0.0-20220630215102-69896b714898
-	golang.org/x/sys v0.0.0-20220704084225-05e143d24a9e
+	golang.org/x/net v0.0.0-20220708220712-1185a9018129
+	golang.org/x/sys v0.0.0-20220708085239-5a0f0661e09d
 	google.golang.org/protobuf v1.28.0
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
-require (
-	github.com/spf13/pflag v1.0.5 // indirect
-	golang.org/x/exp v0.0.0-20220328175248-053ad81199eb // indirect
-)
+require golang.org/x/exp v0.0.0-20220328175248-053ad81199eb // indirect
 
 require (
 	crawshaw.io/sqlite v0.3.3-0.20210127221821-98b1f83c5508 // indirect
@@ -219,7 +216,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.1 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/juju/ratelimit v1.0.1 // indirect
-	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/klauspost/compress v1.15.7 // indirect
 	github.com/klauspost/cpuid v1.3.1 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/klauspost/reedsolomon v1.9.9 // indirect
@@ -296,8 +293,8 @@ require (
 	go.uber.org/zap v1.19.1 // indirect
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
 	golang.org/x/mod v0.6.0-dev.0.20211013180041-c96bc1413d57 // indirect
-	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
+	golang.org/x/text v0.3.8-0.20211105212822-18b340fc7af2 // indirect
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect
 	golang.org/x/tools v0.1.8-0.20211029000441-d6a9af8af023 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
@@ -305,5 +302,5 @@ require (
 	google.golang.org/genproto v0.0.0-20220630174209-ad1d48641aa7 // indirect
 	google.golang.org/grpc v1.47.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gopkg.in/yaml.v3 v3.0.1
 )
