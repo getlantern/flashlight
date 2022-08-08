@@ -187,16 +187,3 @@ func getReplicaOptionsRoot(require *require.Assertions) (fos ReplicaOptionsRoot)
 	require.NoError(g.UnmarshalFeatureOptions(FeatureReplica, &fos))
 	return
 }
-
-func TestReplicaProxying(t *testing.T) {
-	require := require.New(t)
-	assert := assert.New(t)
-	fos := getReplicaOptionsRoot(require)
-	numInfohashes := len(fos.ProxyAnnounceTargets)
-	// The default is to announce as a proxy.
-	assert.True(numInfohashes > 0)
-	// The default is not to look for proxies
-	assert.Empty(fos.ProxyPeerInfoHashes)
-	// Iran looks for peers from the default countries.
-	assert.Len(fos.ByCountry["IR"].ProxyPeerInfoHashes, numInfohashes)
-}

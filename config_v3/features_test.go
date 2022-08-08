@@ -149,18 +149,6 @@ func TestReplicaByCountry(t *testing.T) {
 	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
 }
 
-func TestReplicaProxying(t *testing.T) {
-	assert := assert.New(t)
-	fos := getReplicaOptionsRoot(t)
-	numInfohashes := len(fos.ProxyAnnounceTargets)
-	// The default is to announce as a proxy.
-	assert.True(numInfohashes > 0)
-	// The default is not to look for proxies
-	assert.Empty(fos.ProxyPeerInfoHashes)
-	// Iran looks for peers from the default countries.
-	assert.Len(fos.ByCountry["IR"].ProxyPeerInfoHashes, numInfohashes)
-}
-
 func getReplicaOptionsRoot(t *testing.T) (fos ReplicaOptionsRoot) {
 	g := globalFromTemplate(t)
 	require.NoError(t, g.UnmarshalFeatureOptions(FeatureReplica, &fos))
