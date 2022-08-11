@@ -18,7 +18,6 @@ import (
 	"github.com/getlantern/ops"
 	"github.com/getlantern/proxybench"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/bypass"
@@ -35,6 +34,7 @@ import (
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/stats"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 )
 
 var (
@@ -126,7 +126,7 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 
 func (f *Flashlight) reconfigureGoogleAds() {
 	var opts config.GoogleSearchAdsOptions
-	if err := f.FeatureOptions(config.FeatureGoogleSearchAds, &opts); err == nil {
+	if err := f.featureOptions(config.FeatureGoogleSearchAds, &opts); err == nil {
 		f.client.ConfigureGoogleAds(opts)
 	} else {
 		log.Errorf("Unable to configure google search ads: %v", err)
@@ -136,11 +136,11 @@ func (f *Flashlight) reconfigureGoogleAds() {
 func (f *Flashlight) reconfigurePingProxies() {
 	enabled := func() bool {
 		return common.InDevelopment() ||
-			(f.FeatureEnabled(config.FeaturePingProxies) && f.autoReport())
+			(f.featureEnabled(config.FeaturePingProxies) && f.autoReport())
 	}
 	var opts config.PingProxiesOptions
 	// ignore the error because the zero value means disabling it.
-	_ = f.FeatureOptions(config.FeaturePingProxies, &opts)
+	_ = f.featureOptions(config.FeaturePingProxies, &opts)
 	f.client.ConfigurePingProxies(enabled, opts.Interval)
 }
 
@@ -201,9 +201,9 @@ func (f *Flashlight) DisableNamedDomainRules(names ...string) {
 	}
 }
 
-// FeatureEnabled returns true if the input feature is enabled for this flashlight instance. Feature
+// featureEnabled returns true if the input feature is enabled for this flashlight instance. Feature
 // names are tracked in the config package.
-func (f *Flashlight) FeatureEnabled(feature string) bool {
+func (f *Flashlight) featureEnabled(feature string) bool {
 	f.mxGlobal.RLock()
 	global := f.global
 	f.mxGlobal.RUnlock()
@@ -235,9 +235,9 @@ func (f *Flashlight) calcFeature(global *config.Global, country, feature string)
 		country)
 }
 
-// FeatureOptions unmarshals options for the input feature. Feature names are tracked in the config
+// featureOptions unmarshals options for the input feature. Feature names are tracked in the config
 // package.
-func (f *Flashlight) FeatureOptions(feature string, opts config.FeatureOptions) error {
+func (f *Flashlight) featureOptions(feature string, opts config.FeatureOptions) error {
 	f.mxGlobal.RLock()
 	global := f.global
 	f.mxGlobal.RUnlock()
@@ -295,7 +295,7 @@ func (f *Flashlight) applyProxyBench(cfg *config.Global) {
 	go func() {
 		// Wait a while for geolookup to happen before checking if we can turn on proxybench
 		geolookup.GetCountry(1 * time.Minute)
-		if f.FeatureEnabled(config.FeatureProxyBench) {
+		if f.featureEnabled(config.FeatureProxyBench) {
 			startProxyBenchOnce.Do(func() {
 				opts := &proxybench.Opts{
 					UpdateURL: "https://s3.amazonaws.com/lantern/proxybench.json",
@@ -316,7 +316,7 @@ func (f *Flashlight) applyBorda(cfg *config.Global) {
 			return false
 		}
 
-		if f.FeatureEnabled(config.FeatureNoBorda) {
+		if f.featureEnabled(config.FeatureNoBorda) {
 			// Borda is disabled by global config
 			return false
 		}
@@ -327,7 +327,7 @@ func (f *Flashlight) applyBorda(cfg *config.Global) {
 }
 
 func (f *Flashlight) applyOtel(cfg *config.Global) {
-	if cfg.Otel != nil && f.FeatureEnabled(config.FeatureOtel) {
+	if cfg.Otel != nil && f.featureEnabled(config.FeatureOtel) {
 		otel.Configure(cfg.Otel)
 	}
 }
@@ -438,34 +438,34 @@ func New(
 	}
 
 	useShortcut := func() bool {
-		return !_proxyAll() && f.FeatureEnabled(config.FeatureShortcut) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !_proxyAll() && f.featureEnabled(config.FeatureShortcut) && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	useDetour := func() bool {
-		return !_proxyAll() && f.FeatureEnabled(config.FeatureDetour) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !_proxyAll() && f.featureEnabled(config.FeatureDetour) && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	proxyAll := func() bool {
 		useShortcutOrDetour := useShortcut() || useDetour()
-		return !useShortcutOrDetour && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !useShortcutOrDetour && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	cl, err := client.NewClient(
 		f.configDir,
 		disconnected,
-		func() bool { return f.FeatureEnabled(config.FeatureProbeProxies) },
+		func() bool { return f.featureEnabled(config.FeatureProbeProxies) },
 		proxyAll,
 		useShortcut,
 		shortcut.Allow,
 		useDetour,
 		func() bool {
-			return !f.FeatureEnabled(config.FeatureNoHTTPSEverywhere)
+			return !f.featureEnabled(config.FeatureNoHTTPSEverywhere)
 		},
 		func() bool {
-			return common.Platform != "android" && (f.FeatureEnabled(config.FeatureTrackYouTube) || f.FeatureEnabled(config.FeatureGoogleSearchAds))
+			return common.Platform != "android" && (f.featureEnabled(config.FeatureTrackYouTube) || f.featureEnabled(config.FeatureGoogleSearchAds))
 		},
 		func() bool {
-			return _googleAds() && f.FeatureEnabled(config.FeatureGoogleSearchAds)
+			return _googleAds() && f.featureEnabled(config.FeatureGoogleSearchAds)
 		},
 		userConfig,
 		statsTracker,
