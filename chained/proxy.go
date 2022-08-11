@@ -17,12 +17,12 @@ import (
 	"github.com/getlantern/enhttp"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/idletiming"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/samber/lo"
@@ -393,6 +393,9 @@ func (p *proxy) JustifiedLabel() string {
 }
 
 func (p *proxy) Location() (string, string, string) {
+	if p.location == nil {
+		return "", "", ""
+	}
 	return p.location.CountryCode, p.location.Country, p.location.City
 }
 
