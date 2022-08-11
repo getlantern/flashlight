@@ -88,19 +88,19 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 	client, _ := NewClient(
 		tempConfigDir,
 		func() bool { return false },
-		func() bool { return true },
-		func() bool { return false },
-		func() bool { return false },
+		func() bool { return true },  // allow probes
+		func() bool { return false }, // proxy all
+		func() bool { return false }, // use shortcut
 		func(ctx context.Context, addr string) (shortcut.Method, net.IP) {
 			return shortcut.Proxy, nil
-		},
-		func() bool { return true },
-		func() bool { return true },
-		func() bool { return false },
-		func() bool { return false },
+		}, // shortcut method
+		func() bool { return true },  // use detour
+		func() bool { return true },  // allow HTTPS everywhere
+		func() bool { return false }, // allow MITM
+		func() bool { return false }, // allow Google Search Ads
 		newTestUserConfig(),
 		mockStatsTracker{},
-		func() bool { return true },
+		func() bool { return true }, // allow private hosts
 		func() string { return lang },
 		func() string { return adSwapTargetURL },
 		func(host string) (string, error) { return host, nil },

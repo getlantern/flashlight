@@ -34,7 +34,6 @@ import (
 	"github.com/getlantern/proxy/v2/filters"
 	"github.com/getlantern/shortcut"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
@@ -45,6 +44,7 @@ import (
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/status"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 )
 
 var (
@@ -690,7 +690,7 @@ func (client *Client) doDial(
 		dialer = func(ctx context.Context, network, addr string) (net.Conn, error) {
 			var conn net.Conn
 			var err error
-			method, ip := client.shortcutMethod(cappedCTX, addr)
+			method, ip := client.shortcutMethod(ctx, addr)
 			switch method {
 			case shortcut.Direct:
 				// Don't cap the context if the address is eligible for shortcut.
