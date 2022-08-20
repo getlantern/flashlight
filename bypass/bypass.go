@@ -81,7 +81,7 @@ func (b *bypass) newProxy(name string, pc *apipb.ProxyConfig, configDir string, 
 		name:              name,
 		done:              make(chan bool),
 		toggle:            atomic.NewBool(mrand.Float32() < 0.5),
-		dfRoundTripper:    proxied.Fronted(),
+		dfRoundTripper:    proxied.Fronted(0),
 		userConfig:        userConfig,
 		proxyRoundTripper: proxyRoundTripper(name, pc, configDir, userConfig, dialer),
 	}

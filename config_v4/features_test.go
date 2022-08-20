@@ -170,18 +170,6 @@ func TestReplicaByCountry(t *testing.T) {
 	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
 }
 
-func TestReplicaProxying(t *testing.T) {
-	assert := assert.New(t)
-	fos := getReplicaOptionsRoot(t)
-	numInfohashes := len(fos.ProxyAnnounceTargets)
-	// The default is to announce as a proxy.
-	assert.True(numInfohashes > 0)
-	// The default is not to look for proxies
-	assert.Empty(fos.ProxyPeerInfoHashes)
-	// Iran looks for peers from the default countries.
-	assert.Len(fos.ByCountry["IR"].ProxyPeerInfoHashes, numInfohashes)
-}
-
 func TestChatEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
 	assert.True(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "ae"), "Chat is enabled in UAE when running 7.0.0")

@@ -1,3 +1,11 @@
+# Feature Branch: Replica P2P
+
+- Story: https://github.com/getlantern/lantern-internal/issues/5046
+- Point of contact: @soltzen
+- branch name: feat__replica_p2p
+
+---
+
 # Lantern [![Go Actions Status](https://github.com/getlantern/flashlight/actions/workflows/go.yml/badge.svg)](https://github.com/getlantern/flashlight/actions) [![Coverage Status](https://coveralls.io/repos/github/getlantern/flashlight/badge.svg?t=C4SaZX)](https://coveralls.io/github/getlantern/flashlight)
 
 This repo contains the core Lantern library as well as the Android and iOS bindings.
@@ -104,3 +112,15 @@ go-mobile automatically sets the `ios` build tag when building for iOS. In our c
 ### Architecture
 
 ![Overview](https://user-images.githubusercontent.com/1143966/117667942-72c80a80-b173-11eb-8c0d-829f2ccd8cde.png)
+
+## Features
+
+We use "features" to enable/disable different characteristics/techniques in Flashlight, usually through the global config.
+
+See `./config/features.go` for a list of features. Below is a non-extensive description of each feature.
+
+### p2pcensoredpeer and p2pfreepeer
+
+Allows the client to act either as a FreePeer or a CensoredPeer.
+
+See overview of the p2p-proxying story here: https://docs.google.com/document/d/1JUjZHgpnunmwG3wUwlSmCKFwOGOXkkwyGd7cgrOJzbs/edit
