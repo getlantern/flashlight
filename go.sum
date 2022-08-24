@@ -89,8 +89,8 @@ github.com/alicebob/miniredis v2.5.0+incompatible/go.mod h1:8HZjEj4yU0dwhYHky+Dx
 github.com/alicebob/miniredis/v2 v2.15.1/go.mod h1:gquAfGbzn92jvtrSC69+6zZnwSODVXVpYDRaGhWaL6I=
 github.com/anacrolix/chansync v0.3.0 h1:lRu9tbeuw3wl+PhMu/r+JJCRu5ArFXIluOgdF0ao6/U=
 github.com/anacrolix/chansync v0.3.0/go.mod h1:DZsatdsdXxD0WiwcGl0nJVwyjCKMDv+knl1q2iBjA2k=
-github.com/anacrolix/dht/v2 v2.18.0 h1:btjVjzjKqO5nKGbJHJ2UmuwiRx+EgX3e+OCHC9+WRz8=
-github.com/anacrolix/dht/v2 v2.18.0/go.mod h1:mxrSeP/LIY429SgWMO9o6UdjBjB8ZjBh6HHCmd8Ly1g=
+github.com/anacrolix/dht/v2 v2.18.1 h1:0y/2HoD1VzhJ4o/XDtcTwKGDc5rotFmpV+bEC48ZAd8=
+github.com/anacrolix/dht/v2 v2.18.1/go.mod h1:mxrSeP/LIY429SgWMO9o6UdjBjB8ZjBh6HHCmd8Ly1g=
 github.com/anacrolix/envpprof v0.0.0-20180404065416-323002cec2fa/go.mod h1:KgHhUaQMc8cC0+cEflSgCFNFbKwi5h54gqtVn8yhP7c=
 github.com/anacrolix/envpprof v1.0.0/go.mod h1:KgHhUaQMc8cC0+cEflSgCFNFbKwi5h54gqtVn8yhP7c=
 github.com/anacrolix/envpprof v1.1.0/go.mod h1:My7T5oSqVfEn4MD4Meczkw/f5lSIndGAKu/0SM/rkf4=

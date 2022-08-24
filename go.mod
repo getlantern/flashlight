@@ -30,7 +30,7 @@ replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.2.0
 	github.com/PuerkitoBio/goquery v1.7.0
-	github.com/anacrolix/dht/v2 v2.18.0
+	github.com/anacrolix/dht/v2 v2.18.1
 	github.com/anacrolix/go-libutp v1.2.0
 	github.com/anacrolix/missinggo/v2 v2.7.0
 	github.com/andybalholm/brotli v1.0.4
