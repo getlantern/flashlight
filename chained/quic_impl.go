@@ -7,11 +7,12 @@ import (
 	"context"
 	gtls "crypto/tls"
 	"net"
+	"time"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/keyman"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/quicwrapper"
 )
 
@@ -34,8 +35,10 @@ func newQUICImpl(name, addr string, pc *apipb.ProxyConfig, reportDialCore report
 	}
 
 	quicConf := &quicwrapper.Config{
-		MaxIncomingStreams:      -1,
-		KeepAlive:               true,
+		MaxIncomingStreams: -1,
+		// This interface was changed in quic-go v0.28.0. This is what I think it was for "true"
+		// before that version. It's definitely not more than 20s.
+		KeepAlivePeriod:         15 * time.Second,
 		DisablePathMTUDiscovery: disablePathMTUDiscovery,
 	}
 
