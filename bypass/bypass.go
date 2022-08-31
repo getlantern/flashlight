@@ -15,13 +15,13 @@ import (
 
 	mrand "math/rand"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"go.uber.org/atomic"
 	"google.golang.org/protobuf/proto"
 )
@@ -29,8 +29,8 @@ import (
 var log = golog.LoggerFor("bypass")
 
 // The way lantern-cloud is configured, we need separate URLs for domain fronted vs proxied traffic.
-const dfEndpoint = "https://iantem.io/bypass/v1/proxy"
-const proxyEndpoint = "https://bypass.iantem.io/v1/proxy"
+const dfEndpoint = "https://iantem.io/api/v1/bypass"
+const proxyEndpoint = "https://api.iantem.io/v1/bypass"
 
 type bypass struct {
 	infos     map[string]*apipb.ProxyConfig
