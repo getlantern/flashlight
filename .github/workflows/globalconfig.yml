@@ -3,7 +3,7 @@ name: Update Global Config
 on:
   push:
     branches:
-      - devel
+      - main
     paths:
       - 'embeddedconfig/global.yaml.tmpl'
   schedule:
@@ -24,9 +24,9 @@ jobs:
     - name: Granting private modules access
       run: |
           git config --global url."https://${{ secrets.GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
-        ref: devel
+        ref: main
     - run: |
         cd ./embeddedconfig
         go generate
@@ -38,5 +38,5 @@ jobs:
         git config user.email github-actions@github.com
         git add embeddedconfig/global.yaml
         git commit -m "pushing auto-generated embedded global config"
-        echo "pushing to devel"
-        git push origin devel
+        echo "pushing to main"
+        git push origin main

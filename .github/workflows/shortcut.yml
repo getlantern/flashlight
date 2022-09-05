@@ -22,9 +22,7 @@ jobs:
     - name: Granting private modules access
       run: |
           git config --global url."https://${{ secrets.GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-    - uses: actions/checkout@v2
-      with:
-        ref: devel
+    - uses: actions/checkout@v3
     - run: |
         cd ./shortcut
         ./genlist.sh
@@ -33,5 +31,5 @@ jobs:
         git config user.email github-actions@github.com
         git add resources/*
         git commit -m "pushing auto-generated shortcut ip lists"
-        echo "pushing to devel"
-        git push origin devel
+        echo "pushing to main"
+        git push origin main
