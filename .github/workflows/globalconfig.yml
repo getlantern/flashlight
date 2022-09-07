@@ -28,6 +28,7 @@ jobs:
       with:
         ref: main
     - run: |
+        git pull
         cd ./embeddedconfig
         go generate
         cd -
