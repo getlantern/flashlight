@@ -1,11 +1,3 @@
-# Feature Branch: Replica P2P
-
-- Story: https://github.com/getlantern/lantern-internal/issues/5046
-- Point of contact: @soltzen
-- branch name: feat__replica_p2p
-
----
-
 # Lantern [![Go Actions Status](https://github.com/getlantern/flashlight/actions/workflows/go.yml/badge.svg)](https://github.com/getlantern/flashlight/actions) [![Coverage Status](https://coveralls.io/repos/github/getlantern/flashlight/badge.svg?t=C4SaZX)](https://coveralls.io/github/getlantern/flashlight)
 
 This repo contains the core Lantern library as well as the Android and iOS bindings.
