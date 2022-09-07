@@ -41,7 +41,7 @@ jobs:
         go-version: 1.18
     - run: |
         cd ./config
-        go test
+        go test -v -failfast -count=1 -race
     - name: Git push
       uses: actions/checkout@v3
       with:
