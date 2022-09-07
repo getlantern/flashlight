@@ -18,19 +18,27 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v3
+
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
         go-version: 1.18
     - name: Granting private modules access
       run: |
-          git config --global url."https://${{ secrets.GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-    - uses: actions/checkout@v3
-      with:
-        ref: main
+        git config --global url."https://${{ secrets.GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+    - name: Build
+      run: |
+        cd genconfig
+        go build -ldflags="-s -w"
+    - name: Run UPX
+        uses: crazy-max/ghaction-upx@v2
+        with:
+          version: latest
+          files: genconfig
+          args: -fq
     - run: |
         cd genconfig
-        go build
         git config user.name github-actions
         git config user.email github-actions@github.com
         git add -f genconfig
