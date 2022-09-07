@@ -36,7 +36,7 @@ jobs:
       uses: crazy-max/ghaction-upx@v2
       with:
         version: latest
-        files: genconfig
+        files: genconfig/genconfig
         args: -fq
     - run: |
         cd genconfig
