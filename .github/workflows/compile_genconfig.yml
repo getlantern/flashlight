@@ -18,7 +18,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
 
     - name: Set up Go
       uses: actions/setup-go@v3
@@ -32,11 +33,11 @@ jobs:
         cd genconfig
         go build -ldflags="-s -w"
     - name: Run UPX
-        uses: crazy-max/ghaction-upx@v2
-        with:
-          version: latest
-          files: genconfig
-          args: -fq
+      uses: crazy-max/ghaction-upx@v2
+      with:
+        version: latest
+        files: genconfig
+        args: -fq
     - run: |
         cd genconfig
         git config user.name github-actions
