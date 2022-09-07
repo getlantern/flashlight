@@ -27,16 +27,25 @@ jobs:
           git config --global url."https://${{ secrets.GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
     - uses: actions/checkout@v3
       with:
-        ref: main
+        ref: 220907_soltzen_debug_flashlight
     - name: Go generate
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.18
     - run: |
         cd ./embeddedconfig
         go generate
     - name: Go test
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.18
     - run: |
         cd ./config
         go test
     - name: Git push
+    - uses: actions/checkout@v3
+      with:
+        ref: 220907_soltzen_debug_flashlight
     - run: |
         git config user.name github-actions
         git config user.email github-actions@github.com
