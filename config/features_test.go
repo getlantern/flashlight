@@ -222,8 +222,11 @@ func TestReplicaEnabled(t *testing.T) {
 
 func TestOtelEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
-	assert.False(t, gl.FeatureEnabled(FeatureOtel, "android", common.DefaultAppName, "7.0.0", 1, false, "ae"), "Otel is disabled for low user")
-	assert.False(t, gl.FeatureEnabled(FeatureOtel, "android", common.DefaultAppName, "7.0.0", 500, false, "ae"), "Otel is disabled for high user")
+	assert.True(t, gl.FeatureEnabled(FeatureOtel, "android", common.DefaultAppName, "7.0.0", 1, false, "ae"), "Otel is disabled for low user")
+	assert.True(t, gl.FeatureEnabled(FeatureOtel, "android", common.DefaultAppName, "7.0.0", 500, false, "ae"), "Otel is disabled for high user")
+
+	assert.True(t, gl.FeatureEnabled(FeatureOtel, "windows", common.DefaultAppName, "7.0.0", 1, false, "ae"), "Otel is disabled for low user")
+	assert.True(t, gl.FeatureEnabled(FeatureOtel, "dawrin", common.DefaultAppName, "7.0.0", 1, false, "ae"), "Otel is disabled for low user")
 }
 
 func getReplicaOptionsRoot(t *testing.T) (fos ReplicaOptionsRoot) {
