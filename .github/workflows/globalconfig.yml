@@ -39,7 +39,7 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version: 1.18
-    - run: |
+      run: |
         cd ./config
         go test -v -failfast -count=1 -race
     - name: Git push
