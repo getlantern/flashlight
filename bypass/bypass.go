@@ -98,10 +98,8 @@ type proxy struct {
 	*apipb.ProxyConfig
 	name              string
 	done              chan bool
-	randString        string
 	dfRoundTripper    http.RoundTripper
 	proxyRoundTripper http.RoundTripper
-	configDir         string
 	toggle            *atomic.Bool
 	userConfig        common.UserConfig
 }
@@ -187,7 +185,11 @@ func proxyRoundTripper(name string, info *apipb.ProxyConfig, configDir string, u
 func (p *proxy) newRequest(userConfig common.UserConfig, endpoint string) (*http.Request, error) {
 	// Just posting all the info about the server allows us to control these fields fully on the server
 	// side.
-	infopb, err := proto.Marshal(p.ProxyConfig)
+	bypassRequest := &apipb.BypassRequest{
+		Config: p.ProxyConfig,
+	}
+
+	infopb, err := proto.Marshal(bypassRequest)
 	if err != nil {
 		log.Errorf("Unable to marshal chained server info: %v", err)
 		return nil, err
@@ -223,24 +225,20 @@ func (p *proxy) stop() {
 // the provided function overrides the default sleep.
 func (p *proxy) callRandomly(f func() int64) {
 	calls := atomic.NewInt64(0)
-	var sleepTime int64
 	var elapsed time.Duration
 	var sleep = func() <-chan time.Time {
 		defer func() {
 			calls.Inc()
 		}()
-		base := 20
+		base := 40
 		// If we just started up, we want to send traffic a little quicker to make sure we factor in users
 		// that don't run for very long.
 		if calls.Load() == 0 {
 			log.Debug("Making first call sooner")
 			base = 3
 		}
-		var delay time.Duration
-		if sleepTime > 0 {
-			delay = time.Duration(sleepTime) * time.Second
-		}
-		delay = elapsed + (time.Duration(base*2+mrand.Intn(base*5)) * time.Second)
+		var delay = elapsed + (time.Duration(base*2+mrand.Intn(base*5)) * time.Second)
+
 		log.Debugf("Next call in %v", delay)
 		return time.After(delay)
 	}
@@ -251,7 +249,7 @@ func (p *proxy) callRandomly(f func() int64) {
 			return
 		case <-sleep():
 			start := time.Now()
-			sleepTime = f()
+			f()
 			elapsed = time.Since(start)
 		}
 	}

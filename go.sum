@@ -417,8 +417,8 @@ github.com/getlantern/keyman v0.0.0-20210622061955-aa0d47d4932c h1:42BHUoilinoKR
 github.com/getlantern/keyman v0.0.0-20210622061955-aa0d47d4932c/go.mod h1:lzCwzxjE8ciu+2bZku7kcCKfOYAXUs4stPn3elouYNI=
 github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a h1:z7G1v79GB1qRrkcbzF0nrLzV/+dwdGmamEZAp0ff+z0=
 github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a/go.mod h1:cGOfTjvllC9bcwS7cVW6tGT6fXc8Dki384uFjm7XBnw=
-github.com/getlantern/lantern-cloud v0.0.0-20220809031918-8972edaab08a h1:agh6w3d5gmA5ydN7VqTHZGDaUMrWJZxXniwkTgnB0k4=
-github.com/getlantern/lantern-cloud v0.0.0-20220809031918-8972edaab08a/go.mod h1:WLAw3VO3Vlxt0CCadn9TPu32i3j6b92v5sfl25hXBAo=
+github.com/getlantern/lantern-cloud v0.0.0-20220907144819-73a5c8d87a5d h1:KTBGQ/EJfTuIdbafegGe6hXT98Fnr34a//+ocfXe31M=
+github.com/getlantern/lantern-cloud v0.0.0-20220907144819-73a5c8d87a5d/go.mod h1:B7yT+tdKIMorA42MvsNySB1b9AU4L8ui5eRD/hfCbBE=
 github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210601195915-e04471aa4920 h1:VHBRvnYWECSPUMEIvpn24q3kMgpSR6zLgDMIMthWNFQ=
 github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210601195915-e04471aa4920/go.mod h1:JludU10BDqs/5iHmTlQF4+ToAouyyIK868mA6Okrqco=
 github.com/getlantern/libp2p v0.0.0-20220906115846-b1bf7a93d9ab h1:ceeMULzWCN8OHCtg/lIWLVcxtXQ4TsKggaAzn3lNwCY=
