@@ -43,7 +43,7 @@ jobs:
         cd ./config
         go test
     - name: Git push
-    - uses: actions/checkout@v3
+      uses: actions/checkout@v3
       with:
         ref: 220907_soltzen_debug_flashlight
     - run: |
