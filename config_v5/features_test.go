@@ -138,7 +138,7 @@ func TestDetour(t *testing.T) {
 	gl := globalFromTemplate(t)
 	for _, country := range []string{"cn"} {
 		for _, os := range []string{"android", "windows", "darwin", "linux"} {
-			assert.True(t, gl.FeatureEnabled(FeatureDetour, os, common.DefaultAppName, common.Version, 1, false, country), fmt.Sprintf("detour is enabled for %s in %s", os, country))
+			assert.False(t, gl.FeatureEnabled(FeatureDetour, os, common.DefaultAppName, common.Version, 1, false, country), fmt.Sprintf("detour is disabled for %s in %s", os, country))
 		}
 	}
 }
@@ -148,7 +148,7 @@ func TestShortcut(t *testing.T) {
 	for _, country := range []string{"cn", "ir"} {
 		for _, os := range []string{"android", "windows", "darwin", "linux"} {
 			if country != "ir" || os != "android" {
-				assert.True(t, gl.FeatureEnabled(FeatureShortcut, os, common.DefaultAppName, common.Version, 1, false, country), fmt.Sprintf("shortcut is enabled for %s in %s", os, country))
+				assert.False(t, gl.FeatureEnabled(FeatureShortcut, os, common.DefaultAppName, common.Version, 1, false, country), fmt.Sprintf("shortcut is disabled for %s in %s", os, country))
 			}
 		}
 	}

@@ -77,6 +77,10 @@ featuresenabled:
       # XXX 2022-08-08, soltzen: Small testbed for phase 1 of the project: https://docs.google.com/document/d/1JUjZHgpnunmwG3wUwlSmCKFwOGOXkkwyGd7cgrOJzbs/edit#heading=h.lf1udh61ebmc
       userfloor: 0
       userceil: 0.01
+  otel:
+    - label: opentelemetry
+      userfloor: 0
+      userceil: 0.01
   yinbi:
     - label: yinbi
       application: lantern
@@ -119,17 +123,16 @@ featuresenabled:
     - label: chat-android-qa
       platforms: android
       versionconstraints: ">=99.0.0"
-    # For building
   ######## New-Style configuration for detour, shortcut and probeproxies. These are disabled by default and have to be enabled in the config. ########
-  detour:
-    - label: cn-detour
-      geocountries: cn
-  shortcut:
-    - label: cn-shortcut
-      geocountries: cn
-    - lable: ir-desktop-shortcut
-      geocountries: ir
-      platforms: windows,darwin,linux
+  #detour:
+  #  - label: cn-detour
+  #    geocountries: cn
+  #shortcut:
+  #  - label: cn-shortcut
+  #    geocountries: cn
+  #  - label: ir-desktop-shortcut
+  #    geocountries: ir
+  #    platforms: windows,darwin,linux
   # probeproxies is not enabled anywhere
   ######## End of New-Style configuration for detour, shortcut and probeproxies ########
 
@@ -467,7 +470,10 @@ replica:
   replicaserviceendpoint: *GlobalReplicaRust
 
 otel:
-  endpoint: telemetry.iantem.io:443
+  endpoint: api.honeycomb.io:443
+  headers:
+    # Note - this key is only authorized to send events, nothing else
+    x-honeycomb-team: D7LRAYj3uCxrSb7WZjO24C
   samplerate: 1000
   opsamplerates:
     client_started: 1
