@@ -7,9 +7,7 @@ name: Compile genconfig binary
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
+  
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -44,8 +42,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: genconfig release ${{ github.ref }}
+        tag_name: ${{ github.sha }}
+        release_name: genconfig release ${{ github.sha }}
         draft: false
         prerelease: false
     - name: Upload Release Asset
