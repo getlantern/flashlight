@@ -36,14 +36,16 @@ jobs:
         version: latest
         files: genconfig/genconfig
         args: -fq
+    - id: commit
+      uses: pr-mpt/actions-commit-hash@v1
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.sha }}
-        release_name: genconfig release ${{ github.sha }}
+        tag_name: ${{ steps.commit.outputs.short }}
+        release_name: genconfig release ${{ steps.commit.outputs.short }}
         draft: false
         prerelease: false
     - name: Upload Release Asset
