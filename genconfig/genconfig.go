@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/x509"
+	_ "embed"
 	"encoding/base64"
 	"encoding/json"
 	"flag"
@@ -43,7 +44,6 @@ var (
 	minMasquerades  = flag.Int("min-masquerades", 1000, "Require that the resulting config contain at least this many masquerades per provider")
 	maxMasquerades  = flag.Int("max-masquerades", 1000, "Limit the number of masquerades to include in config per provider")
 	blacklistFile   = flag.String("blacklist", "", "Path to file containing list of blacklisted domains, which will be excluded from the configuration even if present in the masquerades file (e.g. blacklist.txt)")
-	mappingFile     = flag.String("mapping", "provider_map.yaml", "Path to file containing provider mapping")
 	proxiedSitesDir = flag.String("proxiedsites", "proxiedsites", "Path to directory containing proxied site lists, which will be combined and proxied by Lantern")
 	minFreq         = flag.Float64("minfreq", 3.0, "Minimum frequency (percentage) for including CA cert in list of trusted certs, defaults to 3.0%")
 	numberOfWorkers = flag.Int("numworkers", 50, "Number of worker threads")
@@ -68,13 +68,12 @@ var (
 	providers     map[string]*provider // supported fronting providers
 )
 
+//go:embed provider_map.yaml
+var mappingData []byte
+
 func populateProviders() {
-	mappingData, err := ioutil.ReadFile(*mappingFile)
-	if err != nil {
-		panic("Mapping file doesn't exist")
-	}
 	var mapping map[string]ProviderConfig
-	err = yaml.Unmarshal(mappingData, &mapping)
+	err := yaml.Unmarshal(mappingData, &mapping)
 	if err != nil {
 		panic(fmt.Sprintf("Mapping file is invalid: %v", err))
 	}
