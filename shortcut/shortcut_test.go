@@ -25,8 +25,10 @@ func TestShortcutResources(t *testing.T) {
 		return method
 	}
 	sc = testCountry(t, "ir")
-	assert.Equal(t, shortcut.Proxy, method("10.10.1.1"))
-	assert.Equal(t, shortcut.Direct, method("10.11.1.1"))
+
+	// 10.10.0.0/16 is the range Iran returns to DNS poisoned domains
+	assert.Equal(t, shortcut.Proxy, method("10.10.1.1"), "Should proxy network calls for DNS poisoned sites in Iran")
+	assert.Equal(t, shortcut.Direct, method("10.11.1.1"), "Should NOT proxy network calls for non-DNS poisoned sites in Iran")
 }
 
 func testCountry(t *testing.T, country string) shortcut.Shortcut {
@@ -59,12 +61,12 @@ func TestUnconfiguredCountry(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	method, _ := sc.RouteMethod(ctx, "10.10.1.1:80")
-	assert.Equal(t, shortcut.Direct, method)
+	assert.Equal(t, shortcut.Direct, method, "Not going directly to private IP for unconfigured country?")
 	cancel()
 
 	configure("gb")
 	ctx, cancel = context.WithTimeout(context.Background(), 2*time.Second)
 	method, _ = Allow(ctx, "10.10.1.1:80")
-	assert.Equal(t, shortcut.Direct, method)
+	assert.Equal(t, shortcut.Direct, method, "Not going directly to private IP for GB?")
 	cancel()
 }
