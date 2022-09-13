@@ -159,7 +159,7 @@ func (f *ProxiedFlow) RoundTrip(
 looper:
 	select {
 	case flowResp := <-recvFlowRespCh:
-		fmt.Printf("flowResp = %+v\n", flowResp)
+		// fmt.Printf("flowResp = %+v\n", flowResp)
 		if flowResp.err != nil {
 			var url string
 			if originalReq.URL != nil {
@@ -174,6 +174,7 @@ looper:
 			collectedErrors = append(collectedErrors, flowResp.err)
 		}
 		if flowResp.resp != nil {
+			// fmt.Printf("flowResp.resp = %+v\n", flowResp.resp)
 			// Set this component as a preferredComponent, only if the
 			// component wants to (i.e., shouldPrefer is true)
 			for _, c := range f.components {

@@ -132,7 +132,7 @@ require (
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
-require github.com/getlantern/libp2p v0.0.0-20220909112043-ce39c8fb5886
+require github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
 
 require golang.org/x/exp v0.0.0-20220428152302-39d4317da171 // indirect
 
