@@ -474,10 +474,7 @@ replica:
   replicaserviceendpoint: *GlobalReplicaRust
 
 otel:
-  endpoint: api.honeycomb.io:443
-  headers:
-    # Note - this key is only authorized to send events, nothing else
-    x-honeycomb-team: D7LRAYj3uCxrSb7WZjO24C
+  endpoint: telemetry.iantem.io:443
   samplerate: 1000
   opsamplerates:
     client_started: 1
