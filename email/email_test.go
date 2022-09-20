@@ -1,6 +1,7 @@
 package email
 
 import (
+	"context"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -84,6 +85,6 @@ func TestSubmitIssue(t *testing.T) {
 			From:     "ox+unittest@getlantern.org",
 			Template: "user-send-logs-desktop",
 		}
-		assert.NoError(t, sendTemplate(msg), "Should be able to send email")
+		assert.NoError(t, sendTemplate(context.Background(), msg), "Should be able to send email")
 	}
 }

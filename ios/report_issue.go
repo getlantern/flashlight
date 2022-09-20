@@ -2,6 +2,7 @@ package ios
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -70,5 +71,5 @@ func ReportIssue(isPro bool, userID int, proToken, deviceID, appVersion, deviceM
 		msg.Proxies = bytes
 	}
 
-	return email.Send(msg)
+	return email.Send(context.TODO(), msg)
 }
