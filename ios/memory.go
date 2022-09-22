@@ -84,21 +84,25 @@ func (c *client) optimizeMemoryUsage() {
 	})
 }
 
-func (c *client) logMemory() {
+func (c *client) logMemoryPeriodically(ctx context.Context) {
 	for {
-		c.doLogMemory()
-		time.Sleep(logMemoryInterval)
+		select {
+		case <-ctx.Done():
+			// stop
+			return
+		case <-time.After(logMemoryInterval):
+			c.doLogMemory()
+		}
 	}
 }
 
-func (c *client) gcPeriodically() {
-	ticker := time.NewTicker(forceGCInterval)
-	for range ticker.C {
-		// this select ensures that if ticker fired while we were checking memory (i.e. it took longer than forceGCInterval), we wait until the ticket fires again to check memory
+func (c *client) gcPeriodically(ctx context.Context) {
+	for {
 		select {
-		case <-ticker.C:
-			continue
-		default:
+		case <-ctx.Done():
+			// stop
+			return
+		case <-time.After(forceGCInterval):
 			freeMemory()
 			atomic.StoreInt64(&c.memoryAvailable, int64(c.memChecker.BytesRemain()))
 		}

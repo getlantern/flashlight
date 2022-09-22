@@ -3,6 +3,7 @@ package ios
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -19,12 +20,12 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/embeddedconfig"
 	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 )
 
 const (
@@ -39,9 +40,8 @@ type ConfigResult struct {
 	// that the VPN needs to be reconfigured.
 	VPNNeedsReconfiguring bool
 
-	// IPSToExcludeFromVPN lists all IPS that should be excluded from the VPNS's
-	// routes in a comma-delimited string
-	IPSToExcludeFromVPN string
+	// Indicates whether the list of proxies was updated from the web
+	proxiesUpdated bool
 }
 
 // Configure fetches updated configuration from the cloud and stores it in
@@ -139,14 +139,17 @@ func (cf *configurer) configure(userID int, proToken string, refreshProxies bool
 		}
 
 		result.VPNNeedsReconfiguring = result.VPNNeedsReconfiguring || globalUpdated || proxiesUpdated
+		result.proxiesUpdated = proxiesUpdated
 	}
+
+	var ipsToExcludeFromVPN string
 
 	for _, provider := range global.Client.Fronted.Providers {
 		for _, masquerade := range provider.Masquerades {
-			if len(result.IPSToExcludeFromVPN) == 0 {
-				result.IPSToExcludeFromVPN = masquerade.IpAddress
+			if len(ipsToExcludeFromVPN) == 0 {
+				ipsToExcludeFromVPN = masquerade.IpAddress
 			} else {
-				result.IPSToExcludeFromVPN = fmt.Sprintf("%v,%v", result.IPSToExcludeFromVPN, masquerade.IpAddress)
+				ipsToExcludeFromVPN = fmt.Sprintf("%v,%v", ipsToExcludeFromVPN, masquerade.IpAddress)
 			}
 		}
 	}
@@ -154,14 +157,20 @@ func (cf *configurer) configure(userID int, proToken string, refreshProxies bool
 	for _, proxy := range proxies {
 		if proxy.Addr != "" {
 			host, _, _ := net.SplitHostPort(proxy.Addr)
-			result.IPSToExcludeFromVPN = fmt.Sprintf("%v,%v", host, result.IPSToExcludeFromVPN)
+			ipsToExcludeFromVPN = fmt.Sprintf("%v,%v", host, ipsToExcludeFromVPN)
 			log.Debugf("Added %v", host)
 		}
 		if proxy.MultiplexedAddr != "" {
 			host, _, _ := net.SplitHostPort(proxy.MultiplexedAddr)
-			result.IPSToExcludeFromVPN = fmt.Sprintf("%v,%v", host, result.IPSToExcludeFromVPN)
+			ipsToExcludeFromVPN = fmt.Sprintf("%v,%v", host, ipsToExcludeFromVPN)
 			log.Debugf("Added %v", host)
 		}
+	}
+
+	// Save the IPS to exclude to disk
+	err = ioutil.WriteFile(filepath.Join(cf.configFolderPath, "ips"), []byte(ipsToExcludeFromVPN), 0644)
+	if err != nil {
+		return nil, err
 	}
 
 	email.SetDefaultRecipient(global.ReportIssueEmail)
@@ -283,7 +292,9 @@ func (cf *configurer) updateFromWeb(rt http.RoundTripper, name string, etag stri
 	var newETag string
 	var err error
 
+	log.Debugf("Fetching proxies with prior etag '%v", etag)
 	if name == proxiesYaml && cf.hardcodedProxies != "" {
+		log.Debug("Using hardcoded proxies")
 		bytes, newETag, err = cf.updateFromHardcodedProxies()
 	} else {
 		bytes, newETag, err = cf.doUpdateFromWeb(rt, name, etag, cfg, url)
@@ -301,7 +312,7 @@ func (cf *configurer) updateFromWeb(rt http.RoundTripper, name string, etag stri
 	cf.saveEtag(name, newETag)
 
 	if name == proxiesYaml {
-		log.Debugf("Updated proxies.yaml from cloud:\n%v", string(bytes))
+		log.Debugf("Updated proxies.yaml from cloud with etag '%v' and newETag: '%v'\n%v", etag, newETag, string(bytes))
 	} else {
 		log.Debugf("Updated %v from cloud", name)
 	}
@@ -413,4 +424,25 @@ func (cf *configurer) saveEtag(name string, etag string) {
 
 func (cf *configurer) fullPathTo(filename string) string {
 	return filepath.Join(cf.configFolderPath, filename)
+}
+
+func (c *client) fetchConfigPeriodically(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			// stop
+			return
+		case <-time.After(15 * time.Second):
+			log.Debug("Calling Configure()")
+			result, err := Configure(c.configDir, int(c.uc.UserID), c.uc.Token, c.uc.DeviceID, true, "")
+			if err != nil {
+				log.Errorf("Unable to reconfigure VPN in background: %v", err)
+			} else if result.proxiesUpdated {
+				log.Debug("Proxies were updated, panic to force restart of VPN")
+				panic("force restart")
+			} else {
+				log.Debug("Proxies unchanged")
+			}
+		}
+	}
 }

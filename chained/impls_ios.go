@@ -3,7 +3,10 @@
 
 package chained
 
-import "github.com/getlantern/errors"
+import (
+	"github.com/getlantern/errors"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
+)
 
 func newKCPImpl(s *apipb.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	return nil, errors.New("KCP is not supported on iOS")

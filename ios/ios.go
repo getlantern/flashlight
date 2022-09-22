@@ -1,6 +1,7 @@
 package ios
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -14,12 +15,12 @@ import (
 	"github.com/getlantern/dnsgrab/persistentcache"
 	"github.com/getlantern/errors"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 )
 
 const (
@@ -51,13 +52,17 @@ type writeRequest struct {
 }
 
 type writerAdapter struct {
+	ctx       context.Context
+	cancel    func()
 	writer    Writer
 	requests  chan *writeRequest
 	closeOnce sync.Once
 }
 
-func newWriterAdapter(writer Writer) io.WriteCloser {
+func newWriterAdapter(ctx context.Context, cancel func(), writer Writer) io.WriteCloser {
 	wa := &writerAdapter{
+		ctx:      ctx,
+		cancel:   cancel,
 		writer:   writer,
 		requests: make(chan *writeRequest, ipWriteBufferDepth),
 	}
@@ -89,6 +94,7 @@ func (wa *writerAdapter) handleWrites() {
 func (wa *writerAdapter) Close() error {
 	wa.closeOnce.Do(func() {
 		close(wa.requests)
+		wa.cancel()
 	})
 	return nil
 }
@@ -189,8 +195,10 @@ func Client(packetsOut Writer, udpDialer UDPDialer, memChecker MemChecker, confi
 		mtu = 1500
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	c := &client{
-		packetsOut:      newWriterAdapter(packetsOut),
+		packetsOut:      newWriterAdapter(ctx, cancel, packetsOut),
 		udpDialer:       udpDialer,
 		memChecker:      memChecker,
 		configDir:       configDir,
@@ -201,16 +209,18 @@ func Client(packetsOut Writer, udpDialer UDPDialer, memChecker MemChecker, confi
 	}
 
 	c.optimizeMemoryUsage()
-	go c.gcPeriodically()
-	go c.logMemory()
+	go c.gcPeriodically(ctx)
+	go c.logMemoryPeriodically(ctx)
 
-	return c.start()
+	return c.start(ctx)
 }
 
-func (c *client) start() (ClientWriter, error) {
+func (c *client) start(ctx context.Context) (ClientWriter, error) {
 	if err := c.loadUserConfig(); err != nil {
 		return nil, log.Errorf("error loading user config: %v", err)
 	}
+
+	go c.fetchConfigPeriodically(ctx)
 
 	log.Debugf("Running client for device '%v' at config path '%v'", c.uc.GetDeviceID(), c.configDir)
 	log.Debugf("Max buffer bytes: %d", buffers.MaxBufferBytes())

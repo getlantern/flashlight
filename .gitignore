@@ -39,6 +39,7 @@ access_data.json
 ios/demo/demo
 ios/ios.test
 Ios.framework
+Ios.xcframework
 *.aar
 *.jar
 .vscode
