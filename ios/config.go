@@ -40,6 +40,10 @@ type ConfigResult struct {
 	// that the VPN needs to be reconfigured.
 	VPNNeedsReconfiguring bool
 
+	// ipsToExcludeFromVPN lists all IPS that should be excluded from the VPNS's
+	// routes in a comma-delimited string
+	ipsToExcludeFromVPN string
+
 	// Indicates whether the list of proxies was updated from the web
 	proxiesUpdated bool
 }
@@ -142,14 +146,12 @@ func (cf *configurer) configure(userID int, proToken string, refreshProxies bool
 		result.proxiesUpdated = proxiesUpdated
 	}
 
-	var ipsToExcludeFromVPN string
-
 	for _, provider := range global.Client.Fronted.Providers {
 		for _, masquerade := range provider.Masquerades {
-			if len(ipsToExcludeFromVPN) == 0 {
-				ipsToExcludeFromVPN = masquerade.IpAddress
+			if len(result.ipsToExcludeFromVPN) == 0 {
+				result.ipsToExcludeFromVPN = masquerade.IpAddress
 			} else {
-				ipsToExcludeFromVPN = fmt.Sprintf("%v,%v", ipsToExcludeFromVPN, masquerade.IpAddress)
+				result.ipsToExcludeFromVPN = fmt.Sprintf("%v,%v", result.ipsToExcludeFromVPN, masquerade.IpAddress)
 			}
 		}
 	}
@@ -157,18 +159,18 @@ func (cf *configurer) configure(userID int, proToken string, refreshProxies bool
 	for _, proxy := range proxies {
 		if proxy.Addr != "" {
 			host, _, _ := net.SplitHostPort(proxy.Addr)
-			ipsToExcludeFromVPN = fmt.Sprintf("%v,%v", host, ipsToExcludeFromVPN)
+			result.ipsToExcludeFromVPN = fmt.Sprintf("%v,%v", host, result.ipsToExcludeFromVPN)
 			log.Debugf("Added %v", host)
 		}
 		if proxy.MultiplexedAddr != "" {
 			host, _, _ := net.SplitHostPort(proxy.MultiplexedAddr)
-			ipsToExcludeFromVPN = fmt.Sprintf("%v,%v", host, ipsToExcludeFromVPN)
+			result.ipsToExcludeFromVPN = fmt.Sprintf("%v,%v", host, result.ipsToExcludeFromVPN)
 			log.Debugf("Added %v", host)
 		}
 	}
 
 	// Save the IPS to exclude to disk
-	err = ioutil.WriteFile(filepath.Join(cf.configFolderPath, "ips"), []byte(ipsToExcludeFromVPN), 0644)
+	err = ioutil.WriteFile(filepath.Join(cf.configFolderPath, "ips"), []byte(result.ipsToExcludeFromVPN), 0644)
 	if err != nil {
 		return nil, err
 	}
@@ -292,7 +294,7 @@ func (cf *configurer) updateFromWeb(rt http.RoundTripper, name string, etag stri
 	var newETag string
 	var err error
 
-	log.Debugf("Fetching proxies with prior etag '%v", etag)
+	log.Debugf("Fetching proxies with prior etag '%v'", etag)
 	if name == proxiesYaml && cf.hardcodedProxies != "" {
 		log.Debug("Using hardcoded proxies")
 		bytes, newETag, err = cf.updateFromHardcodedProxies()
@@ -312,7 +314,7 @@ func (cf *configurer) updateFromWeb(rt http.RoundTripper, name string, etag stri
 	cf.saveEtag(name, newETag)
 
 	if name == proxiesYaml {
-		log.Debugf("Updated proxies.yaml from cloud with etag '%v' and newETag: '%v'\n%v", etag, newETag, string(bytes))
+		log.Debugf("Updated proxies.yaml from cloud with prior etag '%v' and new ETag: '%v'\n%v", etag, newETag, string(bytes))
 	} else {
 		log.Debugf("Updated %v from cloud", name)
 	}
@@ -432,7 +434,7 @@ func (c *client) fetchConfigPeriodically(ctx context.Context) {
 		case <-ctx.Done():
 			// stop
 			return
-		case <-time.After(15 * time.Second):
+		case <-time.After(1 * time.Minute):
 			log.Debug("Calling Configure()")
 			result, err := Configure(c.configDir, int(c.uc.UserID), c.uc.Token, c.uc.DeviceID, true, "")
 			if err != nil {
