@@ -45,7 +45,15 @@ var (
 		"replica_upload",
 		"replica_view",
 		"replica_torrent_peer_sent_data",
-		"install_mitm_cert"}
+		"install_mitm_cert",
+		// See here for more info
+		// https://github.com/getlantern/lantern-internal/issues/5664
+		"p2pfreepeer__did_show",
+		"p2pfreepeer__portforward_successful",
+		"p2pfreepeer__portforward_failed",
+		"p2pfreepeer__opt_in",
+		"p2pfreepeer__opt_out",
+	}
 
 	// LightweightOps are ops for which we record less than the full set of dimensions (e.g. omit error)
 	LightweightOps = []string{
