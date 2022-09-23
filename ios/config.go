@@ -440,7 +440,7 @@ func (c *client) fetchConfigPeriodically(ctx context.Context) {
 			if err != nil {
 				log.Errorf("Unable to reconfigure VPN in background: %v", err)
 			} else if result.proxiesUpdated {
-				log.Debug("Proxies were updated, panic to force restart of VPN")
+				log.Errorf("Proxies changed, panic to force restart")
 				panic("force restart")
 			} else {
 				log.Debug("Proxies unchanged")

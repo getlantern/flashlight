@@ -156,14 +156,9 @@ func (c *cw) Write(b []byte) (int, error) {
 }
 
 func (c *cw) Reconfigure() {
-	dialers, err := c.client.loadDialers()
-	if err != nil {
-		// this causes the NetworkExtension process to die. Since the VPN is configured as "on-demand",
-		// the OS will automatically restart the service, at which point we'll read the new config anyway.
-		panic(log.Errorf("Unable to load dialers on reconfigure: %v", err))
-	}
-
-	c.bal.Reset(dialers)
+	// This causes the NetworkExtension process to die. Since the VPN is configured as "on-demand",
+	// the OS will automatically restart the service, at which point we'll read the new config anyway.
+	panic("force restart")
 }
 
 func (c *cw) Close() error {
