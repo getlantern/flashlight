@@ -40,9 +40,9 @@ type ConfigResult struct {
 	// that the VPN needs to be reconfigured.
 	VPNNeedsReconfiguring bool
 
-	// ipsToExcludeFromVPN lists all IPS that should be excluded from the VPNS's
+	// IPSToExcludeFromVPN lists all IPS that should be excluded from the VPNS's
 	// routes in a comma-delimited string
-	ipsToExcludeFromVPN string
+	IPSToExcludeFromVPN string
 
 	// Indicates whether the list of proxies was updated from the web
 	proxiesUpdated bool
@@ -148,10 +148,10 @@ func (cf *configurer) configure(userID int, proToken string, refreshProxies bool
 
 	for _, provider := range global.Client.Fronted.Providers {
 		for _, masquerade := range provider.Masquerades {
-			if len(result.ipsToExcludeFromVPN) == 0 {
-				result.ipsToExcludeFromVPN = masquerade.IpAddress
+			if len(result.IPSToExcludeFromVPN) == 0 {
+				result.IPSToExcludeFromVPN = masquerade.IpAddress
 			} else {
-				result.ipsToExcludeFromVPN = fmt.Sprintf("%v,%v", result.ipsToExcludeFromVPN, masquerade.IpAddress)
+				result.IPSToExcludeFromVPN = fmt.Sprintf("%v,%v", result.IPSToExcludeFromVPN, masquerade.IpAddress)
 			}
 		}
 	}
@@ -159,18 +159,18 @@ func (cf *configurer) configure(userID int, proToken string, refreshProxies bool
 	for _, proxy := range proxies {
 		if proxy.Addr != "" {
 			host, _, _ := net.SplitHostPort(proxy.Addr)
-			result.ipsToExcludeFromVPN = fmt.Sprintf("%v,%v", host, result.ipsToExcludeFromVPN)
+			result.IPSToExcludeFromVPN = fmt.Sprintf("%v,%v", host, result.IPSToExcludeFromVPN)
 			log.Debugf("Added %v", host)
 		}
 		if proxy.MultiplexedAddr != "" {
 			host, _, _ := net.SplitHostPort(proxy.MultiplexedAddr)
-			result.ipsToExcludeFromVPN = fmt.Sprintf("%v,%v", host, result.ipsToExcludeFromVPN)
+			result.IPSToExcludeFromVPN = fmt.Sprintf("%v,%v", host, result.IPSToExcludeFromVPN)
 			log.Debugf("Added %v", host)
 		}
 	}
 
 	// Save the IPS to exclude to disk
-	err = ioutil.WriteFile(filepath.Join(cf.configFolderPath, "ips"), []byte(result.ipsToExcludeFromVPN), 0644)
+	err = ioutil.WriteFile(filepath.Join(cf.configFolderPath, "ips"), []byte(result.IPSToExcludeFromVPN), 0644)
 	if err != nil {
 		return nil, err
 	}

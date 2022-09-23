@@ -34,7 +34,7 @@ func TestConfigure(t *testing.T) {
 	require.NoError(t, err)
 
 	require.True(t, result1.VPNNeedsReconfiguring)
-	require.NotEmpty(t, result1.ipsToExcludeFromVPN)
+	require.NotEmpty(t, result1.IPSToExcludeFromVPN)
 
 	c := &configurer{configFolderPath: tmpDir}
 	uc, err := c.readUserConfig()
@@ -48,8 +48,8 @@ func TestConfigure(t *testing.T) {
 	require.NoError(t, err)
 	result2, err := Configure(tmpDir, 0, "", testDeviceID2, true, "")
 	require.NoError(t, err)
-	ips1 := strings.Split(result1.ipsToExcludeFromVPN, ",")
-	ips2 := strings.Split(result2.ipsToExcludeFromVPN, ",")
+	ips1 := strings.Split(result1.IPSToExcludeFromVPN, ",")
+	ips2 := strings.Split(result2.IPSToExcludeFromVPN, ",")
 	sort.Strings(ips1)
 	sort.Strings(ips2)
 	if result2.VPNNeedsReconfiguring {
