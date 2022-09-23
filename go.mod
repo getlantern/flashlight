@@ -97,7 +97,7 @@ require (
 	github.com/getlantern/tlsdialer/v3 v3.0.3
 	github.com/getlantern/tlsmasq v0.4.6
 	github.com/getlantern/tlsresumption v0.0.0-20211216020551-6a3f901d86b9
-	github.com/getlantern/tlsutil v0.5.2
+	github.com/getlantern/tlsutil v0.5.3
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
