@@ -2,7 +2,7 @@
 # internet.
 uiaddr: 127.0.0.1:16823
 bordareportinterval: 5m0s
-bordasamplepercentage: 0.001
+bordasamplepercentage: 0.0001
 pingsamplepercentage: 0 # back compatiblity for Lantern 5.7.2 and below
 globalconfigpollinterval: 1h0m0s
 proxyconfigpollinterval: 1m0s
@@ -79,6 +79,10 @@ featuresenabled:
       userceil: 0.01
   otel:
     - label: opentelemetry
+  noborda:
+    - label: disablebordafor75percent
+      userfloor: 0
+      userceil: 0.75
   yinbi:
     - label: yinbi
       application: lantern
