@@ -46,7 +46,7 @@ var (
 
 	Staging = false
 
-	ProAPIHost = "api.getiantem.org"
+	ProAPIHost = "api-staging.getiantem.org"
 
 	log = golog.LoggerFor("flashlight.common")
 
