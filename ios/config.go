@@ -72,10 +72,12 @@ type UserConfig struct {
 }
 
 type configurer struct {
-	configFolderPath string
-	hardcodedProxies string
-	uc               *UserConfig
-	rt               http.RoundTripper
+	configFolderPath   string
+	hardcodedProxies   string
+	uc                 *UserConfig
+	rt                 http.RoundTripper
+	lastFetchedProxies time.Time
+	lastFetchedGlobal  time.Time
 }
 
 func (cf *configurer) configure(userID int, proToken string, refreshProxies bool) (*ConfigResult, error) {
@@ -138,7 +140,7 @@ func (cf *configurer) configure(userID int, proToken string, refreshProxies bool
 		log.Debug("Updated global config")
 		if refreshProxies {
 			log.Debug("Refreshing proxies")
-			proxies, proxiesUpdated = cf.updateProxies(proxies, proxiesEtag)
+			proxies, proxiesUpdated = cf.updateProxies(global, proxies, proxiesEtag)
 			log.Debug("Refreshed proxies")
 		}
 
@@ -261,6 +263,12 @@ func (cf *configurer) configureFronting(global *config.Global, timeout time.Dura
 }
 
 func (cf *configurer) updateGlobal(rt http.RoundTripper, cfg *config.Global, etag string, url string) (*config.Global, bool) {
+	if time.Now().Sub(cf.lastFetchedGlobal) < cfg.GlobalConfigPollInterval {
+		// don't fetch global config more often than allowed
+		return cfg, false
+	}
+	cf.lastFetchedGlobal = time.Now()
+
 	updated := &config.Global{}
 	didFetch, err := cf.updateFromWeb(rt, globalYaml, etag, updated, url)
 	if err != nil {
@@ -272,7 +280,13 @@ func (cf *configurer) updateGlobal(rt http.RoundTripper, cfg *config.Global, eta
 	return cfg, didFetch
 }
 
-func (cf *configurer) updateProxies(cfg map[string]*apipb.ProxyConfig, etag string) (map[string]*apipb.ProxyConfig, bool) {
+func (cf *configurer) updateProxies(globalCfg *config.Global, cfg map[string]*apipb.ProxyConfig, etag string) (map[string]*apipb.ProxyConfig, bool) {
+	if time.Now().Sub(cf.lastFetchedProxies) < globalCfg.ProxyConfigPollInterval {
+		// don't fetch proxies config more often than allowed
+		return cfg, false
+	}
+	cf.lastFetchedProxies = time.Now()
+
 	updated := make(map[string]*apipb.ProxyConfig)
 	didFetch, err := cf.updateFromWeb(cf.rt, proxiesYaml, etag, updated, "http://config.getiantem.org/proxies.yaml.gz")
 	if err != nil {
