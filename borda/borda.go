@@ -24,27 +24,14 @@ var (
 	// of the borda sample percentage. This should all be low-volume operations,
 	// otherwise we will utilize too much bandwidth on the client.
 	FullyReportedOps = []string{
-		"proxybench",
 		"client_started",
 		"client_stopped",
 		"connect",
 		"disconnect",
-		"traffic",
-		"catchall_fatal",
-		"sysproxy_on",
-		"sysproxy_off",
-		"sysproxy_off_force",
-		"sysproxy_clear",
 		"report_issue",
-		"proxy_rank",
-		"proxy_selection_stability",
-		"probe",
 		"dial_for_balancer",
 		"proxy_dial",
 		"youtube_view",
-		"replica_upload",
-		"replica_view",
-		"replica_torrent_peer_sent_data",
 		"install_mitm_cert",
 		// See here for more info
 		// https://github.com/getlantern/lantern-internal/issues/5664
@@ -59,7 +46,12 @@ var (
 	LightweightOps = []string{
 		"dial_for_balancer",
 		"proxy_dial",
-		"youtube_view"}
+		"youtube_view",
+		"p2pfreepeer__did_show",
+		"p2pfreepeer__portforward_successful",
+		"p2pfreepeer__portforward_failed",
+		"p2pfreepeer__opt_in",
+		"p2pfreepeer__opt_out"}
 
 	// BeforeSubmit is an optional callback to capture when borda batches are
 	// submitted. It's mostly useful for unit testing.
