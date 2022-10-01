@@ -1,8 +1,8 @@
 # cloud.yaml contains the default configuration that's made available on the
 # internet.
 uiaddr: 127.0.0.1:16823
-bordareportinterval: 5m0s
-bordasamplepercentage: 0.01
+bordareportinterval: 15m0s
+bordasamplepercentage: 0.0001
 pingsamplepercentage: 0 # back compatiblity for Lantern 5.7.2 and below
 globalconfigpollinterval: 1h0m0s
 proxyconfigpollinterval: 1m0s
@@ -79,6 +79,10 @@ featuresenabled:
       userceil: 0.01
   otel:
     - label: opentelemetry
+  noborda:
+    - label: disablebordafor75percent
+      userfloor: 0
+      userceil: 0.75
   yinbi:
     - label: yinbi
       application: lantern
@@ -442,8 +446,8 @@ domainroutingrules:
   yandex.net: d
   yandex.ru: d
   yandexmetrica.com: d
-  tiktokv.com: d
-
+  tiktok.com: d
+  
   # Go direct in Russia for now
   92.223.103.136: md
   s-dt2.cloud.gcore.lu: md
@@ -454,6 +458,9 @@ domainroutingrules:
   9.rarbg.com: p
   tracker.openbittorrent.com: p
   tracker4.itzmx.com: p
+
+  # Donorbox doesn't like proxied traffic sometimes, send it direct
+  donorbox.org: md
 
 proxiedsites:
   delta:
@@ -478,7 +485,7 @@ otel:
   headers:
     # Note - this key is only authorized to send events, nothing else
     x-honeycomb-team: D7LRAYj3uCxrSb7WZjO24C
-  samplerate: 1000
+  samplerate: 2000
   opsamplerates:
     client_started: 1
     client_stopped: 1
