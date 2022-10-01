@@ -520,6 +520,8 @@ github.com/getlantern/tlsutil v0.2.0/go.mod h1:Vxsyr9DVnYwsqHaEzMYkg9fT8aBrnO2eI
 github.com/getlantern/tlsutil v0.5.1/go.mod h1:lVgvr4nxuQ1ocOho90UB6LnHFlpP16TXAGpHR8Z0QnI=
 github.com/getlantern/tlsutil v0.5.2 h1:BeYPkbgrcT4E51zCGePpHBBWFel7aglmNZvBb8kTVbk=
 github.com/getlantern/tlsutil v0.5.2/go.mod h1:lVgvr4nxuQ1ocOho90UB6LnHFlpP16TXAGpHR8Z0QnI=
+github.com/getlantern/tlsutil v0.5.3 h1:g1FjuG4/OTZe8kkbEmpSxvT9rXzYOG9jO4jHiDeQIxM=
+github.com/getlantern/tlsutil v0.5.3/go.mod h1:lVgvr4nxuQ1ocOho90UB6LnHFlpP16TXAGpHR8Z0QnI=
 github.com/getlantern/upnp v0.0.0-20220531140457-71a975af1fad h1:F7Pl+9tS7QtyCzL7hD70pm4jpSiJp/pCn25d2BQ/xow=
 github.com/getlantern/upnp v0.0.0-20220531140457-71a975af1fad/go.mod h1:ZZCjqcZBEc+UK2hjZf3saA3Hiw2z2CXTTF6r4tu0+i0=
 github.com/getlantern/utls v0.0.0-20211116192935-1abdc4b1acab h1:spKfkU87PniZpLFxNWeDgEToUzDtlEEK6s55dbiKQmM=

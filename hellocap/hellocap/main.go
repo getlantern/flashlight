@@ -32,5 +32,5 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	fmt.Println(string(hello))
+	fmt.Printf("%#x\n", hello)
 }

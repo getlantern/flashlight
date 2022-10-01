@@ -129,7 +129,7 @@ func (c *capturingConn) checkHello(newBytes []byte) {
 		if parseErr == nil {
 			c.onHello(c.helloBuf.Bytes()[:nHello], nil)
 			c.helloRead = true
-		} else if !errors.Is(parseErr, io.EOF) {
+		} else if !errors.Is(parseErr, io.ErrUnexpectedEOF) {
 			c.onHello(nil, fmt.Errorf("could not parse captured bytes as a ClientHello: %w", parseErr))
 			c.helloRead = true
 		}
@@ -151,7 +151,7 @@ func (l capturingListener) Accept() (net.Conn, error) {
 }
 
 func listenAndCaptureTCP(onHello onHello) (*capturingListener, error) {
-	l, err := net.Listen("tcp", "")
+	l, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		return nil, err
 	}
