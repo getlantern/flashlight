@@ -8,7 +8,7 @@ replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.27
 
 replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20211116192935-1abdc4b1acab
 
-replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20220920103553-a5860a01d392
+replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20221004112352-e7c04248adcb
 
 //replace github.com/getlantern/yinbi-server => ../yinbi-server
 
