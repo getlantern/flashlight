@@ -3,6 +3,7 @@ package email
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
@@ -106,7 +107,7 @@ type Message struct {
 	Proxies []byte
 }
 
-func Send(msg *Message) error {
+func Send(ctx context.Context, msg *Message) error {
 	var op *ops.Op
 	if strings.HasPrefix(msg.Template, "user-send-logs") {
 		op = ops.Begin("report_issue")
@@ -130,14 +131,14 @@ func Send(msg *Message) error {
 		op = ops.Begin("send_email").Set("template", msg.Template)
 	}
 	defer op.End()
-	err := sendTemplate(msg)
+	err := sendTemplate(ctx, msg)
 	if err != nil {
 		return log.Error(op.FailIf(err))
 	}
 	return nil
 }
 
-func sendTemplate(msg *Message) error {
+func sendTemplate(ctx context.Context, msg *Message) error {
 	client := mandrill.ClientWithKey(Key)
 	client.HTTPClient = getHTTPClient()
 	recipient := msg.To
@@ -231,7 +232,7 @@ func sendTemplate(msg *Message) error {
 		log.Debug("No proxies.yaml included to send to mandrill")
 	}
 
-	responses, err := client.MessagesSendTemplate(mmsg, msg.Template, "")
+	responses, err := client.MessagesSendTemplate(ctx, mmsg, msg.Template, "")
 	if err != nil {
 		return err
 	}

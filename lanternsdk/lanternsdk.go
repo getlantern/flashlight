@@ -2,6 +2,7 @@
 package lanternsdk
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -220,5 +221,5 @@ func reportIssue(template, appName, configDir, deviceID, userEmail string, maxLo
 			msg.Proxies = bytes
 		}
 	}
-	return email.Send(msg)
+	return email.Send(context.TODO(), msg)
 }
