@@ -247,7 +247,7 @@ featureoptions:
     replicarustdefaultendpoint: &FrankfurtReplicaRust http://replica-search-aws.lantern.io/
     replicarustendpoints:
       "RU": *FrankfurtReplicaRust
-      "IR": *FrankfurtReplicaRust
+      "IR": *IranReplicaRust
 
     # Here follows options per-country
 
@@ -316,6 +316,16 @@ featureoptions:
     "IR":
       <<: *FrankfurtBase
       staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
+      replicarustendpoint: &IranReplicaRust "https://ir.ss7hc6jm.io"
+      metadatabaseurls: &IranReplicaBaseUrls
+        # Arvancloud also supports bucket.s3-endpoint schema, which I think would be more identifiable.
+        - https://s3.ir-thr-at1.arvanstorage.com/gmt/
+        - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
+        - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
+        - https://s3.eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
+        - https://s3-eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
+        - https://d3mm73d1kmj7zd.cloudfront.net/
+      webseedbaseurls: *IranReplicaBaseUrls
     "RU":
       <<: *FrankfurtBase
       staticpeeraddrs: [&RussiaReplicaPeers "94.242.59.118:42069"]
