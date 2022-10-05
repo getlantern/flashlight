@@ -4,7 +4,7 @@ import (
 	"net"
 
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/go-ping"
+	"github.com/go-ping/ping"
 )
 
 func (p *proxy) Ping() {
@@ -16,18 +16,23 @@ func (p *proxy) Ping() {
 	op := ops.Begin("icmp_ping").ChainedProxy(p.Name(), p.addr, p.protocol, p.network, p.multiplexed)
 	defer op.End()
 	log.Debugf("Pinging %v at %v", p.Name(), p.addr)
-	stats, err := ping.Run(host, &ping.Opts{
-		Count:       100,
-		PayloadSize: 1200, // use a very large size similar to what we'd see in TCP packets
-	})
+
+	pinger, err := ping.NewPinger(host)
 	if err != nil {
-		op.FailIf(log.Errorf("Error pinging %v: %v", host, err))
+		op.FailIf(log.Errorf("while creating pinger %v: %v", host, err))
 		return
 	}
-	op.SetMetricPercentile("ping_rtt_min", stats.RTTMin)
-	op.SetMetricPercentile("ping_rtt_avg", stats.RTTAvg)
-	op.SetMetricPercentile("ping_rtt_max", stats.RTTMax)
-	op.SetMetricPercentile("ping_plr", stats.PLR)
-	log.Debugf("Packet Loss Rate: %v", stats.PLR)
+	pinger.Count = 100
+	pinger.Size = 1200
+	if err := pinger.Run(); err != nil {
+		op.FailIf(log.Errorf("while pinging %v: %v", host, err))
+		return
+	}
+	stats := pinger.Statistics()
+	op.SetMetricPercentile("ping_rtt_min", stats.MinRtt.Seconds())
+	op.SetMetricPercentile("ping_rtt_avg", stats.AvgRtt.Seconds())
+	op.SetMetricPercentile("ping_rtt_max", stats.MaxRtt.Seconds())
+	op.SetMetricPercentile("ping_plr", stats.PacketLoss)
+	log.Debugf("Packet Loss Rate: %v", stats.PacketLoss)
 	log.Debugf("Successfully pinged %v", p.Name())
 }

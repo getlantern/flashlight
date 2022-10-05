@@ -58,7 +58,6 @@ require (
 	github.com/getlantern/eventual/v2 v2.0.2
 	github.com/getlantern/fronted v0.0.0-20220707102541-0478ae49d9d3
 	github.com/getlantern/geolookup v0.0.0-20210901195705-eec711834596
-	github.com/getlantern/go-ping v0.0.0-20210901195920-5415d0f18231
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
 	github.com/getlantern/golog v0.0.0-20211223150227-d4d95a44d873
 	github.com/getlantern/grtrack v0.0.0-20210901195719-bdf9e1d12dac // indirect
@@ -134,7 +133,10 @@ require (
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
-require github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
+require (
+	github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
+	github.com/go-ping/ping v1.1.0
+)
 
 require golang.org/x/exp v0.0.0-20220428152302-39d4317da171 // indirect
 
@@ -290,7 +292,6 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c // indirect
 	github.com/templexxx/cpu v0.0.8 // indirect
 	github.com/templexxx/xorsimd v0.4.1 // indirect
 	github.com/ti-mo/conntrack v0.3.0 // indirect

@@ -5,9 +5,9 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 )
 
 // initBalancer takes hosts from cfg.ChainedServers and it uses them to create a
