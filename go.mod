@@ -135,12 +135,23 @@ require (
 
 require github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
 
-require golang.org/x/exp v0.0.0-20220428152302-39d4317da171 // indirect
+require (
+	github.com/OperatorFoundation/Replicant-go/Replicant/v3 v3.0.8 // indirect
+	github.com/OperatorFoundation/ghostwriter-go v1.0.6 // indirect
+	github.com/OperatorFoundation/go-bloom v1.0.1 // indirect
+	github.com/OperatorFoundation/go-shadowsocks2 v1.1.11 // indirect
+	github.com/OperatorFoundation/monolith-go/monolith v1.0.10 // indirect
+	github.com/OperatorFoundation/shapeshifter-ipc/v3 v3.0.0 // indirect
+	github.com/aead/ecdh v0.2.0 // indirect
+	github.com/deckarep/golang-set v1.8.0 // indirect
+	golang.org/x/exp v0.0.0-20220428152302-39d4317da171 // indirect
+)
 
 require (
 	crawshaw.io/sqlite v0.3.3-0.20210127221821-98b1f83c5508 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1.0.20210721174708-390f27c3be20 // indirect
 	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
+	github.com/OperatorFoundation/Starbridge-go/Starbridge/v3 v3.0.9
 	github.com/RoaringBitmap/roaring v1.0.1-0.20220510143707-3f418c4f42a4 // indirect
 	github.com/Yawning/chacha20 v0.0.0-20170904085104-e3b1f968fc63 // indirect
 	github.com/ajwerner/btree v0.0.0-20211221152037-f427b3e689c0 // indirect
