@@ -16,7 +16,6 @@ import (
 const (
 	FeatureAuth                 = "auth"
 	FeatureProxyBench           = "proxybench"
-	FeaturePingProxies          = "pingproxies"
 	FeatureTrafficLog           = "trafficlog"
 	FeatureNoBorda              = "noborda"
 	FeatureProbeProxies         = "probeproxies"
@@ -191,19 +190,6 @@ func (o *GoogleSearchAdsOptions) fromMap(m map[string]interface{}) error {
 	}
 
 	return decoder.Decode(m)
-}
-
-type PingProxiesOptions struct {
-	Interval time.Duration
-}
-
-func (o *PingProxiesOptions) fromMap(m map[string]interface{}) error {
-	interval, err := durationFromMap(m, "interval")
-	if err != nil {
-		return err
-	}
-	o.Interval = interval
-	return nil
 }
 
 // TrafficLogOptions represents options for github.com/getlantern/trafficlog-flashlight.

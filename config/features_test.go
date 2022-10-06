@@ -106,8 +106,6 @@ featureoptions:
     waittimesincefailedinstall: 24h
     userdenialthreshold: 3
     timebeforedenialreset: 2160h
-  pingproxies:
-    interval: 1h
 `
 	gl := NewGlobal()
 	require.NoError(t, yaml.Unmarshal([]byte(yml), gl))
@@ -122,10 +120,6 @@ featureoptions:
 	require.Equal(t, 24*time.Hour, opts.WaitTimeSinceFailedInstall)
 	require.Equal(t, 3, opts.UserDenialThreshold)
 	require.Equal(t, 2160*time.Hour, opts.TimeBeforeDenialReset)
-
-	var opts2 PingProxiesOptions
-	require.NoError(t, gl.UnmarshalFeatureOptions(FeaturePingProxies, &opts2))
-	require.Equal(t, time.Hour, opts2.Interval)
 }
 
 func TestMatomoEnabled(t *testing.T) {
