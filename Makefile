@@ -15,15 +15,12 @@ test-and-cover: $(SOURCES)
 	CP=$$(echo $$TP | tr ' ', ',') && \
 	set -x && \
 	for pkg in $$TP; do \
-		GO111MODULE=on go test -race -v -tags="headless" -covermode=atomic -coverprofile=profile_tmp.cov -coverpkg "$$CP" $$pkg || exit 1; \
+		go test -race -v -tags="headless" -covermode=atomic -coverprofile=profile_tmp.cov -coverpkg "$$CP" $$pkg || exit 1; \
 		tail -n +2 profile_tmp.cov >> profile.cov; \
 	done
 
-test: $(SOURCES)
-	@TP=$$(go list ./...) && \
-	for pkg in $$TP; do \
-		GO111MODULE=on go test -failfast -race -v -tags="headless" $$pkg || exit 1; \
-	done
+test:
+	go test -failfast -race -v -tags="headless" ./...
 
 define prep-for-mobile
 	go env -w 'GOPRIVATE=github.com/getlantern/*'
@@ -34,14 +31,14 @@ endef
 lanternsdk-android.aar: $(SOURCES)
 	$(call prep-for-mobile) && \
 	echo "LDFLAGS $(LDFLAGS)" && \
-	echo "Running gomobile with `which gomobile` version `GO111MODULE=off gomobile version` ..." && \
+	echo "Running gomobile with `which gomobile` version `gomobile version` ..." && \
 	gomobile bind -cache `pwd`/.gomobilecache -o=lanternsdk-android.aar -target=android -tags='headless publicsdk' -ldflags="$(LDFLAGS)" github.com/getlantern/flashlight/lanternsdk
 
 # we build the LanternSDK.framework in two steps to use XCFramework
 # See https://stackoverflow.com/questions/63942997/generate-xcframework-file-with-gomobile
 Lanternsdk.xcframework: $(SOURCES)
 	@$(call prep-for-mobile) && \
-	echo "Running gomobile with `which gomobile` version `GO111MODULE=off gomobile version` ..." && \
+	echo "Running gomobile with `which gomobile` version `gomobile version` ..." && \
 	gomobile bind -cache `pwd`/.gomobilecache -o=Lanternsdk.xcframework -target=ios -tags='headless publicsdk' -ldflags="$(LDFLAGS)" github.com/getlantern/flashlight/lanternsdk
 
 clean:
