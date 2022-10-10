@@ -58,7 +58,6 @@ require (
 	github.com/getlantern/eventual/v2 v2.0.2
 	github.com/getlantern/fronted v0.0.0-20220707102541-0478ae49d9d3
 	github.com/getlantern/geolookup v0.0.0-20210901195705-eec711834596
-	github.com/getlantern/go-ping v0.0.0-20210901195920-5415d0f18231
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
 	github.com/getlantern/golog v0.0.0-20211223150227-d4d95a44d873
 	github.com/getlantern/grtrack v0.0.0-20210901195719-bdf9e1d12dac // indirect
@@ -290,7 +289,6 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c // indirect
 	github.com/templexxx/cpu v0.0.8 // indirect
 	github.com/templexxx/xorsimd v0.4.1 // indirect
 	github.com/ti-mo/conntrack v0.3.0 // indirect
