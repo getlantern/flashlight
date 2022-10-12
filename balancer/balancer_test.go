@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -98,7 +99,7 @@ func TestGoodSlowDialer(t *testing.T) {
 
 func TestAllFailingUpstream(t *testing.T) {
 	addr, l := echoServer()
-	defer func() { _ = l.Close() }()
+	defer func() { require.NoError(t, l.Close()) }()
 
 	dialer1 := &testDialer{
 		name:            "dialer1",
