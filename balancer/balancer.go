@@ -128,9 +128,6 @@ type Dialer interface {
 	// Stop stops background processing for this Dialer.
 	Stop()
 
-	// Ping performs an ICMP ping of the proxy used by this dialer
-	Ping()
-
 	WriteStats(w io.Writer)
 }
 
@@ -318,42 +315,81 @@ func (b *Balancer) newBalancedDial(network string, addr string) (*balancedDial, 
 	}, nil
 }
 
-func (bd *balancedDial) dial(ctx context.Context, start time.Time) (conn net.Conn, err error) {
-	newCTX, cancel := context.WithTimeout(ctx, bd.Balancer.overallDialTimeout)
+func (bd *balancedDial) dial(parentCtx context.Context, start time.Time) (net.Conn, error) {
+	childCtx, cancel := context.WithTimeout(parentCtx, bd.Balancer.overallDialTimeout)
 	defer cancel()
-	deadline, _ := newCTX.Deadline()
 	attempts := 0
 	for {
-		conn := bd.dialWithDialer(newCTX, bd.dialers[bd.idx], start, attempts)
-		if conn != nil {
+		conn, err := bd.dialWithDialer(childCtx, bd.dialers[bd.idx], start, attempts)
+		if err != nil {
+			// Log the dial error here as a trace since it's not fatal. If we
+			// have another dialer, we'll try it.
+			log.Tracef(
+				"Dialing %s://%s with %s failed: %v. You can ignore this since we'll try with other dialers.",
+				bd.network, bd.addr, bd.dialers[bd.idx].Label(), err)
+		} else {
 			return conn, nil
 		}
-		if time.Now().After(deadline) {
-			break
+
+		// Check context: if it dies, we can't continue.
+		select {
+		case <-childCtx.Done():
+			err = fmt.Errorf(
+				"Dialing %s://%s with %s on attempt %d context died (1st codepath): dial duration (%s): Context duration (%s). Context error: %w",
+				bd.network, bd.addr,
+				bd.dialers[bd.idx].Label(),
+				attempts, time.Since(start),
+				bd.Balancer.overallDialTimeout,
+				childCtx.Err())
+			return nil, err
+		default:
 		}
+
 		attempts++
-		if !bd.advanceToNextDialer(attempts) {
-			break
+		if !bd.advanceToNextDialer(childCtx, attempts) {
+			// If we reached here, we have no more dialers and the context
+			// might've died. Determine the error and die
+			if childCtx.Err() != nil {
+				err = fmt.Errorf(
+					"Dialing %s://%s with %s on attempt %d context died (2nd codepath): Context duration (%s). Context error: %w",
+					bd.network, bd.addr,
+					bd.dialers[bd.idx].Label(),
+					attempts,
+					bd.Balancer.overallDialTimeout,
+					childCtx.Err())
+			} else {
+				err = fmt.Errorf("No more dialers for %s://%s with %s on attempt %d",
+					bd.network, bd.addr,
+					bd.dialers[bd.idx].Label(),
+					attempts)
+			}
+			return nil, err
 		}
-		// check deadline again after advancing, as we may have slept for a while
-		if time.Now().After(deadline) {
-			break
-		}
+		// If we reach here, we failed with this dialer, but there are still
+		// other dialers in the pipeline. Advance to the next one.
 	}
 
-	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", bd.network, bd.addr, attempts)
+	// UNREACHABLE CODE
 }
 
 // advanceToNextDialer advances this balancedDial to the next dialer, cycling
 // back to the beginning if necessary. If all dialers have failed upstream, this
 // method returns false.
-func (bd *balancedDial) advanceToNextDialer(attempts int) bool {
+func (bd *balancedDial) advanceToNextDialer(
+	ctx context.Context,
+	attempts int) bool {
 	if len(bd.failedUpstream) == len(bd.dialers) {
 		// all dialers failed upstream, give up
 		return false
 	}
 
 	for {
+		select {
+		case <-ctx.Done():
+			return false
+		default:
+		}
+
 		bd.idx++
 		if bd.idx >= len(bd.dialers) {
 			bd.idx = 0
@@ -368,20 +404,20 @@ func (bd *balancedDial) advanceToNextDialer(attempts int) bool {
 	}
 }
 
-func (bd *balancedDial) dialWithDialer(ctx context.Context, dialer Dialer, start time.Time, attempts int) net.Conn {
+func (bd *balancedDial) dialWithDialer(ctx context.Context, dialer Dialer, start time.Time, attempts int) (net.Conn, error) {
 	deadline, _ := ctx.Deadline()
 	log.Tracef("Dialing %s://%s with %s on pass %v with timeout %v", bd.network, bd.addr, dialer.Label(), attempts, deadline.Sub(time.Now()))
 	oldRTT, oldBW := dialer.EstRTT(), dialer.EstBandwidth()
 	conn, failedUpstream, err := dialer.DialContext(ctx, bd.network, bd.addr)
 	if err != nil {
 		bd.onFailure(dialer, failedUpstream, err, attempts)
-		return nil
+		return nil, err
 	}
 	// Multiplexed dialers don't wait for anything from the proxy when dialing
 	// "persistent" connections, so we can't blindly trust such connections as
 	// signals of success dialers.
 	if bd.network == NetworkPersistent {
-		return conn
+		return conn, nil
 	}
 	// Please leave this at Debug level, as it helps us understand
 	// performance issues caused by a poor proxy being selected.
@@ -401,7 +437,7 @@ func (bd *balancedDial) dialWithDialer(ctx context.Context, dialer Dialer, start
 		default:
 		}
 	}
-	return conn
+	return conn, nil
 }
 
 func (bd *balancedDial) onSuccess(dialer Dialer) {
@@ -709,14 +745,6 @@ func (b *Balancer) KeepLookingForSucceedingDialer() {
 		case <-b.closeCh:
 			return
 		}
-	}
-}
-
-// PingProxies pings the client's proxies.
-func (bal *Balancer) PingProxies() {
-	dialers := bal.copyOfDialers()
-	for _, dialer := range dialers {
-		go dialer.Ping()
 	}
 }
 

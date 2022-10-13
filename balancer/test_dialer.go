@@ -182,5 +182,4 @@ func (d *testDialer) Stop() {
 	atomic.StoreInt32(&d.stopped, 1)
 }
 
-func (d *testDialer) Ping()                  {}
 func (d *testDialer) WriteStats(w io.Writer) {}

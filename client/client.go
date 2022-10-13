@@ -149,7 +149,6 @@ type Client struct {
 	httpProxyIP   string
 	httpProxyPort string
 
-	chPingProxiesConf    chan pingProxiesConf
 	googleAdsFilter      func() bool
 	googleAdsOptionsLock sync.RWMutex
 	googleAdsOptions     *config.GoogleSearchAdsOptions
@@ -213,7 +212,6 @@ func NewClient(
 		adSwapTargetURL:                        adSwapTargetURL,
 		googleAdsFilter:                        allowGoogleSearchAds,
 		reverseDNS:                             reverseDNS,
-		chPingProxiesConf:                      make(chan pingProxiesConf, 1),
 		googleAdsOptions:                       nil,
 		googleAdsOptionsLock:                   sync.RWMutex{},
 		adTrackUrl:                             adTrackUrl,
@@ -253,7 +251,6 @@ func NewClient(
 	}
 	client.reportProxyLocationLoop()
 	client.iptool, _ = iptool.New()
-	go client.pingProxiesLoop()
 	go func() {
 		for {
 			if geolookup.GetCountry(0) != "" {
@@ -826,4 +823,24 @@ func (client *Client) ConfigureGoogleAds(opts config.GoogleSearchAdsOptions) {
 	client.googleAdsOptionsLock.Lock()
 	client.googleAdsOptions = &opts
 	client.googleAdsOptionsLock.Unlock()
+}
+
+// initBalancer takes hosts from cfg.ChainedServers and it uses them to create a
+// balancer. Returns the new dialers.
+func (client *Client) initBalancer(proxies map[string]*apipb.ProxyConfig) ([]balancer.Dialer, error) {
+	if len(proxies) == 0 {
+		return nil, fmt.Errorf("No chained servers configured, not initializing balancer")
+	}
+
+	chained.PersistSessionStates(client.configDir)
+	dialers := chained.CreateDialers(client.configDir, proxies, client.user)
+	client.bal.Reset(dialers)
+
+	go func() {
+		for hasSucceeding := range client.bal.HasSucceedingDialer {
+			client.statsTracker.SetHasSucceedingProxy(hasSucceeding)
+		}
+	}()
+
+	return dialers, nil
 }
