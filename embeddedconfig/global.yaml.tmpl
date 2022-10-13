@@ -249,7 +249,6 @@ featureoptions:
       "IR": *FrankfurtReplicaRust
 
     # Here follows options per-country
-
     "DE": &FrankfurtBase
       metadatabaseurls: *AllReplicaBaseUrls
       replicarustendpoint: *FrankfurtReplicaRust
@@ -316,8 +315,18 @@ featureoptions:
       <<: *FrankfurtBase
       staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
     "RU":
-      <<: *FrankfurtBase
+      proxypeerinfohashes: *GlobalProxyInfohashes
+      metadatabaseurls: *AllReplicaBaseUrls
+      # Taken from https://github.com/getlantern/replica-infrastructure-metrics/blob/5df25dd/hetzner/ansible/hosts-ru
+      replicarustendpoint: http://92.223.103.136:8080/
+      trackers: *GlobalTrackers
+      webseedbaseurls: *AllReplicaBaseUrls
       staticpeeraddrs: [&RussiaReplicaPeers "94.242.59.118:42069"]
+      # Generated like this:
+      # - Checkout this branch in replica-rust: https://github.com/getlantern/replica-rust/commit/78be85984c7e91de08a08bea97837568b8cb1f79
+      # - Run `just make-ca-cert keys/out/lantern-ca`
+      # - Replace new lines with literal \n: `awk '{printf "%s\\n", $0}' lantern-ca.crt.pem`
+      customca: "-----BEGIN CERTIFICATE-----\nMIID7DCCA5OgAwIBAgIUMao3101UqbvxjBevAk5q+N41Q6gwCgYIKoZIzj0EAwIw\ngYIxCzAJBgNVBAYTAlVTMQswCQYDVQQIDAJDQTELMAkGA1UEBwwCVVMxEDAOBgNV\nBAoMB0xhbnRlcm4xEDAOBgNVBAsMB0xhbnRlcm4xEDAOBgNVBAMMB0xhbnRlcm4x\nIzAhBgkqhkiG9w0BCQEWFGFmaXNrQGdldGxhbnRlcm4ub3JnMB4XDTIyMDMxNzE2\nMDgzOVoXDTMyMDMxNDE2MDgzOVowgYQxCzAJBgNVBAYTAlVTMQswCQYDVQQIDAJD\nQTELMAkGA1UEBwwCVVMxEDAOBgNVBAoMB0xhbnRlcm4xEDAOBgNVBAsMB0xhbnRl\ncm4xEjAQBgNVBAMMCWxvY2FsaG9zdDEjMCEGCSqGSIb3DQEJARYUYWZpc2tAZ2V0\nbGFudGVybi5vcmcwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQC95d6T\ngaTflL53R5WXroSkZltF0Wmb6uRsbmOoLPbyiqIwnoeHnevDtzNvZlkPewCsgSH/\nU2ez5HuUAFDstu1S2rfSfQyXNqsY7i0rXX219F4okSQBg+pj78T8Y4D4aDH9NUf/\n5xD6jVIErw1mrIIojekh3HmDNcCXl1AOmQ0YPakZG8BPpm0oolWEPdYqdiaydPZk\nur7hQWUqzdZZRC6X9RvoRs7au3YBYGtyPIzovX0/8vZBzb/WQhAU2Q+SumsK7gZJ\nuZdoXL3I2gPjm7KD0JClAY3c592yZA8xJQKMWzNnoxbpf+fV8E5K9KAo7z7DMYg3\nyhnjfn4EbrPtKCoOkLP+AMbC0Df9ADA9h+2/qVMXrKlx1MlUtGomZX9b4keJvJlx\niueqINEY20My3REu3Fmy0pls1roGegy0PjA1B+6bEr9KC+KzBmyF0atzf4uF8bLd\nYtS4M3c09Blqari4PzAaA8dZuT7eB8oyKz6n/ubS38vfh0lnR+Qy+PksrZgiv3IX\njr2xN20CFnJbrSDQ8yGk9ZpaftZNpLNi3nyykZJDLdY9l5aFgaEjGpXE5cQCikeu\n/dtLo/4gBUQRLKgt14zKYgbDJGUi4/kqssqithLx3JRORLDGOGGC65Y/r5pIseJy\nl2+ogu2kIWf/RaZrFwtcTMV/ADPUGDg1Fl7ktwIDAQABoxgwFjAUBgNVHREEDTAL\ngglsb2NhbGhvc3QwCgYIKoZIzj0EAwIDRwAwRAIgBUYtZWKn5Gr44nk8UDWlWDNN\nzImCiog055BgEv36PNoCIFqE6qrC2Koc0eNzaiAI93IveEMn2JxFGsCQVitF2NBR\n-----END CERTIFICATE-----\n"
     "CN":
       metadatabaseurls:
       - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
