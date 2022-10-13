@@ -8,8 +8,8 @@ package chained
 import (
 	"strconv"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	tls "github.com/refraction-networking/utls"
 	"google.golang.org/protobuf/proto"
 )
@@ -182,8 +182,14 @@ var availableClientHelloIDs = map[string]tls.ClientHelloID{
 	"HelloFirefox_Auto":     tls.HelloFirefox_Auto,
 	"HelloFirefox_55":       tls.HelloFirefox_55,
 	"HelloFirefox_56":       tls.HelloFirefox_56,
+	"HelloFirefox_105":      tls.HelloFirefox_105,
 	"HelloChrome_Auto":      tls.HelloChrome_Auto,
 	"HelloChrome_58":        tls.HelloChrome_58,
 	"HelloChrome_62":        tls.HelloChrome_62,
+	"HelloChrome_106":       tls.HelloChrome_106,
+	"HelloEdge_Auto":        tls.HelloEdge_Auto,
+	"Hello360_Auto":         tls.Hello360_Auto,
+	"HelloQQ_Auto":          tls.HelloQQ_Auto,
+	"HelloQQ_11":            tls.HelloQQ_11_1,
 	"HelloBrowser":          helloBrowser,
 }
