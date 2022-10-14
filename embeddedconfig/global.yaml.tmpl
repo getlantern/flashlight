@@ -229,7 +229,7 @@ featureoptions:
     - https://s3.eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
     - https://s3-eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
     - https://d3mm73d1kmj7zd.cloudfront.net/
-    replicarustendpoint: &GlobalReplicaRust http://replica-search.lantern.io/
+    replicarustendpoint: *FrankfurtReplicaRust
     staticpeeraddrs: []
     # This list is from https://github.com/getlantern/dhtup/blob/c8fde3e1a38abcb9709df07194ea2de3ae33bdbe/trackers.go#L14
     # We want to cover several transports (schemes here), support announces for Replica content and otherwise, and ensure results for regional differences. To that end a China tracker would be nice if it wasn't a vulnerability.
@@ -250,79 +250,23 @@ featureoptions:
 
     # Here follows options per-country
 
-    "DE": &FrankfurtBase
+    "IR":
       metadatabaseurls: *AllReplicaBaseUrls
       replicarustendpoint: *FrankfurtReplicaRust
-      staticpeeraddrs: []
       trackers: *GlobalTrackers
       webseedbaseurls: *AllReplicaBaseUrls
-    "LT": *FrankfurtBase
-    "EE": *FrankfurtBase
-    "BY": *FrankfurtBase
-    "UA": *FrankfurtBase
-    "AE": *FrankfurtBase
-    "LV": *FrankfurtBase
-    "MD": *FrankfurtBase
-    "GE": *FrankfurtBase
-    "UZ": *FrankfurtBase
-    "KZ": *FrankfurtBase
-    "TR": *FrankfurtBase
-    "TM": *FrankfurtBase
-    "AM": *FrankfurtBase
-    "AZ": *FrankfurtBase
-    "KG": *FrankfurtBase
-    "TJ": *FrankfurtBase
-    "TN": *FrankfurtBase
-    "US": *FrankfurtBase
-    "UK": *FrankfurtBase
-    "AT": *FrankfurtBase
-    "BE": *FrankfurtBase
-    "BR": *FrankfurtBase
-    "CR": *FrankfurtBase
-    "DK": *FrankfurtBase
-    "DO": *FrankfurtBase
-    "EC": *FrankfurtBase
-    "EG": *FrankfurtBase
-    "SV": *FrankfurtBase
-    "FR": *FrankfurtBase
-    "FI": *FrankfurtBase
-    "GR": *FrankfurtBase
-    "GT": *FrankfurtBase
-    "HK": *FrankfurtBase
-    "IN": *FrankfurtBase
-    "IE": *FrankfurtBase
-    "IT": *FrankfurtBase
-    "JP": *FrankfurtBase
-    "KP": *FrankfurtBase
-    "LI": *FrankfurtBase
-    "LU": *FrankfurtBase
-    "MX": *FrankfurtBase
-    "MM": *FrankfurtBase
-    "NL": *FrankfurtBase
-    "NZ": *FrankfurtBase
-    "NI": *FrankfurtBase
-    "PS": *FrankfurtBase
-    "PL": *FrankfurtBase
-    "ES": *FrankfurtBase
-    "SE": *FrankfurtBase
-    "CH": *FrankfurtBase
-    "SY": *FrankfurtBase
-    "TW": *FrankfurtBase
-    "TH": *FrankfurtBase
-    "YE": *FrankfurtBase
-    "CZ": *FrankfurtBase
-    "GE": *FrankfurtBase
-    "IR":
-      <<: *FrankfurtBase
       staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
     "RU":
-      <<: *FrankfurtBase
+      metadatabaseurls: *AllReplicaBaseUrls
+      replicarustendpoint: *FrankfurtReplicaRust
+      trackers: *GlobalTrackers
+      webseedbaseurls: *AllReplicaBaseUrls
       staticpeeraddrs: [&RussiaReplicaPeers "94.242.59.118:42069"]
     "CN":
       metadatabaseurls:
       - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
       - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
-      replicarustendpoint: *GlobalReplicaRust
+      replicarustendpoint: &GlobalReplicaRust http://replica-search.lantern.io/
       staticpeeraddrs: []
       trackers: *GlobalTrackers
       webseedbaseurls:
