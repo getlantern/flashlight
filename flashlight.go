@@ -18,7 +18,6 @@ import (
 	"github.com/getlantern/ops"
 	"github.com/getlantern/proxybench"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/bypass"
@@ -36,6 +35,7 @@ import (
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/stats"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	p2pLogger "github.com/getlantern/libp2p/logger"
 	"github.com/getlantern/quicproxy"
 )
@@ -52,7 +52,6 @@ var (
 	blockingRelevantFeatures = map[string]bool{
 		config.FeatureProxyBench:           false,
 		config.FeatureGoogleSearchAds:      false,
-		config.FeaturePingProxies:          false,
 		config.FeatureNoBorda:              true,
 		config.FeatureProbeProxies:         false,
 		config.FeatureDetour:               false,
@@ -129,7 +128,6 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 		// ignore
 	}
 	f.onConfigUpdate(cfg, src)
-	f.reconfigurePingProxies()
 	f.reconfigureGoogleAds()
 }
 
@@ -140,17 +138,6 @@ func (f *Flashlight) reconfigureGoogleAds() {
 	} else {
 		log.Errorf("Unable to configure google search ads: %v", err)
 	}
-}
-
-func (f *Flashlight) reconfigurePingProxies() {
-	enabled := func() bool {
-		return common.InDevelopment() ||
-			(f.FeatureEnabled(config.FeaturePingProxies) && f.autoReport())
-	}
-	var opts config.PingProxiesOptions
-	// ignore the error because the zero value means disabling it.
-	_ = f.FeatureOptions(config.FeaturePingProxies, &opts)
-	f.client.ConfigurePingProxies(enabled, opts.Interval)
 }
 
 // EnabledFeatures gets all features enabled based on current conditions

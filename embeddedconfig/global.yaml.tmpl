@@ -13,7 +13,6 @@ reportissueemail: support@lantern.jitbit.com
 #
 # The available features are:
 # - proxybench
-# - pingproxies
 # - trafficlog
 # - noborda
 # - probeproxies
@@ -230,7 +229,7 @@ featureoptions:
     - https://s3.eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
     - https://s3-eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
     - https://d3mm73d1kmj7zd.cloudfront.net/
-    replicarustendpoint: &GlobalReplicaRust http://replica-search.lantern.io/
+    replicarustendpoint: *FrankfurtReplicaRust
     staticpeeraddrs: []
     # This list is from https://github.com/getlantern/dhtup/blob/c8fde3e1a38abcb9709df07194ea2de3ae33bdbe/trackers.go#L14
     # We want to cover several transports (schemes here), support announces for Replica content and otherwise, and ensure results for regional differences. To that end a China tracker would be nice if it wasn't a vulnerability.
@@ -251,70 +250,8 @@ featureoptions:
 
     # Here follows options per-country
 
-    "DE": &FrankfurtBase
-      metadatabaseurls: *AllReplicaBaseUrls
-      replicarustendpoint: *FrankfurtReplicaRust
-      staticpeeraddrs: []
-      trackers: *GlobalTrackers
-      webseedbaseurls: *AllReplicaBaseUrls
-    "LT": *FrankfurtBase
-    "EE": *FrankfurtBase
-    "BY": *FrankfurtBase
-    "UA": *FrankfurtBase
-    "AE": *FrankfurtBase
-    "LV": *FrankfurtBase
-    "MD": *FrankfurtBase
-    "GE": *FrankfurtBase
-    "UZ": *FrankfurtBase
-    "KZ": *FrankfurtBase
-    "TR": *FrankfurtBase
-    "TM": *FrankfurtBase
-    "AM": *FrankfurtBase
-    "AZ": *FrankfurtBase
-    "KG": *FrankfurtBase
-    "TJ": *FrankfurtBase
-    "TN": *FrankfurtBase
-    "US": *FrankfurtBase
-    "UK": *FrankfurtBase
-    "AT": *FrankfurtBase
-    "BE": *FrankfurtBase
-    "BR": *FrankfurtBase
-    "CR": *FrankfurtBase
-    "DK": *FrankfurtBase
-    "DO": *FrankfurtBase
-    "EC": *FrankfurtBase
-    "EG": *FrankfurtBase
-    "SV": *FrankfurtBase
-    "FR": *FrankfurtBase
-    "FI": *FrankfurtBase
-    "GR": *FrankfurtBase
-    "GT": *FrankfurtBase
-    "HK": *FrankfurtBase
-    "IN": *FrankfurtBase
-    "IE": *FrankfurtBase
-    "IT": *FrankfurtBase
-    "JP": *FrankfurtBase
-    "KP": *FrankfurtBase
-    "LI": *FrankfurtBase
-    "LU": *FrankfurtBase
-    "MX": *FrankfurtBase
-    "MM": *FrankfurtBase
-    "NL": *FrankfurtBase
-    "NZ": *FrankfurtBase
-    "NI": *FrankfurtBase
-    "PS": *FrankfurtBase
-    "PL": *FrankfurtBase
-    "ES": *FrankfurtBase
-    "SE": *FrankfurtBase
-    "CH": *FrankfurtBase
-    "SY": *FrankfurtBase
-    "TW": *FrankfurtBase
-    "TH": *FrankfurtBase
-    "YE": *FrankfurtBase
-    "CZ": *FrankfurtBase
-    "GE": *FrankfurtBase
     "IR":
-      <<: *FrankfurtBase
+      trackers: *GlobalTrackers
       staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
       replicarustendpoint: &IranReplicaRust "https://ir.ss7hc6jm.io"
       metadatabaseurls: &IranReplicaBaseUrls
@@ -327,13 +264,16 @@ featureoptions:
         - https://d3mm73d1kmj7zd.cloudfront.net/
       webseedbaseurls: *IranReplicaBaseUrls
     "RU":
-      <<: *FrankfurtBase
+      metadatabaseurls: *AllReplicaBaseUrls
+      replicarustendpoint: *FrankfurtReplicaRust
+      trackers: *GlobalTrackers
+      webseedbaseurls: *AllReplicaBaseUrls
       staticpeeraddrs: [&RussiaReplicaPeers "94.242.59.118:42069"]
     "CN":
       metadatabaseurls:
       - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
       - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
-      replicarustendpoint: *GlobalReplicaRust
+      replicarustendpoint: &GlobalReplicaRust http://replica-search.lantern.io/
       staticpeeraddrs: []
       trackers: *GlobalTrackers
       webseedbaseurls:
@@ -386,6 +326,7 @@ client:
     ss7hc6jm.io:443: 92.223.103.136:443
     www.ss7hc6jm.io:80: 92.223.103.136:80
     ss7hc6jm.io:80: 92.223.103.136:80
+    # Should there be something here for the Iran Replica infrastructure?
 
 
 nameddomainroutingrules:
@@ -462,6 +403,12 @@ domainroutingrules:
   92.223.103.136: md
   s-dt2.cloud.gcore.lu: md
   retracker.bashtel.ru: md
+
+  # Iran direct
+
+  # Should we be using the IP address directly here?
+  ir.ss7hc6jm.io: md
+  s3.ir-thr-at1.arvanstorage.com: md
 
   # Replica http(s) BitTorrent trackers that run on non-standard ports (80 and 443?) should be listed here.
   tracker.opentrackr.org: p

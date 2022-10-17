@@ -1,5 +1,4 @@
 //go:build !iosapp
-// +build !iosapp
 
 package chained
 
@@ -18,8 +17,8 @@ import (
 	"github.com/getlantern/errors"
 	shadowsocks "github.com/getlantern/lantern-shadowsocks/client"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 )
 
 const (

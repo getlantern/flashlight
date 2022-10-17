@@ -6,7 +6,7 @@ replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.27.1-0.20220428155905-cb005872fecc
 
-replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20211116192935-1abdc4b1acab
+replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20221011213556-17014cb6fc4a
 
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20221004112352-e7c04248adcb
 
@@ -52,13 +52,12 @@ require (
 	github.com/getlantern/domains v0.0.0-20220311111720-94f59a903271
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
 	github.com/getlantern/enhttp v0.0.0-20210901195634-6f89d45ee033
-	github.com/getlantern/errors v1.0.1
+	github.com/getlantern/errors v1.0.3
 	github.com/getlantern/event v0.0.0-20210901195647-a7e3145142e6
 	github.com/getlantern/eventual v1.0.0
 	github.com/getlantern/eventual/v2 v2.0.2
 	github.com/getlantern/fronted v0.0.0-20220707102541-0478ae49d9d3
 	github.com/getlantern/geolookup v0.0.0-20210901195705-eec711834596
-	github.com/getlantern/go-ping v0.0.0-20210901195920-5415d0f18231
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
 	github.com/getlantern/golog v0.0.0-20211223150227-d4d95a44d873
 	github.com/getlantern/grtrack v0.0.0-20210901195719-bdf9e1d12dac // indirect
@@ -81,7 +80,7 @@ require (
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20220721104633-92b6c4b27b91
 	github.com/getlantern/netx v0.0.0-20211206143627-7ccfeb739cbd
-	github.com/getlantern/ops v0.0.0-20220622024155-46238aeb954f
+	github.com/getlantern/ops v0.0.0-20220713155959-1315d978fff7
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
 	github.com/getlantern/proxy/v2 v2.0.1-0.20220303164029-b34b76e0e581
 	github.com/getlantern/proxybench v0.0.0-20220404140110-f49055cb86de
@@ -121,11 +120,11 @@ require (
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
 	gitlab.com/yawning/obfs4.git v0.0.0-20220204003609-77af0cba934d
-	go.opentelemetry.io/otel v1.7.0
+	go.opentelemetry.io/otel v1.9.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.7.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.7.0
 	go.opentelemetry.io/otel/sdk v1.7.0
-	go.opentelemetry.io/otel/trace v1.7.0
+	go.opentelemetry.io/otel/trace v1.9.0
 	go.uber.org/atomic v1.9.0
 	golang.org/x/mobile v0.0.0-20210831151748-9cba7bc03c0f
 	golang.org/x/net v0.0.0-20220708220712-1185a9018129
@@ -136,12 +135,23 @@ require (
 
 require github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
 
-require golang.org/x/exp v0.0.0-20220428152302-39d4317da171 // indirect
+require (
+	github.com/OperatorFoundation/Replicant-go/Replicant/v3 v3.0.8 // indirect
+	github.com/OperatorFoundation/ghostwriter-go v1.0.6 // indirect
+	github.com/OperatorFoundation/go-bloom v1.0.1 // indirect
+	github.com/OperatorFoundation/go-shadowsocks2 v1.1.11 // indirect
+	github.com/OperatorFoundation/monolith-go/monolith v1.0.10 // indirect
+	github.com/OperatorFoundation/shapeshifter-ipc/v3 v3.0.0 // indirect
+	github.com/aead/ecdh v0.2.0 // indirect
+	github.com/deckarep/golang-set v1.8.0 // indirect
+	golang.org/x/exp v0.0.0-20220428152302-39d4317da171 // indirect
+)
 
 require (
 	crawshaw.io/sqlite v0.3.3-0.20210127221821-98b1f83c5508 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1.0.20210721174708-390f27c3be20 // indirect
 	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
+	github.com/OperatorFoundation/Starbridge-go/Starbridge/v3 v3.0.9
 	github.com/RoaringBitmap/roaring v1.0.1-0.20220510143707-3f418c4f42a4 // indirect
 	github.com/Yawning/chacha20 v0.0.0-20170904085104-e3b1f968fc63 // indirect
 	github.com/ajwerner/btree v0.0.0-20211221152037-f427b3e689c0 // indirect
@@ -290,7 +300,6 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c // indirect
 	github.com/templexxx/cpu v0.0.8 // indirect
 	github.com/templexxx/xorsimd v0.4.1 // indirect
 	github.com/ti-mo/conntrack v0.3.0 // indirect
