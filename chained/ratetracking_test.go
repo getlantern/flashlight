@@ -8,7 +8,7 @@ import (
 	"time"
 
 	borda "github.com/getlantern/borda/client"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/mockconn"
 	"github.com/stretchr/testify/assert"
@@ -30,7 +30,7 @@ func TestRateTracking(t *testing.T) {
 	})
 
 	sd := mockconn.SucceedingDialer([]byte("1234567890"))
-	p, err := newProxy("test", "addr:567", "proto", "netw", &apipb.ProxyConfig{
+	p, err := newProxy("test", "addr:567", "proto", "netw", &config.ProxyConfig{
 		AuthToken: "token",
 		Trusted:   true,
 	}, newTestUserConfig())

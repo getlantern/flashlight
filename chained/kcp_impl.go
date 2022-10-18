@@ -7,10 +7,10 @@ import (
 	"context"
 	"net"
 
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/kcpwrapper"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/ops"
 )
 
@@ -28,7 +28,7 @@ type kcpImpl struct {
 	dialKCP        func(ctx context.Context, addr string) (net.Conn, error)
 }
 
-func newKCPImpl(pc *apipb.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newKCPImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	return nil, errors.New("KCP not supported")
 }
 

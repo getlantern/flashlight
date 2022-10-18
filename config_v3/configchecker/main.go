@@ -5,10 +5,9 @@
 //
 // Examples:
 //
-//   go run main.go proxies ~/Library/Application\ Support/Lantern/proxies.yaml
-//   go run main.go global ~/Library/Application\ Support/Lantern/global.yaml
-//   go run main.go global https://globalconfig.flashlightproxy.com/global.yaml.gz
-//
+//	go run main.go proxies ~/Library/Application\ Support/Lantern/proxies.yaml
+//	go run main.go global ~/Library/Application\ Support/Lantern/global.yaml
+//	go run main.go global https://globalconfig.flashlightproxy.com/global.yaml.gz
 package main
 
 import (
@@ -19,7 +18,7 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
+	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/yaml"
@@ -83,7 +82,7 @@ func readRemote(target string) ([]byte, error) {
 }
 
 func parseProxies(bytes []byte) {
-	cfg := make(map[string]*apipb.ProxyConfig)
+	cfg := make(map[string]*commonconfig.ProxyConfig)
 	err := yaml.Unmarshal(bytes, cfg)
 	if err != nil {
 		fail("Unable to parse proxies config: %v", err)

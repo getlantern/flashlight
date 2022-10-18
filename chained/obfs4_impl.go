@@ -6,7 +6,7 @@ import (
 	"net"
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/ops"
 	"gitlab.com/yawning/obfs4.git/transports/base"
 	"gitlab.com/yawning/obfs4.git/transports/obfs4"
@@ -20,7 +20,7 @@ type obfs4Impl struct {
 	args     interface{}
 }
 
-func newOBFS4Impl(name, addr string, pc *apipb.ProxyConfig, dialCore coreDialer) (proxyImpl, error) {
+func newOBFS4Impl(name, addr string, pc *config.ProxyConfig, dialCore coreDialer) (proxyImpl, error) {
 	if pc.Cert == "" {
 		return nil, fmt.Errorf("No Cert configured for obfs4 server, can't connect")
 	}

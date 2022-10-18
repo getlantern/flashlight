@@ -8,8 +8,8 @@ import (
 	gtls "crypto/tls"
 	"net"
 
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/quicwrapper"
@@ -21,7 +21,7 @@ type quicImpl struct {
 	dialer         *quicwrapper.Client
 }
 
-func newQUICImpl(name, addr string, pc *apipb.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newQUICImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	tlsConf := &gtls.Config{
 		ServerName:         pc.TLSServerNameIndicator,
 		InsecureSkipVerify: true,

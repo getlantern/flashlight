@@ -8,21 +8,21 @@ import (
 
 	tls "github.com/refraction-networking/utls"
 
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/browsers/simbrowser"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/tlsresumption"
 )
 
-// Generates TLS configuration for connecting to proxy specified by the apipb.ProxyConfig. This
+// Generates TLS configuration for connecting to proxy specified by the config.ProxyConfig. This
 // function may block while determining things like how to mimic the default browser's client hello.
 //
 // Returns a slice of ClientHellos to be used for dialing. These hellos are in priority order: the
 // first hello is the "ideal" one and the remaining hellos serve as backup in case something is
 // wrong with the previous hellos. There will always be at least one hello. For each hello, the
 // ClientHelloSpec will be non-nil if and only if the ClientHelloID is tls.HelloCustom.
-func tlsConfigForProxy(ctx context.Context, configDir, proxyName string, pc *apipb.ProxyConfig, uc common.UserConfig) (
+func tlsConfigForProxy(ctx context.Context, configDir, proxyName string, pc *config.ProxyConfig, uc common.UserConfig) (
 	*tls.Config, []helloSpec) {
 
 	configuredHelloID := clientHelloID(pc)
@@ -107,7 +107,7 @@ func getBrowserHello(ctx context.Context, configDir string, uc common.UserConfig
 	return helloSpec{simbrowser.ChooseForUser(ctx, uc).ClientHelloID, nil}
 }
 
-func orderedCipherSuitesFromConfig(pc *apipb.ProxyConfig) []uint16 {
+func orderedCipherSuitesFromConfig(pc *config.ProxyConfig) []uint16 {
 	if common.Platform == "android" {
 		return mobileOrderedCipherSuites(pc)
 	}

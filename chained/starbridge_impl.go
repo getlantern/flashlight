@@ -5,8 +5,8 @@ import (
 	"net"
 
 	"github.com/OperatorFoundation/Starbridge-go/Starbridge/v3"
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 )
 
 type starbridge struct {
@@ -32,7 +32,7 @@ func (s *starbridge) close() {
 	}
 }
 
-func newStarbridgeImpl(name, addr string, pc *apipb.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newStarbridgeImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	config := Starbridge.ClientConfig{
 		Address:                   addr,
 		ServerPersistentPublicKey: pc.Cert,

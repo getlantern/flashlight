@@ -23,13 +23,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/golog"
 	proxy "github.com/getlantern/http-proxy-lantern/v2"
 	"github.com/getlantern/tlsdefaults"
 	"github.com/getlantern/waitforserver"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/client"
 )
 
@@ -395,11 +395,11 @@ func (helper *Helper) writeConfig() error {
 	return ioutil.WriteFile(filename, out, 0644)
 }
 
-func (helper *Helper) buildProxies(proto string) (map[string]*apipb.ProxyConfig, error) {
+func (helper *Helper) buildProxies(proto string) (map[string]*config.ProxyConfig, error) {
 	protos := strings.Split(proto, ",")
 	// multipath
 	if len(protos) > 1 {
-		proxies := make(map[string]*apipb.ProxyConfig)
+		proxies := make(map[string]*config.ProxyConfig)
 		for _, p := range protos {
 			cfgs, err := helper.buildProxies(p)
 			if err != nil {
@@ -412,7 +412,7 @@ func (helper *Helper) buildProxies(proto string) (map[string]*apipb.ProxyConfig,
 		}
 		return proxies, nil
 	}
-	var srv apipb.ProxyConfig
+	var srv config.ProxyConfig
 	err := yaml.Unmarshal(proxiesTemplate, &srv)
 	if err != nil {
 		return nil, fmt.Errorf("Could not unmarshal config %v", err)
@@ -499,7 +499,7 @@ func (helper *Helper) buildProxies(proto string) (map[string]*apipb.ProxyConfig,
 			srv.Addr = helper.HTTPSProxyServerAddr
 		}
 	}
-	return map[string]*apipb.ProxyConfig{"proxy-" + proto: &srv}, nil
+	return map[string]*config.ProxyConfig{"proxy-" + proto: &srv}, nil
 }
 
 func (helper *Helper) startTLSMasqOrigin() error {

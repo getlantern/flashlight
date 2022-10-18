@@ -15,13 +15,14 @@ import (
 
 	mrand "math/rand"
 
+	commonconfig "github.com/getlantern/common/config"
+	"github.com/getlantern/flashlight/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"go.uber.org/atomic"
 	"google.golang.org/protobuf/proto"
 )
@@ -33,26 +34,26 @@ const dfEndpoint = "https://iantem.io/api/v1/bypass"
 const proxyEndpoint = "https://api.iantem.io/v1/bypass"
 
 type bypass struct {
-	infos     map[string]*apipb.ProxyConfig
+	infos     map[string]*commonconfig.ProxyConfig
 	proxies   []*proxy
 	mxProxies sync.Mutex
 }
 
 // Start sends periodic traffic to the bypass server. The client periodically sends traffic to the server both via
 // domain fronting and proxying to determine if proxies are blocked.
-func Start(listen func(func(map[string]*apipb.ProxyConfig, config.Source)), configDir string, userConfig common.UserConfig) func() {
+func Start(listen func(func(map[string]*commonconfig.ProxyConfig, config.Source)), configDir string, userConfig common.UserConfig) func() {
 	mrand.Seed(time.Now().UnixNano())
 	b := &bypass{
-		infos:   make(map[string]*apipb.ProxyConfig),
+		infos:   make(map[string]*commonconfig.ProxyConfig),
 		proxies: make([]*proxy, 0),
 	}
-	listen(func(infos map[string]*apipb.ProxyConfig, src config.Source) {
+	listen(func(infos map[string]*commonconfig.ProxyConfig, src config.Source) {
 		b.OnProxies(infos, configDir, userConfig)
 	})
 	return b.reset
 }
 
-func (b *bypass) OnProxies(infos map[string]*apipb.ProxyConfig, configDir string, userConfig common.UserConfig) {
+func (b *bypass) OnProxies(infos map[string]*commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig) {
 	b.mxProxies.Lock()
 	defer b.mxProxies.Unlock()
 	b.reset()
@@ -75,7 +76,7 @@ func (b *bypass) OnProxies(infos map[string]*apipb.ProxyConfig, configDir string
 	}
 }
 
-func (b *bypass) newProxy(name string, pc *apipb.ProxyConfig, configDir string, userConfig common.UserConfig, dialer balancer.Dialer) *proxy {
+func (b *bypass) newProxy(name string, pc *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer balancer.Dialer) *proxy {
 	return &proxy{
 		ProxyConfig:       pc,
 		name:              name,
@@ -95,7 +96,7 @@ func (b *bypass) reset() {
 }
 
 type proxy struct {
-	*apipb.ProxyConfig
+	*commonconfig.ProxyConfig
 	name              string
 	done              chan bool
 	dfRoundTripper    http.RoundTripper
@@ -166,7 +167,7 @@ func (p *proxy) sendToBypass() int64 {
 	return sleepTime
 }
 
-func proxyRoundTripper(name string, info *apipb.ProxyConfig, configDir string, userConfig common.UserConfig, dialer balancer.Dialer) http.RoundTripper {
+func proxyRoundTripper(name string, info *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer balancer.Dialer) http.RoundTripper {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.Proxy = nil
 	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -186,7 +187,22 @@ func (p *proxy) newRequest(userConfig common.UserConfig, endpoint string) (*http
 	// Just posting all the info about the server allows us to control these fields fully on the server
 	// side.
 	bypassRequest := &apipb.BypassRequest{
-		Config: p.ProxyConfig,
+		Config: &apipb.LegacyConnectConfig{
+			Name:                       p.ProxyConfig.Name,
+			Addr:                       p.ProxyConfig.Addr,
+			Cert:                       p.ProxyConfig.Cert,
+			PluggableTransport:         p.ProxyConfig.PluggableTransport,
+			PluggableTransportSettings: p.ProxyConfig.PluggableTransportSettings,
+			Location: &apipb.LegacyConnectConfig_ProxyLocation{
+				City:        p.ProxyConfig.Location.GetCity(),
+				Country:     p.ProxyConfig.Location.GetCountry(),
+				CountryCode: p.ProxyConfig.Location.GetCountryCode(),
+				Latitude:    p.ProxyConfig.Location.GetLatitude(),
+				Longitude:   p.ProxyConfig.Location.GetLongitude(),
+			},
+			Track:  p.ProxyConfig.Track,
+			Region: p.ProxyConfig.Region,
+		},
 	}
 
 	infopb, err := proto.Marshal(bypassRequest)

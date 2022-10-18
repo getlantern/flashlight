@@ -19,6 +19,7 @@ import (
 
 	lru "github.com/hashicorp/golang-lru"
 
+	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual/v2"
@@ -44,7 +45,6 @@ import (
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/status"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 )
 
 var (
@@ -475,7 +475,7 @@ func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reade
 // Configure updates the client's configuration. Configure can be called
 // before or after ListenAndServe, and can be called multiple times. If
 // no error occurred, then the new dialers are returned.
-func (client *Client) Configure(proxies map[string]*apipb.ProxyConfig) []balancer.Dialer {
+func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []balancer.Dialer {
 	log.Debug("Configure() called")
 	dialers, err := client.initBalancer(proxies)
 	if err != nil {
@@ -827,7 +827,7 @@ func (client *Client) ConfigureGoogleAds(opts config.GoogleSearchAdsOptions) {
 
 // initBalancer takes hosts from cfg.ChainedServers and it uses them to create a
 // balancer. Returns the new dialers.
-func (client *Client) initBalancer(proxies map[string]*apipb.ProxyConfig) ([]balancer.Dialer, error) {
+func (client *Client) initBalancer(proxies map[string]*commonconfig.ProxyConfig) ([]balancer.Dialer, error) {
 	if len(proxies) == 0 {
 		return nil, fmt.Errorf("No chained servers configured, not initializing balancer")
 	}

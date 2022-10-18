@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
@@ -49,7 +49,7 @@ func (impl *multipathImpl) FormatStats() []string {
 	return impl.dialer.(multipath.Stats).FormatStats()
 }
 
-func CreateMPDialer(configDir, endpoint string, ss map[string]*apipb.ProxyConfig, uc common.UserConfig) (balancer.Dialer, error) {
+func CreateMPDialer(configDir, endpoint string, ss map[string]*config.ProxyConfig, uc common.UserConfig) (balancer.Dialer, error) {
 	if len(ss) < 1 {
 		return nil, errors.New("no dialers")
 	}
@@ -83,12 +83,12 @@ func CreateMPDialer(configDir, endpoint string, ss map[string]*apipb.ProxyConfig
 	return p, nil
 }
 
-func groupByMultipathEndpoint(proxies map[string]*apipb.ProxyConfig) map[string]map[string]*apipb.ProxyConfig {
-	groups := make(map[string]map[string]*apipb.ProxyConfig)
+func groupByMultipathEndpoint(proxies map[string]*config.ProxyConfig) map[string]map[string]*config.ProxyConfig {
+	groups := make(map[string]map[string]*config.ProxyConfig)
 	for name, s := range proxies {
 		group, exists := groups[s.MultipathEndpoint]
 		if !exists {
-			group = make(map[string]*apipb.ProxyConfig)
+			group = make(map[string]*config.ProxyConfig)
 			groups[s.MultipathEndpoint] = group
 		}
 		group[name] = s

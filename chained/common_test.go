@@ -3,13 +3,13 @@ package chained
 import (
 	"testing"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
+	"github.com/getlantern/common/config"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
 )
 
 func TestCopyConfigs(t *testing.T) {
-	proxies := map[string]*apipb.ProxyConfig{
+	proxies := map[string]*config.ProxyConfig{
 		"pc1": {
 			PluggableTransportSettings: map[string]string{
 				"true":        "true",
@@ -45,12 +45,12 @@ func TestCopyConfigs(t *testing.T) {
 }
 
 func TestPTSettingsNil(t *testing.T) {
-	s := &apipb.ProxyConfig{}
+	s := &config.ProxyConfig{}
 	assert.False(t, ptSettingBool(s, "bool"))
 }
 
 func TestPTSettings(t *testing.T) {
-	s := &apipb.ProxyConfig{
+	s := &config.ProxyConfig{
 		PluggableTransportSettings: map[string]string{
 			"true":        "true",
 			"false":       "false",

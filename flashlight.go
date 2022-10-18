@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/dhtup"
 	"github.com/getlantern/dnsgrab"
@@ -35,7 +36,6 @@ import (
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/stats"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	p2pLogger "github.com/getlantern/libp2p/logger"
 	"github.com/getlantern/quicproxy"
 )
@@ -89,7 +89,7 @@ func (t HandledErrorType) String() string {
 }
 
 type ProxyListener interface {
-	OnProxies(map[string]*apipb.ProxyConfig)
+	OnProxies(map[string]*commonconfig.ProxyConfig)
 }
 
 type Flashlight struct {
@@ -108,7 +108,7 @@ type Flashlight struct {
 	errorHandler      func(HandledErrorType, error)
 	dhtupContext      *dhtup.Context
 	mxProxyListeners  sync.RWMutex
-	proxyListeners    []func(map[string]*apipb.ProxyConfig, config.Source)
+	proxyListeners    []func(map[string]*commonconfig.ProxyConfig, config.Source)
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
@@ -244,13 +244,13 @@ func (f *Flashlight) FeatureOptions(feature string, opts config.FeatureOptions) 
 	return global.UnmarshalFeatureOptions(feature, opts)
 }
 
-func (f *Flashlight) addProxyListener(listener func(proxies map[string]*apipb.ProxyConfig, src config.Source)) {
+func (f *Flashlight) addProxyListener(listener func(proxies map[string]*commonconfig.ProxyConfig, src config.Source)) {
 	f.mxProxyListeners.Lock()
 	defer f.mxProxyListeners.Unlock()
 	f.proxyListeners = append(f.proxyListeners, listener)
 }
 
-func (f *Flashlight) notifyProxyListeners(proxies map[string]*apipb.ProxyConfig, src config.Source) {
+func (f *Flashlight) notifyProxyListeners(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
 	f.mxProxyListeners.RLock()
 	defer f.mxProxyListeners.RUnlock()
 	for _, l := range f.proxyListeners {
@@ -263,7 +263,7 @@ func (f *Flashlight) notifyProxyListeners(proxies map[string]*apipb.ProxyConfig,
 
 func (f *Flashlight) startConfigFetch() func() {
 	proxiesDispatch := func(conf interface{}, src config.Source) {
-		proxyMap := conf.(map[string]*apipb.ProxyConfig)
+		proxyMap := conf.(map[string]*commonconfig.ProxyConfig)
 		f.notifyProxyListeners(proxyMap, src)
 	}
 	globalDispatch := func(conf interface{}, src config.Source) {
@@ -383,10 +383,10 @@ func New(
 			log.Errorf("%v: %v", t, err)
 		},
 		dhtupContext:   dhtupContext,
-		proxyListeners: make([]func(map[string]*apipb.ProxyConfig, config.Source), 0),
+		proxyListeners: make([]func(map[string]*commonconfig.ProxyConfig, config.Source), 0),
 	}
 
-	f.addProxyListener(func(proxies map[string]*apipb.ProxyConfig, src config.Source) {
+	f.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
 		log.Debug("Applying proxy config with proxies")
 		dialers := f.client.Configure(chained.CopyConfigs(proxies))
 		if dialers != nil {
