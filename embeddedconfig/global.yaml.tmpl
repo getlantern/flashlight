@@ -229,7 +229,7 @@ featureoptions:
     - https://s3.eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
     - https://s3-eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
     - https://d3mm73d1kmj7zd.cloudfront.net/
-    replicarustendpoint: *FrankfurtReplicaRust
+    replicarustendpoint: &FrankfurtReplicaRust http://replica-search-aws.lantern.io/
     staticpeeraddrs: []
     # This list is from https://github.com/getlantern/dhtup/blob/c8fde3e1a38abcb9709df07194ea2de3ae33bdbe/trackers.go#L14
     # We want to cover several transports (schemes here), support announces for Replica content and otherwise, and ensure results for regional differences. To that end a China tracker would be nice if it wasn't a vulnerability.
@@ -243,17 +243,17 @@ featureoptions:
     webseedbaseurls: *AllReplicaBaseUrls
 
     # These are for compatibility with clients that don't load all options per-country.
-    replicarustdefaultendpoint: &FrankfurtReplicaRust http://replica-search-aws.lantern.io/
+    replicarustdefaultendpoint: *FrankfurtReplicaRust
     replicarustendpoints:
       "RU": *FrankfurtReplicaRust
-      "IR": *IranReplicaRust
+      "IR": &IranReplicaRust "https://ir.ss7hc6jm.io"
 
     # Here follows options per-country
 
     "IR":
       trackers: *GlobalTrackers
       staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
-      replicarustendpoint: &IranReplicaRust "https://ir.ss7hc6jm.io"
+      replicarustendpoint: *IranReplicaRust
       metadatabaseurls: &IranReplicaBaseUrls
         # Arvancloud also supports bucket.s3-endpoint schema, which I think would be more identifiable.
         - https://s3.ir-thr-at1.arvanstorage.com/gmt/
