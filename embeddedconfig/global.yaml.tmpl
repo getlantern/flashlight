@@ -245,7 +245,7 @@ featureoptions:
     # These are for compatibility with clients that don't load all options per-country.
     replicarustdefaultendpoint: *FrankfurtReplicaRust
     replicarustendpoints:
-      "RU": *FrankfurtReplicaRust
+      "CN": &GlobalReplicaRust http://replica-search.lantern.io/
       "IR": &IranReplicaRust "https://ir.ss7hc6jm.io"
 
     # Here follows options per-country
@@ -273,7 +273,7 @@ featureoptions:
       metadatabaseurls:
       - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
       - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
-      replicarustendpoint: &GlobalReplicaRust http://replica-search.lantern.io/
+      replicarustendpoint: *GlobalReplicaRust
       staticpeeraddrs: []
       trackers: *GlobalTrackers
       webseedbaseurls:

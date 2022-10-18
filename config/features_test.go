@@ -170,7 +170,7 @@ func TestReplicaConfigBackwardsCompatibility(t *testing.T) {
 	assert := assert.New(t)
 	fos := getReplicaOptionsRoot(t)
 	// This checks that the alias propagates to the old config correctly.
-	assert.Equal(fos.ByCountry["RU"].ReplicaRustEndpoint, fos.ReplicaRustEndpoints["RU"])
+	assert.Equal(fos.ByCountry["CN"].ReplicaRustEndpoint, fos.ReplicaRustEndpoints["CN"])
 }
 
 func TestP2PEnabledAndFeatures(t *testing.T) {
