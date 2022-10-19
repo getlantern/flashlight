@@ -7,10 +7,10 @@ import (
 
 	"github.com/getlantern/cmux/v2"
 	"github.com/getlantern/cmuxprivate"
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/psmux"
 	"github.com/xtaci/smux"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/ops"
 )
 
@@ -23,7 +23,7 @@ type multiplexedImpl struct {
 	multiplexedDial cmux.DialFN
 }
 
-func multiplexed(wrapped proxyImpl, name string, s *apipb.ProxyConfig) (proxyImpl, error) {
+func multiplexed(wrapped proxyImpl, name string, s *config.ProxyConfig) (proxyImpl, error) {
 	log.Debugf("Enabling multiplexing for %v", name)
 	poolSize := s.MultiplexedPhysicalConns
 	if poolSize < 1 {
@@ -52,7 +52,7 @@ func (impl *multiplexedImpl) dialServer(op *ops.Op, ctx context.Context) (net.Co
 
 // createMultiplexedProtocol configures a cmux multiplexing protocol
 // according to settings.
-func createMultiplexedProtocol(s *apipb.ProxyConfig) (cmux.Protocol, error) {
+func createMultiplexedProtocol(s *config.ProxyConfig) (cmux.Protocol, error) {
 	protocol := s.MultiplexedProtocol
 	if protocol == "" {
 		protocol = defaultMuxProtocol
@@ -68,7 +68,7 @@ func createMultiplexedProtocol(s *apipb.ProxyConfig) (cmux.Protocol, error) {
 	}
 }
 
-func configureSmux(pc *apipb.ProxyConfig) (cmux.Protocol, error) {
+func configureSmux(pc *config.ProxyConfig) (cmux.Protocol, error) {
 	config := smux.DefaultConfig()
 	config.KeepAliveInterval = IdleTimeout / 2
 	config.KeepAliveTimeout = IdleTimeout
@@ -88,7 +88,7 @@ func configureSmux(pc *apipb.ProxyConfig) (cmux.Protocol, error) {
 	return cmux.NewSmuxProtocol(config), nil
 }
 
-func configurePsmux(pc *apipb.ProxyConfig) (cmux.Protocol, error) {
+func configurePsmux(pc *config.ProxyConfig) (cmux.Protocol, error) {
 	config := psmux.DefaultConfig()
 	config.KeepAliveInterval = IdleTimeout / 2
 	config.KeepAliveTimeout = IdleTimeout

@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/hellosplitter"
@@ -30,7 +30,7 @@ type httpsImpl struct {
 	sync.Mutex
 }
 
-func newHTTPSImpl(configDir, name, addr string, pc *apipb.ProxyConfig, uc common.UserConfig, dialCore coreDialer) (proxyImpl, error) {
+func newHTTPSImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig, dialCore coreDialer) (proxyImpl, error) {
 	const timeout = 5 * time.Second
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)

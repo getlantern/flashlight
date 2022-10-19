@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
+	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/rot13"
 	"github.com/getlantern/yaml"
 )
@@ -83,8 +83,8 @@ func newGlobalConfig(t *testing.T) *Global {
 	return global
 }
 
-func newProxiesConfig(t *testing.T) map[string]*apipb.ProxyConfig {
-	proxies := make(map[string]*apipb.ProxyConfig)
+func newProxiesConfig(t *testing.T) map[string]*commonconfig.ProxyConfig {
+	proxies := make(map[string]*commonconfig.ProxyConfig)
 	err := yaml.Unmarshal([]byte(proxiesYamlTemplate), proxies)
 	abortOnError(t, err)
 	return proxies

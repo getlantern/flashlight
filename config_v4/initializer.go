@@ -9,7 +9,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
+	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/embeddedconfig"
 )
@@ -172,7 +172,7 @@ func newGlobalUnmarshaler(flags map[string]interface{}) func(bytes []byte) (inte
 
 func newProxiesUnmarshaler() func(bytes []byte) (interface{}, error) {
 	return func(bytes []byte) (interface{}, error) {
-		servers := make(map[string]*apipb.ProxyConfig)
+		servers := make(map[string]*commonconfig.ProxyConfig)
 		if err := yaml.Unmarshal(bytes, servers); err != nil {
 			return nil, err
 		}

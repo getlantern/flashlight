@@ -14,11 +14,11 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
 	shadowsocks "github.com/getlantern/lantern-shadowsocks/client"
 
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 )
 
 const (
@@ -33,7 +33,7 @@ type shadowsocksImpl struct {
 	rngmx          sync.Mutex
 }
 
-func newShadowsocksImpl(name, addr string, pc *apipb.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	secret := ptSetting(pc, "shadowsocks_secret")
 	cipher := ptSetting(pc, "shadowsocks_cipher")
 	upstream := ptSetting(pc, "shadowsocks_upstream")

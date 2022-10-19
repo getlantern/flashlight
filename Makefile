@@ -1,13 +1,18 @@
 DISABLE_PORT_RANDOMIZATION ?=
 
 SHELL := /bin/bash
-SOURCES := $(shell find . -name '*[^_test].go')
+PROTO_SOURCES = $(shell find . -name '*.proto')
+GENERATED_PROTO_SOURCES = $(shell echo "$(PROTO_SOURCES)" | sed 's/\.proto/\.pb\.go/g')
+SOURCES = $(GENERATED_PROTO_SOURCES) $(shell find . -name '*[^_test].go')
 
 REVISION_DATE := $(shell git log -1 --pretty=format:%ad --date=format:%Y%m%d.%H%M%S)
 BUILD_DATE := $(shell date -u +%Y%m%d.%H%M%S)
 
 VERSION ?= $$VERSION
 LDFLAGS := -s -w -X github.com/getlantern/flashlight/common.RevisionDate=$(REVISION_DATE) -X github.com/getlantern/flashlight/common.BuildDate=$(BUILD_DATE) -X github.com/getlantern/flashlight/common.CompileTimePackageVersion=$(VERSION)
+
+%.pb.go: %.proto
+	protoc --go_out=. --go_opt=paths=source_relative $<
 
 test-and-cover: $(SOURCES)
 	@echo "mode: count" > profile.cov && \

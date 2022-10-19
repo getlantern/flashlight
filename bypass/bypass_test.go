@@ -3,15 +3,15 @@ package bypass
 import (
 	"testing"
 
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestHTTPRequest(t *testing.T) {
 	p := &proxy{
-		ProxyConfig: &apipb.ProxyConfig{
+		ProxyConfig: &config.ProxyConfig{
 			Addr: "http://cookies.com",
 		},
 	}

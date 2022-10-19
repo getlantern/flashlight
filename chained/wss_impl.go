@@ -7,8 +7,8 @@ import (
 	"net"
 	"net/url"
 
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tinywss"
@@ -22,7 +22,7 @@ type wssImpl struct {
 	dialer         tinywss.Client
 }
 
-func newWSSImpl(addr string, pc *apipb.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newWSSImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	var rt tinywss.RoundTripHijacker
 	var err error
 
@@ -68,7 +68,7 @@ func (impl *wssImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, erro
 	})
 }
 
-func wssHTTPRoundTripper(s *apipb.ProxyConfig) (tinywss.RoundTripHijacker, error) {
+func wssHTTPRoundTripper(s *config.ProxyConfig) (tinywss.RoundTripHijacker, error) {
 	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
 		log.Debugf("tinywss HTTP Roundtripper dialing %v", addr)
 		// the configured proxy address is always contacted
@@ -76,7 +76,7 @@ func wssHTTPRoundTripper(s *apipb.ProxyConfig) (tinywss.RoundTripHijacker, error
 	}), nil
 }
 
-func wssHTTPSRoundTripper(pc *apipb.ProxyConfig) (tinywss.RoundTripHijacker, error) {
+func wssHTTPSRoundTripper(pc *config.ProxyConfig) (tinywss.RoundTripHijacker, error) {
 	serverName := pc.TLSServerNameIndicator
 	sendServerName := true
 	if serverName == "" {

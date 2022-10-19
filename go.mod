@@ -72,7 +72,6 @@ require (
 	github.com/getlantern/kcpwrapper v0.0.0-20220503142841-b0e764933966
 	github.com/getlantern/keyman v0.0.0-20210622061955-aa0d47d4932c
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
-	github.com/getlantern/lantern-cloud v0.0.0-20220907144819-73a5c8d87a5d
 	github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210601195915-e04471aa4920
 	github.com/getlantern/measured v0.0.0-20210507000559-ec5307b2b8be
 	github.com/getlantern/mitm v0.0.0-20210622063317-e6510574903b
@@ -133,7 +132,10 @@ require (
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
-require github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
+require (
+	github.com/getlantern/common v1.2.0
+	github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
+)
 
 require (
 	github.com/OperatorFoundation/Replicant-go/Replicant/v3 v3.0.8 // indirect
@@ -144,6 +146,7 @@ require (
 	github.com/OperatorFoundation/shapeshifter-ipc/v3 v3.0.0 // indirect
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/exp v0.0.0-20220428152302-39d4317da171 // indirect
 )
 
