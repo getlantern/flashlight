@@ -51,7 +51,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ steps.bump_tag.outputs.tag }}
-        release_name: genconfig release ${{ steps.commit.outputs.short }}
+        release_name: genconfig release ${{ steps.bump_tag.outputs.tag }}
         draft: false
         prerelease: false
     - name: Upload Release Asset
