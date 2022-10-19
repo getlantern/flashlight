@@ -10,6 +10,12 @@ import (
 	mrand "math/rand"
 )
 
+// EnableLanternCloudReferralHeader is a build flag which enables config
+// proxying to the lantern-cloud API. Proxying works by setting a header. When
+// config-server sees the header, it proxies the config request to the
+// lantern-cloud API as a 'referral'.
+var EnableLanternCloudReferralHeader string
+
 const (
 	AppHeader                           = "X-Lantern-App"
 	VersionHeader                       = "X-Lantern-Version"
@@ -33,6 +39,7 @@ const (
 	SleepHeader                         = "X-Lantern-Sleep"
 	XBQHeader                           = "XBQ"
 	XBQHeaderv2                         = "XBQv2"
+	LanternCloudReferralHeader          = "X-Lantern-API-Referral"
 )
 
 var (
@@ -51,6 +58,10 @@ func AddCommonNonUserHeaders(uc UserConfig, req *http.Request) {
 	}
 	if len(uc.GetEnabledExperiments()) > 0 {
 		req.Header.Set("x-lantern-dev-experiments", strings.Join(uc.GetEnabledExperiments(), ","))
+	}
+
+	if EnableLanternCloudReferralHeader == "true" {
+		req.Header.Set(LanternCloudReferralHeader, "true")
 	}
 
 	req.Header.Set(PlatformHeader, Platform)
