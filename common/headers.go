@@ -60,7 +60,8 @@ func AddCommonNonUserHeaders(uc UserConfig, req *http.Request) {
 		req.Header.Set("x-lantern-dev-experiments", strings.Join(uc.GetEnabledExperiments(), ","))
 	}
 
-	if EnableLanternCloudReferralHeader == "true" {
+	if strings.ToLower(EnableLanternCloudReferralHeader) == "true" ||
+		EnableLanternCloudReferralHeader == "1" {
 		req.Header.Set(LanternCloudReferralHeader, "true")
 	}
 
