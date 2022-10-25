@@ -334,6 +334,8 @@ github.com/getlantern/common v1.2.0/go.mod h1:0SEJgqSudY1N0PP012aNY2raInQVUeXOp0
 github.com/getlantern/context v0.0.0-20190109183933-c447772a6520/go.mod h1:L+mq6/vvYHKjCX2oez0CgEAJmbq1fbb/oNJIWQkBybY=
 github.com/getlantern/context v0.0.0-20220418194847-3d5e7a086201 h1:oEZYEpZo28Wdx+5FZo4aU7JFXu0WG/4wJWese5reQSA=
 github.com/getlantern/context v0.0.0-20220418194847-3d5e7a086201/go.mod h1:Y9WZUHEb+mpra02CbQ/QczLUe6f0Dezxaw5DCJlJQGo=
+github.com/getlantern/cromagnon v0.0.0-20221025032520-f10e877f2b0d h1:4QFxEAn3q6Jd6R/caf2Ollsf7ZWPUYtzenRi5MyKda4=
+github.com/getlantern/cromagnon v0.0.0-20221025032520-f10e877f2b0d/go.mod h1:TCbg4hGNCSllKkIy1JEOpq9zR8a5bUJdS/b9FzBNUpg=
 github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1 h1:7Iij6/WnGBryEpBuhLEOwWFX61ubsx3ann4fRHKJTlY=
 github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1/go.mod h1:5iIcBTk/mor1hyVGucgUKLnH8ucQ0Gk+gmHog7g7NIw=
 github.com/getlantern/dhtup v0.0.0-20220627142103-ed614929df34 h1:CfJzYk0FFQwX88JQBOImXgrnQH5ISFah+2/dgpxAr6g=
@@ -393,8 +395,8 @@ github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7/go.mod h1:zx/1xUU
 github.com/getlantern/golog v0.0.0-20200929154820-62107891371a/go.mod h1:ZyIjgH/1wTCl+B+7yH1DqrWp6MPJqESmwmEQ89ZfhvA=
 github.com/getlantern/golog v0.0.0-20201105130739-9586b8bde3a9/go.mod h1:ZyIjgH/1wTCl+B+7yH1DqrWp6MPJqESmwmEQ89ZfhvA=
 github.com/getlantern/golog v0.0.0-20210606115803-bce9f9fe5a5f/go.mod h1:ZyIjgH/1wTCl+B+7yH1DqrWp6MPJqESmwmEQ89ZfhvA=
-github.com/getlantern/golog v0.0.0-20211223150227-d4d95a44d873 h1:nnod94N4hMKb7pyJmnXDk+HR23o1S2CbZ4oMKzHbp9A=
-github.com/getlantern/golog v0.0.0-20211223150227-d4d95a44d873/go.mod h1:+ZU1h+iOVqWReBpky6d5Y2WL0sF2Llxu+QcxJFs2+OU=
+github.com/getlantern/golog v0.0.0-20221014032422-49749a7176cf h1:VLM1gChzNF4KrFRa0BJDo/OnxG9ZDI6JNcNkqz4mZEI=
+github.com/getlantern/golog v0.0.0-20221014032422-49749a7176cf/go.mod h1:+ZU1h+iOVqWReBpky6d5Y2WL0sF2Llxu+QcxJFs2+OU=
 github.com/getlantern/gonat v0.0.0-20201001145726-634575ba87fb h1:tDQA66mL1vTHKSMu3Ras/9Tk884ipPAhcdQHXpnDhxg=
 github.com/getlantern/gonat v0.0.0-20201001145726-634575ba87fb/go.mod h1:ysiamkJHyOrnlNmtDCCccH1NbFdgEBSJRg44DWiOxcY=
 github.com/getlantern/goproxy v0.0.0-20220805074304-4a43a9ed4ec6 h1:/jwJjghYGhLhpPYmO4IyHLG+VMVVZaIdgp8oe1dSx6E=
@@ -1048,6 +1050,9 @@ github.com/rs/dnscache v0.0.0-20211102005908-e0241e321417/go.mod h1:qe5TWALJ8/a1
 github.com/russross/blackfriday v1.5.2/go.mod h1:JO/DiYxRf+HjHt06OyowR9PTA263kcR/rfWxYHBV53g=
 github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46 h1:GHRpF1pTW19a8tTFrMLUcfWwyC0pnifVo2ClaLq+hP8=
 github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46/go.mod h1:uAQ5PCi+MFsC7HjREoAz1BU+Mq60+05gifQSsHSDG/8=
+github.com/sagernet/cronet-go v0.0.0-20220816045649-24139c8f10b0 h1:PyHFiCNGgWhl/PrJSLVe+OVtwHwRXFeiOMe/zlGHNiw=
+github.com/sagernet/cronet-go v0.0.0-20220816045649-24139c8f10b0/go.mod h1:knFNW+h+BtbcZwR3hyH4BdV9wtFPfYxy3U8v5XQeKXo=
+github.com/sagernet/sing v0.0.0-20220614131337-ea019b365507 h1:rMYMyB6N0ARFg0bwgG1Ahl+h0HCXO74yzT8PYvxOuPs=
 github.com/samber/lo v1.25.0 h1:H8F6cB0RotRdgcRCivTByAQePaYhGMdOTJIj2QFS2I0=
 github.com/samber/lo v1.25.0/go.mod h1:2I7tgIv8Q1SG2xEIkRq0F2i2zgxVpnyPOP0d3Gj2r+A=
 github.com/sclevine/agouti v3.0.0+incompatible/go.mod h1:b4WX9W9L1sfQKXeJf1mUTLZKJ48R1S7H23Ji7oFO5Bw=
@@ -1112,7 +1117,6 @@ github.com/spf13/cobra v0.0.3/go.mod h1:1l0Ry5zgKvJasoi3XT1TypsSe7PqH0Sj9dhYf7v3
 github.com/spf13/jwalterweatherman v1.0.0/go.mod h1:cQK4TGJAtQXfYWX+Ddv3mKDzgVb68N+wFjFa4jdeBTo=
 github.com/spf13/pflag v1.0.3/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnInEg4=
 github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
-github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
 github.com/spf13/viper v1.4.0/go.mod h1:PTJ7Z/lr49W6bUbkmS1V3by4uWynFiR9p7+dSq/yZzE=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.1.1/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
@@ -1164,8 +1168,9 @@ github.com/ugorji/go/codec v1.2.6 h1:7kbGefxLoDBuYXOms4yD7223OpNMMPNPZxXk5TvFcyQ
 github.com/ugorji/go/codec v1.2.6/go.mod h1:V6TCNZ4PHqoHGFZuSG1W8nrCzzdgA2DozYxWFFpvxTw=
 github.com/ulikunitz/xz v0.5.6/go.mod h1:2bypXElzHzzJZwzH67Y6wb67pO62Rzfn7BSiF4ABRW8=
 github.com/ulikunitz/xz v0.5.8/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0oWt/14=
-github.com/ulikunitz/xz v0.5.9 h1:RsKRIA2MO8x56wkkcd3LbtcE/uMszhb6DpRf+3uwa3I=
 github.com/ulikunitz/xz v0.5.9/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0oWt/14=
+github.com/ulikunitz/xz v0.5.10 h1:t92gobL9l3HE202wg3rlk19F6X+JOxl9BBrCCMYEYd8=
+github.com/ulikunitz/xz v0.5.10/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0oWt/14=
 github.com/vharitonsky/iniflags v0.0.0-20180513140207-a33cd0b5f3de/go.mod h1:irMhzlTz8+fVFj6CH2AN2i+WI5S6wWFtK3MBCIxIpyI=
 github.com/viant/assertly v0.4.8/go.mod h1:aGifi++jvCrUaklKEKT0BU95igDNaqkvz+49uaYMPRU=
 github.com/viant/toolbox v0.24.0/go.mod h1:OxMCG57V0PXuIP2HNQrtJf2CjqdmbrOx5EkMILuUhzM=

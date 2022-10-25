@@ -192,6 +192,8 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 		impl, err = newTLSMasqImpl(configDir, name, addr, s, uc, reportDialCore)
 	case "starbridge":
 		impl, err = newStarbridgeImpl(name, addr, s, reportDialCore)
+	case "httpstream":
+		impl, err = newCronetImpl(name, addr, s, reportDialCore)
 	default:
 		err = errors.New("Unknown transport: %v", transport).With("addr", addr).With("plugabble-transport", transport)
 	}

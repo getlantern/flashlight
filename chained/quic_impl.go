@@ -35,7 +35,6 @@ func newQUICImpl(name, addr string, pc *config.ProxyConfig, reportDialCore repor
 
 	quicConf := &quicwrapper.Config{
 		MaxIncomingStreams:      -1,
-		KeepAlive:               true,
 		DisablePathMTUDiscovery: disablePathMTUDiscovery,
 	}
 

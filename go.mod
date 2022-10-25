@@ -29,6 +29,8 @@ replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336
 
 // replace github.com/getlantern/dhtup => ../dhtup
 
+// replace github.com/getlantern/cromagnon => ../cromagnon
+
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.2.0
 	github.com/PuerkitoBio/goquery v1.7.0
@@ -59,7 +61,7 @@ require (
 	github.com/getlantern/fronted v0.0.0-20220707102541-0478ae49d9d3
 	github.com/getlantern/geolookup v0.0.0-20210901195705-eec711834596
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
-	github.com/getlantern/golog v0.0.0-20211223150227-d4d95a44d873
+	github.com/getlantern/golog v0.0.0-20221014032422-49749a7176cf
 	github.com/getlantern/grtrack v0.0.0-20210901195719-bdf9e1d12dac // indirect
 	github.com/getlantern/hellosplitter v0.1.1
 	github.com/getlantern/hidden v0.0.0-20220104173330-f221c5a24770
@@ -134,6 +136,7 @@ require (
 
 require (
 	github.com/getlantern/common v1.2.0
+	github.com/getlantern/cromagnon v0.0.0-20221025032520-f10e877f2b0d
 	github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
 )
 
@@ -147,7 +150,7 @@ require (
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/alecthomas/atomic v0.1.0-alpha2 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/sagernet/cronet-go v0.0.0-20220816045649-24139c8f10b0 // indirect
 	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d // indirect
 )
 
@@ -311,7 +314,7 @@ require (
 	github.com/tidwall/btree v1.3.1 // indirect
 	github.com/tjfoc/gmsm v1.3.2 // indirect
 	github.com/tkuchiki/go-timezone v0.2.0 // indirect
-	github.com/ulikunitz/xz v0.5.9 // indirect
+	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2 // indirect
 	gitlab.com/yawning/edwards25519-extra.git v0.0.0-20211229043746-2f91fcc9fbdb // indirect
