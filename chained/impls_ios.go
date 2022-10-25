@@ -1,9 +1,11 @@
-//go:build iosapp
-// +build iosapp
+//go:build ios
 
 package chained
 
-import "github.com/getlantern/errors"
+import (
+	"github.com/getlantern/common/config"
+	"github.com/getlantern/errors"
+)
 
 func newKCPImpl(s *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	return nil, errors.New("KCP is not supported on iOS")
