@@ -1,5 +1,4 @@
-//go:build !iosapp
-// +build !iosapp
+//go:build !ios
 
 package chained
 

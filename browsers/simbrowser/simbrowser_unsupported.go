@@ -1,4 +1,4 @@
-// +build !darwin,!windows darwin,iosapp
+//go:build (!darwin && !windows) || (darwin && ios)
 
 package simbrowser
 

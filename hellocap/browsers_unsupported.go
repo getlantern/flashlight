@@ -1,4 +1,4 @@
-// +build !windows,!darwin darwin,iosapp
+//go:build (!windows && !darwin) || (darwin && ios)
 
 package hellocap
 

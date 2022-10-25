@@ -102,7 +102,7 @@ if let host = proxyAddr?.httpHost {
 lanternsdk/TestApp contains a test iOS application demonstrating use of the lanternsdk on iOS.
 
 ## A note on iOS and memory usage
-The iOS application needs to run as a background process on iOS, meaning that it's severely memory restricted. Because of this, we disable a lot of protocols and extra features using `// +build !iosapp` in order to conserve memory.
+The iOS application needs to run as a background process on iOS, meaning that it's severely memory restricted. Because of this, we disable a lot of protocols and extra features using `// go:build !ios` in order to conserve memory.
 
 ### Why not use // +build !ios
 go-mobile automatically sets the `ios` build tag when building for iOS. In our case, we don't use this because in addition to the iOS app, we also distribute an iOS SDK that's intended for embedding inside of user-interactice apps. This SDK does not have to run in the background and is thus not memory constrained in the same way as our iOS app. Consequently, the sdk can and does include all of the standard lantern protocols and features.
