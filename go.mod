@@ -10,6 +10,8 @@ replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0
 
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20221004112352-e7c04248adcb
 
+replace github.com/sagernet/cronet-go => github.com/getlantern/cronet-go v0.0.0-20221025125419-0a4b7ac2071c
+
 //replace github.com/getlantern/yinbi-server => ../yinbi-server
 
 // replace github.com/getlantern/mandrill => /home/soltzen/dev/soltzen/mandrill

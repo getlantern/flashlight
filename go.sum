@@ -336,6 +336,8 @@ github.com/getlantern/context v0.0.0-20220418194847-3d5e7a086201 h1:oEZYEpZo28Wd
 github.com/getlantern/context v0.0.0-20220418194847-3d5e7a086201/go.mod h1:Y9WZUHEb+mpra02CbQ/QczLUe6f0Dezxaw5DCJlJQGo=
 github.com/getlantern/cromagnon v0.0.0-20221025032520-f10e877f2b0d h1:4QFxEAn3q6Jd6R/caf2Ollsf7ZWPUYtzenRi5MyKda4=
 github.com/getlantern/cromagnon v0.0.0-20221025032520-f10e877f2b0d/go.mod h1:TCbg4hGNCSllKkIy1JEOpq9zR8a5bUJdS/b9FzBNUpg=
+github.com/getlantern/cronet-go v0.0.0-20221025125419-0a4b7ac2071c h1:/0qTPMNmbUI4T7qAW0PmHudEHBtMX9xT5pZo/jw1Os8=
+github.com/getlantern/cronet-go v0.0.0-20221025125419-0a4b7ac2071c/go.mod h1:knFNW+h+BtbcZwR3hyH4BdV9wtFPfYxy3U8v5XQeKXo=
 github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1 h1:7Iij6/WnGBryEpBuhLEOwWFX61ubsx3ann4fRHKJTlY=
 github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1/go.mod h1:5iIcBTk/mor1hyVGucgUKLnH8ucQ0Gk+gmHog7g7NIw=
 github.com/getlantern/dhtup v0.0.0-20220627142103-ed614929df34 h1:CfJzYk0FFQwX88JQBOImXgrnQH5ISFah+2/dgpxAr6g=
@@ -1050,8 +1052,6 @@ github.com/rs/dnscache v0.0.0-20211102005908-e0241e321417/go.mod h1:qe5TWALJ8/a1
 github.com/russross/blackfriday v1.5.2/go.mod h1:JO/DiYxRf+HjHt06OyowR9PTA263kcR/rfWxYHBV53g=
 github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46 h1:GHRpF1pTW19a8tTFrMLUcfWwyC0pnifVo2ClaLq+hP8=
 github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46/go.mod h1:uAQ5PCi+MFsC7HjREoAz1BU+Mq60+05gifQSsHSDG/8=
-github.com/sagernet/cronet-go v0.0.0-20220816045649-24139c8f10b0 h1:PyHFiCNGgWhl/PrJSLVe+OVtwHwRXFeiOMe/zlGHNiw=
-github.com/sagernet/cronet-go v0.0.0-20220816045649-24139c8f10b0/go.mod h1:knFNW+h+BtbcZwR3hyH4BdV9wtFPfYxy3U8v5XQeKXo=
 github.com/sagernet/sing v0.0.0-20220614131337-ea019b365507 h1:rMYMyB6N0ARFg0bwgG1Ahl+h0HCXO74yzT8PYvxOuPs=
 github.com/samber/lo v1.25.0 h1:H8F6cB0RotRdgcRCivTByAQePaYhGMdOTJIj2QFS2I0=
 github.com/samber/lo v1.25.0/go.mod h1:2I7tgIv8Q1SG2xEIkRq0F2i2zgxVpnyPOP0d3Gj2r+A=
