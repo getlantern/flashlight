@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -203,6 +204,32 @@ func (c *Client) MigrateDeviceID(user common.UserConfig, oldDeviceID string) err
 
 	resp := &BaseResponse{}
 	return c.execute(user, http.MethodPost, "migrate-device-id", query, resp)
+}
+
+// RedeemResellerCode redeems a reseller code for the given user
+//
+// Note: In reality, the response for this route from pro-server is not
+// BaseResponse but of this type
+// https://github.com/getlantern/pro-server-neu/blob/34bcdc042e983bf9504014aa066bba6bdedcebdb/handlers/purchase.go#L201.
+// That being said, we don't really care about the response from pro-server
+// here. We just wanna know if it succeeded or failed, which is encapsulated in the fields of BaseResponse.
+func (c *Client) RedeemResellerCode(user common.UserConfig, emailAddress, resellerCode, deviceName, currency string) (*BaseResponse, error) {
+	query := url.Values{
+		"email":          {emailAddress},
+		"resellerCode":   {resellerCode},
+		"idempotencyKey": {strconv.FormatInt(time.Now().UnixMilli(), 10)},
+		"currency":       {currency},
+		"deviceName":     {deviceName},
+		"provider":       {"reseller-code"},
+	}
+
+	resp := &BaseResponse{}
+	if err := c.execute(user, http.MethodPost, "purchase", query, resp); err != nil {
+		log.Errorf("Failed to redeem reseller code: %v", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
