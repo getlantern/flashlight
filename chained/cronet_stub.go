@@ -8,6 +8,6 @@ import (
 	"github.com/getlantern/errors"
 )
 
-func newCronetImpl(s *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newCronetImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	return nil, errors.New("Cronet is not supported in this build")
 }
