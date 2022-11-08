@@ -1,0 +1,4 @@
+bin
+globalconfig*
+replica*
+.git

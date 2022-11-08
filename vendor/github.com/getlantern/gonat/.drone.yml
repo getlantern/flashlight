@@ -1,0 +1,23 @@
+kind: pipeline
+name: default
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+- name: test
+  image: golang
+  privileged: true
+  environment:
+    COVERALLS_TOKEN:
+      from_secret: coveralls_token
+  commands:
+  - apt-get -q -y update
+  - apt-get -q -y install lsof net-tools iptables
+  - iptables -D ufw-before-input -m conntrack --ctstate INVALID -j DROP || echo "Rule not found"
+  - iptables -I OUTPUT -p tcp -m conntrack --ctstate ESTABLISHED --ctdir ORIGINAL --tcp-flags RST RST -j DROP
+  - go test -race
+  - go test -covermode=count -coverprofile=profile.cov
+  - go get github.com/mattn/goveralls
+  - goveralls -service drone.io -coverprofile=profile.cov
