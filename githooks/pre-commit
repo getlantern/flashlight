@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Always vendor dependencies on check-in to make sure CI can build
+echo "Vendoring go dependencies"
+go mod vendor
+# We need this additional step to include CGO dependencies
+go install github.com/goware/modvendor@latest
+modvendor -copy="**/*.c **/*.h" -v
+git add -f vendor

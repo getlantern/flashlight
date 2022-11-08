@@ -48,3 +48,7 @@ Lanternsdk.xcframework: $(SOURCES)
 
 clean:
 	rm -rf .gomobilecache lanternsdk-android.aar Lanternsdk.xcframework
+
+.PHONY: install-githooks
+install-githooks:
+	cp githooks/* .git/hooks/

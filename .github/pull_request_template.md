@@ -1,0 +1,1 @@
+If you changed dependencies (e.g. go.mod or go.sum), did you run `go mod vendor` to vendor it? Really, you should just [install the pre-commit hook](../README.md#vendoring).
