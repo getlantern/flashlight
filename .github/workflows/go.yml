@@ -18,10 +18,6 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version: 1.18
-    - name: Granting private modules access
-      run: |
-          git config --global url."https://${{ secrets.GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-
       # Install gotestfmt on the VM running the action.
     - name: Set up gotestfmt
       uses: haveyoudebuggedit/gotestfmt-action@v2
