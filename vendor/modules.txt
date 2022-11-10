@@ -469,7 +469,7 @@ github.com/getlantern/msgpack/codes
 # github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 ## explicit; go 1.13
 github.com/getlantern/mtime
-# github.com/getlantern/multipath v0.0.0-20220721104633-92b6c4b27b91
+# github.com/getlantern/multipath v0.0.0-20220920195041-55195f38df73
 ## explicit; go 1.18
 github.com/getlantern/multipath
 # github.com/getlantern/netx v0.0.0-20211206143627-7ccfeb739cbd
