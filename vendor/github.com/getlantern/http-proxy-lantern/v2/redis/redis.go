@@ -18,6 +18,7 @@ func NewClient(redisURL string) (*redis.Client, error) {
 	return redis.NewClient(&redis.Options{
 		Addr:     opt.Addr,
 		Password: opt.Password,
+		PoolSize: 2,
 		TLSConfig: &tls.Config{
 			ClientSessionCache: tls.NewLRUClientSessionCache(20),
 		},

@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	utp "github.com/anacrolix/go-libutp"
 	bordaClient "github.com/getlantern/borda/client"
 	"github.com/getlantern/cmux/v2"
 	"github.com/getlantern/cmuxprivate"
@@ -84,7 +83,6 @@ type Proxy struct {
 	TestingLocal                       bool
 	HTTPAddr                           string
 	HTTPMultiplexAddr                  string
-	HTTPUTPAddr                        string
 	BordaReportInterval                time.Duration
 	BordaSamplePercentage              float64
 	BordaBufferSize                    int
@@ -110,7 +108,6 @@ type Proxy struct {
 	TunnelPorts                        string
 	Obfs4Addr                          string
 	Obfs4MultiplexAddr                 string
-	Obfs4UTPAddr                       string
 	Obfs4Dir                           string
 	Obfs4HandshakeConcurrency          int
 	Obfs4MaxPendingHandshakesPerClient int
@@ -119,7 +116,6 @@ type Proxy struct {
 	Benchmark                          bool
 	DiffServTOS                        int
 	LampshadeAddr                      string
-	LampshadeUTPAddr                   string
 	LampshadeKeyCacheSize              int
 	LampshadeMaxClientInitAge          time.Duration
 	VersionCheck                       bool
@@ -199,13 +195,19 @@ type addresses struct {
 // ListenAndServe listens, serves and blocks.
 func (p *Proxy) ListenAndServe() error {
 	if p.CountryLookup == nil {
+		log.Debugf("Maxmind not configured, will not report country data to prometheus or in bandwidth data")
 		p.CountryLookup = geo.NoLookup{}
 	}
 	if p.ISPLookup == nil {
+		log.Debugf("Maxmind not configured, will not report ISP data to prometheus")
 		p.ISPLookup = geo.NoLookup{}
 	}
+
 	p.instrument = instrument.NoInstrument{}
-	if p.PromExporterAddr != "" {
+	if p.PromExporterAddr == "" {
+		log.Debugf("Not enabling prometheus export")
+	} else {
+		log.Debugf("Enabling prometheus export at %v", p.PromExporterAddr)
 		prom := instrument.NewPrometheus(
 			p.CountryLookup,
 			p.ISPLookup,
@@ -362,17 +364,6 @@ func (p *Proxy) ListenAndServe() error {
 		http:           p.HTTPAddr,
 		httpMultiplex:  p.HTTPMultiplexAddr,
 		tlsmasq:        p.TLSMasqAddr,
-	}); err != nil {
-		return err
-	}
-
-	if err := addListenersForBaseTransport(p.listenUTP, &addresses{
-		obfs4:          "",
-		obfs4Multiplex: p.Obfs4UTPAddr,
-		lampshade:      p.LampshadeUTPAddr,
-		http:           "",
-		httpMultiplex:  p.HTTPUTPAddr,
-		tlsmasq:        "",
 	}); err != nil {
 		return err
 	}
@@ -610,12 +601,18 @@ func (p *Proxy) createFilterChain(bl *blacklist.Blacklist) (filters.Chain, proxy
 
 	filterChain = filterChain.Append(
 		proxy.OnFirstOnly(googlefilter.New(p.GoogleSearchRegex, p.GoogleCaptchaRegex)),
-		analytics.New(&analytics.Options{
+	)
+	if p.ProxiedSitesSamplePercentage > 0 && p.ProxiedSitesTrackingID != "" {
+		log.Debugf("Tracking proxied sites in Google Analytics")
+		filterChain = filterChain.Append(analytics.New(&analytics.Options{
 			TrackingID:       p.ProxiedSitesTrackingID,
 			SamplePercentage: p.ProxiedSitesSamplePercentage,
 		}),
-		proxy.OnFirstOnly(devicefilter.NewPost(bl)),
-	)
+		)
+	} else {
+		log.Debugf("Not tracking proxied sites in Google Analytics")
+	}
+	filterChain = filterChain.Append(proxy.OnFirstOnly(devicefilter.NewPost(bl)))
 
 	if !p.TestingLocal {
 		allowedLocalAddrs := []string{"127.0.0.1:7300"}
@@ -705,7 +702,10 @@ func (p *Proxy) createFilterChain(bl *blacklist.Blacklist) (filters.Chain, proxy
 func (p *Proxy) configureBandwidthReporting() (*reportingConfig, listeners.MeasuredReportFN) {
 	var bordaReporter listeners.MeasuredReportFN
 	if p.BordaReportInterval > 0 {
+		log.Debug("Enabling reporting to borda")
 		bordaReporter = borda.Enable(p.BordaReportInterval, p.BordaSamplePercentage, p.BordaBufferSize)
+	} else {
+		log.Debug("Not reporting to borda")
 	}
 	return newReportingConfig(p.CountryLookup, p.ReportingRedisClient, p.EnableReports, bordaReporter, p.instrument, p.throttleConfig), bordaReporter
 }
@@ -837,21 +837,6 @@ func (p *Proxy) listenTCP(addr string, wrapBBR bool) (net.Listener, error) {
 	} else {
 		go packetcounter.Track(p.ExternalIntf, port, p.instrument.TCPPackets)
 	}
-	return l, nil
-}
-
-func (p *Proxy) listenUTP(addr string, wrapBBR bool) (net.Listener, error) {
-	var l net.Listener
-	var err error
-	l, err = utp.NewSocket("udp", addr)
-	if err != nil {
-		return nil, err
-	}
-
-	if p.IdleTimeout > 0 {
-		l = listeners.NewIdleConnListener(l, p.IdleTimeout)
-	}
-
 	return l, nil
 }
 

@@ -1,16 +1,14 @@
-SHELL := /bin/bash
+SHELL := bash
 .DEFAULT_GOAL := build
 GIT_REVISION := $(shell git rev-parse --short HEAD)
-CHANGE_BIN   := $(shell which git-chglog)
 
 # Binaries compiled for the host OS will be output to BUILD_DIR.
 # Binaries compiles for distribution will be output to DIST_DIR.
 BUILD_DIR   := bin
 DIST_DIR    := dist-bin
+BINARY      := $(DIST_DIR)/http-proxy
 
 SRCS := $(shell find . -name "*.go" -not -path "*_test.go" -not -path "./vendor/*") go.mod go.sum
-
-GO_VERSION := 1.17.7
 
 DOCKER_IMAGE_TAG := http-proxy-builder
 DOCKER_VOLS = "-v $$PWD/../../..:/src"
@@ -40,17 +38,6 @@ endif
 
 .PHONY: build dist distnochange dist-on-linux dist-on-docker clean test system-checks
 
-# This tags the current version and creates a CHANGELOG for the current directory.
-define tag-changelog
-	echo "Tagging..." && \
-	git tag -a "$$VERSION" -f --annotate -m"Tagged $$VERSION" && \
-	git push --tags -f && \
-	$(CHANGE_BIN) --output CHANGELOG.md && \
-	git add CHANGELOG.md && \
-	git commit -m "Updated changelog for $$VERSION" && \
-	git push origin HEAD
-endef
-
 guard-%:
 	 @ if [ -z '${${*}}' ]; then echo 'Environment variable $* not set' && exit 1; fi
 
@@ -58,11 +45,6 @@ require-version: guard-VERSION
 	@if ! [[ "$$VERSION" =~ v[0-9]+[.][0-9]+[.][0-9]+ ]]; then \
 		echo "VERSION must be a semantic version like 'v1.2.10'"; \
 		exit 1; \
-	fi
-
-require-change:
-	@ if [ "$(CHANGE_BIN)" = "" ]; then \
-		echo 'Missing "git-chglog" command. See https://github.com/git-chglog/git-chglog'; exit 1; \
 	fi
 
 # n.b. The http-proxy-custom prefix is to facilitate searching for custom binaries in the S3 UI.
@@ -97,9 +79,10 @@ dist-on-linux: $(DIST_DIR)
 
 dist-on-docker: $(DIST_DIR) docker-builder
 	GO111MODULE=on go mod vendor && \
-	docker run -e GIT_REVISION='$(GIT_REVISION)' -e BUILD_TYPE='$(BUILD_TYPE)' \
+	docker run --platform=linux/amd64 -e GIT_REVISION='$(GIT_REVISION)' -e BUILD_TYPE='$(BUILD_TYPE)' \
 	-v $$PWD:/src -t $(DOCKER_IMAGE_TAG) /bin/bash -c \
-	'cd /src && go build -o $(DIST_DIR)/http-proxy -ldflags="-X main.revision=$$GIT_REVISION -X main.build_type=$$BUILD_TYPE" -mod=vendor ./http-proxy'
+	'cd /src && CGO_ENABLED=1 go build -o $(BINARY) -ldflags="-X main.revision=$$GIT_REVISION -X main.build_type=$$BUILD_TYPE" -mod=vendor ./http-proxy' && \
+	file $(BINARY) && ls -lh $(BINARY)
 
 $(DIST_DIR)/http-proxy: $(SRCS)
 	@if [ "$(BUILD_WITH_DOCKER)" = "true" ]; then \
@@ -110,8 +93,10 @@ $(DIST_DIR)/http-proxy: $(SRCS)
 
 distnochange: $(DIST_DIR)/http-proxy
 
-dist: require-version require-change $(DIST_DIR)/http-proxy
-	$(call tag-changelog)
+dist: require-version $(DIST_DIR)/http-proxy
+	echo "Tagging..." && \
+	git tag -a "$$VERSION" -f --annotate -m"Tagged $$VERSION" && \
+	git push --tags
 
 deploy: $(DIST_DIR)/http-proxy
 	s3cmd put $(DIST_DIR)/http-proxy s3://http-proxy/http-proxy && \
@@ -141,7 +126,7 @@ docker-builder: system-checks
 	DOCKER_CONTEXT=.$(DOCKER_IMAGE_TAG)-context && \
 	mkdir -p $$DOCKER_CONTEXT && \
 	cp Dockerfile $$DOCKER_CONTEXT && \
-	docker build -t $(DOCKER_IMAGE_TAG) --build-arg go_version=go$(GO_VERSION) $$DOCKER_CONTEXT
+	docker build -t $(DOCKER_IMAGE_TAG) $$DOCKER_CONTEXT
 
 test:
 	./test.bash $(REDIS_LOGS)

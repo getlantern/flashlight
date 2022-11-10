@@ -58,8 +58,7 @@ const (
 )
 
 var (
-	log               = golog.LoggerFor("testsupport")
-	tlsmasqOriginAddr string
+	log = golog.LoggerFor("testsupport")
 	//go:embed global-cfg.yaml
 	globalCfg []byte
 	//go:embed proxies-template.yaml
@@ -185,12 +184,12 @@ func (helper *Helper) Close() {
 func (helper *Helper) startWebServer() error {
 	lh, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
-		return fmt.Errorf("Unable to listen for HTTP connections: %v", err)
+		return fmt.Errorf("unable to listen for HTTP connections: %v", err)
 	}
 	helper.listeners = append(helper.listeners, lh)
 	ls, err := tlsdefaults.Listen("localhost:0", "webkey.pem", "webcert.pem")
 	if err != nil {
-		return fmt.Errorf("Unable to listen for HTTPS connections: %v", err)
+		return fmt.Errorf("unable to listen for HTTPS connections: %v", err)
 	}
 	helper.listeners = append(helper.listeners, ls)
 	go func() {
@@ -224,13 +223,10 @@ func (helper *Helper) startProxyServer() error {
 		TestingLocal:              true,
 		HTTPAddr:                  helper.HTTPSProxyServerAddr,
 		HTTPMultiplexAddr:         helper.HTTPSSmuxProxyServerAddr,
-		HTTPUTPAddr:               helper.HTTPSUTPAddr,
 		Obfs4Addr:                 helper.OBFS4ProxyServerAddr,
-		Obfs4UTPAddr:              helper.OBFS4UTPProxyServerAddr,
 		Obfs4Dir:                  filepath.Join(helper.ConfigDir, obfs4SubDir),
 		Obfs4HandshakeConcurrency: obfs4HandshakeConcurrency,
 		LampshadeAddr:             helper.LampshadeProxyServerAddr,
-		LampshadeUTPAddr:          helper.LampshadeUTPProxyServerAddr,
 		QUICIETFAddr:              helper.QUICIETFProxyServerAddr,
 		WSSAddr:                   helper.WSSProxyServerAddr,
 		TLSMasqAddr:               helper.TLSMasqProxyServerAddr,
@@ -303,7 +299,7 @@ func (helper *Helper) startProxyServer() error {
 func (helper *Helper) startConfigServer() error {
 	l, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
-		return fmt.Errorf("Unable to listen for config server connection: %v", err)
+		return fmt.Errorf("unable to listen for config server connection: %v", err)
 	}
 	helper.listeners = append(helper.listeners, l)
 	go func() {
@@ -415,7 +411,7 @@ func (helper *Helper) buildProxies(proto string) (map[string]*config.ProxyConfig
 	var srv config.ProxyConfig
 	err := yaml.Unmarshal(proxiesTemplate, &srv)
 	if err != nil {
-		return nil, fmt.Errorf("Could not unmarshal config %v", err)
+		return nil, fmt.Errorf("could not unmarshal config %v", err)
 	}
 
 	srv.AuthToken = Token
@@ -432,14 +428,14 @@ func (helper *Helper) buildProxies(proto string) (map[string]*config.ProxyConfig
 
 		bridgelineFile, err2 := ioutil.ReadFile(filepath.Join(filepath.Join(helper.ConfigDir, obfs4SubDir), "obfs4_bridgeline.txt"))
 		if err2 != nil {
-			return nil, fmt.Errorf("Could not read obfs4_bridgeline.txt: %v", err2)
+			return nil, fmt.Errorf("could not read obfs4_bridgeline.txt: %v", err2)
 		}
-		obfs4extract := regexp.MustCompile(".+cert=([^\\s]+).+")
+		obfs4extract := regexp.MustCompile(`.+cert=([^\s]+).+`)
 		srv.Cert = string(obfs4extract.FindSubmatch(bridgelineFile)[1])
 	} else {
 		cert, err2 := ioutil.ReadFile(CertFile)
 		if err2 != nil {
-			return nil, fmt.Errorf("Could not read cert %v", err2)
+			return nil, fmt.Errorf("could not read cert %v", err2)
 		}
 		srv.Cert = string(cert)
 		if proto == "lampshade" {

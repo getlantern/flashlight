@@ -373,8 +373,8 @@ github.com/getlantern/hidden
 github.com/getlantern/http-proxy/listeners
 github.com/getlantern/http-proxy/proxyfilters
 github.com/getlantern/http-proxy/server
-# github.com/getlantern/http-proxy-lantern/v2 v2.7.4
-## explicit; go 1.17
+# github.com/getlantern/http-proxy-lantern/v2 v2.8.0
+## explicit; go 1.18
 github.com/getlantern/http-proxy-lantern/v2
 github.com/getlantern/http-proxy-lantern/v2/analytics
 github.com/getlantern/http-proxy-lantern/v2/analytics/engine
