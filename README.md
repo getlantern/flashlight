@@ -6,7 +6,7 @@ The Lantern desktop application can be found at [getlantern/lantern-desktop](lan
 
 ## Vendoring
 
-When config-server builds in CI, it uses vendored dependencies. To avoid having to remember to run this manually, you can install a git pre-commit hook with `make install-githooks`.
+When `flashlight` builds in CI, it uses vendored dependencies. To avoid having to remember to run this manually, you can install a git pre-commit hook with `make install-githooks`.
 
 ## Process for making changes to [config](config)
 flashlight is configured with per-proxy configuration loaded from the config-server, and global configuration loaded from S3 at runtime.
