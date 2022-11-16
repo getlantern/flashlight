@@ -183,7 +183,7 @@ func TestPollProxies(t *testing.T) {
 			assert.True(t, len(val.Addr) > 6)
 		}
 
-		for i := 1; i <= 400; i++ {
+		for i := 1; i <= 1000; i++ {
 			fi, err = os.Stat(file)
 			if err == nil && fi != nil && fi.ModTime().After(mtime) {
 				//log.Debugf("Got newer mod time?")
