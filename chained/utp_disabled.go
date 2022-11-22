@@ -1,4 +1,4 @@
-// +build android iosapp ios linux
+//go:build android || ios || linux
 
 package chained
 

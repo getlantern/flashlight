@@ -1,7 +1,4 @@
-// +build !android
-// +build !iosapp
-// +build !ios
-// +build !linux
+//go:build !android && !ios && !linux
 
 package chained
 
