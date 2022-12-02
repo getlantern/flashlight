@@ -133,28 +133,6 @@ func TestMatomoEnabled(t *testing.T) {
 	assert.True(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, 500, false, "us"), "Matomo is enabled for a high User ID")
 }
 
-func TestReplicaByCountry(t *testing.T) {
-	assert := assert.New(t)
-	fos := getReplicaOptionsRoot(t)
-	assert.Contains(fos.ByCountry, "RU")
-	assert.NotContains(fos.ByCountry, "AU")
-	assert.NotEmpty(fos.ByCountry)
-	globalTrackers := fos.Trackers
-	assert.NotEmpty(globalTrackers)
-	// Check the countries pull in the trackers using the anchor. Just change this if they stop
-	// using the same trackers. I really don't want this to break out the gate is all.
-	assert.Equal(fos.ByCountry["CN"].Trackers, globalTrackers)
-	// It's okay for Russia to have different trackers.
-	assert.NotEmpty(fos.ByCountry["RU"].Trackers)
-	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
-}
-
-func getReplicaOptionsRoot(t *testing.T) (fos ReplicaOptionsRoot) {
-	g := globalFromTemplate(t)
-	require.NoError(t, g.UnmarshalFeatureOptions(FeatureReplica, &fos))
-	return
-}
-
 func globalFromTemplate(t *testing.T) *Global {
 	var w bytes.Buffer
 	// We could write into a pipe, but that requires concurrency and we're old-school in tests.
