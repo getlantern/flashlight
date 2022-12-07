@@ -55,11 +55,6 @@ type ReplicaOptionsRoot struct {
 	// Options tailored to country. This could be used to pattern match any arbitrary string really.
 	// mapstructure should ignore the field name.
 	ByCountry map[string]ReplicaOptions `mapstructure:",remain"`
-	// Deprecated. An unmatched country uses the embedded ReplicaOptions.ReplicaRustEndpoint.
-	// Removing this will break unmarshalling config.
-	ReplicaRustDefaultEndpoint string
-	// Deprecated. Use ByCountry.ReplicaRustEndpoint.
-	ReplicaRustEndpoints map[string]string
 }
 
 func (ro *ReplicaOptionsRoot) fromMap(m map[string]interface{}) error {
@@ -327,8 +322,8 @@ func (g ClientGroup) Validate() error {
 	return nil
 }
 
-//Includes checks if the ClientGroup includes the user, device and country
-//combination, assuming the group has been validated.
+// Includes checks if the ClientGroup includes the user, device and country
+// combination, assuming the group has been validated.
 func (g ClientGroup) Includes(platform, appName, version string, userID int64, isPro bool, geoCountry string) bool {
 	if g.UserCeil > 0 {
 		// Unknown user ID doesn't belong to any user range

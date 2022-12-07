@@ -160,17 +160,8 @@ func TestReplicaByCountry(t *testing.T) {
 	assert.NotEmpty(globalTrackers)
 	// Check the countries pull in the trackers using the anchor. Just change this if they stop
 	// using the same trackers. I really don't want this to break out the gate is all.
-	assert.Equal(fos.ByCountry["CN"].Trackers, globalTrackers)
 	assert.NotEmpty(fos.ByCountry["RU"].Trackers)
 	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
-}
-
-// TestReplicaConfigBackwardsCompatibility checks if the old Replica config format (with "ReplicaRustEndpoints") still work with the new config, which has country-specific configs (using ByCountry["RU"]
-func TestReplicaConfigBackwardsCompatibility(t *testing.T) {
-	assert := assert.New(t)
-	fos := getReplicaOptionsRoot(t)
-	// This checks that the alias propagates to the old config correctly.
-	assert.Equal(fos.ByCountry["CN"].ReplicaRustEndpoint, fos.ReplicaRustEndpoints["CN"])
 }
 
 func TestP2PEnabledAndFeatures(t *testing.T) {
