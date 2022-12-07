@@ -237,7 +237,7 @@ featureoptions:
     trackers: &GlobalTrackers
     - udp://opentor.org:2710/announce
     - http://tracker4.itzmx.com:2710/announce
-    - udp://tracker.opentrackr.org:1337/announce
+    - udp://tracker.bittorrent.cloud:42069/announce
     - https://tracker.nanoha.org:443/announce
     - http://t.nyaatracker.com:80/announce
     webseedbaseurls: *AllReplicaBaseUrls
@@ -399,6 +399,7 @@ domainroutingrules:
   s3.ir-thr-at1.arvanstorage.com: md
 
   # Replica http(s) BitTorrent trackers that run on non-standard ports (80 and 443?) should be listed here.
+  tracker.bittorrent.cloud: p
   tracker.opentrackr.org: p
   9.rarbg.com: p
   tracker.openbittorrent.com: p
