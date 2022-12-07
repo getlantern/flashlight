@@ -14,7 +14,7 @@ on:
 jobs:
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04 # the binary produced on newer Ubuntu versions won't run on our rather old cloudmaster
     steps:
     - name: Checkout
       uses: actions/checkout@v3
