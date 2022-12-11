@@ -242,6 +242,11 @@ featureoptions:
     - http://t.nyaatracker.com:80/announce
     webseedbaseurls: *AllReplicaBaseUrls
 
+    # These are for compatibility with clients that don't load all options per-country.
+    replicarustdefaultendpoint: *FrankfurtReplicaRust
+    replicarustendpoints:
+      "CN": *FrankfurtReplicaRust
+
     # Here follows options per-country
 
     "IR":
@@ -417,6 +422,14 @@ proxiedsites:
 trustedcas: {{range .cas}}
 - commonname: "{{.CommonName}}"
   cert: "{{.Cert}}"{{end}}
+
+# This is the original global config, still here for compatibility with very old clients.
+replica:
+  webseedbaseurls: *AllReplicaBaseUrls
+  trackers: *GlobalTrackers
+  staticpeeraddrs: []
+  metadatabaseurls: *AllReplicaBaseUrls
+  replicaserviceendpoint: *FrankfurtReplicaRust
 
 otel:
   endpoint: api.honeycomb.io:443
