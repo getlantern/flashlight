@@ -14,9 +14,10 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/Jigsaw-Code/outline-ss-server/client"
+	"github.com/Jigsaw-Code/outline-ss-server/prefix"
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
-	shadowsocks "github.com/getlantern/lantern-shadowsocks/client"
 
 	"github.com/getlantern/flashlight/ops"
 )
@@ -27,7 +28,7 @@ const (
 
 type shadowsocksImpl struct {
 	reportDialCore reportDialCoreFn
-	client         shadowsocks.Client
+	client         client.Client
 	upstream       string
 	rng            *mrand.Rand
 	rngmx          sync.Mutex
@@ -37,6 +38,10 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 	secret := ptSetting(pc, "shadowsocks_secret")
 	cipher := ptSetting(pc, "shadowsocks_cipher")
 	upstream := ptSetting(pc, "shadowsocks_upstream")
+	// potentialPrefix should be a valid value taken from here
+	// https://github.com/getlantern/lantern-shadowsocks/blob/805a0ddbe9c19a54c7e4c96e6651155f92c8a486/prefix/types.go#L11
+	// Else, we'll default to not using a prefix.
+	potentialPrefix := ptSetting(pc, "shadowsocks_prefix")
 	if upstream == "" {
 		upstream = defaultShadowsocksUpstreamSuffix
 	}
@@ -49,10 +54,13 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 	if err != nil {
 		return nil, errors.New("unable to parse port in address %v: %v", addr, err)
 	}
-	client, err := shadowsocks.NewClient(host, port, secret, cipher)
+	cl, err := client.NewClient(host, port, secret, cipher)
 	if err != nil {
 		return nil, errors.New("failed to create shadowsocks client: %v", err)
 	}
+	cl.SetTCPSaltGenerator(
+		client.NewPrefixSaltGenerator(
+			prefix.FromString(potentialPrefix).Make))
 
 	var seed int64
 	err = binary.Read(crand.Reader, binary.BigEndian, &seed)
@@ -64,7 +72,7 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 
 	return &shadowsocksImpl{
 		reportDialCore: reportDialCore,
-		client:         client,
+		client:         cl,
 		upstream:       upstream,
 		rng:            rng,
 	}, nil

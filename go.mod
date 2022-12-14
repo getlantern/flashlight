@@ -27,6 +27,8 @@ replace github.com/eycorsican/go-tun2socks => github.com/getlantern/go-tun2socks
 // on this unmerged PR against gomobile - https://github.com/golang/mobile/pull/58.
 replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336-0bdf708b6d0f
 
+replace github.com/Jigsaw-Code/outline-ss-server => github.com/getlantern/lantern-shadowsocks v1.3.6-0.20221214082121-805a0ddbe9c1
+
 // replace github.com/getlantern/dhtup => ../dhtup
 
 require (
@@ -72,7 +74,6 @@ require (
 	github.com/getlantern/kcpwrapper v0.0.0-20220503142841-b0e764933966
 	github.com/getlantern/keyman v0.0.0-20210622061955-aa0d47d4932c
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
-	github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210601195915-e04471aa4920
 	github.com/getlantern/measured v0.0.0-20210507000559-ec5307b2b8be
 	github.com/getlantern/mitm v0.0.0-20210622063317-e6510574903b
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
@@ -115,7 +116,7 @@ require (
 	github.com/pborman/uuid v1.2.1
 	github.com/refraction-networking/utls v1.0.0
 	github.com/shadowsocks/go-shadowsocks2 v0.1.4-0.20201002022019-75d43273f5a5
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
 	gitlab.com/yawning/obfs4.git v0.0.0-20220204003609-77af0cba934d
@@ -126,13 +127,14 @@ require (
 	go.opentelemetry.io/otel/trace v1.9.0
 	go.uber.org/atomic v1.9.0
 	golang.org/x/mobile v0.0.0-20210831151748-9cba7bc03c0f
-	golang.org/x/net v0.0.0-20220708220712-1185a9018129
-	golang.org/x/sys v0.0.0-20220708085239-5a0f0661e09d
-	google.golang.org/protobuf v1.28.0
+	golang.org/x/net v0.1.0
+	golang.org/x/sys v0.3.0
+	google.golang.org/protobuf v1.28.1
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
 require (
+	github.com/Jigsaw-Code/outline-ss-server v0.0.0-00010101000000-000000000000
 	github.com/getlantern/common v1.2.0
 	github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
 )
@@ -147,7 +149,7 @@ require (
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/alecthomas/atomic v0.1.0-alpha2 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210601195915-e04471aa4920 // indirect
 	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d // indirect
 )
 
@@ -247,7 +249,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.1 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/juju/ratelimit v1.0.1 // indirect
-	github.com/klauspost/compress v1.15.7 // indirect
+	github.com/klauspost/compress v1.15.12 // indirect
 	github.com/klauspost/cpuid v1.3.1 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/klauspost/reedsolomon v1.9.9 // indirect
@@ -256,7 +258,7 @@ require (
 	github.com/marten-seemann/qtls-go1-16 v0.1.5 // indirect
 	github.com/marten-seemann/qtls-go1-17 v0.1.1 // indirect
 	github.com/marten-seemann/qtls-go1-18 v0.1.1 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mdlayher/netlink v1.1.0 // indirect
 	github.com/mholt/archiver/v3 v3.5.1 // indirect
 	github.com/mikioh/tcp v0.0.0-20180707144002-02a37043a4f7 // indirect
@@ -270,8 +272,8 @@ require (
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
-	github.com/oschwald/geoip2-golang v1.5.0 // indirect
-	github.com/oschwald/maxminddb-golang v1.8.0 // indirect
+	github.com/oschwald/geoip2-golang v1.8.0 // indirect
+	github.com/oschwald/maxminddb-golang v1.10.0 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
 	github.com/pierrec/lz4/v4 v4.1.8 // indirect
 	github.com/pion/datachannel v1.5.2 // indirect
@@ -294,10 +296,10 @@ require (
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v1.12.2 // indirect
+	github.com/prometheus/client_golang v1.13.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
-	github.com/prometheus/common v0.35.0 // indirect
-	github.com/prometheus/procfs v0.7.3 // indirect
+	github.com/prometheus/common v0.37.0 // indirect
+	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/rs/dnscache v0.0.0-20211102005908-e0241e321417 // indirect
 	github.com/samber/lo v1.25.0
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
@@ -311,7 +313,7 @@ require (
 	github.com/tidwall/btree v1.3.1 // indirect
 	github.com/tjfoc/gmsm v1.3.2 // indirect
 	github.com/tkuchiki/go-timezone v0.2.0 // indirect
-	github.com/ulikunitz/xz v0.5.9 // indirect
+	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2 // indirect
 	gitlab.com/yawning/edwards25519-extra.git v0.0.0-20211229043746-2f91fcc9fbdb // indirect
@@ -321,16 +323,15 @@ require (
 	go.uber.org/goleak v1.1.12 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.19.1 // indirect
-	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
-	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
-	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
-	golang.org/x/text v0.3.8-0.20211105212822-18b340fc7af2 // indirect
-	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect
-	golang.org/x/tools v0.1.10 // indirect
-	golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f // indirect
+	golang.org/x/crypto v0.1.0 // indirect
+	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
+	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
+	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
+	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20220630174209-ad1d48641aa7 // indirect
-	google.golang.org/grpc v1.47.0 // indirect
+	google.golang.org/genproto v0.0.0-20220802133213-ce4fa296bf78 // indirect
+	google.golang.org/grpc v1.48.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v3 v3.0.1
 )
