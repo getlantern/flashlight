@@ -413,6 +413,10 @@ domainroutingrules:
   # Donorbox doesn't like proxied traffic sometimes, send it direct
   donorbox.org: md
 
+  # FreeKassa is a Russian payment processor, send it direct
+  # https://github.com/getlantern/lantern-internal/issues/5841
+  pay.freekassa.ru: md
+
 proxiedsites:
   delta:
     additions: []
