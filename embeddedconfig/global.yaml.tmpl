@@ -229,6 +229,8 @@ featureoptions:
     - https://d3mm73d1kmj7zd.cloudfront.net/
     # This is a domain access endpoint for the Replica Cloudflare R2 bucket. See https://dash.cloudflare.com/1c693b3f1031ed33f68653b1e67dfbef/r2/overview/buckets/replica/settings and the domain's DNS configuration.
     - https://replica-r2.lantern.io/
+    # This endpoint triggers objects to be copied from older buckets if they're not yet present on R2, and then redirects to the correct replica endpoint.
+    - https://replica-r2-slurper.lantern.io/
     replicarustendpoint: &FrankfurtReplicaRust http://replica-search-aws.lantern.io/
     staticpeeraddrs: []
     # This list is from https://github.com/getlantern/dhtup/blob/c8fde3e1a38abcb9709df07194ea2de3ae33bdbe/trackers.go#L14
