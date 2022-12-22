@@ -242,8 +242,12 @@ featureoptions:
     - http://t.nyaatracker.com:80/announce
     webseedbaseurls: *AllReplicaBaseUrls
 
-    # These are for compatibility with clients that don't load all options per-country.
+    # These are for compatibility with clients that don't load all options per-country. They can be removed when android-lantern is released with the fix to use the updated ReplicaOptions handling.
+
     replicarustdefaultendpoint: *FrankfurtReplicaRust
+
+    # This probably isn't needed, but some tests might still assume that "CN" is a key, and I'm not 100% YAML won't barf if this field is missing. Also it means that old clients might not fallback to a hardcoded Global instance and use this instead. All the reasons.
+
     replicarustendpoints:
       "CN": *FrankfurtReplicaRust
 
