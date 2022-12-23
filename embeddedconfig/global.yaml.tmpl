@@ -222,11 +222,6 @@ featureoptions:
     # unencrypted. See here: https://github.com/getlantern/flashlight/pull/1198
 
     metadatabaseurls: &AllReplicaBaseUrls
-    - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
-    - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
-    - https://s3.eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
-    - https://s3-eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
-    - https://d3mm73d1kmj7zd.cloudfront.net/
     # This is a domain access endpoint for the Replica Cloudflare R2 bucket. See https://dash.cloudflare.com/1c693b3f1031ed33f68653b1e67dfbef/r2/overview/buckets/replica/settings and the domain's DNS configuration.
     - https://replica-r2.lantern.io/
     # This endpoint triggers objects to be copied from older buckets if they're not yet present on R2, and then redirects to the correct replica endpoint.
