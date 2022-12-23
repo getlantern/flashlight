@@ -15,10 +15,11 @@ import (
 	"sync"
 
 	"github.com/Jigsaw-Code/outline-ss-server/client"
-	"github.com/Jigsaw-Code/outline-ss-server/prefix"
+
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
 
+	"github.com/getlantern/flashlight/chained/prefixgen"
 	"github.com/getlantern/flashlight/ops"
 )
 
@@ -38,10 +39,8 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 	secret := ptSetting(pc, "shadowsocks_secret")
 	cipher := ptSetting(pc, "shadowsocks_cipher")
 	upstream := ptSetting(pc, "shadowsocks_upstream")
-	// potentialPrefix should be a valid value taken from here
-	// https://github.com/getlantern/lantern-shadowsocks/blob/805a0ddbe9c19a54c7e4c96e6651155f92c8a486/prefix/types.go#L11
-	// Else, we'll default to not using a prefix.
-	potentialPrefix := ptSetting(pc, "shadowsocks_prefix")
+	prefixGen := ptSetting(pc, "shadowsocks_prefix_generator")
+
 	if upstream == "" {
 		upstream = defaultShadowsocksUpstreamSuffix
 	}
@@ -58,9 +57,16 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 	if err != nil {
 		return nil, errors.New("failed to create shadowsocks client: %v", err)
 	}
-	cl.SetTCPSaltGenerator(
-		client.NewPrefixSaltGenerator(
-			prefix.FromString(potentialPrefix).Make))
+
+	if prefixGen != "" {
+		gen, err := prefixgen.New(prefixGen)
+		if err != nil {
+			log.Errorf("failed to parse shadowsocks prefix generator: %v", err)
+		} else {
+			prefixFunc := func() ([]byte, error) { return gen(), nil }
+			cl.SetTCPSaltGenerator(client.NewPrefixSaltGenerator(prefixFunc))
+		}
+	}
 
 	var seed int64
 	err = binary.Read(crand.Reader, binary.BigEndian, &seed)

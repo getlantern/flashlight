@@ -17,7 +17,6 @@ github.com/HdrHistogram/hdrhistogram-go
 ## explicit; go 1.18
 github.com/Jigsaw-Code/outline-ss-server/client
 github.com/Jigsaw-Code/outline-ss-server/net
-github.com/Jigsaw-Code/outline-ss-server/prefix
 github.com/Jigsaw-Code/outline-ss-server/shadowsocks
 github.com/Jigsaw-Code/outline-ss-server/slicepool
 # github.com/OperatorFoundation/Replicant-go/Replicant/v3 v3.0.8
