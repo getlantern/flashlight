@@ -159,8 +159,6 @@ func (p *proxy) sendToBypass() int64 {
 	}
 	if resp.StatusCode != http.StatusOK {
 		log.Errorf("Unexpected response code %v: for response %#v", resp.Status, resp)
-		// If we don't get a 200, we'll revert to the default sleep time.
-		return -1
 	} else {
 		log.Debugf("Successfully got response from: %v", p.name)
 	}
@@ -241,8 +239,8 @@ func (p *proxy) stop() {
 // the provided function overrides the default sleep.
 func (p *proxy) callRandomly(f func() int64) {
 	calls := atomic.NewInt64(0)
-	var elapsed time.Duration
-	var sleep = func() <-chan time.Time {
+
+	var sleep = func(extraSleepTime int64, elapsed time.Duration) <-chan time.Time {
 		defer func() {
 			calls.Inc()
 		}()
@@ -254,18 +252,21 @@ func (p *proxy) callRandomly(f func() int64) {
 			base = 3
 		}
 		var delay = elapsed + (time.Duration(base*2+mrand.Intn(base*5)) * time.Second)
-
+		delay = delay + time.Duration(extraSleepTime)*time.Second
 		log.Debugf("Next call in %v", delay)
 		return time.After(delay)
 	}
 
+	// This is passed back from the server to add longer sleeps if desired.
+	var extraSleepTime int64
+	var elapsed time.Duration
 	for {
 		select {
 		case <-p.done:
 			return
-		case <-sleep():
+		case <-sleep(extraSleepTime, elapsed):
 			start := time.Now()
-			f()
+			extraSleepTime = f()
 			elapsed = time.Since(start)
 		}
 	}
