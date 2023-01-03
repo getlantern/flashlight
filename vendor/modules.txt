@@ -335,7 +335,7 @@ github.com/getlantern/filepersist
 # github.com/getlantern/framed v0.0.0-20190601192238-ceb6431eeede
 ## explicit; go 1.12
 github.com/getlantern/framed
-# github.com/getlantern/fronted v0.0.0-20220707102541-0478ae49d9d3
+# github.com/getlantern/fronted v0.0.0-20221102104652-893705395782
 ## explicit; go 1.18
 github.com/getlantern/fronted
 # github.com/getlantern/geo v0.0.0-20210511192032-f563c52422c5
