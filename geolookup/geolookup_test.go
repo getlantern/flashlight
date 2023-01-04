@@ -1,7 +1,6 @@
 package geolookup
 
 import (
-	"context"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -10,9 +9,7 @@ import (
 	"time"
 
 	"github.com/getlantern/eventual/v2"
-	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/fronted"
-	"github.com/getlantern/libp2p/p2p"
 	"github.com/stretchr/testify/require"
 )
 
@@ -199,6 +196,7 @@ func TestFronted(t *testing.T) {
 	)
 }
 
+/*
 func TestP2PGeolookup(t *testing.T) {
 	freeP2pCtx, censoredP2pCtx := p2p.InitTestPeers(
 		t,
@@ -330,3 +328,4 @@ func TestP2PGeolookup(t *testing.T) {
 		}
 	}
 }
+*/

@@ -34,6 +34,8 @@ const (
 	FeatureOtel                 = "otel"
 	FeatureP2PFreePeer          = "p2pfreepeer"
 	FeatureP2PCensoredPeer      = "p2pcensoredpeer"
+	FeatureBroflake             = "broflake"
+	FeatureProxiedFlow          = "proxiedflow"
 )
 
 var (
@@ -148,6 +150,51 @@ func (o *P2PCensoredPeerOptions) fromMap(m map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+type BroflakeOptions struct {
+	DiscoverySrv   string
+	Endpoint       string
+	StunSrvs       []string
+	GenesisAddr    string
+	NATFailTimeout time.Duration
+	ICEFailTimeout time.Duration
+}
+
+func (o *BroflakeOptions) fromMap(m map[string]interface{}) error {
+	var err error
+
+	o.DiscoverySrv, err = somethingFromMap[string](m, "discovery_server")
+	if err != nil {
+		return fmt.Errorf("decoding discovery_server: %w", err)
+	}
+
+	o.Endpoint, err = somethingFromMap[string](m, "endpoint")
+	if err != nil {
+		return fmt.Errorf("decoding endpoint: %w", err)
+	}
+
+	o.StunSrvs, err = stringArrFromMap(m, "stun_servers")
+	if err != nil {
+		return fmt.Errorf("decoding stun_servers: %w", err)
+	}
+
+	o.GenesisAddr, err = somethingFromMap[string](m, "genesis_addr")
+	if err != nil {
+		return fmt.Errorf("decoding nat_timeout: %w", err)
+	}
+
+	o.NATFailTimeout, err = durationFromMap(m, "nat_timeout")
+	if err != nil {
+		return fmt.Errorf("decoding nat_timeout: %w", err)
+	}
+
+	o.ICEFailTimeout, err = durationFromMap(m, "ice_timeout")
+	if err != nil {
+		return fmt.Errorf("decoding ice_timeout: %w", err)
+	}
+
 	return nil
 }
 
