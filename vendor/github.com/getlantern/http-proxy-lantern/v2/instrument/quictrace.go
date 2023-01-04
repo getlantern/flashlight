@@ -30,6 +30,9 @@ func (t *QuicTracer) DroppedPacket(addr net.Addr, ptype qlog.PacketType, size ql
 	// this indicates some kind of malformed or unexpected packet from remote (vs a lost packet)
 }
 
+func (t *QuicTracer) SentVersionNegotiationPacket(_ net.Addr, dest, src qlog.ArbitraryLenConnectionID, _ []qlog.VersionNumber) {
+}
+
 type QuicConnTracer struct {
 	inst Instrument
 }
@@ -50,12 +53,16 @@ func (t *QuicConnTracer) ClosedConnection(error)                                
 func (t *QuicConnTracer) SentTransportParameters(parameters *qlog.TransportParameters)     {}
 func (t *QuicConnTracer) ReceivedTransportParameters(parameters *qlog.TransportParameters) {}
 func (t *QuicConnTracer) RestoredTransportParameters(parameters *qlog.TransportParameters) {}
-func (t *QuicConnTracer) ReceivedVersionNegotiationPacket(hdr *qlog.Header, versions []qlog.VersionNumber) {
+func (t *QuicConnTracer) ReceivedVersionNegotiationPacket(dest, src qlog.ArbitraryLenConnectionID, versions []qlog.VersionNumber) {
+}
+func (t *QuicConnTracer) ReceivedLongHeaderPacket(hdr *qlog.ExtendedHeader, packetSize qlog.ByteCount, frames []qlog.Frame) {
+}
+func (t *QuicConnTracer) ReceivedShortHeaderPacket(hdr *qlog.ShortHeader, packetSize qlog.ByteCount, frames []qlog.Frame) {
 }
 func (t *QuicConnTracer) ReceivedRetry(hdr *qlog.Header) {}
 func (t *QuicConnTracer) ReceivedPacket(hdr *qlog.ExtendedHeader, size qlog.ByteCount, frames []qlog.Frame) {
 }
-func (t *QuicConnTracer) BufferedPacket(pt qlog.PacketType) {}
+func (t *QuicConnTracer) BufferedPacket(pt qlog.PacketType, count qlog.ByteCount) {}
 func (t *QuicConnTracer) DroppedPacket(pt qlog.PacketType, size qlog.ByteCount, reason qlog.PacketDropReason) {
 }
 func (t *QuicConnTracer) UpdatedMetrics(rttStats *qlog.RTTStats, cwnd, bytesInFlight qlog.ByteCount, packetsInFlight int) {

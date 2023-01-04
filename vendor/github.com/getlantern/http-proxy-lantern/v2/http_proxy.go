@@ -22,6 +22,7 @@ import (
 	"github.com/getlantern/geo"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/gonat"
+	"github.com/getlantern/http-proxy-lantern/v2/otel"
 	shadowsocks "github.com/getlantern/http-proxy-lantern/v2/shadowsocks"
 	"github.com/getlantern/kcpwrapper"
 
@@ -55,7 +56,6 @@ import (
 	"github.com/getlantern/http-proxy-lantern/v2/mimic"
 	"github.com/getlantern/http-proxy-lantern/v2/obfs4listener"
 	"github.com/getlantern/http-proxy-lantern/v2/opsfilter"
-	"github.com/getlantern/http-proxy-lantern/v2/otel"
 	"github.com/getlantern/http-proxy-lantern/v2/ping"
 	"github.com/getlantern/http-proxy-lantern/v2/quic"
 	"github.com/getlantern/http-proxy-lantern/v2/redis"
@@ -82,7 +82,8 @@ type Proxy struct {
 	TestingLocal                       bool
 	HTTPAddr                           string
 	HTTPMultiplexAddr                  string
-	OTELSampleRate                     int
+	HoneycombSampleRate                int
+	TeleportSampleRate                 int
 	ExternalIP                         string
 	CertFile                           string
 	CfgSvrAuthToken                    string
@@ -136,6 +137,7 @@ type Proxy struct {
 	PacketForwardAddr                  string
 	ExternalIntf                       string
 	SessionTicketKeyFile               string
+	FirstSessionTicketKey              string
 	RequireSessionTickets              bool
 	MissingTicketReaction              tlslistener.HandshakeReaction
 	TLSListenerAllowTLS13              bool
@@ -259,9 +261,13 @@ func (p *Proxy) ListenAndServe(ctx context.Context) error {
 		OKDoesNotWaitForUpstream: !p.ConnectOKWaitsForUpstream,
 		OnError:                  p.instrument.WrapConnErrorHandler("proxy_serve", onServerError),
 	})
-	bwReporting, stopOTEL := p.configureBandwidthReporting()
-	defer stopOTEL()
-	defer p.instrument.Close()
+	stopHoneycomb := p.configureHoneycomb()
+	defer stopHoneycomb()
+
+	stopTeleport := p.configureTeleport()
+	defer stopTeleport()
+
+	bwReporting := p.configureBandwidthReporting()
 	// Throttle connections when signaled
 	srv.AddListenerWrappers(lanternlisteners.NewBitrateListener, bwReporting.wrapper)
 
@@ -388,7 +394,10 @@ func (p *Proxy) wrapTLSIfNecessary(fn listenerBuilderFN) listenerBuilderFN {
 		}
 
 		if p.HTTPS {
-			l, err = tlslistener.Wrap(l, p.KeyFile, p.CertFile, p.SessionTicketKeyFile, p.RequireSessionTickets, p.MissingTicketReaction, p.TLSListenerAllowTLS13, p.instrument)
+			l, err = tlslistener.Wrap(
+				l, p.KeyFile, p.CertFile, p.SessionTicketKeyFile, p.FirstSessionTicketKey,
+				p.RequireSessionTickets, p.MissingTicketReaction, p.TLSListenerAllowTLS13,
+				p.instrument)
 			if err != nil {
 				return nil, err
 			}
@@ -488,11 +497,10 @@ func (p *Proxy) buildPsmuxProtocol() (cmux.Protocol, error) {
 	return cmuxprivate.NewPsmuxProtocol(config), nil
 }
 
-func proxyName(hostname string) (proxyName string, dc string) {
+func proxyNameAndDC(hostname string) (proxyName string, dc string) {
 	match := proxyNameRegex.FindStringSubmatch(hostname)
-	// Only set proxy name if it follows our naming convention
 	if len(match) != 5 {
-		return "", ""
+		return proxyName, ""
 	}
 	return match[1], match[3]
 }
@@ -631,27 +639,73 @@ func (p *Proxy) createFilterChain(bl *blacklist.Blacklist) (filters.Chain, proxy
 	}, nil
 }
 
-func (p *Proxy) configureBandwidthReporting() (*reportingConfig, func()) {
-	stop := func() {}
-	if p.OTELSampleRate > 0 {
-		log.Debug("Configuring OpenTelemetry")
-		proxyName, dc := proxyName(p.ProxyName)
-		opts := &otel.Opts{
-			SampleRate:    p.OTELSampleRate,
-			ExternalIP:    p.ExternalIP,
-			ProxyName:     proxyName,
-			Track:         p.Track,
-			DC:            dc,
-			ProxyProtocol: p.ProxyProtocol,
-			IsPro:         p.Pro,
-		}
-		otel.Configure(opts)
-		stop = otel.Stop
-	} else {
-		log.Debug("Not configuring OpenTelemetry")
+func (p *Proxy) configureHoneycomb() func() {
+	if p.HoneycombSampleRate <= 0 {
+		log.Debug("Not configuring Honeycomb")
+		return func() {}
 	}
 
-	return newReportingConfig(p.CountryLookup, p.ReportingRedisClient, p.EnableReports, p.instrument, p.throttleConfig), stop
+	log.Debug("Configuring Honeycomb")
+	return p.configureOTEL(
+		"api.honeycomb.io:443",
+		map[string]string{
+			"x-honeycomb-team": "jskJrfYyNNp2lcJ0WQ8JfD",
+		},
+		p.HoneycombSampleRate,
+		1*time.Minute,
+		false,
+	)
+}
+
+func (p *Proxy) configureTeleport() func() {
+	if p.TeleportSampleRate <= 0 {
+		log.Debug("Not configuring Teleport")
+		return func() {}
+	}
+
+	log.Debug("Configuring Teleport")
+	return p.configureOTEL(
+		"telemetry.iantem.io:443",
+		map[string]string{},
+		p.TeleportSampleRate,
+		1*time.Hour,
+		true,
+	)
+}
+
+func (p *Proxy) configureOTEL(
+	endpoint string,
+	headers map[string]string,
+	sampleRate int,
+	reportingInterval time.Duration,
+	includeDeviceIDs bool,
+) func() {
+	proxyName, dc := proxyNameAndDC(p.ProxyName)
+	opts := &otel.Opts{
+		Endpoint:      endpoint,
+		Headers:       headers,
+		SampleRate:    sampleRate,
+		ExternalIP:    p.ExternalIP,
+		ProxyName:     proxyName,
+		Track:         p.Track,
+		DC:            dc,
+		ProxyProtocol: p.ProxyProtocol,
+		IsPro:         p.Pro,
+	}
+	tp, stop := otel.BuildTracerProvider(opts)
+	if tp != nil {
+		go p.instrument.ReportToOTELPeriodically(reportingInterval, tp, includeDeviceIDs)
+		ogStop := stop
+		stop = func() {
+			p.instrument.ReportToOTEL(tp, includeDeviceIDs)
+			ogStop()
+		}
+	}
+	return stop
+}
+
+func (p *Proxy) configureBandwidthReporting() *reportingConfig {
+	return newReportingConfig(p.CountryLookup, p.ReportingRedisClient, p.EnableReports, p.instrument, p.throttleConfig)
 }
 
 func (p *Proxy) loadThrottleConfig() {
@@ -851,7 +905,9 @@ func (p *Proxy) listenWSS(addr string) (net.Listener, error) {
 	}
 
 	if p.HTTPS {
-		l, err = tlslistener.Wrap(l, p.KeyFile, p.CertFile, p.SessionTicketKeyFile, p.RequireSessionTickets, p.MissingTicketReaction, p.TLSListenerAllowTLS13, p.instrument)
+		l, err = tlslistener.Wrap(
+			l, p.KeyFile, p.CertFile, p.SessionTicketKeyFile, p.FirstSessionTicketKey,
+			p.RequireSessionTickets, p.MissingTicketReaction, p.TLSListenerAllowTLS13, p.instrument)
 		if err != nil {
 			return nil, err
 		}

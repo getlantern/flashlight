@@ -1,6 +1,7 @@
 package tlslistener
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/tls"
 	"fmt"
@@ -9,7 +10,9 @@ import (
 	"time"
 )
 
-func maintainSessionTicketKey(cfg *tls.Config, sessionTicketKeyFile string, keyListener func(keys [][32]byte)) {
+func maintainSessionTicketKey(
+	cfg *tls.Config, sessionTicketKeyFile string, firstKey *[32]byte, keyListener func(keys [][32]byte)) {
+
 	// read cached session ticket keys
 	keyBytes, err := ioutil.ReadFile(sessionTicketKeyFile)
 	if err != nil {
@@ -17,6 +20,10 @@ func maintainSessionTicketKey(cfg *tls.Config, sessionTicketKeyFile string, keyL
 			panic(fmt.Errorf("Unable to read session ticket key file %v: %v", sessionTicketKeyFile, err))
 		}
 		keyBytes = make([]byte, 0)
+	}
+
+	if firstKey != nil {
+		ensureFirstKey(*firstKey, keyBytes)
 	}
 
 	// Create a new key right away
@@ -29,6 +36,24 @@ func maintainSessionTicketKey(cfg *tls.Config, sessionTicketKeyFile string, keyL
 			keyBytes = prependToSessionTicketKeys(cfg, sessionTicketKeyFile, keyBytes, keyListener)
 		}
 	}()
+}
+
+// ensureFirstKey ensures that firstKey is the oldest key in keyBytes, where keyBytes represents a
+// string of session ticket keys in ascending order by age.
+//
+// In other words, when this function returns, keyBytes[len(keyBytes)-32:] == firstKey
+func ensureFirstKey(firstKey [32]byte, keyBytes []byte) {
+	if len(keyBytes) < 32 {
+		keyBytes = append(keyBytes, firstKey[:]...)
+		return
+	}
+
+	currentFirst := keyBytes[len(keyBytes)-32:]
+	if bytes.Equal(currentFirst, firstKey[:]) {
+		return
+	}
+	keyBytes = append(keyBytes, firstKey[:]...)
+	return
 }
 
 func prependToSessionTicketKeys(cfg *tls.Config, sessionTicketKeyFile string, keyBytes []byte, keyListener func(keys [][32]byte)) []byte {

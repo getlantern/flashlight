@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"strings"
 
 	"github.com/lucas-clemente/quic-go/internal/protocol"
 	"github.com/lucas-clemente/quic-go/internal/utils"
@@ -42,11 +41,8 @@ type client struct {
 	logger    utils.Logger
 }
 
-var (
-	// make it possible to mock connection ID generation in the tests
-	generateConnectionID           = protocol.GenerateConnectionID
-	generateConnectionIDForInitial = protocol.GenerateConnectionIDForInitial
-)
+// make it possible to mock connection ID for initial generation in the tests
+var generateConnectionIDForInitial = protocol.GenerateConnectionIDForInitial
 
 // DialAddr establishes a new QUIC connection to a server.
 // It uses a new UDP connection and closes this connection when the QUIC connection is closed.
@@ -193,7 +189,7 @@ func dialContext(
 		return nil, err
 	}
 	config = populateClientConfig(config, createdPacketConn)
-	packetHandlers, err := getMultiplexer().AddConn(pconn, config.ConnectionIDLength, config.StatelessResetKey, config.Tracer)
+	packetHandlers, err := getMultiplexer().AddConn(pconn, config.ConnectionIDGenerator.ConnectionIDLen(), config.StatelessResetKey, config.Tracer)
 	if err != nil {
 		return nil, err
 	}
@@ -236,15 +232,14 @@ func newClient(
 		// is given with a blank ServerName, no ServerName is
 		// used.  This is similar to standard tls package
 		// usage.
-		sni := host
-		if strings.IndexByte(sni, ':') != -1 {
-			var err error
-			sni, _, err = net.SplitHostPort(sni)
-			if err != nil {
-				return nil, err
-			}
+		sni, _, err := net.SplitHostPort(host)
+		if err != nil {
+			// It's ok if net.SplitHostPort returns an error - it could be a hostname/IP address without a port.
+			sni = host
 		}
 		tlsConf.ServerName = sni
+	} else {
+		tlsConf = tlsConf.Clone()
 	}
 
 	// check that all versions are actually supported
@@ -256,7 +251,7 @@ func newClient(
 		}
 	}
 
-	srcConnID, err := generateConnectionID(config.ConnectionIDLength)
+	srcConnID, err := config.ConnectionIDGenerator.GenerateConnectionID()
 	if err != nil {
 		return nil, err
 	}

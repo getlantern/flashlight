@@ -14,8 +14,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/getlantern/errors"
@@ -44,7 +44,8 @@ type Instrument interface {
 	SuspectedProbing(fromIP net.IP, reason string)
 	VersionCheck(redirect bool, method, reason string)
 	ProxiedBytes(sent, recv int, platform, version, app, dataCapCohort string, clientIP net.IP, deviceID, originHost string)
-	Close() error
+	ReportToOTELPeriodically(interval time.Duration, tp *sdktrace.TracerProvider, includeDeviceID bool)
+	ReportToOTEL(tp *sdktrace.TracerProvider, includeDeviceID bool)
 	quicSentPacket()
 	quicLostPacket()
 }
@@ -72,9 +73,11 @@ func (i NoInstrument) SuspectedProbing(fromIP net.IP, reason string)     {}
 func (i NoInstrument) VersionCheck(redirect bool, method, reason string) {}
 func (i NoInstrument) ProxiedBytes(sent, recv int, platform, version, app, dataCapCohort string, clientIP net.IP, deviceID, originHost string) {
 }
-func (i NoInstrument) Close() error    { return nil }
-func (i NoInstrument) quicSentPacket() {}
-func (i NoInstrument) quicLostPacket() {}
+func (i NoInstrument) ReportToOTELPeriodically(interval time.Duration, tp *sdktrace.TracerProvider, includeDeviceID bool) {
+}
+func (i NoInstrument) ReportToOTEL(tp *sdktrace.TracerProvider, includeDeviceID bool) {}
+func (i NoInstrument) quicSentPacket()                                                {}
+func (i NoInstrument) quicLostPacket()                                                {}
 
 // CommonLabels defines a set of common labels apply to all metrics instrumented.
 type CommonLabels struct {
@@ -117,15 +120,16 @@ func (f *instrumentedFilter) Apply(cs *filters.ConnectionState, req *http.Reques
 // PromInstrument is an implementation of Instrument which exports Prometheus
 // metrics.
 type PromInstrument struct {
-	countryLookup    geo.CountryLookup
-	ispLookup        geo.ISPLookup
-	commonLabels     prometheus.Labels
-	commonLabelNames []string
-	filters          map[string]*instrumentedFilter
-	errorHandlers    map[string]func(conn net.Conn, err error)
-	clientStats      map[clientDetails]*usage
-	// originStats      map[originDetails]*usage
-	statsMx sync.Mutex
+	countryLookup           geo.CountryLookup
+	ispLookup               geo.ISPLookup
+	commonLabels            prometheus.Labels
+	commonLabelNames        []string
+	filters                 map[string]*instrumentedFilter
+	errorHandlers           map[string]func(conn net.Conn, err error)
+	clientStats             map[clientDetails]*usage
+	clientStatsWithDeviceID map[clientDetails]*usage
+	originStats             map[originDetails]*usage
+	statsMx                 sync.Mutex
 
 	blacklistChecked, blacklisted, mimicryChecked, mimicked, quicLostPackets, quicSentPackets, tcpConsecRetransmissions, tcpSentDataPackets, throttlingChecked, xbqSent prometheus.Counter
 
@@ -145,14 +149,15 @@ func NewPrometheus(countryLookup geo.CountryLookup, ispLookup geo.ISPLookup, c C
 		i++
 	}
 	p := &PromInstrument{
-		countryLookup:    countryLookup,
-		ispLookup:        ispLookup,
-		commonLabels:     commonLabels,
-		commonLabelNames: commonLabelNames,
-		filters:          make(map[string]*instrumentedFilter),
-		errorHandlers:    make(map[string]func(conn net.Conn, err error)),
-		clientStats:      make(map[clientDetails]*usage),
-		// originStats:      make(map[originDetails]*usage),
+		countryLookup:           countryLookup,
+		ispLookup:               ispLookup,
+		commonLabels:            commonLabels,
+		commonLabelNames:        commonLabelNames,
+		filters:                 make(map[string]*instrumentedFilter),
+		errorHandlers:           make(map[string]func(conn net.Conn, err error)),
+		clientStats:             make(map[clientDetails]*usage),
+		clientStatsWithDeviceID: make(map[clientDetails]*usage),
+		originStats:             make(map[originDetails]*usage),
 		blacklistChecked: promauto.NewCounterVec(prometheus.CounterOpts{
 			Name: "proxy_blacklist_checked_requests_total",
 		}, commonLabelNames).With(commonLabels),
@@ -247,7 +252,6 @@ func NewPrometheus(countryLookup geo.CountryLookup, ispLookup geo.ISPLookup, c C
 		}, append(commonLabelNames, "method", "redirected", "reason")).MustCurryWith(commonLabels),
 	}
 
-	go p.reportToOTELPeriodically()
 	return p
 }
 
@@ -388,6 +392,12 @@ func (p *PromInstrument) ProxiedBytes(sent, recv int, platform, version, app, da
 	p.bytesRecvByISP.With(by_isp).Add(float64(recv))
 
 	clientKey := clientDetails{
+		platform: platform,
+		version:  version,
+		country:  country,
+		isp:      isp,
+	}
+	clientKeyWithDeviceID := clientDetails{
 		deviceID: deviceID,
 		platform: platform,
 		version:  version,
@@ -396,19 +406,20 @@ func (p *PromInstrument) ProxiedBytes(sent, recv int, platform, version, app, da
 	}
 	p.statsMx.Lock()
 	p.clientStats[clientKey] = p.clientStats[clientKey].add(sent, recv)
-	// if originHost != "" {
-	// 	originRoot, err := p.originRoot(originHost)
-	// 	if err == nil {
-	// 		// only record if we could extract originRoot
-	// 		originKey := originDetails{
-	// 			origin:   originRoot,
-	// 			platform: platform,
-	// 			version:  version,
-	// 			country:  country,
-	// 		}
-	// 		p.originStats[originKey] = p.originStats[originKey].add(sent, recv)
-	// 	}
-	// }
+	p.clientStatsWithDeviceID[clientKeyWithDeviceID] = p.clientStatsWithDeviceID[clientKeyWithDeviceID].add(sent, recv)
+	if originHost != "" {
+		originRoot, err := p.originRoot(originHost)
+		if err == nil {
+			// only record if we could extract originRoot
+			originKey := originDetails{
+				origin:   originRoot,
+				platform: platform,
+				version:  version,
+				country:  country,
+			}
+			p.originStats[originKey] = p.originStats[originKey].add(sent, recv)
+		}
+	}
 	p.statsMx.Unlock()
 }
 
@@ -416,6 +427,7 @@ func (p *PromInstrument) ProxiedBytes(sent, recv int, platform, version, app, da
 func (p *PromInstrument) quicSentPacket() {
 	p.quicSentPackets.Inc()
 }
+
 func (p *PromInstrument) quicLostPacket() {
 	p.quicLostPackets.Inc()
 }
@@ -489,27 +501,34 @@ func (u *usage) add(sent int, recv int) *usage {
 	return u
 }
 
-func (p *PromInstrument) reportToOTELPeriodically() {
+func (p *PromInstrument) ReportToOTELPeriodically(interval time.Duration, tp *sdktrace.TracerProvider, includeDeviceID bool) {
 	for {
 		// We randomize the sleep time to avoid bursty submission to OpenTelemetry.
 		// Even though each proxy sends relatively little data, proxies often run fairly
 		// closely synchronized since they all update to a new binary and restart around the same
 		// time. By randomizing each proxy's interval, we smooth out the pattern of submissions.
-		sleepInterval := rand.Int63n(int64(otelReportingInterval * 2))
+		sleepInterval := rand.Int63n(int64(interval * 2))
 		time.Sleep(time.Duration(sleepInterval))
-		p.reportToOTEL()
+		p.ReportToOTEL(tp, includeDeviceID)
 	}
 }
 
-func (p *PromInstrument) reportToOTEL() {
+func (p *PromInstrument) ReportToOTEL(tp *sdktrace.TracerProvider, includeDeviceID bool) {
+	var clientStats map[clientDetails]*usage
 	p.statsMx.Lock()
-	clientStats := p.clientStats
-	// originStats := p.originStats
-	p.clientStats = make(map[clientDetails]*usage)
-	// p.originStats = make(map[originDetails]*usage)
+	if includeDeviceID {
+		clientStats = p.clientStatsWithDeviceID
+		p.clientStatsWithDeviceID = make(map[clientDetails]*usage)
+	} else {
+		clientStats = p.clientStats
+		p.clientStats = make(map[clientDetails]*usage)
+	}
+	originStats := p.originStats
+	p.originStats = make(map[originDetails]*usage)
 	p.statsMx.Unlock()
+
 	for key, value := range clientStats {
-		_, span := otel.Tracer("").
+		_, span := tp.Tracer("").
 			Start(
 				context.Background(),
 				"proxied_bytes",
@@ -524,26 +543,21 @@ func (p *PromInstrument) reportToOTEL() {
 					attribute.String("client_isp", key.isp)))
 		span.End()
 	}
-	// for key, value := range originStats {
-	// 	_, span := otel.Tracer("").
-	// 		Start(
-	// 			context.Background(),
-	// 			"origin_bytes",
-	// 			trace.WithAttributes(
-	// 				attribute.Int("origin_bytes_sent", value.sent),
-	// 				attribute.Int("origin_bytes_recv", value.recv),
-	// 				attribute.Int("origin_bytes_total", value.sent+value.recv),
-	// 				attribute.String("origin", key.origin),
-	// 				attribute.String("client_platform", key.platform),
-	// 				attribute.String("client_version", key.version),
-	// 				attribute.String("client_country", key.country)))
-	// 	span.End()
-	// }
-}
-
-func (p *PromInstrument) Close() error {
-	p.reportToOTEL()
-	return nil
+	for key, value := range originStats {
+		_, span := tp.Tracer("").
+			Start(
+				context.Background(),
+				"origin_bytes",
+				trace.WithAttributes(
+					attribute.Int("origin_bytes_sent", value.sent),
+					attribute.Int("origin_bytes_recv", value.recv),
+					attribute.Int("origin_bytes_total", value.sent+value.recv),
+					attribute.String("origin", key.origin),
+					attribute.String("client_platform", key.platform),
+					attribute.String("client_version", key.version),
+					attribute.String("client_country", key.country)))
+		span.End()
+	}
 }
 
 func (p *PromInstrument) originRoot(origin string) (string, error) {
