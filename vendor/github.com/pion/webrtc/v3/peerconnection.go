@@ -21,6 +21,7 @@ import (
 	"github.com/pion/logging"
 	"github.com/pion/rtcp"
 	"github.com/pion/sdp/v3"
+	"github.com/pion/srtp/v2"
 	"github.com/pion/webrtc/v3/internal/util"
 	"github.com/pion/webrtc/v3/pkg/rtcerr"
 )
@@ -659,7 +660,13 @@ func (pc *PeerConnection) CreateOffer(options *OfferOptions) (SessionDescription
 				}
 			}
 			for _, t := range currentTransceivers {
-				if t.Mid() != "" {
+				if mid := t.Mid(); mid != "" {
+					numericMid, errMid := strconv.Atoi(mid)
+					if errMid == nil {
+						if numericMid > pc.greaterMid {
+							pc.greaterMid = numericMid
+						}
+					}
 					continue
 				}
 				pc.greaterMid++
@@ -984,6 +991,7 @@ func (pc *PeerConnection) SetLocalDescription(desc SessionDescription) error {
 	weAnswer := desc.Type == SDPTypeAnswer
 	remoteDesc := pc.RemoteDescription()
 	if weAnswer && remoteDesc != nil {
+		_ = setRTPTransceiverCurrentDirection(&desc, currentTransceivers, false)
 		if err := pc.startRTPSenders(currentTransceivers); err != nil {
 			return err
 		}
@@ -1143,6 +1151,7 @@ func (pc *PeerConnection) SetRemoteDescription(desc SessionDescription) error { 
 
 	if isRenegotation {
 		if weOffer {
+			_ = setRTPTransceiverCurrentDirection(&desc, currentTransceivers, true)
 			if err = pc.startRTPSenders(currentTransceivers); err != nil {
 				return err
 			}
@@ -1172,6 +1181,7 @@ func (pc *PeerConnection) SetRemoteDescription(desc SessionDescription) error { 
 	// Start the networking in a new routine since it will block until
 	// the connection is actually established.
 	if weOffer {
+		_ = setRTPTransceiverCurrentDirection(&desc, currentTransceivers, true)
 		if err := pc.startRTPSenders(currentTransceivers); err != nil {
 			return err
 		}
@@ -1228,6 +1238,51 @@ func (pc *PeerConnection) startReceiver(incoming trackDetails, receiver *RTPRece
 			pc.onTrack(track, receiver)
 		}(t)
 	}
+}
+
+func setRTPTransceiverCurrentDirection(answer *SessionDescription, currentTransceivers []*RTPTransceiver, weOffer bool) error {
+	currentTransceivers = append([]*RTPTransceiver{}, currentTransceivers...)
+	for _, media := range answer.parsed.MediaDescriptions {
+		midValue := getMidValue(media)
+		if midValue == "" {
+			return errPeerConnRemoteDescriptionWithoutMidValue
+		}
+
+		if media.MediaName.Media == mediaSectionApplication {
+			continue
+		}
+
+		var t *RTPTransceiver
+		t, currentTransceivers = findByMid(midValue, currentTransceivers)
+
+		if t == nil {
+			return fmt.Errorf("%w: %q", errPeerConnTranscieverMidNil, midValue)
+		}
+
+		direction := getPeerDirection(media)
+		if direction == RTPTransceiverDirection(Unknown) {
+			continue
+		}
+
+		// reverse direction if it was a remote answer
+		if weOffer {
+			switch direction {
+			case RTPTransceiverDirectionSendonly:
+				direction = RTPTransceiverDirectionRecvonly
+			case RTPTransceiverDirectionRecvonly:
+				// Pion will answer recvonly with a offer recvonly transceiver, so we should
+				// not change the direction to sendonly if we are the offerer, otherwise this
+				// tranceiver can't be reuse for AddTrack
+				if t.Direction() != RTPTransceiverDirectionRecvonly {
+					direction = RTPTransceiverDirectionSendonly
+				}
+			default:
+			}
+		}
+
+		t.setCurrentDirection(direction)
+	}
+	return nil
 }
 
 func runIfNewReceiver(
@@ -1553,61 +1608,71 @@ func (pc *PeerConnection) handleIncomingSSRC(rtpStream io.Reader, ssrc SSRC) err
 
 // undeclaredMediaProcessor handles RTP/RTCP packets that don't match any a:ssrc lines
 func (pc *PeerConnection) undeclaredMediaProcessor() {
-	go func() {
-		var simulcastRoutineCount uint64
-		for {
-			srtpSession, err := pc.dtlsTransport.getSRTPSession()
-			if err != nil {
-				pc.log.Warnf("undeclaredMediaProcessor failed to open SrtpSession: %v", err)
-				return
-			}
+	go pc.undeclaredRTPMediaProcessor()
+	go pc.undeclaredRTCPMediaProcessor()
+}
 
-			stream, ssrc, err := srtpSession.AcceptStream()
-			if err != nil {
-				pc.log.Warnf("Failed to accept RTP %v", err)
-				return
-			}
+func (pc *PeerConnection) undeclaredRTPMediaProcessor() {
+	var simulcastRoutineCount uint64
+	for {
+		srtpSession, err := pc.dtlsTransport.getSRTPSession()
+		if err != nil {
+			pc.log.Warnf("undeclaredMediaProcessor failed to open SrtpSession: %v", err)
+			return
+		}
 
-			if pc.isClosed.get() {
-				if err = stream.Close(); err != nil {
-					pc.log.Warnf("Failed to close RTP stream %v", err)
-				}
-				continue
-			}
+		stream, ssrc, err := srtpSession.AcceptStream()
+		if err != nil {
+			pc.log.Warnf("Failed to accept RTP %v", err)
+			return
+		}
 
-			if atomic.AddUint64(&simulcastRoutineCount, 1) >= simulcastMaxProbeRoutines {
-				atomic.AddUint64(&simulcastRoutineCount, ^uint64(0))
-				pc.log.Warn(ErrSimulcastProbeOverflow.Error())
-				continue
+		if pc.isClosed.get() {
+			if err = stream.Close(); err != nil {
+				pc.log.Warnf("Failed to close RTP stream %v", err)
 			}
+			continue
+		}
 
-			go func(rtpStream io.Reader, ssrc SSRC) {
+		if atomic.AddUint64(&simulcastRoutineCount, 1) >= simulcastMaxProbeRoutines {
+			atomic.AddUint64(&simulcastRoutineCount, ^uint64(0))
+			pc.log.Warn(ErrSimulcastProbeOverflow.Error())
+			pc.dtlsTransport.storeSimulcastStream(stream)
+			continue
+		}
+
+		go func(rtpStream io.Reader, ssrc SSRC) {
+			if err := pc.handleIncomingSSRC(rtpStream, ssrc); err != nil {
+				pc.log.Errorf(incomingUnhandledRTPSsrc, ssrc, err)
 				pc.dtlsTransport.storeSimulcastStream(stream)
+			}
+			atomic.AddUint64(&simulcastRoutineCount, ^uint64(0))
+		}(stream, SSRC(ssrc))
+	}
+}
 
-				if err := pc.handleIncomingSSRC(rtpStream, ssrc); err != nil {
-					pc.log.Errorf(incomingUnhandledRTPSsrc, ssrc, err)
-				}
-				atomic.AddUint64(&simulcastRoutineCount, ^uint64(0))
-			}(stream, SSRC(ssrc))
+func (pc *PeerConnection) undeclaredRTCPMediaProcessor() {
+	var unhandledStreams []*srtp.ReadStreamSRTCP
+	defer func() {
+		for _, s := range unhandledStreams {
+			_ = s.Close()
 		}
 	}()
-
-	go func() {
-		for {
-			srtcpSession, err := pc.dtlsTransport.getSRTCPSession()
-			if err != nil {
-				pc.log.Warnf("undeclaredMediaProcessor failed to open SrtcpSession: %v", err)
-				return
-			}
-
-			_, ssrc, err := srtcpSession.AcceptStream()
-			if err != nil {
-				pc.log.Warnf("Failed to accept RTCP %v", err)
-				return
-			}
-			pc.log.Warnf("Incoming unhandled RTCP ssrc(%d), OnTrack will not be fired", ssrc)
+	for {
+		srtcpSession, err := pc.dtlsTransport.getSRTCPSession()
+		if err != nil {
+			pc.log.Warnf("undeclaredMediaProcessor failed to open SrtcpSession: %v", err)
+			return
 		}
-	}()
+
+		stream, ssrc, err := srtcpSession.AcceptStream()
+		if err != nil {
+			pc.log.Warnf("Failed to accept RTCP %v", err)
+			return
+		}
+		pc.log.Warnf("Incoming unhandled RTCP ssrc(%d), OnTrack will not be fired", ssrc)
+		unhandledStreams = append(unhandledStreams, stream)
+	}
 }
 
 // RemoteDescription returns pendingRemoteDescription if it is not null and
@@ -1706,7 +1771,13 @@ func (pc *PeerConnection) AddTrack(track TrackLocal) (*RTPSender, error) {
 	pc.mu.Lock()
 	defer pc.mu.Unlock()
 	for _, t := range pc.rtpTransceivers {
-		if !t.stopped && t.kind == track.Kind() && t.Sender() == nil {
+		currentDirection := t.getCurrentDirection()
+		// According to https://www.w3.org/TR/webrtc/#dom-rtcpeerconnection-addtrack, if the
+		// transceiver can be reused only if it's currentDirection never be sendrecv or sendonly.
+		// But that will cause sdp inflate. So we only check currentDirection's current value,
+		// that's worked for all browsers.
+		if !t.stopped && t.kind == track.Kind() && t.Sender() == nil &&
+			!(currentDirection == RTPTransceiverDirectionSendrecv || currentDirection == RTPTransceiverDirectionSendonly) {
 			sender, err := pc.api.NewRTPSender(track, pc.dtlsTransport)
 			if err == nil {
 				err = t.SetSender(sender, track)

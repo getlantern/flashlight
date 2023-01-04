@@ -5,6 +5,7 @@ package webrtc
 
 import (
 	"io"
+	"net"
 	"time"
 
 	"github.com/pion/dtls/v2"
@@ -36,15 +37,17 @@ type SettingEngine struct {
 		ICERelayAcceptanceMinWait *time.Duration
 	}
 	candidates struct {
-		ICELite                bool
-		ICENetworkTypes        []NetworkType
-		InterfaceFilter        func(string) bool
-		NAT1To1IPs             []string
-		NAT1To1IPCandidateType ICECandidateType
-		MulticastDNSMode       ice.MulticastDNSMode
-		MulticastDNSHostName   string
-		UsernameFragment       string
-		Password               string
+		ICELite                  bool
+		ICENetworkTypes          []NetworkType
+		InterfaceFilter          func(string) bool
+		IPFilter                 func(net.IP) bool
+		NAT1To1IPs               []string
+		NAT1To1IPCandidateType   ICECandidateType
+		MulticastDNSMode         ice.MulticastDNSMode
+		MulticastDNSHostName     string
+		UsernameFragment         string
+		Password                 string
+		IncludeLoopbackCandidate bool
 	}
 	replayProtection struct {
 		DTLS  *uint
@@ -96,8 +99,8 @@ func (e *SettingEngine) SetSRTPProtectionProfiles(profiles ...dtls.SRTPProtectio
 }
 
 // SetICETimeouts sets the behavior around ICE Timeouts
-// * disconnectedTimeout is the duration without network activity before a Agent is considered disconnected. Default is 5 Seconds
-// * failedTimeout is the duration without network activity before a Agent is considered failed after disconnected. Default is 25 Seconds
+// * disconnectedTimeout is the duration without network activity before an Agent is considered disconnected. Default is 5 Seconds
+// * failedTimeout is the duration without network activity before an Agent is considered failed after disconnected. Default is 25 Seconds
 // * keepAliveInterval is how often the ICE Agent sends extra traffic if there is no activity, if media is flowing no traffic will be sent. Default is 2 seconds
 func (e *SettingEngine) SetICETimeouts(disconnectedTimeout, failedTimeout, keepAliveInterval time.Duration) {
 	e.timeout.ICEDisconnectedTimeout = &disconnectedTimeout
@@ -157,6 +160,14 @@ func (e *SettingEngine) SetInterfaceFilter(filter func(string) bool) {
 	e.candidates.InterfaceFilter = filter
 }
 
+// SetIPFilter sets the filtering functions when gathering ICE candidates
+// This can be used to exclude certain ip from ICE. Which may be
+// useful if you know a certain ip will never succeed, or if you wish to reduce
+// the amount of information you wish to expose to the remote peer
+func (e *SettingEngine) SetIPFilter(filter func(net.IP) bool) {
+	e.candidates.IPFilter = filter
+}
+
 // SetNAT1To1IPs sets a list of external IP addresses of 1:1 (D)NAT
 // and a candidate type for which the external IP address is used.
 // This is useful when you are host a server using Pion on an AWS EC2 instance
@@ -183,6 +194,12 @@ func (e *SettingEngine) SetInterfaceFilter(filter func(string) bool) {
 func (e *SettingEngine) SetNAT1To1IPs(ips []string, candidateType ICECandidateType) {
 	e.candidates.NAT1To1IPs = ips
 	e.candidates.NAT1To1IPCandidateType = candidateType
+}
+
+// SetIncludeLoopbackCandidate enable pion to gather loopback candidates, it is useful
+// for some VM have public IP mapped to loopback interface
+func (e *SettingEngine) SetIncludeLoopbackCandidate(include bool) {
+	e.candidates.IncludeLoopbackCandidate = include
 }
 
 // SetAnsweringDTLSRole sets the DTLS role that is selected when offering

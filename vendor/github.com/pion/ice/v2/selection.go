@@ -84,7 +84,7 @@ func (s *controllingSelector) nominatePair(pair *CandidatePair) {
 		return
 	}
 
-	s.log.Tracef("ping STUN (nominate candidate pair) from %s to %s\n", pair.Local.String(), pair.Remote.String())
+	s.log.Tracef("ping STUN (nominate candidate pair) from %s to %s", pair.Local.String(), pair.Remote.String())
 	s.agent.sendBindingRequest(msg, pair.Local, pair.Remote)
 }
 
@@ -101,9 +101,9 @@ func (s *controllingSelector) HandleBindingRequest(m *stun.Message, local, remot
 	if p.state == CandidatePairStateSucceeded && s.nominatedPair == nil && s.agent.getSelectedPair() == nil {
 		bestPair := s.agent.getBestAvailableCandidatePair()
 		if bestPair == nil {
-			s.log.Tracef("No best pair available\n")
+			s.log.Tracef("No best pair available")
 		} else if bestPair.equal(p) && s.isNominatable(p.Local) && s.isNominatable(p.Remote) {
-			s.log.Tracef("The candidate (%s, %s) is the best candidate available, marking it as nominated\n",
+			s.log.Tracef("The candidate (%s, %s) is the best candidate available, marking it as nominated",
 				p.Local.String(), p.Remote.String())
 			s.nominatedPair = p
 			s.nominatePair(p)
@@ -252,7 +252,8 @@ func (s *controlledSelector) HandleBindingRequest(m *stun.Message, local, remote
 			// previously sent by this pair produced a successful response and
 			// generated a valid pair (Section 7.2.5.3.2).  The agent sets the
 			// nominated flag value of the valid pair to true.
-			if selectedPair := s.agent.getSelectedPair(); selectedPair == nil || selectedPair.priority() < p.priority() {
+			if selectedPair := s.agent.getSelectedPair(); selectedPair == nil ||
+				(selectedPair != p && selectedPair.priority() <= p.priority()) {
 				s.agent.setSelectedPair(p)
 			} else if selectedPair != p {
 				s.log.Tracef("ignore nominate new pair %s, already nominated pair %s", p, selectedPair)

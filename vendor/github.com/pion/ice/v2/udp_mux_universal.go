@@ -16,7 +16,7 @@ type UniversalUDPMux interface {
 	UDPMux
 	GetXORMappedAddr(stunAddr net.Addr, deadline time.Duration) (*stun.XORMappedAddress, error)
 	GetRelayedAddr(turnAddr net.Addr, deadline time.Duration) (*net.Addr, error)
-	GetConnForURL(ufrag string, url string, isIPv6 bool) (net.PacketConn, error)
+	GetConnForURL(ufrag string, url string, addr net.Addr) (net.PacketConn, error)
 }
 
 // UniversalUDPMuxDefault handles STUN and TURN servers packets by wrapping the original UDPConn overriding ReadFrom.
@@ -84,8 +84,8 @@ func (m *UniversalUDPMuxDefault) GetRelayedAddr(turnAddr net.Addr, deadline time
 
 // GetConnForURL add uniques to the muxed connection by concatenating ufrag and URL (e.g. STUN URL) to be able to support multiple STUN/TURN servers
 // and return a unique connection per server.
-func (m *UniversalUDPMuxDefault) GetConnForURL(ufrag string, url string, isIPv6 bool) (net.PacketConn, error) {
-	return m.UDPMuxDefault.GetConn(fmt.Sprintf("%s%s", ufrag, url), isIPv6)
+func (m *UniversalUDPMuxDefault) GetConnForURL(ufrag string, url string, addr net.Addr) (net.PacketConn, error) {
+	return m.UDPMuxDefault.GetConn(fmt.Sprintf("%s%s", ufrag, url), addr)
 }
 
 // ReadFrom is called by UDPMux connWorker and handles packets coming from the STUN server discovering a mapped address.
@@ -102,8 +102,9 @@ func (c *udpConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
 		}
 
 		if err = msg.Decode(); err != nil {
-			c.logger.Warnf("Failed to handle decode ICE from %s: %v\n", addr.String(), err)
-			return n, addr, nil
+			c.logger.Warnf("Failed to handle decode ICE from %s: %v", addr.String(), err)
+			err = nil
+			return
 		}
 
 		udpAddr, ok := addr.(*net.UDPAddr)
@@ -116,7 +117,7 @@ func (c *udpConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
 			err = c.mux.handleXORMappedResponse(udpAddr, msg)
 			if err != nil {
 				c.logger.Debugf("%w: %v", errGetXorMappedAddrResponse, err)
-				return n, addr, nil
+				err = nil
 			}
 			return
 		}
@@ -183,7 +184,7 @@ func (m *UniversalUDPMuxDefault) GetXORMappedAddr(serverAddr net.Addr, deadline 
 	// or wait for already sent request to complete
 	waitAddrReceived, err := m.sendStun(serverAddr)
 	if err != nil {
-		return nil, errSendSTUNPacket
+		return nil, fmt.Errorf("%w: %s", errSendSTUNPacket, err)
 	}
 
 	// block until response was handled by the connWorker routine and XORMappedAddress was updated

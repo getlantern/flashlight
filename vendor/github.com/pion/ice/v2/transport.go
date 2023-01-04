@@ -44,7 +44,7 @@ func (a *Agent) connect(ctx context.Context, isControlling bool, remoteUfrag, re
 	if err != nil {
 		return nil, err
 	}
-	err = a.startConnectivityChecks(isControlling, remoteUfrag, remotePwd)
+	err = a.startConnectivityChecks(isControlling, remoteUfrag, remotePwd) //nolint:contextcheck
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (c *Conn) Read(p []byte) (int, error) {
 		return 0, err
 	}
 
-	n, err := c.agent.buffer.Read(p)
+	n, err := c.agent.buf.Read(p)
 	atomic.AddUint64(&c.bytesReceived, uint64(n))
 	return n, err
 }

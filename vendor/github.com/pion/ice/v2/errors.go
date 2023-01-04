@@ -25,7 +25,7 @@ var (
 	// Have to be at least 24 bits long
 	ErrLocalUfragInsufficientBits = errors.New("local username fragment is less than 24 bits long")
 
-	// ErrLocalPwdInsufficientBits indicates local passoword insufficient bits are provided.
+	// ErrLocalPwdInsufficientBits indicates local password insufficient bits are provided.
 	// Have to be at least 128 bits long
 	ErrLocalPwdInsufficientBits = errors.New("local password is less than 128 bits long")
 
@@ -97,9 +97,6 @@ var (
 	// ErrInvalidMulticastDNSHostName indicates an invalid MulticastDNSHostName
 	ErrInvalidMulticastDNSHostName = errors.New("invalid mDNS HostName, must end with .local and can only contain a single '.'")
 
-	// ErrRestartWhenGathering indicates Restart was called when Agent is in GatheringStateGathering
-	ErrRestartWhenGathering = errors.New("ICE Agent can not be restarted when gathering")
-
 	// ErrRunCanceled indicates a run operation was canceled by its individual done
 	ErrRunCanceled = errors.New("run was canceled by done")
 
@@ -121,7 +118,7 @@ var (
 	errParsePriority                 = errors.New("could not parse priority")
 	errParsePort                     = errors.New("could not parse port")
 	errParseRelatedAddr              = errors.New("could not parse related addresses")
-	errParseTypType                  = errors.New("could not parse typtype")
+	errParseTCPType                  = errors.New("could not parse TCP type")
 	errGetXorMappedAddrResponse      = errors.New("failed to get XOR-MAPPED-ADDRESS response")
 	errConnectionAddrAlreadyExist    = errors.New("connection with same remote address already exists")
 	errReadingStreamingPacket        = errors.New("error reading streaming packet")
@@ -134,9 +131,15 @@ var (
 	errMismatchUsername              = errors.New("username mismatch")
 	errICEWriteSTUNMessage           = errors.New("the ICE conn can't write STUN messages")
 	errUDPMuxDisabled                = errors.New("UDPMux is not enabled")
-	errCandidateIPNotFound           = errors.New("could not determine local IP for Mux candidate")
 	errNoXorAddrMapping              = errors.New("no address mapping")
 	errSendSTUNPacket                = errors.New("failed to send STUN packet")
 	errXORMappedAddrTimeout          = errors.New("timeout while waiting for XORMappedAddr")
 	errNotImplemented                = errors.New("not implemented yet")
+	errNoUDPMuxAvailable             = errors.New("no UDP mux is available")
+	errNoTCPMuxAvailable             = errors.New("no TCP mux is available")
+	errInvalidAddress                = errors.New("invalid address")
+
+	// UDPMuxDefault should not listen on unspecified address, but to keep backward compatibility, don't return error now.
+	// will be used in the future.
+	// errListenUnspecified             = errors.New("can't listen on unspecified address")
 )

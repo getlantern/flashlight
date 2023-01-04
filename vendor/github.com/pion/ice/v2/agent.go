@@ -64,8 +64,8 @@ type Agent struct {
 	prflxAcceptanceMinWait time.Duration
 	relayAcceptanceMinWait time.Duration
 
-	portmin uint16
-	portmax uint16
+	portMin uint16
+	portMax uint16
 
 	candidateTypes []CandidateType
 
@@ -100,7 +100,7 @@ type Agent struct {
 	urls         []*URL
 	networkTypes []NetworkType
 
-	buffer *packetio.Buffer
+	buf *packetio.Buffer
 
 	// LRU of outbound Binding request Transaction IDs
 	pendingBindingRequests []bindingRequest
@@ -129,6 +129,8 @@ type Agent struct {
 	udpMuxSrflx UniversalUDPMux
 
 	interfaceFilter func(string) bool
+	ipFilter        func(net.IP) bool
+	includeLoopback bool
 
 	insecureSkipVerify bool
 
@@ -204,7 +206,7 @@ func (a *Agent) taskLoop() {
 		a.deleteAllCandidates()
 		a.startedFn()
 
-		if err := a.buffer.Close(); err != nil {
+		if err := a.buf.Close(); err != nil {
 			a.log.Warnf("failed to close buffer: %v", err)
 		}
 
@@ -291,13 +293,13 @@ func NewAgent(config *AgentConfig) (*Agent, error) { //nolint:gocognit
 		urls:              config.Urls,
 		networkTypes:      config.NetworkTypes,
 		onConnected:       make(chan struct{}),
-		buffer:            packetio.NewBuffer(),
+		buf:               packetio.NewBuffer(),
 		done:              make(chan struct{}),
 		taskLoopDone:      make(chan struct{}),
 		startedCh:         startedCtx.Done(),
 		startedFn:         startedFn,
-		portmin:           config.PortMin,
-		portmax:           config.PortMax,
+		portMin:           config.PortMin,
+		portMax:           config.PortMax,
 		loggerFactory:     loggerFactory,
 		log:               log,
 		net:               config.Net,
@@ -313,7 +315,11 @@ func NewAgent(config *AgentConfig) (*Agent, error) { //nolint:gocognit
 
 		interfaceFilter: config.InterfaceFilter,
 
+		ipFilter: config.IPFilter,
+
 		insecureSkipVerify: config.InsecureSkipVerify,
+
+		includeLoopback: config.IncludeLoopback,
 	}
 
 	a.tcpMux = config.TCPMux
@@ -337,7 +343,7 @@ func NewAgent(config *AgentConfig) (*Agent, error) { //nolint:gocognit
 	// Make sure the buffer doesn't grow indefinitely.
 	// NOTE: We actually won't get anywhere close to this limit.
 	// SRTP will constantly read from the endpoint and drop packets if it's full.
-	a.buffer.SetLimitSize(maxBufferSize)
+	a.buf.SetLimitSize(maxBufferSize)
 
 	if a.lite && (len(a.candidateTypes) != 1 || a.candidateTypes[0] != CandidateTypeHost) {
 		closeMDNSConn()
@@ -450,7 +456,7 @@ func (a *Agent) startConnectivityChecks(isControlling bool, remoteUfrag, remoteP
 		return ErrMultipleStart
 	default:
 	}
-	if err := a.SetRemoteCredentials(remoteUfrag, remotePwd); err != nil {
+	if err := a.SetRemoteCredentials(remoteUfrag, remotePwd); err != nil { //nolint:contextcheck
 		return err
 	}
 
@@ -477,7 +483,7 @@ func (a *Agent) startConnectivityChecks(isControlling bool, remoteUfrag, remoteP
 		agent.updateConnectionState(ConnectionStateChecking)
 
 		a.requestConnectivityCheck()
-		go a.connectivityChecks()
+		go a.connectivityChecks() //nolint:contextcheck
 	})
 }
 
@@ -568,16 +574,16 @@ func (a *Agent) updateConnectionState(newState ConnectionState) {
 }
 
 func (a *Agent) setSelectedPair(p *CandidatePair) {
-	a.log.Tracef("Set selected candidate pair: %s", p)
-
 	if p == nil {
 		var nilPair *CandidatePair
 		a.selectedPair.Store(nilPair)
+		a.log.Tracef("Unset selected candidate pair")
 		return
 	}
 
 	p.nominated = true
 	a.selectedPair.Store(p)
+	a.log.Tracef("Set selected candidate pair: %s", p)
 
 	a.updateConnectionState(ConnectionStateConnected)
 
@@ -610,7 +616,7 @@ func (a *Agent) pingAllCandidates() {
 		}
 
 		if p.bindingRequestCount > a.maxBindingRequests {
-			a.log.Tracef("max requests reached for pair %s, marking it as failed\n", p)
+			a.log.Tracef("max requests reached for pair %s, marking it as failed", p)
 			p.state = CandidatePairStateFailed
 		} else {
 			a.selector.PingCandidate(p.Local, p.Remote)
@@ -719,9 +725,9 @@ func (a *Agent) AddRemoteCandidate(c Candidate) error {
 	}
 
 	// cannot check for network yet because it might not be applied
-	// when mDNS hostame is used.
+	// when mDNS hostname is used.
 	if c.TCPType() == TCPTypeActive {
-		// TCP Candidates with tcptype active will probe server passive ones, so
+		// TCP Candidates with TCP type active will probe server passive ones, so
 		// no need to do anything with them.
 		a.log.Infof("Ignoring remote candidate with tcpType active: %s", c)
 		return nil
@@ -820,6 +826,9 @@ func (a *Agent) addCandidate(ctx context.Context, c Candidate, candidateConn net
 				a.log.Debugf("Ignore duplicate candidate: %s", c.String())
 				if err := c.close(); err != nil {
 					a.log.Warnf("Failed to close duplicate candidate: %v", err)
+				}
+				if err := candidateConn.Close(); err != nil {
+					a.log.Warnf("Failed to close duplicate candidate connection: %v", err)
 				}
 				return
 			}
@@ -961,7 +970,7 @@ func (a *Agent) findRemoteCandidate(networkType NetworkType, addr net.Addr) Cand
 }
 
 func (a *Agent) sendBindingRequest(m *stun.Message, local, remote Candidate) {
-	a.log.Tracef("ping STUN from %s to %s\n", local.String(), remote.String())
+	a.log.Tracef("ping STUN from %s to %s", local.String(), remote.String())
 
 	a.invalidatePendingBindingRequests(time.Now())
 	a.pendingBindingRequests = append(a.pendingBindingRequests, bindingRequest{
@@ -997,12 +1006,11 @@ func (a *Agent) sendBindingSuccess(m *stun.Message, local, remote Candidate) {
 	}
 }
 
-/* Removes pending binding requests that are over maxBindingRequestTimeout old
-
-   Let HTO be the transaction timeout, which SHOULD be 2*RTT if
-   RTT is known or 500 ms otherwise.
-   https://tools.ietf.org/html/rfc8445#appendix-B.1
-*/
+// Removes pending binding requests that are over maxBindingRequestTimeout old
+//
+// Let HTO be the transaction timeout, which SHOULD be 2*RTT if
+// RTT is known or 500 ms otherwise.
+// https://tools.ietf.org/html/rfc8445#appendix-B.1
 func (a *Agent) invalidatePendingBindingRequests(filterTime time.Time) {
 	initialSize := len(a.pendingBindingRequests)
 
@@ -1143,7 +1151,7 @@ func (a *Agent) validateNonSTUNTraffic(local Candidate, remote net.Addr) bool {
 func (a *Agent) GetSelectedCandidatePair() (*CandidatePair, error) {
 	selectedPair := a.getSelectedPair()
 	if selectedPair == nil {
-		return nil, nil
+		return nil, nil //nolint:nilnil
 	}
 
 	local, err := selectedPair.Local.copy()
@@ -1160,12 +1168,11 @@ func (a *Agent) GetSelectedCandidatePair() (*CandidatePair, error) {
 }
 
 func (a *Agent) getSelectedPair() *CandidatePair {
-	selectedPair := a.selectedPair.Load()
-	if selectedPair == nil {
-		return nil
+	if selectedPair, ok := a.selectedPair.Load().(*CandidatePair); ok {
+		return selectedPair
 	}
 
-	return selectedPair.(*CandidatePair)
+	return nil
 }
 
 func (a *Agent) closeMulticastConn() {
@@ -1194,8 +1201,10 @@ func (a *Agent) SetRemoteCredentials(remoteUfrag, remotePwd string) error {
 // Restart restarts the ICE Agent with the provided ufrag/pwd
 // If no ufrag/pwd is provided the Agent will generate one itself
 //
-// Restart must only be called when GatheringState is GatheringStateComplete
-// a user must then call GatherCandidates explicitly to start generating new ones
+// If there is a gatherer routine currently running, Restart will
+// cancel it.
+// After a Restart, the user must then call GatherCandidates explicitly
+// to start generating new ones.
 func (a *Agent) Restart(ufrag, pwd string) error {
 	if ufrag == "" {
 		var err error
@@ -1222,8 +1231,7 @@ func (a *Agent) Restart(ufrag, pwd string) error {
 	var err error
 	if runErr := a.run(a.context(), func(ctx context.Context, agent *Agent) {
 		if agent.gatheringState == GatheringStateGathering {
-			err = ErrRestartWhenGathering
-			return
+			agent.gatherCandidateCancel()
 		}
 
 		// Clear all agent needed to take back to fresh state

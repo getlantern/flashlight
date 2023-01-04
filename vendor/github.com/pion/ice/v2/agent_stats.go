@@ -60,7 +60,9 @@ func (a *Agent) GetLocalCandidatesStats() []CandidateStats {
 			for _, c := range localCandidates {
 				relayProtocol := ""
 				if c.Type() == CandidateTypeRelay {
-					relayProtocol = c.(*CandidateRelay).RelayProtocol()
+					if cRelay, ok := c.(*CandidateRelay); ok {
+						relayProtocol = cRelay.RelayProtocol()
+					}
 				}
 				stat := CandidateStats{
 					Timestamp:     time.Now(),
@@ -91,8 +93,8 @@ func (a *Agent) GetRemoteCandidatesStats() []CandidateStats {
 	var res []CandidateStats
 	err := a.run(a.context(), func(ctx context.Context, agent *Agent) {
 		result := make([]CandidateStats, 0, len(agent.remoteCandidates))
-		for networkType, localCandidates := range agent.remoteCandidates {
-			for _, c := range localCandidates {
+		for networkType, remoteCandidates := range agent.remoteCandidates {
+			for _, c := range remoteCandidates {
 				stat := CandidateStats{
 					Timestamp:     time.Now(),
 					ID:            c.ID(),
