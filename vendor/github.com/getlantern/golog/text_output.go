@@ -37,8 +37,8 @@ func (o *textOutput) Debug(prefix string, skipFrames int, printStack bool, sever
 }
 
 func (o *textOutput) print(writer io.Writer, prefix string, skipFrames int, printStack bool, severity string, arg interface{}, values map[string]interface{}) {
-	buf := bufferPool.Get()
-	defer bufferPool.Put(buf)
+	buf := getBuffer()
+	defer returnBuffer(buf)
 
 	GetPrepender()(buf)
 	linePrefix := o.linePrefix(prefix, skipFrames)

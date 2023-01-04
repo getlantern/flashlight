@@ -6,6 +6,7 @@ import (
 	"context"
 	gtls "crypto/tls"
 	"net"
+	"time"
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
@@ -34,7 +35,8 @@ func newQUICImpl(name, addr string, pc *config.ProxyConfig, reportDialCore repor
 
 	quicConf := &quicwrapper.Config{
 		MaxIncomingStreams:      -1,
-		KeepAlive:               true,
+		MaxIdleTimeout:          IdleTimeout * time.Second,
+		KeepAlivePeriod:         15 * time.Second,
 		DisablePathMTUDiscovery: disablePathMTUDiscovery,
 	}
 

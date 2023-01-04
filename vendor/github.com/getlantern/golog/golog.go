@@ -1,7 +1,24 @@
 // Package golog implements logging functions that log errors to stderr and
-// debug messages to stdout. Trace logging is also supported.
-// Trace logs go to stdout as well, but they are only written if the program
-// is run with environment variable "TRACE=true".
+// debug messages to stdout.
+//
+// Trace logs go to stdout as well, but they are only written if a linker flag
+// or an environment variable is set as such:
+//
+// - The following linker flag is set
+//
+//		-X github.com/getlantern/golog.linkerFlagEnableTraceThroughLinker=true
+//
+//	  - Optionally, you can also set a comma-separated list of prefixes to trace
+//	    through the following linker flag
+//
+//	    -X github.com/getlantern/golog.linkerFlagTracePrefixes=prefix1,prefix2
+//
+//	  - Or, alternatively, trace logging can also be enable if "TRACE=true"
+//	    environment variable is set
+//
+//	  - Optionally, you can also set a comma-separated list of prefixes to trace
+//	    through the "TRACE" environment variable like this: "TRACE=prefix1,prefix2"
+//
 // A stack dump will be printed after the message if "PRINT_STACK=true".
 package golog
 
@@ -22,7 +39,6 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/hidden"
 	"github.com/getlantern/ops"
-	"github.com/oxtoacart/bpool"
 )
 
 const (
@@ -51,9 +67,13 @@ var (
 	reporters      []ErrorReporter
 	reportersMutex sync.RWMutex
 
-	bufferPool = bpool.NewBufferPool(200)
-
 	onFatal atomic.Value
+
+	// enableTraceThroughLinker is set through a linker flag. It's used to
+	// enforce tracing through a linker flag. It can either be set to "true",
+	// "1", or "TRUE". Any other value will be ignored.
+	linkerFlagEnableTraceThroughLinker string
+	linkerFlagTracePrefixes            string
 )
 
 // Severity is a level of error (higher values are more severe)
@@ -206,25 +226,60 @@ type Logger interface {
 	AsStdLogger() *log.Logger
 }
 
+// shouldEnableTrace returns true if tracing was enforced through a linker
+// flag, or if TRACE=true is set in the environment, while favoring the former.
+//
+// See the top-level comment for more information.
+func shouldEnableTrace(currentPrefix string) bool {
+	// Linker flag checks
+	// ------------------
+	if strings.ToLower(linkerFlagEnableTraceThroughLinker) == "true" ||
+		// if trace through linker flags is set, check if the current prefix is
+		// included in the list of prefixes to trace
+		linkerFlagEnableTraceThroughLinker == "1" {
+		// Only return true if the current prefix is included in the list of
+		// prefixes to trace
+		prefixesToTrace := strings.Split(linkerFlagTracePrefixes, ",")
+		for _, prefix := range prefixesToTrace {
+			if strings.ToLower(prefix) == strings.ToLower(currentPrefix) {
+				return true
+			}
+		}
+		return true
+	}
+
+	// Environment variable checks
+	// ---------------------
+	// If TRACE=true is set in the environment, return true
+	envVar := os.Getenv("TRACE")
+	if envVar == "" {
+		return false
+	}
+	if v, err := strconv.ParseBool(os.Getenv("TRACE")); err == nil && v {
+		return true
+	}
+	// Else, this could be a comma-separated list of prefixes to trace
+	// If the current prefix is included in the list, return true
+	for _, prefix := range strings.Split(envVar, ",") {
+		if strings.ToLower(prefix) == strings.ToLower(currentPrefix) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func LoggerFor(prefix string) Logger {
 	l := &logger{
 		prefix: prefix + ": ",
 	}
 
-	trace := os.Getenv("TRACE")
-	l.traceOn, _ = strconv.ParseBool(trace)
-	if !l.traceOn {
-		prefixes := strings.Split(trace, ",")
-		for _, p := range prefixes {
-			if prefix == strings.Trim(p, " ") {
-				l.traceOn = true
-				break
-			}
-		}
-	}
+	l.traceOn = shouldEnableTrace(prefix)
 	if l.traceOn {
+		fmt.Printf("TRACE logging is enabled for prefix [%s]\n", prefix)
 		l.traceOut = l.newTraceWriter()
 	} else {
+		fmt.Printf("TRACE logging is NOT enabled for prefix [%s]\n", prefix)
 		l.traceOut = ioutil.Discard
 	}
 
@@ -412,8 +467,8 @@ func argToString(arg interface{}) string {
 		if ml, isMultiline := arg.(MultiLine); !isMultiline {
 			return fmt.Sprintf("%v", arg)
 		} else {
-			buf := bufferPool.Get()
-			defer bufferPool.Put(buf)
+			buf := getBuffer()
+			defer returnBuffer(buf)
 			mlp := ml.MultiLinePrinter()
 			for {
 				more := mlp(buf)

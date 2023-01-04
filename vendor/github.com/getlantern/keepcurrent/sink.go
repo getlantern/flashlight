@@ -23,19 +23,40 @@ func ToFileWithPreprocessor(path string, preprocessor func(io.Reader) (io.Reader
 }
 
 func (s *fileSink) UpdateFrom(r io.Reader) error {
-	f, err := os.OpenFile(s.path, os.O_WRONLY|os.O_CREATE, 0666)
+	tmpFile, err := ioutil.TempFile("", "")
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	closed := false
+	defer func() {
+		if !closed {
+			tmpFile.Close()
+		}
+	}()
+	defer os.Remove(tmpFile.Name())
+
+	err = os.Chmod(tmpFile.Name(), 0666)
+	if err != nil {
+		return err
+	}
+
 	if s.preprocessor != nil {
 		r, err = s.preprocessor(r)
 		if err != nil {
 			return err
 		}
 	}
-	_, err = io.Copy(f, r)
-	return err
+	_, err = io.Copy(tmpFile, r)
+	if err != nil {
+		return err
+	}
+
+	err = tmpFile.Close()
+	if err != nil {
+		return err
+	}
+
+	return os.Rename(tmpFile.Name(), s.path)
 }
 
 func (s *fileSink) String() string {

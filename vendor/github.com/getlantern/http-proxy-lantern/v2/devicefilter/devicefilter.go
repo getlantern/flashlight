@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"sync"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -29,15 +30,19 @@ var (
 
 	epoch = time.Date(2016, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	alwaysThrottle = lanternlisteners.NewRateLimiter(10)
+	alwaysThrottle = lanternlisteners.NewRateLimiter(10, 10) // this is basically unusably slow, only used for malicious or really old/broken clients
+
+	defaultThrottleRate = int64(5000 * 1024 / 8) // 5 Mbps
 )
 
 // deviceFilterPre does the device-based filtering
 type deviceFilterPre struct {
-	deviceFetcher  *redis.DeviceFetcher
-	throttleConfig throttle.Config
-	sendXBQHeader  bool
-	instrument     instrument.Instrument
+	deviceFetcher      *redis.DeviceFetcher
+	throttleConfig     throttle.Config
+	sendXBQHeader      bool
+	instrument         instrument.Instrument
+	limitersByDevice   map[string]*lanternlisteners.RateLimiter
+	limitersByDeviceMx sync.Mutex
 }
 
 // deviceFilterPost cleans up
@@ -59,17 +64,17 @@ type deviceFilterPost struct {
 // <allowed> is the string representation of a 64-bit unsigned integer
 // <asof> is the 64-bit signed integer representing seconds since a custom
 // epoch (00:00:00 01/01/2016 UTC).
-
 func NewPre(df *redis.DeviceFetcher, throttleConfig throttle.Config, sendXBQHeader bool, instrument instrument.Instrument) filters.Filter {
 	if throttleConfig != nil {
 		log.Debug("Throttling enabled")
 	}
 
 	return &deviceFilterPre{
-		deviceFetcher:  df,
-		throttleConfig: throttleConfig,
-		sendXBQHeader:  sendXBQHeader,
-		instrument:     instrument,
+		deviceFetcher:    df,
+		throttleConfig:   throttleConfig,
+		sendXBQHeader:    sendXBQHeader,
+		instrument:       instrument,
+		limitersByDevice: make(map[string]*lanternlisteners.RateLimiter, 0),
 	}
 }
 
@@ -79,17 +84,33 @@ func (f *deviceFilterPre) Apply(cs *filters.ConnectionState, req *http.Request, 
 		log.Tracef("DeviceFilter Middleware received request:\n%s", reqStr)
 	}
 
-	// Some domains are excluded from being throttled and don't count towards the
-	// bandwidth cap.
-	if domains.ConfigForRequest(req).Unthrottled {
-		f.instrument.Throttle(false, "domain-excluded")
-		return next(cs, req)
-	}
-
 	// Attached the uid to connection to report stats to redis correctly
 	// "conn" in context is previously attached in server.go
 	wc := cs.Downstream().(listeners.WrapConn)
 	lanternDeviceID := req.Header.Get(common.DeviceIdHeader)
+
+	// Even if a device hasn't hit its data cap, we always throttle to a default throttle rate to
+	// keep bandwidth hogs from using too much bandwidth. Note - this does not apply to pro proxies
+	// which don't use the devicefilter at all.
+	throttleDefault := func(message string) {
+		if defaultThrottleRate <= 0 {
+			f.instrument.Throttle(false, message)
+		}
+		limiter := f.rateLimiterForDevice(lanternDeviceID, defaultThrottleRate, defaultThrottleRate)
+		if log.IsTraceEnabled() {
+			log.Tracef("Throttling connection to %v per second by default",
+				humanize.Bytes(uint64(defaultThrottleRate)))
+		}
+		f.instrument.Throttle(true, "default")
+		wc.ControlMessage("throttle", limiter)
+	}
+
+	// Some domains are excluded from being throttled and don't count towards the
+	// bandwidth cap.
+	if domains.ConfigForRequest(req).Unthrottled {
+		throttleDefault("domain-excluded")
+		return next(cs, req)
+	}
 
 	if lanternDeviceID == "" {
 		// Old lantern versions and possible cracks do not include the device
@@ -114,7 +135,7 @@ func (f *deviceFilterPre) Apply(cs *filters.ConnectionState, req *http.Request, 
 	if u == nil {
 		// Eagerly request device ID data from Redis and store it in usage
 		f.deviceFetcher.RequestNewDeviceUsage(lanternDeviceID)
-		f.instrument.Throttle(false, "no-usage-data")
+		throttleDefault("no-usage-data")
 		return next(cs, req)
 	}
 
@@ -137,15 +158,19 @@ func (f *deviceFilterPre) Apply(cs *filters.ConnectionState, req *http.Request, 
 
 	if capOn && u.Bytes > settings.Threshold {
 		// per connection limiter
-		limiter := lanternlisteners.NewRateLimiter(settings.Rate)
-		log.Tracef("Throttling connection from device %s to %v per second", lanternDeviceID,
-			humanize.Bytes(uint64(settings.Rate)))
+		// Note - when people hit the data cap, we only throttle writes back to the client, not reads.
+		// This way, they can continue to upload videos or other bandwidth intensive content for sharing.
+		limiter := f.rateLimiterForDevice(lanternDeviceID, defaultThrottleRate, settings.Rate)
+		if log.IsTraceEnabled() {
+			log.Tracef("Throttling connection from device %s to %v per second", lanternDeviceID,
+				humanize.Bytes(uint64(settings.Rate)))
+		}
 		f.instrument.Throttle(true, "datacap")
 		wc.ControlMessage("throttle", limiter)
 		measuredCtx["throttled"] = true
 	} else {
 		// default case is not throttling
-		f.instrument.Throttle(false, "")
+		throttleDefault("")
 	}
 	wc.ControlMessage("measured", measuredCtx)
 
@@ -166,6 +191,18 @@ func (f *deviceFilterPre) Apply(cs *filters.ConnectionState, req *http.Request, 
 	resp.Header.Set(common.XBQHeaderv2, xbqv2) // for new clients that support different bandwidth cap expirations
 	f.instrument.XBQHeaderSent()
 	return resp, nextCtx, err
+}
+
+func (f *deviceFilterPre) rateLimiterForDevice(deviceID string, rateLimitRead, rateLimitWrite int64) *lanternlisteners.RateLimiter {
+	f.limitersByDeviceMx.Lock()
+	defer f.limitersByDeviceMx.Unlock()
+
+	limiter := f.limitersByDevice[deviceID]
+	if limiter == nil || limiter.GetRateRead() != rateLimitRead || limiter.GetRateWrite() != rateLimitWrite {
+		limiter = lanternlisteners.NewRateLimiter(rateLimitRead, rateLimitWrite)
+		f.limitersByDevice[deviceID] = limiter
+	}
+	return limiter
 }
 
 func NewPost(bl *blacklist.Blacklist) filters.Filter {

@@ -122,7 +122,7 @@ func (s *sendStream) Write(p []byte) (int, error) {
 		var copied bool
 		var deadline time.Time
 		// As soon as dataForWriting becomes smaller than a certain size x, we copy all the data to a STREAM frame (s.nextFrame),
-		// which can the be popped the next time we assemble a packet.
+		// which can then be popped the next time we assemble a packet.
 		// This allows us to return Write() when all data but x bytes have been sent out.
 		// When the user now calls Close(), this is much more likely to happen before we popped that last STREAM frame,
 		// allowing us to set the FIN bit on that frame (instead of sending an empty STREAM frame with FIN).
@@ -277,7 +277,7 @@ func (s *sendStream) popNewStreamFrame(maxBytes, sendWindow protocol.ByteCount) 
 		nextFrame := s.nextFrame
 		s.nextFrame = nil
 
-		maxDataLen := utils.MinByteCount(sendWindow, nextFrame.MaxDataLen(maxBytes, s.version))
+		maxDataLen := utils.Min(sendWindow, nextFrame.MaxDataLen(maxBytes, s.version))
 		if nextFrame.DataLen() > maxDataLen {
 			s.nextFrame = wire.GetStreamFrame()
 			s.nextFrame.StreamID = s.streamID
@@ -312,7 +312,7 @@ func (s *sendStream) popNewStreamFrameWithoutBuffer(f *wire.StreamFrame, maxByte
 	if maxDataLen == 0 { // a STREAM frame must have at least one byte of data
 		return s.dataForWriting != nil || s.nextFrame != nil || s.finishedWriting
 	}
-	s.getDataForWriting(f, utils.MinByteCount(maxDataLen, sendWindow))
+	s.getDataForWriting(f, utils.Min(maxDataLen, sendWindow))
 
 	return s.dataForWriting != nil || s.nextFrame != nil || s.finishedWriting
 }

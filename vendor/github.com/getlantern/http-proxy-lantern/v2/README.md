@@ -14,10 +14,17 @@ These are Lantern-specific middleware components for the HTTP Proxy in Go:
 
 * Custom responses for mimicking Apache in certain cases
 
-### Building
+## Deploying
 
-Currently, http-proxy-lantern will only build on Linux hosts. You need to have
-the package `libpcap-dev` installed.
+All pushes to the `main` branch are automatically deployed to production via CI in GitHub Actions.
+
+All pushes to the `canary` branch are automatically deployed to the canary binary distribution URL for any proxies running the canary version.
+
+See `.github/workflows/go.yml`, which uses the `make build` Makefile target **NOT THE LEGACY `make dist-on-docker`**.
+
+## Rolling back a Deployment
+
+The http-proxy binary is distributed through S3 as [this object](https://s3.console.aws.amazon.com/s3/object/http-proxy?region=ap-northeast-1&prefix=http-proxy). This object is versioned in S3, so if you need to roll back to a prior deployed version, you can simply delete the currently deployed version from [here](https://s3.console.aws.amazon.com/s3/object/http-proxy?region=ap-northeast-1&prefix=http-proxy&tab=versions).
 
 ### Usage
 
@@ -73,7 +80,7 @@ Run a Lantern client accordingly from `lantern-desktop`, as in:
 
 If you're developing a new transport, you can also add new versions of those files for that transport as you're testing.
 
-You have two options to test it: the Lantern client or [checkfallbacks](https://github.com/getlantern/lantern/tree/valencia/src/github.com/getlantern/checkfallbacks).
+You have two options to test it: the Lantern client or [checkfallbacks](https://github.com/getlantern/checkfallbacks).
 
 Keep in mind that they will need to send some headers in order to avoid receiving 404 messages (the chained server response if you aren't providing them).
 
@@ -97,28 +104,6 @@ If you are using checkfallbacks, make sure that both the certificate and the tok
 With option `-pprofaddr=localhost:6060`, you can always access lots of debug information from http://localhost:6060/debug/pprof. Ref https://golang.org/pkg/net/http/pprof/.
 
 ***Be sure to only listen on localhost or private addresses for security reason.***
-
-## Building for distribution and deploying
-
-You can use the following command to do all this automatically. Note that `make dist` requires $VERSION. It will tag the repo with that version and will also generate a new changelog:
-
-```
-VERSION=v0.1.3 make dist
-```
-
-To build for distribution but not tagging or generating new changelog:
-
-```
-make distnochange
-```
-
-When building on non-linux machines, prepending `docker-` to the targets, i.e., `make docker-dist` and `make docker-distnochange` respectively.
-
-Once you've build a binary for distribution, you can deploy it to all live proxies with:
-
-```
-make deploy
-```
 
 ## Temporarily Deploying a Preview Binary to a Single Server
 Sometimes it's useful to deploy a preview binary to a single server. This can
@@ -171,4 +156,3 @@ To view proxy logs on a given machine, run:
 ```
 journalctl -e -u http-proxy
 ```
-

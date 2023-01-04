@@ -1,13 +1,11 @@
 package tokenfilter
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"strings"
 
 	"github.com/getlantern/golog"
-	"github.com/getlantern/ops"
 	"github.com/getlantern/proxy/v2/filters"
 
 	"github.com/getlantern/http-proxy-lantern/v2/common"
@@ -30,9 +28,6 @@ func New(token string, instrument instrument.Instrument) filters.Filter {
 }
 
 func (f *tokenFilter) Apply(cs *filters.ConnectionState, req *http.Request, next filters.Next) (*http.Response, *filters.ConnectionState, error) {
-	op := ops.Begin("tokenfilter")
-	defer op.End()
-
 	if log.IsTraceEnabled() {
 		reqStr, _ := httputil.DumpRequest(req, true)
 		log.Tracef("Token Filter Middleware received request:\n%s", reqStr)
@@ -45,7 +40,7 @@ func (f *tokenFilter) Apply(cs *filters.ConnectionState, req *http.Request, next
 
 	tokens := req.Header[common.TokenHeader]
 	if tokens == nil || len(tokens) == 0 || tokens[0] == "" {
-		log.Error(errorf(op, "No token provided, mimicking apache"))
+		log.Errorf("No token provided, mimicking apache")
 		f.instrument.Mimic(true)
 		return mimicApache(cs, req)
 	}
@@ -62,13 +57,9 @@ func (f *tokenFilter) Apply(cs *filters.ConnectionState, req *http.Request, next
 		f.instrument.Mimic(false)
 		return next(cs, req)
 	}
-	log.Error(errorf(op, "Mismatched token(s) %v, mimicking apache", strings.Join(tokens, ",")))
+	log.Errorf("Mismatched token(s) %v, mimicking apache", strings.Join(tokens, ","))
 	f.instrument.Mimic(true)
 	return mimicApache(cs, req)
-}
-
-func errorf(op ops.Op, msg string, args ...interface{}) error {
-	return op.FailIf(fmt.Errorf(msg, args...))
 }
 
 func mimicApache(cs *filters.ConnectionState, req *http.Request) (*http.Response, *filters.ConnectionState, error) {

@@ -6,8 +6,6 @@ import (
 	"strings"
 
 	"github.com/getlantern/golog"
-	"github.com/getlantern/ops"
-	"github.com/getlantern/proxy/v2"
 	"github.com/getlantern/proxy/v2/filters"
 
 	"github.com/getlantern/http-proxy-lantern/v2/bbr"
@@ -42,18 +40,6 @@ func (f *opsfilter) Apply(cs *filters.ConnectionState, req *http.Request, next f
 	version := req.Header.Get(common.VersionHeader)
 	app := req.Header.Get(common.AppHeader)
 
-	op := ops.Begin("proxy").
-		Set("device_id", deviceID).
-		Set("origin", req.Host).
-		Set("origin_host", originHost).
-		Set("origin_port", originPort).
-		Set("proxy_dial_timeout", req.Header.Get(proxy.DialTimeoutHeader)).
-		Set("app_platform", platform).
-		Set("app_version", version).
-		Set("client_app", app)
-	log.Tracef("Starting op")
-	defer op.End()
-
 	measuredCtx := map[string]interface{}{
 		"origin":      req.Host,
 		"origin_host": originHost,
@@ -84,15 +70,11 @@ func (f *opsfilter) Apply(cs *filters.ConnectionState, req *http.Request, next f
 	if err != nil {
 		clientIP = req.RemoteAddr
 	}
-	op.Set("client_ip", clientIP)
 	measuredCtx["client_ip"] = clientIP
 
 	// Send the same context data to measured as well
 	wc := cs.Downstream().(listeners.WrapConn)
 	wc.ControlMessage("measured", measuredCtx)
 
-	resp, nextCtx, nextErr := next(cs, req)
-	op.FailIf(nextErr)
-
-	return resp, nextCtx, nextErr
+	return next(cs, req)
 }

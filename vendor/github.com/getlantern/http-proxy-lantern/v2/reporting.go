@@ -26,7 +26,7 @@ type reportingConfig struct {
 	wrapper func(ls net.Listener) net.Listener
 }
 
-func newReportingConfig(countryLookup geo.CountryLookup, rc *rclient.Client, enabled bool, bordaReporter listeners.MeasuredReportFN, instrument instrument.Instrument, throttleConfig throttle.Config) *reportingConfig {
+func newReportingConfig(countryLookup geo.CountryLookup, rc *rclient.Client, enabled bool, instrument instrument.Instrument, throttleConfig throttle.Config) *reportingConfig {
 	if !enabled || rc == nil {
 		return noReport
 	}
@@ -56,12 +56,22 @@ func newReportingConfig(countryLookup geo.CountryLookup, rc *rclient.Client, ena
 		if _client_ip != nil {
 			client_ip = net.ParseIP(_client_ip.(string))
 		}
+		_deviceID := ctx["deviceid"]
+		deviceID := ""
+		if _deviceID != nil {
+			deviceID = _deviceID.(string)
+		}
 		dataCapCohort := ""
 		throttleSettings, hasThrottleSettings := ctx["throttle_settings"]
 		if hasThrottleSettings {
 			dataCapCohort = throttleSettings.(*throttle.Settings).Label
 		}
-		instrument.ProxiedBytes(deltaStats.SentTotal, deltaStats.RecvTotal, platform, version, app, dataCapCohort, client_ip)
+		_originHost := ctx["origin_host"]
+		originHost := ""
+		if _originHost != nil {
+			originHost = _originHost.(string)
+		}
+		instrument.ProxiedBytes(deltaStats.SentTotal, deltaStats.RecvTotal, platform, version, app, dataCapCohort, client_ip, deviceID, originHost)
 	}
 
 	var reporter listeners.MeasuredReportFN
@@ -74,11 +84,7 @@ func newReportingConfig(countryLookup geo.CountryLookup, rc *rclient.Client, ena
 	} else {
 		reporter = redis.NewMeasuredReporter(countryLookup, rc, measuredReportingInterval, throttleConfig)
 	}
-	if bordaReporter != nil {
-		reporter = combineReporter(reporter, bordaReporter, proxiedBytesReporter)
-	} else {
-		reporter = combineReporter(reporter, proxiedBytesReporter)
-	}
+	reporter = combineReporter(reporter, proxiedBytesReporter)
 	wrapper := func(ls net.Listener) net.Listener {
 		return listeners.NewMeasuredListener(ls, measuredReportingInterval, reporter)
 	}

@@ -6,83 +6,67 @@ import (
 	"time"
 
 	"github.com/getlantern/http-proxy/listeners"
-	"github.com/juju/ratelimit"
+	"github.com/getlantern/ratelimit"
+)
+
+const (
+	minSleep = 5 * time.Millisecond // don't bother sleeping for less than this amount of time
 )
 
 type RateLimiter struct {
-	r              *ratelimit.Bucket
-	w              *ratelimit.Bucket
-	rate           int64
-	preferredMinIO int64
+	r         *ratelimit.Bucket
+	w         *ratelimit.Bucket
+	rateRead  int64
+	rateWrite int64
 }
 
-func NewRateLimiter(rate int64) *RateLimiter {
+func NewRateLimiter(rateRead, rateWrite int64) *RateLimiter {
 	l := &RateLimiter{
-		rate: rate,
+		rateRead:  rateRead,
+		rateWrite: rateWrite,
 	}
-	if rate > 0 {
-		l.r = ratelimit.NewBucketWithRate(float64(rate), rate)
-		l.w = ratelimit.NewBucketWithRate(float64(rate), rate)
-
-		// prefer to read or write at least this number of bytes
-		// at once when possible. Use a progressively lower min
-		// for lower rates.
-		min := rate / 8
-		if min < 1 {
-			min = 1
-		} else if min > 512 {
-			min = 512
-		}
-		l.preferredMinIO = min
+	if rateRead > 0 {
+		l.r = ratelimit.NewBucketWithRate(float64(rateRead), rateRead)
+	}
+	if rateWrite > 0 {
+		l.w = ratelimit.NewBucketWithRate(float64(rateWrite), rateWrite)
 	}
 	return l
 }
 
-// Acquire up to max read tokens. Will return as soon as
-// between min and max reads are acquired. Returns number
-// of tokens acquired and boolean indicating whether they
-// were immediately available or a delay was necessary.
-func (l *RateLimiter) waitRead(min, max int64) (int64, bool) {
-	t, d := l.wait(l.r, min, max)
-	if d > 0 {
-		time.Sleep(d)
-		return t, true
-	}
-	return t, false
+func (l *RateLimiter) GetRateRead() int64 {
+	return l.rateRead
 }
 
-// Acquire up to max write tokens. Will return as soon as
-// between min and max writes are acquired. Returns number
-// of tokens acquired and boolean indicating whether they
-// were immediately available or a delay was necessary.
-func (l *RateLimiter) waitWrite(min, max int64) (int64, bool) {
-	t, d := l.wait(l.w, min, max)
-	if d > 0 {
-		time.Sleep(d)
-		return t, true
-	}
-	return t, false
-
+func (l *RateLimiter) GetRateWrite() int64 {
+	return l.rateWrite
 }
 
-func (l *RateLimiter) wait(b *ratelimit.Bucket, min, max int64) (int64, time.Duration) {
-	if b == nil {
-		return max, 0
+func (l *RateLimiter) waitRead(n int) {
+	d := l.wait(l.r, n)
+	if d > 0 {
+		sleep(d)
 	}
+}
 
-	var taken int64
-	var d time.Duration
-
-	if min > 0 {
-		d = b.Take(min)
-		taken = min
+func (l *RateLimiter) waitWrite(n int) {
+	d := l.wait(l.w, n)
+	if d > 0 {
+		sleep(d)
 	}
+}
 
-	if d == 0 && taken < max {
-		taken += b.TakeAvailable(max - taken)
+// In order to avoid lots of very short (and relatively expensive) sleeps, never sleep for
+// less than minSleep.
+func sleep(d time.Duration) {
+	if d < minSleep {
+		d = minSleep
 	}
+	time.Sleep(d)
+}
 
-	return taken, d
+func (l *RateLimiter) wait(b *ratelimit.Bucket, n int) time.Duration {
+	return b.Take(int64(n))
 }
 
 type bitrateListener struct {
@@ -103,7 +87,7 @@ func (bl *bitrateListener) Accept() (net.Conn, error) {
 	return &bitrateConn{
 		WrapConnEmbeddable: wc,
 		Conn:               c,
-		limiter:            NewRateLimiter(0),
+		limiter:            NewRateLimiter(0, 0),
 	}, err
 }
 
@@ -115,49 +99,25 @@ type bitrateConn struct {
 }
 
 func (c *bitrateConn) Read(p []byte) (n int, err error) {
-	if c.limiter.rate == 0 {
+	if c.limiter.rateRead == 0 {
 		return c.Conn.Read(p)
 	}
 
-	var delayed bool
-	var nn int
-	// read in chunks until delayed or read ends
-	for lp := int64(len(p)); lp > 0 && err == nil; lp = int64(len(p)) {
-		bs := c.limiter.preferredMinIO
-		if lp < bs {
-			bs = lp
-		}
-		nn, err = c.Conn.Read(p[:bs])
-
-		if nn > 0 {
-			_, delayed = c.limiter.waitRead(int64(nn), int64(nn))
-			n += nn
-			p = p[nn:]
-		}
-
-		// short read or had to wait for tokens.
-		if int64(nn) < bs || delayed {
-			break
-		}
+	n, err = c.Conn.Read(p)
+	if err == nil {
+		c.limiter.waitRead(n)
 	}
 	return
 }
 
 func (c *bitrateConn) Write(p []byte) (n int, err error) {
-	if c.limiter.rate == 0 {
+	if c.limiter.rateWrite == 0 {
 		return c.Conn.Write(p)
 	}
 
-	var i int
-	for lp := int64(len(p)); lp > 0 && err == nil; lp = int64(len(p)) {
-		min := c.limiter.preferredMinIO
-		if lp < min {
-			min = lp
-		}
-		s, _ := c.limiter.waitWrite(min, lp)
-		i, err = c.Conn.Write(p[:s])
-		p = p[i:]
-		n += i
+	n, err = c.Conn.Write(p)
+	if err == nil {
+		c.limiter.waitWrite(n)
 	}
 	return
 }
@@ -170,7 +130,7 @@ func (c *bitrateConn) OnState(s http.ConnState) {
 }
 
 func (c *bitrateConn) ControlMessage(msgType string, data interface{}) {
-	// pro-user message always overrides the active flag
+	// per user message always overrides the active flag
 	if msgType == "throttle" {
 		c.limiter = data.(*RateLimiter)
 	}

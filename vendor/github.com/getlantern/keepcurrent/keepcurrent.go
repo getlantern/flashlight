@@ -1,5 +1,5 @@
-// Package keepcurrent periodically poll from the source and if it's changed,
-// sync with a set of destinations
+// Package keepcurrent periodically polls from the source and if it's changed,
+// syncs with a set of destinations
 
 package keepcurrent
 
@@ -38,6 +38,8 @@ type Runner struct {
 	// be more reliable than the source.
 	OnSinkError func(sink Sink, err error)
 
+	Validate func(data []byte) error
+
 	source      Source
 	sinks       []Sink
 	lastUpdated time.Time
@@ -45,10 +47,19 @@ type Runner struct {
 
 // New construct a runner which synchronizes data from one source to one or more sinks
 func New(from Source, to ...Sink) *Runner {
+	return NewWithValidator(func(data []byte) error { return nil }, from, to...)
+}
+
+// Like New but with a function that validates data before sending it to the sinks
+func NewWithValidator(validate func(data []byte) error, from Source, to ...Sink) *Runner {
 	return &Runner{
-		func(error, int) time.Duration { return 0 },
-		func(Sink, error) {},
-		from, to, time.Time{}}
+		OnSourceError: func(error, int) time.Duration { return 0 },
+		OnSinkError:   func(Sink, error) {},
+		Validate:      validate,
+		source:        from,
+		sinks:         to,
+		lastUpdated:   time.Time{},
+	}
 }
 
 // InitFrom synchronizes data from the given source to configured sinks.
@@ -95,6 +106,9 @@ func (runner *Runner) syncOnce(from Source, chStop chan struct{}) {
 			// Read ahead to surface any error reading from the source
 			data, err = ioutil.ReadAll(rc)
 			rc.Close()
+		}
+		if err == nil {
+			err = runner.Validate(data)
 		}
 		if err == nil {
 			runner.lastUpdated = start

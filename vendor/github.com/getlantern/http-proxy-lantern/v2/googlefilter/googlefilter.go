@@ -9,7 +9,6 @@ import (
 	"regexp"
 
 	"github.com/getlantern/golog"
-	"github.com/getlantern/ops"
 	"github.com/getlantern/proxy/v2/filters"
 )
 
@@ -47,15 +46,11 @@ func (f *googleFilter) Apply(cs *filters.ConnectionState, req *http.Request, nex
 
 func (f *googleFilter) recordActivity(req *http.Request) (sawSearch bool, sawCaptcha bool) {
 	if f.searchRegex.MatchString(req.Host) {
-		op := ops.Begin("google_search")
-		log.Tracef("Saw google search")
-		op.End()
+		// TODO: instrument with OTEL
 		return true, false
 	}
 	if f.captchaRegex.MatchString(req.Host) {
-		op := ops.Begin("google_captcha")
-		log.Tracef("Saw google captcha")
-		op.End()
+		// TODO: instrument with OTEL
 		return false, true
 	}
 	return false, false

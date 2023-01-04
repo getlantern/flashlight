@@ -46,8 +46,8 @@ func (o *jsonOutput) print(writer io.Writer, prefix string, skipFrames int, prin
 	cleanPrefix := prefix[0 : len(prefix)-2] // prefix contains ': ' at the end, strip it
 	event := Event{Component: cleanPrefix, Severity: severity, Caller: o.caller(skipFrames), Context: values}
 	if printStack {
-		buf := bufferPool.Get()
-		defer bufferPool.Put(buf)
+		buf := getBuffer()
+		defer returnBuffer(buf)
 		_ = writeStack(buf, o.pc)
 		event.Stack = buf.String()
 	}

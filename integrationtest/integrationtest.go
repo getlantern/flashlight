@@ -4,6 +4,7 @@ package integrationtest
 
 import (
 	"compress/gzip"
+	"context"
 	"crypto/sha256"
 	"crypto/tls"
 	_ "embed"
@@ -73,11 +74,8 @@ type Helper struct {
 	t                             *testing.T
 	ConfigDir                     string
 	HTTPSProxyServerAddr          string
-	HTTPSUTPAddr                  string
 	OBFS4ProxyServerAddr          string
-	OBFS4UTPProxyServerAddr       string
 	LampshadeProxyServerAddr      string
-	LampshadeUTPProxyServerAddr   string
 	QUICIETFProxyServerAddr       string
 	WSSProxyServerAddr            string
 	ShadowsocksProxyServerAddr    string
@@ -115,11 +113,8 @@ func NewHelper(t *testing.T, basePort int) (*Helper, error) {
 		t:                             t,
 		ConfigDir:                     ConfigDir,
 		HTTPSProxyServerAddr:          nextListenAddr(),
-		HTTPSUTPAddr:                  nextListenAddr(),
 		OBFS4ProxyServerAddr:          nextListenAddr(),
-		OBFS4UTPProxyServerAddr:       nextListenAddr(),
 		LampshadeProxyServerAddr:      nextListenAddr(),
-		LampshadeUTPProxyServerAddr:   nextListenAddr(),
 		QUICIETFProxyServerAddr:       nextListenAddr(),
 		WSSProxyServerAddr:            nextListenAddr(),
 		ShadowsocksProxyServerAddr:    nextListenAddr(),
@@ -224,13 +219,10 @@ func (helper *Helper) startProxyServer() error {
 		TestingLocal:              true,
 		HTTPAddr:                  helper.HTTPSProxyServerAddr,
 		HTTPMultiplexAddr:         helper.HTTPSSmuxProxyServerAddr,
-		HTTPUTPAddr:               helper.HTTPSUTPAddr,
 		Obfs4Addr:                 helper.OBFS4ProxyServerAddr,
-		Obfs4UTPAddr:              helper.OBFS4UTPProxyServerAddr,
 		Obfs4Dir:                  filepath.Join(helper.ConfigDir, obfs4SubDir),
 		Obfs4HandshakeConcurrency: obfs4HandshakeConcurrency,
 		LampshadeAddr:             helper.LampshadeProxyServerAddr,
-		LampshadeUTPAddr:          helper.LampshadeUTPProxyServerAddr,
 		QUICIETFAddr:              helper.QUICIETFProxyServerAddr,
 		WSSAddr:                   helper.WSSProxyServerAddr,
 		TLSMasqAddr:               helper.TLSMasqProxyServerAddr,
@@ -273,8 +265,10 @@ func (helper *Helper) startProxyServer() error {
 		IdleTimeout:       30 * time.Second,
 	}
 
-	go s1.ListenAndServe()
-	go s2.ListenAndServe()
+	ctx, _ := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	go s1.ListenAndServe(ctx)
+	ctx, _ = context.WithTimeout(context.Background(), 500*time.Millisecond)
+	go s2.ListenAndServe(ctx)
 
 	err = waitforserver.WaitForServer("tcp", helper.HTTPSProxyServerAddr, 10*time.Second)
 	if err != nil {
@@ -294,7 +288,8 @@ func (helper *Helper) startProxyServer() error {
 	}
 
 	// only launch / wait for this one after the cert is in place (can race otherwise.)
-	go s3.ListenAndServe()
+	ctx, _ = context.WithTimeout(context.Background(), 500*time.Millisecond)
+	go s3.ListenAndServe(ctx)
 	err = waitforserver.WaitForServer("tcp", helper.HTTPSPsmuxProxyServerAddr, 10*time.Second)
 
 	return err
@@ -419,12 +414,8 @@ func (helper *Helper) buildProxies(proto string) (map[string]*config.ProxyConfig
 	}
 
 	srv.AuthToken = Token
-	if proto == "obfs4" || proto == "utpobfs4" {
-		if proto == "utpobfs4" {
-			srv.Addr = helper.OBFS4UTPProxyServerAddr
-		} else {
-			srv.Addr = helper.OBFS4ProxyServerAddr
-		}
+	if proto == "obfs4" {
+		srv.Addr = helper.OBFS4ProxyServerAddr
 		srv.PluggableTransport = proto
 		srv.PluggableTransportSettings = map[string]string{
 			"iat-mode": "0",
@@ -455,12 +446,6 @@ func (helper *Helper) buildProxies(proto string) (map[string]*config.ProxyConfig
 				"url":         fmt.Sprintf("https://%s", helper.WSSProxyServerAddr),
 				"multiplexed": "true",
 			}
-		} else if proto == "utphttps" {
-			srv.Addr = helper.HTTPSUTPAddr
-			srv.PluggableTransport = "utphttps"
-		} else if proto == "utplampshade" {
-			srv.Addr = helper.LampshadeUTPProxyServerAddr
-			srv.PluggableTransport = "utplampshade"
 		} else if proto == "tlsmasq" {
 			srv.Addr = helper.TLSMasqProxyServerAddr
 			srv.PluggableTransport = "tlsmasq"

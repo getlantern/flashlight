@@ -2,13 +2,13 @@ package keepcurrent
 
 import (
 	"fmt"
-	"github.com/mholt/archiver/v3"
 	"io"
 	"net/http"
 	"os"
 	"sync"
 	"time"
 
+	"github.com/mholt/archiver/v3"
 )
 
 type webSource struct {

@@ -1,19 +1,35 @@
 package instrument
 
 import (
+	"context"
+	"math/rand"
 	"net"
 	"net/http"
+	"regexp"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
+	"github.com/getlantern/errors"
 	"github.com/getlantern/geo"
 	"github.com/getlantern/multipath"
 	"github.com/getlantern/proxy/v2/filters"
+)
+
+const (
+	otelReportingInterval = 60 * time.Minute
+)
+
+var (
+	originRootRegex = regexp.MustCompile(`([^\.]+\.[^\.]+$)`)
 )
 
 // Instrument is the common interface about what can be instrumented.
@@ -27,8 +43,8 @@ type Instrument interface {
 	XBQHeaderSent()
 	SuspectedProbing(fromIP net.IP, reason string)
 	VersionCheck(redirect bool, method, reason string)
-	ProxiedBytes(sent, recv int, platform, version, app, dataCapCohort string, clientIP net.IP)
-	TCPPackets(clientAddr string, sentDataPackets, retransmissions, consecRetransmissions int)
+	ProxiedBytes(sent, recv int, platform, version, app, dataCapCohort string, clientIP net.IP, deviceID, originHost string)
+	Close() error
 	quicSentPacket()
 	quicLostPacket()
 }
@@ -54,10 +70,9 @@ func (i NoInstrument) Throttle(m bool, reason string) {}
 func (i NoInstrument) XBQHeaderSent()                                    {}
 func (i NoInstrument) SuspectedProbing(fromIP net.IP, reason string)     {}
 func (i NoInstrument) VersionCheck(redirect bool, method, reason string) {}
-func (i NoInstrument) ProxiedBytes(sent, recv int, platform, version, app, dataCapCohort string, clientIP net.IP) {
+func (i NoInstrument) ProxiedBytes(sent, recv int, platform, version, app, dataCapCohort string, clientIP net.IP, deviceID, originHost string) {
 }
-func (i NoInstrument) TCPPackets(clientAddr string, sentDataPackets, retransmissions, consecRetransmissions int) {
-}
+func (i NoInstrument) Close() error    { return nil }
 func (i NoInstrument) quicSentPacket() {}
 func (i NoInstrument) quicLostPacket() {}
 
@@ -108,6 +123,9 @@ type PromInstrument struct {
 	commonLabelNames []string
 	filters          map[string]*instrumentedFilter
 	errorHandlers    map[string]func(conn net.Conn, err error)
+	clientStats      map[clientDetails]*usage
+	// originStats      map[originDetails]*usage
+	statsMx sync.Mutex
 
 	blacklistChecked, blacklisted, mimicryChecked, mimicked, quicLostPackets, quicSentPackets, tcpConsecRetransmissions, tcpSentDataPackets, throttlingChecked, xbqSent prometheus.Counter
 
@@ -126,13 +144,15 @@ func NewPrometheus(countryLookup geo.CountryLookup, ispLookup geo.ISPLookup, c C
 		commonLabelNames[i] = k
 		i++
 	}
-	return &PromInstrument{
+	p := &PromInstrument{
 		countryLookup:    countryLookup,
 		ispLookup:        ispLookup,
 		commonLabels:     commonLabels,
 		commonLabelNames: commonLabelNames,
 		filters:          make(map[string]*instrumentedFilter),
 		errorHandlers:    make(map[string]func(conn net.Conn, err error)),
+		clientStats:      make(map[clientDetails]*usage),
+		// originStats:      make(map[originDetails]*usage),
 		blacklistChecked: promauto.NewCounterVec(prometheus.CounterOpts{
 			Name: "proxy_blacklist_checked_requests_total",
 		}, commonLabelNames).With(commonLabels),
@@ -226,6 +246,9 @@ func NewPrometheus(countryLookup geo.CountryLookup, ispLookup geo.ISPLookup, c C
 			Name: "proxy_version_check_total",
 		}, append(commonLabelNames, "method", "redirected", "reason")).MustCurryWith(commonLabels),
 	}
+
+	go p.reportToOTELPeriodically()
+	return p
 }
 
 // Run runs the PromInstrument exporter on the given address. The
@@ -350,26 +373,43 @@ func (p *PromInstrument) VersionCheck(redirect bool, method, reason string) {
 
 // ProxiedBytes records the volume of application data clients sent and
 // received via the proxy.
-func (p *PromInstrument) ProxiedBytes(sent, recv int, platform, version, app, dataCapCohort string, clientIP net.IP) {
+func (p *PromInstrument) ProxiedBytes(sent, recv int, platform, version, app, dataCapCohort string, clientIP net.IP, deviceID, originHost string) {
 	labels := prometheus.Labels{"app_platform": platform, "app_version": version, "app": app, "datacap_cohort": dataCapCohort}
 	p.bytesSent.With(labels).Add(float64(sent))
 	p.bytesRecv.With(labels).Add(float64(recv))
 	country := p.countryLookup.CountryCode(clientIP)
+	isp := p.ispLookup.ISP(clientIP)
 	by_isp := prometheus.Labels{"country": country, "isp": "omitted"}
 	// We care about ISPs within these countries only, to reduce cardinality of the metrics
 	if country == "CN" || country == "IR" || country == "AE" || country == "TK" {
-		by_isp["isp"] = p.ispLookup.ISP(clientIP)
+		by_isp["isp"] = isp
 	}
 	p.bytesSentByISP.With(by_isp).Add(float64(sent))
 	p.bytesRecvByISP.With(by_isp).Add(float64(recv))
-}
 
-// TCPPackets records the number/rate of TCP data packets and retransmissions
-// mainly for block detection.
-func (p *PromInstrument) TCPPackets(clientAddr string, sentDataPackets, retransmissions, consecRetransmissions int) {
-	p.tcpRetransmissionRate.Observe(float64(retransmissions) / float64(sentDataPackets))
-	p.tcpSentDataPackets.Add(float64(sentDataPackets))
-	p.tcpConsecRetransmissions.Add(float64(consecRetransmissions))
+	clientKey := clientDetails{
+		deviceID: deviceID,
+		platform: platform,
+		version:  version,
+		country:  country,
+		isp:      isp,
+	}
+	p.statsMx.Lock()
+	p.clientStats[clientKey] = p.clientStats[clientKey].add(sent, recv)
+	// if originHost != "" {
+	// 	originRoot, err := p.originRoot(originHost)
+	// 	if err == nil {
+	// 		// only record if we could extract originRoot
+	// 		originKey := originDetails{
+	// 			origin:   originRoot,
+	// 			platform: platform,
+	// 			version:  version,
+	// 			country:  country,
+	// 		}
+	// 		p.originStats[originKey] = p.originStats[originKey].add(sent, recv)
+	// 	}
+	// }
+	p.statsMx.Unlock()
 }
 
 // quicPackets is used by QuicTracer to update QUIC retransmissions mainly for block detection.
@@ -418,4 +458,117 @@ func (prom *PromInstrument) MultipathStats(protocols []string) (trackers []multi
 		})
 	}
 	return
+}
+
+type clientDetails struct {
+	deviceID string
+	platform string
+	version  string
+	country  string
+	isp      string
+}
+
+type originDetails struct {
+	origin   string
+	platform string
+	version  string
+	country  string
+}
+
+type usage struct {
+	sent int
+	recv int
+}
+
+func (u *usage) add(sent int, recv int) *usage {
+	if u == nil {
+		u = &usage{}
+	}
+	u.sent += sent
+	u.recv += recv
+	return u
+}
+
+func (p *PromInstrument) reportToOTELPeriodically() {
+	for {
+		// We randomize the sleep time to avoid bursty submission to OpenTelemetry.
+		// Even though each proxy sends relatively little data, proxies often run fairly
+		// closely synchronized since they all update to a new binary and restart around the same
+		// time. By randomizing each proxy's interval, we smooth out the pattern of submissions.
+		sleepInterval := rand.Int63n(int64(otelReportingInterval * 2))
+		time.Sleep(time.Duration(sleepInterval))
+		p.reportToOTEL()
+	}
+}
+
+func (p *PromInstrument) reportToOTEL() {
+	p.statsMx.Lock()
+	clientStats := p.clientStats
+	// originStats := p.originStats
+	p.clientStats = make(map[clientDetails]*usage)
+	// p.originStats = make(map[originDetails]*usage)
+	p.statsMx.Unlock()
+	for key, value := range clientStats {
+		_, span := otel.Tracer("").
+			Start(
+				context.Background(),
+				"proxied_bytes",
+				trace.WithAttributes(
+					attribute.Int("bytes_sent", value.sent),
+					attribute.Int("bytes_recv", value.recv),
+					attribute.Int("bytes_total", value.sent+value.recv),
+					attribute.String("device_id", key.deviceID),
+					attribute.String("client_platform", key.platform),
+					attribute.String("client_version", key.version),
+					attribute.String("client_country", key.country),
+					attribute.String("client_isp", key.isp)))
+		span.End()
+	}
+	// for key, value := range originStats {
+	// 	_, span := otel.Tracer("").
+	// 		Start(
+	// 			context.Background(),
+	// 			"origin_bytes",
+	// 			trace.WithAttributes(
+	// 				attribute.Int("origin_bytes_sent", value.sent),
+	// 				attribute.Int("origin_bytes_recv", value.recv),
+	// 				attribute.Int("origin_bytes_total", value.sent+value.recv),
+	// 				attribute.String("origin", key.origin),
+	// 				attribute.String("client_platform", key.platform),
+	// 				attribute.String("client_version", key.version),
+	// 				attribute.String("client_country", key.country)))
+	// 	span.End()
+	// }
+}
+
+func (p *PromInstrument) Close() error {
+	p.reportToOTEL()
+	return nil
+}
+
+func (p *PromInstrument) originRoot(origin string) (string, error) {
+	ip := net.ParseIP(origin)
+	if ip != nil {
+		// origin is an IP address, try to get domain name
+		origins, err := net.LookupAddr(origin)
+		if err != nil || net.ParseIP(origins[0]) != nil {
+			// failed to reverse lookup, try to get ASN
+			asn := p.ispLookup.ASN(ip)
+			if asn != "" {
+				return asn, nil
+			}
+			return "", errors.New("unable to lookup ip %v", ip)
+		}
+		return p.originRoot(stripTrailingDot(origins[0]))
+	}
+	matches := originRootRegex.FindStringSubmatch(origin)
+	if matches == nil {
+		// regex didn't match, return origin as is
+		return origin, nil
+	}
+	return matches[1], nil
+}
+
+func stripTrailingDot(s string) string {
+	return strings.TrimRight(s, ".")
 }
