@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	httpClient = getHTTPClient(proxied.ParallelForIdempotent())
+	httpClient *http.Client = getHTTPClient(proxied.ParallelForIdempotent())
 )
 
 // GetHTTPClient creates a new http.Client that uses domain fronting and direct

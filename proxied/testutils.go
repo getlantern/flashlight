@@ -5,9 +5,45 @@ import (
 	"time"
 )
 
+const (
+	roundTripperHeaderKey = "X-Lantern-RoundTripper"
+)
+
+// OnStartRoundTrip is called by the flow when it starts a new roundtrip.
+type OnStartRoundTripFunc func(FlowComponentID, *http.Request)
+
+// OnCompleteRoundTrip is called by the flow when it completes a roundtrip.
+type OnCompleteRoundTripFunc func(FlowComponentID)
+
 type mockRoundTripper_Return200 struct {
 	id             FlowComponentID
 	processingTime time.Duration
+}
+
+type withTestInfo struct {
+	rt                  http.RoundTripper
+	onStartRoundTrip    OnStartRoundTripFunc
+	onCompleteRoundTrip OnCompleteRoundTripFunc
+	id                  FlowComponentID
+}
+
+func (r *withTestInfo) RoundTrip(req *http.Request) (*http.Response, error) {
+	if r.onStartRoundTrip != nil {
+		r.onStartRoundTrip(r.id, req)
+	}
+	if r.onCompleteRoundTrip != nil {
+		defer r.onCompleteRoundTrip(r.id)
+	}
+
+	resp, err := r.rt.RoundTrip(req)
+	if resp != nil {
+		if resp.Header == nil {
+			resp.Header = http.Header{}
+		}
+		resp.Header.Add(roundTripperHeaderKey, string(r.id))
+	}
+
+	return resp, err
 }
 
 // RoundTrip here just sleeps a bit and then returns 200 OK.
@@ -17,16 +53,12 @@ func (c *mockRoundTripper_Return200) RoundTrip(
 ) (*http.Response, error) {
 	time.Sleep(c.processingTime)
 	resp := &http.Response{
-		Header: map[string][]string{
-			roundTripperHeaderKey: []string{c.id.String()},
-		},
+		StatusCode: 200,
 	}
-	resp.StatusCode = 200
 	return resp, nil
 }
 
 type mockRoundTripper_FailOnceAndThenReturn200 struct {
-	id             FlowComponentID
 	processingTime time.Duration
 	failOnce       bool
 }
@@ -37,11 +69,7 @@ func (c *mockRoundTripper_FailOnceAndThenReturn200) RoundTrip(
 	*http.Request,
 ) (*http.Response, error) {
 	time.Sleep(c.processingTime)
-	resp := &http.Response{
-		Header: map[string][]string{
-			roundTripperHeaderKey: []string{c.id.String()},
-		},
-	}
+	resp := &http.Response{}
 	if !c.failOnce {
 		resp.StatusCode = 400
 		c.failOnce = true
@@ -52,7 +80,6 @@ func (c *mockRoundTripper_FailOnceAndThenReturn200) RoundTrip(
 }
 
 type mockRoundTripper_Return200Once struct {
-	id             FlowComponentID
 	processingTime time.Duration
 	return200After int
 	currentCount   int
@@ -64,11 +91,7 @@ func (c *mockRoundTripper_Return200Once) RoundTrip(
 	*http.Request,
 ) (*http.Response, error) {
 	time.Sleep(c.processingTime)
-	resp := &http.Response{
-		Header: map[string][]string{
-			roundTripperHeaderKey: []string{c.id.String()},
-		},
-	}
+	resp := &http.Response{}
 	if c.currentCount == c.return200After {
 		resp.StatusCode = 200
 	} else {
@@ -79,7 +102,6 @@ func (c *mockRoundTripper_Return200Once) RoundTrip(
 }
 
 type mockRoundTripper_Return400 struct {
-	id             FlowComponentID
 	processingTime time.Duration
 }
 
@@ -89,11 +111,7 @@ func (c *mockRoundTripper_Return400) RoundTrip(
 	*http.Request,
 ) (*http.Response, error) {
 	time.Sleep(c.processingTime)
-	resp := &http.Response{
-		Header: map[string][]string{
-			roundTripperHeaderKey: []string{c.id.String()},
-		},
-	}
+	resp := &http.Response{}
 	resp.StatusCode = 400
 	return resp, nil
 }
