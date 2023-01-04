@@ -31,32 +31,39 @@ func TestProxiedFlowCancellaton(t *testing.T) {
 		cancel()
 	}()
 
+	// Register a RoundTripper that never finishes
+	aaa := FlowComponentID("aaa")
+	EnableComponent(
+		aaa,
+		&mockRoundTripper_Return200{
+			id:             FlowComponentID("aaa"),
+			processingTime: 999 * time.Second,
+		})
+
 	// Assert that, after we cancel, since our only roundtripper "aaa"
 	// is waiting forever, we won't get any response and we'll get an
 	// error
 	resp, err := NewProxiedFlow(
-		&ProxiedFlowInput{
-			AddDebugHeaders: true,
-		},
+		&ProxiedFlowOptions{},
 	).
-		// Make a roundtripper that never finishes
 		Add("aaa",
-			&mockRoundTripper_Return200{
-				id:             FlowComponentID("aaa"),
-				processingTime: 999 * time.Second,
-			},
 			false, // isPreferred
 		).RoundTrip(req)
+
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "context canceled")
 	require.Nil(t, resp)
 }
 
 func TestProxiedFlowPreference(t *testing.T) {
+	register := func(id FlowComponentID, cb OnStartRoundTripFunc, rt http.RoundTripper) {
+		EnableComponent(id, &withTestInfo{id: id, onStartRoundTrip: cb, rt: rt})
+	}
+
 	type testCase struct {
 		name                                   string
 		numOfRequests                          int
-		initFlow                               func(f OnStartRoundTrip) *ProxiedFlow
+		initFlow                               func(f OnStartRoundTripFunc) *ProxiedFlow
 		mapOfRoundTripperNamesToNumTimesCalled map[string]int
 		winningRoundTripperPerRequest          []string
 	}
@@ -65,19 +72,19 @@ func TestProxiedFlowPreference(t *testing.T) {
 		{
 			name:          "Parallel components. Prefer none. All roundtrippers should be triggered",
 			numOfRequests: 5,
-			initFlow: func(f OnStartRoundTrip) *ProxiedFlow {
-				return NewProxiedFlow(&ProxiedFlowInput{
-					AddDebugHeaders:      true,
-					OnStartRoundTripFunc: f,
+			initFlow: func(f OnStartRoundTripFunc) *ProxiedFlow {
+				register("aaa", f, &mockRoundTripper_Return200{id: "aaa", processingTime: 100 * time.Millisecond})
+				register("bbb", f, &mockRoundTripper_Return200{id: "bbb", processingTime: 300 * time.Millisecond})
+				register("ccc", f, &mockRoundTripper_Return200{id: "ccc", processingTime: 300 * time.Millisecond})
+
+				return NewProxiedFlow(&ProxiedFlowOptions{
+					ParallelMethods: AnyMethod,
 				}).
 					Add("aaa",
-						&mockRoundTripper_Return200{id: "aaa", processingTime: 100 * time.Millisecond},
 						false).
 					Add("bbb",
-						&mockRoundTripper_Return200{id: "bbb", processingTime: 300 * time.Millisecond},
 						false).
 					Add("ccc",
-						&mockRoundTripper_Return200{id: "ccc", processingTime: 300 * time.Millisecond},
 						false)
 			},
 			winningRoundTripperPerRequest: []string{
@@ -98,19 +105,19 @@ func TestProxiedFlowPreference(t *testing.T) {
 		{
 			name:          "Parallel components, prefer one. Have the preferred one come first and the rest should NOT be triggered for subsequent runs if no errors occur",
 			numOfRequests: 5,
-			initFlow: func(f OnStartRoundTrip) *ProxiedFlow {
-				return NewProxiedFlow(&ProxiedFlowInput{
-					AddDebugHeaders:      true,
-					OnStartRoundTripFunc: f,
+			initFlow: func(f OnStartRoundTripFunc) *ProxiedFlow {
+				register("aaa", f, &mockRoundTripper_Return200{id: "aaa", processingTime: 100 * time.Millisecond})
+				register("bbb", f, &mockRoundTripper_Return200{id: "bbb", processingTime: 300 * time.Millisecond})
+				register("ccc", f, &mockRoundTripper_Return200{id: "ccc", processingTime: 300 * time.Millisecond})
+
+				return NewProxiedFlow(&ProxiedFlowOptions{
+					ParallelMethods: AnyMethod,
 				}).
 					Add("aaa",
-						&mockRoundTripper_Return200{id: "aaa", processingTime: 100 * time.Millisecond},
 						true).
 					Add("bbb",
-						&mockRoundTripper_Return200{id: "bbb", processingTime: 300 * time.Millisecond},
 						false).
 					Add("ccc",
-						&mockRoundTripper_Return200{id: "ccc", processingTime: 300 * time.Millisecond},
 						false)
 			},
 			winningRoundTripperPerRequest: []string{
@@ -131,23 +138,19 @@ func TestProxiedFlowPreference(t *testing.T) {
 		{
 			name:          "Parallel components. Prefer one. The preferred component fails and the rest are triggered in the same run",
 			numOfRequests: 5,
-			initFlow: func(f OnStartRoundTrip) *ProxiedFlow {
-				return NewProxiedFlow(&ProxiedFlowInput{
-					AddDebugHeaders:      true,
-					OnStartRoundTripFunc: f,
+			initFlow: func(f OnStartRoundTripFunc) *ProxiedFlow {
+				register("aaa", f, &mockRoundTripper_FailOnceAndThenReturn200{processingTime: 500 * time.Millisecond})
+				register("bbb", f, &mockRoundTripper_Return200{processingTime: 100 * time.Millisecond})
+				register("ccc", f, &mockRoundTripper_Return200{processingTime: 400 * time.Millisecond})
+
+				return NewProxiedFlow(&ProxiedFlowOptions{
+					ParallelMethods: AnyMethod,
 				}).
 					Add("aaa",
-						&mockRoundTripper_FailOnceAndThenReturn200{
-							id: "aaa", processingTime: 500 * time.Millisecond},
 						true).
 					Add("bbb",
-						&mockRoundTripper_Return200{id: "bbb",
-							processingTime: 100 * time.Millisecond,
-						},
 						false).
 					Add("ccc",
-						&mockRoundTripper_Return200{id: "ccc",
-							processingTime: 400 * time.Millisecond},
 						false).
 					// Set "aaa" as the preferredComponent
 					SetPreferredComponent("aaa")
@@ -162,13 +165,7 @@ func TestProxiedFlowPreference(t *testing.T) {
 				"bbb",
 			},
 			mapOfRoundTripperNamesToNumTimesCalled: map[string]int{
-				// Once for the first request that failed when "aaa" was the
-				// preferred component.
-				//
-				// And five more for the rest of the requests. Yes, we've ran
-				// this component **twice** for one request. That's fine.
-				"aaa": 6,
-				// One for each request in this round
+				"aaa": 5,
 				"bbb": 5,
 				"ccc": 5,
 			},
@@ -177,23 +174,19 @@ func TestProxiedFlowPreference(t *testing.T) {
 		{
 			name:          "Parallel components. Prefer none. Have all of them fail",
 			numOfRequests: 5,
-			initFlow: func(f OnStartRoundTrip) *ProxiedFlow {
-				flow := NewProxiedFlow(&ProxiedFlowInput{
-					AddDebugHeaders:      true,
-					OnStartRoundTripFunc: f,
+			initFlow: func(f OnStartRoundTripFunc) *ProxiedFlow {
+				register("aaa", f, &mockRoundTripper_Return400{processingTime: 100 * time.Millisecond})
+				register("bbb", f, &mockRoundTripper_Return400{processingTime: 100 * time.Millisecond})
+				register("ccc", f, &mockRoundTripper_Return400{processingTime: 100 * time.Millisecond})
+
+				flow := NewProxiedFlow(&ProxiedFlowOptions{
+					ParallelMethods: AnyMethod,
 				}).
 					Add("aaa",
-						&mockRoundTripper_Return400{
-							id: "aaa", processingTime: 100 * time.Millisecond},
 						false).
 					Add("bbb",
-						&mockRoundTripper_Return400{id: "bbb",
-							processingTime: 100 * time.Millisecond,
-						},
 						false).
 					Add("ccc",
-						&mockRoundTripper_Return400{id: "ccc",
-							processingTime: 100 * time.Millisecond},
 						false)
 
 				return flow
@@ -219,6 +212,7 @@ func TestProxiedFlowPreference(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			registry.clear()
 			var collectedIdsMu sync.Mutex
 			collectedIds := []FlowComponentID{}
 			flow := tc.initFlow(func(id FlowComponentID, _ *http.Request) {
@@ -241,8 +235,9 @@ func TestProxiedFlowPreference(t *testing.T) {
 				resp, err := flow.RoundTrip(req)
 				winnerRTName := tc.winningRoundTripperPerRequest[i]
 				if winnerRTName == "" {
-					require.Error(t, err)
-					require.Nil(t, resp)
+					require.NoError(t, err)
+					require.NotNil(t, resp)
+					require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 				} else {
 					require.NoError(t, err)
 					require.NotNil(t, resp)

@@ -21,6 +21,7 @@ import (
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/borda"
+	"github.com/getlantern/flashlight/broflake"
 	"github.com/getlantern/flashlight/bypass"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
@@ -119,6 +120,8 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
 	f.applyClientConfig(cfg)
 	f.applyProxyBench(cfg)
+	f.applyBroflake(cfg)
+	f.applyProxiedFlow(cfg)
 	f.applyBorda(cfg)
 	f.applyOtel(cfg)
 	select {
@@ -326,6 +329,24 @@ func (f *Flashlight) applyOtel(cfg *config.Global) {
 	if cfg.Otel != nil && f.FeatureEnabled(config.FeatureOtel) {
 		otel.Configure(cfg.Otel)
 	}
+}
+
+func (f *Flashlight) applyBroflake(cfg *config.Global) {
+	if f.FeatureEnabled(config.FeatureBroflake) {
+		var fopts config.BroflakeOptions
+		if err := f.FeatureOptions(config.FeatureBroflake, &fopts); err != nil {
+			log.Debugf(
+				"enabling broflake: bad or no options for broflake feature in global-config: %v",
+				err,
+			)
+			return
+		}
+		broflake.StartBroflakeCensoredPeerIfNecessary(true, &fopts)
+	}
+}
+
+func (f *Flashlight) applyProxiedFlow(cfg *config.Global) {
+	proxied.SetProxiedFlowFeatureEnabled(f.FeatureEnabled(config.FeatureProxiedFlow))
 }
 
 // New creates a client proxy.

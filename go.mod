@@ -107,7 +107,7 @@ require (
 	github.com/huin/goupnp v1.0.3 // indirect
 	github.com/jaffee/commandeer v0.5.0
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
-	github.com/lucas-clemente/quic-go v0.31.1 // indirect
+	github.com/lucas-clemente/quic-go v0.31.1
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/go-server-timing v1.0.0
@@ -126,7 +126,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.11.1
 	go.uber.org/atomic v1.9.0
 	golang.org/x/mobile v0.0.0-20221110043201-43a038452099
-	golang.org/x/net v0.1.0
+	golang.org/x/net v0.3.0
 	golang.org/x/sys v0.3.0
 	google.golang.org/protobuf v1.28.1
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
@@ -134,6 +134,8 @@ require (
 
 require (
 	github.com/Jigsaw-Code/outline-ss-server v1.4.0
+	github.com/getlantern/broflake/clientcore v0.0.0-20230227174042-18002515b30a
+	github.com/getlantern/broflake/common v0.0.0-20230227174042-18002515b30a
 	github.com/getlantern/common v1.2.0
 	github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
 )
@@ -148,22 +150,15 @@ require (
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/alecthomas/atomic v0.1.0-alpha2 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
-	github.com/getlantern/go-update v0.0.0-20230221120840-8d795213a8bc // indirect
+	github.com/getlantern/broflake/netstate/client v0.0.0-20230227174042-18002515b30a // indirect
 	github.com/getlantern/ratelimit v0.0.0-20220926192648-933ab81a6fc7 // indirect
-	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/pprof v0.0.0-20220608213341-c488b8fa1db3 // indirect
-	github.com/kr/binarydist v0.1.0 // indirect
-	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/marten-seemann/qtls-go1-19 v0.1.1 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
 	github.com/onsi/ginkgo/v2 v2.2.0 // indirect
-	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
-	github.com/shirou/gopsutil/v3 v3.22.12 // indirect
-	github.com/tklauser/go-sysconf v0.3.11 // indirect
-	github.com/tklauser/numcpus v0.6.0 // indirect
-	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	golang.org/x/exp v0.0.0-20220823124025-807a23277127 // indirect
+	nhooyr.io/websocket v1.8.7 // indirect
 )
 
 require (
@@ -272,23 +267,23 @@ require (
 	github.com/oschwald/maxminddb-golang v1.10.0 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
 	github.com/pierrec/lz4/v4 v4.1.12 // indirect
-	github.com/pion/datachannel v1.5.2 // indirect
+	github.com/pion/datachannel v1.5.5 // indirect
 	github.com/pion/dtls/v2 v2.1.5 // indirect
-	github.com/pion/ice/v2 v2.2.7 // indirect
+	github.com/pion/ice/v2 v2.2.12 // indirect
 	github.com/pion/interceptor v0.1.12 // indirect
 	github.com/pion/logging v0.2.2 // indirect
 	github.com/pion/mdns v0.0.5 // indirect
 	github.com/pion/randutil v0.1.0 // indirect
 	github.com/pion/rtcp v1.2.10 // indirect
 	github.com/pion/rtp v1.7.13 // indirect
-	github.com/pion/sctp v1.8.2 // indirect
+	github.com/pion/sctp v1.8.5 // indirect
 	github.com/pion/sdp/v3 v3.0.6 // indirect
 	github.com/pion/srtp/v2 v2.0.10 // indirect
 	github.com/pion/stun v0.3.5 // indirect
-	github.com/pion/transport v0.13.1 // indirect
+	github.com/pion/transport v0.14.1 // indirect
 	github.com/pion/turn/v2 v2.0.8 // indirect
 	github.com/pion/udp v0.1.1 // indirect
-	github.com/pion/webrtc/v3 v3.1.43 // indirect
+	github.com/pion/webrtc/v3 v3.1.50 // indirect
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -320,7 +315,7 @@ require (
 	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/text v0.5.0 // indirect
 	golang.org/x/time v0.0.0-20220922220347-f3bd1da661af // indirect
 	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
