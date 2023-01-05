@@ -134,8 +134,8 @@ require (
 
 require (
 	github.com/Jigsaw-Code/outline-ss-server v1.4.0
-	github.com/getlantern/broflake/clientcore v0.0.0-20230104182723-50a41f9df80b
-	github.com/getlantern/broflake/common v0.0.0-20230104182723-50a41f9df80b
+	github.com/getlantern/broflake/clientcore v0.0.0-20230104205741-752ce8cdca3a
+	github.com/getlantern/broflake/common v0.0.0-20230104205741-752ce8cdca3a
 	github.com/getlantern/common v1.2.0
 	github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
 )
