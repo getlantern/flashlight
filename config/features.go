@@ -87,7 +87,8 @@ func (o *P2PCensoredPeerOptions) FromMap(m map[string]interface{}) error {
 type BroflakeOptions struct {
 	DiscoverySrv   string
 	Endpoint       string
-	StunSrvs       []string
+	STUNSrvs       []string
+	STUNBatchSize  uint32
 	GenesisAddr    string
 	NATFailTimeout time.Duration
 	ICEFailTimeout time.Duration
@@ -106,9 +107,14 @@ func (o *BroflakeOptions) fromMap(m map[string]interface{}) error {
 		return fmt.Errorf("decoding endpoint: %w", err)
 	}
 
-	o.StunSrvs, err = stringArrFromMap(m, "stun_servers")
+	o.STUNSrvs, err = stringArrFromMap(m, "stun_servers")
 	if err != nil {
 		return fmt.Errorf("decoding stun_servers: %w", err)
+	}
+
+	o.STUNBatchSize, err = somethingFromMap[uint32](m, "stun_batch_size")
+	if err != nil {
+		return fmt.Errorf("decoding stun_batch_size: %w", err)
 	}
 
 	o.GenesisAddr, err = somethingFromMap[string](m, "genesis_addr")
