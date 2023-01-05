@@ -112,10 +112,11 @@ func (o *BroflakeOptions) fromMap(m map[string]interface{}) error {
 		return fmt.Errorf("decoding stun_servers: %w", err)
 	}
 
-	o.STUNBatchSize, err = somethingFromMap[uint32](m, "stun_batch_size")
+	batchSize, err := somethingFromMap[int](m, "stun_batch_size")
 	if err != nil {
 		return fmt.Errorf("decoding stun_batch_size: %w", err)
 	}
+	o.STUNBatchSize = uint32(batchSize)
 
 	o.GenesisAddr, err = somethingFromMap[string](m, "genesis_addr")
 	if err != nil {
