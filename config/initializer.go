@@ -172,11 +172,31 @@ func newGlobalUnmarshaler(flags map[string]interface{}) func(bytes []byte) (inte
 		if err := yaml.Unmarshal(bytes, gl); err != nil {
 			return nil, err
 		}
+		if err := applyLocalOverrides(flags, gl); err != nil {
+			return nil, err
+		}
 		if err := gl.validate(); err != nil {
 			return nil, err
 		}
 		return gl, nil
 	}
+}
+
+func applyLocalOverrides(flags map[string]interface{}, gl *Global) error {
+	if v := flags["feature-overrides"]; v != nil {
+		filename := v.(string)
+		log.Debugf("Applying local feature overrides from %v", filename)
+		bytes, err := readConfigFile(filename, false)
+		if err != nil {
+			return err
+		}
+		overrides := &FeatureOverrides{}
+		if err := yaml.Unmarshal(bytes, overrides); err != nil {
+			return err
+		}
+		gl.applyFeatureOverrides(overrides)
+	}
+	return nil
 }
 
 func newProxiesUnmarshaler() func(bytes []byte) (interface{}, error) {
