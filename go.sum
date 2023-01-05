@@ -293,8 +293,12 @@ github.com/getlantern/borda v0.0.0-20220308134056-c4a5602f778e h1:mPtGf92RlHVeFs
 github.com/getlantern/borda v0.0.0-20220308134056-c4a5602f778e/go.mod h1:h/CNT4zYivoVZTnY3Yi/XkQCA2hlemWLjMEzKbIf5K4=
 github.com/getlantern/broflake/clientcore v0.0.0-20230104182723-50a41f9df80b h1:miq13PafxXbjXSR4o8VKsLoBIKrlsLLsA9X+gUYZeeY=
 github.com/getlantern/broflake/clientcore v0.0.0-20230104182723-50a41f9df80b/go.mod h1:JKgradrDWAns4qNKDgPIDEBLtiFV1NYoxVawYGDJc4w=
+github.com/getlantern/broflake/clientcore v0.0.0-20230104205741-752ce8cdca3a h1:BzHvRjIK5ifocf0o+Sw9a8Ma9p4f/BM5znkavMn8vMA=
+github.com/getlantern/broflake/clientcore v0.0.0-20230104205741-752ce8cdca3a/go.mod h1:JKgradrDWAns4qNKDgPIDEBLtiFV1NYoxVawYGDJc4w=
 github.com/getlantern/broflake/common v0.0.0-20230104182723-50a41f9df80b h1:XY80X0PrTpMUmiPC8IQ4tWFhAG4zW+XltvmXDxMNX3g=
 github.com/getlantern/broflake/common v0.0.0-20230104182723-50a41f9df80b/go.mod h1:6NQUESeWlw0z3FyY8U3PiczADx2b6TQrBY8lsRU2cOg=
+github.com/getlantern/broflake/common v0.0.0-20230104205741-752ce8cdca3a h1:qG43C3FiXwTymZFKicPa/xPTq94glMr2LI4rGqdjPx4=
+github.com/getlantern/broflake/common v0.0.0-20230104205741-752ce8cdca3a/go.mod h1:6NQUESeWlw0z3FyY8U3PiczADx2b6TQrBY8lsRU2cOg=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
 github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493 h1:8WjDNmpDLFVsAfcnHxqF4pfVKkdAQxyJ9iCHB4LxSfc=
 github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=

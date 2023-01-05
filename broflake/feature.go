@@ -21,15 +21,18 @@ func StartBroflakeCensoredPeerIfNecessary(enabled bool, options *config.Broflake
 	}
 
 	log.Debugf("attempting to enable broflake features...")
+
 	startBroflakeOnce.Do(func() {
 		log.Debugf("really attempting to enable broflake features once...")
+
 		opt := &clientcore.WebRTCOptions{
 			DiscoverySrv:   options.DiscoverySrv,
 			Endpoint:       options.Endpoint,
-			StunSrvs:       options.StunSrvs,
 			GenesisAddr:    options.GenesisAddr,
 			NATFailTimeout: options.NATFailTimeout,
 			ICEFailTimeout: options.ICEFailTimeout,
+			STUNBatch:      RandomSTUNs(options.STUNSrvs),
+			STUNBatchSize:  options.STUNBatchSize,
 		}
 
 		InitAndStartBroflakeCensoredPeer(opt)

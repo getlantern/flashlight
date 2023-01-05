@@ -250,10 +250,10 @@ github.com/getlantern/bbrconn
 # github.com/getlantern/borda v0.0.0-20220308134056-c4a5602f778e
 ## explicit; go 1.12
 github.com/getlantern/borda/client
-# github.com/getlantern/broflake/clientcore v0.0.0-20230104182723-50a41f9df80b
+# github.com/getlantern/broflake/clientcore v0.0.0-20230104205741-752ce8cdca3a
 ## explicit; go 1.18
 github.com/getlantern/broflake/clientcore
-# github.com/getlantern/broflake/common v0.0.0-20230104182723-50a41f9df80b
+# github.com/getlantern/broflake/common v0.0.0-20230104205741-752ce8cdca3a
 ## explicit; go 1.18
 github.com/getlantern/broflake/common
 # github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493
