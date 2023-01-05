@@ -315,29 +315,10 @@ func newConfig(filePath string, opts *options) *config {
 }
 
 func (conf *config) saved() (interface{}, error) {
-	infile, err := os.Open(conf.filePath)
+	bytes, err := readConfigFile(conf.filePath, conf.obfuscate)
 	if err != nil {
-		err = fmt.Errorf("unable to open config file %v for reading: %w", conf.filePath, err)
-		log.Error(err.Error())
 		return nil, err
 	}
-	defer infile.Close()
-
-	var in io.Reader = infile
-	if conf.obfuscate {
-		in = rot13.NewReader(infile)
-	}
-
-	bytes, err := ioutil.ReadAll(in)
-	if err != nil {
-		err = fmt.Errorf("error reading config from %v: %w", conf.filePath, err)
-		log.Error(err.Error())
-		return nil, err
-	}
-	if len(bytes) == 0 {
-		return nil, fmt.Errorf("config exists but is empty at %v", conf.filePath)
-	}
-
 	log.Debugf("Returning saved config at %v", conf.filePath)
 	return conf.unmarshaler(bytes)
 }
@@ -417,4 +398,30 @@ func (conf *config) doSaveOne(in []byte) error {
 	}
 	log.Debugf("Wrote file at %v", conf.filePath)
 	return nil
+}
+
+func readConfigFile(filePath string, obfuscated bool) ([]byte, error) {
+	infile, err := os.Open(filePath)
+	if err != nil {
+		err = fmt.Errorf("unable to open config file %v for reading: %w", filePath, err)
+		log.Error(err.Error())
+		return nil, err
+	}
+	defer infile.Close()
+
+	var in io.Reader = infile
+	if obfuscated {
+		in = rot13.NewReader(infile)
+	}
+
+	bytes, err := ioutil.ReadAll(in)
+	if err != nil {
+		err = fmt.Errorf("error reading config from %v: %w", filePath, err)
+		log.Error(err.Error())
+		return nil, err
+	}
+	if len(bytes) == 0 {
+		return nil, fmt.Errorf("config exists but is empty at %v", filePath)
+	}
+	return bytes, nil
 }
