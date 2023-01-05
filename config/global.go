@@ -75,6 +75,12 @@ func NewGlobal() *Global {
 	}
 }
 
+// just the feature options
+type FeatureOverrides struct {
+	FeaturesEnabled map[string][]*ClientGroup
+	FeatureOptions  map[string]map[string]interface{}
+}
+
 // FeatureEnabled checks if the feature is enabled given the client properties.
 func (cfg *Global) FeatureEnabled(feature, platform, appName, version string, userID int64, isPro bool,
 	geoCountry string) bool {
@@ -134,6 +140,17 @@ func (cfg *Global) applyFlags(flags map[string]interface{}) {
 		case "borda-sample-percentage":
 			cfg.BordaSamplePercentage = value.(float64)
 		}
+	}
+}
+
+func (cfg *Global) applyFeatureOverrides(o *FeatureOverrides) {
+	for k, v := range o.FeaturesEnabled {
+		log.Debugf("Overriding features enabled for %v", k)
+		cfg.FeaturesEnabled[k] = v
+	}
+	for k, v := range o.FeatureOptions {
+		log.Debugf("Overriding feature options for %v", k)
+		cfg.FeatureOptions[k] = v
 	}
 }
 
