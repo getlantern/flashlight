@@ -42,6 +42,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/getlantern/flashlight/ops"
 )
 
 const anyHTTPMethodMarker = "Any"
@@ -304,6 +306,7 @@ func (f *ProxiedFlow) SetPreferredComponent(id FlowComponentID) *ProxiedFlow {
 		if c.id == id {
 			f.preferredComponentMx.Lock()
 			f.preferredComponent = c
+			log.Debugf("set preferred flow component to %v", c)
 			f.preferredComponentMx.Unlock()
 			break
 		}
@@ -324,6 +327,7 @@ func (f *ProxiedFlow) SetPreferredComponentIfEmpty(id FlowComponentID) *ProxiedF
 			f.preferredComponentMx.Lock()
 			if f.preferredComponent == nil {
 				f.preferredComponent = c
+				log.Debugf("set preferred flow component to %v", c)
 			}
 			f.preferredComponentMx.Unlock()
 			break
@@ -338,6 +342,7 @@ func (f *ProxiedFlow) SetPreferredComponentIfEmpty(id FlowComponentID) *ProxiedF
 func (f *ProxiedFlow) ClearPreferredComponent() *ProxiedFlow {
 	f.preferredComponentMx.Lock()
 	f.preferredComponent = nil
+	log.Debugf("cleared preferred flow component")
 	f.preferredComponentMx.Unlock()
 	return f
 }
@@ -392,6 +397,20 @@ func (f ProxiedFlow) ShouldRunParallel(req *http.Request) bool {
 // RoundTrip makes ProxiedFlow implement the http.RoundTripper interface.
 // This function respects the request's original context
 func (f *ProxiedFlow) RoundTrip(req *http.Request) (*http.Response, error) {
+	log.Debugf("Using proxied flow for request to: %#v", req.URL.Host)
+	var op *ops.Op
+	ctx := req.Context()
+	if req.Context().Value((ops.CtxKeyBeam)) == nil {
+		// Some callers like the autoupdate package don't have a way to add beam to
+		// the request context. In such cases, generate a new beam.
+		op, ctx = ops.BeginWithNewBeam("proxiedflow", ctx)
+		req = req.WithContext(ctx)
+	} else {
+		op = ops.BeginWithBeam("proxiedflow", ctx)
+	}
+	op.Request(req)
+	defer op.End()
+
 	ch := make(chan *ProxiedFlowResponse, 1)
 	go func() {
 		flow := newFlowRunner(req, f)
@@ -399,9 +418,11 @@ func (f *ProxiedFlow) RoundTrip(req *http.Request) (*http.Response, error) {
 	}()
 	select {
 	case r := <-ch:
+		op.Response(r.resp)
+		op.FailIf(r.err)
 		return r.resp, r.err
 	case <-req.Context().Done():
-		return nil, req.Context().Err()
+		return nil, op.FailIf(req.Context().Err())
 	}
 }
 
@@ -415,6 +436,11 @@ func (comp *ProxiedFlowComponent) run(f *flowRunner) *ProxiedFlowResponse {
 		}
 	}
 	req := f.copyRequest()
+	op := ops.BeginWithBeam("proxiedflowcomponent", req.Context()).Request(req)
+	defer op.End()
+	op.ProxyType(ops.ProxyType(comp.id))
+	log.Debugf("running flow component %v for %v", comp.id, req.URL)
+
 	start := time.Now()
 	resp, err := rt.RoundTrip(req)
 	elapsed := time.Since(start)
@@ -423,7 +449,12 @@ func (comp *ProxiedFlowComponent) run(f *flowRunner) *ProxiedFlowResponse {
 	}
 	if err != nil {
 		err = fmt.Errorf("%v.RoundTrip %v: %w", comp.id, req.URL, err)
+		log.Debugf("flow component failed: %v", err)
+	} else {
+		log.Debugf("got successful response for %v", req.URL)
 	}
+	op.Response(resp)
+	op.FailIf(err)
 
 	return &ProxiedFlowResponse{
 		resp:    resp,
@@ -467,10 +498,14 @@ func (f *flowRunner) Run() *ProxiedFlowResponse {
 	}
 
 	if preferred != nil {
+		log.Debugf("trying preferred flow component for %v", f.requestURLString())
 		resp := f.runComponent(preferred)
 		if !resp.IsFailure() {
 			return resp
 		}
+		log.Debugf("preferred flow component failed for %v, trying others...", f.requestURLString())
+	} else {
+		log.Debugf("no preferred component for %v, trying others...", f.requestURLString())
 	}
 
 	if f.proxiedFlow.ShouldRunParallel(f.originalReq) {
@@ -483,6 +518,7 @@ func (f *flowRunner) Run() *ProxiedFlowResponse {
 // the first non-error response or an error if all
 // components fail.
 func (f *flowRunner) runParallel(components []*ProxiedFlowComponent) *ProxiedFlowResponse {
+	log.Debugf("running flow components in parallel for %v...", f.requestURLString())
 	if len(components) == 0 {
 		return &ProxiedFlowResponse{err: fmt.Errorf("no components")}
 	}
@@ -492,12 +528,12 @@ func (f *flowRunner) runParallel(components []*ProxiedFlowComponent) *ProxiedFlo
 
 	for _, _comp := range components {
 		comp := _comp
-		go func() {
+		ops.Go(func() {
 			results <- f.runComponent(comp)
-		}()
+		})
 	}
 
-	go func() {
+	ops.Go(func() {
 		rs := []*ProxiedFlowResponse{}
 		sent := false
 
@@ -518,7 +554,7 @@ func (f *flowRunner) runParallel(components []*ProxiedFlowComponent) *ProxiedFlo
 		for _, r := range rs {
 			r.Close()
 		}
-	}()
+	})
 
 	return <-first
 }
@@ -534,7 +570,9 @@ func (f *flowRunner) runSequential(components []*ProxiedFlowComponent) *ProxiedF
 		if !r.IsFailure() {
 			return r
 		}
+		log.Debugf("flow component %v failed for %v, trying next...", f.requestURLString(), comp.id)
 	}
+	log.Debugf("no more flow components for %v, returning last response...", f.requestURLString())
 	return r
 }
 
@@ -584,4 +622,14 @@ func (f *flowRunner) copyRequest() *http.Request {
 		req.Body = io.NopCloser(bytes.NewReader(f.body))
 	}
 	return req
+}
+
+func (f *flowRunner) requestURLString() string {
+	f.mx.Lock()
+	defer f.mx.Unlock()
+	urlString := ""
+	if f.originalReq.URL != nil {
+		urlString = f.originalReq.URL.String()
+	}
+	return urlString
 }
