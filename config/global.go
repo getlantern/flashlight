@@ -75,10 +75,12 @@ func NewGlobal() *Global {
 	}
 }
 
-// just the feature options
-type FeatureOverrides struct {
+// options that have a defined story for providing overrides,
+// eg features enabled / options.
+type LocalOverrides struct {
 	FeaturesEnabled map[string][]*ClientGroup
 	FeatureOptions  map[string]map[string]interface{}
+	Otel            *otel.Config
 }
 
 // FeatureEnabled checks if the feature is enabled given the client properties.
@@ -143,7 +145,7 @@ func (cfg *Global) applyFlags(flags map[string]interface{}) {
 	}
 }
 
-func (cfg *Global) applyFeatureOverrides(o *FeatureOverrides) {
+func (cfg *Global) applyOverrides(o *LocalOverrides) {
 	for k, v := range o.FeaturesEnabled {
 		log.Debugf("Overriding features enabled for %v", k)
 		cfg.FeaturesEnabled[k] = v
@@ -151,6 +153,30 @@ func (cfg *Global) applyFeatureOverrides(o *FeatureOverrides) {
 	for k, v := range o.FeatureOptions {
 		log.Debugf("Overriding feature options for %v", k)
 		cfg.FeatureOptions[k] = v
+	}
+	if o.Otel != nil {
+		if cfg.Otel == nil {
+			cfg.Otel = &otel.Config{
+				Headers:       make(map[string]string),
+				OpSampleRates: make(map[string]uint32),
+			}
+		}
+		if o.Otel.Endpoint != "" {
+			log.Debugf("Overriding default otel endponint (%v)", o.Otel.Endpoint)
+			cfg.Otel.Endpoint = o.Otel.Endpoint
+		}
+		for k, v := range o.Otel.Headers {
+			log.Debugf("Overriding otel header %v (%v)", k, v)
+			cfg.Otel.Headers[k] = v
+		}
+		if o.Otel.SampleRate > 0 {
+			log.Debugf("Overriding default otel sample rate (%v)", o.Otel.SampleRate)
+			cfg.Otel.SampleRate = o.Otel.SampleRate
+		}
+		for k, v := range o.Otel.OpSampleRates {
+			log.Debugf("Overriding default otel sample rate for op %v (%v)", k, v)
+			cfg.Otel.OpSampleRates[k] = v
+		}
 	}
 }
 
