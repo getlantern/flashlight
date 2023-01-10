@@ -36,9 +36,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
-	"strconv"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -74,25 +71,30 @@ func init() {
 	registry.enableComponent(FlowComponentID_Chained, &chainedRoundTripper{})
 	registry.enableComponent(FlowComponentID_Fronted, Fronted(DefaultMasqueradeTimeout))
 
-	forces := 0
-	for _, id := range []FlowComponentID{FlowComponentID_P2P, FlowComponentID_Fronted, FlowComponentID_Chained, FlowComponentID_Broflake} {
-		exclusive, _ := strconv.ParseBool(os.Getenv(fmt.Sprintf("FORCE_%s", strings.ToUpper(string(id)))))
-		if exclusive {
-			log.Debugf("Forcing exclusive use of %s for ProxiedFlow", id)
-			registry.exclusivelyUse(id)
+	/*
+		forces := 0
+		for _, id := range []FlowComponentID{FlowComponentID_P2P, FlowComponentID_Fronted, FlowComponentID_Chained, FlowComponentID_Broflake} {
+			exclusive, _ := strconv.ParseBool(os.Getenv(fmt.Sprintf("FORCE_%s", strings.ToUpper(string(id)))))
+			if exclusive {
+				log.Debugf("Forcing exclusive use of %s for ProxiedFlow", id)
+				registry.exclusivelyUse(id)
+				forces += 1
+			}
+		}
+		// also accept this for domain fronting
+		frontOnly, _ := strconv.ParseBool(os.Getenv(forceDF))
+		if frontOnly {
+			log.Debugf("Forcing exclusive use of %s for ProxiedFlow", FlowComponentID_Fronted)
+			registry.exclusivelyUse(FlowComponentID_Fronted)
 			forces += 1
 		}
-	}
-	// also accept this for domain fronting
-	frontOnly, _ := strconv.ParseBool(os.Getenv(forceDF))
-	if frontOnly {
-		log.Debugf("Forcing exclusive use of %s for ProxiedFlow", FlowComponentID_Fronted)
-		registry.exclusivelyUse(FlowComponentID_Fronted)
-		forces += 1
-	}
-	if forces > 1 {
-		log.Debugf("Warning, multiple 'exclusive' methods requested for ProxiedFlow (using %s)", registry.exclusive)
-	}
+		if forces > 1 {
+			log.Debugf("Warning, multiple 'exclusive' methods requested for ProxiedFlow (using %s)", registry.exclusive)
+		}
+	*/
+	id := FlowComponentID_Broflake
+	log.Debugf("Forcing exclusive use of %s for ProxiedFlow", id)
+	registry.exclusivelyUse(id)
 }
 
 // Enables use of ProxiedFlow roundtrippers where they are optional
