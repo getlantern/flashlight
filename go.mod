@@ -81,7 +81,7 @@ require (
 	github.com/getlantern/multipath v0.0.0-20220721104633-92b6c4b27b91
 	github.com/getlantern/netx v0.0.0-20211206143627-7ccfeb739cbd
 	github.com/getlantern/ops v0.0.0-20220713155959-1315d978fff7
-	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
+	github.com/getlantern/osversion v0.0.0-20230110113619-07839d9f2ba0
 	github.com/getlantern/proxy/v2 v2.0.1-0.20220303164029-b34b76e0e581
 	github.com/getlantern/proxybench v0.0.0-20220404140110-f49055cb86de
 	github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683
@@ -126,7 +126,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.8.0
 	go.opentelemetry.io/otel/trace v1.9.0
 	go.uber.org/atomic v1.9.0
-	golang.org/x/mobile v0.0.0-20210831151748-9cba7bc03c0f
+	golang.org/x/mobile v0.0.0-20221110043201-43a038452099
 	golang.org/x/net v0.1.0
 	golang.org/x/sys v0.3.0
 	google.golang.org/protobuf v1.28.1
@@ -150,6 +150,13 @@ require (
 	github.com/alecthomas/atomic v0.1.0-alpha2 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
 	github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210601195915-e04471aa4920 // indirect
+	github.com/go-ole/go-ole v1.2.6 // indirect
+	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
+	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
+	github.com/shirou/gopsutil/v3 v3.22.12 // indirect
+	github.com/tklauser/go-sysconf v0.3.11 // indirect
+	github.com/tklauser/numcpus v0.6.0 // indirect
+	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d // indirect
 )
 
