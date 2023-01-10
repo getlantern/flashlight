@@ -185,16 +185,19 @@ func newGlobalUnmarshaler(flags map[string]interface{}) func(bytes []byte) (inte
 func applyLocalOverrides(flags map[string]interface{}, gl *Global) error {
 	if v := flags["feature-overrides"]; v != nil {
 		filename := v.(string)
-		log.Debugf("Applying local feature overrides from %v", filename)
+		if filename == "" {
+			return nil
+		}
+		log.Debugf("Applying local overrides from %v", filename)
 		bytes, err := readConfigFile(filename, false)
 		if err != nil {
 			return err
 		}
-		overrides := &FeatureOverrides{}
+		overrides := &LocalOverrides{}
 		if err := yaml.Unmarshal(bytes, overrides); err != nil {
 			return err
 		}
-		gl.applyFeatureOverrides(overrides)
+		gl.applyOverrides(overrides)
 	}
 	return nil
 }
