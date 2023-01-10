@@ -116,8 +116,10 @@ type MaybeProxiedFlowRoundTripper struct {
 
 func (rt *MaybeProxiedFlowRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	if atomic.LoadUint64(&proxiedFlowEnabled) == 1 {
+		log.Debugf("MaybeProxiedFlowRoundTripper using flow...")
 		return rt.Flow.RoundTrip(req)
 	} else {
+		log.Debugf("MaybeProxiedFlowRoundTripper using default...")
 		return rt.Default.RoundTrip(req)
 	}
 }
