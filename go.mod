@@ -125,7 +125,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.11.1
 	go.opentelemetry.io/otel/trace v1.11.1
 	go.uber.org/atomic v1.9.0
-	golang.org/x/mobile v0.0.0-20210831151748-9cba7bc03c0f
+	golang.org/x/mobile v0.0.0-20221110043201-43a038452099
 	golang.org/x/net v0.3.0
 	golang.org/x/sys v0.3.0
 	google.golang.org/protobuf v1.28.1
