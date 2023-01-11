@@ -62,6 +62,8 @@ var (
 	registry            *componentRegistry
 	componentNotEnabled = errors.New("component not enabled")
 	proxiedFlowEnabled  uint64
+	forceProxiedFlow    bool
+	forceProxiedFlowEnv string = "FORCE_PROXIED_FLOW"
 
 	AnyMethod = []string{anyHTTPMethodMarker}
 )
@@ -93,11 +95,16 @@ func init() {
 	if forces > 1 {
 		log.Debugf("Warning, multiple 'exclusive' methods requested for ProxiedFlow (using %s)", registry.exclusive)
 	}
+
+	forceProxiedFlow, _ := strconv.ParseBool(os.Getenv(forceProxiedFlowEnv))
+	if forceProxiedFlow {
+		SetProxiedFlowFeatureEnabled(true)
+	}
 }
 
 // Enables use of ProxiedFlow roundtrippers where they are optional
 func SetProxiedFlowFeatureEnabled(enabled bool) {
-	if enabled {
+	if enabled || forceProxiedFlow {
 		atomic.StoreUint64(&proxiedFlowEnabled, 1)
 		log.Debugf("ProxiedFlow roundtrippers enabled.")
 	} else {
