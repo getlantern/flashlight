@@ -483,8 +483,8 @@ github.com/getlantern/netx
 # github.com/getlantern/ops v0.0.0-20220713155959-1315d978fff7
 ## explicit
 github.com/getlantern/ops
-# github.com/getlantern/osversion v0.0.0-20230110113619-07839d9f2ba0
-## explicit; go 1.18
+# github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
+## explicit
 github.com/getlantern/osversion
 # github.com/getlantern/packetforward v0.0.0-20201001150407-c68a447b0360
 ## explicit; go 1.13
@@ -607,10 +607,6 @@ github.com/go-logr/logr/funcr
 # github.com/go-logr/stdr v1.2.2
 ## explicit; go 1.16
 github.com/go-logr/stdr
-# github.com/go-ole/go-ole v1.2.6
-## explicit; go 1.12
-github.com/go-ole/go-ole
-github.com/go-ole/go-ole/oleutil
 # github.com/go-redis/redis/v8 v8.11.3
 ## explicit; go 1.13
 github.com/go-redis/redis/v8
@@ -758,9 +754,6 @@ github.com/lucas-clemente/quic-go/internal/utils
 github.com/lucas-clemente/quic-go/internal/wire
 github.com/lucas-clemente/quic-go/logging
 github.com/lucas-clemente/quic-go/quicvarint
-# github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0
-## explicit; go 1.16
-github.com/lufia/plan9stats
 # github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 ## explicit
 github.com/mailgun/oxy/forward
@@ -978,9 +971,6 @@ github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
-# github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c
-## explicit; go 1.14
-github.com/power-devops/perfstat
 # github.com/prometheus/client_golang v1.13.0
 ## explicit; go 1.17
 github.com/prometheus/client_golang/prometheus
@@ -1013,14 +1003,6 @@ github.com/samber/lo
 # github.com/shadowsocks/go-shadowsocks2 v0.1.4-0.20201002022019-75d43273f5a5
 ## explicit; go 1.15
 github.com/shadowsocks/go-shadowsocks2/socks
-# github.com/shirou/gopsutil/v3 v3.22.12
-## explicit; go 1.15
-github.com/shirou/gopsutil/v3/cpu
-github.com/shirou/gopsutil/v3/host
-github.com/shirou/gopsutil/v3/internal/common
-github.com/shirou/gopsutil/v3/mem
-github.com/shirou/gopsutil/v3/net
-github.com/shirou/gopsutil/v3/process
 # github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726
 ## explicit
 github.com/siddontang/go/log
@@ -1055,12 +1037,6 @@ github.com/tidwall/btree
 # github.com/tjfoc/gmsm v1.3.2
 ## explicit; go 1.12
 github.com/tjfoc/gmsm/sm4
-# github.com/tklauser/go-sysconf v0.3.11
-## explicit; go 1.13
-github.com/tklauser/go-sysconf
-# github.com/tklauser/numcpus v0.6.0
-## explicit; go 1.13
-github.com/tklauser/numcpus
 # github.com/tkuchiki/go-timezone v0.2.0
 ## explicit
 github.com/tkuchiki/go-timezone
@@ -1082,9 +1058,6 @@ github.com/xtaci/smux
 # github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2
 ## explicit
 github.com/xwb1989/sqlparser/dependency/hack
-# github.com/yusufpapurcu/wmi v1.2.2
-## explicit; go 1.16
-github.com/yusufpapurcu/wmi
 # gitlab.com/yawning/edwards25519-extra.git v0.0.0-20211229043746-2f91fcc9fbdb
 ## explicit; go 1.16
 gitlab.com/yawning/edwards25519-extra.git/elligator2
@@ -1187,7 +1160,7 @@ golang.org/x/crypto/xtea
 ## explicit; go 1.18
 golang.org/x/exp/constraints
 golang.org/x/exp/slices
-# golang.org/x/mobile v0.0.0-20221110043201-43a038452099 => github.com/oxtoacart/mobile v0.0.0-20220116191336-0bdf708b6d0f
+# golang.org/x/mobile v0.0.0-20210831151748-9cba7bc03c0f => github.com/oxtoacart/mobile v0.0.0-20220116191336-0bdf708b6d0f
 ## explicit; go 1.16
 golang.org/x/mobile/bind/java
 golang.org/x/mobile/internal/mobileinit
