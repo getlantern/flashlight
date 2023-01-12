@@ -1,5 +1,8 @@
 # Lantern [![Go Actions Status](https://github.com/getlantern/flashlight/actions/workflows/go.yml/badge.svg)](https://github.com/getlantern/flashlight/actions) [![Coverage Status](https://coveralls.io/repos/github/getlantern/flashlight/badge.svg?t=C4SaZX)](https://coveralls.io/github/getlantern/flashlight)
 
+*Maintainers*
+@forkner, @oxtoacart, @hwh33, @myleshorton
+
 This repo contains the core Lantern library as well as the Android and iOS bindings.
 
 The Lantern desktop application can be found at [getlantern/lantern-desktop](lantern-desktop).
