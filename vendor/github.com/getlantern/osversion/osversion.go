@@ -1,14 +1,25 @@
+//go:build !android
+
 package osversion
 
 import (
-	"github.com/blang/semver"
+	"fmt"
+
+	"github.com/shirou/gopsutil/v3/host"
 )
 
-func GetSemanticVersion() (semver.Version, error) {
-	str, err := GetString()
+func GetHumanReadable() (string, error) {
+	a, err := host.Info()
 	if err != nil {
-		return semver.Version{}, err
+		return "", fmt.Errorf("failed to get host info: %w", err)
 	}
+	return fmt.Sprintf("%s %s", a.Platform, a.PlatformVersion), nil
+}
 
-	return semver.Make(str)
+func GetSemanticVersion() (string, error) {
+	a, err := host.Info()
+	if err != nil {
+		return "", fmt.Errorf("failed to get host info: %w", err)
+	}
+	return a.PlatformVersion, nil
 }
