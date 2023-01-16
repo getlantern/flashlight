@@ -4,6 +4,7 @@ package integrationtest
 
 import (
 	"compress/gzip"
+	"context"
 	"crypto/sha256"
 	"crypto/tls"
 	_ "embed"
@@ -224,13 +225,10 @@ func (helper *Helper) startProxyServer() error {
 		TestingLocal:              true,
 		HTTPAddr:                  helper.HTTPSProxyServerAddr,
 		HTTPMultiplexAddr:         helper.HTTPSSmuxProxyServerAddr,
-		HTTPUTPAddr:               helper.HTTPSUTPAddr,
 		Obfs4Addr:                 helper.OBFS4ProxyServerAddr,
-		Obfs4UTPAddr:              helper.OBFS4UTPProxyServerAddr,
 		Obfs4Dir:                  filepath.Join(helper.ConfigDir, obfs4SubDir),
 		Obfs4HandshakeConcurrency: obfs4HandshakeConcurrency,
 		LampshadeAddr:             helper.LampshadeProxyServerAddr,
-		LampshadeUTPAddr:          helper.LampshadeUTPProxyServerAddr,
 		QUICIETFAddr:              helper.QUICIETFProxyServerAddr,
 		WSSAddr:                   helper.WSSProxyServerAddr,
 		TLSMasqAddr:               helper.TLSMasqProxyServerAddr,
@@ -273,8 +271,8 @@ func (helper *Helper) startProxyServer() error {
 		IdleTimeout:       30 * time.Second,
 	}
 
-	go s1.ListenAndServe()
-	go s2.ListenAndServe()
+	go s1.ListenAndServe(context.Background())
+	go s2.ListenAndServe(context.Background())
 
 	err = waitforserver.WaitForServer("tcp", helper.HTTPSProxyServerAddr, 10*time.Second)
 	if err != nil {
@@ -294,7 +292,7 @@ func (helper *Helper) startProxyServer() error {
 	}
 
 	// only launch / wait for this one after the cert is in place (can race otherwise.)
-	go s3.ListenAndServe()
+	go s3.ListenAndServe(context.Background())
 	err = waitforserver.WaitForServer("tcp", helper.HTTPSPsmuxProxyServerAddr, 10*time.Second)
 
 	return err
