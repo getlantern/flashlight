@@ -23,17 +23,8 @@ jobs:
           git config --global url."https://${{ secrets.GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
     - name: Run tests
       uses: robherley/go-test-action@v0.1.0
-        with:
-          testArguments: -race -failfast -tags="headless" -coverprofile=profile.cov -v ./...
-
-      # Upload the original go test log as an artifact for later review.
-    - name: Upload test log
-      uses: actions/upload-artifact@v3
-      if: always()
       with:
-        name: test-log
-        path: /tmp/gotest.log
-        if-no-files-found: error
+        testArguments: -race -failfast -tags="headless" -coverprofile=profile.cov -v ./...
     - name: Install goveralls
       env:
         GO111MODULE: off
