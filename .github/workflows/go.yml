@@ -22,9 +22,9 @@ jobs:
       run: |
           git config --global url."https://${{ secrets.GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
     - name: Run tests
-      run: |
-        set -euo pipefail
-        go test -json -race -failfast -tags="headless" -coverprofile=profile.cov -v ./... 2>&1 | tee /tmp/gotest.log
+      uses: robherley/go-test-action@v0.1.0
+        with:
+          testArguments: -race -failfast -tags="headless" -coverprofile=profile.cov -v ./...
 
       # Upload the original go test log as an artifact for later review.
     - name: Upload test log
