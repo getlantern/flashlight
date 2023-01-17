@@ -7,18 +7,6 @@ This repo contains the core Lantern library as well as the Android and iOS bindi
 
 The Lantern desktop application can be found at [getlantern/lantern-desktop](lantern-desktop).
 
-## Vendoring
-
-When `flashlight` builds in CI, it uses vendored dependencies. To avoid having to remember to run this manually, you can install a git pre-commit hook with `make install-githooks`.
-
-**NOTE**: **DO NOT USE `go mod vendor`**. That command notoriously fails to include C code in vendored libraries (see [here](https://github.com/golang/go/issues/26366)).
-
-We use <github.com/goware/modvendor> specifically to avoid that. So to vendor, run:
-
-    go install github.com/goware/modvendor@latest
-    go mod tidy
-    modvendor -copy="**/*.c **/*.h" -v
-
 ## Process for making changes to [config](config)
 flashlight is configured with per-proxy configuration loaded from the config-server, and global configuration loaded from S3 at runtime.
 
@@ -43,6 +31,8 @@ In addition to adding the domains that forward on Cloudfront and Akamai, you als
 Mappings on Cloudfront and Akamai can be added using the terraform config in `lantern-cloud`.
 
 ## Building
+In CI, `flashlight` used `GH_TOKEN` for access to private repositories.
+
 You can build an SDK for use by external applications either for Android or for iOS.
 
 ### Prerequisites
