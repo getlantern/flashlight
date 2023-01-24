@@ -19,11 +19,6 @@ func generateUser() *common.UserConfigData {
 	return common.NewUserConfigData(common.DefaultAppName, generateDeviceId(), 0, "", nil, "en-US")
 }
 
-var (
-	userA *common.UserConfigData
-	userB *common.UserConfigData
-)
-
 func init() {
 	common.ForceStaging()
 }
@@ -34,10 +29,10 @@ func createClient() *Client {
 	})
 }
 
-func TestCreateUserA(t *testing.T) {
-	userA = generateUser()
+func TestCreateUser(t *testing.T) {
+	user := generateUser()
 
-	res, err := createClient().UserCreate(userA)
+	res, err := createClient().UserCreate(user)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -47,15 +42,25 @@ func TestCreateUserA(t *testing.T) {
 	assert.True(t, res.User.Token != "")
 	assert.True(t, res.User.Code != "")
 	assert.True(t, res.User.Referral == res.User.Code)
-
-	userA.UserID = res.User.ID
-	userA.Token = res.User.Token
 }
 
-func TestUserAData(t *testing.T) {
-	res, err := createClient().UserData(userA)
+func TestGetUserData(t *testing.T) {
+	user := generateUser()
+	res, err := createClient().UserCreate(user)
+	if !assert.NoError(t, err) {
+		return
+	}
+	user.UserID = res.User.ID
+	user.Token = res.User.Token
+
+	// fetch this user's info with a new client
+	res, err = createClient().UserData(user)
 	if assert.NoError(t, err) {
-		assert.Equal(t, "ok", res.Status)
+		assert.True(t, res.User.ID != 0)
+		assert.Equal(t, res.User.ID, user.UserID)
+		// This is not set currently, this could be enabled if status is returned again ...
+		// See https://github.com/getlantern/pro-server-neu/commit/cda2f9565bd1fde16334e57e00e2b5572423880c
+		// assert.Equal(t, "ok", res.Status)
 	}
 }
 
@@ -78,26 +83,42 @@ func TestUserDataWrong(t *testing.T) {
 }
 
 func TestRequestDeviceLinkingCode(t *testing.T) {
-	res, err := createClient().RequestDeviceLinkingCode(userA, "Test Device")
-	if assert.NoError(t, err) {
-		assert.NotEmpty(t, res.Code)
-		assert.True(t, time.Unix(res.ExpireAt, 0).After(time.Now()))
-	}
-}
-
-func TestCreateUserB(t *testing.T) {
-	userB = generateUser()
-
-	res, err := createClient().UserCreate(userB)
+	user := generateUser()
+	res, err := createClient().UserCreate(user)
 	if !assert.NoError(t, err) {
 		return
 	}
+	user.UserID = res.User.ID
+	user.Token = res.User.Token
 
+	lcr, err := createClient().RequestDeviceLinkingCode(user, "Test Device")
+	if assert.NoError(t, err) {
+		assert.NotEmpty(t, lcr.Code)
+		assert.True(t, time.Unix(lcr.ExpireAt, 0).After(time.Now()))
+	}
+}
+
+func TestCreateUniqueUsers(t *testing.T) {
+	userA := generateUser()
+	res, err := createClient().UserCreate(userA)
+	if !assert.NoError(t, err) {
+		return
+	}
 	assert.True(t, res.User.ID != 0)
 	assert.True(t, res.User.Token != "")
-	assert.True(t, res.User.Code != "")
-	assert.True(t, res.User.Referral == res.User.Code)
+	userA.UserID = res.User.ID
+	userA.Token = res.User.Token
 
+	userB := generateUser()
+	res, err = createClient().UserCreate(userB)
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.True(t, res.User.ID != 0)
+	assert.True(t, res.User.Token != "")
 	userB.UserID = res.User.ID
 	userB.Token = res.User.Token
+
+	assert.NotEqual(t, userA.UserID, userB.UserID)
+	assert.NotEqual(t, userA.Token, userB.Token)
 }
