@@ -3,15 +3,16 @@ package chained
 import (
 	"context"
 	stls "crypto/tls"
-	"crypto/x509"
 	"encoding/binary"
 	"encoding/hex"
-	"encoding/pem"
 	stderrors "errors"
+	"fmt"
 	"net"
 	"strings"
 	"sync"
 	"time"
+
+	tls "github.com/refraction-networking/utls"
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
@@ -22,7 +23,6 @@ import (
 	"github.com/getlantern/tlsmasq"
 	"github.com/getlantern/tlsmasq/ptlshs"
 	"github.com/getlantern/tlsutil"
-	tls "github.com/refraction-networking/utls"
 )
 
 type tlsMasqImpl struct {
@@ -86,27 +86,20 @@ func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc com
 		return nil, errors.New("malformed server address: %v", err)
 	}
 
-	// Add the proxy cert to the root CAs as proxy certs are self-signed.
-	if pc.Cert == "" {
-		return nil, errors.New("no proxy certificate configured")
-	}
-	block, rest := pem.Decode([]byte(pc.Cert))
-	if block == nil {
-		return nil, errors.New("failed to decode proxy certificate as PEM block")
-	}
-	if len(rest) > 0 {
-		return nil, errors.New("unexpected extra data in proxy certificate PEM")
-	}
-	cert, err := x509.ParseCertificate(block.Bytes)
+	pCfg, hellos, err := tlsConfigForProxy(ctx, configDir, name, pc, uc)
 	if err != nil {
-		return nil, errors.New("failed to parse proxy certificate: %v", err)
+		return nil, fmt.Errorf("error generating TLS config: %w", err)
 	}
-	pool := x509.NewCertPool()
-	pool.AddCert(cert)
 
-	pCfg, hellos := tlsConfigForProxy(ctx, configDir, name, pc, uc)
+	// For tlsmasq proxies, the TLS config we generated in the previous step is the config used in
+	// the initial handshake with the masquerade origin. Thus we need to make some modifications.
+
 	pCfg.ServerName = sni
 	pCfg.InsecureSkipVerify = InsecureSkipVerifyTLSMasqOrigin
+
+	// Save the proxy CA pool and set the root CAs to nil (use system defaults).
+	proxyCAs := pCfg.RootCAs
+	pCfg.RootCAs = nil
 
 	cfg := tlsmasq.DialerConfig{
 		ProxiedHandshakeConfig: ptlshs.DialerConfig{
@@ -114,12 +107,13 @@ func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc com
 			Secret:     secret,
 			NonceTTL:   nonceTTL,
 		},
+		// This is the config used for the second, wrapped handshake with the proxy itself.
 		TLSConfig: &stls.Config{
 			MinVersion:   minVersion,
 			CipherSuites: suites,
 			// Proxy certificates are valid for the host (usually their IP address).
 			ServerName: host,
-			RootCAs:    pool,
+			RootCAs:    proxyCAs,
 		},
 	}
 
