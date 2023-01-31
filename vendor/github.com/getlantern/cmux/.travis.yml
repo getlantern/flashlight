@@ -1,7 +1,0 @@
-language: go
-go:
-    1.13.5
-env:
-  - ROOT=.
-  - ROOT=v2
-script: cd $ROOT && go test ./...
