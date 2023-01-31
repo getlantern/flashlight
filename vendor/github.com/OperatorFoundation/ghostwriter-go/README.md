@@ -1,2 +1,0 @@
-# ghostwriter-go
- 
