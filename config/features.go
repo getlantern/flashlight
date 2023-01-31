@@ -85,55 +85,17 @@ func (o *P2PCensoredPeerOptions) FromMap(m map[string]interface{}) error {
 }
 
 type BroflakeOptions struct {
-	DiscoverySrv   string
-	Endpoint       string
-	STUNSrvs       []string
-	STUNBatchSize  uint32
-	GenesisAddr    string
-	NATFailTimeout time.Duration
-	ICEFailTimeout time.Duration
+	DiscoverySrv   string        `mapstructure:"discovery_server"`
+	Endpoint       string        `mapstructure:"endpoint"`
+	STUNSrvs       []string      `mapstructure:"stun_servers"`
+	STUNBatchSize  uint32        `mapstructure:"stun_batch_size"`
+	GenesisAddr    string        `mapstructure:"genesis_addr"`
+	NATFailTimeout time.Duration `mapstructure:"nat_timeout"`
+	ICEFailTimeout time.Duration `mapstructure:"ice_timeout"`
 }
 
 func (o *BroflakeOptions) fromMap(m map[string]interface{}) error {
-	var err error
-
-	o.DiscoverySrv, err = somethingFromMap[string](m, "discovery_server")
-	if err != nil {
-		return fmt.Errorf("decoding discovery_server: %w", err)
-	}
-
-	o.Endpoint, err = somethingFromMap[string](m, "endpoint")
-	if err != nil {
-		return fmt.Errorf("decoding endpoint: %w", err)
-	}
-
-	o.STUNSrvs, err = stringArrFromMap(m, "stun_servers")
-	if err != nil {
-		return fmt.Errorf("decoding stun_servers: %w", err)
-	}
-
-	batchSize, err := somethingFromMap[int](m, "stun_batch_size")
-	if err != nil {
-		return fmt.Errorf("decoding stun_batch_size: %w", err)
-	}
-	o.STUNBatchSize = uint32(batchSize)
-
-	o.GenesisAddr, err = somethingFromMap[string](m, "genesis_addr")
-	if err != nil {
-		return fmt.Errorf("decoding nat_timeout: %w", err)
-	}
-
-	o.NATFailTimeout, err = durationFromMap(m, "nat_timeout")
-	if err != nil {
-		return fmt.Errorf("decoding nat_timeout: %w", err)
-	}
-
-	o.ICEFailTimeout, err = durationFromMap(m, "ice_timeout")
-	if err != nil {
-		return fmt.Errorf("decoding ice_timeout: %w", err)
-	}
-
-	return nil
+	return mapstructure.Decode(m, o)
 }
 
 type GoogleSearchAdsOptions struct {
