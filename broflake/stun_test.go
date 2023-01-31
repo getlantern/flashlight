@@ -14,7 +14,7 @@ func TestRandomSTUNs(t *testing.T) {
 		stuns = append(stuns, fmt.Sprintf("stun%v.example.com", i))
 	}
 
-	getBatch := RandomSTUNs(stuns)
+	getBatch := newRandomSTUNs(stuns)
 	for batchSize := 0; batchSize < listSize+1; batchSize++ {
 		seen := make([]string, 0, batchSize)
 		batch, err := getBatch(uint32(batchSize))
@@ -36,7 +36,7 @@ func TestRandomSTUNs(t *testing.T) {
 	assert.Equal(t, len(batch), listSize)
 	assert.ElementsMatch(t, batch, stuns)
 
-	getBatchZero := RandomSTUNs([]string{})
+	getBatchZero := newRandomSTUNs([]string{})
 	batch, err = getBatchZero(100)
 	assert.Equal(t, len(batch), 0)
 	if !assert.NoError(t, err) {
