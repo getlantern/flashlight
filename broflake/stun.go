@@ -5,9 +5,9 @@ import (
 	"time"
 )
 
-type STUNBatchFunc func(uint32) ([]string, error)
+type stunBatchFunc func(uint32) ([]string, error)
 
-func RandomSTUNs(servers []string) STUNBatchFunc {
+func newRandomSTUNs(servers []string) stunBatchFunc {
 	r := &randomSTUNs{
 		servers: servers,
 		prng:    rand.New(rand.NewSource(time.Now().UnixNano())),

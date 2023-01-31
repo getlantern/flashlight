@@ -31,7 +31,7 @@ func StartBroflakeCensoredPeerIfNecessary(enabled bool, options *config.Broflake
 			GenesisAddr:    options.GenesisAddr,
 			NATFailTimeout: options.NATFailTimeout,
 			ICEFailTimeout: options.ICEFailTimeout,
-			STUNBatch:      RandomSTUNs(options.STUNSrvs),
+			STUNBatch:      newRandomSTUNs(options.STUNSrvs),
 			STUNBatchSize:  options.STUNBatchSize,
 		}
 
