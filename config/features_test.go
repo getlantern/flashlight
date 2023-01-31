@@ -212,6 +212,22 @@ func TestOtelEnabled(t *testing.T) {
 	assert.False(t, gl.FeatureEnabled(FeatureOtel, "android", common.DefaultAppName, "7.0.0", 500, false, "ae"), "Otel is enabled for high user in UAE")
 }
 
+func TestBroflakeEnabled(t *testing.T) {
+	yml := `
+featureoptions:
+  broflake:
+    discovery_server: https://discovery.broflake.org
+    nat_timeout: 5
+`
+	gl := NewGlobal()
+	require.NoError(t, yaml.Unmarshal([]byte(yml), gl))
+
+	var opts BroflakeOptions
+	require.NoError(t, gl.UnmarshalFeatureOptions(FeatureBroflake, &opts))
+	assert.Equal(t, "https://discovery.broflake.org", opts.DiscoverySrv)
+	assert.Equal(t, time.Duration(5), opts.NATFailTimeout)
+}
+
 func getReplicaOptionsRoot(t *testing.T) (fos ReplicaOptionsRoot) {
 	g := globalFromTemplate(t)
 	require.NoError(t, g.UnmarshalFeatureOptions(FeatureReplica, &fos))
