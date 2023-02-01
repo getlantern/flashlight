@@ -1,6 +1,5 @@
 package proxied
 
-/*
 import (
 	"context"
 	"io/ioutil"
@@ -57,6 +56,10 @@ func TestP2PRoundTrippers(t *testing.T) {
 		censoredP2pCtx.Close(context.Background())
 	})
 
+	registry.clear()
+	EnableComponent(FlowComponentID_P2P, nil)
+	EnableComponent(FlowComponentID_Fronted, nil)
+
 	// Configure fronted package
 	fronted.ConfigureForTest(t)
 	fronted.ConfigureHostAlaisesForTest(t, map[string]string{
@@ -74,9 +77,14 @@ func TestP2PRoundTrippers(t *testing.T) {
 		{
 			name: "P2P",
 			initRoundTripper: func() http.RoundTripper {
-				return NewProxiedFlow(&ProxiedFlowInput{AddDebugHeaders: true}).
-					Add(FlowComponentID_P2P, censoredP2pCtx, false)
 
+				return NewProxiedFlow(&ProxiedFlowOptions{
+					ParallelMethods: AnyMethod,
+				}).AddWithRoundTripper(
+					FlowComponentID_P2P,
+					&withTestInfo{rt: censoredP2pCtx, id: FlowComponentID_P2P},
+					false,
+				)
 			},
 			expectedSucceedingRoundTripperName: FlowComponentID_P2P,
 			inputTestURLs: []URLTestInput{
@@ -104,9 +112,10 @@ func TestP2PRoundTrippers(t *testing.T) {
 				// succeed. See the description of "p2p.InitTestP2PPeers"
 				// function), we're expecting the P2P roundtripper to win this
 				// round (i.e., expectedSucceedingRoundTripperName == FlowComponentID_P2P)
-				return NewProxiedFlow(&ProxiedFlowInput{AddDebugHeaders: true}).
-					Add(FlowComponentID_P2P, censoredP2pCtx, false).
-					Add(FlowComponentID_Fronted, Fronted(0), false).
+				return NewProxiedFlow(&ProxiedFlowOptions{
+					ParallelMethods: AnyMethod,
+				}).AddWithRoundTripper(FlowComponentID_Fronted, &withTestInfo{rt: Fronted(0), id: FlowComponentID_Fronted}, false).
+					AddWithRoundTripper(FlowComponentID_P2P, &withTestInfo{rt: censoredP2pCtx, id: FlowComponentID_P2P}, false).
 					SetPreferredComponent(FlowComponentID_P2P)
 			},
 			expectedSucceedingRoundTripperName: FlowComponentID_P2P,
@@ -127,9 +136,10 @@ func TestP2PRoundTrippers(t *testing.T) {
 			initRoundTripper: func() http.RoundTripper {
 				// What happens here is the same as above, but the preferred
 				// component is Fronted.
-				return NewProxiedFlow(&ProxiedFlowInput{AddDebugHeaders: true}).
-					Add(FlowComponentID_Fronted, Fronted(0), true).
-					Add(FlowComponentID_P2P, censoredP2pCtx, false).
+				return NewProxiedFlow(&ProxiedFlowOptions{
+					ParallelMethods: AnyMethod,
+				}).AddWithRoundTripper(FlowComponentID_Fronted, &withTestInfo{rt: Fronted(0), id: FlowComponentID_Fronted}, true).
+					AddWithRoundTripper(FlowComponentID_P2P, &withTestInfo{rt: censoredP2pCtx, id: FlowComponentID_P2P}, false).
 					SetPreferredComponent(FlowComponentID_Fronted)
 			},
 			expectedSucceedingRoundTripperName: FlowComponentID_Fronted,
@@ -181,4 +191,3 @@ func TestP2PRoundTrippers(t *testing.T) {
 	}
 
 }
-*/
