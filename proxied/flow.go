@@ -18,7 +18,7 @@
 //     req, err := http.NewRequest("GET", "http://example.com", nil)
 //     flow := NewProxiedFlow(
 //         &ProxiedFlowOptions{
-//             ParallelMethods: []{http.MethodGet, http.MethodHead, http.MethodOptions},
+//             ParallelMethods: []string{http.MethodGet, http.MethodHead, http.MethodOptions},
 //     	   })
 //
 // 	   flow.
@@ -26,7 +26,6 @@
 //       Add(proxied.FlowComponentID_Fronted, false)
 //     resp, err := flow.RoundTrip(req)
 //
-// TODO: there is no support for ops tracing
 //
 package proxied
 
@@ -183,10 +182,12 @@ func (r *componentRegistry) defaultRoundTripper(id FlowComponentID) (http.RoundT
 	r.mx.RLock()
 	defer r.mx.RUnlock()
 	if r.exclusive != FlowComponentID_None && r.exclusive != id {
+		log.Debugf("considering component %s to be disabled because an exclusive component is set.", id)
 		return nil, fmt.Errorf("%v: %w", id, componentNotEnabled)
 	}
 	rt := r.roundTrippers[id]
 	if rt == nil {
+		log.Debugf("considering component %s to be disabled because no roundtripper is set.", id)
 		return nil, fmt.Errorf("%v: %w", id, componentNotEnabled)
 	}
 	return rt, nil
@@ -380,6 +381,7 @@ func (f *ProxiedFlow) PreferredComponent() *ProxiedFlowComponent {
 func (f *ProxiedFlow) enabledComponents() (*ProxiedFlowComponent, []*ProxiedFlowComponent) {
 	preferred := f.PreferredComponent()
 	if preferred != nil && !preferred.isEnabled() {
+		log.Debugf("the preferred component was not enabled, ignoring.")
 		preferred = nil
 	}
 	rest := make([]*ProxiedFlowComponent, 0)
