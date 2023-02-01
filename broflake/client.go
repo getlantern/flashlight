@@ -45,22 +45,24 @@ func Dial(network string, addr string) (net.Conn, error) {
 	return d.(dialerFn)(network, addr)
 }
 
-func newQUICDialerFn(pconn net.PacketConn) dialerFn {
-	client := &client{pconn: pconn}
+func newQUICDialerFn(pconn net.PacketConn, tlsConfig *tls.Config) dialerFn {
+	client := &client{pconn: pconn, tlsConfig: tlsConfig}
 	return func(network, addr string) (net.Conn, error) {
 		return client.DialContext(context.Background())
 	}
 }
 
 type client struct {
-	pconn   net.PacketConn
-	session quic.Connection
-	mx      sync.Mutex
+	pconn     net.PacketConn
+	tlsConfig *tls.Config
+	session   quic.Connection
+	mx        sync.Mutex
 }
 
 func (c *client) DialContext(ctx context.Context) (net.Conn, error) {
 	session, err := c.getOrCreateSession(ctx)
 	if err != nil {
+		log.Debugf("failed to create quic session over broflake pconn: %s", err)
 		return nil, fmt.Errorf("connecting broflake session: %w", err)
 	}
 	stream, err := session.OpenStreamSync(ctx)
@@ -76,18 +78,12 @@ func (c *client) getOrCreateSession(ctx context.Context) (quic.Connection, error
 	c.mx.Lock()
 	defer c.mx.Unlock()
 	if c.session == nil {
-		// TODO use a pinned cert to secure the connection
-		tlsConf := &tls.Config{
-			InsecureSkipVerify: true,
-			NextProtos:         []string{"broflake"},
-		}
-
 		session, err := quic.DialContext(
 			ctx,
 			c.pconn,
 			bfcommon.DebugAddr("broflake address placeholder"),
 			"",
-			tlsConf,
+			c.tlsConfig,
 			&bfcommon.QUICCfg)
 
 		if err != nil {
@@ -122,16 +118,22 @@ func NewRoundTripper() *http.Transport {
 	}
 }
 
+type Options struct {
+	WebRTCOptions            *clientcore.WebRTCOptions
+	EgressServerName         string
+	EgressInsecureSkipVerify bool
+}
+
 // Initializes and starts broflake in a configuration suitable
 // for a flashlight censored peer.
-func InitAndStartBroflakeCensoredPeer(options *clientcore.WebRTCOptions) error {
+func InitAndStartBroflakeCensoredPeer(options *Options) error {
 	var wgReady sync.WaitGroup
 	bfconn, producerUserStream := clientcore.NewProducerUserStream(&wgReady)
 	cTable := clientcore.NewWorkerTable([]clientcore.WorkerFSM{*producerUserStream})
 	cRouter := clientcore.NewConsumerRouter(bus.Downstream, cTable)
 	var pfsms []clientcore.WorkerFSM
 	for i := 0; i < pTableSize; i++ {
-		pfsms = append(pfsms, *clientcore.NewConsumerWebRTC(options, &wgReady))
+		pfsms = append(pfsms, *clientcore.NewConsumerWebRTC(options.WebRTCOptions, &wgReady))
 	}
 	pTable := clientcore.NewWorkerTable(pfsms)
 	pRouter := clientcore.NewProducerSerialRouter(bus.Upstream, pTable, cTable.Size())
@@ -140,7 +142,12 @@ func InitAndStartBroflakeCensoredPeer(options *clientcore.WebRTCOptions) error {
 	bus.Start()
 	cRouter.Init()
 	pRouter.Init()
-	dialer.Set(newQUICDialerFn(bfconn))
+	tlsConfig := &tls.Config{
+		ServerName:         options.EgressServerName,
+		InsecureSkipVerify: options.EgressInsecureSkipVerify,
+		NextProtos:         []string{"broflake"},
+	}
+	dialer.Set(newQUICDialerFn(bfconn, tlsConfig))
 	ui.OnReady()
 	ui.OnStartup()
 	return nil
