@@ -25,7 +25,7 @@ func StartBroflakeCensoredPeerIfNecessary(enabled bool, options *config.Broflake
 	startBroflakeOnce.Do(func() {
 		log.Debugf("really attempting to enable broflake features once...")
 
-		opt := &clientcore.WebRTCOptions{
+		wo := &clientcore.WebRTCOptions{
 			DiscoverySrv:   options.DiscoverySrv,
 			Endpoint:       options.Endpoint,
 			GenesisAddr:    options.GenesisAddr,
@@ -35,7 +35,11 @@ func StartBroflakeCensoredPeerIfNecessary(enabled bool, options *config.Broflake
 			STUNBatchSize:  options.STUNBatchSize,
 		}
 
-		InitAndStartBroflakeCensoredPeer(opt)
+		InitAndStartBroflakeCensoredPeer(&Options{
+			WebRTCOptions:            wo,
+			EgressInsecureSkipVerify: options.EgressInsecureSkipVerify,
+			EgressServerName:         options.EgressServerName,
+		})
 
 		if err := proxied.EnableComponent(proxied.FlowComponentID_Broflake, NewRoundTripper()); err != nil {
 			log.Errorf("Failed to enable broflake via proxied.EnableComponent: %v", proxied.FlowComponentID_Broflake, err)
