@@ -154,15 +154,15 @@ func (o *P2PCensoredPeerOptions) fromMap(m map[string]interface{}) error {
 }
 
 type BroflakeOptions struct {
-	DiscoverySrv             string        `mapstructure:"discovery_server"`
-	Endpoint                 string        `mapstructure:"endpoint"`
-	STUNSrvs                 []string      `mapstructure:"stun_servers"`
-	STUNBatchSize            uint32        `mapstructure:"stun_batch_size"`
-	GenesisAddr              string        `mapstructure:"genesis_addr"`
-	NATFailTimeout           time.Duration `mapstructure:"nat_timeout"`
-	ICEFailTimeout           time.Duration `mapstructure:"ice_timeout"`
-	EgressServerName         string        `mapstructure:"egress_server_name"`
-	EgressInsecureSkipVerify bool          `mapstructure:"egress_insecure_skip_verify"`
+	DiscoverySrv             string   `mapstructure:"discovery_server"`
+	Endpoint                 string   `mapstructure:"endpoint"`
+	STUNSrvs                 []string `mapstructure:"stun_servers"`
+	STUNBatchSize            uint32   `mapstructure:"stun_batch_size"`
+	GenesisAddr              string   `mapstructure:"genesis_addr"`
+	NATFailTimeout           string   `mapstructure:"nat_timeout"`
+	ICEFailTimeout           string   `mapstructure:"ice_timeout"`
+	EgressServerName         string   `mapstructure:"egress_server_name"`
+	EgressInsecureSkipVerify bool     `mapstructure:"egress_insecure_skip_verify"`
 }
 
 func (o *BroflakeOptions) fromMap(m map[string]interface{}) error {
