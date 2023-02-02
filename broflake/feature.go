@@ -25,6 +25,13 @@ func StartBroflakeCensoredPeerIfNecessary(enabled bool, options *config.Broflake
 	startBroflakeOnce.Do(func() {
 		log.Debugf("really attempting to enable broflake features once...")
 
+		bo := &clientcore.BroflakeOptions{
+			CTableSize:  options.CTableSize,
+			PTableSize:  options.PTableSize,
+			BusBufferSz: options.BusBufferSz,
+			Netstated:   options.Netstated,
+		}
+
 		wo := &clientcore.WebRTCOptions{
 			DiscoverySrv:   options.DiscoverySrv,
 			Endpoint:       options.Endpoint,
@@ -33,12 +40,18 @@ func StartBroflakeCensoredPeerIfNecessary(enabled bool, options *config.Broflake
 			ICEFailTimeout: options.ICEFailTimeout,
 			STUNBatch:      newRandomSTUNs(options.STUNSrvs),
 			STUNBatchSize:  options.STUNBatchSize,
+			Tag:            options.Tag,
+		}
+
+		qo := &clientcore.QUICLayerOptions{
+			ServerName:         options.EgressServerName,
+			InsecureSkipVerify: options.EgressInsecureSkipVerify,
 		}
 
 		InitAndStartBroflakeCensoredPeer(&Options{
-			WebRTCOptions:            wo,
-			EgressInsecureSkipVerify: options.EgressInsecureSkipVerify,
-			EgressServerName:         options.EgressServerName,
+			BroflakeOptions:  bo,
+			WebRTCOptions:    wo,
+			QUICLayerOptions: qo,
 		})
 
 		if err := proxied.EnableComponent(proxied.FlowComponentID_Broflake, NewRoundTripper()); err != nil {
