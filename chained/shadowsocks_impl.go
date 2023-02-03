@@ -58,7 +58,8 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 		return nil, errors.New("failed to create shadowsocks client: %v", err)
 	}
 
-	if prefixGen != "" {
+	// Infrastructure python code seems to insert "None" as the prefix generator if there is none.
+	if prefixGen != "" && prefixGen != "None" {
 		gen, err := prefixgen.New(prefixGen)
 		if err != nil {
 			log.Errorf("failed to parse shadowsocks prefix generator from %v for proxy %v: %v", prefixGen, name, err)
