@@ -1,8 +1,11 @@
-package main
+package util
 
 import (
+	"context"
 	"os"
 	"path/filepath"
+	"sync"
+	"time"
 )
 
 // Expand expands the path to include the home directory if the path
@@ -19,4 +22,26 @@ func ExpandPath(path string) string {
 		return path
 	}
 	return filepath.Join(os.Getenv("HOME"), path[1:])
+}
+
+func WaitForWaitGroup(wg *sync.WaitGroup, timeout time.Duration) (ok bool) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+	select {
+	case <-ctx.Done():
+		return false
+	case <-ch:
+		return true
+	}
+}
+
+type IoNopCloser struct{}
+
+func (IoNopCloser) Close() error {
+	return nil
 }
