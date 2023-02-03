@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/x509"
 	"net"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -30,7 +31,7 @@ type httpsImpl struct {
 	sync.Mutex
 }
 
-func newHTTPSImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig, dialCore coreDialer) (proxyImpl, error) {
+func newHTTPSImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig, dialCore coreDialer) (ProxyImpl, error) {
 	const timeout = 5 * time.Second
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -44,6 +45,24 @@ func newHTTPSImpl(configDir, name, addr string, pc *config.ProxyConfig, uc commo
 	if len(hellos) == 0 {
 		return nil, log.Error(errors.New("expected at least one hello"))
 	}
+
+	// Respect SSLKEYLOGFILE environment variable if set.
+	// Very useful for debugging TLS issues.
+	if os.Getenv("SSLKEYLOGFILE") != "" {
+		w, err := os.OpenFile(os.Getenv("SSLKEYLOGFILE"),
+			os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
+		if err != nil {
+			log.Errorf(
+				"SSLKEYLOGFILE env was specified, but unable to open SSLKEYLOGFILE (%s): %v",
+				os.Getenv("SSLKEYLOGFILE"), err)
+		} else {
+			tlsConfig.KeyLogWriter = w
+			log.Debugf(
+				"SSLKEYLOGFILE env was specified at (%s). Will dump the contents there",
+				os.Getenv("SSLKEYLOGFILE"))
+		}
+	}
+
 	return &httpsImpl{
 		dialCore:                dialCore,
 		addr:                    addr,
@@ -55,7 +74,7 @@ func newHTTPSImpl(configDir, name, addr string, pc *config.ProxyConfig, uc commo
 	}, nil
 }
 
-func (impl *httpsImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (impl *httpsImpl) DialServer(op *ops.Op, ctx context.Context, prefixBuf []byte) (net.Conn, error) {
 	r := impl.roller.getCopy()
 	defer impl.roller.updateTo(r)
 

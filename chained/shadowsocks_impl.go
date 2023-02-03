@@ -35,7 +35,7 @@ type shadowsocksImpl struct {
 	rngmx          sync.Mutex
 }
 
-func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func NewShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (ProxyImpl, error) {
 	secret := ptSetting(pc, "shadowsocks_secret")
 	cipher := ptSetting(pc, "shadowsocks_cipher")
 	upstream := ptSetting(pc, "shadowsocks_upstream")
@@ -53,6 +53,7 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 	if err != nil {
 		return nil, errors.New("unable to parse port in address %v: %v", addr, err)
 	}
+	fmt.Printf("Creating shadowsocks client for %v:%v\n", host, port)
 	cl, err := client.NewClient(host, port, secret, cipher)
 	if err != nil {
 		return nil, errors.New("failed to create shadowsocks client: %v", err)
@@ -84,12 +85,15 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 	}, nil
 }
 
-func (impl *shadowsocksImpl) close() {
+func (impl *shadowsocksImpl) Close() {
 }
 
-func (impl *shadowsocksImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (impl *shadowsocksImpl) DialServer(op *ops.Op, ctx context.Context, prefixBuf []byte) (net.Conn, error) {
 	return impl.reportDialCore(op, func() (net.Conn, error) {
-		conn, err := impl.client.DialTCP(nil, impl.generateUpstream())
+		conn, err := impl.client.DialTCP(
+			nil, impl.generateUpstream(),
+			&client.DialTCPOptions{PrefixBuf: prefixBuf},
+		)
 		if err != nil {
 			return nil, err
 		}

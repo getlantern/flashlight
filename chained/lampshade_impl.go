@@ -26,7 +26,7 @@ type lampshadeImpl struct {
 	setOp          func(op *ops.Op)
 }
 
-func newLampshadeImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newLampshadeImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (ProxyImpl, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(pc.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", addr))
@@ -92,7 +92,7 @@ func newLampshadeImpl(name, addr string, pc *config.ProxyConfig, reportDialCore 
 	return &lampshadeImpl{reportDialCore: reportDialCore, name: name, addr: addr, dialer: dialer, setOp: setOp}, nil
 }
 
-func (impl *lampshadeImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (impl *lampshadeImpl) DialServer(op *ops.Op, ctx context.Context, prefix []byte) (net.Conn, error) {
 	impl.setOp(op)
 	return impl.dialer.DialContext(ctx, func() (net.Conn, error) {
 		// note - we do not wrap the TCP connection with IdleTiming because

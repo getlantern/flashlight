@@ -47,7 +47,7 @@ type testImpl struct {
 	d func(ctx context.Context) (net.Conn, error)
 }
 
-func (impl *testImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (impl *testImpl) DialServer(op *ops.Op, ctx context.Context, prefix []byte) (net.Conn, error) {
 	return impl.d(ctx)
 }
 
@@ -60,7 +60,7 @@ func newDialer(dialServer func(ctx context.Context) (net.Conn, error)) (func(net
 			Country:     "country",
 			CountryCode: "countryCode",
 		},
-	}, newTestUserConfig())
+	}, newTestUserConfig(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +156,7 @@ func TestBadAddressToServer(t *testing.T) {
 	p, err := newProxy("test", "addr:567", "proto", "netw", &config.ProxyConfig{
 		AuthToken: "token",
 		Trusted:   true,
-	}, newTestUserConfig())
+	}, newTestUserConfig(), nil)
 	if !assert.NoError(t, err) {
 		return
 	}

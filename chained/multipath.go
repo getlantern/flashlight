@@ -14,7 +14,7 @@ import (
 )
 
 type mpDialerAdapter struct {
-	impl  proxyImpl
+	impl  ProxyImpl
 	label string
 }
 
@@ -29,7 +29,7 @@ func (d *mpDialerAdapter) DialContext(ctx context.Context) (net.Conn, error) {
 		op = ops.Begin("dial_subflow")
 	}
 	defer op.End()
-	return d.impl.dialServer(op, ctx)
+	return d.impl.DialServer(op, ctx, nil)
 }
 
 func (d *mpDialerAdapter) Label() string {
@@ -41,7 +41,7 @@ type multipathImpl struct {
 	dialer multipath.Dialer
 }
 
-func (impl *multipathImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (impl *multipathImpl) DialServer(op *ops.Op, ctx context.Context, prefix []byte) (net.Conn, error) {
 	return impl.dialer.DialContext(context.WithValue(ctx, "op", op))
 }
 
@@ -59,16 +59,16 @@ func CreateMPDialer(configDir, endpoint string, ss map[string]*config.ProxyConfi
 	for name, s := range ss {
 		if p == nil {
 			// Note: we pass the first server info to newProxy for the attributes shared by all paths
-			p, err = newProxy(endpoint, endpoint+":0", "multipath", "multipath", s, uc)
+			p, err = newProxy(endpoint, endpoint+":0", "multipath", "multipath", s, uc, nil)
 			if err != nil {
 				return nil, err
 			}
 		}
-		addr, transport, _, err := extractParams(s)
+		addr, transport, _, err := ExtractParams(s)
 		if err != nil {
 			return nil, err
 		}
-		impl, err := createImpl(configDir, name, addr, transport, s, uc, p.reportDialCore)
+		impl, err := CreateImpl(configDir, name, addr, transport, s, uc, p.reportDialCore)
 		if err != nil {
 			log.Errorf("failed to add %v to %v, continuing: %v", s.Addr, name, err)
 			continue

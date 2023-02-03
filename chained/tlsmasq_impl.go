@@ -33,7 +33,7 @@ type tlsMasqImpl struct {
 	tlsClientHelloSplitting bool
 }
 
-func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig, reportDialCore reportDialCoreFn) (ProxyImpl, error) {
 	const timeout = 5 * time.Second
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -126,7 +126,7 @@ func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc com
 	return &tlsMasqImpl{reportDialCore: reportDialCore, addr: addr, cfg: cfg, tlsClientHelloSplitting: pc.TLSClientHelloSplitting}, nil
 }
 
-func (impl *tlsMasqImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (impl *tlsMasqImpl) DialServer(op *ops.Op, ctx context.Context, prefix []byte) (net.Conn, error) {
 	tcpConn, err := impl.reportDialCore(op, func() (net.Conn, error) {
 		return netx.DialContext(ctx, "tcp", impl.addr)
 	})

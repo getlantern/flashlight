@@ -27,7 +27,7 @@ type kcpImpl struct {
 	dialKCP        func(ctx context.Context, addr string) (net.Conn, error)
 }
 
-func newKCPImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newKCPImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (ProxyImpl, error) {
 	return nil, errors.New("KCP not supported")
 }
 
