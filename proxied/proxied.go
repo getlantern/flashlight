@@ -295,7 +295,7 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 			if err != nil {
 				log.Debugf("Failed to drain body to get failed response body for req.URL.Host [%s]", req.URL.Host)
 			}
-			log.Debugf("Got a failed response from running request with req.URL.Host [%s] | status code: [%d] | body: %s",
+			log.Debugf("Got a failed response (could be the proxy not being reachable) from running request with req.URL.Host [%s] | status code: [%d] | response:\n%#v",
 				req.URL.Host, resp.StatusCode, string(b))
 			_ = resp.Body.Close()
 		}
