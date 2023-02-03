@@ -202,7 +202,7 @@ require (
 	github.com/dvyukov/go-fuzz v0.0.0-20210429054444-fca39067bc72 // indirect
 	github.com/edsrzf/mmap-go v1.1.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
-	github.com/getlantern/byteexec v0.0.0-20220903142956-e6ed20032cfd // indirect
+	github.com/getlantern/byteexec v0.0.0-20220903141943-7db46f110fbc // indirect
 	github.com/getlantern/cmux v0.0.0-20200905031936-c55b16ee8462 // indirect
 	github.com/getlantern/context v0.0.0-20220418194847-3d5e7a086201 // indirect
 	github.com/getlantern/dns v0.0.0-20210120185712-8d005533efa0 // indirect
