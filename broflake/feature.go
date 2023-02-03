@@ -2,7 +2,6 @@ package broflake
 
 import (
 	"sync"
-	"time"
 
 	clientcore "github.com/getlantern/broflake/clientcore"
 	"github.com/getlantern/flashlight/config"
@@ -30,8 +29,8 @@ func StartBroflakeCensoredPeerIfNecessary(enabled bool, options *config.Broflake
 			DiscoverySrv:   options.DiscoverySrv,
 			Endpoint:       options.Endpoint,
 			GenesisAddr:    options.GenesisAddr,
-			NATFailTimeout: duration(options.NATFailTimeout, "10s"),
-			ICEFailTimeout: duration(options.ICEFailTimeout, "10s"),
+			NATFailTimeout: options.NATFailTimeout,
+			ICEFailTimeout: options.ICEFailTimeout,
 			STUNBatch:      newRandomSTUNs(options.STUNSrvs),
 			STUNBatchSize:  options.STUNBatchSize,
 		}
@@ -46,12 +45,4 @@ func StartBroflakeCensoredPeerIfNecessary(enabled bool, options *config.Broflake
 			log.Errorf("Failed to enable broflake via proxied.EnableComponent: %v", proxied.FlowComponentID_Broflake, err)
 		}
 	})
-}
-
-func duration(dur, def string) time.Duration {
-	d, err := time.ParseDuration(dur)
-	if err != nil {
-		d, _ = time.ParseDuration(def)
-	}
-	return d
 }

@@ -85,19 +85,37 @@ func (o *P2PCensoredPeerOptions) FromMap(m map[string]interface{}) error {
 }
 
 type BroflakeOptions struct {
-	DiscoverySrv             string   `mapstructure:"discovery_server"`
-	Endpoint                 string   `mapstructure:"endpoint"`
-	STUNSrvs                 []string `mapstructure:"stun_servers"`
-	STUNBatchSize            uint32   `mapstructure:"stun_batch_size"`
-	GenesisAddr              string   `mapstructure:"genesis_addr"`
-	NATFailTimeout           string   `mapstructure:"nat_timeout"`
-	ICEFailTimeout           string   `mapstructure:"ice_timeout"`
-	EgressServerName         string   `mapstructure:"egress_server_name"`
-	EgressInsecureSkipVerify bool     `mapstructure:"egress_insecure_skip_verify"`
+	DiscoverySrv             string        `mapstructure:"discovery_server"`
+	Endpoint                 string        `mapstructure:"endpoint"`
+	STUNSrvs                 []string      `mapstructure:"stun_servers"`
+	STUNBatchSize            uint32        `mapstructure:"stun_batch_size"`
+	GenesisAddr              string        `mapstructure:"genesis_addr"`
+	NATFailTimeout           time.Duration `mapstructure:"nat_timeout"`
+	ICEFailTimeout           time.Duration `mapstructure:"ice_timeout"`
+	EgressServerName         string        `mapstructure:"egress_server_name"`
+	EgressInsecureSkipVerify bool          `mapstructure:"egress_insecure_skip_verify"`
 }
 
 func (o *BroflakeOptions) fromMap(m map[string]interface{}) error {
-	return mapstructure.Decode(m, o)
+	config := &mapstructure.DecoderConfig{
+		DecodeHook: func(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
+			if t != reflect.TypeOf(time.Duration(0)) {
+				return data, nil
+			}
+			d, err := time.ParseDuration(fmt.Sprintf("%v", data))
+			if err != nil {
+				return time.ParseDuration("10s")
+			}
+			return d, nil
+		},
+		Result: o,
+	}
+
+	decoder, err := mapstructure.NewDecoder(config)
+	if err != nil {
+		return err
+	}
+	return decoder.Decode(m)
 }
 
 type GoogleSearchAdsOptions struct {
