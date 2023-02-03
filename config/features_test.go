@@ -217,7 +217,7 @@ func TestBroflakeEnabled(t *testing.T) {
 featureoptions:
   broflake:
     discovery_server: https://discovery.broflake.org
-    nat_timeout: 5
+    nat_timeout: 5s
 `
 	gl := NewGlobal()
 	require.NoError(t, yaml.Unmarshal([]byte(yml), gl))
@@ -225,7 +225,19 @@ featureoptions:
 	var opts BroflakeOptions
 	require.NoError(t, gl.UnmarshalFeatureOptions(FeatureBroflake, &opts))
 	assert.Equal(t, "https://discovery.broflake.org", opts.DiscoverySrv)
-	assert.Equal(t, time.Duration(5), opts.NATFailTimeout)
+	assert.Equal(t, time.Duration(5)*time.Second, opts.NATFailTimeout)
+
+	badtimeout := `
+featureoptions:
+  broflake:
+    discovery_server: https://discovery.broflake.org
+    nat_timeout: orje
+`
+	gl = NewGlobal()
+	require.NoError(t, yaml.Unmarshal([]byte(badtimeout), gl))
+	require.NoError(t, gl.UnmarshalFeatureOptions(FeatureBroflake, &opts))
+	assert.Equal(t, "https://discovery.broflake.org", opts.DiscoverySrv)
+	assert.Equal(t, time.Duration(10)*time.Second, opts.NATFailTimeout)
 }
 
 func getReplicaOptionsRoot(t *testing.T) (fos ReplicaOptionsRoot) {
