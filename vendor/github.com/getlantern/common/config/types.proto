@@ -1,0 +1,38 @@
+syntax = "proto3";
+option go_package = "github.com/getlantern/common/config";
+
+message ProxyConfig {
+    message ProxyLocation {
+        string city = 1;
+        string country = 2;
+        string country_code = 3;
+        float latitude = 4;
+        float longitude = 5;
+    }
+
+    string name = 1;
+    string addr = 2;
+    string cert = 3;
+    string auth_token = 4;
+    bool trusted = 5;
+    int32 max_preconnect = 6;
+    int32 bias = 7;
+    string pluggable_transport = 8;
+    map<string, string> pluggable_transport_settings = 9;
+    string ENHTTPURL = 10;
+    repeated string TLSDesktop_ordered_cipher_suite_names = 11;
+    repeated string TLSMobile_ordered_cipher_suite_names = 12;
+    string TLSServer_name_indicator = 13;
+    int32 TLSClient_session_cache_size = 14;
+    string TLSClient_helloID = 15;
+    bool TLSClient_hello_splitting = 16;
+    string TLSClient_session_state = 17;
+    ProxyLocation location = 18;
+    string multipath_endpoint = 19;
+    string multiplexed_addr = 20;
+    int32 multiplexed_physical_conns = 21;
+    string multiplexed_protocol = 22;
+    map<string, string> multiplexed_settings = 23;
+    string track = 24;
+    string region = 25;
+}
