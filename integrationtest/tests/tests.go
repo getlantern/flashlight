@@ -1,10 +1,14 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/getlantern/common/config"
+	"github.com/getlantern/flashlight-integration-test/rediswrapper"
+	"github.com/getlantern/flashlight-integration-test/util"
 	httpProxyLantern "github.com/getlantern/http-proxy-lantern/v2"
 	"github.com/go-redis/redis/v8"
 )
@@ -76,6 +80,41 @@ type Test interface {
 		httpProxyLanternHandle io.Closer,
 		err error)
 	Run(*config.ProxyConfig) error
+}
+
+func initHttpProxyLanternLocalOrRemote(
+	rdb *redis.Client,
+	integrationTestConfig *IntegrationTestConfig,
+	remoteTestTrackName string,
+	localProxyConfig *config.ProxyConfig,
+) (*config.ProxyConfig, io.Closer, error) {
+	var proxyConfig *config.ProxyConfig
+	var httpProxyLanternHandle io.Closer
+	var err error
+	if integrationTestConfig.IsHttpProxyLanternLocal {
+		httpProxyLanternHandle, err = initLocalHttpProxyLantern(localProxyConfig)
+		if err != nil {
+			return nil, nil,
+				fmt.Errorf("Unable to init local http-proxy-lantern: %v", err)
+		}
+		defer httpProxyLanternHandle.Close()
+		proxyConfig = localProxyConfig
+	} else {
+		ctx, cancel := context.WithTimeout(
+			context.Background(), 5*time.Second)
+		defer cancel()
+		proxyConfig, err = rediswrapper.FetchRandomProxyConfigFromTrack(
+			ctx, rdb, remoteTestTrackName)
+		if err != nil {
+			return nil, nil,
+				fmt.Errorf(
+					"Unable to fetch random proxy from track %s: %v",
+					remoteTestTrackName, err)
+		}
+		httpProxyLanternHandle = util.IoNopCloser{}
+	}
+
+	return proxyConfig, httpProxyLanternHandle, nil
 }
 
 func initLocalHttpProxyLantern(proxyConfig *config.ProxyConfig) (*httpProxyLantern.Proxy, error) {

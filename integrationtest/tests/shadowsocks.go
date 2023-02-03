@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/getlantern/common/config"
-	"github.com/getlantern/flashlight-integration-test/rediswrapper"
 	"github.com/getlantern/flashlight-integration-test/util"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
@@ -40,33 +39,11 @@ func (t *Test_Shadowsocks_NoMultiplex_MultiplePrefix) Init(
 	var localProxyConfig *config.ProxyConfig = &config.ProxyConfig{}
 
 	// Init http-proxy-lantern, either local or remote
-	var proxyConfig *config.ProxyConfig
-	var httpProxyLanternHandle io.Closer
-	var err error
-	if integrationTestConfig.IsHttpProxyLanternLocal {
-		httpProxyLanternHandle, err = initLocalHttpProxyLantern(localProxyConfig)
-		if err != nil {
-			return nil, nil,
-				fmt.Errorf("Unable to init local http-proxy-lantern: %v", err)
-		}
-		defer httpProxyLanternHandle.Close()
-		proxyConfig = localProxyConfig
-	} else {
-		ctx, cancel := context.WithTimeout(
-			context.Background(), 5*time.Second)
-		defer cancel()
-		proxyConfig, err = rediswrapper.FetchRandomProxyConfigFromTrack(
-			ctx, rdb, remoteTestTrackName)
-		if err != nil {
-			return nil, nil,
-				fmt.Errorf(
-					"Unable to fetch random proxy from track %s: %v",
-					remoteTestTrackName, err)
-		}
-		httpProxyLanternHandle = util.IoNopCloser{}
-	}
-
-	return proxyConfig, httpProxyLanternHandle, nil
+	return initHttpProxyLanternLocalOrRemote(
+		rdb,
+		integrationTestConfig,
+		remoteTestTrackName,
+		localProxyConfig)
 }
 
 func (t *Test_Shadowsocks_NoMultiplex_MultiplePrefix) Run(proxyConfig *config.ProxyConfig) error {
