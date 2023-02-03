@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -51,7 +52,7 @@ func (p *proxy) Stop() {
 	log.Tracef("Stopping dialer %s", p.Label())
 	p.closeOnce.Do(func() {
 		close(p.closeCh)
-		p.impl.close()
+		p.impl.Close()
 	})
 }
 
@@ -167,16 +168,117 @@ func (p *proxy) MarkFailure() {
 	return
 }
 
-// defaultDialOrigin implements the method from serverConn. With standard proxies, this
+func (p *proxy) SuccessfulPrefixChan() <-chan []byte {
+	if p.opts == nil || p.opts.successfulPrefixChan == nil {
+		return nil
+	}
+	return p.opts.successfulPrefixChan
+}
+
+type ConnectionWithPrefix struct {
+	conn      net.Conn
+	prefixBuf []byte
+	err       error
+}
+
+func defaultDialOrigin(
+	op *ops.Op,
+	ctx context.Context,
+	p *proxy,
+	network, addr string) (net.Conn, error) {
+	// Drain the successfulPrefixChan if it exists. This is to prevent
+	// the channel from filling up and blocking the proxy.
+	if p.opts.successfulPrefixChan != nil {
+	looper:
+		select {
+		case <-p.opts.successfulPrefixChan:
+			goto looper
+		default:
+			break looper
+		}
+	}
+
+	// Check how many prefixes we have for this proxy.
+	if p.opts == nil || len(p.opts.Prefixes) == 0 {
+		collectionCh := make(chan ConnectionWithPrefix, 1)
+		go doDialOrigin(op, ctx, p, network, addr, nil, collectionCh)
+		connectionCollection := <-collectionCh
+		return connectionCollection.conn, connectionCollection.err
+	}
+
+	// We have prefixes, so we'll use multipath dialing.
+
+	// Dial routine: dials the server len(p.Prefixes) times, each time with a
+	// different prefix. The successful connection with the lowest RTT will be
+	// used. The rest will still be reported as a success, but will be closed
+	// immediately.
+	collectionCh := make(chan ConnectionWithPrefix, len(p.opts.Prefixes))
+	for _, prefixBuf := range p.opts.Prefixes {
+		go doDialOrigin(op, ctx, p, network, addr, prefixBuf, collectionCh)
+	}
+
+	// Collection routine
+	successfulConnCh := make(chan net.Conn)
+	sb := &strings.Builder{}
+	go func() {
+		didSendSuccessfulConn := false
+		for pc := range collectionCh {
+			// If we get an error, we can't continue.
+			// Collect the error so we can log it later if everything fails.
+			if pc.err != nil {
+				log.Debugf("Dialer %s failed to dial with prefix %s: %s", p.Label(), pc.prefixBuf, pc.err)
+				sb.WriteString(fmt.Sprintf(" %s: %s", pc.prefixBuf, pc.err))
+				continue
+			}
+
+			// Signal a correct dial with a prefix
+			if p.opts.successfulPrefixChan != nil {
+				p.opts.successfulPrefixChan <- pc.prefixBuf
+			}
+
+			// If this is the first successful dial, send it to the main routine
+			// TODO <26-01-2023, soltzen> Consider using closed channels
+			// instead of a boolean
+			if !didSendSuccessfulConn {
+				successfulConnCh <- pc.conn
+				didSendSuccessfulConn = true
+				continue
+			}
+
+			// Close the connection since if we're here, we already sent a
+			// successful connection.
+			pc.conn.Close()
+		}
+	}()
+
+	// Wait for a successful connection or a timeout
+	select {
+	case conn := <-successfulConnCh:
+		return conn, nil
+	case <-ctx.Done():
+		return nil, fmt.Errorf("Failed to dial %s with any prefix: %s",
+			p.Addr(), sb.String())
+	}
+}
+
+// doDialOrigin implements the method from serverConn. With standard proxies, this
 // involves sending either a CONNECT request or a GET request to initiate a
 // persistent connection to the upstream proxy.
-func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
+func doDialOrigin(
+	op *ops.Op,
+	ctx context.Context,
+	p *proxy,
+	network, addr string,
+	prefixBuf []byte,
+	collectionCh chan<- ConnectionWithPrefix) {
 	conn, err := p.reportedDial(func(op *ops.Op) (net.Conn, error) {
-		return p.impl.dialServer(op, ctx)
+		return p.impl.DialServer(op, ctx, prefixBuf)
 	})
 	if err != nil {
 		log.Debugf("Unable to dial server %v: %s", p.Label(), err)
-		return nil, err
+		collectionCh <- ConnectionWithPrefix{
+			err: fmt.Errorf("dialing server: %s", err)}
+		return
 	}
 
 	conn, err = overheadWrapper(true)(conn, op.FailIf(err))
@@ -188,9 +290,11 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 		timeout = timeUntilDeadline - 2*time.Second
 		if timeout < 0 {
 			log.Errorf("Not enough time left for server to dial upstream within %v, return errUpstream immediately", timeUntilDeadline)
-			return nil, errUpstream
+			collectionCh <- ConnectionWithPrefix{err: errUpstream}
+			return
 		}
 	}
+
 	// Look for our special hacked "connect" transport used to signal
 	// that we should send a CONNECT request and tunnel all traffic through
 	// that.
@@ -206,11 +310,13 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 	}
 	if err != nil {
 		conn.Close()
-		return nil, err
+		log.Debugf("Unable to dial server %v: %s", p.Label(), err)
+		collectionCh <- ConnectionWithPrefix{err: fmt.Errorf("dialing server: %s", err)}
+		return
 	}
 	// Unset the deadline to avoid affecting later read/write on the connection.
 	conn.SetDeadline(time.Time{})
-	return conn, nil
+	collectionCh <- ConnectionWithPrefix{conn: conn, prefixBuf: prefixBuf}
 }
 
 func (p *proxy) onRequest(req *http.Request) {

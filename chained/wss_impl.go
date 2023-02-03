@@ -22,7 +22,7 @@ type wssImpl struct {
 	dialer         tinywss.Client
 }
 
-func newWSSImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newWSSImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (ProxyImpl, error) {
 	var rt tinywss.RoundTripHijacker
 	var err error
 
@@ -57,12 +57,12 @@ func newWSSImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDialCo
 	return &wssImpl{reportDialCore, addr, client}, nil
 }
 
-func (impl *wssImpl) close() {
+func (impl *wssImpl) Close() {
 	log.Debug("Closing wss session: Proxy closed.")
 	impl.dialer.Close()
 }
 
-func (impl *wssImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (impl *wssImpl) DialServer(op *ops.Op, ctx context.Context, prefix []byte) (net.Conn, error) {
 	return impl.reportDialCore(op, func() (net.Conn, error) {
 		return impl.dialer.DialContext(ctx)
 	})

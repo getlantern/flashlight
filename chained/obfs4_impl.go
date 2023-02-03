@@ -20,7 +20,7 @@ type obfs4Impl struct {
 	args     interface{}
 }
 
-func newOBFS4Impl(name, addr string, pc *config.ProxyConfig, dialCore coreDialer) (proxyImpl, error) {
+func newOBFS4Impl(name, addr string, pc *config.ProxyConfig, dialCore coreDialer) (ProxyImpl, error) {
 	if pc.Cert == "" {
 		return nil, fmt.Errorf("No Cert configured for obfs4 server, can't connect")
 	}
@@ -47,7 +47,7 @@ func newOBFS4Impl(name, addr string, pc *config.ProxyConfig, dialCore coreDialer
 	}, nil
 }
 
-func (impl *obfs4Impl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (impl *obfs4Impl) DialServer(op *ops.Op, ctx context.Context, prefix []byte) (net.Conn, error) {
 	dial := func(network, address string) (net.Conn, error) {
 		// We know for sure the network and address are the same as what
 		// the inner DailServer uses.

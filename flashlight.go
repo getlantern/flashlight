@@ -471,6 +471,7 @@ func New(
 		reverseDNS,
 		adTrackUrl,
 		eventWithLabel,
+		nil,
 	)
 	if err != nil {
 		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)

@@ -13,9 +13,9 @@ type httpImpl struct {
 	addr     string
 }
 
-func newHTTPImpl(addr string, dialCore coreDialer) proxyImpl {
+func newHTTPImpl(addr string, dialCore coreDialer) ProxyImpl {
 	return &httpImpl{addr: addr, dialCore: dialCore}
 }
-func (impl *httpImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (impl *httpImpl) DialServer(op *ops.Op, ctx context.Context, prefix []byte) (net.Conn, error) {
 	return impl.dialCore(op, ctx, impl.addr)
 }

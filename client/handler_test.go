@@ -166,6 +166,7 @@ func newClientForDiversion(opts *config.GoogleSearchAdsOptions) *Client {
 		func(host string) (string, error) { return host, nil },
 		func() string { return "https://tracker/ads" },
 		func(category, action, label string) {},
+		nil,
 	)
 	client.googleAdsOptions = opts
 	return client

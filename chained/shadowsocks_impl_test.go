@@ -22,7 +22,7 @@ func TestGenerateUpstream(t *testing.T) {
 		},
 	}
 
-	prx, err := newShadowsocksImpl("test-0", "127.0.0.1:4444", info, nil)
+	prx, err := NewShadowsocksImpl("test-0", "127.0.0.1:4444", info, nil)
 	if !assert.Nil(t, err, "Failed to create proxy impl: %v", err) {
 		return
 	}

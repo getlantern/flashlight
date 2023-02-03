@@ -185,6 +185,7 @@ func NewClient(
 	reverseDNS func(addr string) (string, error),
 	adTrackUrl func() string,
 	eventWithLabel func(category, action, label string),
+	inputBalancer *balancer.Balancer,
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
 	rewriteLRU, err := lru.New(100)
@@ -194,7 +195,6 @@ func NewClient(
 	client := &Client{
 		configDir:                              configDir,
 		requestTimeout:                         requestTimeout,
-		bal:                                    balancer.New(allowProbes, time.Duration(requestTimeout)),
 		disconnected:                           disconnected,
 		allowProbes:                            allowProbes,
 		proxyAll:                               proxyAll,
@@ -221,6 +221,12 @@ func NewClient(
 		httpListener:                           eventual.NewValue(),
 		socksListener:                          eventual.NewValue(),
 		DNSResolutionMapForDirectDialsEventual: eventual.NewValue(),
+	}
+
+	if inputBalancer == nil {
+		client.bal = balancer.New(allowProbes, time.Duration(requestTimeout))
+	} else {
+		client.bal = inputBalancer
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -553,6 +559,7 @@ func (client *Client) doDial(
 	isCONNECT bool,
 	addr string,
 	dnsResolutionMapForDirectDials map[string]string) (net.Conn, error) {
+	fmt.Printf("PINEAPPLE doDial: isCONNECT=%v, addr=%v\n", isCONNECT, addr)
 
 	dialDirect := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		if v, ok := dnsResolutionMapForDirectDials[addr]; ok {
@@ -577,6 +584,7 @@ func (client *Client) doDial(
 			proto = balancer.NetworkConnect
 		}
 		start := time.Now()
+		fmt.Printf("PINEAPPLE bal.DialContext: proto=%v | addr=%v\n", proto, addr)
 		conn, err := client.bal.DialContext(ctx, proto, addr)
 		if log.IsTraceEnabled() {
 			log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)

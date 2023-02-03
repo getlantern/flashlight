@@ -56,20 +56,20 @@ var (
 	createKeyLogWriterOnce sync.Once
 )
 
-// proxyImpl is the interface to hide the details of client side logic for
+// ProxyImpl is the interface to hide the details of client side logic for
 // different types of pluggable transports.
-type proxyImpl interface {
-	// dialServer is to establish connection to the proxy server to the point
+type ProxyImpl interface {
+	// DialServer is to establish connection to the proxy server to the point
 	// of being able to transfer application data.
-	dialServer(op *ops.Op, ctx context.Context) (net.Conn, error)
-	// close releases the resources associated with the implementation, if any.
-	close()
+	DialServer(op *ops.Op, ctx context.Context, prefix []byte) (net.Conn, error)
+	// Close releases the resources associated with the implementation, if any.
+	Close()
 }
 
-// nopCloser is a mixin to implement a do-nothing close() method of proxyImpl.
+// nopCloser is a mixin to implement a do-nothing Close() method of proxyImpl.
 type nopCloser struct{}
 
-func (c nopCloser) close() {}
+func (c nopCloser) Close() {}
 
 // CreateDialers creates a list of Proxies (balancer.Dialer) with supplied server info.
 func CreateDialers(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) []balancer.Dialer {
@@ -105,21 +105,58 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 	return mappedDialers
 }
 
+type DialerOpts struct {
+	// List of prefixes to try when dialing the proxy with dialOrigin().
+	//
+	// If this is empty, no prefix is sent.
+	//
+	// If this is non-empty, **multiple** dials will be made to the same proxy,
+	// each with a different prefix from this list. The first successful dial
+	// will be used. All successful dials will call the proxy's
+	// OnSuccessfulDialWithPrefix callback.
+	//
+	// Failed dials will not be reported. If all dials fail, the proxy's
+	// dialOrigin() will fail.
+	Prefixes             [][]byte
+	successfulPrefixChan chan []byte
+}
+
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
-func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserConfig) (balancer.Dialer, error) {
-	addr, transport, network, err := extractParams(s)
+func CreateDialer(
+	configDir, name string,
+	s *config.ProxyConfig,
+	uc common.UserConfig,
+	optsList ...DialerOpts,
+) (balancer.Dialer, error) {
+	var opts *DialerOpts = nil
+	if len(optsList) > 0 {
+		opts = &optsList[0]
+		// Initialize the prefix collection channel with a buffer of
+		// len(opts.Prefixes).
+		if opts.Prefixes != nil {
+			opts.successfulPrefixChan = make(
+				chan []byte,
+				len(opts.Prefixes))
+		}
+	}
+
+	addr, transport, network, err := ExtractParams(s)
 	if err != nil {
 		return nil, err
 	}
-	p, err := newProxy(name, addr, transport, network, s, uc)
-	p.impl, err = createImpl(configDir, name, addr, transport, s, uc, p.reportDialCore)
+	p, err := newProxy(
+		name, addr, transport, network,
+		s, uc, opts)
+	p.impl, err = CreateImpl(
+		configDir, name, addr, transport,
+		s, uc, p.reportDialCore)
 	if err != nil {
 		return nil, err
 	}
 	return p, nil
 }
 
-func extractParams(s *config.ProxyConfig) (addr, transport, network string, err error) {
+func ExtractParams(s *config.ProxyConfig) (addr, transport, network string, err error) {
 	if theForceAddr != "" && theForceToken != "" {
 		forceProxy(s)
 	}
@@ -150,7 +187,7 @@ func extractParams(s *config.ProxyConfig) (addr, transport, network string, err 
 	return
 }
 
-func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func CreateImpl(configDir, name, addr, transport string, s *config.ProxyConfig, uc common.UserConfig, reportDialCore reportDialCoreFn) (ProxyImpl, error) {
 	coreDialer := func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error) {
 		return reportDialCore(op, func() (net.Conn, error) {
 			return netx.DialContext(ctx, "tcp", addr)
@@ -167,7 +204,7 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 			})
 		}
 	}
-	var impl proxyImpl
+	var impl ProxyImpl
 	var err error
 	switch transport {
 	case "", "http", "https", "utphttp", "utphttps":
@@ -185,7 +222,7 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 	case "quic_ietf":
 		impl, err = newQUICImpl(name, addr, s, reportDialCore)
 	case "shadowsocks":
-		impl, err = newShadowsocksImpl(name, addr, s, reportDialCore)
+		impl, err = NewShadowsocksImpl(name, addr, s, reportDialCore)
 	case "wss":
 		impl, err = newWSSImpl(addr, s, reportDialCore)
 	case "tlsmasq":
@@ -208,7 +245,7 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 	if s.MultiplexedAddr != "" || transport == "utphttp" ||
 		transport == "utphttps" || transport == "utpobfs4" ||
 		transport == "tlsmasq" {
-		impl, err = multiplexed(impl, name, s)
+		impl, err = Multiplexed(impl, name, s)
 		if err != nil {
 			return nil, err
 		}
@@ -295,7 +332,7 @@ type proxy struct {
 	user                common.UserConfig
 	trusted             bool
 	bias                int
-	impl                proxyImpl
+	impl                ProxyImpl
 	dialOrigin          dialOriginFn
 	emaRTT              *ema.EMA
 	emaRTTDev           *ema.EMA
@@ -306,9 +343,16 @@ type proxy struct {
 	closeCh             chan bool
 	closeOnce           sync.Once
 	mx                  sync.Mutex
+
+	opts *DialerOpts
 }
 
-func newProxy(name, addr, protocol, network string, s *config.ProxyConfig, uc common.UserConfig) (*proxy, error) {
+func newProxy(
+	name, addr, protocol, network string,
+	s *config.ProxyConfig,
+	uc common.UserConfig,
+	opts *DialerOpts,
+) (*proxy, error) {
 	p := &proxy{
 		name:             name,
 		protocol:         protocol,
@@ -327,6 +371,7 @@ func newProxy(name, addr, protocol, network string, s *config.ProxyConfig, uc co
 		numPreconnected:  func() int { return 0 },
 		closeCh:          make(chan bool, 1),
 		consecSuccesses:  1, // be optimistic
+		opts:             opts,
 	}
 	// Make sure we don't panic if there's no location.
 	if s.Location != nil {
@@ -488,7 +533,7 @@ func (p *proxy) collectBBRInfo(reqTime time.Time, resp *http.Response) {
 			// value.
 			p.mx.Lock()
 			if reqTime.After(p.mostRecentABETime) {
-				log.Debugf("%v: X-BBR-ABE: %.2f Mbps", p.Label(), abe)
+				log.Tracef("%v: X-BBR-ABE: %.2f Mbps", p.Label(), abe)
 				intABE := int64(abe * 1000)
 				if intABE > 0 {
 					// We check for a positive ABE here because in some scenarios (like

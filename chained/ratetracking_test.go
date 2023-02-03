@@ -33,7 +33,7 @@ func TestRateTracking(t *testing.T) {
 	p, err := newProxy("test", "addr:567", "proto", "netw", &config.ProxyConfig{
 		AuthToken: "token",
 		Trusted:   true,
-	}, newTestUserConfig())
+	}, newTestUserConfig(), nil)
 	p.impl = &testImpl{d: func(ctx context.Context) (net.Conn, error) {
 		return sd.Dial("", "")
 	}}

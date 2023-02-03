@@ -15,7 +15,7 @@ type starbridge struct {
 	conn           net.Conn
 }
 
-func (s *starbridge) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (s *starbridge) DialServer(op *ops.Op, ctx context.Context, prefix []byte) (net.Conn, error) {
 	return s.reportDialCore(op, func() (net.Conn, error) {
 		conn, err := s.config.Dial(s.config.Address)
 		if err != nil {
@@ -26,13 +26,13 @@ func (s *starbridge) dialServer(op *ops.Op, ctx context.Context) (net.Conn, erro
 	})
 }
 
-func (s *starbridge) close() {
+func (s *starbridge) Close() {
 	if s.conn != nil {
 		s.conn.Close()
 	}
 }
 
-func newStarbridgeImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newStarbridgeImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (ProxyImpl, error) {
 	config := Starbridge.ClientConfig{
 		Address:                   addr,
 		ServerPersistentPublicKey: pc.Cert,

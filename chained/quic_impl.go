@@ -19,7 +19,7 @@ type quicImpl struct {
 	dialer         *quicwrapper.Client
 }
 
-func newQUICImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newQUICImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (ProxyImpl, error) {
 	tlsConf := &gtls.Config{
 		ServerName:         pc.TLSServerNameIndicator,
 		InsecureSkipVerify: true,
@@ -55,12 +55,12 @@ func newQUICImpl(name, addr string, pc *config.ProxyConfig, reportDialCore repor
 	return &quicImpl{reportDialCore, addr, dialer}, nil
 }
 
-func (impl *quicImpl) close() {
+func (impl *quicImpl) Close() {
 	log.Debug("Closing quic session: Proxy closed.")
 	impl.dialer.Close()
 }
 
-func (impl *quicImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (impl *quicImpl) DialServer(op *ops.Op, ctx context.Context, prefix []byte) (net.Conn, error) {
 	return impl.reportDialCore(op, func() (net.Conn, error) {
 		conn, err := impl.dialer.DialContext(ctx)
 		if err != nil {
