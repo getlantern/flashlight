@@ -1,8 +1,9 @@
-package main
+package tests
 
 import (
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -14,55 +15,73 @@ import (
 	"time"
 
 	"github.com/getlantern/common/config"
+	"github.com/getlantern/flashlight-integration-test/rediswrapper"
+	"github.com/getlantern/flashlight-integration-test/util"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 	"github.com/go-redis/redis/v8"
 )
 
-type TestCase struct {
-	connectionType           string
-	testURL                  string
-	expectedStringInResponse string
-}
-type TestCaseAndError struct {
-	TestCase
-	err error
-}
-
 // Taken from here:
 // https://github.com/getlantern/lantern-infrastructure/blob/ed3d4b11fb11c6a19a92c45a7fcf8b521e7352cb/etc/current_production_track_config.py#L175
 // const TrackName = "dofra1u16ru-https-pro"
 
-const TrackName = "ir-anfra-ss-dnsovertcp"
+// TODO <03-02-2023, soltzen> Send this to http-proxy-lantern locally to init it
 
-func testShadowsocks(rdb *redis.Client) error {
-	// We're testing shadowsocks so fetch a shadowsocks track from Redis and
-	// extract a random proxy from it
-	proxyConfigFetchCtx, proxyConfigFetchCtxCancel := context.WithTimeout(
-		context.Background(), 5*time.Second)
-	defer proxyConfigFetchCtxCancel()
-	proxyConfig, err := fetchRandomProxyConfigFromTrack(
-		proxyConfigFetchCtx, rdb, TrackName)
-	if err != nil {
-		return fmt.Errorf(
-			"Unable to fetch random proxy from track %s: %v",
-			TrackName, err)
+type Test_Shadowsocks_NoMultiplex_MultiplePrefix struct{}
+
+func (t *Test_Shadowsocks_NoMultiplex_MultiplePrefix) Init(
+	rdb *redis.Client,
+	integrationTestConfig *IntegrationTestConfig,
+) (*config.ProxyConfig, io.Closer, error) {
+	// Init http-proxy-lantern, either local or remote
+	const remoteTestTrackName = "ir-anfra-ss-dnsovertcp"
+	var localProxyConfig *config.ProxyConfig = &config.ProxyConfig{}
+
+	// Init http-proxy-lantern, either local or remote
+	var proxyConfig *config.ProxyConfig
+	var httpProxyLanternHandle io.Closer
+	var err error
+	if integrationTestConfig.IsHttpProxyLanternLocal {
+		httpProxyLanternHandle, err = initLocalHttpProxyLantern(localProxyConfig)
+		if err != nil {
+			return nil, nil,
+				fmt.Errorf("Unable to init local http-proxy-lantern: %v", err)
+		}
+		defer httpProxyLanternHandle.Close()
+		proxyConfig = localProxyConfig
+	} else {
+		ctx, cancel := context.WithTimeout(
+			context.Background(), 5*time.Second)
+		defer cancel()
+		proxyConfig, err = rediswrapper.FetchRandomProxyConfigFromTrack(
+			ctx, rdb, remoteTestTrackName)
+		if err != nil {
+			return nil, nil,
+				fmt.Errorf(
+					"Unable to fetch random proxy from track %s: %v",
+					remoteTestTrackName, err)
+		}
+		httpProxyLanternHandle = util.IoNopCloser{}
 	}
-	fmt.Printf("PINEAPPLE proxyConfig: %v\n", proxyConfig)
 
+	return proxyConfig, httpProxyLanternHandle, nil
+}
+
+func (t *Test_Shadowsocks_NoMultiplex_MultiplePrefix) Run(proxyConfig *config.ProxyConfig) error {
 	// Modify the transport
-	proxyConfig.PluggableTransport = "shadowsocks"
-	proxyConfig.Addr = "localhost:3223"
-	proxyConfig.MultiplexedAddr = "localhost:3223"
-	b, err := os.ReadFile("/Users/soltzen/dev/lantern/http-proxy-lantern/ss-track/cert.pem")
-	if err != nil {
-		return fmt.Errorf("Unable to read cert.pem: %v", err)
-	}
-	proxyConfig.Cert = string(b)
-	proxyConfig.AuthToken = "6zSbMrauzKETEgTNHJN92KGZeI55b2RFxPItiZ8x2Rqjjpuzg79fgeiZUEJgxn3X"
+	// proxyConfig.PluggableTransport = "shadowsocks"
+	// proxyConfig.Addr = "localhost:3223"
 	// proxyConfig.MultiplexedAddr = "localhost:3223"
-	proxyConfig.PluggableTransportSettings["shadowsocks_secret"] = "locUgMMrZYF5Qhon5TcvJiL9JyJ6seho4pwPiZOKHto="
+	// b, err := os.ReadFile("/Users/soltzen/dev/lantern/http-proxy-lantern/ss-track/cert.pem")
+	// if err != nil {
+	// 	return fmt.Errorf("Unable to read cert.pem: %v", err)
+	// }
+	// proxyConfig.Cert = string(b)
+	// proxyConfig.AuthToken = "6zSbMrauzKETEgTNHJN92KGZeI55b2RFxPItiZ8x2Rqjjpuzg79fgeiZUEJgxn3X"
+	// // proxyConfig.MultiplexedAddr = "localhost:3223"
+	// proxyConfig.PluggableTransportSettings["shadowsocks_secret"] = "locUgMMrZYF5Qhon5TcvJiL9JyJ6seho4pwPiZOKHto="
 
 	// Create the dialer
 	configDir, err := os.MkdirTemp("", "test")
@@ -214,29 +233,13 @@ func runTestCase(
 	}
 
 	// Wait for all prefixes to be successful
-	if !waitForWaitGroup(
+	if !util.WaitForWaitGroup(
 		&successfulPrefixReceivedWaitGroup,
 		5*time.Second) {
 		return fmt.Errorf("Timed-out waiting for successful prefixes")
 	}
 
 	return nil
-}
-
-func waitForWaitGroup(wg *sync.WaitGroup, timeout time.Duration) (ok bool) {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-	ch := make(chan struct{})
-	go func() {
-		wg.Wait()
-		close(ch)
-	}()
-	select {
-	case <-ctx.Done():
-		return false
-	case <-ch:
-		return true
-	}
 }
 
 func runTestHTTPRequestWithDialer(
