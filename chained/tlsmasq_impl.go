@@ -98,7 +98,7 @@ func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc com
 	pCfg.InsecureSkipVerify = InsecureSkipVerifyTLSMasqOrigin
 
 	// Save the proxy CA pool and set the root CAs to nil (use system defaults).
-	proxyCAs := pCfg.RootCAs
+	proxyCAs := pCfg.RootCAs.Clone()
 	pCfg.RootCAs = nil
 
 	cfg := tlsmasq.DialerConfig{
