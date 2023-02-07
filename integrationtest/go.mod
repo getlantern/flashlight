@@ -17,10 +17,13 @@ replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-2022
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.31.1-0.20230104154904-d810c964a217
 
 require (
+	github.com/caarlos0/log v0.1.10
 	github.com/getlantern/common v1.2.0
 	github.com/getlantern/flashlight v0.0.0-00010101000000-000000000000
+	github.com/getlantern/golog v0.0.0-20230206140254-6d0a2e0f79af
 	github.com/getlantern/http-proxy-lantern/v2 v2.8.0
 	github.com/go-redis/redis/v8 v8.11.5
+	github.com/rivo/tview v0.0.0-20230206063056-c1eadf1b0bf6
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -52,12 +55,14 @@ require (
 	github.com/anacrolix/sync v0.4.0 // indirect
 	github.com/anacrolix/torrent v1.47.0 // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
+	github.com/aymanbagabas/go-osc52 v1.2.1 // indirect
 	github.com/benbjohnson/immutable v0.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/bradfitz/iter v0.0.0-20191230175014-e8f45d346db8 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/charmbracelet/lipgloss v0.6.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
@@ -68,6 +73,8 @@ require (
 	github.com/edsrzf/mmap-go v1.1.0 // indirect
 	github.com/elazarl/goproxy v0.0.0-20220417044921-416226498f94 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
+	github.com/gdamore/encoding v1.0.0 // indirect
+	github.com/gdamore/tcell/v2 v2.5.3 // indirect
 	github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0 // indirect
 	github.com/getlantern/borda v0.0.0-20220308134056-c4a5602f778e // indirect
 	github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493 // indirect
@@ -89,7 +96,6 @@ require (
 	github.com/getlantern/geo v0.0.0-20221101125300-c661769d5822 // indirect
 	github.com/getlantern/geolookup v0.0.0-20210901195705-eec711834596 // indirect
 	github.com/getlantern/go-cache v0.0.0-20141028142048-88b53914f467 // indirect
-	github.com/getlantern/golog v0.0.0-20221014032422-49749a7176cf // indirect
 	github.com/getlantern/gonat v0.0.0-20201001145726-634575ba87fb // indirect
 	github.com/getlantern/grtrack v0.0.0-20210901195719-bdf9e1d12dac // indirect
 	github.com/getlantern/hellosplitter v0.1.1 // indirect
@@ -161,9 +167,12 @@ require (
 	github.com/klauspost/reedsolomon v1.9.9 // indirect
 	github.com/libp2p/go-buffer-pool v0.0.2 // indirect
 	github.com/lucas-clemente/quic-go v0.31.1 // indirect
+	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/marten-seemann/qtls-go1-18 v0.1.3 // indirect
 	github.com/marten-seemann/qtls-go1-19 v0.1.1 // indirect
+	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mdlayher/netlink v1.1.0 // indirect
 	github.com/mholt/archiver/v3 v3.5.1 // indirect
@@ -173,6 +182,8 @@ require (
 	github.com/mitchellh/go-ps v1.0.0 // indirect
 	github.com/mitchellh/go-server-timing v1.0.0 // indirect
 	github.com/mmcloughlin/avo v0.0.0-20200803215136-443f81d77104 // indirect
+	github.com/muesli/reflow v0.3.0 // indirect
+	github.com/muesli/termenv v0.13.0 // indirect
 	github.com/nwaples/rardecode v1.1.2 // indirect
 	github.com/onsi/ginkgo/v2 v2.2.0 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
@@ -188,6 +199,7 @@ require (
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/refraction-networking/utls v1.0.0 // indirect
+	github.com/rivo/uniseg v0.4.2 // indirect
 	github.com/rs/dnscache v0.0.0-20211102005908-e0241e321417 // indirect
 	github.com/samber/lo v1.25.0 // indirect
 	github.com/shadowsocks/go-shadowsocks2 v0.1.4-0.20201002022019-75d43273f5a5 // indirect
@@ -226,6 +238,7 @@ require (
 	golang.org/x/net v0.1.0 // indirect
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
 	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/term v0.1.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
 	golang.org/x/tools v0.1.12 // indirect

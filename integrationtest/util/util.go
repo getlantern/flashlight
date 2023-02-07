@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -44,4 +45,12 @@ type IoNopCloser struct{}
 
 func (IoNopCloser) Close() error {
 	return nil
+}
+
+func MustReadFile(filePath string) []byte {
+	b, err := os.ReadFile(filePath)
+	if err != nil {
+		panic(fmt.Errorf("Failed to read file %s: %w", filePath, err))
+	}
+	return b
 }

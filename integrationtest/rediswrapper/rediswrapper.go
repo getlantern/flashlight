@@ -31,7 +31,10 @@ func GetRedisURLFromInfra(repoPath string) string {
 		if strings.HasPrefix(scanner.Text(), "REDIS_URL") {
 			arr := strings.Split(scanner.Text(), "=")
 			if len(arr) != 2 {
-				log.Fatalf("Unexpected format for REDIS_URL: %s", scanner.Text())
+				log.Fatalf(
+					"Unexpected format for REDIS_URL: %s",
+					scanner.Text(),
+				)
 			}
 			redisURL = arr[1]
 			break
@@ -46,8 +49,13 @@ func GetRedisURLFromInfra(repoPath string) string {
 	return redisURL
 }
 
-func MakeRedisClientFromInfra(ctx context.Context, infraPath string) (*redis.Client, error) {
-	redisOpts, err := redis.ParseURL(GetRedisURLFromInfra(util.ExpandPath(infraPath)))
+func MakeRedisClientFromInfra(
+	ctx context.Context,
+	infraPath string,
+) (*redis.Client, error) {
+	redisOpts, err := redis.ParseURL(
+		GetRedisURLFromInfra(util.ExpandPath(infraPath)),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to parse redis URL: %v", err)
 	}
@@ -64,18 +72,34 @@ func RedisKey_ServersForTrack(track string) string {
 	return fmt.Sprintf("%s:servers", track)
 }
 
-func FetchRandomProxyFromTrack(ctx context.Context, rdb *redis.Client, track string) (string, error) {
+func FetchRandomProxyFromTrack(
+	ctx context.Context,
+	rdb *redis.Client,
+	track string,
+) (string, error) {
 	proxy, err := rdb.SRandMember(ctx, RedisKey_ServersForTrack(track)).Result()
 	if err != nil {
-		return "", fmt.Errorf("Unable to fetch proxies from track %s: %v", track, err)
+		return "", fmt.Errorf(
+			"Unable to fetch proxies from track %s: %v",
+			track,
+			err,
+		)
 	}
 	return proxy, nil
 }
 
-func fetchProxyConfig(ctx context.Context, rdb *redis.Client, proxyName string) (string, error) {
+func fetchProxyConfig(
+	ctx context.Context,
+	rdb *redis.Client,
+	proxyName string,
+) (string, error) {
 	config, err := rdb.HGet(ctx, "server->config", proxyName).Result()
 	if err != nil {
-		return "", fmt.Errorf("Unable to fetch proxy config for %s: %v", proxyName, err)
+		return "", fmt.Errorf(
+			"Unable to fetch proxy config for %s: %v",
+			proxyName,
+			err,
+		)
 	}
 	return config, nil
 }
