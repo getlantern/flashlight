@@ -2,26 +2,20 @@ package testsuite
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
-	"net/http"
 	"path/filepath"
-	"strconv"
 	"strings"
-	"sync"
 	"time"
 
-	"github.com/caarlos0/log"
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight-integration-test/projectpath"
 	"github.com/getlantern/flashlight-integration-test/rediswrapper"
 	"github.com/getlantern/flashlight-integration-test/util"
-	"github.com/getlantern/flashlight/balancer"
-	"github.com/getlantern/flashlight/chained"
-	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/golog"
+	httpProxyLantern "github.com/getlantern/http-proxy-lantern/v2"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -35,7 +29,6 @@ var LocalHTTPProxyLanternTestCertFile = filepath.Join(
 	"testdata",
 	"httpproxylantern-test-cert.pem")
 var allTests map[string]Test
-var updateChan chan struct{}
 
 func init() {
 	allTests = map[string]Test{
@@ -48,29 +41,10 @@ func init() {
 		// Shadowsocks
 		// ---------------
 		// "shadowsocks-nomultiplex-singleprefix": &Test_Shadowsocks_NoMultiplex_SinglePrefix{},
-		"shadowsocks-nomultiplex-noprefix":       &Test_Shadowsocks_NoMultiplex_NoPrefix{},
-		"shadowsocks-nomultiplex-multipleprefix": &Test_Shadowsocks_NoMultiplex_MultiplePrefix{},
+		"shadowsocks-no-multiplex-no-prefix":       &Test_Shadowsocks_NoMultiplex_NoPrefix{},
+		"shadowsocks-no-multiplex-multiple-prefix": &Test_Shadowsocks_NoMultiplex_MultiplePrefix{},
 	}
-	updateChan = make(chan struct{})
 }
-
-// Run runs the test specified by testName, or "all" to run all tests.
-// func Run(
-// 	rdb *redis.Client,
-// 	testName string,
-// 	integrationTestConfig *IntegrationTestConfig,
-// ) error {
-// 	// Init
-// 	proxyConfig, httpProxyLanternHandle, err := t.Init(
-// 		rdb, integrationTestConfig)
-// 	if err != nil {
-// 		return fmt.Errorf("Unable to init test %s: %s", testName, err)
-// 	}
-// 	defer httpProxyLanternHandle.Close()
-
-// 	// Run
-// 	return t.Run(proxyConfig)
-// }
 
 type TestCase struct {
 	connectionType           string
@@ -87,6 +61,12 @@ type IntegrationTestConfig struct {
 	IsHttpProxyLanternLocal bool
 }
 
+type TestParams struct {
+	proxyConfig *config.ProxyConfig
+	prefixes    [][]byte
+	testCases   []TestCase
+}
+
 type TestStatus int
 
 const (
@@ -97,179 +77,16 @@ const (
 )
 
 type Test interface {
-	Init(*redis.Client, *IntegrationTestConfig) (
-		proxyConfig *config.ProxyConfig,
-		httpProxyLanternHandle io.Closer,
-		err error)
-	Run(*config.ProxyConfig) error
-	GetName() string
-}
-
-func initRemoteHttpProxyLantern(
-	rdb *redis.Client,
-	remoteTestTrackName string,
-) (*config.ProxyConfig, io.Closer, error) {
-	ctx, cancel := context.WithTimeout(
-		context.Background(), 5*time.Second)
-	defer cancel()
-	proxyConfig, err := rediswrapper.FetchRandomProxyConfigFromTrack(
-		ctx, rdb, remoteTestTrackName)
-	if err != nil {
-		return nil, nil,
-			fmt.Errorf(
-				"Unable to fetch random proxy from track %s: %v",
-				remoteTestTrackName, err)
-	}
-	httpProxyLanternHandle := util.IoNopCloser{}
-
-	return proxyConfig, httpProxyLanternHandle, nil
-}
-
-// runTestCase runs a single test case.
-// For each test case, it:
-//  1. Creates a new dialer with the given configDir and proxyConfig
-//  2. If prefixes is not nil, make sure we successfully receive all of them
-//  3. Launch an HTTP request to cas.testURL with the created dialer and make
-//     sure it succeeds
-func runTestCase(
-	ctx context.Context,
-	ID int,
-	cas TestCase,
-	configDir string,
-	proxyConfig *config.ProxyConfig,
-	prefixes [][]byte,
-) error {
-	// Init the dialer
-	dialer, err := chained.CreateDialer(
-		configDir,
-		"test_"+strconv.Itoa(ID),
-		proxyConfig,
-		common.NullUserConfig{},
-		chained.DialerOpts{Prefixes: prefixes},
-	)
-	if err != nil {
-		return fmt.Errorf("Unable to create dialer: %v", err)
-	}
-	defer dialer.Stop()
-
-	// If this test case supports prefixes, init prefix success channel and a
-	// fill a waitgroup with the number of prefixes. We'll decrement the
-	// waitgroup as we receive successful prefixes.
-	var successfulPrefixReceivedWaitGroup sync.WaitGroup
-	if prefixes != nil && len(prefixes) > 0 {
-		for range prefixes {
-			successfulPrefixReceivedWaitGroup.Add(1)
-		}
-		// Receive successful prefixes and decrement the waitgroup
-		go func() {
-			ch := dialer.SuccessfulPrefixChan()
-			if ch == nil {
-				panic("No successful prefix channel for test case " +
-					strconv.Itoa(ID))
-			}
-			for prefix := range ch {
-				fmt.Printf("TestCase %d: Successful prefix: %s\n", ID, prefix)
-				successfulPrefixReceivedWaitGroup.Done()
-			}
-		}()
-	}
-
-	// Run a test HTTP request with the dialer
-	if err := runTestHTTPRequestWithDialer(
-		ctx,
-		dialer,
-		cas.connectionType,
-		cas.testURL,
-		cas.expectedStringInResponse); err != nil {
-		return fmt.Errorf("while running test HTTP request (%v): %v",
-			cas.testURL, err)
-	}
-
-	// Wait for all prefixes to be successful.
-	// This only applies to test cases that use prefixes.
-	// For ones that don't, this is a no-op.
-	if !util.WaitForWaitGroup(
-		&successfulPrefixReceivedWaitGroup,
-		5*time.Second) {
-		return fmt.Errorf("Timed-out waiting for successful prefixes")
-	}
-
-	return nil
-}
-
-func runTestHTTPRequestWithDialer(
-	ctx context.Context,
-	dialer balancer.Dialer,
-	connectionType, testURL, expectedStringInResponse string,
-) error {
-	// Make a test request
-	req, err := http.NewRequestWithContext(ctx, "GET", testURL, nil)
-	if err != nil {
-		return fmt.Errorf("Unable to create request: %v", err)
-	}
-
-	// Use an HTTP transport that uses the dialer.
-	//
-	// XXX <27-01-2023, soltzen> Don't use an http.Client since that will
-	// force a TLS handshake. Our dialer already handles that (see
-	// chained/*_impl.go for info on your specific dialer.
-	//
-	// Also, don't add an http.Transport.Proxy since our dialer already runs a
-	// CONNECT request (for https requests) and modifies the Host header (for
-	// http requests), just like the http.Transport.Proxy would do. See this in
-	// action in chained/dialer.go. Our dialer knows about this from the
-	// supplied "connectionType" which is either balancer.NetworkConnect or
-	// balancer.NetworkPersistent (both "fake" connection types, used just to
-	// inform the dialer of the connection).
-	//
-	// TODO <27-01-2023, soltzen> TBH the above "fake" connection types are a
-	// complete hack. http.Transport.Proxy knows how to handle this case
-	// without the dialer doing all this extra work.
-	rt := &http.Transport{
-		DialContext: func(
-			ctx context.Context,
-			network, addr string) (net.Conn, error) {
-			conn, upstreamErr, err := dialer.DialContext(
-				ctx, connectionType, addr)
-			if err != nil {
-				return nil, fmt.Errorf(
-					"DialContext upstream: %v | error: %v", upstreamErr, err)
-			}
-			return conn, nil
-		},
-	}
-
-	// Run the request
-	resp, err := rt.RoundTrip(req)
-	if err != nil {
-		return fmt.Errorf("Unable to make request: %v", err)
-	}
-
-	// Read the response
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("Unable to read response body: %v", err)
-	}
-	defer resp.Body.Close()
-	// fmt.Printf("PINEAPPLE Response body: %s", string(b))
-
-	// Assert response status code and body
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("Unexpected status code: %d", resp.StatusCode)
-	}
-	if !strings.Contains(string(b), expectedStringInResponse) {
-		return fmt.Errorf(
-			"expected string [%s] was not found in response: %s",
-			expectedStringInResponse, string(b))
-	}
-	return nil
+	Init(rdb *redis.Client,
+		integrationTestConfig *IntegrationTestConfig,
+	) (TestParams, *httpProxyLantern.Proxy)
+	Name() string
 }
 
 type TestSuite struct {
-	Tests      []Test
-	cfg        *IntegrationTestConfig
-	rdb        *redis.Client
-	UpdateChan chan struct{}
+	tests []Test
+	cfg   *IntegrationTestConfig
+	rdb   *redis.Client
 }
 
 func NewTestSuite(
@@ -295,28 +112,71 @@ func NewTestSuite(
 	}
 
 	return &TestSuite{
-		Tests:      testsToRun,
-		cfg:        cfg,
-		rdb:        rdb,
-		UpdateChan: make(chan struct{}),
+		tests: testsToRun,
+		cfg:   cfg,
+		rdb:   rdb,
 	}, nil
 }
 
 func (ts *TestSuite) RunTests() error {
-	for _, t := range ts.Tests {
-		log.Debugf("Selected test: %s", t.GetName())
-		proxyConfig, httpProxyLanternHandle, err := t.Init(
+	for _, t := range ts.tests {
+		logger.Debugf("Selected test: %s", t.Name())
+		testParams, httpProxyLanternHandle := t.Init(
 			ts.rdb,
 			ts.cfg,
 		)
-		if err != nil {
-			return fmt.Errorf("Unable to init test %s: %s", t.GetName(), err)
-		}
-		defer httpProxyLanternHandle.Close()
 
-		if err := t.Run(proxyConfig); err != nil {
-			return fmt.Errorf("Test %s failed: %s", t.GetName(), err)
+		// Start httpProxyLantern server
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		go initLocalHttpProxyLantern(ctx, httpProxyLanternHandle)
+
+		// Sleep for a bit to let the proxy start
+		time.Sleep(2 * time.Second)
+
+		if err := runTest(testParams, 10*time.Second); err != nil {
+			return fmt.Errorf("Test %s failed: %s", t.Name(), err)
 		}
+
+		httpProxyLanternHandle.Close()
 	}
 	return nil
+}
+
+func initRemoteHttpProxyLantern(
+	rdb *redis.Client,
+	remoteTestTrackName string,
+) (*config.ProxyConfig, io.Closer, error) {
+	ctx, cancel := context.WithTimeout(
+		context.Background(), 5*time.Second)
+	defer cancel()
+	proxyConfig, err := rediswrapper.FetchRandomProxyConfigFromTrack(
+		ctx, rdb, remoteTestTrackName)
+	if err != nil {
+		return nil, nil,
+			fmt.Errorf(
+				"Unable to fetch random proxy from track %s: %v",
+				remoteTestTrackName, err)
+	}
+	httpProxyLanternHandle := util.IoNopCloser{}
+
+	return proxyConfig, httpProxyLanternHandle, nil
+}
+
+func initLocalHttpProxyLantern(ctx context.Context, p *httpProxyLantern.Proxy) {
+	if err := p.ListenAndServe(ctx); err != nil {
+		switch {
+		// Ignore closed network errors
+		case errors.Is(err, net.ErrClosed):
+		case strings.Contains(err.Error(), "listener closed"):
+			break
+		default:
+			panic(
+				logger.Errorf(
+					"Unable to start httpProxyLantern server: %v",
+					err,
+				),
+			)
+		}
+	}
 }
