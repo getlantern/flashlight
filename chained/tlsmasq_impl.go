@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	stderrors "errors"
-	"fmt"
 	"net"
 	"strings"
 	"sync"
@@ -88,7 +87,7 @@ func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc com
 
 	pCfg, hellos, err := tlsConfigForProxy(ctx, configDir, name, pc, uc)
 	if err != nil {
-		return nil, fmt.Errorf("error generating TLS config: %w", err)
+		return nil, errors.New("error generating TLS config: %v", err)
 	}
 
 	// For tlsmasq proxies, the TLS config we generated in the previous step is the config used in

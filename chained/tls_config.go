@@ -3,7 +3,6 @@ package chained
 import (
 	"context"
 	"crypto/x509"
-	"encoding/pem"
 	"io"
 	"os"
 	"runtime"
@@ -75,25 +74,15 @@ func tlsConfigForProxy(ctx context.Context, configDir, proxyName string, pc *con
 	if pc.Cert == "" {
 		return nil, nil, errors.New("no proxy certificate configured")
 	}
-	block, rest := pem.Decode([]byte(pc.Cert))
-	if block == nil {
-		return nil, nil, errors.New("failed to decode proxy certificate as PEM block")
-	}
-	if len(rest) > 0 {
-		return nil, nil, errors.New("unexpected extra data in proxy certificate PEM")
-	}
-	cert, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		return nil, nil, errors.New("failed to parse proxy certificate: %v", err)
-	}
 	rootCAs := x509.NewCertPool()
-	rootCAs.AddCert(cert)
+	if !rootCAs.AppendCertsFromPEM([]byte(pc.Cert)) {
+		return nil, nil, errors.New("failed to parse proxy certificate")
+	}
 
 	cfg := &tls.Config{
 		ClientSessionCache: sessionCache,
 		CipherSuites:       cipherSuites,
 		ServerName:         pc.TLSServerNameIndicator,
-		InsecureSkipVerify: true,
 		KeyLogWriter:       getTLSKeyLogWriter(),
 		RootCAs:            rootCAs,
 	}
