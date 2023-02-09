@@ -73,8 +73,8 @@ func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc com
 		return nil, errors.New("expected %d-byte secret string, got %d bytes", len(secret), len(secretBytes))
 	}
 	copy(secret[:], secretBytes)
-	sni := ptSetting(pc, "tlsmasq_sni")
-	if sni == "" {
+	masqSNI := ptSetting(pc, "tlsmasq_sni")
+	if masqSNI == "" {
 		return nil, errors.New("server name indicator must be configured")
 	}
 	// It's okay if this is unset - it'll just result in us using the default.
@@ -85,24 +85,23 @@ func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc com
 		return nil, errors.New("malformed server address: %v", err)
 	}
 
-	pCfg, hellos, err := tlsConfigForProxy(ctx, configDir, name, pc, uc)
+	proxyTLS, hellos, err := tlsConfigForProxy(ctx, configDir, name, pc, uc)
 	if err != nil {
 		return nil, errors.New("error generating TLS config: %v", err)
 	}
 
 	// For tlsmasq proxies, the TLS config we generated in the previous step is the config used in
 	// the initial handshake with the masquerade origin. Thus we need to make some modifications.
-
-	pCfg.ServerName = sni
-	pCfg.InsecureSkipVerify = InsecureSkipVerifyTLSMasqOrigin
-
-	// Save the proxy CA pool and set the root CAs to nil (use system defaults).
-	proxyCAs := pCfg.RootCAs.Clone()
-	pCfg.RootCAs = nil
+	outerTLS := tls.Config{
+		CipherSuites:       proxyTLS.CipherSuites,
+		KeyLogWriter:       proxyTLS.KeyLogWriter,
+		ServerName:         masqSNI,
+		InsecureSkipVerify: InsecureSkipVerifyTLSMasqOrigin,
+	}
 
 	cfg := tlsmasq.DialerConfig{
 		ProxiedHandshakeConfig: ptlshs.DialerConfig{
-			Handshaker: &utlsHandshaker{pCfg, &helloRoller{hellos: hellos}, sync.Mutex{}},
+			Handshaker: &utlsHandshaker{&outerTLS, &helloRoller{hellos: hellos}, sync.Mutex{}},
 			Secret:     secret,
 			NonceTTL:   nonceTTL,
 		},
@@ -111,8 +110,11 @@ func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc com
 			MinVersion:   minVersion,
 			CipherSuites: suites,
 			// Proxy certificates are valid for the host (usually their IP address).
-			ServerName: host,
-			RootCAs:    proxyCAs,
+			ServerName:            host,
+			InsecureSkipVerify:    proxyTLS.InsecureSkipVerify,
+			VerifyPeerCertificate: proxyTLS.VerifyPeerCertificate,
+			RootCAs:               proxyTLS.RootCAs.Clone(),
+			KeyLogWriter:          proxyTLS.KeyLogWriter,
 		},
 	}
 

@@ -1,8 +1,10 @@
 package chained
 
 import (
+	"bytes"
 	"context"
 	"crypto/x509"
+	"encoding/pem"
 	"io"
 	"os"
 	"runtime"
@@ -70,13 +72,33 @@ func tlsConfigForProxy(ctx context.Context, configDir, proxyName string, pc *con
 
 	cipherSuites := orderedCipherSuitesFromConfig(pc)
 
-	// Proxy certs are self-signed, so add it to the root CAs.
+	// Proxy certs are self-signed. We will just verify that the peer (the proxy) provided exactly
+	// the expected certificate.
 	if pc.Cert == "" {
 		return nil, nil, errors.New("no proxy certificate configured")
 	}
-	rootCAs := x509.NewCertPool()
-	if !rootCAs.AppendCertsFromPEM([]byte(pc.Cert)) {
-		return nil, nil, errors.New("failed to parse proxy certificate")
+	block, rest := pem.Decode([]byte(pc.Cert))
+	if block == nil {
+		return nil, nil, errors.New("failed to decode proxy certificate as PEM block")
+	}
+	if len(rest) > 0 {
+		return nil, nil, errors.New("unexpected extra data in proxy certificate PEM")
+	}
+	if block.Type != "CERTIFICATE" {
+		return nil, nil, errors.New("expected certificate in PEM block")
+	}
+	proxyCertDER := block.Bytes
+
+	// Just a byte-wise comparsion, verifying that the proxy cert is the expected one.
+	// n.b. Not invoked when resuming a session (as there are no peer certificates to inspect).
+	verifyPeerCert := func(peerCerts [][]byte, _ [][]*x509.Certificate) error {
+		if len(peerCerts) == 0 {
+			return errors.New("no peer certificate")
+		}
+		if !bytes.Equal(peerCerts[0], proxyCertDER) {
+			return errors.New("peer certificate does not match expected")
+		}
+		return nil
 	}
 
 	cfg := &tls.Config{
@@ -84,7 +106,12 @@ func tlsConfigForProxy(ctx context.Context, configDir, proxyName string, pc *con
 		CipherSuites:       cipherSuites,
 		ServerName:         pc.TLSServerNameIndicator,
 		KeyLogWriter:       getTLSKeyLogWriter(),
-		RootCAs:            rootCAs,
+
+		// We have to disable standard verification because we want to provide an alternative SNI.
+		// We provide our own verification function, which ensures that verification still occurs
+		// as part of the handshake.
+		InsecureSkipVerify:    true,
+		VerifyPeerCertificate: verifyPeerCert,
 	}
 	hellos := []helloSpec{
 		configuredHelloSpec,
