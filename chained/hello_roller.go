@@ -1,11 +1,13 @@
 package chained
 
 import (
+	stderrors "errors"
 	"net"
 	"sync"
 
-	"github.com/getlantern/errors"
 	tls "github.com/refraction-networking/utls"
+
+	"github.com/getlantern/errors"
 )
 
 type helloSpec struct {
@@ -20,9 +22,9 @@ type helloSpec struct {
 }
 
 // This function is guaranteed to return one of the following:
-//  - A non-custom client hello ID (i.e. not utls.ClientHelloCustom)
-//  - utls.ClientHelloCustom and a non-nil utls.ClientHelloSpec.
-//  - An error (if the above is not possible)
+//   - A non-custom client hello ID (i.e. not utls.ClientHelloCustom)
+//   - utls.ClientHelloCustom and a non-nil utls.ClientHelloSpec.
+//   - An error (if the above is not possible)
 func (hs helloSpec) utlsSpec() (tls.ClientHelloID, *tls.ClientHelloSpec, error) {
 	const tlsRecordHeaderLen = 5
 
@@ -103,4 +105,14 @@ func (hr *helloRoller) getCopy() *helloRoller {
 	hellos := make([]helloSpec, len(hr.hellos))
 	copy(hellos, hr.hellos)
 	return &helloRoller{hellos, hr.index, hr.advances, sync.Mutex{}}
+}
+
+// Utility function for users of the helloRoller. If an error is returned by the handshake function
+// and that error is related to the ClientHello, we should roll to the next one.
+func isHelloErr(err error) bool {
+	// We assume that everything other than timeouts might be related to the hello. This may be
+	// aggressive, but it's better that the client is willing to try other hellos, rather than
+	// get stuck in a loop on a bad one.
+	var netErr net.Error
+	return !(stderrors.As(err, &netErr) && netErr.Timeout())
 }

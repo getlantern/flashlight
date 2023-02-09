@@ -166,17 +166,6 @@ func (h *utlsHandshaker) Handshake(conn net.Conn) (*ptlshs.HandshakeResult, erro
 	r := h.roller.getCopy()
 	defer h.roller.updateTo(r)
 
-	isHelloErr := func(err error) bool {
-		// We assume that everything other than timeouts or transient network errors might be
-		// related to the hello. This may be a little aggressive, but it's better that the client is
-		// willing to try other hellos, rather than get stuck in a loop on a bad one.
-		var netErr net.Error
-		if !stderrors.As(err, &netErr) {
-			return true
-		}
-		return !netErr.Temporary() && !netErr.Timeout()
-	}
-
 	currentHello := r.current()
 	uconn, err := currentHello.uconn(conn, h.cfg.Clone())
 	if err != nil {

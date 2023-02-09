@@ -3,7 +3,6 @@ package chained
 import (
 	"context"
 	"net"
-	"strings"
 	"sync"
 	"time"
 
@@ -79,9 +78,7 @@ func (impl *httpsImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, er
 	}
 	result, err := d.DialForTimings("tcp", impl.addr)
 	if err != nil {
-		if strings.Contains(err.Error(), "tls: ") ||
-			strings.Contains(err.Error(), "failed to apply custom client hello spec: ") {
-			// A TLS-level error is likely related to a bad hello.
+		if isHelloErr(err) {
 			log.Debugf("got error likely related to bad hello; advancing roller: %v", err)
 			r.advance()
 		}
