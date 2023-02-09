@@ -89,7 +89,7 @@ func tlsConfigForProxy(ctx context.Context, configDir, proxyName string, pc *con
 	}
 	proxyCertDER := block.Bytes
 
-	// Just a byte-wise comparsion, verifying that the proxy cert is the expected one.
+	// Byte-wise comparsion, verifying that the proxy cert is the expected one.
 	// n.b. Not invoked when resuming a session (as there are no peer certificates to inspect).
 	verifyPeerCert := func(peerCerts [][]byte, _ [][]*x509.Certificate) error {
 		if len(peerCerts) == 0 {
