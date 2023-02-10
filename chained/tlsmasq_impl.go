@@ -113,7 +113,7 @@ func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc com
 			ServerName:            host,
 			InsecureSkipVerify:    proxyTLS.InsecureSkipVerify,
 			VerifyPeerCertificate: proxyTLS.VerifyPeerCertificate,
-			RootCAs:               proxyTLS.RootCAs.Clone(),
+			RootCAs:               proxyTLS.RootCAs,
 			KeyLogWriter:          proxyTLS.KeyLogWriter,
 		},
 	}
