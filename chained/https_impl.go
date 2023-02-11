@@ -2,28 +2,24 @@ package chained
 
 import (
 	"context"
-	"crypto/x509"
 	"net"
-	"strings"
 	"sync"
 	"time"
+
+	tls "github.com/refraction-networking/utls"
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/hellosplitter"
-	"github.com/getlantern/keyman"
 	"github.com/getlantern/tlsdialer/v3"
-	tls "github.com/refraction-networking/utls"
 )
 
 type httpsImpl struct {
 	nopCloser
 	dialCore                coreDialer
 	addr                    string
-	certPEM                 string
-	x509cert                *x509.Certificate
 	tlsConfig               *tls.Config
 	roller                  *helloRoller
 	tlsClientHelloSplitting bool
@@ -36,19 +32,16 @@ func newHTTPSImpl(configDir, name, addr string, pc *config.ProxyConfig, uc commo
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(pc.Cert))
+	tlsConfig, hellos, err := tlsConfigForProxy(ctx, configDir, name, pc, uc)
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", addr))
 	}
-	tlsConfig, hellos := tlsConfigForProxy(ctx, configDir, name, pc, uc)
 	if len(hellos) == 0 {
 		return nil, log.Error(errors.New("expected at least one hello"))
 	}
 	return &httpsImpl{
 		dialCore:                dialCore,
 		addr:                    addr,
-		certPEM:                 string(cert.PEMEncoded()),
-		x509cert:                cert.X509(),
 		tlsConfig:               tlsConfig,
 		roller:                  &helloRoller{hellos: hellos},
 		tlsClientHelloSplitting: pc.TLSClientHelloSplitting,
@@ -85,38 +78,13 @@ func (impl *httpsImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, er
 	}
 	result, err := d.DialForTimings("tcp", impl.addr)
 	if err != nil {
-		if strings.Contains(err.Error(), "tls: ") ||
-			strings.Contains(err.Error(), "failed to apply custom client hello spec: ") {
-			// A TLS-level error is likely related to a bad hello.
+		if isHelloErr(err) {
 			log.Debugf("got error likely related to bad hello; advancing roller: %v", err)
 			r.advance()
 		}
 		return nil, err
 	}
-	conn := result.Conn
-	peerCertificates := conn.ConnectionState().PeerCertificates
-	// when using tls session resumption from a stored session state, there will be no peer certificates.
-	// this is okay.
-	resumedSession := len(peerCertificates) == 0
-	if !resumedSession && !conn.ConnectionState().PeerCertificates[0].Equal(impl.x509cert) {
-		if closeErr := conn.Close(); closeErr != nil {
-			log.Debugf("Error closing chained server connection: %s", closeErr)
-		}
-		var received interface{}
-		var expected interface{}
-		_received, certErr := keyman.LoadCertificateFromX509(conn.ConnectionState().PeerCertificates[0])
-		if certErr != nil {
-			log.Errorf("Unable to parse received certificate: %v", certErr)
-			received = conn.ConnectionState().PeerCertificates[0]
-			expected = impl.x509cert
-		} else {
-			received = string(_received.PEMEncoded())
-			expected = string(impl.certPEM)
-		}
-		return nil, op.FailIf(log.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
-			received, expected))
-	}
-	return conn, nil
+	return result.Conn, nil
 }
 
 func timeoutFor(ctx context.Context) time.Duration {

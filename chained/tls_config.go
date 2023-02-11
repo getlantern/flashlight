@@ -1,7 +1,10 @@
 package chained
 
 import (
+	"bytes"
 	"context"
+	"crypto/x509"
+	"encoding/pem"
 	"io"
 	"os"
 	"runtime"
@@ -9,6 +12,7 @@ import (
 	tls "github.com/refraction-networking/utls"
 
 	"github.com/getlantern/common/config"
+	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/browsers/simbrowser"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
@@ -23,7 +27,7 @@ import (
 // wrong with the previous hellos. There will always be at least one hello. For each hello, the
 // ClientHelloSpec will be non-nil if and only if the ClientHelloID is tls.HelloCustom.
 func tlsConfigForProxy(ctx context.Context, configDir, proxyName string, pc *config.ProxyConfig, uc common.UserConfig) (
-	*tls.Config, []helloSpec) {
+	*tls.Config, []helloSpec, error) {
 
 	configuredHelloID := clientHelloID(pc)
 	var ss *tls.ClientSessionState
@@ -68,12 +72,46 @@ func tlsConfigForProxy(ctx context.Context, configDir, proxyName string, pc *con
 
 	cipherSuites := orderedCipherSuitesFromConfig(pc)
 
+	// Proxy certs are self-signed. We will just verify that the peer (the proxy) provided exactly
+	// the expected certificate.
+	if pc.Cert == "" {
+		return nil, nil, errors.New("no proxy certificate configured")
+	}
+	block, rest := pem.Decode([]byte(pc.Cert))
+	if block == nil {
+		return nil, nil, errors.New("failed to decode proxy certificate as PEM block")
+	}
+	if len(rest) > 0 {
+		return nil, nil, errors.New("unexpected extra data in proxy certificate PEM")
+	}
+	if block.Type != "CERTIFICATE" {
+		return nil, nil, errors.New("expected certificate in PEM block")
+	}
+	proxyCertDER := block.Bytes
+
+	// Byte-wise comparsion, verifying that the proxy cert is the expected one.
+	// n.b. Not invoked when resuming a session (as there are no peer certificates to inspect).
+	verifyPeerCert := func(peerCerts [][]byte, _ [][]*x509.Certificate) error {
+		if len(peerCerts) == 0 {
+			return errors.New("no peer certificate")
+		}
+		if !bytes.Equal(peerCerts[0], proxyCertDER) {
+			return errors.New("peer certificate does not match expected")
+		}
+		return nil
+	}
+
 	cfg := &tls.Config{
 		ClientSessionCache: sessionCache,
 		CipherSuites:       cipherSuites,
 		ServerName:         pc.TLSServerNameIndicator,
-		InsecureSkipVerify: true,
 		KeyLogWriter:       getTLSKeyLogWriter(),
+
+		// We have to disable standard verification because we want to provide an alternative SNI.
+		// We provide our own verification function, which ensures that verification still occurs
+		// as part of the handshake.
+		InsecureSkipVerify:    true,
+		VerifyPeerCertificate: verifyPeerCert,
 	}
 	hellos := []helloSpec{
 		configuredHelloSpec,
@@ -81,7 +119,7 @@ func tlsConfigForProxy(ctx context.Context, configDir, proxyName string, pc *con
 		{tls.HelloGolang, nil},
 	}
 
-	return cfg, hellos
+	return cfg, hellos, nil
 }
 
 // getBrowserHello determines the best way to mimic the system's default web browser. There are a
