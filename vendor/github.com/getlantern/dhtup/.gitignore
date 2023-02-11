@@ -1,0 +1,6 @@
+bin
+globalconfig*
+!globalconfig.target
+replica*
+!replica.target
+/.torrent.db*
