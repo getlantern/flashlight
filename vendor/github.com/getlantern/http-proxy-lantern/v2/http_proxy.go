@@ -654,6 +654,7 @@ func (p *Proxy) configureHoneycomb() func() {
 		p.HoneycombSampleRate,
 		1*time.Minute,
 		false,
+		true,
 	)
 }
 
@@ -670,6 +671,7 @@ func (p *Proxy) configureTeleport() func() {
 		p.TeleportSampleRate,
 		1*time.Hour,
 		true,
+		false, // don't include proxy identity in Teleport data to avoid tying device IDs to specific proxy IP addresses
 	)
 }
 
@@ -679,18 +681,40 @@ func (p *Proxy) configureOTEL(
 	sampleRate int,
 	reportingInterval time.Duration,
 	includeDeviceIDs bool,
+	includeProxyIdentity bool,
 ) func() {
 	proxyName, dc := proxyNameAndDC(p.ProxyName)
 	opts := &otel.Opts{
 		Endpoint:      endpoint,
 		Headers:       headers,
 		SampleRate:    sampleRate,
-		ExternalIP:    p.ExternalIP,
-		ProxyName:     proxyName,
 		Track:         p.Track,
 		DC:            dc,
 		ProxyProtocol: p.ProxyProtocol,
 		IsPro:         p.Pro,
+	}
+	if p.ShadowsocksMultiplexAddr != "" {
+		opts.Addr = p.ShadowsocksMultiplexAddr
+	} else if p.ShadowsocksAddr != "" {
+		opts.Addr = p.ShadowsocksAddr
+	} else if p.QUICIETFAddr != "" {
+		opts.Addr = p.QUICIETFAddr
+	} else if p.LampshadeAddr != "" {
+		opts.Addr = p.LampshadeAddr
+	} else if p.Obfs4MultiplexAddr != "" {
+		opts.Addr = p.Obfs4MultiplexAddr
+	} else if p.Obfs4Addr != "" {
+		opts.Addr = p.Obfs4Addr
+	} else if p.TLSMasqAddr != "" {
+		opts.Addr = p.TLSMasqAddr
+	} else if p.HTTPMultiplexAddr != "" {
+		opts.Addr = p.HTTPMultiplexAddr
+	} else if p.HTTPAddr != "" {
+		opts.Addr = p.HTTPAddr
+	}
+	if includeProxyIdentity {
+		opts.ExternalIP = p.ExternalIP
+		opts.ProxyName = proxyName
 	}
 	tp, stop := otel.BuildTracerProvider(opts)
 	if tp != nil {

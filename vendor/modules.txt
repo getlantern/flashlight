@@ -360,7 +360,7 @@ github.com/getlantern/hidden
 github.com/getlantern/http-proxy/listeners
 github.com/getlantern/http-proxy/proxyfilters
 github.com/getlantern/http-proxy/server
-# github.com/getlantern/http-proxy-lantern/v2 v2.8.1-0.20230124134327-8d2091abe853
+# github.com/getlantern/http-proxy-lantern/v2 v2.8.1-0.20230215114357-157d6da42017
 ## explicit; go 1.18
 github.com/getlantern/http-proxy-lantern/v2
 github.com/getlantern/http-proxy-lantern/v2/analytics

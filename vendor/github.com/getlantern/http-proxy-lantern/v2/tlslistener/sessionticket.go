@@ -23,7 +23,7 @@ func maintainSessionTicketKey(
 	}
 
 	if firstKey != nil {
-		ensureFirstKey(*firstKey, keyBytes)
+		keyBytes = ensureFirstKey(*firstKey, keyBytes)
 	}
 
 	// Create a new key right away
@@ -41,19 +41,17 @@ func maintainSessionTicketKey(
 // ensureFirstKey ensures that firstKey is the oldest key in keyBytes, where keyBytes represents a
 // string of session ticket keys in ascending order by age.
 //
-// In other words, when this function returns, keyBytes[len(keyBytes)-32:] == firstKey
-func ensureFirstKey(firstKey [32]byte, keyBytes []byte) {
+// In other words, the last 32 bytes of the result will be equal to firstKey.
+func ensureFirstKey(firstKey [32]byte, keyBytes []byte) []byte {
 	if len(keyBytes) < 32 {
-		keyBytes = append(keyBytes, firstKey[:]...)
-		return
+		return append(keyBytes, firstKey[:]...)
 	}
 
 	currentFirst := keyBytes[len(keyBytes)-32:]
 	if bytes.Equal(currentFirst, firstKey[:]) {
-		return
+		return keyBytes
 	}
-	keyBytes = append(keyBytes, firstKey[:]...)
-	return
+	return append(keyBytes, firstKey[:]...)
 }
 
 func prependToSessionTicketKeys(cfg *tls.Config, sessionTicketKeyFile string, keyBytes []byte, keyListener func(keys [][32]byte)) []byte {
