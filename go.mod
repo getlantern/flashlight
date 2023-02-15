@@ -110,7 +110,7 @@ require (
 	github.com/huin/goupnp v1.0.3 // indirect
 	github.com/jaffee/commandeer v0.5.0
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
-	github.com/lucas-clemente/quic-go v0.31.1
+	github.com/lucas-clemente/quic-go v0.31.1 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/go-server-timing v1.0.0
@@ -138,7 +138,6 @@ require (
 require (
 	github.com/Jigsaw-Code/outline-ss-server v1.4.0
 	github.com/getlantern/broflake/clientcore v0.0.0-20230208164123-a672315e60e4
-	github.com/getlantern/broflake/common v0.0.0-20230208164123-a672315e60e4
 	github.com/getlantern/common v1.2.0
 	github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
 )
@@ -153,8 +152,8 @@ require (
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/alecthomas/atomic v0.1.0-alpha2 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
-	github.com/getlantern/broflake v0.0.0-20230201223930-0469c55d2e94 // indirect
-	github.com/getlantern/broflake/netstate/client v0.0.0-20230201223930-0469c55d2e94 // indirect
+	github.com/getlantern/broflake/common v0.0.0-20230208164123-a672315e60e4 // indirect
+	github.com/getlantern/broflake/netstate/client v0.0.0-20230208164123-a672315e60e4 // indirect
 	github.com/getlantern/ratelimit v0.0.0-20220926192648-933ab81a6fc7 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/golang/mock v1.6.0 // indirect
