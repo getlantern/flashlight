@@ -161,13 +161,15 @@ type BroflakeOptions struct {
 	GenesisAddr              string        `mapstructure:"genesis_addr"`
 	NATFailTimeout           time.Duration `mapstructure:"nat_timeout"`
 	ICEFailTimeout           time.Duration `mapstructure:"ice_timeout"`
-	Tag                      string        `mapstructure:"tag"`
 	CTableSize               int           `mapstructure:"ctable_size`
 	PTableSize               int           `mapstructure:"ptable_size"`
 	BusBufferSz              int           `mapstructure:"bus_buffer_size"`
-	Netstated                string        `mapstructure:"netstated"`
 	EgressServerName         string        `mapstructure:"egress_server_name"`
 	EgressInsecureSkipVerify bool          `mapstructure:"egress_insecure_skip_verify"`
+
+	// these are local testing options ignored by global config decoder
+	Tag       string `mapstructure:"-"`
+	Netstated string `mapstructure:"-"`
 }
 
 func (o *BroflakeOptions) fromMap(m map[string]interface{}) error {
@@ -350,8 +352,8 @@ func (g ClientGroup) Validate() error {
 	return nil
 }
 
-//Includes checks if the ClientGroup includes the user, device and country
-//combination, assuming the group has been validated.
+// Includes checks if the ClientGroup includes the user, device and country
+// combination, assuming the group has been validated.
 func (g ClientGroup) Includes(platform, appName, version string, userID int64, isPro bool, geoCountry string) bool {
 	if g.UserCeil > 0 {
 		// Unknown user ID doesn't belong to any user range

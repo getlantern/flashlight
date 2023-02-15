@@ -348,6 +348,19 @@ func (f *Flashlight) applyBroflake(cfg *config.Global) {
 			)
 			return
 		}
+
+		// local testing options
+		if v := f.flagsAsMap["broflake-tag"]; v != nil {
+			if tag, ok := v.(string); ok && tag != "" {
+				fopts.Tag = tag
+			}
+		}
+		if v := f.flagsAsMap["broflake-netstated"]; v != nil {
+			if netstated, ok := v.(string); ok && netstated != "" {
+				fopts.Netstated = netstated
+			}
+		}
+
 		broflake.StartBroflakeCensoredPeerIfNecessary(true, &fopts)
 	}
 }
