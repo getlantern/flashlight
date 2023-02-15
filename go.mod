@@ -153,7 +153,7 @@ require (
 	github.com/alecthomas/atomic v0.1.0-alpha2 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
 	github.com/getlantern/broflake/common v0.0.0-20230208164123-a672315e60e4 // indirect
-	github.com/getlantern/broflake/netstate/client v0.0.0-20230201223930-0469c55d2e94 // indirect
+	github.com/getlantern/broflake/netstate/client v0.0.0-20230208164123-a672315e60e4 // indirect
 	github.com/getlantern/ratelimit v0.0.0-20220926192648-933ab81a6fc7 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/golang/mock v1.6.0 // indirect
