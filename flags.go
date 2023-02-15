@@ -46,6 +46,8 @@ type Flags struct {
 	P2PRegistrarEndpoint    string        `flag:"p2p-registrar-endpoint" help:"Endpoint to use when p2pfreepeer feature is enabled. This overrides other sources"`
 	P2PDomainWhitelist      []string      `flag:"p2p-domain-whitelist" help:"comma separated list of domains to whitelist when p2pfreepeer feature is enabled. This overrides other sources. If nothing is supplied, FreePeerCtx defaults to only whitelisting geolookups"`
 	FeatureOverrides        string        `flag:"feature-overrides" help:"if specified, feature overrides are loaded from this file"`
+	BroflakeTag             string        `flag:"broflake-tag" help"if specified, use this identifier for broflake client testing"`
+	BroflakeNetstated       string        `flag:"broflake-netstated" help"if specified, use this address for broflake client net state server"`
 }
 
 func (f Flags) AsMap() map[string]interface{} {
