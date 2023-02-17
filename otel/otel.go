@@ -7,8 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/golog"
-	"github.com/getlantern/ops"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -17,6 +15,9 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/getlantern/golog"
+	"github.com/getlantern/ops"
 )
 
 var (
@@ -34,6 +35,7 @@ type Config struct {
 }
 
 func Configure(cfg *Config) {
+	log.Debugf("Configuring OpenTelemetry with sample rate %d and op sample rates %v", cfg.SampleRate, cfg.OpSampleRates)
 	log.Debugf("Connecting to endpoint %v", cfg.Endpoint)
 	log.Debugf("Using headers %v", cfg.Headers)
 

@@ -76,6 +76,8 @@ featuresenabled:
       # XXX 2022-08-08, soltzen: Small testbed for phase 1 of the project: https://docs.google.com/document/d/1JUjZHgpnunmwG3wUwlSmCKFwOGOXkkwyGd7cgrOJzbs/edit#heading=h.lf1udh61ebmc
       userfloor: 0
       userceil: 0.01
+  otel:
+    - label: opentelemetry
   noborda:
     - label: disablebordafor75percent
       userfloor: 0
@@ -449,9 +451,8 @@ otel:
   headers:
     # Note - this key is only authorized to send events, nothing else
     x-honeycomb-team: D7LRAYj3uCxrSb7WZjO24C
-  samplerate: 512
+  samplerate: 2000
   opsamplerates:
     client_started: 1
     client_stopped: 1
     report_issue: 1
-    replica_torrent_peer_sent_data: 1
