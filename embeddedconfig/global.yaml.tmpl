@@ -233,7 +233,10 @@ featureoptions:
     # http(s) proxies must be added to the domain routing rules if they have non-standard ports.
     trackers: &GlobalTrackers
     - udp://opentor.org:2710/announce
-    - udp://tracker.bittorrent.cloud:42069/announce
+    # This is offline for now.
+    #- udp://tracker.bittorrent.cloud:42069/announce
+    # This tracker matches the one replica-rust uses to get swarm counts. It should be the most reliable choice.
+    - http://tracker.opentrackr.org:1337/scrape
     - https://tracker.nanoha.org:443/announce
     - http://t.nyaatracker.com:80/announce
     webseedbaseurls: *AllReplicaBaseUrls
