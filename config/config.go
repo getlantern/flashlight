@@ -215,7 +215,7 @@ func pipeConfig(opts *options) (stop func()) {
 					FilePath:   opts.name,
 					// Empty this to force data to be obtained through peers.
 					WebSeedUrls: []string{"https://globalconfig.flashlightproxy.com/dhtup/"},
-					Salt:        "globalconfig",
+					Salt:        []byte("globalconfig"),
 					// Empty this to force metainfo to be obtained via peers.
 					MetainfoUrls: []string{
 						// This won't work for changes until the CloudFlare caches are flushed as part of updates.
