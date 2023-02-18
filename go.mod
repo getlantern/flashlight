@@ -101,7 +101,7 @@ require (
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getsentry/sentry-go v0.13.0
+	github.com/getsentry/sentry-go v0.18.0
 	github.com/google/gopacket v1.1.17
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/huin/goupnp v1.0.3 // indirect
@@ -227,7 +227,7 @@ require (
 	github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c // indirect
 	github.com/getlantern/upnp v0.0.0-20220531140457-71a975af1fad // indirect
 	github.com/getlantern/withtimeout v0.0.0-20160829163843-511f017cd913 // indirect
-	github.com/go-errors/errors v1.4.0 // indirect
+	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-redis/redis/v8 v8.11.5 // indirect
@@ -298,7 +298,7 @@ require (
 	github.com/rs/dnscache v0.0.0-20211102005908-e0241e321417 // indirect
 	github.com/samber/lo v1.25.0
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
-	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/templexxx/cpu v0.0.8 // indirect
@@ -320,7 +320,7 @@ require (
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde // indirect
 	golang.org/x/text v0.4.0 // indirect
-	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
+	golang.org/x/time v0.0.0-20220922220347-f3bd1da661af // indirect
 	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220802133213-ce4fa296bf78 // indirect
