@@ -63,7 +63,7 @@ type AnalyticsOptions struct {
 const GA = "ga"
 const MATOMO = "matomo"
 
-func (ao *AnalyticsOptions) fromMap(m map[string]interface{}) error {
+func (ao *AnalyticsOptions) FromMap(m map[string]interface{}) error {
 	return mapstructure.Decode(m, &ao)
 }
 
@@ -169,7 +169,7 @@ type PingProxiesOptions struct {
 	Interval time.Duration
 }
 
-func (o *PingProxiesOptions) fromMap(m map[string]interface{}) error {
+func (o *PingProxiesOptions) FromMap(m map[string]interface{}) error {
 	interval, err := durationFromMap(m, "interval")
 	if err != nil {
 		return err
@@ -214,7 +214,7 @@ type TrafficLogOptions struct {
 	TimeBeforeDenialReset time.Duration
 }
 
-func (o *TrafficLogOptions) fromMap(m map[string]interface{}) error {
+func (o *TrafficLogOptions) FromMap(m map[string]interface{}) error {
 	var err error
 	o.CaptureBytes, err = intFromMap(m, "capturebytes")
 	if err != nil {
