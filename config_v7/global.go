@@ -104,7 +104,7 @@ func (cfg *Global) UnmarshalFeatureOptions(feature string, opts FeatureOptions) 
 	if !exists {
 		return errAbsentOption
 	}
-	return opts.FromMap(m)
+	return opts.fromMap(m)
 }
 
 // TrustedCACerts returns a certificate pool containing the TrustedCAs from this
