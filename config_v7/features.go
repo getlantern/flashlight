@@ -8,23 +8,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchellh/mapstructure"
-
 	"github.com/blang/semver"
-
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/common"
+	"github.com/mitchellh/mapstructure"
 )
 
 const (
 	FeatureAuth                 = "auth"
 	FeatureProxyBench           = "proxybench"
-	FeaturePingProxies          = "pingproxies"
 	FeatureTrafficLog           = "trafficlog"
 	FeatureNoBorda              = "noborda"
-	FeatureNoProbeProxies       = "noprobeproxies"
-	FeatureNoShortcut           = "noshortcut"
-	FeatureNoDetour             = "nodetour"
+	FeatureProbeProxies         = "probeproxies"
+	FeatureShortcut             = "shortcut"
+	FeatureDetour               = "detour"
 	FeatureNoHTTPSEverywhere    = "nohttpseverywhere"
 	FeatureReplica              = "replica"
 	FeatureProxyWhitelistedOnly = "proxywhitelistedonly"
@@ -32,7 +28,12 @@ const (
 	FeatureGoogleSearchAds      = "googlesearchads"
 	FeatureYinbiWallet          = "yinbiwallet"
 	FeatureYinbi                = "yinbi"
-	FeatureAnalytics            = "analytics"
+	FeatureGoogleAnalytics      = "googleanalytics"
+	FeatureMatomo               = "matomo"
+	FeatureChat                 = "chat"
+	FeatureOtel                 = "otel"
+	FeatureP2PFreePeer          = "p2pfreepeer"
+	FeatureP2PCensoredPeer      = "p2pcensoredpeer"
 )
 
 var (
@@ -45,30 +46,7 @@ var (
 
 // FeatureOptions is an interface implemented by all feature options
 type FeatureOptions interface {
-	FromMap(map[string]interface{}) error
-}
-
-type AnalyticsProvider struct {
-	SampleRate float32
-	Endpoint   string
-	Config     map[string]interface{}
-}
-
-// AnalyticsOptions is the configuration for analytics providers such as Google Analytics or Matomo.
-type AnalyticsOptions struct {
-	// Providers maps provider names to their sampling rates.
-	Providers map[string]*AnalyticsProvider
-}
-
-const GA = "ga"
-const MATOMO = "matomo"
-
-func (ao *AnalyticsOptions) fromMap(m map[string]interface{}) error {
-	return mapstructure.Decode(m, &ao)
-}
-
-func (ao *AnalyticsOptions) GetProvider(key string) *AnalyticsProvider {
-	return ao.Providers[key]
+	fromMap(map[string]interface{}) error
 }
 
 type ReplicaOptionsRoot struct {
@@ -102,6 +80,7 @@ type ReplicaOptions struct {
 	ProxyAnnounceTargets []string
 	// A set of info hashes where p2p-proxy peers can be found.
 	ProxyPeerInfoHashes []string
+	CustomCA            string
 }
 
 func (ro *ReplicaOptions) GetWebseedBaseUrls() []string {
@@ -122,6 +101,54 @@ func (ro *ReplicaOptions) GetMetadataBaseUrls() []string {
 
 func (ro *ReplicaOptions) GetReplicaRustEndpoint() string {
 	return ro.ReplicaRustEndpoint
+}
+
+func (ro *ReplicaOptions) GetCustomCA() string {
+	return ro.CustomCA
+}
+
+// XXX <11-07-2022, soltzen> DEPREACTED in favor of
+// github.com/getlantern/libp2p
+func (ro *ReplicaOptions) GetProxyAnnounceTargets() []string {
+	return nil
+}
+
+// XXX <11-07-2022, soltzen> DEPREACTED in favor of
+// github.com/getlantern/libp2p
+func (ro *ReplicaOptions) GetProxyPeerInfoHashes() []string {
+	return nil
+}
+
+type P2PFreePeerOptions struct {
+	RegistrarEndpoint string   `mapstructure:"registrar_endpoint"`
+	DomainWhitelist   []string `mapstructure:"domain_whitelist"`
+}
+
+func (o *P2PFreePeerOptions) fromMap(m map[string]interface{}) error {
+	var err error
+	o.RegistrarEndpoint, err = somethingFromMap[string](m, "registrar_endpoint")
+	if err != nil {
+		return err
+	}
+
+	o.DomainWhitelist, err = stringArrFromMap(m, "domain_whitelist")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type P2PCensoredPeerOptions struct {
+	Bep44TargetsAndSalts []string `mapstructure:"bep44_targets_and_salts"`
+}
+
+func (o *P2PCensoredPeerOptions) fromMap(m map[string]interface{}) error {
+	var err error
+	o.Bep44TargetsAndSalts, err = stringArrFromMap(m, "bep44_targets_and_salts")
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 type GoogleSearchAdsOptions struct {
@@ -165,19 +192,6 @@ func (o *GoogleSearchAdsOptions) fromMap(m map[string]interface{}) error {
 	return decoder.Decode(m)
 }
 
-type PingProxiesOptions struct {
-	Interval time.Duration
-}
-
-func (o *PingProxiesOptions) fromMap(m map[string]interface{}) error {
-	interval, err := durationFromMap(m, "interval")
-	if err != nil {
-		return err
-	}
-	o.Interval = interval
-	return nil
-}
-
 // TrafficLogOptions represents options for github.com/getlantern/trafficlog-flashlight.
 type TrafficLogOptions struct {
 	// Size of the traffic log's packet buffers (if enabled).
@@ -216,11 +230,11 @@ type TrafficLogOptions struct {
 
 func (o *TrafficLogOptions) fromMap(m map[string]interface{}) error {
 	var err error
-	o.CaptureBytes, err = intFromMap(m, "capturebytes")
+	o.CaptureBytes, err = somethingFromMap[int](m, "capturebytes")
 	if err != nil {
 		return errors.New("error unmarshaling 'capturebytes': %v", err)
 	}
-	o.SaveBytes, err = intFromMap(m, "savebytes")
+	o.SaveBytes, err = somethingFromMap[int](m, "savebytes")
 	if err != nil {
 		return errors.New("error unmarshaling 'savebytes': %v", err)
 	}
@@ -228,7 +242,7 @@ func (o *TrafficLogOptions) fromMap(m map[string]interface{}) error {
 	if err != nil {
 		return errors.New("error unmarshaling 'capturesaveduration': %v", err)
 	}
-	o.Reinstall, err = boolFromMap(m, "reinstall")
+	o.Reinstall, err = somethingFromMap[bool](m, "reinstall")
 	if err != nil {
 		return errors.New("error unmarshaling 'reinstall': %v", err)
 	}
@@ -236,7 +250,7 @@ func (o *TrafficLogOptions) fromMap(m map[string]interface{}) error {
 	if err != nil {
 		return errors.New("error unmarshaling 'waittimesincefailedinstall': %v", err)
 	}
-	o.UserDenialThreshold, err = intFromMap(m, "userdenialthreshold")
+	o.UserDenialThreshold, err = somethingFromMap[int](m, "userdenialthreshold")
 	if err != nil {
 		return errors.New("error unmarshaling 'userdenialthreshold': %v", err)
 	}
@@ -313,17 +327,17 @@ func (g ClientGroup) Validate() error {
 	return nil
 }
 
-// Includes checks if the ClientGroup includes the user, device and country
-// combination, assuming the group has been validated.
-func (g ClientGroup) Includes(appName string, userID int64, isPro bool, geoCountry string) bool {
+//Includes checks if the ClientGroup includes the user, device and country
+//combination, assuming the group has been validated.
+func (g ClientGroup) Includes(platform, appName, version string, userID int64, isPro bool, geoCountry string) bool {
 	if g.UserCeil > 0 {
 		// Unknown user ID doesn't belong to any user range
 		if userID == 0 {
 			return false
 		}
-		percision := 1000.0
-		remainder := userID % int64(percision)
-		if remainder < int64(g.UserFloor*percision) || remainder >= int64(g.UserCeil*percision) {
+		precision := 1000.0
+		remainder := userID % int64(precision)
+		if remainder < int64(g.UserFloor*precision) || remainder >= int64(g.UserCeil*precision) {
 			return false
 		}
 	}
@@ -341,11 +355,11 @@ func (g ClientGroup) Includes(appName string, userID int64, isPro bool, geoCount
 		if err != nil {
 			return false
 		}
-		if !expectedRange(semver.MustParse(common.Version)) {
+		if !expectedRange(semver.MustParse(version)) {
 			return false
 		}
 	}
-	if g.Platforms != "" && !csvContains(g.Platforms, common.Platform) {
+	if g.Platforms != "" && !csvContains(g.Platforms, platform) {
 		return false
 	}
 	if g.GeoCountries != "" && !csvContains(g.GeoCountries, geoCountry) {
@@ -367,42 +381,44 @@ func csvContains(csv, s string) bool {
 	return false
 }
 
-func boolFromMap(m map[string]interface{}, name string) (bool, error) {
+func somethingFromMap[T any](m map[string]interface{}, name string) (T, error) {
+	var ret T
 	v, exists := m[name]
 	if !exists {
-		return false, errAbsentOption
+		return ret, errAbsentOption
 	}
-	b, ok := v.(bool)
+	var ok bool
+	ret, ok = v.(T)
 	if !ok {
-		return false, errMalformedOption
+		return ret, errMalformedOption
 	}
-	return b, nil
-}
-
-func intFromMap(m map[string]interface{}, name string) (int, error) {
-	v, exists := m[name]
-	if !exists {
-		return 0, errAbsentOption
-	}
-	i, ok := v.(int)
-	if !ok {
-		return 0, errMalformedOption
-	}
-	return i, nil
+	return ret, nil
 }
 
 func durationFromMap(m map[string]interface{}, name string) (time.Duration, error) {
-	v, exists := m[name]
-	if !exists {
-		return 0, errAbsentOption
-	}
-	s, ok := v.(string)
-	if !ok {
-		return 0, errMalformedOption
+	s, err := somethingFromMap[string](m, name)
+	if err != nil {
+		return 0, err
 	}
 	d, err := time.ParseDuration(s)
 	if err != nil {
 		return 0, errMalformedOption
 	}
 	return d, nil
+}
+
+func stringArrFromMap(m map[string]interface{}, key string) (ret []string, err error) {
+	arr, err := somethingFromMap[[]interface{}](m, key)
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range arr {
+		t, ok := v.(string)
+		if !ok {
+			return nil, fmt.Errorf(
+				"stringArrFromMap: not a valid string target: %+v", m)
+		}
+		ret = append(ret, t)
+	}
+	return ret, nil
 }
