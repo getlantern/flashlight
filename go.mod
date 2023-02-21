@@ -81,7 +81,7 @@ require (
 	github.com/getlantern/multipath v0.0.0-20220920195041-55195f38df73
 	github.com/getlantern/netx v0.0.0-20211206143627-7ccfeb739cbd
 	github.com/getlantern/ops v0.0.0-20220713155959-1315d978fff7
-	github.com/getlantern/osversion v0.0.0-20230110113619-07839d9f2ba0
+	github.com/getlantern/osversion v0.0.0-20230221120431-d6f9971f8ccf
 	github.com/getlantern/proxy/v2 v2.0.1-0.20220303164029-b34b76e0e581
 	github.com/getlantern/proxybench v0.0.0-20220404140110-f49055cb86de
 	github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683
@@ -148,10 +148,12 @@ require (
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/alecthomas/atomic v0.1.0-alpha2 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
+	github.com/getlantern/go-update v0.0.0-20230221120840-8d795213a8bc // indirect
 	github.com/getlantern/ratelimit v0.0.0-20220926192648-933ab81a6fc7 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/pprof v0.0.0-20220608213341-c488b8fa1db3 // indirect
+	github.com/kr/binarydist v0.1.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/marten-seemann/qtls-go1-19 v0.1.1 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
