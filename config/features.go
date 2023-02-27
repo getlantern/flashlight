@@ -103,7 +103,7 @@ type BroflakeOptions struct {
 	Netstated string `mapstructure:"-"`
 }
 
-func (o *BroflakeOptions) fromMap(m map[string]interface{}) error {
+func (o *BroflakeOptions) FromMap(m map[string]interface{}) error {
 	config := &mapstructure.DecoderConfig{
 		DecodeHook: func(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
 			if t != reflect.TypeOf(time.Duration(0)) {
