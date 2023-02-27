@@ -134,42 +134,30 @@ require (
 
 require (
 	github.com/Jigsaw-Code/outline-ss-server v1.4.0
+	github.com/OperatorFoundation/Replicant-go/Replicant/v3 v3.0.14
 	github.com/getlantern/common v1.2.0
 	github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
 )
 
 require (
-	github.com/OperatorFoundation/Replicant-go/Replicant/v3 v3.0.8 // indirect
 	github.com/OperatorFoundation/ghostwriter-go v1.0.6 // indirect
 	github.com/OperatorFoundation/go-bloom v1.0.1 // indirect
-	github.com/OperatorFoundation/go-shadowsocks2 v1.1.11 // indirect
-	github.com/OperatorFoundation/monolith-go/monolith v1.0.10 // indirect
-	github.com/OperatorFoundation/shapeshifter-ipc/v3 v3.0.0 // indirect
+	github.com/OperatorFoundation/go-shadowsocks2 v1.1.12 // indirect
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/alecthomas/atomic v0.1.0-alpha2 // indirect
-	github.com/deckarep/golang-set v1.8.0 // indirect
-	github.com/getlantern/go-update v0.0.0-20230221120840-8d795213a8bc // indirect
 	github.com/getlantern/ratelimit v0.0.0-20220926192648-933ab81a6fc7 // indirect
-	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/pprof v0.0.0-20220608213341-c488b8fa1db3 // indirect
-	github.com/kr/binarydist v0.1.0 // indirect
-	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/marten-seemann/qtls-go1-19 v0.1.1 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
 	github.com/onsi/ginkgo/v2 v2.2.0 // indirect
-	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
-	github.com/shirou/gopsutil/v3 v3.22.12 // indirect
-	github.com/tklauser/go-sysconf v0.3.11 // indirect
-	github.com/tklauser/numcpus v0.6.0 // indirect
-	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	golang.org/x/exp v0.0.0-20220823124025-807a23277127 // indirect
 )
 
 require (
 	crawshaw.io/sqlite v0.3.3-0.20220618202545-d1964889ea3c // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1.0.20210721174708-390f27c3be20 // indirect
-	github.com/OperatorFoundation/Starbridge-go/Starbridge/v3 v3.0.9
+	github.com/OperatorFoundation/Starbridge-go/Starbridge/v3 v3.0.12
 	github.com/RoaringBitmap/roaring v1.2.1 // indirect
 	github.com/Yawning/chacha20 v0.0.0-20170904085104-e3b1f968fc63 // indirect
 	github.com/ajwerner/btree v0.0.0-20211221152037-f427b3e689c0 // indirect

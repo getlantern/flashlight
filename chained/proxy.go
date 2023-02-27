@@ -13,6 +13,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/samber/lo"
+	"google.golang.org/protobuf/proto"
+
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/ema"
 	"github.com/getlantern/enhttp"
@@ -25,8 +28,6 @@ import (
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
-	"github.com/samber/lo"
-	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -207,7 +208,7 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 
 	if s.MultiplexedAddr != "" || transport == "utphttp" ||
 		transport == "utphttps" || transport == "utpobfs4" ||
-		transport == "tlsmasq" {
+		transport == "tlsmasq" || transport == "starbridge" {
 		impl, err = multiplexed(impl, name, s)
 		if err != nil {
 			return nil, err
