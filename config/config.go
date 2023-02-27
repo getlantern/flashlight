@@ -110,6 +110,10 @@ type options struct {
 	rt http.RoundTripper
 
 	dhtupContext *dhtup.Context
+
+	// ipFunc is a function that returns the IP address of the client looked
+	// up from the geoip server.
+	ipFunc func() string
 }
 
 var globalConfigDhtTarget krpc.ID

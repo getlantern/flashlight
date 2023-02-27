@@ -30,6 +30,7 @@ const (
 	ProxyDialTimeoutHeader              = "X-Lantern-Dial-Timeout"
 	ClientCountryHeader                 = "X-Lantern-Client-Country"
 	RandomNoiseHeader                   = "X-Lantern-Rand"
+	IPHeader                            = "X-Lantern-IP"
 	SleepHeader                         = "X-Lantern-Sleep"
 	XBQHeader                           = "XBQ"
 	XBQHeaderv2                         = "XBQv2"
@@ -67,6 +68,8 @@ func AddCommonNonUserHeaders(uc UserConfig, req *http.Request) {
 	// We include a random length string here to make it harder for censors to identify lantern
 	// based on consistent packet lengths.
 	req.Header.Add(RandomNoiseHeader, randomizedString())
+
+	req.Header.Add(IPHeader, uc.GetIP())
 }
 
 // AddCommonHeadersWithOptions sets standard http headers on a request bound

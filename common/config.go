@@ -32,6 +32,7 @@ func (uc *UserConfigData) GetInternalHeaders() map[string]string {
 	}
 	return h
 }
+func (uc *UserConfigData) GetIP() string { return "" }
 
 var _ UserConfig = (*UserConfigData)(nil)
 

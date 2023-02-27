@@ -15,6 +15,7 @@ type UserConfig interface {
 	GetTimeZone() (string, error)
 	GetInternalHeaders() map[string]string
 	GetEnabledExperiments() []string
+	GetIP() string
 }
 
 // NullAuthConfig is useful for testing
@@ -37,5 +38,6 @@ func (s NullUserConfig) GetTimeZone() (string, error) {
 
 func (s NullUserConfig) GetLanguage() string                   { return "" }
 func (s NullUserConfig) GetInternalHeaders() map[string]string { return make(map[string]string) }
+func (s NullUserConfig) GetIP() string                         { return "" }
 
 var _ UserConfig = (*NullUserConfig)(nil)
