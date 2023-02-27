@@ -137,7 +137,7 @@ require (
 
 require (
 	github.com/Jigsaw-Code/outline-ss-server v1.4.0
-	github.com/getlantern/broflake/clientcore v0.0.0-20230208164123-a672315e60e4
+	github.com/getlantern/broflake/clientcore v0.0.0-20230227174042-18002515b30a
 	github.com/getlantern/common v1.2.0
 	github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
 )
@@ -152,8 +152,8 @@ require (
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/alecthomas/atomic v0.1.0-alpha2 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
-	github.com/getlantern/broflake/common v0.0.0-20230208164123-a672315e60e4 // indirect
-	github.com/getlantern/broflake/netstate/client v0.0.0-20230208164123-a672315e60e4 // indirect
+	github.com/getlantern/broflake/common v0.0.0-20230227174042-18002515b30a // indirect
+	github.com/getlantern/broflake/netstate/client v0.0.0-20230227174042-18002515b30a // indirect
 	github.com/getlantern/ratelimit v0.0.0-20220926192648-933ab81a6fc7 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/golang/mock v1.6.0 // indirect
