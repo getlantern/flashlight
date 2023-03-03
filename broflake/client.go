@@ -12,9 +12,9 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.broflake")
 
-	client clientcore.ReliableStreamLayer
-	rt     http.RoundTripper
-	ready  = make(chan struct{}, 0)
+	client               clientcore.ReliableStreamLayer
+	broflakeRoundTripper http.RoundTripper
+	ready                = make(chan struct{})
 )
 
 // Dials a connection to a broflake egress server
@@ -33,7 +33,7 @@ func (*roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	ctx := req.Context()
 	select {
 	case <-ready:
-		return rt.RoundTrip(req)
+		return broflakeRoundTripper.RoundTrip(req)
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	}
@@ -65,7 +65,7 @@ func InitAndStartBroflakeCensoredPeer(options *Options) error {
 		return err
 	}
 	client = ql
-	rt = clientcore.CreateHTTPTransport(ql)
+	broflakeRoundTripper = clientcore.CreateHTTPTransport(ql)
 	close(ready)
 
 	return nil
