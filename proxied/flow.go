@@ -15,18 +15,16 @@
 //
 // The code for this example will look like this:
 //
-//     req, err := http.NewRequest("GET", "http://example.com", nil)
-//     flow := NewProxiedFlow(
-//         &ProxiedFlowOptions{
-//             ParallelMethods: []string{http.MethodGet, http.MethodHead, http.MethodOptions},
-//     	   })
+//	    req, err := http.NewRequest("GET", "http://example.com", nil)
+//	    flow := NewProxiedFlow(
+//	        &ProxiedFlowOptions{
+//	            ParallelMethods: []string{http.MethodGet, http.MethodHead, http.MethodOptions},
+//	    	   })
 //
-// 	   flow.
-// 	     Add(proxied.FlowComponentID_Chained, true).
-//       Add(proxied.FlowComponentID_Fronted, false)
-//     resp, err := flow.RoundTrip(req)
-//
-//
+//		   flow.
+//		     Add(proxied.FlowComponentID_Chained, true).
+//	      Add(proxied.FlowComponentID_Fronted, false)
+//	    resp, err := flow.RoundTrip(req)
 package proxied
 
 import (
@@ -393,7 +391,7 @@ func (f *ProxiedFlow) enabledComponents() (*ProxiedFlowComponent, []*ProxiedFlow
 	return preferred, rest
 }
 
-func (f ProxiedFlow) ShouldRunParallel(req *http.Request) bool {
+func (f *ProxiedFlow) ShouldRunParallel(req *http.Request) bool {
 	for _, method := range f.options.ParallelMethods {
 		if method == anyHTTPMethodMarker {
 			return true
@@ -496,7 +494,7 @@ func newFlowRunner(req *http.Request, p *ProxiedFlow) *flowRunner {
 	}
 }
 
-// run picks the appropriate strategy for executing the request
+// Run picks the appropriate strategy for executing the request
 // based on request method and other state
 func (f *flowRunner) Run() *ProxiedFlowResponse {
 	if err := f.readRequestBody(); err != nil {
@@ -505,7 +503,7 @@ func (f *flowRunner) Run() *ProxiedFlowResponse {
 
 	preferred, rest := f.proxiedFlow.enabledComponents()
 	if preferred == nil && len(rest) == 0 {
-		return &ProxiedFlowResponse{err: fmt.Errorf("no components enabled to perform request.")}
+		return &ProxiedFlowResponse{err: fmt.Errorf("no components enabled to perform request")}
 	}
 
 	if preferred != nil {
