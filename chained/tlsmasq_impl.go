@@ -117,6 +117,7 @@ func decodeUint16(s string) (uint16, error) {
 func cipherSuites(cipherSuites, name string) ([]uint16, error) {
 	suiteStrings := strings.Split(cipherSuites, ",")
 	if len(suiteStrings) == 1 && suiteStrings[0] == "" {
+		// No suites specified. Setting them to nil will cause the default suites to be used.
 		log.Debugf("No suites specified, using default suites for %s", name)
 		return nil, nil
 	}
