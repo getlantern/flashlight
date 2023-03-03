@@ -31,6 +31,7 @@ var (
 	Proxy      = Rule("p")
 	MustProxy  = Rule("m")
 	MustDirect = Rule("md")
+	Broflake   = Rule("bf")
 
 	// Requests to these domains require proxies for security purposes and to
 	// ensure that config-server requests in particular always go through a proxy
