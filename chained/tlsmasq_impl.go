@@ -38,26 +38,11 @@ func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc com
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	decodeUint16 := func(s string) (uint16, error) {
-		b, err := hex.DecodeString(strings.TrimPrefix(s, "0x"))
-		if err != nil {
-			return 0, err
-		}
-		return binary.BigEndian.Uint16(b), nil
+	suites, err := cipherSuites(ptSetting(pc, "tlsmasq_suites"), name)
+	if err != nil {
+		return nil, errors.New("could not parse suites for: %v", name)
 	}
 
-	suites := []uint16{}
-	suiteStrings := strings.Split(ptSetting(pc, "tlsmasq_suites"), ",")
-	if len(suiteStrings) == 1 && suiteStrings[0] == "" {
-		return nil, errors.New("no cipher suites specified")
-	}
-	for _, s := range suiteStrings {
-		suite, err := decodeUint16(s)
-		if err != nil {
-			return nil, errors.New("bad cipher string '%s': %v", s, err)
-		}
-		suites = append(suites, suite)
-	}
 	versStr := ptSetting(pc, "tlsmasq_tlsminversion")
 	minVersion, err := decodeUint16(versStr)
 	if err != nil {
@@ -119,6 +104,31 @@ func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc com
 	}
 
 	return &tlsMasqImpl{reportDialCore: reportDialCore, addr: addr, cfg: cfg, tlsClientHelloSplitting: pc.TLSClientHelloSplitting}, nil
+}
+
+func decodeUint16(s string) (uint16, error) {
+	b, err := hex.DecodeString(strings.TrimPrefix(s, "0x"))
+	if err != nil {
+		return 0, err
+	}
+	return binary.BigEndian.Uint16(b), nil
+}
+
+func cipherSuites(cipherSuites, name string) ([]uint16, error) {
+	suiteStrings := strings.Split(cipherSuites, ",")
+	if len(suiteStrings) == 1 && suiteStrings[0] == "" {
+		log.Debugf("No suites specified, using default suites for %s", name)
+		return nil, nil
+	}
+	suites := []uint16{}
+	for _, s := range suiteStrings {
+		suite, err := decodeUint16(s)
+		if err != nil {
+			return nil, errors.New("bad cipher string '%s': %v", s, err)
+		}
+		suites = append(suites, suite)
+	}
+	return suites, nil
 }
 
 func (impl *tlsMasqImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
