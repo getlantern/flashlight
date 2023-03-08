@@ -636,10 +636,6 @@ func (client *Client) doDial(
 		return dialDirect(ctx, "tcp", addr)
 	}
 
-	dialBroflake(ctx context.Context, network, addr string, ip net.IP) (net.Conn, error) {
-		log.Debugf("Use dial broflake for %v(%v)", addr, ip)
-
-
 	switch domainrouting.RuleFor(host) {
 	case domainrouting.Direct:
 		log.Tracef("Directly dialing %v per domain routing rules (Direct)", addr)
@@ -651,11 +647,6 @@ func (client *Client) doDial(
 		op.Set("force_proxied", true)
 		op.Set("force_proxied_reason", "routingrule")
 		return dialProxied(ctx, "whatever", addr)
-	case domainrouting.Broflake:
-		log.Tracef("Proxying to %v per domain routing rules (Broflake)", addr)
-		op.Set("force_broflake", true)
-		op.Set("force_broflake_reason", "routingrule")
-		return dialBroflake(ctx, "whatever", addr)
 	}
 
 	dl, _ := ctx.Deadline()
