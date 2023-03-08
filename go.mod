@@ -82,7 +82,7 @@ require (
 	github.com/getlantern/multipath v0.0.0-20220920195041-55195f38df73
 	github.com/getlantern/netx v0.0.0-20211206143627-7ccfeb739cbd
 	github.com/getlantern/ops v0.0.0-20220713155959-1315d978fff7
-	github.com/getlantern/osversion v0.0.0-20230110113619-07839d9f2ba0
+	github.com/getlantern/osversion v0.0.0-20230221120431-d6f9971f8ccf
 	github.com/getlantern/proxy/v2 v2.0.1-0.20220303164029-b34b76e0e581
 	github.com/getlantern/proxybench v0.0.0-20220404140110-f49055cb86de
 	github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683
@@ -148,19 +148,12 @@ require (
 	github.com/alecthomas/atomic v0.1.0-alpha2 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
-	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/pprof v0.0.0-20220608213341-c488b8fa1db3 // indirect
-	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/marten-seemann/qtls-go1-19 v0.1.1 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
 	github.com/montanaflynn/stats v0.6.6 // indirect
 	github.com/onsi/ginkgo/v2 v2.2.0 // indirect
-	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
-	github.com/shirou/gopsutil/v3 v3.22.12 // indirect
-	github.com/tklauser/go-sysconf v0.3.11 // indirect
-	github.com/tklauser/numcpus v0.6.0 // indirect
-	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.uber.org/goleak v1.1.12 // indirect
 	golang.org/x/exp v0.0.0-20220823124025-807a23277127 // indirect
 )
@@ -198,7 +191,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
-	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dvyukov/go-fuzz v0.0.0-20210429054444-fca39067bc72 // indirect
 	github.com/edsrzf/mmap-go v1.1.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
@@ -221,7 +213,6 @@ require (
 	github.com/getlantern/upnp v0.0.0-20220531140457-71a975af1fad // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/golang/gddo v0.0.0-20190419222130-af0f2af80721 // indirect
