@@ -636,9 +636,16 @@ func (client *Client) doDial(
 		return dialDirect(ctx, "tcp", addr)
 	}
 
-	dialBroflake(ctx context.Context, network, addr string, ip net.IP) (net.Conn, error) {
-		log.Debugf("Use dial broflake for %v(%v)", addr, ip)
+	// (nelson) TODO: the partial 'dialBroflake' function below was added by myles in:
+	// https://github.com/getlantern/flashlight/commit/f8619faf2a0b3714a564914e47497064ac75c86c
+	//
+	// It doesn't compile. I see that ox reverted it in:
+	// https://github.com/getlantern/flashlight/commit/b03e17a3f259158e43f33fe71b720696c33387e8
+	//
+	// I'm not yet sure what's going on, so I'm just commenting out everything to do with it for now.
 
+	// dialBroflake(ctx context.Context, network, addr string, ip net.IP) (net.Conn, error) {
+	//	log.Debugf("Use dial broflake for %v(%v)", addr, ip)
 
 	switch domainrouting.RuleFor(host) {
 	case domainrouting.Direct:
@@ -655,7 +662,7 @@ func (client *Client) doDial(
 		log.Tracef("Proxying to %v per domain routing rules (Broflake)", addr)
 		op.Set("force_broflake", true)
 		op.Set("force_broflake_reason", "routingrule")
-		return dialBroflake(ctx, "whatever", addr)
+		// return dialBroflake(ctx, "whatever", addr)
 	}
 
 	dl, _ := ctx.Deadline()

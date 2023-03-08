@@ -45,6 +45,9 @@ type Flags struct {
 	P2PBep44TargetsAndSalts []string      `flag:"p2p-bep44-targets-and-salts" help:"comma separated list of BEP44Targets (in the form of 'target1:salt1,target2:salt2,...') to use when p2pcensoredpeer feature is enabled. This overrides other sources like global-config"`
 	P2PRegistrarEndpoint    string        `flag:"p2p-registrar-endpoint" help:"Endpoint to use when p2pfreepeer feature is enabled. This overrides other sources"`
 	P2PDomainWhitelist      []string      `flag:"p2p-domain-whitelist" help:"comma separated list of domains to whitelist when p2pfreepeer feature is enabled. This overrides other sources. If nothing is supplied, FreePeerCtx defaults to only whitelisting geolookups"`
+	ForceBroflake           bool          `flag:"force-broflake" help:"force enable broflake (using a reasonable default configuration)"`
+	BroflakeTag             string        `flag:"broflake-tag" help:"specify a broflake tag for observability testing"`
+	BroflakeNetstated       string        `flag:"broflake-netstated" help:"specify a broflake netstated server for observability testing"`
 }
 
 func (f Flags) AsMap() map[string]interface{} {

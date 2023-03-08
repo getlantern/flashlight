@@ -35,6 +35,7 @@ const (
 	FeatureOtel                 = "otel"
 	FeatureP2PFreePeer          = "p2pfreepeer"
 	FeatureP2PCensoredPeer      = "p2pcensoredpeer"
+	FeatureBroflake             = "broflake"
 )
 
 var (
@@ -80,6 +81,71 @@ func (o *P2PCensoredPeerOptions) FromMap(m map[string]interface{}) error {
 		return err
 	}
 	return nil
+}
+
+type BroflakeOptions struct {
+	// Overrides WebRTCOptions.DiscoverySrv
+	DiscoverySrv string `mapstructure:"discovery_server"`
+
+	// Overrides WebRTCOptions.Endpoint
+	Endpoint string `mapstructure:"endpoint"`
+
+	// The list of STUN servers provided here is not used directly by Broflake, but rather can be
+	// used by Flashlight as part of a custom injected STUNBatch function
+	STUNSrvs []string `mapstructure:"stun_servers"`
+
+	// Overrides WebRTCOptions.STUNBatchSize
+	STUNBatchSize uint32 `mapstructure:"stun_batch_size"`
+
+	// Overrides WebRTCOptions.GenesisAddr
+	GenesisAddr string `mapstructure:"genesis_addr"`
+
+	// Overrides WebRTCOptions.NATFailTimeout
+	NATFailTimeout time.Duration `mapstructure:"nat_timeout"`
+
+	// Overrides WebRTCOptions.ICEFailTimeout
+	ICEFailTimeout time.Duration `mapstructure:"ice_timeout"`
+
+	// Overrides BroflakeOptions.CTableSize
+	CTableSize int `mapstructure:"ctable_size`
+
+	// Overrides BroflakeOptions.PTableSize
+	PTableSize int `mapstructure:"ptable_size"`
+
+	// Overrides BroflakeOptions.BusBufferSz
+	BusBufferSz int `mapstructure:"bus_buffer_size"`
+
+	// Overrides QUICLayerOptions.ServerName
+	EgressServerName string `mapstructure:"egress_server_name"`
+
+	// Overrides QUICLayerOptions.InsecureSkipVerify
+	EgressInsecureSkipVerify bool `mapstructure:"egress_insecure_skip_verify"`
+
+	// these are local testing options ignored by global config decoder
+	Tag       string `mapstructure:"-"`
+	Netstated string `mapstructure:"-"`
+}
+
+func (o *BroflakeOptions) FromMap(m map[string]interface{}) error {
+	config := &mapstructure.DecoderConfig{
+		DecodeHook: func(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
+			if t != reflect.TypeOf(time.Duration(0)) {
+				return data, nil
+			}
+			d, err := time.ParseDuration(fmt.Sprintf("%v", data))
+			if err != nil {
+				return time.ParseDuration("10s")
+			}
+			return d, nil
+		},
+		Result: o,
+	}
+
+	decoder, err := mapstructure.NewDecoder(config)
+	if err != nil {
+		return err
+	}
+	return decoder.Decode(m)
 }
 
 type GoogleSearchAdsOptions struct {

@@ -21,6 +21,7 @@ import (
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/borda"
+	"github.com/getlantern/flashlight/broflake"
 	"github.com/getlantern/flashlight/bypass"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
@@ -119,6 +120,7 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
 	f.applyClientConfig(cfg)
 	f.applyProxyBench(cfg)
+	f.applyBroflake(cfg)
 	f.applyBorda(cfg)
 	f.applyOtel(cfg)
 	select {
@@ -302,6 +304,52 @@ func (f *Flashlight) applyProxyBench(cfg *config.Global) {
 			log.Debug("proxybench disabled")
 		}
 	}()
+}
+
+func (f *Flashlight) applyBroflake(cfg *config.Global) {
+	// ATTN CODE REVIEWER: This seemed like the most straightforward place to check for and enforce
+	// the --force-broflake flag, but I concede that it doesn't seem very idiomatic when compared to
+	// the other 'apply' functions in this source file. Is there a better place for this logic?
+	if v := f.flagsAsMap["force-broflake"]; v == true {
+		// TODO 03/08/2023: as of today, all of Broflake's default options should be good to get this
+		// client up and running on the Lantern Network mainline, so we don't need to specify any
+		// overrides in this config.BroflakeOptions structure except for QUIC setings...
+		fopts := config.BroflakeOptions{
+			EgressInsecureSkipVerify: true,
+		}
+
+		f.doApplyBroflake(&fopts)
+		return
+	}
+
+	if f.FeatureEnabled(config.FeatureBroflake) {
+		var fopts config.BroflakeOptions
+		if err := f.FeatureOptions(config.FeatureBroflake, &fopts); err != nil {
+			log.Debugf(
+				"enabling broflake: bad or no options for broflake feature in global config: %v",
+				err,
+			)
+			return
+		}
+
+		f.doApplyBroflake(&fopts)
+	}
+}
+
+func (f *Flashlight) doApplyBroflake(fopts *config.BroflakeOptions) {
+	if v := f.flagsAsMap["broflake-tag"]; v != nil {
+		if tag, ok := v.(string); ok && tag != "" {
+			fopts.Tag = tag
+		}
+	}
+
+	if v := f.flagsAsMap["broflake-netstated"]; v != nil {
+		if netstated, ok := v.(string); ok && netstated != "" {
+			fopts.Netstated = netstated
+		}
+	}
+
+	broflake.StartBroflakeClient(fopts)
 }
 
 func (f *Flashlight) applyBorda(cfg *config.Global) {
