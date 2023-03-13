@@ -25,33 +25,22 @@ import (
 	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
-)
-
-const (
-	minCheckInterval      = 10 * time.Second
-	maxCheckInterval      = 15 * time.Minute
-	dialCoreCheckInterval = 30 * time.Second
+	"github.com/getlantern/flashlight/proxyimpl"
 )
 
 var (
-	// IdleTimeout closes connections idle for a period to avoid dangling
-	// connections. Web applications tend to contact servers in 1 minute
-	// interval or below. 65 seconds is long enough to avoid interrupt normal
-	// connections but shorter than the idle timeout on the server to avoid
-	// running into closed connection problems.
-	IdleTimeout = 65 * time.Second
-
 	// errUpstream is an error that indicates there was a problem upstream of a
 	// proxy. Such errors are not counted as failures but do allow failover to
 	// other proxies.
-	errUpstream = errors.New("Upstream error")
+	errUpstream                  = errors.New("Upstream error")
+	errFailedToDialWithAnyPrefix = errors.New("Failed to dial with any prefix")
 )
 
 func (p *proxy) Stop() {
 	log.Tracef("Stopping dialer %s", p.Label())
 	p.closeOnce.Do(func() {
 		close(p.closeCh)
-		p.impl.close()
+		p.impl.Close()
 	})
 }
 
@@ -111,11 +100,15 @@ func (p *proxy) WriteStats(w io.Writer) {
 		estRTT*1000, estBandwidth,
 		humanize.Bytes(p.DataSent()), humanize.Bytes(p.DataRecv()),
 		probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs)
-	if impl, ok := p.impl.(*multipathImpl); ok {
+	if impl, ok := p.impl.(*proxyimpl.MultipathImpl); ok {
 		for _, line := range impl.FormatStats() {
 			_, _ = fmt.Fprintf(w, "\t%s\n", line)
 		}
 	}
+}
+
+func (p *proxy) Implementation() proxyimpl.ProxyImpl {
+	return p.impl
 }
 
 // DialContext dials using provided context
@@ -164,53 +157,16 @@ func (p *proxy) MarkFailure() {
 	atomic.StoreInt64(&p.consecSuccesses, 0)
 	newCF := atomic.AddInt64(&p.consecFailures, 1)
 	log.Tracef("Dialer %s consecutive failures: %d -> %d", p.Label(), newCF-1, newCF)
-	return
 }
 
 // defaultDialOrigin implements the method from serverConn. With standard proxies, this
 // involves sending either a CONNECT request or a GET request to initiate a
 // persistent connection to the upstream proxy.
 func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
-	conn, err := p.reportedDial(func(op *ops.Op) (net.Conn, error) {
-		return p.impl.dialServer(op, ctx)
-	})
-	if err != nil {
-		log.Debugf("Unable to dial server %v: %s", p.Label(), err)
-		return nil, err
-	}
-
-	conn, err = overheadWrapper(true)(conn, op.FailIf(err))
-	var timeout time.Duration
-	if deadline, set := ctx.Deadline(); set {
-		conn.SetDeadline(deadline)
-		// Set timeout based on our given deadline, minus a 2 second fudge factor
-		timeUntilDeadline := deadline.Sub(time.Now())
-		timeout = timeUntilDeadline - 2*time.Second
-		if timeout < 0 {
-			log.Errorf("Not enough time left for server to dial upstream within %v, return errUpstream immediately", timeUntilDeadline)
-			return nil, errUpstream
-		}
-	}
-	// Look for our special hacked "connect" transport used to signal
-	// that we should send a CONNECT request and tunnel all traffic through
-	// that.
-	switch network {
-	case balancer.NetworkConnect:
-		log.Trace("Sending CONNECT request")
-		bconn := bufconn.Wrap(conn)
-		conn = bconn
-		err = p.sendCONNECT(op, addr, bconn, timeout)
-	case balancer.NetworkPersistent:
-		log.Trace("Sending GET request to establish persistent HTTP connection")
-		err = p.initPersistentConnection(addr, conn)
-	}
-	if err != nil {
-		conn.Close()
-		return nil, err
-	}
-	// Unset the deadline to avoid affecting later read/write on the connection.
-	conn.SetDeadline(time.Time{})
-	return conn, nil
+	collectionCh := make(chan ConnectionWithPrefix, 1)
+	go doDialOrigin(op, ctx, p, network, addr, nil, collectionCh)
+	connectionCollection := <-collectionCh
+	return connectionCollection.conn, connectionCollection.err
 }
 
 func (p *proxy) onRequest(req *http.Request) {
@@ -315,4 +271,162 @@ func (p *proxy) initPersistentConnection(addr string, conn net.Conn) error {
 	}
 
 	return nil
+}
+
+type ConnectionWithPrefix struct {
+	conn      net.Conn
+	prefixBuf []byte
+	err       error
+}
+
+// multipathPrefixDialOrigin triggers multiple dials to a Lantern proxy (which
+// would subsequently dial an origin server) equal to the amount of prefixes in
+// "p.impl.(*proxyimpl.PrefixImpl).Prefixes".
+//
+// Each dial, after a successful handshake (e.g., a TCP handshake), will send a
+// prefix to the Lantern proxy (taken from
+// "p.impl.(*proxyimpl.PrefixImpl).Prefixes". The Lantern proxy should
+// **discard** the prefix completely. It is used purely since some Censors
+// completely ignore a few connections with certain prefixes (i.e., ones that
+// look like a DNS request. See here for example:
+// https://github.com/getlantern/lantern-internal/issues/5849)
+//
+// It then returns the first
+// successful connection and (if a callback is configured), signals the rest of
+// the successful connections to a callback specified through
+// "p.impl.(*proxyimpl.PrefixImpl).SetSuccessfulPrefixCallback()".
+//
+// See proxyimpl/prefix.go:PrefixImpl for more details.
+func multipathPrefixDialOrigin(
+	op *ops.Op,
+	ctx context.Context,
+	p *proxy,
+	network, addr string) (net.Conn, error) {
+	prefixProxyImpl, ok := p.impl.(*proxyimpl.PrefixImpl)
+	if !ok {
+		return nil,
+			fmt.Errorf(
+				"Unexpected proxy type %T. Expected PrefixImpl",
+				p.impl)
+	}
+
+	// Dial routine: dials the server len(prefixProxyImpl.Prefixes) times, each
+	// time with a different prefix. The successful connection with the lowest
+	// RTT will be used. The rest will still be reported as a success, but will
+	// be closed immediately.
+	collectionCh := make(chan ConnectionWithPrefix, len(prefixProxyImpl.Prefixes))
+	for _, prefixBuf := range prefixProxyImpl.Prefixes {
+		go doDialOrigin(op, ctx, p, network, addr, prefixBuf, collectionCh)
+	}
+
+	// Collection routine
+	successfulConnCh := make(chan net.Conn)
+	go func() {
+		didSendSuccessfulConn := false
+		for pc := range collectionCh {
+			// If we get an error, we can't continue.
+			// Collect the error so we can log it later if everything fails.
+			if pc.err != nil {
+				// Log the error
+				log.Debugf(
+					"Dialer %s failed to dial with prefix %s: %s",
+					p.Label(), pc.prefixBuf, pc.err)
+				continue
+			}
+
+			// Signal a correct dial with this prefix
+			prefixProxyImpl.ReceiveSuccessfulPrefix(pc.prefixBuf)
+
+			// If this is the first successful dial, send it to the main
+			// routine
+			if !didSendSuccessfulConn {
+				successfulConnCh <- pc.conn
+				didSendSuccessfulConn = true
+				continue
+			}
+
+			// Close the connection since if we're here, we already sent a
+			// successful connection.
+			pc.conn.Close()
+		}
+	}()
+
+	// Wait for a successful connection or a timeout
+	select {
+	case conn := <-successfulConnCh:
+		return conn, nil
+	case <-ctx.Done():
+		return nil, fmt.Errorf("address %v: %w",
+			p.Addr(), errFailedToDialWithAnyPrefix)
+	}
+}
+
+// doDialOrigin implements the method from serverConn. With standard proxies, this
+// involves sending either a CONNECT request or a GET request to initiate a
+// persistent connection to the upstream proxy.
+func doDialOrigin(
+	op *ops.Op,
+	ctx context.Context,
+	p *proxy,
+	network, addr string,
+	prefixBuf []byte,
+	collectionCh chan<- ConnectionWithPrefix) {
+	// Define what to do with a postLayer4Dial
+	// onPostLayer4Dial := func(c *net.TCPConn) (net.Conn, error) {
+	// 	// Wrap the net.Conn we get after a successful layer 4 (TCP/UDP)
+	// 	// connection with a prefixConn. This allows us to prepend a
+	// 	// prefix to the first request we send over the connection.
+	// 	return proxyimpl.NewPrefixConn(c, prefixBuf), nil
+	// }
+
+	conn, err := p.reportedDial(func(op *ops.Op) (net.Conn, error) {
+		if prefixBuf != nil {
+			return p.impl.DialServer(op, ctx, proxyimpl.NewPrefixTCPDialer(prefixBuf))
+		} else {
+			return p.impl.DialServer(op, ctx, nil)
+		}
+	})
+	if err != nil {
+		log.Debugf("Unable to dial server %v: %s", p.Label(), err)
+		collectionCh <- ConnectionWithPrefix{
+			err: fmt.Errorf("dialing server: %s", err)}
+		return
+	}
+
+	conn, err = overheadWrapper(true)(conn, op.FailIf(err))
+	var timeout time.Duration
+	if deadline, set := ctx.Deadline(); set {
+		conn.SetDeadline(deadline)
+		// Set timeout based on our given deadline, minus a 2 second fudge factor
+		timeUntilDeadline := deadline.Sub(time.Now())
+		timeout = timeUntilDeadline - 2*time.Second
+		if timeout < 0 {
+			log.Errorf("Not enough time left for server to dial upstream within %v, return errUpstream immediately", timeUntilDeadline)
+			collectionCh <- ConnectionWithPrefix{err: errUpstream}
+			return
+		}
+	}
+
+	// Look for our special hacked "connect" transport used to signal
+	// that we should send a CONNECT request and tunnel all traffic through
+	// that.
+	switch network {
+	case balancer.NetworkConnect:
+		log.Trace("Sending CONNECT request")
+		bconn := bufconn.Wrap(conn)
+		conn = bconn
+		err = p.sendCONNECT(op, addr, bconn, timeout)
+	case balancer.NetworkPersistent:
+		log.Trace("Sending GET request to establish persistent HTTP connection")
+		err = p.initPersistentConnection(addr, conn)
+	}
+	if err != nil {
+		conn.Close()
+		log.Debugf("Unable to dial server %v: %s", p.Label(), err)
+		collectionCh <- ConnectionWithPrefix{err: fmt.Errorf("dialing server: %s", err)}
+		return
+	}
+	// Unset the deadline to avoid affecting later read/write on the connection.
+	conn.SetDeadline(time.Time{})
+	collectionCh <- ConnectionWithPrefix{conn: conn, prefixBuf: prefixBuf}
 }

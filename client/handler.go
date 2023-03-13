@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/getlantern/flashlight/config"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -15,13 +14,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/proxyimpl"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/andybalholm/brotli"
 
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/proxy/v2/filters"
 
-	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/pro"
@@ -37,8 +38,8 @@ func (client *Client) handle(conn net.Conn) error {
 	client.opsMap.put(conn, op)
 	defer client.opsMap.delete(conn)
 	// Use idletiming on client connections to make sure we don't get dangling server connections when clients disappear without our knowledge
-	conn = idletiming.Conn(conn, chained.IdleTimeout, func() {
-		log.Debugf("Client connection to %v idle for %v, closed", conn.RemoteAddr(), chained.IdleTimeout)
+	conn = idletiming.Conn(conn, proxyimpl.IdleTimeout, func() {
+		log.Debugf("Client connection to %v idle for %v, closed", conn.RemoteAddr(), proxyimpl.IdleTimeout)
 	})
 	err := client.proxy.Handle(context.Background(), conn, conn)
 	if err != nil {

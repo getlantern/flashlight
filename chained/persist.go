@@ -32,9 +32,7 @@ func TrackStatsFor(dialers []balancer.Dialer, configDir string, probeIfNecessary
 	}
 
 	statsTrackingDialers = make([]balancer.Dialer, 0, len(dialers))
-	for _, d := range dialers {
-		statsTrackingDialers = append(statsTrackingDialers, d)
-	}
+	statsTrackingDialers = append(statsTrackingDialers, dialers...)
 
 	statsMx.Unlock()
 
@@ -161,9 +159,7 @@ func persistStats(statsFilePath string) {
 		time.Sleep(15 * time.Second)
 		statsMx.Lock()
 		dialers := make([]balancer.Dialer, 0, len(statsTrackingDialers))
-		for _, d := range statsTrackingDialers {
-			dialers = append(dialers, d)
-		}
+		dialers = append(dialers, statsTrackingDialers...)
 		statsMx.Unlock()
 		doPersistStats(statsFilePath, dialers)
 	}

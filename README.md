@@ -123,3 +123,17 @@ See `./config/features.go` for a list of features. Below is a non-extensive desc
 Allows the client to act either as a FreePeer or a CensoredPeer.
 
 See overview of the p2p-proxying story here: https://docs.google.com/document/d/1JUjZHgpnunmwG3wUwlSmCKFwOGOXkkwyGd7cgrOJzbs/edit
+
+## FAQ
+
+### Prefix logic with multipath dialers
+
+Main issue: https://github.com/getlantern/lantern-internal/issues/5866.
+
+See documentation in `proxyimpl/prefix.go:PrefixImpl` and `chained/proxy.go:multipathPrefixDialOrigin()`.
+
+Censors many times completely ignore a connection if **the first few bytes right after the initial handshake** (in the case of TCP, after the TCP handshake. In the case of UDP, there's no handshake) **looked like** something known (like a DNS header. See [here](https://github.com/getlantern/lantern-internal/issues/5849) for more info).
+
+We call those first few bytes after the initial handshake the **prefix**. Sometimes a prefix would work in some places (or sometimes) but fails to work in other places, so it's useful for a client to A) receive many prefixes to try and B) try all of them simultaneously. The code in `proxyimpl/prefix.go:PrefixImpl` and `chained/proxy.go:multipathPrefixDialOrigin()` allows it to do just that: when a client receives proxy information **that includes prefixes**, it will try **all** of them until one succeeds.
+
+See the functional tests in `chained/prefix_test.go` for a full walkthrough

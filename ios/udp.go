@@ -9,7 +9,7 @@ import (
 	"github.com/eycorsican/go-tun2socks/core"
 
 	"github.com/getlantern/dnsgrab"
-	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/proxyimpl"
 )
 
 // UDPDialer provides a mechanism for dialing outbound UDP connections that bypass the VPN.
@@ -87,12 +87,12 @@ func (cb *UDPCallbacks) OnWritten() {
 }
 
 func (cb *UDPCallbacks) idleTiming() {
-	t := time.NewTimer(chained.IdleTimeout)
+	t := time.NewTimer(proxyimpl.IdleTimeout)
 	resetTimer := func() {
 		if !t.Stop() {
 			<-t.C
 		}
-		next := time.Duration(chained.IdleTimeout)
+		next := time.Duration(proxyimpl.IdleTimeout)
 		t.Reset(next)
 	}
 

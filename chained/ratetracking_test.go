@@ -10,6 +10,7 @@ import (
 	borda "github.com/getlantern/borda/client"
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/proxyimpl"
 	"github.com/getlantern/mockconn"
 	"github.com/stretchr/testify/assert"
 )
@@ -34,7 +35,7 @@ func TestRateTracking(t *testing.T) {
 		AuthToken: "token",
 		Trusted:   true,
 	}, newTestUserConfig())
-	p.impl = &testImpl{d: func(ctx context.Context) (net.Conn, error) {
+	p.impl = &proxyimpl.TestImpl{DialServerFunc: func(ctx context.Context) (net.Conn, error) {
 		return sd.Dial("", "")
 	}}
 
