@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -36,6 +38,7 @@ import (
 	"github.com/getlantern/shortcut"
 
 	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/broflake"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
@@ -587,12 +590,62 @@ func (client *Client) doDial(
 		return conn, err
 	}
 
+	// TODO (nelson):
+	// Broflake's proxy chain wants everything to be a CONNECT. Since we can't seem to use
+	// proxy.sendCONNECT (from chained/dialer.go) from here, I just rolled my own CONNECT wrapper
+	// right here in the function body...
+	dialBroflake := func(ctx context.Context, network, addr string) (net.Conn, error) {
+		log.Debugf("Use dial broflake for %v", addr)
+
+		conn, err := broflake.T.DialContext(ctx, network, addr)
+		if err != nil {
+			return nil, err
+		}
+
+		req, err := http.NewRequest(http.MethodConnect, "/", nil)
+		if err != nil {
+			return nil, err
+		}
+		req.URL = &url.URL{
+			Host: addr,
+		}
+		req.Host = addr
+
+		req.Write(conn)
+		br := bufio.NewReader(conn)
+		resp, err := http.ReadResponse(br, req)
+		if err != nil {
+			conn.Close()
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != 200 {
+			resp, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			conn.Close()
+			return nil, errors.New("Egress server refused connection" + string(resp))
+		}
+
+		return conn, nil
+	}
+
 	host, _, err := net.SplitHostPort(addr)
 	if err != nil {
 		host = addr
 	}
 	host = strings.ToLower(strings.TrimSpace(host))
 	routingRuleForDomain := domainrouting.RuleFor(host)
+
+	// ****************************************************************************
+	// TODO: DELETE ME! Short circuit test to proxy absolutely everything through Broflake
+	log.Tracef("Proxying to %v per domain routing rules (Broflake)", addr)
+	op.Set("force_broflake", true)
+	op.Set("force_broflake_reason", "routingrule")
+	return dialBroflake(ctx, "whatever", addr)
+	// *****************************************************************************
 
 	if routingRuleForDomain == domainrouting.MustDirect {
 		log.Debugf("Forcing direct to %v per domain routing rules (MustDirect)", host)
@@ -636,17 +689,6 @@ func (client *Client) doDial(
 		return dialDirect(ctx, "tcp", addr)
 	}
 
-	// (nelson) TODO: the partial 'dialBroflake' function below was added by myles in:
-	// https://github.com/getlantern/flashlight/commit/f8619faf2a0b3714a564914e47497064ac75c86c
-	//
-	// It doesn't compile. I see that ox reverted it in:
-	// https://github.com/getlantern/flashlight/commit/b03e17a3f259158e43f33fe71b720696c33387e8
-	//
-	// I'm not yet sure what's going on, so I'm just commenting out everything to do with it for now.
-
-	// dialBroflake(ctx context.Context, network, addr string, ip net.IP) (net.Conn, error) {
-	//	log.Debugf("Use dial broflake for %v(%v)", addr, ip)
-
 	switch domainrouting.RuleFor(host) {
 	case domainrouting.Direct:
 		log.Tracef("Directly dialing %v per domain routing rules (Direct)", addr)
@@ -662,7 +704,7 @@ func (client *Client) doDial(
 		log.Tracef("Proxying to %v per domain routing rules (Broflake)", addr)
 		op.Set("force_broflake", true)
 		op.Set("force_broflake_reason", "routingrule")
-		// return dialBroflake(ctx, "whatever", addr)
+		return dialBroflake(ctx, "whatever", addr)
 	}
 
 	dl, _ := ctx.Deadline()

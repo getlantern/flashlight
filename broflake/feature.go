@@ -10,10 +10,21 @@ import (
 )
 
 var (
-	// ATTN CODE REVIEWER: I copied this logger from the previous attempt at a PR, but I don't really know
-	// what it's doing. Broflake itself uses Go's default log package. Do we have any issues here?
-	log               = golog.LoggerFor("flashlight.broflake")
+	// TODO (nelson): I copied this logger from the previous attempt at a PR, but I don't really know
+	// what it's doing. Broflake itself uses Go's default log package. Do we have any worries here?
+	log = golog.LoggerFor("flashlight.broflake")
+
 	startBroflakeOnce sync.Once
+
+	// TODO (nelson): A successfully constructed Broflake client provides an interface to Flashlight
+	// as an http.Transport. We keep the reference to said transport here. Currently, Flashlight's
+	// Broflake client can only be constructed once, so we're not worried about races on this var
+	// after our first call to StartBroflakeClient. However, I'm unclear on whether I need to worry
+	// about Flashlight trying to dial using this transport before our Broflake client has been
+	// constructed. Also: there's the question of whether the reference to Broflake's transport
+	// should instead be kept on Flashlight's client.Client. It's currently difficult to do that
+	// without creating a circular dependency?
+	T *http.Transport
 )
 
 // StartBroflakeClient constructs, initializes, and starts a Broflake client which is configured to
@@ -76,13 +87,13 @@ func StartBroflakeClient(options *config.BroflakeOptions) {
 		}
 
 		// Construct and start a Broflake client!
-		_, err := initAndStartBroflake(bo, wo, qo)
+		transport, err := initAndStartBroflake(bo, wo, qo)
 		if err != nil {
 			log.Errorf("Failed to init and start Broflake: %v", err)
 			return
 		}
 
-		// TODO: welp, now we've got a roundtripper in _ above -- what do we do with it?
+		T = transport
 	})
 }
 

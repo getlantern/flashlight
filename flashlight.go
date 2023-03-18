@@ -307,11 +307,11 @@ func (f *Flashlight) applyProxyBench(cfg *config.Global) {
 }
 
 func (f *Flashlight) applyBroflake(cfg *config.Global) {
-	// ATTN CODE REVIEWER: This seemed like the most straightforward place to check for and enforce
+	// TODO (nelson): This seemed like the most straightforward place to check for and enforce
 	// the --force-broflake flag, but I concede that it doesn't seem very idiomatic when compared to
 	// the other 'apply' functions in this source file. Is there a better place for this logic?
 	if v := f.flagsAsMap["force-broflake"]; v == true {
-		// TODO 03/08/2023: as of today, all of Broflake's default options should be good to get this
+		// TODO (nelson): as of 3/8/23, all of Broflake's default options should be good to get this
 		// client up and running on the Lantern Network mainline, so we don't need to specify any
 		// overrides in this config.BroflakeOptions structure except for QUIC setings...
 		fopts := config.BroflakeOptions{
