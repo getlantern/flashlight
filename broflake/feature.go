@@ -21,9 +21,9 @@ var (
 	// Broflake client can only be constructed once, so we're not worried about races on this var
 	// after our first call to StartBroflakeClient. However, I'm unclear on whether I need to worry
 	// about Flashlight trying to dial using this transport before our Broflake client has been
-	// constructed. Also: there's the question of whether the reference to Broflake's transport
-	// should instead be kept on Flashlight's client.Client. It's currently difficult to do that
-	// without creating a circular dependency?
+	// constructed. Would this be a case to use our eventual package? Also: there's the question of
+	// whether the reference to Broflake's transport should instead be kept on Flashlight's
+	// client.Client. It's currently difficult to do that without creating a circular dependency?
 	T *http.Transport
 )
 
