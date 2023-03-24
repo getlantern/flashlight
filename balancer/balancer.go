@@ -43,6 +43,9 @@ var (
 // Dialer provides the ability to dial a proxy and obtain information needed to
 // effectively load balance between dialers.
 type Dialer interface {
+	// TODO: actually implement this
+	SupportsAddr(network, addr string) bool
+
 	// DialContext dials out to the given origin. failedUpstream indicates whether
 	// this was an upstream error (as opposed to errors connecting to the proxy).
 	DialContext(ctx context.Context, network, addr string) (conn net.Conn, failedUpstream bool, err error)
@@ -231,10 +234,10 @@ func (b *Balancer) ResetFromExisting() {
 // Dial dials (network, addr) using one of the currently active configured
 // Dialers. The dialer is chosen based on the following ordering:
 //
-// - succeeding dialers are preferred to failing
-// - dialers whose bandwidth is unknown are preferred to those whose bandwidth
-//   is known (in order to collect data)
-// - faster dialers (based on bandwidth / RTT) are preferred to slower ones
+//   - succeeding dialers are preferred to failing
+//   - dialers whose bandwidth is unknown are preferred to those whose bandwidth
+//     is known (in order to collect data)
+//   - faster dialers (based on bandwidth / RTT) are preferred to slower ones
 //
 // Only Trusted Dialers are used to dial HTTP hosts.
 //
