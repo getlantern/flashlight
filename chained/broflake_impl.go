@@ -3,7 +3,6 @@ package chained
 import (
 	"context"
 	"net"
-	"net/http"
 
 	"github.com/getlantern/broflake/clientcore"
 	"github.com/getlantern/common/config"
@@ -12,7 +11,7 @@ import (
 
 type broflakeImpl struct {
 	reportDialCore reportDialCoreFn // TODO: I don't know what this is for yet
-	t              *http.Transport
+	QUICLayer      *clientcore.QUICLayer
 	ui             *clientcore.UIImpl
 }
 
@@ -47,7 +46,7 @@ func newBroflakeImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (p
 
 	return &broflakeImpl{
 		reportDialCore: reportDialCore,
-		t:              clientcore.CreateHTTPTransport(ql),
+		QUICLayer:      ql,
 		ui:             ui,
 	}, nil
 }
@@ -57,7 +56,7 @@ func (b *broflakeImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, er
 
 	// TODO: it may or may not be necessary to wrap this dial in a CONNECT, a la the "Integrate
 	// Broflake Redux" PR...
-	return b.t.DialContext(ctx, "whatever", "whatever")
+	return b.QUICLayer.DialContext(ctx)
 }
 
 func (b *broflakeImpl) close() {
