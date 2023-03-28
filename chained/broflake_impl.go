@@ -44,6 +44,8 @@ func newBroflakeImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (p
 		return nil, err
 	}
 
+	ql.DialAndMaintainQUICConnection()
+
 	return &broflakeImpl{
 		reportDialCore: reportDialCore,
 		QUICLayer:      ql,
@@ -60,5 +62,6 @@ func (b *broflakeImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, er
 }
 
 func (b *broflakeImpl) close() {
+	b.QUICLayer.Close()
 	b.ui.Stop()
 }
