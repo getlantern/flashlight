@@ -24,6 +24,8 @@ func newBroflakeImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (p
 
 	// TODO: extract config settings from ProxyConfig and override wo fields as applicable
 	wo := clientcore.NewDefaultWebRTCOptions()
+	wo.DiscoverySrv = "https://bf-freddie.herokuapp.com"
+	wo.Endpoint = "/v1/signal"
 
 	// TODO: here we need to inject our custom STUNBatch function as applicable, where should that code live?
 
