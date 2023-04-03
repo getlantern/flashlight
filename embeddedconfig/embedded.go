@@ -36,5 +36,8 @@ var GlobalReplicaOptions = func() (fos replicaConfig.ReplicaOptionsRoot) {
 		panic(err)
 	}
 	err = globalConfig.UnmarshalFeatureOptions(g, globalConfig.FeatureReplica, &fos)
+	if err != nil {
+		panic(err)
+	}
 	return
 }()

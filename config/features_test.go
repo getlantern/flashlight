@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/getlantern/flashlight/embeddedconfig"
 	replicaConfig "github.com/getlantern/replica/config"
 	"strings"
 	"testing"
@@ -212,9 +213,7 @@ func TestOtelEnabled(t *testing.T) {
 }
 
 func requireGetReplicaOptionsRoot(t *testing.T) (fos replicaConfig.ReplicaOptionsRoot) {
-	g := globalFromTemplate(t)
-	require.NoError(t, g.UnmarshalFeatureOptions(FeatureReplica, &fos))
-	return
+	return embeddedconfig.GlobalReplicaOptions
 }
 
 func globalFromTemplate(t *testing.T) *Global {

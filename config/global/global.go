@@ -12,7 +12,7 @@ type Raw any
 
 func UnmarshalFeatureOptions(cfg Raw, feature string, opts FeatureOptions) error {
 	// It's possible to do this with recover and runtime type assertion checking, but we actually want to screen for nils too.
-	foAny, exists := cfg.(map[any]any)["FeatureOptions"]
+	foAny, exists := cfg.(map[any]any)["featureoptions"]
 	if !exists {
 		return ErrFeatureOptionAbsent
 	}

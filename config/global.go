@@ -1,12 +1,9 @@
 package config
 
 import (
-	"bytes"
 	"crypto/x509"
 	"errors"
 	"github.com/getlantern/flashlight/embeddedconfig"
-	"github.com/getlantern/yaml"
-	"text/template"
 	"time"
 
 	"github.com/getlantern/flashlight/browsers/simbrowser"
@@ -161,12 +158,6 @@ func (cfg *Global) validate() error {
 
 // Returns the global config in structured form, by executing the template without any data. This is useful for consuming parts of the config that aren't templatized.
 func GetEmbeddedGlobalSansTemplateData() (g *Global, err error) {
-	var w bytes.Buffer
-	err = template.Must(template.New("").Parse(embeddedconfig.GlobalTemplate)).Execute(&w, nil)
-	if err != nil {
-		return
-	}
-	g = new(Global)
-	err = yaml.Unmarshal(w.Bytes(), g)
+	err = embeddedconfig.ExecuteAndUnmarshalGlobal(nil, g)
 	return
 }
