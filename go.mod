@@ -126,8 +126,8 @@ require (
 	go.opentelemetry.io/otel/trace v1.11.1
 	go.uber.org/atomic v1.9.0
 	golang.org/x/mobile v0.0.0-20221110043201-43a038452099
-	golang.org/x/net v0.1.0
-	golang.org/x/sys v0.3.0
+	golang.org/x/net v0.7.0
+	golang.org/x/sys v0.5.0
 	google.golang.org/protobuf v1.28.1
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
@@ -137,6 +137,7 @@ require (
 	github.com/OperatorFoundation/Replicant-go/Replicant/v3 v3.0.14
 	github.com/getlantern/common v1.2.0
 	github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
+	github.com/getlantern/replica v0.13.0
 )
 
 require (
@@ -145,20 +146,32 @@ require (
 	github.com/OperatorFoundation/go-shadowsocks2 v1.1.12 // indirect
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/alecthomas/atomic v0.1.0-alpha2 // indirect
+	github.com/anacrolix/confluence v1.11.1-0.20220330234942-3c7a0c445dad // indirect
+	github.com/dsoprea/go-exif/v2 v2.0.0-20200604193436-ca8584a0e1c4 // indirect
+	github.com/dsoprea/go-logging v0.0.0-20200517223158-a10564966e9d // indirect
+	github.com/dsoprea/go-png-image-structure v0.0.0-20200615034826-4cfc78940228 // indirect
+	github.com/dsoprea/go-utility v0.0.0-20200512094054-1abbbc781176 // indirect
+	github.com/getlantern/meta-scrubber v0.0.1 // indirect
 	github.com/getlantern/ratelimit v0.0.0-20220926192648-933ab81a6fc7 // indirect
+	github.com/go-errors/errors v1.4.2 // indirect
+	github.com/golang/geo v0.0.0-20200319012246-673a6f80352d // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/pprof v0.0.0-20220608213341-c488b8fa1db3 // indirect
+	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/marten-seemann/qtls-go1-19 v0.1.1 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
 	github.com/onsi/ginkgo/v2 v2.2.0 // indirect
+	github.com/pion/transport/v2 v2.0.0 // indirect
+	github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46 // indirect
 	golang.org/x/exp v0.0.0-20220823124025-807a23277127 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 require (
 	crawshaw.io/sqlite v0.3.3-0.20220618202545-d1964889ea3c // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1.0.20210721174708-390f27c3be20 // indirect
 	github.com/OperatorFoundation/Starbridge-go/Starbridge/v3 v3.0.12
-	github.com/RoaringBitmap/roaring v1.2.1 // indirect
+	github.com/RoaringBitmap/roaring v1.2.3 // indirect
 	github.com/Yawning/chacha20 v0.0.0-20170904085104-e3b1f968fc63 // indirect
 	github.com/ajwerner/btree v0.0.0-20211221152037-f427b3e689c0 // indirect
 	github.com/anacrolix/chansync v0.3.0 // indirect
@@ -173,7 +186,7 @@ require (
 	github.com/anacrolix/squirrel v0.4.1-0.20220122230132-14b040773bac // indirect
 	github.com/anacrolix/stm v0.4.0 // indirect
 	github.com/anacrolix/sync v0.4.0 // indirect
-	github.com/anacrolix/torrent v1.48.1-0.20230103142631-c20f73d53e9f // indirect
+	github.com/anacrolix/torrent v1.48.1-0.20230301031729-c069849b4040 // indirect
 	github.com/anacrolix/upnp v0.1.3-0.20220123035249-922794e51c96 // indirect
 	github.com/anacrolix/utp v0.1.0 // indirect
 	github.com/andybalholm/cascadia v1.1.0 // indirect
@@ -261,7 +274,7 @@ require (
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
 	github.com/pierrec/lz4/v4 v4.1.12 // indirect
 	github.com/pion/datachannel v1.5.2 // indirect
-	github.com/pion/dtls/v2 v2.1.5 // indirect
+	github.com/pion/dtls/v2 v2.2.4 // indirect
 	github.com/pion/ice/v2 v2.2.7 // indirect
 	github.com/pion/interceptor v0.1.12 // indirect
 	github.com/pion/logging v0.2.2 // indirect
@@ -275,7 +288,7 @@ require (
 	github.com/pion/stun v0.3.5 // indirect
 	github.com/pion/transport v0.13.1 // indirect
 	github.com/pion/turn/v2 v2.0.8 // indirect
-	github.com/pion/udp v0.1.1 // indirect
+	github.com/pion/udp v0.1.4 // indirect
 	github.com/pion/webrtc/v3 v3.1.43 // indirect
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -305,10 +318,10 @@ require (
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/crypto v0.1.0 // indirect
+	golang.org/x/crypto v0.5.0 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/time v0.0.0-20220922220347-f3bd1da661af // indirect
 	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

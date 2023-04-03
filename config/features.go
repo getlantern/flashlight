@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	globalConfig "github.com/getlantern/flashlight/config/global"
 	"math/rand"
 	"reflect"
 	"regexp"
@@ -23,7 +24,7 @@ const (
 	FeatureShortcut             = "shortcut"
 	FeatureDetour               = "detour"
 	FeatureNoHTTPSEverywhere    = "nohttpseverywhere"
-	FeatureReplica              = "replica"
+	FeatureReplica              = globalConfig.FeatureReplica
 	FeatureProxyWhitelistedOnly = "proxywhitelistedonly"
 	FeatureTrackYouTube         = "trackyoutube"
 	FeatureGoogleSearchAds      = "googlesearchads"
@@ -41,14 +42,11 @@ var (
 	// to have stable calculation of fraction until the client restarts.
 	randomFloat = rand.Float64()
 
-	errAbsentOption    = errors.New("option is absent")
+	errAbsentOption    = globalConfig.ErrFeatureOptionAbsent
 	errMalformedOption = errors.New("malformed option")
 )
 
-// FeatureOptions is an interface implemented by all feature options
-type FeatureOptions interface {
-	FromMap(map[string]interface{}) error
-}
+type FeatureOptions = globalConfig.FeatureOptions
 
 type P2PFreePeerOptions struct {
 	RegistrarEndpoint string   `mapstructure:"registrar_endpoint"`

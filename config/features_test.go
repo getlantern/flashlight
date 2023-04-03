@@ -1,11 +1,10 @@
 package config
 
 import (
-	"bytes"
 	"fmt"
+	replicaConfig "github.com/getlantern/replica/config"
 	"strings"
 	"testing"
-	"text/template"
 	"time"
 
 	"github.com/stretchr/testify/assert"
@@ -14,7 +13,6 @@ import (
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/embeddedconfig"
 )
 
 func TestValidate(t *testing.T) {
@@ -151,6 +149,20 @@ func TestShortcut(t *testing.T) {
 	}
 }
 
+func TestReplicaByCountry(t *testing.T) {
+	assert := assert.New(t)
+	fos := requireGetReplicaOptionsRoot(t)
+	assert.Contains(fos.ByCountry, "RU")
+	assert.NotContains(fos.ByCountry, "AU")
+	assert.NotEmpty(fos.ByCountry)
+	globalTrackers := fos.Trackers
+	assert.NotEmpty(globalTrackers)
+	// Check the countries pull in the trackers using the anchor. Just change this if they stop
+	// using the same trackers. I really don't want this to break out the gate is all.
+	assert.NotEmpty(fos.ByCountry["RU"].Trackers)
+	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
+}
+
 func TestP2PEnabledAndFeatures(t *testing.T) {
 	// TODO <04-07-2022, soltzen> This part of the test, along with most other
 	// "enabled" tests in this file, are really weak: they mainly test isolated
@@ -199,11 +211,14 @@ func TestOtelEnabled(t *testing.T) {
 	assert.True(t, gl.FeatureEnabled(FeatureOtel, "android", common.DefaultAppName, "7.0.0", 500, false, "ae"), "Otel is enabled for high user in UAE")
 }
 
+func requireGetReplicaOptionsRoot(t *testing.T) (fos replicaConfig.ReplicaOptionsRoot) {
+	g := globalFromTemplate(t)
+	require.NoError(t, g.UnmarshalFeatureOptions(FeatureReplica, &fos))
+	return
+}
+
 func globalFromTemplate(t *testing.T) *Global {
-	var w bytes.Buffer
-	// We could write into a pipe, but that requires concurrency and we're old-school in tests.
-	require.NoError(t, template.Must(template.New("").Parse(embeddedconfig.GlobalTemplate)).Execute(&w, nil))
-	g := &Global{}
-	require.NoError(t, yaml.Unmarshal(w.Bytes(), g))
+	g, err := GetEmbeddedGlobalSansTemplateData()
+	require.NoError(t, err)
 	return g
 }
