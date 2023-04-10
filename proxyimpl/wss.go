@@ -1,4 +1,4 @@
-package chained
+package proxyimpl
 
 import (
 	"context"
@@ -17,12 +17,12 @@ import (
 )
 
 type wssImpl struct {
-	reportDialCore reportDialCoreFn
+	reportDialCore ReportDialCoreFn
 	addr           string
 	dialer         tinywss.Client
 }
 
-func newWSSImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newWSSImpl(addr string, pc *config.ProxyConfig, reportDialCore ReportDialCoreFn) (ProxyImpl, error) {
 	var rt tinywss.RoundTripHijacker
 	var err error
 
@@ -57,12 +57,12 @@ func newWSSImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDialCo
 	return &wssImpl{reportDialCore, addr, client}, nil
 }
 
-func (impl *wssImpl) close() {
+func (impl *wssImpl) Close() {
 	log.Debug("Closing wss session: Proxy closed.")
 	impl.dialer.Close()
 }
 
-func (impl *wssImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (impl *wssImpl) DialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return impl.reportDialCore(op, func() (net.Conn, error) {
 		return impl.dialer.DialContext(ctx)
 	})
@@ -72,7 +72,7 @@ func wssHTTPRoundTripper(s *config.ProxyConfig) (tinywss.RoundTripHijacker, erro
 	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
 		log.Debugf("tinywss HTTP Roundtripper dialing %v", addr)
 		// the configured proxy address is always contacted
-		return netx.DialTimeout(network, addr, chainedDialTimeout)
+		return netx.DialTimeout(network, addr, ChainedDialTimeout)
 	}), nil
 }
 
@@ -119,7 +119,7 @@ func wssHTTPSRoundTripper(pc *config.ProxyConfig) (tinywss.RoundTripHijacker, er
 			ForceValidateName: forceValidateName,
 			Config:            tlsConf,
 			ClientHelloID:     helloID,
-			Timeout:           chainedDialTimeout,
+			Timeout:           ChainedDialTimeout,
 		}
 		// the configured proxy address is always contacted.
 		return td.Dial(network, addr)

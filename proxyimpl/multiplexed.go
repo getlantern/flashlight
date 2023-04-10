@@ -1,4 +1,4 @@
-package chained
+package proxyimpl
 
 import (
 	"context"
@@ -19,11 +19,11 @@ const (
 )
 
 type multiplexedImpl struct {
-	proxyImpl
+	ProxyImpl
 	multiplexedDial cmux.DialFN
 }
 
-func multiplexed(wrapped proxyImpl, name string, s *config.ProxyConfig) (proxyImpl, error) {
+func multiplexed(wrapped ProxyImpl, name string, s *config.ProxyConfig) (ProxyImpl, error) {
 	log.Debugf("Enabling multiplexing for %v", name)
 	poolSize := s.MultiplexedPhysicalConns
 	if poolSize < 1 {
@@ -38,7 +38,7 @@ func multiplexed(wrapped proxyImpl, name string, s *config.ProxyConfig) (proxyIm
 		Dial: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			op := ops.Begin("dial_multiplexed")
 			defer op.End()
-			return wrapped.dialServer(op, ctx)
+			return wrapped.DialServer(op, ctx)
 		},
 		PoolSize: int(poolSize),
 		Protocol: proto,
@@ -46,7 +46,7 @@ func multiplexed(wrapped proxyImpl, name string, s *config.ProxyConfig) (proxyIm
 	return &multiplexedImpl{wrapped, multiplexedDial}, nil
 }
 
-func (impl *multiplexedImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (impl *multiplexedImpl) DialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return impl.multiplexedDial(ctx, "", "")
 }
 

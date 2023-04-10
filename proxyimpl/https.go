@@ -1,13 +1,13 @@
-package chained
+package proxyimpl
 
 import (
 	"bytes"
 	"context"
 	"crypto/x509"
 	"encoding/pem"
-	"io"
-	"os"
-	"runtime"
+	"net"
+	"sync"
+	"time"
 
 	tls "github.com/refraction-networking/utls"
 
@@ -16,8 +16,97 @@ import (
 	"github.com/getlantern/flashlight/browsers/simbrowser"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/hellosplitter"
+	"github.com/getlantern/tlsdialer/v3"
 	"github.com/getlantern/tlsresumption"
 )
+
+type httpsImpl struct {
+	common.NopCloser
+	dialCore                coreDialer
+	addr                    string
+	tlsConfig               *tls.Config
+	roller                  *helloRoller
+	tlsClientHelloSplitting bool
+	sync.Mutex
+}
+
+func newHTTPSImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig, dialCore coreDialer) (ProxyImpl, error) {
+	const timeout = 5 * time.Second
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	tlsConfig, hellos, err := tlsConfigForProxy(ctx, configDir, name, pc, uc)
+	if err != nil {
+		return nil, log.Error(errors.Wrap(err).With("addr", addr))
+	}
+	if len(hellos) == 0 {
+		return nil, log.Error(errors.New("expected at least one hello"))
+	}
+	return &httpsImpl{
+		dialCore:                dialCore,
+		addr:                    addr,
+		tlsConfig:               tlsConfig,
+		roller:                  &helloRoller{hellos: hellos},
+		tlsClientHelloSplitting: pc.TLSClientHelloSplitting,
+	}, nil
+}
+
+func (impl *httpsImpl) DialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+	r := impl.roller.getCopy()
+	defer impl.roller.updateTo(r)
+
+	currentHello := r.current()
+	helloID, helloSpec, err := currentHello.utlsSpec()
+	if err != nil {
+		log.Debugf("failed to generate valid utls hello spec; advancing roller: %v", err)
+		r.advance()
+		return nil, errors.New("failed to generate valid utls hello spec: %v", err)
+	}
+	d := tlsdialer.Dialer{
+		DoDial: func(network, addr string, timeout time.Duration) (net.Conn, error) {
+			tcpConn, err := impl.dialCore(op, ctx, impl.addr)
+			if err != nil {
+				return nil, err
+			}
+			if impl.tlsClientHelloSplitting {
+				tcpConn = hellosplitter.Wrap(tcpConn, splitClientHello)
+			}
+
+			// Run the post-layer 4 dial function if specified
+			// if onPostLayer4Dial != nil {
+			// 	tcpConn, err = onPostLayer4Dial(tcpConn.(*net.TCPConn))
+			// 	if err != nil {
+			// 		return nil, fmt.Errorf("onPostLayer4Dial failed: %v", err)
+			// 	}
+			// }
+			return tcpConn, err
+		},
+		Timeout:         timeoutFor(ctx),
+		SendServerName:  impl.tlsConfig.ServerName != "",
+		Config:          impl.tlsConfig.Clone(),
+		ClientHelloID:   helloID,
+		ClientHelloSpec: helloSpec,
+	}
+	result, err := d.DialForTimings("tcp", impl.addr)
+	if err != nil {
+		if isHelloErr(err) {
+			log.Debugf("got error likely related to bad hello; advancing roller: %v", err)
+			r.advance()
+		}
+		return nil, err
+	}
+	return result.Conn, nil
+}
+
+func timeoutFor(ctx context.Context) time.Duration {
+	deadline, ok := ctx.Deadline()
+	if ok {
+		return deadline.Sub(time.Now())
+	}
+	return ChainedDialTimeout
+}
 
 // Generates TLS configuration for connecting to proxy specified by the config.ProxyConfig. This
 // function may block while determining things like how to mimic the default browser's client hello.
@@ -120,50 +209,4 @@ func tlsConfigForProxy(ctx context.Context, configDir, proxyName string, pc *con
 	}
 
 	return cfg, hellos, nil
-}
-
-// getBrowserHello determines the best way to mimic the system's default web browser. There are a
-// few possible failure points in making this determination, e.g. a failure to obtain the default
-// browser or a failure to capture a hello from the browser. However, this function will always find
-// something reasonable to fall back on.
-func getBrowserHello(ctx context.Context, configDir string, uc common.UserConfig) helloSpec {
-	// We have a number of ways to approximate the browser's ClientHello format. We begin with the
-	// most desirable, progressively falling back to less desirable options on failure.
-
-	op := ops.Begin("get_browser_hello")
-	op.Set("platform", runtime.GOOS)
-	defer op.End()
-
-	hello, err := activelyObtainBrowserHello(ctx, configDir)
-	if err == nil {
-		return *hello
-	}
-	op.FailIf(err)
-	log.Debugf("failed to actively obtain browser hello: %v", err)
-
-	// Our last option is to simulate a browser choice for the user based on market share.
-	return helloSpec{simbrowser.ChooseForUser(ctx, uc).ClientHelloID, nil}
-}
-
-func orderedCipherSuitesFromConfig(pc *config.ProxyConfig) []uint16 {
-	if common.Platform == "android" {
-		return mobileOrderedCipherSuites(pc)
-	}
-	return desktopOrderedCipherSuites(pc)
-}
-
-// Write the session keys to file if SSLKEYLOGFILE is set, same as browsers.
-func getTLSKeyLogWriter() io.Writer {
-	createKeyLogWriterOnce.Do(func() {
-		path := os.Getenv("SSLKEYLOGFILE")
-		if path == "" {
-			return
-		}
-		var err error
-		tlsKeyLogWriter, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0600)
-		if err != nil {
-			log.Debugf("Error creating keylog file at %v: %s", path, err)
-		}
-	})
-	return tlsKeyLogWriter
 }

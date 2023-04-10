@@ -17,6 +17,7 @@ import (
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/proxyimpl"
 	"github.com/getlantern/golog"
 )
 
@@ -42,15 +43,6 @@ func newTestUserConfig() *common.UserConfigData {
 	return common.NewUserConfigData(common.DefaultAppName, "device", 1234, "protoken", nil, "en-US")
 }
 
-type testImpl struct {
-	nopCloser
-	d func(ctx context.Context) (net.Conn, error)
-}
-
-func (impl *testImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
-	return impl.d(ctx)
-}
-
 func newDialer(dialServer func(ctx context.Context) (net.Conn, error)) (func(network, addr string) (net.Conn, error), error) {
 	p, err := newProxy("test", "addr:567", "proto", "netw", &config.ProxyConfig{
 		AuthToken: "token",
@@ -64,7 +56,7 @@ func newDialer(dialServer func(ctx context.Context) (net.Conn, error)) (func(net
 	if err != nil {
 		return nil, err
 	}
-	p.impl = &testImpl{d: dialServer}
+	p.impl = &proxyimpl.TestImpl{DialServerFunc: dialServer}
 	return p.dial, nil
 }
 
@@ -160,7 +152,7 @@ func TestBadAddressToServer(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	p.impl = &testImpl{d: func(ctx context.Context) (net.Conn, error) {
+	p.impl = &proxyimpl.TestImpl{DialServerFunc: func(ctx context.Context) (net.Conn, error) {
 		return nil, fmt.Errorf("fail intentionally")
 	}}
 	l := startServer(t)
@@ -277,15 +269,8 @@ func test(t *testing.T, dialer func(network, addr string) (net.Conn, error)) {
 }
 
 func (p *proxy) dial(network, addr string) (net.Conn, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), chainedDialTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), proxyimpl.ChainedDialTimeout)
 	defer cancel()
 	conn, _, err := p.DialContext(ctx, network, addr)
 	return conn, err
-}
-
-func TestCiphersFromNames(t *testing.T) {
-	assert.Nil(t, ciphersFromNames(nil))
-	assert.Nil(t, ciphersFromNames([]string{}))
-	assert.Nil(t, ciphersFromNames([]string{"UNKNOWN"}))
-	assert.EqualValues(t, []uint16{0x0035, 0x003c}, ciphersFromNames([]string{"TLS_RSA_WITH_AES_256_CBC_SHA", "UNKNOWN", "TLS_RSA_WITH_AES_128_CBC_SHA256"}))
 }

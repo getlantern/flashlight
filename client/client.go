@@ -43,6 +43,7 @@ import (
 	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/proxyimpl"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/status"
 )
@@ -223,7 +224,7 @@ func NewClient(
 		DNSResolutionMapForDirectDialsEventual: eventual.NewValue(),
 	}
 
-	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
+	keepAliveIdleTimeout := proxyimpl.IdleTimeout - 5*time.Second
 
 	var mitmErr error
 	client.proxy, mitmErr = proxy.New(&proxy.Opts{
@@ -482,7 +483,7 @@ func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []
 		log.Error(err)
 		return nil
 	}
-	chained.PersistSessionStates(client.configDir)
+	proxyimpl.PersistSessionStates(client.configDir)
 	chained.TrackStatsFor(dialers, client.configDir, client.allowProbes())
 	return dialers
 }
@@ -832,7 +833,7 @@ func (client *Client) initBalancer(proxies map[string]*commonconfig.ProxyConfig)
 		return nil, fmt.Errorf("No chained servers configured, not initializing balancer")
 	}
 
-	chained.PersistSessionStates(client.configDir)
+	proxyimpl.PersistSessionStates(client.configDir)
 	dialers := chained.CreateDialers(client.configDir, proxies, client.user)
 	client.bal.Reset(dialers)
 

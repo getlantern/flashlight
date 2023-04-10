@@ -1,4 +1,4 @@
-package chained
+package proxyimpl
 
 import (
 	"context"
@@ -25,14 +25,14 @@ import (
 )
 
 type tlsMasqImpl struct {
-	nopCloser
-	reportDialCore          reportDialCoreFn
+	common.NopCloser
+	reportDialCore          ReportDialCoreFn
 	addr                    string
 	cfg                     tlsmasq.DialerConfig
 	tlsClientHelloSplitting bool
 }
 
-func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig, reportDialCore ReportDialCoreFn) (ProxyImpl, error) {
 	const timeout = 5 * time.Second
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -132,7 +132,7 @@ func cipherSuites(cipherSuites, name string) ([]uint16, error) {
 	return suites, nil
 }
 
-func (impl *tlsMasqImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (impl *tlsMasqImpl) DialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	tcpConn, err := impl.reportDialCore(op, func() (net.Conn, error) {
 		return netx.DialContext(ctx, "tcp", impl.addr)
 	})

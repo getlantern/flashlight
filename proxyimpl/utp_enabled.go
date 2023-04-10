@@ -1,6 +1,6 @@
 //go:build !android && !ios && !linux
 
-package chained
+package proxyimpl
 
 import (
 	"context"

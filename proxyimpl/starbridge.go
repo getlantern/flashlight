@@ -1,4 +1,4 @@
-package chained
+package proxyimpl
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/netx"
 )
@@ -32,13 +33,13 @@ import (
 const fakeListenAddr = "1.2.3.4:5678"
 
 type starbridge struct {
-	nopCloser
+	common.NopCloser
 	addr           string
 	config         replicant.ClientConfig
-	reportDialCore reportDialCoreFn
+	reportDialCore ReportDialCoreFn
 }
 
-func (impl *starbridge) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (impl *starbridge) DialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	tcpConn, err := impl.reportDialCore(op, func() (net.Conn, error) {
 		return netx.DialContext(ctx, "tcp", impl.addr)
 	})
@@ -53,7 +54,7 @@ func (impl *starbridge) dialServer(op *ops.Op, ctx context.Context) (net.Conn, e
 	return conn, nil
 }
 
-func newStarbridgeImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newStarbridgeImpl(name, addr string, pc *config.ProxyConfig, reportDialCore ReportDialCoreFn) (ProxyImpl, error) {
 	if ptSetting(pc, "starbridge_public_key") == "" {
 		return nil, errors.New("no public key")
 	}

@@ -42,6 +42,7 @@ import (
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/proxyimpl"
 )
 
 var (
@@ -49,7 +50,7 @@ var (
 )
 
 func main() {
-	chained.IdleTimeout = 2 * time.Second
+	proxyimpl.IdleTimeout = 2 * time.Second
 	chained.PerformanceProbes = 1
 	chained.BasePerformanceProbeKB = 100
 
@@ -84,7 +85,7 @@ func main() {
 			return
 		}
 
-		sleepTime := time.Duration(float64(chained.IdleTimeout) * 3 * rand.Float64())
+		sleepTime := time.Duration(float64(proxyimpl.IdleTimeout) * 3 * rand.Float64())
 		log.Debugf("Sleeping %v", sleepTime)
 		time.Sleep(sleepTime)
 	}

@@ -24,16 +24,6 @@ func init() {
 	}()
 }
 
-func overheadDialer(app bool, dial func(network, addr string, timeout time.Duration) (net.Conn, error)) func(network, addr string, timeout time.Duration) (net.Conn, error) {
-	return func(network, addr string, timeout time.Duration) (net.Conn, error) {
-		return dialOverhead(network, addr, timeout, app, dial)
-	}
-}
-
-func dialOverhead(network, addr string, timeout time.Duration, app bool, dial func(network, addr string, timeout time.Duration) (net.Conn, error)) (net.Conn, error) {
-	return overheadWrapper(app)(dial(network, addr, timeout))
-}
-
 func overheadWrapper(app bool) func(net.Conn, error) (net.Conn, error) {
 	return func(conn net.Conn, err error) (net.Conn, error) {
 		if conn == nil || err != nil {

@@ -1,4 +1,4 @@
-package chained
+package proxyimpl
 
 import (
 	"context"
@@ -14,12 +14,12 @@ import (
 )
 
 type quicImpl struct {
-	reportDialCore reportDialCoreFn
+	reportDialCore ReportDialCoreFn
 	addr           string
 	dialer         *quicwrapper.Client
 }
 
-func newQUICImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newQUICImpl(name, addr string, pc *config.ProxyConfig, reportDialCore ReportDialCoreFn) (ProxyImpl, error) {
 	tlsConf := &gtls.Config{
 		ServerName:         pc.TLSServerNameIndicator,
 		InsecureSkipVerify: true,
@@ -27,7 +27,7 @@ func newQUICImpl(name, addr string, pc *config.ProxyConfig, reportDialCore repor
 	}
 
 	disablePathMTUDiscovery := true
-	if ptSettingBool(pc, "path_mtu_discovery") == true {
+	if ptSettingBool(pc, "path_mtu_discovery") {
 		disablePathMTUDiscovery = false
 	}
 
@@ -55,12 +55,12 @@ func newQUICImpl(name, addr string, pc *config.ProxyConfig, reportDialCore repor
 	return &quicImpl{reportDialCore, addr, dialer}, nil
 }
 
-func (impl *quicImpl) close() {
+func (impl *quicImpl) Close() {
 	log.Debug("Closing quic session: Proxy closed.")
 	impl.dialer.Close()
 }
 
-func (impl *quicImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (impl *quicImpl) DialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return impl.reportDialCore(op, func() (net.Conn, error) {
 		conn, err := impl.dialer.DialContext(ctx)
 		if err != nil {

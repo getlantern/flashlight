@@ -1,6 +1,6 @@
 //go:build !ios
 
-package chained
+package proxyimpl
 
 import (
 	"bytes"

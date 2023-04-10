@@ -1,6 +1,6 @@
 //go:build !ios
 
-package chained
+package proxyimpl
 
 import (
 	"context"
@@ -15,8 +15,6 @@ import (
 const helloCacheFilename = "hello-cache.active-capture"
 
 func activelyObtainBrowserHello(ctx context.Context, configDir string) (*helloSpec, error) {
-	const tlsRecordHeaderLen = 5
-
 	helloCacheFile := filepath.Join(configDir, helloCacheFilename)
 	sample, err := ioutil.ReadFile(helloCacheFile)
 	if err == nil {

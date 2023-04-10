@@ -25,22 +25,10 @@ import (
 	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
-)
-
-const (
-	minCheckInterval      = 10 * time.Second
-	maxCheckInterval      = 15 * time.Minute
-	dialCoreCheckInterval = 30 * time.Second
+	"github.com/getlantern/flashlight/proxyimpl"
 )
 
 var (
-	// IdleTimeout closes connections idle for a period to avoid dangling
-	// connections. Web applications tend to contact servers in 1 minute
-	// interval or below. 65 seconds is long enough to avoid interrupt normal
-	// connections but shorter than the idle timeout on the server to avoid
-	// running into closed connection problems.
-	IdleTimeout = 65 * time.Second
-
 	// errUpstream is an error that indicates there was a problem upstream of a
 	// proxy. Such errors are not counted as failures but do allow failover to
 	// other proxies.
@@ -51,7 +39,7 @@ func (p *proxy) Stop() {
 	log.Tracef("Stopping dialer %s", p.Label())
 	p.closeOnce.Do(func() {
 		close(p.closeCh)
-		p.impl.close()
+		p.impl.Close()
 	})
 }
 
@@ -111,11 +99,15 @@ func (p *proxy) WriteStats(w io.Writer) {
 		estRTT*1000, estBandwidth,
 		humanize.Bytes(p.DataSent()), humanize.Bytes(p.DataRecv()),
 		probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs)
-	if impl, ok := p.impl.(*multipathImpl); ok {
+	if impl, ok := p.impl.(*proxyimpl.MultipathImpl); ok {
 		for _, line := range impl.FormatStats() {
 			_, _ = fmt.Fprintf(w, "\t%s\n", line)
 		}
 	}
+}
+
+func (p *proxy) Implementation() proxyimpl.ProxyImpl {
+	return p.impl
 }
 
 // DialContext dials using provided context
@@ -164,7 +156,6 @@ func (p *proxy) MarkFailure() {
 	atomic.StoreInt64(&p.consecSuccesses, 0)
 	newCF := atomic.AddInt64(&p.consecFailures, 1)
 	log.Tracef("Dialer %s consecutive failures: %d -> %d", p.Label(), newCF-1, newCF)
-	return
 }
 
 // defaultDialOrigin implements the method from serverConn. With standard proxies, this
@@ -172,7 +163,7 @@ func (p *proxy) MarkFailure() {
 // persistent connection to the upstream proxy.
 func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
 	conn, err := p.reportedDial(func(op *ops.Op) (net.Conn, error) {
-		return p.impl.dialServer(op, ctx)
+		return p.impl.DialServer(op, ctx)
 	})
 	if err != nil {
 		log.Debugf("Unable to dial server %v: %s", p.Label(), err)

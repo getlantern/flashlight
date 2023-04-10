@@ -1,4 +1,4 @@
-package chained
+package proxyimpl
 
 import (
 	"context"
@@ -18,6 +18,7 @@ import (
 	"github.com/getlantern/errors"
 
 	"github.com/getlantern/flashlight/chained/prefixgen"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 )
 
@@ -26,14 +27,15 @@ const (
 )
 
 type shadowsocksImpl struct {
-	reportDialCore reportDialCoreFn
+	common.NopCloser
+	reportDialCore ReportDialCoreFn
 	client         client.Client
 	upstream       string
 	rng            *mrand.Rand
 	rngmx          sync.Mutex
 }
 
-func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCore ReportDialCoreFn) (ProxyImpl, error) {
 	secret := ptSetting(pc, "shadowsocks_secret")
 	cipher := ptSetting(pc, "shadowsocks_cipher")
 	upstream := ptSetting(pc, "shadowsocks_upstream")
@@ -62,8 +64,12 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 		if err != nil {
 			log.Errorf("failed to parse shadowsocks prefix generator from %v for proxy %v: %v", prefixGen, name, err)
 		} else {
-			prefixFunc := func() ([]byte, error) { return gen(), nil }
-			cl.SetTCPSaltGenerator(client.NewPrefixSaltGenerator(prefixFunc))
+			cl.SetTCPSaltGenerator(
+				client.NewPrefixSaltGenerator(
+					func() ([]byte, error) {
+						return gen(), nil
+					},
+				))
 		}
 	}
 
@@ -83,10 +89,7 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 	}, nil
 }
 
-func (impl *shadowsocksImpl) close() {
-}
-
-func (impl *shadowsocksImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (impl *shadowsocksImpl) DialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return impl.reportDialCore(op, func() (net.Conn, error) {
 		conn, err := impl.client.DialTCP(nil, impl.generateUpstream())
 		if err != nil {

@@ -1,4 +1,4 @@
-package chained
+package proxyimpl
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/buffers"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/lampshade"
@@ -18,15 +19,15 @@ import (
 )
 
 type lampshadeImpl struct {
-	nopCloser
-	reportDialCore reportDialCoreFn
+	common.NopCloser
+	reportDialCore ReportDialCoreFn
 	name           string
 	addr           string
 	dialer         lampshade.Dialer
 	setOp          func(op *ops.Op)
 }
 
-func newLampshadeImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newLampshadeImpl(name, addr string, pc *config.ProxyConfig, reportDialCore ReportDialCoreFn) (ProxyImpl, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(pc.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", addr))
@@ -92,7 +93,7 @@ func newLampshadeImpl(name, addr string, pc *config.ProxyConfig, reportDialCore 
 	return &lampshadeImpl{reportDialCore: reportDialCore, name: name, addr: addr, dialer: dialer, setOp: setOp}, nil
 }
 
-func (impl *lampshadeImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (impl *lampshadeImpl) DialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	impl.setOp(op)
 	return impl.dialer.DialContext(ctx, func() (net.Conn, error) {
 		// note - we do not wrap the TCP connection with IdleTiming because

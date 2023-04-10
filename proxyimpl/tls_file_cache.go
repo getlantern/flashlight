@@ -1,4 +1,4 @@
-package chained
+package proxyimpl
 
 import (
 	"bytes"

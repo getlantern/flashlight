@@ -1,4 +1,4 @@
-package chained
+package proxyimpl
 
 import (
 	"context"
@@ -21,7 +21,7 @@ func (pc *preconnectedConn) expired() bool {
 }
 
 type preconnectingDialer struct {
-	wrapped       proxyImpl
+	wrapped       ProxyImpl
 	log           golog.Logger
 	maxPreconnect int
 	expiration    time.Duration
@@ -32,7 +32,7 @@ type preconnectingDialer struct {
 	closeCh       chan bool
 }
 
-func newPreconnectingDialer(name string, maxPreconnect int, expiration time.Duration, wrapped proxyImpl) *preconnectingDialer {
+func newPreconnectingDialer(name string, maxPreconnect int, expiration time.Duration, wrapped ProxyImpl) *preconnectingDialer {
 	pd := &preconnectingDialer{
 		wrapped:       wrapped,
 		log:           golog.LoggerFor(fmt.Sprintf("chained.preconnect.%v", name)),
@@ -46,7 +46,7 @@ func newPreconnectingDialer(name string, maxPreconnect int, expiration time.Dura
 	return pd
 }
 
-func (pd *preconnectingDialer) dialServer(op *ops.Op, ctx context.Context) (conn net.Conn, err error) {
+func (pd *preconnectingDialer) DialServer(op *ops.Op, ctx context.Context) (conn net.Conn, err error) {
 	// Whenever we dial successfully, warm up the pool by preconnecting
 	defer func() {
 		if err == nil {
@@ -67,7 +67,7 @@ func (pd *preconnectingDialer) dialServer(op *ops.Op, ctx context.Context) (conn
 			pd.log.Tracef("preconnection expired before use")
 		default:
 			pd.log.Tracef("dialing on demand")
-			conn, err = pd.wrapped.dialServer(op, ctx)
+			conn, err = pd.wrapped.DialServer(op, ctx)
 			return
 		}
 	}
@@ -95,11 +95,11 @@ func (pd *preconnectingDialer) preconnectIfNecessary(op *ops.Op) {
 }
 
 func (pd *preconnectingDialer) preconnect(op *ops.Op) {
-	ctx, cancel := context.WithTimeout(context.Background(), chainedDialTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), ChainedDialTimeout)
 	defer cancel()
 
 	expiration := time.Now().Add(pd.expiration)
-	conn, err := pd.wrapped.dialServer(op, ctx)
+	conn, err := pd.wrapped.DialServer(op, ctx)
 	if err != nil {
 		pd.log.Errorf("error preconnecting: %v", err)
 		pd.decrementPreconnecting()
@@ -108,12 +108,6 @@ func (pd *preconnectingDialer) preconnect(op *ops.Op) {
 	pd.preconnectingSucceeded()
 	pd.pool <- &preconnectedConn{conn, expiration}
 	pd.log.Trace("preconnected")
-}
-
-func (pd *preconnectingDialer) numPreconnecting() int {
-	pd.statsMutex.RLock()
-	defer pd.statsMutex.RUnlock()
-	return pd.preconnecting
 }
 
 func (pd *preconnectingDialer) numPreconnected() int {
@@ -151,13 +145,13 @@ func (pd *preconnectingDialer) closeWhenNecessary() {
 		case pconn := <-pd.pool:
 			pd.log.Trace("closing preconnection")
 			pconn.Conn.Close()
-		case <-time.After(chainedDialTimeout * 2):
+		case <-time.After(ChainedDialTimeout * 2):
 			pd.log.Trace("waited twice the chained dial timeout, no more preconnections to close")
 			return
 		}
 	}
 }
 
-func (pd *preconnectingDialer) close() {
+func (pd *preconnectingDialer) Close() {
 	close(pd.closeCh)
 }
