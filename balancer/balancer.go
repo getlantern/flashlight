@@ -16,6 +16,7 @@ import (
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/proxyimpl"
 	"github.com/getlantern/golog"
 )
 
@@ -129,6 +130,8 @@ type Dialer interface {
 	Stop()
 
 	WriteStats(w io.Writer)
+
+	Implementation() proxyimpl.ProxyImpl
 }
 
 type dialStats struct {
@@ -231,10 +234,10 @@ func (b *Balancer) ResetFromExisting() {
 // Dial dials (network, addr) using one of the currently active configured
 // Dialers. The dialer is chosen based on the following ordering:
 //
-// - succeeding dialers are preferred to failing
-// - dialers whose bandwidth is unknown are preferred to those whose bandwidth
-//   is known (in order to collect data)
-// - faster dialers (based on bandwidth / RTT) are preferred to slower ones
+//   - succeeding dialers are preferred to failing
+//   - dialers whose bandwidth is unknown are preferred to those whose bandwidth
+//     is known (in order to collect data)
+//   - faster dialers (based on bandwidth / RTT) are preferred to slower ones
 //
 // Only Trusted Dialers are used to dial HTTP hosts.
 //
