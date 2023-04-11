@@ -2,6 +2,7 @@ package chained
 
 import (
 	"context"
+	"math/rand"
 	"net"
 	"time"
 
@@ -70,7 +71,21 @@ func newBroflakeImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (p
 		wo.Tag = tag
 	}
 
-	// TODO: here we need to inject our custom STUNBatch function as applicable, where should that code live?
+	if STUNBatchSize := ptSettingInt(pc, "broflake_stunbatchsize"); STUNBatchSize != 0 {
+		wo.STUNBatchSize = uint32(STUNBatchSize)
+	}
+
+	// XXX: STUN servers are handled in a subtly different way than the rest of our settings overrides,
+	// because they're a nonscalar quantity passed via a different top level field in the ProxyConfig.
+	// If (and only if) a list of STUN servers has been supplied in the ProxyConfig, we'll override
+	// Broflake's default STUNBatch function.
+	if srvs := pc.GetStunServers(); srvs != nil {
+		rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+		wo.STUNBatch = func(size uint32) (batch []string, err error) {
+			return getRandomSubset(size, rng, srvs)
+		}
+	}
 
 	qo := &clientcore.QUICLayerOptions{
 		ServerName:         ptSetting(pc, "broflake_egress_server_name"),
@@ -106,4 +121,20 @@ func (b *broflakeImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, er
 func (b *broflakeImpl) close() {
 	b.QUICLayer.Close()
 	b.ui.Stop()
+}
+
+// getRandomSubset is a helper for our custom STUNBatch function. It returns a 'size'-sized
+// random subset of the strings in 'set'.
+func getRandomSubset(size uint32, rng *rand.Rand, set []string) (batch []string, err error) {
+	if size > uint32(len(set)) {
+		size = uint32(len(set))
+	}
+
+	indices := rng.Perm(len(set))[:size]
+	batch = make([]string, 0, len(indices))
+	for _, i := range indices {
+		batch = append(batch, set[i])
+	}
+
+	return batch, nil
 }
