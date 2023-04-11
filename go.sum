@@ -314,6 +314,8 @@ github.com/getlantern/common v1.2.0 h1:+Xm0FTLrrX7hSi2UQ4Ys+p9Jrlx8TK44HuqreZN/X
 github.com/getlantern/common v1.2.0/go.mod h1:0SEJgqSudY1N0PP012aNY2raInQVUeXOp08VGrjtuOU=
 github.com/getlantern/common v1.2.1-0.20230407181332-ad3746cbbbbe h1:LXjuU84cGHJNDwZm36yTEk1ynBSbsAfxPoWWF/wG9jc=
 github.com/getlantern/common v1.2.1-0.20230407181332-ad3746cbbbbe/go.mod h1:0SEJgqSudY1N0PP012aNY2raInQVUeXOp08VGrjtuOU=
+github.com/getlantern/common v1.2.1-0.20230411182920-46a4f570191f h1:SWuiYtNgoo+nwxpA478zzR6z9iI126Hvw/mHRIP5AQg=
+github.com/getlantern/common v1.2.1-0.20230411182920-46a4f570191f/go.mod h1:0SEJgqSudY1N0PP012aNY2raInQVUeXOp08VGrjtuOU=
 github.com/getlantern/context v0.0.0-20190109183933-c447772a6520/go.mod h1:L+mq6/vvYHKjCX2oez0CgEAJmbq1fbb/oNJIWQkBybY=
 github.com/getlantern/context v0.0.0-20220418194847-3d5e7a086201 h1:oEZYEpZo28Wdx+5FZo4aU7JFXu0WG/4wJWese5reQSA=
 github.com/getlantern/context v0.0.0-20220418194847-3d5e7a086201/go.mod h1:Y9WZUHEb+mpra02CbQ/QczLUe6f0Dezxaw5DCJlJQGo=

@@ -134,7 +134,7 @@ require (
 
 require (
 	github.com/Jigsaw-Code/outline-ss-server v1.4.0
-	github.com/getlantern/common v1.2.1-0.20230407181332-ad3746cbbbbe
+	github.com/getlantern/common v1.2.1-0.20230411182920-46a4f570191f
 	github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
 )
 
