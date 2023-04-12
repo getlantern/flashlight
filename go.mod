@@ -135,7 +135,7 @@ require (
 require (
 	github.com/Jigsaw-Code/outline-ss-server v1.4.0
 	github.com/getlantern/broflake v0.0.0-20230323194516-3719ba64b72d
-	github.com/getlantern/common v1.2.0
+	github.com/getlantern/common v1.2.1-0.20230411182920-46a4f570191f
 	github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
 )
 
@@ -149,6 +149,8 @@ require (
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/alecthomas/atomic v0.1.0-alpha2 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
+	github.com/getlantern/broflake v0.0.0-20230324174927-73f6a6737e09 // indirect
+	github.com/getlantern/go-update v0.0.0-20230221120840-8d795213a8bc // indirect
 	github.com/getlantern/ratelimit v0.0.0-20220926192648-933ab81a6fc7 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/pprof v0.0.0-20220608213341-c488b8fa1db3 // indirect
@@ -157,6 +159,11 @@ require (
 	github.com/onsi/ginkgo/v2 v2.2.0 // indirect
 	github.com/pion/transport/v2 v2.0.2 // indirect
 	github.com/pion/udp/v2 v2.0.1 // indirect
+	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
+	github.com/shirou/gopsutil/v3 v3.22.12 // indirect
+	github.com/tklauser/go-sysconf v0.3.11 // indirect
+	github.com/tklauser/numcpus v0.6.0 // indirect
+	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	golang.org/x/exp v0.0.0-20220823124025-807a23277127 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 )
@@ -280,7 +287,9 @@ require (
 	github.com/pion/sdp/v3 v3.0.6 // indirect
 	github.com/pion/srtp/v2 v2.0.12 // indirect
 	github.com/pion/stun v0.4.0 // indirect
+	github.com/pion/transport v0.14.1 // indirect
 	github.com/pion/turn/v2 v2.1.0 // indirect
+	github.com/pion/udp v0.1.1 // indirect
 	github.com/pion/webrtc/v3 v3.1.58 // indirect
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

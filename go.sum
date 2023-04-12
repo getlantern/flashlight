@@ -292,8 +292,8 @@ github.com/getlantern/bbrconn v0.0.0-20210901194755-12169918fdf9 h1:IJKppG1QLU1r
 github.com/getlantern/bbrconn v0.0.0-20210901194755-12169918fdf9/go.mod h1:HMPEgWG0J3goTYFWoTohloqZ3BQywXMElZnd9EROxxU=
 github.com/getlantern/borda v0.0.0-20220308134056-c4a5602f778e h1:mPtGf92RlHVeFsGNgVe0e6mIQS6uqymX++kDqRLrzL0=
 github.com/getlantern/borda v0.0.0-20220308134056-c4a5602f778e/go.mod h1:h/CNT4zYivoVZTnY3Yi/XkQCA2hlemWLjMEzKbIf5K4=
-github.com/getlantern/broflake v0.0.0-20230323194516-3719ba64b72d h1:XwJM4YQI5pd/G6ROQcig2TGHI7ufjT4qCLa7B98lBko=
-github.com/getlantern/broflake v0.0.0-20230323194516-3719ba64b72d/go.mod h1:SPiKfQMLFzxQIBM2Z8sgp3tg/oP2molr3HsF2vAORpQ=
+github.com/getlantern/broflake v0.0.0-20230324174927-73f6a6737e09 h1:3O2cxSa5E8TG+sqaMXC4x9uosN+g84M85YoAmXvb2yI=
+github.com/getlantern/broflake v0.0.0-20230324174927-73f6a6737e09/go.mod h1:SPiKfQMLFzxQIBM2Z8sgp3tg/oP2molr3HsF2vAORpQ=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
 github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493 h1:8WjDNmpDLFVsAfcnHxqF4pfVKkdAQxyJ9iCHB4LxSfc=
 github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
@@ -311,6 +311,10 @@ github.com/getlantern/cmuxprivate v0.0.0-20211216020409-d29d0d38be54 h1:aqzgkWfj
 github.com/getlantern/cmuxprivate v0.0.0-20211216020409-d29d0d38be54/go.mod h1:WIunQ/nFvkQAP89tY2CX4R5kj9A1OJhjA3KmP6nj4o4=
 github.com/getlantern/common v1.2.0 h1:+Xm0FTLrrX7hSi2UQ4Ys+p9Jrlx8TK44HuqreZN/XtA=
 github.com/getlantern/common v1.2.0/go.mod h1:0SEJgqSudY1N0PP012aNY2raInQVUeXOp08VGrjtuOU=
+github.com/getlantern/common v1.2.1-0.20230407181332-ad3746cbbbbe h1:LXjuU84cGHJNDwZm36yTEk1ynBSbsAfxPoWWF/wG9jc=
+github.com/getlantern/common v1.2.1-0.20230407181332-ad3746cbbbbe/go.mod h1:0SEJgqSudY1N0PP012aNY2raInQVUeXOp08VGrjtuOU=
+github.com/getlantern/common v1.2.1-0.20230411182920-46a4f570191f h1:SWuiYtNgoo+nwxpA478zzR6z9iI126Hvw/mHRIP5AQg=
+github.com/getlantern/common v1.2.1-0.20230411182920-46a4f570191f/go.mod h1:0SEJgqSudY1N0PP012aNY2raInQVUeXOp08VGrjtuOU=
 github.com/getlantern/context v0.0.0-20190109183933-c447772a6520/go.mod h1:L+mq6/vvYHKjCX2oez0CgEAJmbq1fbb/oNJIWQkBybY=
 github.com/getlantern/context v0.0.0-20220418194847-3d5e7a086201 h1:oEZYEpZo28Wdx+5FZo4aU7JFXu0WG/4wJWese5reQSA=
 github.com/getlantern/context v0.0.0-20220418194847-3d5e7a086201/go.mod h1:Y9WZUHEb+mpra02CbQ/QczLUe6f0Dezxaw5DCJlJQGo=
@@ -1555,7 +1559,8 @@ google.golang.org/genproto v0.0.0-20200804131852-c06518451d9c/go.mod h1:FWY/as6D
 google.golang.org/genproto v0.0.0-20200825200019-8632dd797987/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
 google.golang.org/genproto v0.0.0-20210303154014-9728d6b83eeb/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
 google.golang.org/genproto v0.0.0-20211118181313-81c1377c94b1/go.mod h1:5CzLGKJ67TSI2B9POpiiyGha0AjJvZIUgRMt1dSmuhc=
-google.golang.org/genproto v0.0.0-20221118155620-16455021b5e6 h1:a2S6M0+660BgMNl++4JPlcAO/CjkqYItDEZwkoDQK7c=
+google.golang.org/genproto v0.0.0-20220802133213-ce4fa296bf78 h1:QntLWYqZeuBtJkth3m/6DLznnI0AHJr+AgJXvVh/izw=
+google.golang.org/genproto v0.0.0-20220802133213-ce4fa296bf78/go.mod h1:iHe1svFLAZg9VWz891+QbRMwUv9O/1Ww+/mngYeThbc=
 google.golang.org/genproto v0.0.0-20221118155620-16455021b5e6/go.mod h1:rZS5c/ZVYMaOGBfO68GWtjOw/eLaZM1X6iVtgjZ+EWg=
 google.golang.org/grpc v1.17.0/go.mod h1:6QZJwpn2B+Zp71q/5VxRsJ6NXXVCE5NRUHRo+f3cWCs=
 google.golang.org/grpc v1.19.0/go.mod h1:mqu4LbDTu4XGKhr4mRzUsmM4RtVoemTSY81AxZiDr8c=
