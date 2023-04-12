@@ -47,6 +47,11 @@ var (
 	errUpstream = errors.New("Upstream error")
 )
 
+func (p *proxy) SupportsAddr(network, addr string) bool {
+	// TODO: implement me!
+	return false
+}
+
 func (p *proxy) Stop() {
 	log.Tracef("Stopping dialer %s", p.Label())
 	p.closeOnce.Do(func() {
