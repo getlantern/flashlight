@@ -23,6 +23,7 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/idletiming"
@@ -306,6 +307,7 @@ type proxy struct {
 	mostRecentABETime   time.Time
 	numPreconnecting    func() int
 	numPreconnected     func() int
+	allowedDomains      *domainrouting.Rules
 	closeCh             chan bool
 	closeOnce           sync.Once
 	mx                  sync.Mutex
@@ -365,6 +367,15 @@ func newProxy(name, addr, protocol, network string, s *config.ProxyConfig, uc co
 			}
 			return dfConn, err
 		}
+	}
+	if len(s.AllowedDomains) > 0 {
+		// Some proxies like Broflake only support a limited set of domains. This sets up domain routing
+		// rules based on what was configured in the proxy config.
+		rulesMap := make(domainrouting.RulesMap)
+		for _, domain := range s.AllowedDomains {
+			rulesMap[domain] = domainrouting.MustProxy
+		}
+		p.allowedDomains = domainrouting.NewRules(rulesMap)
 	}
 	return p, nil
 }

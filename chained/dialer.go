@@ -24,6 +24,7 @@ import (
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/flashlight/ops"
 )
 
@@ -48,8 +49,19 @@ var (
 )
 
 func (p *proxy) SupportsAddr(network, addr string) bool {
-	// TODO: implement me!
-	return false
+	if p.allowedDomains == nil {
+		// this proxy doesn't filter allowed domains
+		return true
+	}
+
+	domain, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		log.Debugf("Unable to split addr %v: %v", addr, err)
+		return false
+	}
+
+	rule := p.allowedDomains.RuleFor(domain)
+	return rule == domainrouting.MustProxy
 }
 
 func (p *proxy) Stop() {

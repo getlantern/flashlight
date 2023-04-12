@@ -29,6 +29,8 @@ replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336
 
 replace github.com/Jigsaw-Code/outline-ss-server => github.com/getlantern/lantern-shadowsocks v1.3.6-0.20230114153732-0193919d4860
 
+replace github.com/getlantern/common => ../common
+
 // replace github.com/getlantern/dhtup => ../dhtup
 
 require (
