@@ -43,7 +43,6 @@ var (
 // Dialer provides the ability to dial a proxy and obtain information needed to
 // effectively load balance between dialers.
 type Dialer interface {
-	// TODO: actually implement this
 	SupportsAddr(network, addr string) bool
 
 	// DialContext dials out to the given origin. failedUpstream indicates whether
@@ -294,16 +293,8 @@ type balancedDial struct {
 	idx            int
 }
 
-func (b *Balancer) newBalancedDial(network string, addr string) (*balancedDial, error) {
-	trustedOnly := false
-	_, port, _ := net.SplitHostPort(addr)
-	// We try to identify HTTP traffic (as opposed to HTTPS) by port and only
-	// send HTTP traffic to dialers marked as trusted.
-	if port == "" || port == "80" || port == "8080" {
-		trustedOnly = true
-	}
-
-	dialers, sessionStats, pickErr := b.pickDialers(trustedOnly)
+func (b *Balancer) newBalancedDial(network, addr string) (*balancedDial, error) {
+	dialers, sessionStats, pickErr := b.pickDialers(network, addr)
 	if pickErr != nil {
 		return nil, pickErr
 	}
@@ -671,14 +662,30 @@ func (b *Balancer) printStats() {
 	log.Debug("----------- End Dialer Stats -----------")
 }
 
-func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, map[string]*dialStats, error) {
+func (b *Balancer) pickDialers(network, addr string) ([]Dialer, map[string]*dialStats, error) {
+	trustedOnly := false
+	_, port, _ := net.SplitHostPort(addr)
+	// We try to identify HTTP traffic (as opposed to HTTPS) by port and only
+	// send HTTP traffic to dialers marked as trusted.
+	if port == "" || port == "80" || port == "8080" {
+		trustedOnly = true
+	}
+
 	b.mu.RLock()
-	dialers := b.dialers
+	_dialers := b.dialers
 	if trustedOnly {
-		dialers = b.trusted
+		_dialers = b.trusted
 	}
 	sessionStats := b.sessionStats
 	b.mu.RUnlock()
+
+	// Pick only dialers that support the requested network and address.
+	dialers := make(sortedDialers, 0, len(_dialers))
+	for _, d := range _dialers {
+		if d.SupportsAddr(network, addr) {
+			dialers = append(dialers, d)
+		}
+	}
 
 	if dialers.Len() == 0 {
 		if trustedOnly {
@@ -686,6 +693,7 @@ func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, map[string]*dialStat
 		}
 		return nil, nil, fmt.Errorf("No dialers")
 	}
+
 	return dialers, sessionStats, nil
 }
 
