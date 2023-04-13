@@ -61,7 +61,7 @@ func (b *bypass) OnProxies(infos map[string]*commonconfig.ProxyConfig, configDir
 	// The chained package shouldn't need to understand the NoSupportBypass bool (since that's a
 	// bypass concept) so we need to filter out proxies from 'infos' which don't support bypass
 	// before we create the dialers map...
-	supportedInfos := make(map[string]*commonconfig.ProxyConfig)
+	supportedInfos := make(map[string]*commonconfig.ProxyConfig, len(infos))
 
 	for k, v := range infos {
 		if !v.NoSupportBypass {
