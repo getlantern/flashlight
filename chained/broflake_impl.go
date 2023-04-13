@@ -83,7 +83,7 @@ func newBroflakeImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (p
 		rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 		wo.STUNBatch = func(size uint32) (batch []string, err error) {
-			return getRandomSubset(size, rng, srvs)
+			return getRandomSubset(size, rng, srvs), nil
 		}
 	}
 
@@ -125,7 +125,7 @@ func (b *broflakeImpl) close() {
 
 // getRandomSubset is a helper for our custom STUNBatch function. It returns a 'size'-sized
 // random subset of the strings in 'set'.
-func getRandomSubset(size uint32, rng *rand.Rand, set []string) (batch []string, err error) {
+func getRandomSubset(size uint32, rng *rand.Rand, set []string) (batch []string) {
 	if size > uint32(len(set)) {
 		size = uint32(len(set))
 	}
@@ -136,5 +136,5 @@ func getRandomSubset(size uint32, rng *rand.Rand, set []string) (batch []string,
 		batch = append(batch, set[i])
 	}
 
-	return batch, nil
+	return batch
 }
