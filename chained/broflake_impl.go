@@ -125,16 +125,16 @@ func (b *broflakeImpl) close() {
 
 // getRandomSubset is a helper for our custom STUNBatch function. It returns a 'size'-sized
 // random subset of the strings in 'set'.
-func getRandomSubset(size uint32, rng *rand.Rand, set []string) (batch []string) {
+func getRandomSubset(size uint32, rng *rand.Rand, set []string) []string {
 	if size > uint32(len(set)) {
 		size = uint32(len(set))
 	}
 
 	indices := rng.Perm(len(set))[:size]
-	batch = make([]string, 0, len(indices))
+	subset := make([]string, 0, len(indices))
 	for _, i := range indices {
-		batch = append(batch, set[i])
+		subset = append(subset, set[i])
 	}
 
-	return batch
+	return subset
 }
