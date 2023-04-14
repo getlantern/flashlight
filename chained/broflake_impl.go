@@ -62,6 +62,10 @@ func makeBroflakeOptions(pc *config.ProxyConfig) (
 	// Override BroflakeOptions defaults as applicable
 	bo := clientcore.NewDefaultBroflakeOptions()
 
+	if clientType := ptSetting(pc, "broflake_client_type"); clientType != "" {
+		bo.ClientType = clientType
+	}
+
 	if cTableSize := ptSettingInt(pc, "broflake_ctablesize"); cTableSize != 0 {
 		bo.CTableSize = cTableSize
 	}
