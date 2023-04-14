@@ -20,7 +20,45 @@ type broflakeImpl struct {
 func newBroflakeImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	// TODO: I don't know what the reportDialCoreFn is, and I'm not sure if I need to know. I'm
 	// just imitating the function signature and approach of other impls...
+	bo, wo, qo := makeBroflakeOptions(pc)
 
+	// Construct, init, and start a Broflake client!
+	bfconn, ui, err := clientcore.NewBroflake(bo, wo, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	ql, err := clientcore.NewQUICLayer(bfconn, qo)
+	if err != nil {
+		return nil, err
+	}
+
+	ql.DialAndMaintainQUICConnection()
+
+	return &broflakeImpl{
+		reportDialCore: reportDialCore,
+		QUICLayer:      ql,
+		ui:             ui,
+	}, nil
+}
+
+func (b *broflakeImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+	// TODO: I don't know what to do with 'op'
+	return b.QUICLayer.DialContext(ctx)
+}
+
+func (b *broflakeImpl) close() {
+	b.QUICLayer.Close()
+	b.ui.Stop()
+}
+
+// makeBroflakeOptions constructs the options structs required by the Broflake client constructor,
+// overriding fields with values supplied in a ProxyConfig as applicable
+func makeBroflakeOptions(pc *config.ProxyConfig) (
+	*clientcore.BroflakeOptions,
+	*clientcore.WebRTCOptions,
+	*clientcore.QUICLayerOptions,
+) {
 	// Override BroflakeOptions defaults as applicable
 	bo := clientcore.NewDefaultBroflakeOptions()
 
@@ -58,7 +96,6 @@ func newBroflakeImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (p
 	// XXX: config.ProxyConfig pluggabletransportsettings do not support serialization of rich types like
 	// time.Duration. Consequently, we're somewhat riskily rehydrating our two timeout values here by
 	// assuming that the coefficient is time.Second. Beware!
-
 	if NATFailTimeout := ptSettingInt(pc, "broflake_natfailtimeout"); NATFailTimeout != 0 {
 		wo.NATFailTimeout = time.Duration(NATFailTimeout) * time.Second
 	}
@@ -92,35 +129,7 @@ func newBroflakeImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (p
 		InsecureSkipVerify: ptSettingBool(pc, "broflake_egress_insecure_skip_verify"),
 	}
 
-	// Construct, init, and start a Broflake client!
-	bfconn, ui, err := clientcore.NewBroflake(bo, wo, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	ql, err := clientcore.NewQUICLayer(bfconn, qo)
-	if err != nil {
-		return nil, err
-	}
-
-	ql.DialAndMaintainQUICConnection()
-
-	return &broflakeImpl{
-		reportDialCore: reportDialCore,
-		QUICLayer:      ql,
-		ui:             ui,
-	}, nil
-}
-
-func (b *broflakeImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
-	// TODO: I don't know what to do with 'op'
-
-	return b.QUICLayer.DialContext(ctx)
-}
-
-func (b *broflakeImpl) close() {
-	b.QUICLayer.Close()
-	b.ui.Stop()
+	return bo, wo, qo
 }
 
 // getRandomSubset is a helper for our custom STUNBatch function. It returns a 'size'-sized
