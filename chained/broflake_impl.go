@@ -4,11 +4,13 @@ import (
 	"context"
 	"math/rand"
 	"net"
+	"net/http"
 	"time"
 
 	"github.com/getlantern/broflake/clientcore"
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/proxied"
 )
 
 type broflakeImpl struct {
@@ -126,6 +128,12 @@ func makeBroflakeOptions(pc *config.ProxyConfig) (
 		wo.STUNBatch = func(size uint32) (batch []string, err error) {
 			return getRandomSubset(size, rng, srvs), nil
 		}
+	}
+
+	// Broflake's HTTP client isn't currently configurable via PluggableTransportSettings, and so
+	// we just give it this domain fronted client in all cases
+	wo.HttpClient = &http.Client{
+		Transport: proxied.ParallelPreferChained(),
 	}
 
 	qo := &clientcore.QUICLayerOptions{
