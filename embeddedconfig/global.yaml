@@ -24991,7 +24991,7 @@ featuresenabled:
     label: hk-privacy
   - geocountries: us,cn
     label: stealth
-  - geocountries: uz
+  - geocountries: uz,ru
     label: detour-broken
   noprobeproxies:
   - geocountries: ir
@@ -25007,7 +25007,7 @@ featuresenabled:
   - geocountries: ir
     label: stealth
     platforms: android
-  - geocountries: uz
+  - geocountries: uz,ru
     label: shortcut-broken
   otel:
   - label: opentelemetry
