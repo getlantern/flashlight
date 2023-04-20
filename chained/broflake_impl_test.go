@@ -1,6 +1,7 @@
 package chained
 
 import (
+	"crypto/x509"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -29,6 +30,18 @@ func TestMakeBroflakeOptions(t *testing.T) {
 			"broflake_stunbatchsize":               "911",
 			"broflake_egress_server_name":          "waldo",
 			"broflake_egress_insecure_skip_verify": "true",
+			"broflake_egress_ca": "-----BEGIN CERTIFICATE-----\n" +
+				"MIIBvzCCAWmgAwIBAgIUPh2v+PwlOw8lSBEsi05T8zTYTO0wDQYJKoZIhvcNAQEL\n" +
+				"BQAwIjEgMB4GA1UEAwwXYmYtZWdyZXNzLmhlcm9rdWFwcC5jb20wHhcNMjMwNDE5\n" +
+				"MjMxOTI2WhcNMzMwNDE2MjMxOTI2WjAiMSAwHgYDVQQDDBdiZi1lZ3Jlc3MuaGVy\n" +
+				"b2t1YXBwLmNvbTBcMA0GCSqGSIb3DQEBAQUAA0sAMEgCQQDL6cFSY5Agh+lgw6lm\n" +
+				"hWqndxHU1KhzzR9Km/1eOkN3/pcQG3GA09VNY+eRxEMn9Ers1QpE7pDS2trkM+RV\n" +
+				"3C5PAgMBAAGjdzB1MB0GA1UdDgQWBBQLiikw3Nqo1lC6tVfday+WMxrOyTAfBgNV\n" +
+				"HSMEGDAWgBQLiikw3Nqo1lC6tVfday+WMxrOyTAPBgNVHRMBAf8EBTADAQH/MCIG\n" +
+				"A1UdEQQbMBmCF2JmLWVncmVzcy5oZXJva3VhcHAuY29tMA0GCSqGSIb3DQEBCwUA\n" +
+				"A0EAvMd4kqycSe6rhafMBByFOQihGYgW1bwOwcaV+uPS+9M+g9Nw16aJbbFVqNXI\n" +
+				"Pz0zEX8wEPVxLNIskFxnI1B2SQ==\n" +
+				"-----END CERTIFICATE-----\n",
 		},
 		StunServers: []string{
 			"stun:123.456.789",
@@ -81,6 +94,16 @@ func TestMakeBroflakeOptions(t *testing.T) {
 		return
 	}
 	assert.Equal(t, insecureskipverify, qo.InsecureSkipVerify)
+	certPool := x509.NewCertPool()
+	ok := certPool.AppendCertsFromPEM([]byte(pc.PluggableTransportSettings["broflake_egress_ca"]))
+	if !assert.NotEqual(t, ok, false) {
+		return
+	}
+
+	// TODO: we can't compare the structs for equality because they contain function pointers, see:
+	// https://github.com/stretchr/testify/issues/1146
+	// We could solve this by using the x509.CertPool.Equal function, but it was added in Go 1.19 :(
+	// assert.Equal(t, certPool.Equal(qo.CA), true)
 
 	// Assert against the default options structs to be sure our test values != default values
 	dbo := clientcore.NewDefaultBroflakeOptions()
@@ -129,6 +152,16 @@ func TestMakeBroflakeOptions(t *testing.T) {
 		return
 	}
 	assert.NotEqual(t, insecureskipverify, dqo.InsecureSkipVerify)
+	certPool = x509.NewCertPool()
+	ok = certPool.AppendCertsFromPEM([]byte(pc.PluggableTransportSettings["broflake_egress_ca"]))
+	if !assert.NotEqual(t, ok, false) {
+		return
+	}
+
+	// TODO: we can't compare the structs for equality because they contain function pointers, see:
+	// https://github.com/stretchr/testify/issues/1146
+	// We could solve this by using the x509.CertPool.Equal function, but it was added in Go 1.19 :(
+	// assert.NotEqual(t, certPool.Equal(dqo.CA), true)
 
 	// Including > 0 STUN servers should cause the default STUNBatch function to get overridden
 	// TODO: this is a bit of a funky "test by contradiction," it'd be more rigorous to refactor
@@ -153,6 +186,7 @@ func TestMakeBroflakeOptions(t *testing.T) {
 	assert.Equal(t, wo.STUNBatchSize, dwo.STUNBatchSize)
 	assert.Equal(t, qo.ServerName, dqo.ServerName)
 	assert.Equal(t, qo.InsecureSkipVerify, dqo.InsecureSkipVerify)
+	assert.Equal(t, qo.CA, dqo.CA)
 
 	// Supports our test by contradiction, establishing the function pointer for the default STUNBatch function
 	assert.Equal(t, fmt.Sprintf("%p", wo.STUNBatch), fmt.Sprintf("%p", clientcore.DefaultSTUNBatchFunc))
