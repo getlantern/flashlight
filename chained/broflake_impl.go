@@ -2,6 +2,7 @@ package chained
 
 import (
 	"context"
+	"crypto/x509"
 	"math/rand"
 	"net"
 	"net/http"
@@ -136,9 +137,18 @@ func makeBroflakeOptions(pc *config.ProxyConfig) (
 		Transport: proxied.ParallelPreferChained(),
 	}
 
-	qo := &clientcore.QUICLayerOptions{
-		ServerName:         ptSetting(pc, "broflake_egress_server_name"),
-		InsecureSkipVerify: ptSettingBool(pc, "broflake_egress_insecure_skip_verify"),
+	// Override QUICLayerOptions defaults as applicable
+	qo := &clientcore.QUICLayerOptions{}
+
+	if serverName := ptSetting(pc, "broflake_egress_server_name"); serverName != "" {
+		qo.ServerName = serverName
+	}
+
+	qo.InsecureSkipVerify = ptSettingBool(pc, "broflake_egress_insecure_skip_verify")
+
+	if ca := ptSetting(pc, "broflake_egress_ca"); ca != "" {
+		qo.CA = x509.NewCertPool()
+		qo.CA.AppendCertsFromPEM([]byte(ca))
 	}
 
 	return bo, wo, qo
