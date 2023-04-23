@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
-	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/proxyimpl"
 	"github.com/getlantern/netx"
 )
 
@@ -57,7 +57,7 @@ func (c *client) optimizeMemoryUsage() {
 	runtime.GOMAXPROCS(1)
 
 	// MEMORY_OPTIMIZATION - set very aggressive IdleTimeout to help deal with memory constraints on iOS
-	chained.IdleTimeout = shortIdleTimeout
+	proxyimpl.IdleTimeout = shortIdleTimeout
 
 	// MEMORY_OPTIMIZATION - set an aggressive target for triggering GC after new allocations reach 20% of heap
 	debug.SetGCPercent(20)

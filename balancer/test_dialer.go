@@ -11,6 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/getlantern/flashlight/proxyimpl"
 	"github.com/getlantern/mockconn"
 )
 
@@ -183,3 +184,5 @@ func (d *testDialer) Stop() {
 }
 
 func (d *testDialer) WriteStats(w io.Writer) {}
+
+func (d *testDialer) Implementation() proxyimpl.ProxyImpl { return nil }

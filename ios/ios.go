@@ -20,6 +20,7 @@ import (
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/proxyimpl"
 )
 
 const (
@@ -270,7 +271,7 @@ func (c *client) loadUserConfig() error {
 
 func (c *client) loadDialers() ([]balancer.Dialer, error) {
 	cf := &configurer{configFolderPath: c.configDir}
-	chained.PersistSessionStates(c.configDir)
+	proxyimpl.PersistSessionStates(c.configDir)
 
 	proxies := make(map[string]*config.ProxyConfig)
 	_, _, err := cf.openConfig(proxiesYaml, proxies, []byte{})

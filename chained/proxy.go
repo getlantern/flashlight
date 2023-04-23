@@ -3,8 +3,6 @@ package chained
 import (
 	"context"
 	"fmt"
-	"io"
-	"math/rand"
 	"net"
 	"net/http"
 	"strconv"
@@ -24,10 +22,10 @@ import (
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/proxyimpl"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/mtime"
-	"github.com/getlantern/netx"
 )
 
 const (
@@ -39,38 +37,16 @@ const (
 
 	rttDevK          = 2   // Estimated RTT = mean RTT + 2 * deviation
 	successRateAlpha = 0.7 // See example_ema_success_rate_test.go
-
-	defaultMultiplexedPhysicalConns = 1
 )
 
 // InsecureSkipVerifyTLSMasqOrigin controls whether the origin certificate is verified when dialing
 // a tlsmasq proxy. This can be used when testing against origins with self-signed certificates.
 // This should be false in production as allowing a 3rd party to impersonate the origin could allow
 // for a kind of probe.
-var InsecureSkipVerifyTLSMasqOrigin = false
 
 var (
-	chainedDialTimeout          = 1 * time.Minute
 	theForceAddr, theForceToken string
-
-	tlsKeyLogWriter        io.Writer
-	createKeyLogWriterOnce sync.Once
 )
-
-// proxyImpl is the interface to hide the details of client side logic for
-// different types of pluggable transports.
-type proxyImpl interface {
-	// dialServer is to establish connection to the proxy server to the point
-	// of being able to transfer application data.
-	dialServer(op *ops.Op, ctx context.Context) (net.Conn, error)
-	// close releases the resources associated with the implementation, if any.
-	close()
-}
-
-// nopCloser is a mixin to implement a do-nothing close() method of proxyImpl.
-type nopCloser struct{}
-
-func (c nopCloser) close() {}
 
 // CreateDialers creates a list of Proxies (balancer.Dialer) with supplied server info.
 func CreateDialers(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) []balancer.Dialer {
@@ -80,7 +56,7 @@ func CreateDialers(configDir string, proxies map[string]*config.ProxyConfig, uc 
 // CreateDialersMap creates a map of Proxies (balancer.Dialer) with supplied server info.
 func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) map[string]balancer.Dialer {
 	mappedDialers := make(map[string]balancer.Dialer)
-	groups := groupByMultipathEndpoint(proxies)
+	groups := proxyimpl.GroupByMultipathEndpoint(proxies)
 	for endpoint, group := range groups {
 		if endpoint == "" {
 			log.Debugf("Adding %d individual chained servers", len(group))
@@ -95,12 +71,33 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 			}
 		} else {
 			log.Debugf("Adding %d chained servers for multipath endpoint %s", len(group), endpoint)
-			dialer, err := CreateMPDialer(configDir, endpoint, group, uc)
+
+			// Make a new proxy for the multipath endpoint using the info from
+			// the **first server** in the group. Those attributes should be shared
+			// by all paths
+			var err error
+			var p *proxy
+			for _, s := range proxies {
+				p, err = newProxy(endpoint, endpoint+":0", "multipath", "multipath", s, uc)
+				if err != nil {
+					log.Errorf("Unable to configure multipath server to %v. Received error: %v", endpoint, err)
+					continue
+				}
+				// Break after the first one
+				break
+			}
+
+			// Make and assign a new MP dialer
+			p.impl, err = proxyimpl.NewMultipathProxyImpl(
+				configDir, endpoint,
+				group, uc,
+				extractParams, p.reportDialCore)
 			if err != nil {
 				log.Errorf("Unable to configure multipath server to %v. Received error: %v", endpoint, err)
 				continue
 			}
-			mappedDialers[endpoint] = dialer
+
+			mappedDialers[endpoint] = p
 		}
 	}
 	return mappedDialers
@@ -113,9 +110,14 @@ func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserC
 		return nil, err
 	}
 	p, err := newProxy(name, addr, transport, network, s, uc)
-	p.impl, err = createImpl(configDir, name, addr, transport, s, uc, p.reportDialCore)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to configure chained server %v: %v", name, err)
+	}
+	p.impl, err = proxyimpl.New(configDir, name, addr,
+		transport, s, uc, p.reportDialCore)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"Unable to configure proxy implementation for dialer [%v]. Received error: %v", name, err)
 	}
 	return p, nil
 }
@@ -149,78 +151,6 @@ func extractParams(s *config.ProxyConfig) (addr, transport, network string, err 
 		network = "udp"
 	}
 	return
-}
-
-func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
-	coreDialer := func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error) {
-		return reportDialCore(op, func() (net.Conn, error) {
-			return netx.DialContext(ctx, "tcp", addr)
-		})
-	}
-	if strings.HasPrefix(transport, "utp") {
-		dialer, err := utpDialer()
-		if err != nil {
-			return nil, err
-		}
-		coreDialer = func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error) {
-			return reportDialCore(op, func() (net.Conn, error) {
-				return dialer(ctx, addr)
-			})
-		}
-	}
-	var impl proxyImpl
-	var err error
-	switch transport {
-	case "", "http", "https", "utphttp", "utphttps":
-		if s.Cert == "" {
-			log.Errorf("No Cert configured for %s, will dial with plain tcp", addr)
-			impl = newHTTPImpl(addr, coreDialer)
-		} else {
-			log.Tracef("Cert configured for %s, will dial with tls", addr)
-			impl, err = newHTTPSImpl(configDir, name, addr, s, uc, coreDialer)
-		}
-	case "obfs4", "utpobfs4":
-		impl, err = newOBFS4Impl(name, addr, s, coreDialer)
-	case "lampshade":
-		impl, err = newLampshadeImpl(name, addr, s, reportDialCore)
-	case "quic_ietf":
-		impl, err = newQUICImpl(name, addr, s, reportDialCore)
-	case "shadowsocks":
-		impl, err = newShadowsocksImpl(name, addr, s, reportDialCore)
-	case "wss":
-		impl, err = newWSSImpl(addr, s, reportDialCore)
-	case "tlsmasq":
-		impl, err = newTLSMasqImpl(configDir, name, addr, s, uc, reportDialCore)
-	case "starbridge":
-		impl, err = newStarbridgeImpl(name, addr, s, reportDialCore)
-	default:
-		err = errors.New("Unknown transport: %v", transport).With("addr", addr).With("plugabble-transport", transport)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	allowPreconnecting := false
-	switch transport {
-	case "http", "https", "utphttp", "utphttps", "obfs4", "utpobfs4", "tlsmasq":
-		allowPreconnecting = true
-	}
-
-	if s.MultiplexedAddr != "" || transport == "utphttp" ||
-		transport == "utphttps" || transport == "utpobfs4" ||
-		transport == "tlsmasq" || transport == "starbridge" {
-		impl, err = multiplexed(impl, name, s)
-		if err != nil {
-			return nil, err
-		}
-	} else if allowPreconnecting && s.MaxPreconnect > 0 {
-		log.Debugf("Enabling preconnecting for %v", name)
-		// give ourselves a large margin for making sure we're not using idled preconnected connections
-		expiration := IdleTimeout / 2
-		impl = newPreconnectingDialer(name, int(s.MaxPreconnect), expiration, impl)
-	}
-
-	return impl, err
 }
 
 // ForceProxy forces everything through the HTTP proxy at forceAddr using
@@ -265,9 +195,6 @@ func (c *consecCounter) Get() int64 {
 	return atomic.LoadInt64(&c.v)
 }
 
-type coreDialer func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error)
-
-type reportDialCoreFn func(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error)
 type dialOriginFn func(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error)
 
 type proxy struct {
@@ -296,7 +223,7 @@ type proxy struct {
 	user                common.UserConfig
 	trusted             bool
 	bias                int
-	impl                proxyImpl
+	impl                proxyimpl.ProxyImpl
 	dialOrigin          dialOriginFn
 	emaRTT              *ema.EMA
 	emaRTTDev           *ema.EMA
@@ -357,7 +284,7 @@ func newProxy(name, addr, protocol, network string, s *config.ProxyConfig, uc co
 			dfConn, err := p.reportedDial(func(op *ops.Op) (net.Conn, error) { return dial(network, addr) })
 			dfConn, err = overheadWrapper(true)(dfConn, op.FailIf(err))
 			if err == nil {
-				dfConn = idletiming.Conn(dfConn, IdleTimeout, func() {
+				dfConn = idletiming.Conn(dfConn, proxyimpl.IdleTimeout, func() {
 					log.Debug("enhttp connection idled")
 				})
 			}
@@ -556,21 +483,4 @@ func reportProxyDial(delta time.Duration, err error) {
 		innerOp.FailIf(err)
 		innerOp.End()
 	}
-}
-
-func splitClientHello(hello []byte) [][]byte {
-	const minSplits, maxSplits = 2, 5
-	var (
-		maxLen = len(hello) / minSplits
-		splits = [][]byte{}
-		start  = 0
-		end    = start + rand.Intn(maxLen) + 1
-	)
-	for end < len(hello) && len(splits) < maxSplits-1 {
-		splits = append(splits, hello[start:end])
-		start = end
-		end = start + rand.Intn(maxLen) + 1
-	}
-	splits = append(splits, hello[start:])
-	return splits
 }
