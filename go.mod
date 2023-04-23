@@ -138,7 +138,7 @@ require (
 	github.com/Jigsaw-Code/outline-ss-server v1.4.0
 	github.com/OperatorFoundation/Replicant-go/Replicant/v3 v3.0.14
 	github.com/getlantern/broflake v0.0.0-20230420190113-3b1050a67a6d
-	github.com/getlantern/common v1.2.1-0.20230412183517-01f33a4a0723
+	github.com/getlantern/common v1.2.1-0.20230423115230-85a56b8b6431
 	github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
 )
 
