@@ -46,3 +46,4 @@ akamai:
     replica-search-ir.lantern.io: replica-search-ir.dsa.akamai.lantern.io
     replica-thumbnailer-ir.lantern.io: replica-thumbnailer-ir.dsa.akamai.lantern.io
     replica-thumbnailer.lantern.io: replica-thumbnailer.dsa.akamai.lantern.io
+    bf-freddie.herokuapp.com: freddie.dsa.akamai.getiantem.org
