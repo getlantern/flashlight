@@ -118,7 +118,7 @@ func TestNonIdempotentRequest(t *testing.T) {
 	df := ParallelPreferChained()
 	_, err = df.RoundTrip(req)
 	if assert.Error(t, err, "should not send non-idempotent method in parallel") {
-		assert.Contains(t, err.Error(), "Use ParallelPreferChained for non-idempotent method")
+		assert.Contains(t, err.Error(), "attempted to use parallel round-tripper for non-idempotent method, please use ChainedThenFronted or some similar sequential round-tripper")
 	}
 }
 
