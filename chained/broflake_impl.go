@@ -14,6 +14,11 @@ import (
 	"github.com/getlantern/flashlight/proxied"
 )
 
+const (
+	// only wait 10 seconds before failing over to the next masquerade since signaling with Freddie only has a 25 second timeout
+	masqueradeTimeout = 10
+)
+
 type broflakeImpl struct {
 	reportDialCore reportDialCoreFn // TODO: I don't know what this is for yet
 	QUICLayer      *clientcore.QUICLayer
@@ -130,7 +135,7 @@ func makeBroflakeOptions(pc *config.ProxyConfig) (
 	// Broflake's HTTP client isn't currently configurable via PluggableTransportSettings, and so
 	// we just give it this domain fronted client in all cases
 	wo.HttpClient = &http.Client{
-		Transport: proxied.Fronted(0),
+		Transport: proxied.Fronted(masqueradeTimeout),
 	}
 
 	// Override QUICLayerOptions defaults as applicable
