@@ -8,15 +8,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/getlantern/broflake/clientcore"
 	"github.com/getlantern/common/config"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestMakeBroflakeOptions(t *testing.T) {
 	pc := &config.ProxyConfig{
 		PluggableTransportSettings: map[string]string{
-			"broflake_client_type":                 "foo",
 			"broflake_ctablesize":                  "69",
 			"broflake_ptablesize":                  "69",
 			"broflake_busbuffersz":                 "31337",
@@ -52,7 +52,7 @@ func TestMakeBroflakeOptions(t *testing.T) {
 	// Ensure that supplied values make their way into the correct options structs
 	bo, wo, qo := makeBroflakeOptions(pc)
 
-	assert.Equal(t, pc.PluggableTransportSettings["broflake_client_type"], bo.ClientType)
+	assert.Equal(t, "desktop", bo.ClientType)
 	ctablesize, err := strconv.Atoi(pc.PluggableTransportSettings["broflake_ctablesize"])
 	if !assert.NoError(t, err) {
 		return

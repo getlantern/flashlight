@@ -72,6 +72,10 @@ func (d *testDialer) NumPreconnected() int {
 	return 0
 }
 
+func (d *testDialer) SupportsAddr(network, addr string) bool {
+	return true
+}
+
 func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
 	var conn net.Conn
 	var err error
