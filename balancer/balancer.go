@@ -43,6 +43,8 @@ var (
 // Dialer provides the ability to dial a proxy and obtain information needed to
 // effectively load balance between dialers.
 type Dialer interface {
+	// SupportsAddr indicates whether this Dialer supports the given addr. If it does not, the
+	// balancer will not attempt to dial that addr with this Dialer.
 	SupportsAddr(network, addr string) bool
 
 	// DialContext dials out to the given origin. failedUpstream indicates whether
