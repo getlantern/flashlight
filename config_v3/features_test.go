@@ -7,9 +7,10 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/embeddedconfig"
@@ -129,8 +130,8 @@ featureoptions:
 
 func TestMatomoEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
-	assert.True(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, 1, false, "us"), "Matomo is enabled for a low User ID")
-	assert.True(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, 500, false, "us"), "Matomo is enabled for a high User ID")
+	assert.False(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, 1, false, "us"), "Matomo is disabled for a low User ID")
+	assert.False(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, 500, false, "us"), "Matomo is disabled for a high User ID")
 }
 
 func globalFromTemplate(t *testing.T) *Global {
