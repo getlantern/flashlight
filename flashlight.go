@@ -36,14 +36,12 @@ import (
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/stats"
-	p2pLogger "github.com/getlantern/libp2p/logger"
 	"github.com/getlantern/quicproxy"
 )
 
 var (
-	log              = golog.LoggerFor("flashlight")
-	quicProxyLogger  = golog.LoggerFor("flashlight.quicproxy")
-	replicaP2pLogger = golog.LoggerFor("flashlight.libp2p")
+	log             = golog.LoggerFor("flashlight")
+	quicProxyLogger = golog.LoggerFor("flashlight.quicproxy")
 
 	startProxyBenchOnce sync.Once
 
@@ -65,7 +63,6 @@ func init() {
 
 	// Init logger for different packages
 	quicproxy.Log = logging.FlashlightLogger{Logger: quicProxyLogger}
-	p2pLogger.Log = logging.FlashlightLogger{Logger: replicaP2pLogger}
 }
 
 // HandledErrorType is used to differentiate error types to handlers configured via
