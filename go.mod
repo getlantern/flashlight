@@ -63,7 +63,7 @@ require (
 	github.com/getlantern/fronted v0.0.0-20230425162159-77aa3bb026d1
 	github.com/getlantern/geolookup v0.0.0-20210901195705-eec711834596
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
-	github.com/getlantern/golog v0.0.0-20221014032422-49749a7176cf
+	github.com/getlantern/golog v0.0.0-20230502151238-2020a6b47779
 	github.com/getlantern/grtrack v0.0.0-20210901195719-bdf9e1d12dac // indirect
 	github.com/getlantern/hellosplitter v0.1.1
 	github.com/getlantern/hidden v0.0.0-20220104173330-f221c5a24770
@@ -137,7 +137,7 @@ require (
 require (
 	github.com/Jigsaw-Code/outline-ss-server v1.4.0
 	github.com/OperatorFoundation/Replicant-go/Replicant/v3 v3.0.14
-	github.com/getlantern/broflake v0.0.0-20230426132253-6a1935092019
+	github.com/getlantern/broflake v0.0.0-20230503111833-6f2955e1e104
 	github.com/getlantern/common v1.2.1-0.20230427204521-6ac18c21db39
 	github.com/getlantern/libp2p v0.0.0-20220913092210-f9e794d6b10d
 )
