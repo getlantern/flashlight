@@ -557,9 +557,13 @@ func (client *Client) doDial(
 	dialDirect := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		if v, ok := dnsResolutionMapForDirectDials[addr]; ok {
 			log.Debugf("Bypassed DNS resolution: dialing %v as %v", addr, v)
-			return netx.DialContext(ctx, network, v)
+			conn, err := netx.DialContext(ctx, network, v)
+			op.FailIf(err)
+			return conn, err
 		} else {
-			return netx.DialContext(ctx, network, addr)
+			conn, err := netx.DialContext(ctx, network, addr)
+			op.FailIf(err)
+			return conn, err
 		}
 	}
 
@@ -633,6 +637,7 @@ func (client *Client) doDial(
 		log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
 		op.Set("shortcut_direct", true)
 		op.Set("shortcut_direct_ip", ip)
+		op.Set("shortcut_origin", addr)
 		return dialDirect(ctx, "tcp", addr)
 	}
 
