@@ -1,6 +1,6 @@
 module github.com/getlantern/flashlight
 
-go 1.20
+go 1.19
 
 replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220805074304-4a43a9ed4ec6
 
@@ -136,7 +136,6 @@ require (
 require (
 	crawshaw.io/sqlite v0.3.3-0.20220618202545-d1964889ea3c // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1.0.20210721174708-390f27c3be20 // indirect
-	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
 	github.com/OperatorFoundation/ghostwriter-go v1.0.6 // indirect
 	github.com/OperatorFoundation/go-bloom v1.0.1 // indirect
 	github.com/OperatorFoundation/go-shadowsocks2 v1.1.15 // indirect
@@ -179,7 +178,6 @@ require (
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0 // indirect
 	github.com/getlantern/byteexec v0.0.0-20220903142956-e6ed20032cfd // indirect
-	github.com/getlantern/bytemap v0.0.0-20210122162547-b07440a617f0 // indirect
 	github.com/getlantern/cmux v0.0.0-20200905031936-c55b16ee8462 // indirect
 	github.com/getlantern/context v0.0.0-20220418194847-3d5e7a086201 // indirect
 	github.com/getlantern/dns v0.0.0-20210120185712-8d005533efa0 // indirect
@@ -190,25 +188,19 @@ require (
 	github.com/getlantern/framed v0.0.0-20190601192238-ceb6431eeede // indirect
 	github.com/getlantern/geo v0.0.0-20221101125300-c661769d5822 // indirect
 	github.com/getlantern/go-cache v0.0.0-20141028142048-88b53914f467 // indirect
-	github.com/getlantern/goexpr v0.0.0-20211215215226-4cdd4fd2847b // indirect
 	github.com/getlantern/gonat v0.0.0-20201001145726-634575ba87fb // indirect
 	github.com/getlantern/grtrack v0.0.0-20160824195228-cbf67d3fa0fd // indirect
 	github.com/getlantern/hex v0.0.0-20220104173244-ad7e4b9194dc // indirect
 	github.com/getlantern/http-proxy v0.0.3-0.20230112154909-69209a6e2049 // indirect
 	github.com/getlantern/kcp-go/v5 v5.0.0-20220503142114-f0c1cd6e1b54 // indirect
 	github.com/getlantern/keepcurrent v0.0.0-20221014183517-fcee77376b89 // indirect
-	github.com/getlantern/lantern-shadowsocks v1.3.6-0.20210601195915-e04471aa4920 // indirect
 	github.com/getlantern/msgpack v3.1.4+incompatible // indirect
 	github.com/getlantern/packetforward v0.0.0-20201001150407-c68a447b0360 // indirect
-	github.com/getlantern/pcapper v0.0.0-20181212174440-a8b1a3ff0cde // indirect
 	github.com/getlantern/preconn v1.0.0 // indirect
+	github.com/getlantern/ratelimit v0.0.0-20220926192648-933ab81a6fc7 // indirect
 	github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c // indirect
-	github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01 // indirect
-	github.com/getlantern/sqlparser v0.0.0-20171012210704-a879d8035f3c // indirect
 	github.com/getlantern/upnp v0.0.0-20220531140457-71a975af1fad // indirect
-	github.com/getlantern/wal v0.0.0-20220217194315-e4eac848dbd1 // indirect
 	github.com/getlantern/withtimeout v0.0.0-20160829163843-511f017cd913 // indirect
-	github.com/getlantern/zenodb v0.0.0-20220217194355-df46cc148a8c // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-redis/redis/v8 v8.11.5 // indirect
@@ -233,7 +225,6 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.2 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/huin/goupnp v1.0.3 // indirect
-	github.com/juju/ratelimit v1.0.1 // indirect
 	github.com/klauspost/compress v1.16.0 // indirect
 	github.com/klauspost/cpuid v1.3.1 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
@@ -297,7 +288,6 @@ require (
 	github.com/tkuchiki/go-timezone v0.2.0 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
-	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2 // indirect
 	gitlab.com/yawning/edwards25519-extra.git v0.0.0-20211229043746-2f91fcc9fbdb // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.15.1 // indirect
