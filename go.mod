@@ -63,7 +63,7 @@ require (
 	github.com/getlantern/fronted v0.0.0-20230425162159-77aa3bb026d1
 	github.com/getlantern/geolookup v0.0.0-20210901195705-eec711834596
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
-	github.com/getlantern/golog v0.0.0-20230502151238-2020a6b47779
+	github.com/getlantern/golog v0.0.0-20230206140254-6d0a2e0f79af
 	github.com/getlantern/grtrack v0.0.0-20210901195719-bdf9e1d12dac // indirect
 	github.com/getlantern/hellosplitter v0.1.1
 	github.com/getlantern/hidden v0.0.0-20220104173330-f221c5a24770

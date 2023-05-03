@@ -286,8 +286,6 @@ github.com/getlantern/bbrconn v0.0.0-20210901194755-12169918fdf9 h1:IJKppG1QLU1r
 github.com/getlantern/bbrconn v0.0.0-20210901194755-12169918fdf9/go.mod h1:HMPEgWG0J3goTYFWoTohloqZ3BQywXMElZnd9EROxxU=
 github.com/getlantern/borda v0.0.0-20220308134056-c4a5602f778e h1:mPtGf92RlHVeFsGNgVe0e6mIQS6uqymX++kDqRLrzL0=
 github.com/getlantern/borda v0.0.0-20220308134056-c4a5602f778e/go.mod h1:h/CNT4zYivoVZTnY3Yi/XkQCA2hlemWLjMEzKbIf5K4=
-github.com/getlantern/broflake v0.0.0-20230502232617-127a156fadc3 h1:ML0VMsaiIIi7Og+OUP+lp/YlhwInRU5a5t9ZTUnWlc4=
-github.com/getlantern/broflake v0.0.0-20230502232617-127a156fadc3/go.mod h1:SPiKfQMLFzxQIBM2Z8sgp3tg/oP2molr3HsF2vAORpQ=
 github.com/getlantern/broflake v0.0.0-20230503111833-6f2955e1e104 h1:tPFrjinq2Mv1aLkBv1AtgYMUDDpyHo/e5iJOmamJTPg=
 github.com/getlantern/broflake v0.0.0-20230503111833-6f2955e1e104/go.mod h1:SPiKfQMLFzxQIBM2Z8sgp3tg/oP2molr3HsF2vAORpQ=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
@@ -368,8 +366,8 @@ github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7/go.mod h1:zx/1xUU
 github.com/getlantern/golog v0.0.0-20200929154820-62107891371a/go.mod h1:ZyIjgH/1wTCl+B+7yH1DqrWp6MPJqESmwmEQ89ZfhvA=
 github.com/getlantern/golog v0.0.0-20201105130739-9586b8bde3a9/go.mod h1:ZyIjgH/1wTCl+B+7yH1DqrWp6MPJqESmwmEQ89ZfhvA=
 github.com/getlantern/golog v0.0.0-20210606115803-bce9f9fe5a5f/go.mod h1:ZyIjgH/1wTCl+B+7yH1DqrWp6MPJqESmwmEQ89ZfhvA=
-github.com/getlantern/golog v0.0.0-20230502151238-2020a6b47779 h1:3z7/6DFIRmQYHtKNq1Sb7RJXoFkfqDXIlOs8XfbpzAo=
-github.com/getlantern/golog v0.0.0-20230502151238-2020a6b47779/go.mod h1:+ZU1h+iOVqWReBpky6d5Y2WL0sF2Llxu+QcxJFs2+OU=
+github.com/getlantern/golog v0.0.0-20230206140254-6d0a2e0f79af h1:cvD5qCZpH/Q32Ae0i1W1lRkVuM21czEZaJpTuRiJjc4=
+github.com/getlantern/golog v0.0.0-20230206140254-6d0a2e0f79af/go.mod h1:+ZU1h+iOVqWReBpky6d5Y2WL0sF2Llxu+QcxJFs2+OU=
 github.com/getlantern/gonat v0.0.0-20201001145726-634575ba87fb h1:tDQA66mL1vTHKSMu3Ras/9Tk884ipPAhcdQHXpnDhxg=
 github.com/getlantern/gonat v0.0.0-20201001145726-634575ba87fb/go.mod h1:ysiamkJHyOrnlNmtDCCccH1NbFdgEBSJRg44DWiOxcY=
 github.com/getlantern/goproxy v0.0.0-20220805074304-4a43a9ed4ec6 h1:/jwJjghYGhLhpPYmO4IyHLG+VMVVZaIdgp8oe1dSx6E=
