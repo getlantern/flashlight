@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mailgun/oxy/forward"
+	"github.com/vulcand/oxy/forward"
 
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
