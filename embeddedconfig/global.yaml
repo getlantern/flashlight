@@ -2051,7 +2051,7 @@ client:
         hostaliases:
           api-staging.getiantem.org: d16igwq64x5e11.cloudfront.net
           api.getiantem.org: d2n32kma9hyo9f.cloudfront.net
-          bf-freddie.herokuapp.com: https://d2rhc0fs939ppy.cloudfront.net
+          bf-freddie.herokuapp.com: d2rhc0fs939ppy.cloudfront.net
           borda.lantern.io: d157vud77ygy87.cloudfront.net
           config-staging.getiantem.org: d33pfmbpauhmvd.cloudfront.net
           config.getiantem.org: d2wi0vwulmtn99.cloudfront.net
