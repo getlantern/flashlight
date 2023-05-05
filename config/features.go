@@ -31,7 +31,6 @@ const (
 	FeatureYinbiWallet          = "yinbiwallet"
 	FeatureYinbi                = "yinbi"
 	FeatureGoogleAnalytics      = "googleanalytics"
-	FeatureMatomo               = "matomo"
 	FeatureChat                 = "chat"
 	FeatureOtel                 = "otel"
 	FeatureP2PFreePeer          = "p2pfreepeer"

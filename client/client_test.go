@@ -17,12 +17,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/getlantern/detour"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mockconn"
 	"github.com/getlantern/shortcut"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
@@ -460,6 +461,10 @@ func (d *testDialer) NumPreconnecting() int {
 
 func (d *testDialer) NumPreconnected() int {
 	return 0
+}
+
+func (d *testDialer) SupportsAddr(network, addr string) bool {
+	return true
 }
 
 func (d *testDialer) Dial(network, addr string) (net.Conn, error) {

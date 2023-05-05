@@ -15,6 +15,9 @@ import (
 
 	mrand "math/rand"
 
+	"go.uber.org/atomic"
+	"google.golang.org/protobuf/proto"
+
 	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/apipb"
 	"github.com/getlantern/flashlight/balancer"
@@ -23,15 +26,22 @@ import (
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
-	"go.uber.org/atomic"
-	"google.golang.org/protobuf/proto"
 )
 
-var log = golog.LoggerFor("bypass")
+var (
+	log = golog.LoggerFor("bypass")
+
+	// some pluggable transports don't work with bypass
+	unsupportedTransports = map[string]bool{
+		"broflake": true,
+	}
+)
 
 // The way lantern-cloud is configured, we need separate URLs for domain fronted vs proxied traffic.
-const dfEndpoint = "https://iantem.io/api/v1/bypass"
-const proxyEndpoint = "https://api.iantem.io/v1/bypass"
+const (
+	dfEndpoint    = "https://iantem.io/api/v1/bypass"
+	proxyEndpoint = "https://api.iantem.io/v1/bypass"
+)
 
 type bypass struct {
 	infos     map[string]*commonconfig.ProxyConfig
@@ -57,8 +67,18 @@ func (b *bypass) OnProxies(infos map[string]*commonconfig.ProxyConfig, configDir
 	b.mxProxies.Lock()
 	defer b.mxProxies.Unlock()
 	b.reset()
-	dialers := chained.CreateDialersMap(configDir, infos, userConfig)
+
+	// Some pluggable transports don't support bypass, filter these out here.
+	supportedInfos := make(map[string]*commonconfig.ProxyConfig, len(infos))
+
 	for k, v := range infos {
+		if !unsupportedTransports[v.PluggableTransport] {
+			supportedInfos[k] = v
+		}
+	}
+
+	dialers := chained.CreateDialersMap(configDir, supportedInfos, userConfig)
+	for k, v := range supportedInfos {
 		dialer := dialers[k]
 		if dialer == nil {
 			log.Errorf("No dialer for %v", k)

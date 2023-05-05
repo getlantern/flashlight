@@ -48,17 +48,22 @@ type ProxiedSitesConfig struct {
 // Rule specifies how we should handle traffic to a domain and its sub-domains
 type Rule string
 
-// Rules maps domains to their corresponding rules
-type Rules map[string]Rule
+// RulesMap maps domains to their corresponding rules
+type RulesMap map[string]Rule
+
+// Rules is a tree of domain-routing rules that supports fast evaluation
+type Rules struct {
+	tree *domains.Tree
+}
 
 // Configure configures domain routing with the new Rules and ProxiedSitesConfig. The ProxiedSitesConfig is supported
 // for backwards compatibility. All domains in the ProxiedSitesConfig are treated as Proxy rules.
-func Configure(rules Rules, proxiedSites *ProxiedSitesConfig) {
+func Configure(rules RulesMap, proxiedSites *ProxiedSitesConfig) {
 	log.Debugf("Configuring with %d rules and %d proxied sites", len(rules), len(proxiedSites.Cloud))
 
 	// For backwards compatibility, merge in ProxiedSites
 	if rules == nil {
-		rules = make(Rules)
+		rules = make(RulesMap)
 	}
 
 	for _, domain := range proxiedSites.Cloud {
@@ -73,45 +78,45 @@ func Configure(rules Rules, proxiedSites *ProxiedSitesConfig) {
 		rules[domain] = MustProxy
 	}
 
-	newRules := buildTree(rules)
+	newRules := NewRules(rules)
 	mx.Lock()
 	currentRules.Set(newRules)
 	mx.Unlock()
 }
 
 // AddRules adds the given rules to the current rules.
-func AddRules(newRules Rules) error {
+func AddRules(newRules RulesMap) error {
 	mx.Lock()
 	defer mx.Unlock()
 	rules := getCurrentRules(initTimeout)
 	if rules == nil {
 		return errors.New("Rules not yet initialized")
 	}
-	for k, v := range rules.ToMap() {
+	for k, v := range rules.tree.ToMap() {
 		newRules[k] = v.(Rule)
 	}
 
-	currentRules.Set(buildTree(newRules))
+	currentRules.Set(NewRules(newRules))
 	return nil
 }
 
 // RemoveRules removes the domains from the current rules.
-func RemoveRules(oldRules Rules) error {
+func RemoveRules(oldRules RulesMap) error {
 	mx.Lock()
 	defer mx.Unlock()
 	rules := getCurrentRules(initTimeout)
 	if rules == nil {
 		return errors.New("Rules not yet initialized")
 	}
-	m := rules.ToMap()
+	m := rules.tree.ToMap()
 	for domain := range oldRules {
 		delete(m, dotted(strings.ToLower(domain)))
 	}
-	newRules := Rules{}
+	newRules := RulesMap{}
 	for k, v := range m {
 		newRules[k] = v.(Rule)
 	}
-	currentRules.Set(buildTree(newRules))
+	currentRules.Set(NewRules(newRules))
 	return nil
 }
 
@@ -121,31 +126,32 @@ func RuleFor(domain string) Rule {
 	rules := getCurrentRules(initTimeout)
 	mx.RUnlock()
 
-	return ruleFor(domain, rules)
-}
-
-func ruleFor(domain string, rules *domains.Tree) Rule {
 	if rules == nil {
 		log.Debugf("domainrouting not initialized within %v, assuming that domain should be proxied", initTimeout)
 		return Proxy
 	}
 
-	_rule, found := rules.BestMatch(strings.ToLower(domain))
+	return rules.RuleFor(domain)
+}
+
+func (rules *Rules) RuleFor(domain string) Rule {
+	_rule, found := rules.tree.BestMatch(strings.ToLower(domain))
 	if !found {
 		return None
 	}
 	return _rule.(Rule)
 }
 
-func getCurrentRules(timeout time.Duration) *domains.Tree {
+func getCurrentRules(timeout time.Duration) *Rules {
 	current, found := currentRules.Get(timeout)
 	if !found {
 		return nil
 	}
-	return current.(*domains.Tree)
+	return current.(*Rules)
 }
 
-func buildTree(rules Rules) *domains.Tree {
+// Construct a new Rules tree
+func NewRules(rules RulesMap) *Rules {
 	result := domains.NewTree()
 	for domain, rule := range rules {
 		if rule == Direct {
@@ -156,7 +162,7 @@ func buildTree(rules Rules) *domains.Tree {
 		}
 		result.Insert(dotted(strings.ToLower(domain)), rule)
 	}
-	return result
+	return &Rules{result}
 }
 
 // dotted prefixes domains with a dot to enable prefix matching (which we do for all of our rules)

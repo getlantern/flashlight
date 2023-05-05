@@ -79,9 +79,7 @@ featuresenabled:
   otel:
     - label: opentelemetry
   noborda:
-    - label: disablebordafor75percent
-      userfloor: 0
-      userceil: 0.75
+    - label: disablebordaglobally
   yinbi:
     - label: yinbi
       application: lantern
@@ -144,7 +142,7 @@ featuresenabled:
     - label: stealth
       geocountries: us,cn
     - label: detour-broken
-      geocountries: uz
+      geocountries: uz,ru
   noshortcut:
     - label: hk-privacy
       geocountries: hk
@@ -152,7 +150,7 @@ featuresenabled:
       platforms: android
       geocountries: ir
     - label: shortcut-broken
-      geocountries: uz
+      geocountries: uz,ru
   noprobeproxies:
     - label: stealth
       geocountries: ir
@@ -173,10 +171,6 @@ featuresenabled:
       userfloor: 0
       userceil: 0.05
       geocountries: cn
-  matomo:
-    - label: matomo
-      userfloor: 0
-      userceil: 1
 featureoptions:
   googlesearchads:
     ad_format: "\n            <div style=\"padding-bottom: 8px;\">\n             \

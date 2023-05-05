@@ -251,7 +251,7 @@ type dualFetcher struct {
 // arrive.
 func (df *dualFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 	if df.cf.parallel && !isIdempotentMethod(req) {
-		return nil, errors.New("Use ParallelPreferChained for non-idempotent method")
+		return nil, errors.New("attempted to use parallel round-tripper for non-idempotent method, please use ChainedThenFronted or some similar sequential round-tripper")
 	}
 	directRT, err := ChainedNonPersistent(df.rootCA)
 	if err != nil {

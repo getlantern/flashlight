@@ -214,8 +214,15 @@ func pipeConfig(opts *options) (stop func()) {
 					DhtContext: opts.dhtupContext,
 					FilePath:   opts.name,
 					// Empty this to force data to be obtained through peers.
-					WebSeedUrls: []string{"https://globalconfig.flashlightproxy.com/dhtup/"},
-					Salt:        []byte("globalconfig"),
+					WebSeedUrls: []string{
+						"https://globalconfig.flashlightproxy.com/dhtup/",
+						// For the same reason as with MetainfoUrls, if there's a config change, the
+						// wrong data is present if you go through globalconfig.flashlightproxy.com.
+						// This results in the webseeding code in anacrolix/torrent getting angry,
+						// and everyone piling onto the bootstrap seeders.
+						"https://s3.ap-northeast-1.amazonaws.com/globalconfig.flashlightproxy.com/dhtup/",
+					},
+					Salt: []byte("globalconfig"),
 					// Empty this to force metainfo to be obtained via peers.
 					MetainfoUrls: []string{
 						// This won't work for changes until the CloudFlare caches are flushed as part of updates.

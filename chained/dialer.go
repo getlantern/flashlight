@@ -24,6 +24,7 @@ import (
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/flashlight/ops"
 )
 
@@ -46,6 +47,22 @@ var (
 	// other proxies.
 	errUpstream = errors.New("Upstream error")
 )
+
+func (p *proxy) SupportsAddr(network, addr string) bool {
+	if p.allowedDomains == nil {
+		// this proxy doesn't filter allowed domains
+		return true
+	}
+
+	domain, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		log.Debugf("Unable to split addr %v: %v", addr, err)
+		return false
+	}
+
+	rule := p.allowedDomains.RuleFor(domain)
+	return rule == domainrouting.MustProxy
+}
 
 func (p *proxy) Stop() {
 	log.Tracef("Stopping dialer %s", p.Label())
