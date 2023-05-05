@@ -22,7 +22,7 @@ cloudfront:
     replica-search-ir.lantern.io: d2989l3kuj93v8.cloudfront.net
     replica-thumbnailer-ir.lantern.io: d132le39uhgr75.cloudfront.net
     replica-thumbnailer.lantern.io: d2b627m7r9v7iw.cloudfront.net
-    bf-freddie.herokuapp.com: https://d2rhc0fs939ppy.cloudfront.net
+    bf-freddie.herokuapp.com: d2rhc0fs939ppy.cloudfront.net
 akamai:
   ping: 'https://fronted-ping.dsa.akamai.getiantem.org/ping'
   rejectStatus: 403

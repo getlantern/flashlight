@@ -45,8 +45,7 @@ func init() {
 }
 
 // FlashlightLogger is a logger that uses golog.Logger to log messages. It
-// implements a logging interface that packages like quicproxy and libp2p
-// use.
+// implements a logging interface that packages like quicproxy use.
 // See here for more info:
 // - https://github.com/getlantern/quicproxy/blob/d393da079842dda222d5c0ddbc1ba33e55c46e8b/README.md#L40
 type FlashlightLogger struct{ golog.Logger }

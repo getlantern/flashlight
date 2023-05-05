@@ -9,10 +9,17 @@ import (
 	"time"
 
 	"github.com/getlantern/broflake/clientcore"
+	broflake_common "github.com/getlantern/broflake/common"
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/golog"
 )
+
+func init() {
+	log = golog.LoggerFor("broflake")
+	broflake_common.SetDebugLogger(log.AsDebugLogger())
+}
 
 const (
 	// only wait 10 seconds before failing over to the next masquerade since signaling with Freddie only has a 25 second timeout

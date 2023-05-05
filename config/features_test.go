@@ -135,10 +135,12 @@ func TestShortcut(t *testing.T) {
 	gl := globalFromTemplate(t)
 	for _, country := range []string{"cn", "ir"} {
 		for _, os := range []string{"android", "windows", "darwin", "linux"} {
-			if country == "cn" {
-				assert.True(t, gl.FeatureEnabled(FeatureShortcut, os, common.DefaultAppName, common.Version, 1, false, country), fmt.Sprintf("shortcut is enabled for %s in %s", os, country))
-			} else {
-				assert.False(t, gl.FeatureEnabled(FeatureShortcut, os, common.DefaultAppName, common.Version, 1, false, country), fmt.Sprintf("shortcut is disabled for %s in %s", os, country))
+			for _, version := range []string{common.Version, "7.4.0"} {
+				if country == "cn" && version != "7.4.0" {
+					assert.True(t, gl.FeatureEnabled(FeatureShortcut, os, common.DefaultAppName, version, 1, false, country), fmt.Sprintf("shortcut is enabled for %s version %s in %s", os, version, country))
+				} else {
+					assert.False(t, gl.FeatureEnabled(FeatureShortcut, os, common.DefaultAppName, version, 1, false, country), fmt.Sprintf("shortcut is disabled for %s version %s in %s", os, version, country))
+				}
 			}
 		}
 	}
