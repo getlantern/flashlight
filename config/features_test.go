@@ -152,8 +152,9 @@ func TestReplicaByCountry(t *testing.T) {
 	assert.NotEmpty(fos.ByCountry)
 	globalTrackers := fos.Trackers
 	assert.NotEmpty(globalTrackers)
-	// Check the countries pull in the trackers using the anchor. Just change this if they stop
-	// using the same trackers. I really don't want this to break out the gate is all.
+	// Check that YAML anchors are working. This isn't very robust as we're testing specifics of the
+	// actual production config, but there are so many transforms applied to the global config by
+	// many different YAML implementations I want to be sure.
 	assert.NotEmpty(fos.ByCountry["RU"].Trackers)
 	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
 }
