@@ -3,14 +3,15 @@ package config
 import (
 	"crypto/x509"
 	"errors"
-	"github.com/getlantern/flashlight/embeddedconfig"
 	"time"
+
+	"github.com/getlantern/fronted"
+	"github.com/getlantern/keyman"
 
 	"github.com/getlantern/flashlight/browsers/simbrowser"
 	"github.com/getlantern/flashlight/domainrouting"
+	"github.com/getlantern/flashlight/embeddedconfig"
 	"github.com/getlantern/flashlight/otel"
-	"github.com/getlantern/fronted"
-	"github.com/getlantern/keyman"
 )
 
 // Global contains general configuration for Lantern either set globally via

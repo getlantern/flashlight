@@ -3,10 +3,12 @@ package embeddedconfig
 import (
 	"bytes"
 	_ "embed"
-	globalConfig "github.com/getlantern/flashlight/config/global"
+	"text/template"
+
 	replicaConfig "github.com/getlantern/replica/config"
 	"github.com/getlantern/yaml"
-	"text/template"
+
+	globalConfig "github.com/getlantern/flashlight/config/global"
 )
 
 //go:embed global.yaml.tmpl

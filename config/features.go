@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	globalConfig "github.com/getlantern/flashlight/config/global"
 	"math/rand"
 	"reflect"
 	"regexp"
@@ -10,9 +9,10 @@ import (
 	"time"
 
 	"github.com/blang/semver"
+	"github.com/getlantern/errors"
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/getlantern/errors"
+	globalConfig "github.com/getlantern/flashlight/config/global"
 )
 
 const (

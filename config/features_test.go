@@ -2,18 +2,17 @@ package config
 
 import (
 	"fmt"
-	"github.com/getlantern/flashlight/embeddedconfig"
-	replicaConfig "github.com/getlantern/replica/config"
 	"strings"
 	"testing"
 	"time"
 
+	replicaConfig "github.com/getlantern/replica/config"
+	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/getlantern/yaml"
-
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/embeddedconfig"
 )
 
 func TestValidate(t *testing.T) {
