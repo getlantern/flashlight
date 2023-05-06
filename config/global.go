@@ -158,7 +158,8 @@ func (cfg *Global) validate() error {
 }
 
 // Returns the global config in structured form, by executing the template without any data. This is useful for consuming parts of the config that aren't templatized.
-func GetEmbeddedGlobalSansTemplateData() (g *Global, err error) {
-	err = embeddedconfig.ExecuteAndUnmarshalGlobal(nil, g)
-	return
+func GetEmbeddedGlobalSansTemplateData() (*Global, error) {
+	var g Global
+	err := embeddedconfig.ExecuteAndUnmarshalGlobal(nil, &g)
+	return &g, err
 }
