@@ -3,11 +3,12 @@ package chained
 import (
 	"fmt"
 	"math"
+	"testing"
 
 	"github.com/getlantern/ema"
 )
 
-func ExampleEMASuccessRateLow() {
+func TestExampleEMASuccessRateLow(t *testing.T) {
 	rate := ema.New(1, 0.1)
 	fmt.Println("Doesn't respond to hiccups quickly enough")
 	for i := 0; i < 100; i++ {
@@ -42,7 +43,7 @@ func ExampleEMASuccessRateLow() {
 	// 0.838	0.853	0.768	0.790	0.711	0.740	0.665	0.699	0.628	0.665
 }
 
-func ExampleEMASuccessRateHigh() {
+func TestExampleEMASuccessRateHigh(t *testing.T) {
 	rate := ema.New(1, 0.7)
 	fmt.Println("Should recover from hiccups quickly")
 	for i := 0; i < 100; i++ {
@@ -77,7 +78,7 @@ func ExampleEMASuccessRateHigh() {
 	//0.300	0.790	0.237	0.771	0.231	0.769	0.231	0.769	0.231	0.769
 }
 
-func ExampleEMASuccessRateOverlyHigh() {
+func TestExampleEMASuccessRateOverlyHigh(t *testing.T) {
 	rate := ema.New(1, 0.9)
 	fmt.Println("Recovers from hiccups quickly")
 	for i := 0; i < 100; i++ {
