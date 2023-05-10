@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package issue;
+
+message Response {
+}
+
+message Request {
+	string type = 1;
+    string country_code = 2;
+    string app_version = 3;
+    string subscription_level = 4;
+    string platform = 5;
+    string description = 6;
+    string user_email = 7;
+    repeated Attachment attachments= 8;
+    
+    message Attachment {
+        string type = 1;
+        string name = 2;
+        bytes content = 3;
+    }
+}
