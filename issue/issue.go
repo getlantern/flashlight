@@ -1,12 +1,20 @@
 package issue
 
 import (
+	"bytes"
+	"fmt"
+	"net/http"
+
+	"github.com/getlantern/flashlight/logging"
+	"github.com/getlantern/flashlight/util"
 	"github.com/getlantern/golog"
+	proto "github.com/golang/protobuf/proto"
 )
 
 var (
 	log            = golog.LoggerFor("flashlight.issue")
-	maxLogTailSize = 1024768
+	maxLogTailSize = 1024768   // TODO are both of these needed?
+	maxLogSize     = "1024768" // TODO are both of these needed?
 )
 
 // Attachment represents a single supported attachment
@@ -43,7 +51,7 @@ func SendIssueReport(
 
 	r := &Request{}
 
-	log.Debug("sending issue report")
+	log.Debug("capturing issue report metadata")
 	r.Type = issueType
 	r.CountryCode = countryCode
 	r.AppVersion = appVersion
@@ -52,36 +60,50 @@ func SendIssueReport(
 	r.Description = description
 	r.UserEmail = userEmail
 
-	// log.Debug("zipping attachments for issue report")
-	// for _, attachment := range attachments {
-	// 	r.Attachments = append(r.Attachments, &Request_Attachment{
-	// 		Type:    "application/zip",
-	// 		Name:    "attachment",
-	// 		Content: attachment,
-	// 	})
-	// }
+	for _, attachment := range attachments {
+		r.Attachments = append(r.Attachments, &Request_Attachment{
+			Type:    "application/zip",
+			Name:    "attachment",
+			Content: attachment,
+		})
+	}
 
-	// // Zip attachments
-	// if maxLogSize != "" {
-	// 	if size, err := util.ParseFileSize(maxLogSize); err != nil {
-	// 		log.Error(err)
-	// 	} else {
-	// 		log.Debug("Zipping log files for sending email")
-	// 		buf := &bytes.Buffer{}
-	// 		folder := "logs"
-	// 		// attachmentfoo := make([]*issue.Attachment, 0)
-	// 		if _, err := logging.ZipLogFiles(buf, folder, size, int64(maxLogTailSize)); err == nil {
-	// 			r.Attachments = append(r.Attachments, &Request_Attachment{
-	// 				Type:    "application/zip",
-	// 				Name:    folder + ".zip",
-	// 				Content: buf.Bytes(),
-	// 			})
-	// 		} else {
-	// 			log.Errorf("Unable to zip log files: %v", err)
-	// 		}
-	// 	}
-	// }
+	// Zip logs
+	if maxLogSize != "" {
+		if size, err := util.ParseFileSize(maxLogSize); err != nil {
+			log.Error(err)
+		} else {
+			log.Debug("zipping log files for issue report")
+			buf := &bytes.Buffer{}
+			folder := "logs"
+			if _, err := logging.ZipLogFiles(buf, folder, size, int64(maxLogTailSize)); err == nil {
+				r.Attachments = append(r.Attachments, &Request_Attachment{
+					Type:    "application/zip",
+					Name:    folder + ".zip",
+					Content: buf.Bytes(),
+				})
+			} else {
+				log.Errorf("unable to zip log files: %v", err)
+			}
+		}
+	}
 
-	// TODO send message to lantern-cloud
+	// send message to lantern-cloud
+	port := 443                              // TODO verify
+	destination := "https://iantem.io/issue" // TODO is this correct?
+	requestURL := fmt.Sprintf("%v:%v", destination, port)
+	out, err := proto.Marshal(r)
+	if err != nil {
+		log.Errorf("unable to marshal issue report: %v", err)
+		return err
+	}
+	resp, err := http.Post(requestURL, "", bytes.NewBuffer(out))
+	if err != nil {
+		log.Errorf("unable to send issue report: %v", err)
+		return err
+	} else {
+		log.Debugf("issue report sent: %v", resp)
+	}
+
 	return nil
 }
