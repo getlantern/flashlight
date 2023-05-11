@@ -38,6 +38,7 @@ var (
 // 	attachments       []*Attachment
 // }
 
+// Sends an issue report to lantern-cloud/issue, which is then forwarded to ticket system via API
 func SendIssueReport(
 	issueType string,
 	countryCode string,
@@ -89,7 +90,7 @@ func SendIssueReport(
 	}
 
 	// send message to lantern-cloud
-	port := 443                              // TODO verify
+	port := 443                              // TODO how do we send to lantern-cloud?
 	destination := "https://iantem.io/issue" // TODO is this correct?
 	requestURL := fmt.Sprintf("%v:%v", destination, port)
 	out, err := proto.Marshal(r)
@@ -97,7 +98,7 @@ func SendIssueReport(
 		log.Errorf("unable to marshal issue report: %v", err)
 		return err
 	}
-	resp, err := http.Post(requestURL, "", bytes.NewBuffer(out))
+	resp, err := http.Post(requestURL, "application/zip", bytes.NewBuffer(out))
 	if err != nil {
 		log.Errorf("unable to send issue report: %v", err)
 		return err
@@ -105,5 +106,5 @@ func SendIssueReport(
 		log.Debugf("issue report sent: %v", resp)
 	}
 
-	return nil
+	return err
 }

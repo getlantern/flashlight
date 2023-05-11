@@ -4,34 +4,31 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"net/http"
-	"time"
 
-	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/issue"
 	"github.com/getlantern/flashlight/logging"
-	"github.com/getlantern/fronted"
 )
 
-func init() {
-	email.SetDefaultRecipient("support@lantern.jitbit.com")
+// func init() {
+// 	email.SetDefaultRecipient("support@lantern.jitbit.com")
 
-	go func() {
-		log.Debug("Getting fronted transport to use for submitting issues")
-		start := time.Now()
-		tr, ok := fronted.NewDirect(longFrontedAvailableTimeout)
-		if ok {
-			log.Debugf("Got fronted transport for submitting issues within %v", time.Now().Sub(start))
-		} else {
-			log.Debug("Failed to get fronted transport for submitting issues")
-		}
-		email.SetHTTPClient(&http.Client{
-			Timeout:   20 * time.Second,
-			Transport: tr,
-		})
-	}()
-}
+// 	go func() {
+// 		log.Debug("Getting fronted transport to use for submitting issues")
+// 		start := time.Now()
+// 		tr, ok := fronted.NewDirect(longFrontedAvailableTimeout)
+// 		if ok {
+// 			log.Debugf("Got fronted transport for submitting issues within %v", time.Now().Sub(start))
+// 		} else {
+// 			log.Debug("Failed to get fronted transport for submitting issues")
+// 		}
+// 		email.SetHTTPClient(&http.Client{
+// 			Timeout:   20 * time.Second,
+// 			Transport: tr,
+// 		})
+// 	}()
+// }
 
+// // Deprecated in favor of reportIssueViaAPI()
 // // ReportIssueViaEmail reports an issue via email.
 // func ReportIssueViaEmail(isPro bool, userID int, proToken, deviceID, appVersion, deviceModel, iosVersion, emailAddress, issue, appLogsDir, tunnelLogsDir, proxiesYamlPath string) error {
 // 	proText := "no"
@@ -76,6 +73,7 @@ func init() {
 // }
 
 // reportIssueViaAPI reports an issue via the lantern-cloud/issue API
+// TODO where should this be invoked?
 func reportIssueViaAPI(
 	isPro bool,
 	userID int,
@@ -88,7 +86,7 @@ func reportIssueViaAPI(
 	issueText,
 	appLogsDir,
 	tunnelLogsDir,
-	proxiesYamlPath string) error {
+	proxiesYamlPath string) (err error) {
 
 	proText := "no"
 	if isPro {
@@ -107,9 +105,9 @@ func reportIssueViaAPI(
 	// two targets (app/netEx) with their own logs
 	// each target has 6 ios log files and 6 go log files
 	// for a total of 24 files * 5MB
-	_, err := logging.ZipLogFilesFrom(b, 5*1024*1024*24, 0, map[string]string{"app": appLogsDir, "tunnel": tunnelLogsDir})
+	_, err = logging.ZipLogFilesFrom(b, 5*1024*1024*24, 0, map[string]string{"app": appLogsDir, "tunnel": tunnelLogsDir})
 	if err != nil {
-		log.Errorf("Unable to zip log files: %v", err)
+		log.Errorf("unable to zip log files: %v", err)
 	} else {
 		attachments = append(attachments, b.Bytes())
 	}
@@ -117,12 +115,16 @@ func reportIssueViaAPI(
 	// attach proxies.yaml
 	bytes, err := ioutil.ReadFile(proxiesYamlPath)
 	if err != nil {
-		log.Errorf("Unable to read proxies.yaml for reporting issue: %v", err)
+		log.Errorf("unable to read proxies.yaml for reporting issue: %v", err)
 	} else {
 		attachments = append(attachments, bytes)
 	}
 
-	issue.SendIssueReport(issueText, "country-code", appVersion, proText, "iOS", description, emailAddress, attachments)
+	// TODO determine the country code
+	err = issue.SendIssueReport(issueText, "country-code-placeholder", appVersion, proText, "iOS", description, emailAddress, attachments)
+	if err != nil {
+		log.Errorf("unable to send ios issue report: %v", err)
+	}
 
 	return err
 }
