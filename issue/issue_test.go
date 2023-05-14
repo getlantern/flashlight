@@ -1,17 +1,16 @@
 package issue
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
 	"github.com/getlantern/golog"
 )
 
-var logger = golog.LoggerFor("issue-test")
+var logger = golog.LoggerFor("issue_test")
 
 func TestMain(m *testing.M) {
-	tempConfigDir, err := ioutil.TempDir("", "issue_test")
+	tempConfigDir, err := os.MkdirTemp("", "issue_test")
 	if err != nil {
 		logger.Errorf("Unable to create temp config dir: %v", err)
 		os.Exit(1)
