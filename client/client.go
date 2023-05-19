@@ -441,7 +441,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 
 	conf := &socks5.Config{
 		HandleConnect: func(ctx context.Context, conn net.Conn, req *socks5.Request, replySuccess func(boundAddr net.Addr) error, replyError func(err error) error) error {
-			op, ctx := ops.BeginWithNewBeam("proxy", ctx)
+			op := ops.Begin("proxy")
 			defer op.End()
 
 			host := fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port)
@@ -516,7 +516,7 @@ func (client *Client) Stop() error {
 var TimeoutWaitingForDNSResolutionMap = 5 * time.Second
 
 func (client *Client) dial(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {
-	op := ops.BeginWithBeam("proxied_dialer", ctx)
+	op := ops.Begin("proxied_dialer")
 	op.Set("local_proxy_type", "http")
 	op.OriginPort(addr, "")
 	defer op.End()

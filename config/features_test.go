@@ -6,12 +6,14 @@ import (
 	"testing"
 	"time"
 
-	replicaConfig "github.com/getlantern/replica/config"
-	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	replicaConfig "github.com/getlantern/replica/config"
+	"github.com/getlantern/yaml"
+
 	"github.com/getlantern/flashlight/common"
+	globalConfig "github.com/getlantern/flashlight/config/global"
 	"github.com/getlantern/flashlight/embeddedconfig"
 )
 
@@ -209,7 +211,16 @@ func TestOtelEnabled(t *testing.T) {
 }
 
 func requireGetReplicaOptionsRoot(t *testing.T) (fos replicaConfig.ReplicaOptionsRoot) {
-	return embeddedconfig.GlobalReplicaOptions
+	var g globalConfig.Raw
+	err := embeddedconfig.ExecuteAndUnmarshalGlobal(nil, &g)
+	if err != nil {
+		panic(err)
+	}
+	err = globalConfig.UnmarshalFeatureOptions(g, globalConfig.FeatureReplica, &fos)
+	if err != nil {
+		panic(err)
+	}
+	return
 }
 
 func globalFromTemplate(t *testing.T) *Global {

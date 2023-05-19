@@ -185,10 +185,10 @@ func (cf *chainedAndFronted) RoundTrip(req *http.Request) (*http.Response, error
 	if req.Context().Value((ops.CtxKeyBeam)) == nil {
 		// Some callers like the autoupdate package don't have a way to add beam to
 		// the request context. In such cases, generate a new beam.
-		op, ctx = ops.BeginWithNewBeam("chainedandfronted", ctx)
+		op = ops.Begin("chainedandfronted")
 		req = req.WithContext(ctx)
 	} else {
-		op = ops.BeginWithBeam("chainedandfronted", ctx)
+		op = ops.Begin("chainedandfronted")
 	}
 	op.Request(req)
 	defer op.End()
@@ -250,8 +250,12 @@ type dualFetcher struct {
 // chained and fronted servers, simply returning the first response to
 // arrive.
 func (df *dualFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
+	op := ops.Begin("dual_fetcher_round_trip")
+	defer op.End()
+	op.Set("parallel", df.cf.parallel)
+
 	if df.cf.parallel && !isIdempotentMethod(req) {
-		return nil, errors.New("attempted to use parallel round-tripper for non-idempotent method, please use ChainedThenFronted or some similar sequential round-tripper")
+		return nil, op.FailIf(errors.New("attempted to use parallel round-tripper for non-idempotent method, please use ChainedThenFronted or some similar sequential round-tripper"))
 	}
 	directRT, err := ChainedNonPersistent(df.rootCA)
 	if err != nil {
@@ -264,7 +268,7 @@ func (df *dualFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 // chained and fronted servers.
 func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT http.RoundTripper) (*http.Response, error) {
 	log.Debugf("Using dual fronter for request to: %#v", req.URL.Host)
-	op := ops.BeginWithBeam("dualfetcher", req.Context()).Request(req)
+	op := ops.Begin("dualfetcher").Request(req)
 	defer op.End()
 
 	responses := make(chan *http.Response, 2)
@@ -538,7 +542,7 @@ func chained(rootCA string, persistent bool) (http.RoundTripper, error) {
 
 	return AsRoundTripper(func(req *http.Request) (*http.Response, error) {
 		changeUserAgent(req)
-		op := ops.BeginWithBeam("chained", req.Context()).ProxyType(ops.ProxyChained).Request(req)
+		op := ops.Begin("chained").ProxyType(ops.ProxyChained).Request(req)
 		defer op.End()
 		resp, err := tr.RoundTrip(req)
 		op.Response(resp)

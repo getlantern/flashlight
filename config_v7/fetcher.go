@@ -67,9 +67,9 @@ func newHttpFetcher(conf common.UserConfig, rt http.RoundTripper, originURL stri
 }
 
 func (cf *fetcher) fetch() ([]byte, time.Duration, error) {
-	op, ctx := ops.BeginWithNewBeam("fetch_config", context.Background())
+	op := ops.Begin("fetch_config")
 	defer op.End()
-	result, sleep, err := cf.doFetch(ctx, op)
+	result, sleep, err := cf.doFetch(context.Background(), op)
 	return result, sleep, op.FailIf(err)
 }
 

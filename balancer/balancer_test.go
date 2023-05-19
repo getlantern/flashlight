@@ -49,7 +49,7 @@ func TestSingleDialer(t *testing.T) {
 	}
 	// Test successful single dialer
 	b := newBalancer(dialer)
-	conn, err := b.Dial("tcp", addr)
+	conn, err := b.DialContext(context.Background(), "tcp", addr)
 	if assert.NoError(t, err, "Dialing should have succeeded") {
 		doTestConn(t, conn)
 	}
@@ -65,7 +65,7 @@ func TestSingleDialer(t *testing.T) {
 	b.Close()
 	time.Sleep(250 * time.Millisecond)
 	assert.EqualValues(t, 1, atomic.LoadInt32(&dialer.stopped))
-	_, err = b.Dial("tcp", addr)
+	_, err = b.DialContext(context.Background(), "tcp", addr)
 	if assert.Error(t, err, "Dialing on closed balancer should fail") {
 		assert.Contains(t, "No dialers", err.Error(), "Error should have mentioned that there were no dialers")
 	}
@@ -88,10 +88,10 @@ func TestGoodSlowDialer(t *testing.T) {
 	}
 
 	b := newBalancer(dialer1)
-	_, err := b.Dial("tcp", addr)
+	_, err := b.DialContext(context.Background(), "tcp", addr)
 	assert.Error(t, err, "Dialing bad dialer should fail")
 	b.Reset([]Dialer{dialer1, dialer2})
-	_, err = b.Dial("tcp", addr)
+	_, err = b.DialContext(context.Background(), "tcp", addr)
 	if assert.NoError(t, err, "Dialing with one good dialer should succeed") {
 		assert.True(t, dialer1.Attempts() > 0, "should have tried fast dialer first")
 	}
@@ -117,7 +117,7 @@ func TestAllFailingUpstream(t *testing.T) {
 	}
 
 	b := newBalancer(dialer1, dialer2)
-	_, err := b.Dial("tcp", addr)
+	_, err := b.DialContext(context.Background(), "tcp", addr)
 	assert.Error(t, err, "Dialing all bad dialers should fail")
 	assert.EqualValues(t, 0, dialer1.Failures(), "When all dialers fail upstream, don't record a failure")
 	assert.EqualValues(t, 0, dialer2.Failures(), "When all dialers fail upstream, don't record a failure")
@@ -145,7 +145,7 @@ func TestOneFailingUpstream(t *testing.T) {
 	}
 
 	b := newBalancer(dialer1, dialer2)
-	_, err := b.Dial("tcp", addr)
+	_, err := b.DialContext(context.Background(), "tcp", addr)
 	assert.NoError(t, err, "Dialing with one good dialer should succeed")
 	assert.EqualValues(t, 1, dialer1.Failures(), "When a dialer succeeds, dialer that failed upstream should be marked as failed")
 	assert.EqualValues(t, 1, dialer2.Failures(), "Dialer that failed on first dial should be marked as failed")
@@ -159,19 +159,19 @@ func TestTrusted(t *testing.T) {
 		successRate: 1,
 	}
 
-	_, err := newBalancer(dialer).Dial("", "does-not-exist.com:80")
+	_, err := newBalancer(dialer).DialContext(context.Background(), "", "does-not-exist.com:80")
 	assert.Error(t, err, "Dialing with no trusted dialers should have failed")
 	assert.EqualValues(t, 0, dialer.Attempts(), "should not dial untrusted dialer")
 
-	_, err = newBalancer(dialer).Dial("", "does-not-exist.com:8080")
+	_, err = newBalancer(dialer).DialContext(context.Background(), "", "does-not-exist.com:8080")
 	assert.Error(t, err, "Dialing with no trusted dialers should have failed")
 	assert.EqualValues(t, 0, dialer.Attempts(), "should not dial untrusted dialer")
 
 	atomic.StoreInt32(&dialer.untrusted, 0)
-	_, err = newBalancer(dialer).Dial("", "does-not-exist.com:80")
+	_, err = newBalancer(dialer).DialContext(context.Background(), "", "does-not-exist.com:80")
 	assert.NoError(t, err, "Dialing with trusted dialer should have succeeded")
 	assert.EqualValues(t, 1, dialer.Attempts(), "should dial trusted dialer")
-	_, err = newBalancer(dialer).Dial("", "does-not-exist.com:8080")
+	_, err = newBalancer(dialer).DialContext(context.Background(), "", "does-not-exist.com:8080")
 	assert.NoError(t, err, "Dialing with trusted dialer should have succeeded")
 	assert.EqualValues(t, 2, dialer.Attempts(), "should dial trusted dialer")
 }
@@ -194,21 +194,21 @@ func TestSwitchAwayFromSlowDialer(t *testing.T) {
 	}
 
 	b := newBalancer(slowDialer, fastDialer)
-	_, err := b.Dial("tcp", addr)
+	_, err := b.DialContext(context.Background(), "tcp", addr)
 	assert.NoError(t, err, "Dialing with good dialers should succeed")
 	// simulate generic network issue
 	slowDialer.setSuccessRate(0.1)
 	fastDialer.setSuccessRate(0.1)
-	_, err = b.Dial("tcp", addr)
+	_, err = b.DialContext(context.Background(), "tcp", addr)
 	assert.Error(t, err, "Dialing should fail when no succeeding dailers")
 	slowDialer.setSuccessRate(1)
-	_, err = b.Dial("tcp", addr)
+	_, err = b.DialContext(context.Background(), "tcp", addr)
 	assert.NoError(t, err, "Dialing should succeed with one good dialer")
 	assert.Equal(t, slowDialer, b.copyOfDialers()[0], "should switch to slow dialer immediately if fast one fails")
 	fastDialer.setSuccessRate(1)
 	// wait a bit longer for probing to complete
 	time.Sleep(time.Second)
-	_, err = b.Dial("tcp", addr)
+	_, err = b.DialContext(context.Background(), "tcp", addr)
 	assert.NoError(t, err, "Dialing should succeed with good dialers")
 	assert.Equal(t, fastDialer, b.copyOfDialers()[0], "The fast dialer should rise to the top")
 }
