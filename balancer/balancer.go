@@ -249,13 +249,8 @@ func (b *Balancer) ResetFromExisting() {
 //
 // Blocks until dialers are available on the balancer (configured via the New
 // constructor or b.Reset).
-func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
-	return b.DialContext(context.Background(), network, addr)
-}
-
-// DialContext is same as Dial but uses the provided context.
 func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	op := ops.BeginWithBeam("balancer_dial", ctx)
+	op := ops.Begin("balancer_dial")
 	defer op.End()
 
 	op = ops.Begin("balancer_dial_details")

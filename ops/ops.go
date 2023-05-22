@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"runtime"
 	"strings"
-	"sync/atomic"
 	"time"
 
 	borda "github.com/getlantern/borda/client"
@@ -59,24 +58,6 @@ func (op *Op) Begin(name string) *Op {
 // Begin mimics the similar method from ops
 func Begin(name string) *Op {
 	return &Op{ops.Begin(name)}
-}
-
-// BeginWithBeam begins an Op with the beam extracted from the context, if
-// exists.
-func BeginWithBeam(name string, ctx context.Context) *Op {
-	op := Begin(name)
-	if beam, exist := ctx.Value(CtxKeyBeam).(uint64); exist {
-		op.Set("beam", beam)
-	}
-	return op
-}
-
-// BeginWithNewBeam begins an Op with a new beam and adds it to the context.
-func BeginWithNewBeam(name string, ctx context.Context) (*Op, context.Context) {
-	beam := atomic.AddUint64(&beam_seq, 1)
-	newCtx := context.WithValue(ctx, CtxKeyBeam, beam)
-	op := BeginWithBeam(name, newCtx)
-	return op, WithOp(newCtx, op)
 }
 
 // WithOp adds an Op to the context to be retrieved later via FromContext

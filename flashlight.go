@@ -20,7 +20,6 @@ import (
 	"github.com/getlantern/proxybench"
 
 	"github.com/getlantern/flashlight/balancer"
-	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/bypass"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
@@ -116,7 +115,6 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
 	f.applyClientConfig(cfg)
 	f.applyProxyBench(cfg)
-	f.applyBorda(cfg)
 	f.applyOtel(cfg)
 	select {
 	case f.onBordaConfigured <- true:
@@ -299,24 +297,6 @@ func (f *Flashlight) applyProxyBench(cfg *config.Global) {
 			log.Debug("proxybench disabled")
 		}
 	}()
-}
-
-func (f *Flashlight) applyBorda(cfg *config.Global) {
-	_enableBorda := borda.Enabler(cfg.BordaSamplePercentage)
-	enableBorda := func(ctx map[string]interface{}) bool {
-		if !f.autoReport() {
-			// User has chosen not to automatically submit data
-			return false
-		}
-
-		if f.FeatureEnabled(config.FeatureNoBorda) {
-			// Borda is disabled by global config
-			return false
-		}
-
-		return _enableBorda(ctx)
-	}
-	borda.Configure(cfg.BordaReportInterval, enableBorda)
 }
 
 func (f *Flashlight) applyOtel(cfg *config.Global) {

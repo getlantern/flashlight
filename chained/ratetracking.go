@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
+
 	borda "github.com/getlantern/borda/client"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/measured"
@@ -36,7 +37,7 @@ func (p *proxy) withRateTracking(wrapped net.Conn, origin string, ctx context.Co
 			p.consecReadSuccesses.Dec()
 		}
 		// record simple traffic without origin
-		op := ops.BeginWithBeam("traffic", ctx).ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
+		op := ops.Begin("traffic").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
 		op.SetMetric("client_bytes_sent", borda.Sum(stats.SentTotal)).
 			SetMetric("client_bytes_recv", borda.Sum(stats.RecvTotal))
 		op.FailIf(rwError)
@@ -44,7 +45,7 @@ func (p *proxy) withRateTracking(wrapped net.Conn, origin string, ctx context.Co
 		op.End()
 
 		// record xfer data with origin
-		op = ops.BeginWithBeam("xfer", ctx).OriginPort(origin, "")
+		op = ops.Begin("xfer").OriginPort(origin, "")
 		op.SetMetric("client_bytes_sent", borda.Sum(stats.SentTotal)).
 			SetMetric("client_bps_sent_min", borda.Min(stats.SentMin)).
 			SetMetric("client_bps_sent_max", borda.Max(stats.SentMax)).
