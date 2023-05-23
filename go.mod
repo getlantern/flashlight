@@ -81,13 +81,13 @@ require (
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20220920195041-55195f38df73
 	github.com/getlantern/netx v0.0.0-20211206143627-7ccfeb739cbd
-	github.com/getlantern/ops v0.0.0-20220713155959-1315d978fff7
+	github.com/getlantern/ops v0.0.0-20230424193308-26325dfed3cf
 	github.com/getlantern/osversion v0.0.0-20230401075644-c2a30e73c451
 	github.com/getlantern/proxy/v2 v2.0.1-0.20220303164029-b34b76e0e581
 	github.com/getlantern/proxybench v0.0.0-20220404140110-f49055cb86de
 	github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683
 	github.com/getlantern/quicproxy v0.0.0-20220808081037-32e9be8ec447
-	github.com/getlantern/quicwrapper v0.0.0-20230124133216-09e62d6a4ff2
+	github.com/getlantern/quicwrapper v0.0.0-20230523101504-1ec066b7f869
 	github.com/getlantern/replica v0.13.0
 	github.com/getlantern/rot13 v0.0.0-20220822172233-370767b2f782
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
@@ -217,7 +217,7 @@ require (
 	github.com/golang/geo v0.0.0-20200319012246-673a6f80352d // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gonum/blas v0.0.0-20180125090452-e7c5890b24cf // indirect
 	github.com/gonum/floats v0.0.0-20180125090339-7de1f4ea7ab5 // indirect
@@ -242,7 +242,7 @@ require (
 	github.com/lucas-clemente/quic-go v0.31.1 // indirect
 	github.com/marten-seemann/qtls-go1-18 v0.1.3 // indirect
 	github.com/marten-seemann/qtls-go1-19 v0.1.1 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mdlayher/netlink v1.1.0 // indirect
 	github.com/mholt/archiver/v3 v3.5.1 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
@@ -279,10 +279,13 @@ require (
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v1.13.0 // indirect
-	github.com/prometheus/client_model v0.2.0 // indirect
-	github.com/prometheus/common v0.37.0 // indirect
-	github.com/prometheus/procfs v0.8.0 // indirect
+	github.com/prometheus/client_golang v1.15.0 // indirect
+	github.com/prometheus/client_model v0.3.0 // indirect
+	github.com/prometheus/common v0.42.0 // indirect
+	github.com/prometheus/procfs v0.9.0 // indirect
+	github.com/quic-go/qtls-go1-19 v0.3.2 // indirect
+	github.com/quic-go/qtls-go1-20 v0.2.2 // indirect
+	github.com/quic-go/quic-go v0.34.0 // indirect
 	github.com/rs/dnscache v0.0.0-20211102005908-e0241e321417 // indirect
 	github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46 // indirect
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
