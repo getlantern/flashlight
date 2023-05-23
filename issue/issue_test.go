@@ -4,6 +4,8 @@
 package issue
 
 import (
+	"crypto/tls"
+	"net/http"
 	"os"
 	"testing"
 
@@ -13,7 +15,14 @@ import (
 var logger = golog.LoggerFor("issue_test")
 
 func TestMain(m *testing.M) {
-	client = &http.Client{}
+	client = &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				// TODO: Move the service to iantem.io
+				InsecureSkipVerify: true,
+			},
+		},
+	}
 	tempConfigDir, err := os.MkdirTemp("", "issue_test")
 	if err != nil {
 		logger.Errorf("Unable to create temp config dir: %v", err)
@@ -23,9 +32,14 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestSendIssueReport(t *testing.T) {
-	err := SendIssueReport("test", "US", "1.0.0", "free", "ios", "test", "jay+test@getlantern.org", [][]byte{})
+func TestSendReport(t *testing.T) {
+	err := SendReport(int(Request_NO_ACCESSS), "US", "1.0.0", "free", "ios", "test", "jay+test@getlantern.org", []*Attachment{
+		{
+			Name: "Hello.txt",
+			Data: []byte("Hello World"),
+		},
+	})
 	if err != nil {
-		t.Errorf("SendIssueReport() error = %v", err)
+		t.Errorf("SendReport() error = %v", err)
 	}
 }

@@ -26,7 +26,13 @@ message Request {
     string description = 6;
     string user_email = 7;
     string device_id = 8;
-    repeated Attachment attachments = 9;
+    string user_id = 9;
+    string pro_token = 10;
+    string device = 11;
+    string model = 12;
+    string os_version = 13;
+    string language = 14;
+    repeated Attachment attachments = 15;
     
     message Attachment {
         string type = 1;
