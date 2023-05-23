@@ -4,29 +4,33 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"time"
 
+	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/issue"
 	"github.com/getlantern/flashlight/logging"
+	"github.com/getlantern/fronted"
 )
 
-// func init() {
-// 	email.SetDefaultRecipient("support@lantern.jitbit.com")
+func init() {
+	// email.SetDefaultRecipient("support@lantern.jitbit.com")
 
-// 	go func() {
-// 		log.Debug("Getting fronted transport to use for submitting issues")
-// 		start := time.Now()
-// 		tr, ok := fronted.NewDirect(longFrontedAvailableTimeout)
-// 		if ok {
-// 			log.Debugf("Got fronted transport for submitting issues within %v", time.Now().Sub(start))
-// 		} else {
-// 			log.Debug("Failed to get fronted transport for submitting issues")
-// 		}
-// 		email.SetHTTPClient(&http.Client{
-// 			Timeout:   20 * time.Second,
-// 			Transport: tr,
-// 		})
-// 	}()
-// }
+	go func() {
+		log.Debug("Getting fronted transport to use for submitting issues")
+		start := time.Now()
+		tr, ok := fronted.NewDirect(longFrontedAvailableTimeout)
+		if ok {
+			log.Debugf("Got fronted transport for submitting issues within %v", time.Now().Sub(start))
+		} else {
+			log.Debug("Failed to get fronted transport for submitting issues")
+		}
+		email.SetHTTPClient(&http.Client{
+			Timeout:   20 * time.Second,
+			Transport: tr,
+		})
+	}()
+}
 
 // // Deprecated in favor of reportIssueViaAPI()
 // // ReportIssueViaEmail reports an issue via email.
@@ -93,8 +97,8 @@ func reportIssueViaAPI(
 		proText = "yes"
 	}
 
-	// TODO depending on other platforms, this could be
-	description := fmt.Sprintf("iOS version: %v\nDevice model: %v\nDevice ID: %v", iosVersion, deviceModel, deviceID)
+	description := deviceID // TODO determine where the "description" field is passed in from iOS
+	platform := fmt.Sprintf("%v (iOS %v)", deviceModel, iosVersion)
 
 	// make an empty slice of a slice of bytes
 	attachments := [][]byte{}
@@ -121,7 +125,7 @@ func reportIssueViaAPI(
 	}
 
 	// TODO determine the country code
-	err = issue.SendIssueReport(issueText, "country-code-placeholder", appVersion, proText, "iOS", description, emailAddress, attachments)
+	err = issue.SendIssueReport(issueText, "country-code-placeholder", appVersion, proText, platform, description, emailAddress, attachments)
 	if err != nil {
 		log.Errorf("unable to send ios issue report: %v", err)
 	}
