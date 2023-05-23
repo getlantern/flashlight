@@ -46,6 +46,10 @@ Lanternsdk.xcframework: $(SOURCES)
 	echo "Running gomobile with `which gomobile` version `gomobile version` ..." && \
 	gomobile bind -cache `pwd`/.gomobilecache -o=Lanternsdk.xcframework -target=ios -tags='headless publicsdk' -ldflags="$(LDFLAGS)" github.com/getlantern/flashlight/lanternsdk
 
+%.pb.go: %.proto
+	go build -o build/protoc-gen-go google.golang.org/protobuf/cmd/protoc-gen-go
+	protoc --go_out=. --plugin=build/protoc-gen-go --go_opt=paths=source_relative $<
+
 clean:
 	rm -rf .gomobilecache lanternsdk-android.aar Lanternsdk.xcframework
 

@@ -1,19 +1,32 @@
 syntax = "proto3";
-
 package issue;
+option go_package = "github.com/getlantern/flashlight/issue";
 
 message Response {
 }
 
 message Request {
-	string type = 1;
+    enum ISSUE_TYPE {
+        PAYMENT_FAIL = 0;
+        CANNOT_LOGIN = 1;
+        ALWAYS_SPINNING = 2;
+        NO_ACCESSS = 3;
+        SLOW = 4;
+        CANNOT_LINK_DEVICE = 5;
+        CRASHES = 6;
+        CHAT_NOT_WORKING = 7;
+        DISCOVER_NOT_WORKING = 8;
+    }
+    
+	ISSUE_TYPE type = 1;
     string country_code = 2;
     string app_version = 3;
     string subscription_level = 4;
     string platform = 5;
     string description = 6;
     string user_email = 7;
-    repeated Attachment attachments= 8;
+    string device_id = 8;
+    repeated Attachment attachments = 9;
     
     message Attachment {
         string type = 1;

@@ -5,16 +5,22 @@ import (
 	"fmt"
 	"net/http"
 
+	proto "github.com/golang/protobuf/proto"
+
 	"github.com/getlantern/flashlight/logging"
+	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/util"
 	"github.com/getlantern/golog"
-	proto "github.com/golang/protobuf/proto"
 )
 
 var (
 	log            = golog.LoggerFor("flashlight.issue")
 	maxLogTailSize = 1024768   // TODO are both of these needed?
 	maxLogSize     = "1024768" // TODO are both of these needed?
+
+	client = &http.Client{
+		Transport: proxied.ChainedThenFronted(),
+	}
 )
 
 // Attachment represents a single supported attachment
@@ -40,7 +46,7 @@ var (
 
 // Sends an issue report to lantern-cloud/issue, which is then forwarded to ticket system via API
 func SendIssueReport(
-	issueType string,
+	issueType int32,
 	countryCode string,
 	appVersion string,
 	subscriptionLevel string,
@@ -53,7 +59,7 @@ func SendIssueReport(
 	r := &Request{}
 
 	log.Debug("capturing issue report metadata")
-	r.Type = issueType
+	r.Type = Request_ISSUE_TYPE(issueType)
 	r.CountryCode = countryCode
 	r.AppVersion = appVersion
 	r.SubscriptionLevel = subscriptionLevel
@@ -98,7 +104,8 @@ func SendIssueReport(
 		log.Errorf("unable to marshal issue report: %v", err)
 		return err
 	}
-	resp, err := http.Post(requestURL, "application/zip", bytes.NewBuffer(out))
+
+	resp, err := client.Post(requestURL, "application/zip", bytes.NewBuffer(out))
 	if err != nil {
 		log.Errorf("unable to send issue report: %v", err)
 		return err

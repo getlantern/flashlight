@@ -1,3 +1,6 @@
+//go:build integration
+// +build integration
+
 package issue
 
 import (
@@ -10,6 +13,7 @@ import (
 var logger = golog.LoggerFor("issue_test")
 
 func TestMain(m *testing.M) {
+	client = &http.Client{}
 	tempConfigDir, err := os.MkdirTemp("", "issue_test")
 	if err != nil {
 		logger.Errorf("Unable to create temp config dir: %v", err)
