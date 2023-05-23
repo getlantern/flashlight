@@ -90,8 +90,8 @@ func SendIssueReport(
 	}
 
 	// send message to lantern-cloud
-	port := 443                              // TODO how do we send to lantern-cloud?
-	destination := "https://iantem.io/issue" // TODO is this correct?
+	port := 443
+	destination := "https://issue.lantr.net/issue" // TODO verify desitination and port
 	requestURL := fmt.Sprintf("%v:%v", destination, port)
 	out, err := proto.Marshal(r)
 	if err != nil {
