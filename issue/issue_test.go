@@ -18,3 +18,10 @@ func TestMain(m *testing.M) {
 	defer os.RemoveAll(tempConfigDir)
 	os.Exit(m.Run())
 }
+
+func TestSendIssueReport(t *testing.T) {
+	err := SendIssueReport("test", "US", "1.0.0", "free", "ios", "test", "jay+test@getlantern.org", [][]byte{})
+	if err != nil {
+		t.Errorf("SendIssueReport() error = %v", err)
+	}
+}
