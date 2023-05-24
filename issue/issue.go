@@ -27,7 +27,7 @@ var (
 )
 
 const (
-	requestURL = "https://issue.lantr.net/issue"
+	requestURL = "https://issue.iantem.io/v1/issue"
 )
 
 type Attachment struct {
@@ -47,7 +47,35 @@ func SendReport(
 	osVersion string,
 	attachments []*Attachment,
 ) (err error) {
+	return sendReport(
+		userConfig.GetDeviceID(),
+		strconv.Itoa(int(userConfig.GetUserID())),
+		userConfig.GetToken(),
+		userConfig.GetLanguage(),
+		issueType,
+		description,
+		subscriptionLevel,
+		userEmail,
+		device,
+		model,
+		osVersion,
+		attachments,
+	)
+}
 
+func sendReport(
+	deviceID string,
+	userID string,
+	proToken string,
+	language string,
+	issueType int,
+	description string,
+	subscriptionLevel string,
+	userEmail string,
+	device string,
+	model string,
+	osVersion string,
+	attachments []*Attachment) error {
 	r := &Request{}
 
 	log.Debug("capturing issue report metadata")
@@ -58,13 +86,13 @@ func SendReport(
 	r.Platform = common.Platform
 	r.Description = description
 	r.UserEmail = userEmail
-	r.DeviceId = userConfig.GetDeviceID()
-	r.UserId = strconv.Itoa(int(userConfig.GetUserID()))
-	r.ProToken = userConfig.GetToken()
+	r.DeviceId = deviceID
+	r.UserId = userID
+	r.ProToken = proToken
 	r.Device = device
 	r.Model = model
 	r.OsVersion = osVersion
-	r.Language = userConfig.GetLanguage()
+	r.Language = language
 
 	for _, attachment := range attachments {
 		r.Attachments = append(r.Attachments, &Request_Attachment{

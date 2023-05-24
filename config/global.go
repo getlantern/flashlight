@@ -25,6 +25,9 @@ type Global struct {
 	UpdateServerURL       string
 	BordaReportInterval   time.Duration
 	BordaSamplePercentage float64
+	// ReportIssueEmail is the recipient of the email sent when the user
+	// reports issue.
+	ReportIssueEmail string
 
 	// AdSettings are the settings to use for showing ads to mobile clients
 	AdSettings *AdSettings
