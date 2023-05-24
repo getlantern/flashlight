@@ -1,6 +1,3 @@
-//go:build integration
-// +build integration
-
 package issue
 
 import (
@@ -9,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/golog"
 )
 
@@ -33,9 +31,8 @@ func TestMain(m *testing.M) {
 }
 
 func TestSendReport(t *testing.T) {
-	err := SendReport(int(Request_NO_ACCESSS), "US", "0.0.0", "Pro", "Android", "Description placeholder",
-		"jay+test@getlatnern.org", "a123456", "z987654", "abc000000", "Samsung Galaxy S10", "SM-G973F",
-		"11", "en", []*Attachment{
+	err := SendReport(common.UserConfig, Request_NO_ACCESSS, "Description Placeholder", "Pro",
+		"jay+test@getlatnern.org", "Samsung Galaxy S10", "SM-G973F", "11", []*Attachment{
 			{
 				Name: "Hello.txt",
 				Data: []byte("Hello World"),
