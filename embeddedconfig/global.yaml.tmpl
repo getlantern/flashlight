@@ -13,7 +13,6 @@ reportissueemail: support@lantern.jitbit.com
 #
 # The available features are:
 # - proxybench
-# - pingproxies
 # - trafficlog
 # - noborda
 # - probeproxies
@@ -80,9 +79,7 @@ featuresenabled:
   otel:
     - label: opentelemetry
   noborda:
-    - label: disablebordafor75percent
-      userfloor: 0
-      userceil: 0.75
+    - label: disablebordaglobally
   yinbi:
     - label: yinbi
       application: lantern
@@ -100,7 +97,7 @@ featuresenabled:
       # this filter works only for Lantern 6.1+
       application: lantern
     - label: replica-android
-      geocountries: tn,de,ca,au
+      geocountries: tn,de,ca,au,ae,at,be,br,ch,cn,cr,cz,dk,do,ec,eg,es,fi,fr,gr,gt,hk,ie,in,it,jp,kp,li,lu,mm,mx,ni,nl,nz,pl,ps,se,sv,sy,th,tr,tw,uk,us,ye
       platforms: android
       versionconstraints: ">=7.0.0"
     - label: replica-android-early
@@ -113,18 +110,18 @@ featuresenabled:
     - label: all-beam
       application: beam
       versionconstraints: "<4.0.0"
-  chat:
-    - label: chat-android
-      geocountries: us,ca,de,ch,au
-      platforms: android
-      versionconstraints: ">=7.0.0"
-    - label: chat-android-with-china
-      geocountries: ae,us,ca,de,ch,au,in,pk,cn
-      platforms: android
-      versionconstraints: ">=7.1.0"
-    - label: chat-android-qa
-      platforms: android
-      versionconstraints: ">=99.0.0"
+  #chat:
+  #  - label: chat-android
+  #    geocountries: us,ca,de,ch,au
+  #    platforms: android
+  #    versionconstraints: ">=7.0.0"
+  #  - label: chat-android-with-china
+  #    geocountries: ae,us,ca,de,ch,au,in,pk,cn
+  #    platforms: android
+  #    versionconstraints: ">=7.1.0"
+  #  - label: chat-android-qa
+  #    platforms: android
+  #    versionconstraints: ">=99.0.0"
   ######## New-Style configuration for detour, shortcut and probeproxies. These are disabled by default and have to be enabled in the config. ########
   #detour:
   #  - label: cn-detour
@@ -132,6 +129,7 @@ featuresenabled:
   shortcut:
     - label: cn-shortcut
       geocountries: cn
+      versionconstraints: "!7.4.0"
   #  - label: ir-desktop-shortcut
   #    geocountries: ir
   #    platforms: windows,darwin,linux
@@ -145,7 +143,7 @@ featuresenabled:
     - label: stealth
       geocountries: us,cn
     - label: detour-broken
-      geocountries: uz
+      geocountries: uz,ru
   noshortcut:
     - label: hk-privacy
       geocountries: hk
@@ -153,7 +151,10 @@ featuresenabled:
       platforms: android
       geocountries: ir
     - label: shortcut-broken
-      geocountries: uz
+      geocountries: uz,ru
+    - label: china-experiment
+      geocountries: cn
+      versionconstraints: "=7.4.0"
   noprobeproxies:
     - label: stealth
       geocountries: ir
@@ -174,10 +175,6 @@ featuresenabled:
       userfloor: 0
       userceil: 0.05
       geocountries: cn
-  matomo:
-    - label: matomo
-      userfloor: 0
-      userceil: 1
 featureoptions:
   googlesearchads:
     ad_format: "\n            <div style=\"padding-bottom: 8px;\">\n             \
@@ -225,110 +222,48 @@ featureoptions:
     # unencrypted. See here: https://github.com/getlantern/flashlight/pull/1198
 
     metadatabaseurls: &AllReplicaBaseUrls
-    - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
-    - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
-    - https://s3.eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
-    - https://s3-eu-central-1.amazonaws.com/getlantern-replica-frankfurt/
-    - https://d3mm73d1kmj7zd.cloudfront.net/
-    replicarustendpoint: &GlobalReplicaRust http://replica-search.lantern.io/
+    # This is a domain access endpoint for the Replica Cloudflare R2 bucket. See https://dash.cloudflare.com/1c693b3f1031ed33f68653b1e67dfbef/r2/overview/buckets/replica/settings and the domain's DNS configuration.
+    - https://replica-r2.lantern.io/
+    # This endpoint triggers objects to be copied from older buckets if they're not yet present on R2, and then redirects to the correct replica endpoint.
+    - https://replica-r2-slurper.lantern.io/
+    replicarustendpoint: &FrankfurtReplicaRust http://replica-search-aws.lantern.io/
     staticpeeraddrs: []
     # This list is from https://github.com/getlantern/dhtup/blob/c8fde3e1a38abcb9709df07194ea2de3ae33bdbe/trackers.go#L14
     # We want to cover several transports (schemes here), support announces for Replica content and otherwise, and ensure results for regional differences. To that end a China tracker would be nice if it wasn't a vulnerability.
     # http(s) proxies must be added to the domain routing rules if they have non-standard ports.
     trackers: &GlobalTrackers
     - udp://opentor.org:2710/announce
-    - http://tracker4.itzmx.com:2710/announce
-    - udp://tracker.opentrackr.org:1337/announce
+    # This is offline for now.
+    #- udp://tracker.bittorrent.cloud:42069/announce
+    # This tracker matches the one replica-rust uses to get swarm counts. It should be the most reliable choice.
+    - http://tracker.opentrackr.org:1337/scrape
     - https://tracker.nanoha.org:443/announce
     - http://t.nyaatracker.com:80/announce
     webseedbaseurls: *AllReplicaBaseUrls
 
-    # These are for compatibility with clients that don't load all options per-country.
-    replicarustdefaultendpoint: &FrankfurtReplicaRust http://replica-search-aws.lantern.io/
+    # These are for compatibility with clients that don't load all options per-country. They can be removed when android-lantern is released with the fix to use the updated ReplicaOptions handling.
+
+    replicarustdefaultendpoint: *FrankfurtReplicaRust
+
+    # This probably isn't needed, but some tests might still assume that "CN" is a key, and I'm not 100% YAML won't barf if this field is missing. Also it means that old clients might not fallback to a hardcoded Global instance and use this instead. All the reasons.
+
     replicarustendpoints:
-      "RU": *FrankfurtReplicaRust
-      "IR": *FrankfurtReplicaRust
+      "CN": *FrankfurtReplicaRust
 
     # Here follows options per-country
 
-    "DE": &FrankfurtBase
+    "IR":
+      trackers: *GlobalTrackers
+      staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
+      replicarustendpoint: *FrankfurtReplicaRust
+      metadatabaseurls: *AllReplicaBaseUrls
+      webseedbaseurls: *AllReplicaBaseUrls
+    "RU":
       metadatabaseurls: *AllReplicaBaseUrls
       replicarustendpoint: *FrankfurtReplicaRust
-      staticpeeraddrs: []
       trackers: *GlobalTrackers
       webseedbaseurls: *AllReplicaBaseUrls
-    "LT": *FrankfurtBase
-    "EE": *FrankfurtBase
-    "BY": *FrankfurtBase
-    "UA": *FrankfurtBase
-    "AE": *FrankfurtBase
-    "LV": *FrankfurtBase
-    "MD": *FrankfurtBase
-    "GE": *FrankfurtBase
-    "UZ": *FrankfurtBase
-    "KZ": *FrankfurtBase
-    "TR": *FrankfurtBase
-    "TM": *FrankfurtBase
-    "AM": *FrankfurtBase
-    "AZ": *FrankfurtBase
-    "KG": *FrankfurtBase
-    "TJ": *FrankfurtBase
-    "TN": *FrankfurtBase
-    "US": *FrankfurtBase
-    "UK": *FrankfurtBase
-    "AT": *FrankfurtBase
-    "BE": *FrankfurtBase
-    "BR": *FrankfurtBase
-    "CR": *FrankfurtBase
-    "DK": *FrankfurtBase
-    "DO": *FrankfurtBase
-    "EC": *FrankfurtBase
-    "EG": *FrankfurtBase
-    "SV": *FrankfurtBase
-    "FR": *FrankfurtBase
-    "FI": *FrankfurtBase
-    "GR": *FrankfurtBase
-    "GT": *FrankfurtBase
-    "HK": *FrankfurtBase
-    "IN": *FrankfurtBase
-    "IE": *FrankfurtBase
-    "IT": *FrankfurtBase
-    "JP": *FrankfurtBase
-    "KP": *FrankfurtBase
-    "LI": *FrankfurtBase
-    "LU": *FrankfurtBase
-    "MX": *FrankfurtBase
-    "MM": *FrankfurtBase
-    "NL": *FrankfurtBase
-    "NZ": *FrankfurtBase
-    "NI": *FrankfurtBase
-    "PS": *FrankfurtBase
-    "PL": *FrankfurtBase
-    "ES": *FrankfurtBase
-    "SE": *FrankfurtBase
-    "CH": *FrankfurtBase
-    "SY": *FrankfurtBase
-    "TW": *FrankfurtBase
-    "TH": *FrankfurtBase
-    "YE": *FrankfurtBase
-    "CZ": *FrankfurtBase
-    "GE": *FrankfurtBase
-    "IR":
-      <<: *FrankfurtBase
-      staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
-    "RU":
-      <<: *FrankfurtBase
       staticpeeraddrs: [&RussiaReplicaPeers "94.242.59.118:42069"]
-    "CN":
-      metadatabaseurls:
-      - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
-      - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
-      replicarustendpoint: *GlobalReplicaRust
-      staticpeeraddrs: []
-      trackers: *GlobalTrackers
-      webseedbaseurls:
-      - https://s3.ap-southeast-1.amazonaws.com/getlantern-replica/
-      - https://s3-ap-southeast-1.amazonaws.com/getlantern-replica/
 
 adsettings:
   nativebannerzoneid: 5d3787399a1a710001b1ba32
@@ -376,6 +311,7 @@ client:
     ss7hc6jm.io:443: 92.223.103.136:443
     www.ss7hc6jm.io:80: 92.223.103.136:80
     ss7hc6jm.io:80: 92.223.103.136:80
+    # Should there be something here for the Iran Replica infrastructure?
 
 
 nameddomainroutingrules:
@@ -386,6 +322,8 @@ nameddomainroutingrules:
     gvt2.com: md
     gvt3.com: md
     android.clients.google.com: md
+    play.apis.google.com: md
+    play-fe.apis.google.com: md
 
 domainroutingrules:
   huya.com: d
@@ -407,16 +345,16 @@ domainroutingrules:
   router.asus.com: d
   sqm.msn.com: d
   aupl.download.windowsupdate.com: d
-  baidu.com: d
-  aparat.com: d
+  baidu.com: md
+  aparat.com: md
   tmall.com: d
   qq.com: d
   sohu.com: d
   taobao.com: d
-  360.cn: d
+  360.cn: md
   jd.com: d
-  weibo.com: d
-  sina.com.cn: d
+  weibo.com: md
+  sina.com.cn: md
   xinhuanet.com: d
   panda.tv: d
   zhanqi.tv: d
@@ -424,7 +362,7 @@ domainroutingrules:
   huanqiu.com: d
   tianya.cn: d
   yy.com: d
-  bilibili.com: d
+  bilibili.com: md
   17ok.com: d
   so.com: d
   1688.com: d
@@ -437,23 +375,41 @@ domainroutingrules:
   namasha.com: d
   filimo.com: d
   tejaratnews.com: d
-  ir: d
-  yandexmetrica.com: d
+  ir: md
+  yandexmetrica.com: md
   status-log.vskit.tv: d
   api.maccms.com: d
-  wechat.com: d
-  vk.com: d
-  yandex.net: d
-  yandex.ru: d
-  yandexmetrica.com: d
-  tiktok.com: d
-  
+  wechat.com: md
+  vk.com: md
+  yandex.net: md
+  yandex.ru: md
+  yandexmetrica.com: md
+  tiktok.com: md
+  tiktokcdn.com: md
+  apple.com: md
+  cdn-apple.com: md
+  xvideos-cdn.com: md
+  xnxx-cdn.com: md
+  tiktokcdn-us.com: md
+  # pornhub cdn direct for now to cut costs in iran
+  phncdn.com: md
+
+  # Apparently for windows updates
+  hwcdn.net: md
+
   # Go direct in Russia for now
   92.223.103.136: md
   s-dt2.cloud.gcore.lu: md
   retracker.bashtel.ru: md
 
+  # Iran direct
+
+  # Should we be using the IP address directly here?
+  ir.ss7hc6jm.io: md
+  s3.ir-thr-at1.arvanstorage.com: md
+
   # Replica http(s) BitTorrent trackers that run on non-standard ports (80 and 443?) should be listed here.
+  tracker.bittorrent.cloud: p
   tracker.opentrackr.org: p
   9.rarbg.com: p
   tracker.openbittorrent.com: p
@@ -461,6 +417,17 @@ domainroutingrules:
 
   # Donorbox doesn't like proxied traffic sometimes, send it direct
   donorbox.org: md
+
+  # FreeKassa is a Russian payment processor, send it direct
+  # https://github.com/getlantern/lantern-internal/issues/5841
+  pay.freekassa.ru: md
+
+  # Yinshi
+  yinshix.com: p
+  yinshi.iantem.io: p
+
+  # ChatGPT
+  chat.openai.com: p
 
 proxiedsites:
   delta:
@@ -478,15 +445,18 @@ replica:
   trackers: *GlobalTrackers
   staticpeeraddrs: []
   metadatabaseurls: *AllReplicaBaseUrls
-  replicaserviceendpoint: *GlobalReplicaRust
+  replicaserviceendpoint: *FrankfurtReplicaRust
 
 otel:
   endpoint: api.honeycomb.io:443
   headers:
     # Note - this key is only authorized to send events, nothing else
     x-honeycomb-team: D7LRAYj3uCxrSb7WZjO24C
-  samplerate: 2000
+  samplerate: 8000
   opsamplerates:
     client_started: 1
     client_stopped: 1
     report_issue: 1
+    proxy_rank: 24000
+    # Once per MB?
+    replica_torrent_peer_sent_data: 16

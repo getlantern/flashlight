@@ -110,6 +110,41 @@ func RequestDeviceLinkingCode(deviceID, deviceName string) (string, error) {
 	return resp.Code, nil
 }
 
+// RedeemResellerCode redeems the given reseller code, returning the payment_status and the plan
+func RedeemResellerCode(userID int, proToken, deviceID, emailAddress, resellerCode, deviceName, currency string) error {
+	pc, err := getProClient()
+	if err != nil {
+		return err
+	}
+
+	resp, err := pc.RedeemResellerCode(
+		userConfigFor(
+			userID,
+			proToken,
+			deviceID),
+		emailAddress, resellerCode, deviceName, currency)
+	if err != nil {
+		return log.Errorf("unable to redeem reseller code: %v", err)
+	}
+	log.Debugf("Redeemed reseller code, response: %+v", resp)
+	return nil
+}
+
+// UserCreate creates a new user account on the pro server
+func UserCreate(deviceID string) (*ProCredentials, error) {
+	pc, err := getProClient()
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := pc.UserCreate(partialUserConfigFor(deviceID))
+	if err != nil {
+		return nil, log.Errorf("unable to create new user: %v", err)
+	}
+	log.Debugf("created new user: %+v", resp)
+	return &ProCredentials{UserID: int(resp.ID), ProToken: resp.Token}, nil
+}
+
 // Canceler providers a mechanism for canceling long running operations
 type Canceler struct {
 	c          chan interface{}

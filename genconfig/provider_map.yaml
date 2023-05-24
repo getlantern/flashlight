@@ -13,6 +13,7 @@ cloudfront:
     update.getlantern.org: d2yl1zps97e5mx.cloudfront.net
     github.com: d2yl1zps97e5mx.cloudfront.net
     github-production-release-asset-2e65be.s3.amazonaws.com: d37kom4pw4aa7b.cloudfront.net
+    objects.githubusercontent.com: d15b4vylwwabfh.cloudfront.net
     mandrillapp.com: d2rh3u0miqci5a.cloudfront.net
     replica-search.lantern.io: d7kybcoknm3oo.cloudfront.net
     replica-search-staging.lantern.io: d36vwf34kviguu.cloudfront.net
@@ -21,6 +22,7 @@ cloudfront:
     replica-search-ir.lantern.io: d2989l3kuj93v8.cloudfront.net
     replica-thumbnailer-ir.lantern.io: d132le39uhgr75.cloudfront.net
     replica-thumbnailer.lantern.io: d2b627m7r9v7iw.cloudfront.net
+    bf-freddie.herokuapp.com: d2rhc0fs939ppy.cloudfront.net
 akamai:
   ping: 'https://fronted-ping.dsa.akamai.getiantem.org/ping'
   rejectStatus: 403
@@ -36,6 +38,7 @@ akamai:
     update.getlantern.org: update.dsa.akamai.getiantem.org
     github.com: github.dsa.akamai.getiantem.org
     github-production-release-asset-2e65be.s3.amazonaws.com: github-release-asset.dsa.akamai.getiantem.org
+    objects.githubusercontent.com: objects-githubusercontent.dsa.akamai.getiantem.org
     mandrillapp.com: mandrillapp.dsa.akamai.getiantem.org
     replica-search.lantern.io: replica-search.dsa.akamai.lantern.io
     replica-search-staging.lantern.io: replica-search-staging.dsa.akamai.lantern.io
@@ -44,3 +47,4 @@ akamai:
     replica-search-ir.lantern.io: replica-search-ir.dsa.akamai.lantern.io
     replica-thumbnailer-ir.lantern.io: replica-thumbnailer-ir.dsa.akamai.lantern.io
     replica-thumbnailer.lantern.io: replica-thumbnailer.dsa.akamai.lantern.io
+    bf-freddie.herokuapp.com: freddie.dsa.akamai.getiantem.org

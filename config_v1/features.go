@@ -45,7 +45,7 @@ var (
 
 // FeatureOptions is an interface implemented by all feature options
 type FeatureOptions interface {
-	fromMap(map[string]interface{}) error
+	FromMap(map[string]interface{}) error
 }
 
 type AnalyticsProvider struct {
@@ -63,7 +63,7 @@ type AnalyticsOptions struct {
 const GA = "ga"
 const MATOMO = "matomo"
 
-func (ao *AnalyticsOptions) fromMap(m map[string]interface{}) error {
+func (ao *AnalyticsOptions) FromMap(m map[string]interface{}) error {
 	return mapstructure.Decode(m, &ao)
 }
 
@@ -169,7 +169,7 @@ type PingProxiesOptions struct {
 	Interval time.Duration
 }
 
-func (o *PingProxiesOptions) fromMap(m map[string]interface{}) error {
+func (o *PingProxiesOptions) FromMap(m map[string]interface{}) error {
 	interval, err := durationFromMap(m, "interval")
 	if err != nil {
 		return err
@@ -214,7 +214,7 @@ type TrafficLogOptions struct {
 	TimeBeforeDenialReset time.Duration
 }
 
-func (o *TrafficLogOptions) fromMap(m map[string]interface{}) error {
+func (o *TrafficLogOptions) FromMap(m map[string]interface{}) error {
 	var err error
 	o.CaptureBytes, err = intFromMap(m, "capturebytes")
 	if err != nil {
@@ -313,8 +313,8 @@ func (g ClientGroup) Validate() error {
 	return nil
 }
 
-//Includes checks if the ClientGroup includes the user, device and country
-//combination, assuming the group has been validated.
+// Includes checks if the ClientGroup includes the user, device and country
+// combination, assuming the group has been validated.
 func (g ClientGroup) Includes(appName string, userID int64, isPro bool, geoCountry string) bool {
 	if g.UserCeil > 0 {
 		// Unknown user ID doesn't belong to any user range

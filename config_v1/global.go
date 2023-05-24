@@ -37,10 +37,10 @@ type Global struct {
 	ProxiedSites *domainrouting.ProxiedSitesConfig
 
 	// DomainRoutingRules specifies routing rules for specific domains, such as forcing proxing, forcing direct dials, etc.
-	DomainRoutingRules domainrouting.Rules
+	DomainRoutingRules domainrouting.RulesMap
 
 	// NamedDomainRoutingRules specifies routing rules for specific domains, grouped by name.
-	NamedDomainRoutingRules map[string]domainrouting.Rules
+	NamedDomainRoutingRules map[string]domainrouting.RulesMap
 
 	// TrustedCAs are trusted CAs for domain fronting domains only.
 	TrustedCAs []*fronted.CA
@@ -100,7 +100,7 @@ func (cfg *Global) UnmarshalFeatureOptions(feature string, opts FeatureOptions) 
 	if !exists {
 		return errAbsentOption
 	}
-	return opts.fromMap(m)
+	return opts.FromMap(m)
 }
 
 // TrustedCACerts returns a certificate pool containing the TrustedCAs from this

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/common"
 	"github.com/stretchr/testify/assert"
 )
@@ -25,7 +25,7 @@ func TestInit(t *testing.T) {
 	// Note these dispatch functions will receive multiple configs -- local ones,
 	// embedded ones, and remote ones.
 	proxiesDispatch := func(cfg interface{}, src Source) {
-		proxies := cfg.(map[string]*apipb.ProxyConfig)
+		proxies := cfg.(map[string]*commonconfig.ProxyConfig)
 		assert.True(t, len(proxies) > 0)
 		gotProxies.Set(true)
 	}

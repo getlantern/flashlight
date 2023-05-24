@@ -39,7 +39,7 @@ func (p *proxy) ProbeStats() (successes uint64, successKBs uint64, failures uint
 func (p *proxy) Probe(forPerformance bool) bool {
 	// We don't really need the context or the op here. The only purpose is to
 	// create a new beam and implicitly pass it down to the child op.
-	op, _ := ops.BeginWithNewBeam("probe_root", context.Background())
+	op := ops.Begin("probe_root")
 	op.Set("for_performance", forPerformance)
 	defer op.End()
 	forPerformanceString := ""

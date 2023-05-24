@@ -43,6 +43,10 @@ var (
 // Dialer provides the ability to dial a proxy and obtain information needed to
 // effectively load balance between dialers.
 type Dialer interface {
+	// SupportsAddr indicates whether this Dialer supports the given addr. If it does not, the
+	// balancer will not attempt to dial that addr with this Dialer.
+	SupportsAddr(network, addr string) bool
+
 	// DialContext dials out to the given origin. failedUpstream indicates whether
 	// this was an upstream error (as opposed to errors connecting to the proxy).
 	DialContext(ctx context.Context, network, addr string) (conn net.Conn, failedUpstream bool, err error)
@@ -127,9 +131,6 @@ type Dialer interface {
 
 	// Stop stops background processing for this Dialer.
 	Stop()
-
-	// Ping performs an ICMP ping of the proxy used by this dialer
-	Ping()
 
 	WriteStats(w io.Writer)
 }
@@ -234,10 +235,10 @@ func (b *Balancer) ResetFromExisting() {
 // Dial dials (network, addr) using one of the currently active configured
 // Dialers. The dialer is chosen based on the following ordering:
 //
-// - succeeding dialers are preferred to failing
-// - dialers whose bandwidth is unknown are preferred to those whose bandwidth
-//   is known (in order to collect data)
-// - faster dialers (based on bandwidth / RTT) are preferred to slower ones
+//   - succeeding dialers are preferred to failing
+//   - dialers whose bandwidth is unknown are preferred to those whose bandwidth
+//     is known (in order to collect data)
+//   - faster dialers (based on bandwidth / RTT) are preferred to slower ones
 //
 // Only Trusted Dialers are used to dial HTTP hosts.
 //
@@ -248,13 +249,8 @@ func (b *Balancer) ResetFromExisting() {
 //
 // Blocks until dialers are available on the balancer (configured via the New
 // constructor or b.Reset).
-func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
-	return b.DialContext(context.Background(), network, addr)
-}
-
-// DialContext is same as Dial but uses the provided context.
 func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	op := ops.BeginWithBeam("balancer_dial", ctx)
+	op := ops.Begin("balancer_dial")
 	defer op.End()
 
 	op = ops.Begin("balancer_dial_details")
@@ -294,16 +290,8 @@ type balancedDial struct {
 	idx            int
 }
 
-func (b *Balancer) newBalancedDial(network string, addr string) (*balancedDial, error) {
-	trustedOnly := false
-	_, port, _ := net.SplitHostPort(addr)
-	// We try to identify HTTP traffic (as opposed to HTTPS) by port and only
-	// send HTTP traffic to dialers marked as trusted.
-	if port == "" || port == "80" || port == "8080" {
-		trustedOnly = true
-	}
-
-	dialers, sessionStats, pickErr := b.pickDialers(trustedOnly)
+func (b *Balancer) newBalancedDial(network, addr string) (*balancedDial, error) {
+	dialers, sessionStats, pickErr := b.pickDialers(network, addr)
 	if pickErr != nil {
 		return nil, pickErr
 	}
@@ -318,42 +306,81 @@ func (b *Balancer) newBalancedDial(network string, addr string) (*balancedDial, 
 	}, nil
 }
 
-func (bd *balancedDial) dial(ctx context.Context, start time.Time) (conn net.Conn, err error) {
-	newCTX, cancel := context.WithTimeout(ctx, bd.Balancer.overallDialTimeout)
+func (bd *balancedDial) dial(parentCtx context.Context, start time.Time) (net.Conn, error) {
+	childCtx, cancel := context.WithTimeout(parentCtx, bd.Balancer.overallDialTimeout)
 	defer cancel()
-	deadline, _ := newCTX.Deadline()
 	attempts := 0
 	for {
-		conn := bd.dialWithDialer(newCTX, bd.dialers[bd.idx], start, attempts)
-		if conn != nil {
+		conn, err := bd.dialWithDialer(childCtx, bd.dialers[bd.idx], start, attempts)
+		if err != nil {
+			// Log the dial error here as a trace since it's not fatal. If we
+			// have another dialer, we'll try it.
+			log.Tracef(
+				"Dialing %s://%s with %s failed: %v. You can ignore this since we'll try with other dialers.",
+				bd.network, bd.addr, bd.dialers[bd.idx].Label(), err)
+		} else {
 			return conn, nil
 		}
-		if time.Now().After(deadline) {
-			break
+
+		// Check context: if it dies, we can't continue.
+		select {
+		case <-childCtx.Done():
+			err = fmt.Errorf(
+				"Dialing %s://%s with %s on attempt %d context died (1st codepath): dial duration (%s): Context duration (%s). Context error: %w",
+				bd.network, bd.addr,
+				bd.dialers[bd.idx].Label(),
+				attempts, time.Since(start),
+				bd.Balancer.overallDialTimeout,
+				childCtx.Err())
+			return nil, err
+		default:
 		}
+
 		attempts++
-		if !bd.advanceToNextDialer(attempts) {
-			break
+		if !bd.advanceToNextDialer(childCtx, attempts) {
+			// If we reached here, we have no more dialers and the context
+			// might've died. Determine the error and die
+			if childCtx.Err() != nil {
+				err = fmt.Errorf(
+					"Dialing %s://%s with %s on attempt %d context died (2nd codepath): Context duration (%s). Context error: %w",
+					bd.network, bd.addr,
+					bd.dialers[bd.idx].Label(),
+					attempts,
+					bd.Balancer.overallDialTimeout,
+					childCtx.Err())
+			} else {
+				err = fmt.Errorf("No more dialers for %s://%s with %s on attempt %d",
+					bd.network, bd.addr,
+					bd.dialers[bd.idx].Label(),
+					attempts)
+			}
+			return nil, err
 		}
-		// check deadline again after advancing, as we may have slept for a while
-		if time.Now().After(deadline) {
-			break
-		}
+		// If we reach here, we failed with this dialer, but there are still
+		// other dialers in the pipeline. Advance to the next one.
 	}
 
-	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", bd.network, bd.addr, attempts)
+	// UNREACHABLE CODE
 }
 
 // advanceToNextDialer advances this balancedDial to the next dialer, cycling
 // back to the beginning if necessary. If all dialers have failed upstream, this
 // method returns false.
-func (bd *balancedDial) advanceToNextDialer(attempts int) bool {
+func (bd *balancedDial) advanceToNextDialer(
+	ctx context.Context,
+	attempts int) bool {
 	if len(bd.failedUpstream) == len(bd.dialers) {
 		// all dialers failed upstream, give up
 		return false
 	}
 
 	for {
+		select {
+		case <-ctx.Done():
+			return false
+		default:
+		}
+
 		bd.idx++
 		if bd.idx >= len(bd.dialers) {
 			bd.idx = 0
@@ -368,20 +395,20 @@ func (bd *balancedDial) advanceToNextDialer(attempts int) bool {
 	}
 }
 
-func (bd *balancedDial) dialWithDialer(ctx context.Context, dialer Dialer, start time.Time, attempts int) net.Conn {
+func (bd *balancedDial) dialWithDialer(ctx context.Context, dialer Dialer, start time.Time, attempts int) (net.Conn, error) {
 	deadline, _ := ctx.Deadline()
 	log.Tracef("Dialing %s://%s with %s on pass %v with timeout %v", bd.network, bd.addr, dialer.Label(), attempts, deadline.Sub(time.Now()))
 	oldRTT, oldBW := dialer.EstRTT(), dialer.EstBandwidth()
 	conn, failedUpstream, err := dialer.DialContext(ctx, bd.network, bd.addr)
 	if err != nil {
 		bd.onFailure(dialer, failedUpstream, err, attempts)
-		return nil
+		return nil, err
 	}
 	// Multiplexed dialers don't wait for anything from the proxy when dialing
 	// "persistent" connections, so we can't blindly trust such connections as
 	// signals of success dialers.
 	if bd.network == NetworkPersistent {
-		return conn
+		return conn, nil
 	}
 	// Please leave this at Debug level, as it helps us understand
 	// performance issues caused by a poor proxy being selected.
@@ -401,7 +428,7 @@ func (bd *balancedDial) dialWithDialer(ctx context.Context, dialer Dialer, start
 		default:
 		}
 	}
-	return conn
+	return conn, nil
 }
 
 func (bd *balancedDial) onSuccess(dialer Dialer) {
@@ -632,14 +659,30 @@ func (b *Balancer) printStats() {
 	log.Debug("----------- End Dialer Stats -----------")
 }
 
-func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, map[string]*dialStats, error) {
+func (b *Balancer) pickDialers(network, addr string) ([]Dialer, map[string]*dialStats, error) {
+	trustedOnly := false
+	_, port, _ := net.SplitHostPort(addr)
+	// We try to identify HTTP traffic (as opposed to HTTPS) by port and only
+	// send HTTP traffic to dialers marked as trusted.
+	if port == "" || port == "80" || port == "8080" {
+		trustedOnly = true
+	}
+
 	b.mu.RLock()
-	dialers := b.dialers
+	_dialers := b.dialers
 	if trustedOnly {
-		dialers = b.trusted
+		_dialers = b.trusted
 	}
 	sessionStats := b.sessionStats
 	b.mu.RUnlock()
+
+	// Pick only dialers that support the requested network and address.
+	dialers := make(sortedDialers, 0, len(_dialers))
+	for _, d := range _dialers {
+		if d.SupportsAddr(network, addr) {
+			dialers = append(dialers, d)
+		}
+	}
 
 	if dialers.Len() == 0 {
 		if trustedOnly {
@@ -647,6 +690,7 @@ func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, map[string]*dialStat
 		}
 		return nil, nil, fmt.Errorf("No dialers")
 	}
+
 	return dialers, sessionStats, nil
 }
 
@@ -709,14 +753,6 @@ func (b *Balancer) KeepLookingForSucceedingDialer() {
 		case <-b.closeCh:
 			return
 		}
-	}
-}
-
-// PingProxies pings the client's proxies.
-func (bal *Balancer) PingProxies() {
-	dialers := bal.copyOfDialers()
-	for _, dialer := range dialers {
-		go dialer.Ping()
 	}
 }
 

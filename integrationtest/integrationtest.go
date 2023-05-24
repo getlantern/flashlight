@@ -4,6 +4,7 @@ package integrationtest
 
 import (
 	"compress/gzip"
+	"context"
 	"crypto/sha256"
 	"crypto/tls"
 	_ "embed"
@@ -23,13 +24,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/golog"
 	proxy "github.com/getlantern/http-proxy-lantern/v2"
 	"github.com/getlantern/tlsdefaults"
 	"github.com/getlantern/waitforserver"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/client"
 )
 
@@ -224,13 +225,10 @@ func (helper *Helper) startProxyServer() error {
 		TestingLocal:              true,
 		HTTPAddr:                  helper.HTTPSProxyServerAddr,
 		HTTPMultiplexAddr:         helper.HTTPSSmuxProxyServerAddr,
-		HTTPUTPAddr:               helper.HTTPSUTPAddr,
 		Obfs4Addr:                 helper.OBFS4ProxyServerAddr,
-		Obfs4UTPAddr:              helper.OBFS4UTPProxyServerAddr,
 		Obfs4Dir:                  filepath.Join(helper.ConfigDir, obfs4SubDir),
 		Obfs4HandshakeConcurrency: obfs4HandshakeConcurrency,
 		LampshadeAddr:             helper.LampshadeProxyServerAddr,
-		LampshadeUTPAddr:          helper.LampshadeUTPProxyServerAddr,
 		QUICIETFAddr:              helper.QUICIETFProxyServerAddr,
 		WSSAddr:                   helper.WSSProxyServerAddr,
 		TLSMasqAddr:               helper.TLSMasqProxyServerAddr,
@@ -273,8 +271,8 @@ func (helper *Helper) startProxyServer() error {
 		IdleTimeout:       30 * time.Second,
 	}
 
-	go s1.ListenAndServe()
-	go s2.ListenAndServe()
+	go s1.ListenAndServe(context.Background())
+	go s2.ListenAndServe(context.Background())
 
 	err = waitforserver.WaitForServer("tcp", helper.HTTPSProxyServerAddr, 10*time.Second)
 	if err != nil {
@@ -294,7 +292,7 @@ func (helper *Helper) startProxyServer() error {
 	}
 
 	// only launch / wait for this one after the cert is in place (can race otherwise.)
-	go s3.ListenAndServe()
+	go s3.ListenAndServe(context.Background())
 	err = waitforserver.WaitForServer("tcp", helper.HTTPSPsmuxProxyServerAddr, 10*time.Second)
 
 	return err
@@ -395,11 +393,11 @@ func (helper *Helper) writeConfig() error {
 	return ioutil.WriteFile(filename, out, 0644)
 }
 
-func (helper *Helper) buildProxies(proto string) (map[string]*apipb.ProxyConfig, error) {
+func (helper *Helper) buildProxies(proto string) (map[string]*config.ProxyConfig, error) {
 	protos := strings.Split(proto, ",")
 	// multipath
 	if len(protos) > 1 {
-		proxies := make(map[string]*apipb.ProxyConfig)
+		proxies := make(map[string]*config.ProxyConfig)
 		for _, p := range protos {
 			cfgs, err := helper.buildProxies(p)
 			if err != nil {
@@ -412,7 +410,7 @@ func (helper *Helper) buildProxies(proto string) (map[string]*apipb.ProxyConfig,
 		}
 		return proxies, nil
 	}
-	var srv apipb.ProxyConfig
+	var srv config.ProxyConfig
 	err := yaml.Unmarshal(proxiesTemplate, &srv)
 	if err != nil {
 		return nil, fmt.Errorf("Could not unmarshal config %v", err)
@@ -499,7 +497,7 @@ func (helper *Helper) buildProxies(proto string) (map[string]*apipb.ProxyConfig,
 			srv.Addr = helper.HTTPSProxyServerAddr
 		}
 	}
-	return map[string]*apipb.ProxyConfig{"proxy-" + proto: &srv}, nil
+	return map[string]*config.ProxyConfig{"proxy-" + proto: &srv}, nil
 }
 
 func (helper *Helper) startTLSMasqOrigin() error {

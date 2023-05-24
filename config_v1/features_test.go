@@ -1,10 +1,8 @@
 package config
 
 import (
-	"bytes"
 	"strings"
 	"testing"
-	"text/template"
 	"time"
 
 	"github.com/getlantern/yaml"
@@ -12,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/embeddedconfig"
 )
 
 func TestValidate(t *testing.T) {
@@ -159,31 +156,4 @@ featureoptions:
 
 	require.Equal(t, 1, mat.Config["idsite"])
 	require.Nil(t, mat.Config["k1"])
-}
-
-func TestReplicaByCountry(t *testing.T) {
-	require := require.New(t)
-	assert := assert.New(t)
-	fos := getReplicaOptionsRoot(require)
-	assert.Contains(fos.ByCountry, "RU")
-	assert.NotContains(fos.ByCountry, "AU")
-	assert.NotEmpty(fos.ByCountry)
-	globalTrackers := fos.Trackers
-	assert.NotEmpty(globalTrackers)
-	// Check the countries pull in the trackers using the anchor. Just change this if they stop
-	// using the same trackers. I really don't want this to break out the gate is all.
-	assert.Equal(fos.ByCountry["CN"].Trackers, globalTrackers)
-	// It's okay for Russia to have different trackers.
-	assert.NotEmpty(fos.ByCountry["RU"].Trackers)
-	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
-}
-
-func getReplicaOptionsRoot(require *require.Assertions) (fos ReplicaOptionsRoot) {
-	var w bytes.Buffer
-	// We could write into a pipe, but that requires concurrency and we're old-school in tests.
-	require.NoError(template.Must(template.New("").Parse(embeddedconfig.GlobalTemplate)).Execute(&w, nil))
-	var g Global
-	require.NoError(yaml.Unmarshal(w.Bytes(), &g))
-	require.NoError(g.UnmarshalFeatureOptions(FeatureReplica, &fos))
-	return
 }

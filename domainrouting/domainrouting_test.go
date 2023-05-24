@@ -3,12 +3,13 @@ package domainrouting
 import (
 	"testing"
 
-	"github.com/getlantern/domains"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/getlantern/domains"
 )
 
 func TestBuildTree(t *testing.T) {
-	rules := Rules{
+	rules := RulesMap{
 		"D1": Proxy,
 		"P1": Direct,
 		"P3": Proxy,
@@ -20,13 +21,13 @@ func TestBuildTree(t *testing.T) {
 		".p3": Proxy,
 	}
 
-	result := buildTree(rules)
+	result := NewRules(rules)
 
-	assert.EqualValues(t, expectedResult, result.ToMap())
+	assert.EqualValues(t, expectedResult, result.tree.ToMap())
 }
 
 func TestIPHandling(t *testing.T) {
-	rules := Rules{
+	rules := RulesMap{
 		"1.2.3.4": MustDirect,
 	}
 
@@ -38,7 +39,7 @@ func TestIPHandling(t *testing.T) {
 }
 
 func TestTLDHandling(t *testing.T) {
-	rules := Rules{
+	rules := RulesMap{
 		"ir": MustDirect,
 	}
 

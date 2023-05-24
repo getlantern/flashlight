@@ -12,7 +12,6 @@ certs/errors.txt
 flashlight.yaml
 genconfig/genconfig
 genconfig/cloud.yaml
-vendor
 lantern
 lantern-headless*
 lantern-staging*
@@ -45,3 +44,5 @@ Ios.framework
 Lanternsdk*framework*
 xcuserdata
 .gomobilecache
+vendor
+build

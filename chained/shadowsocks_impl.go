@@ -1,6 +1,3 @@
-//go:build !iosapp
-// +build !iosapp
-
 package chained
 
 import (
@@ -15,10 +12,12 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/getlantern/errors"
-	shadowsocks "github.com/getlantern/lantern-shadowsocks/client"
+	"github.com/Jigsaw-Code/outline-ss-server/client"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
+	"github.com/getlantern/common/config"
+	"github.com/getlantern/errors"
+
+	"github.com/getlantern/flashlight/chained/prefixgen"
 	"github.com/getlantern/flashlight/ops"
 )
 
@@ -28,16 +27,18 @@ const (
 
 type shadowsocksImpl struct {
 	reportDialCore reportDialCoreFn
-	client         shadowsocks.Client
+	client         client.Client
 	upstream       string
 	rng            *mrand.Rand
 	rngmx          sync.Mutex
 }
 
-func newShadowsocksImpl(name, addr string, pc *apipb.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	secret := ptSetting(pc, "shadowsocks_secret")
 	cipher := ptSetting(pc, "shadowsocks_cipher")
 	upstream := ptSetting(pc, "shadowsocks_upstream")
+	prefixGen := ptSetting(pc, "shadowsocks_prefix_generator")
+
 	if upstream == "" {
 		upstream = defaultShadowsocksUpstreamSuffix
 	}
@@ -50,9 +51,20 @@ func newShadowsocksImpl(name, addr string, pc *apipb.ProxyConfig, reportDialCore
 	if err != nil {
 		return nil, errors.New("unable to parse port in address %v: %v", addr, err)
 	}
-	client, err := shadowsocks.NewClient(host, port, secret, cipher)
+	cl, err := client.NewClient(host, port, secret, cipher)
 	if err != nil {
 		return nil, errors.New("failed to create shadowsocks client: %v", err)
+	}
+
+	// Infrastructure python code seems to insert "None" as the prefix generator if there is none.
+	if prefixGen != "" && prefixGen != "None" {
+		gen, err := prefixgen.New(prefixGen)
+		if err != nil {
+			log.Errorf("failed to parse shadowsocks prefix generator from %v for proxy %v: %v", prefixGen, name, err)
+		} else {
+			prefixFunc := func() ([]byte, error) { return gen(), nil }
+			cl.SetTCPSaltGenerator(client.NewPrefixSaltGenerator(prefixFunc))
+		}
 	}
 
 	var seed int64
@@ -65,7 +77,7 @@ func newShadowsocksImpl(name, addr string, pc *apipb.ProxyConfig, reportDialCore
 
 	return &shadowsocksImpl{
 		reportDialCore: reportDialCore,
-		client:         client,
+		client:         cl,
 		upstream:       upstream,
 		rng:            rng,
 	}, nil

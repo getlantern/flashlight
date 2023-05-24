@@ -17,12 +17,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/getlantern/detour"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mockconn"
 	"github.com/getlantern/shortcut"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
@@ -127,26 +128,35 @@ func TestServeHTTPOk(t *testing.T) {
 
 func TestServeHTTPTimeout(t *testing.T) {
 	client := newClient()
-	client.requestTimeout = 50 * time.Millisecond
-	resetBalancer(client, func(network, addr string) (net.Conn, error) {
-		<-time.After(client.requestTimeout * 2)
-		return mockconn.SucceedingDialer(nil).Dial(network, addr)
-	})
+	client.requestTimeout = 500 * time.Millisecond
 
-	req, _ := http.NewRequest("CONNECT", "https://a.com:443", nil)
-	resp, _ := roundTrip(client, req)
-	assert.Equal(t, http.StatusOK, resp.StatusCode, "CONNECT requests should always succeed")
+	// Set the balancer to a new Dial() func that waits "client.requestTimeout" * 2
+	// before running
+	resetBalancer(
+		client, // Client
+		func(network, addr string) (net.Conn, error) { // Dial() func
+			time.Sleep(client.requestTimeout * 2)
+			return mockconn.SucceedingDialer(nil).Dial(network, addr)
+		})
 
-	req, _ = http.NewRequest("GET", "http://b.com/action", nil)
+	req, err := http.NewRequest("CONNECT", "https://a.com:443", nil)
+	require.NoError(t, err)
+	resp, err := roundTrip(client, req)
+	require.ErrorIs(t, err, context.DeadlineExceeded)
+	require.Equal(t, http.StatusOK, resp.StatusCode, "CONNECT requests should always succeed")
+
+	req, err = http.NewRequest("GET", "http://b.com/action", nil)
+	require.NoError(t, err)
 	req.Header.Set("Accept", "text/html")
-	resp, _ = roundTrip(client, req)
-	assert.Equal(t, http.StatusServiceUnavailable, resp.StatusCode, "It should respond 503 Service Unavailable with error page")
+	resp, err = roundTrip(client, req)
+	require.ErrorIs(t, err, context.DeadlineExceeded)
+	require.Equal(t, http.StatusServiceUnavailable, resp.StatusCode, "It should respond 503 Service Unavailable with error page")
 	body, err := ioutil.ReadAll(resp.Body)
-	if !assert.NoError(t, err) {
-		return
-	}
-	assert.Contains(t, string(body), "<title>Lantern: Error Accessing Page</title>", "should respond with error page")
-	assert.Contains(t, string(body), "Still unable to dial", "should be dial error")
+	require.NoError(t, err)
+	require.Contains(t, string(body), "<title>Lantern: Error Accessing Page</title>", "should respond with error page")
+	// The error page when dialing an inaccessible page with Lantern actually
+	// contains the dial error. See `./status/generic_error.html`
+	require.Contains(t, string(body), context.DeadlineExceeded.Error())
 }
 
 func TestIsAddressProxyable(t *testing.T) {
@@ -453,6 +463,10 @@ func (d *testDialer) NumPreconnected() int {
 	return 0
 }
 
+func (d *testDialer) SupportsAddr(network, addr string) bool {
+	return true
+}
+
 func (d *testDialer) Dial(network, addr string) (net.Conn, error) {
 	conn, _, err := d.DialContext(context.Background(), network, addr)
 	return conn, err
@@ -549,7 +563,6 @@ func (d *testDialer) Stop() {
 	d.stopped = true
 }
 
-func (d *testDialer) Ping()                {}
 func (d *testDialer) WriteStats(io.Writer) {}
 
 func roundTrip(client *Client, req *http.Request) (*response, error) {

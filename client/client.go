@@ -19,6 +19,7 @@ import (
 
 	lru "github.com/hashicorp/golang-lru"
 
+	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual/v2"
@@ -44,7 +45,6 @@ import (
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/status"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 )
 
 var (
@@ -149,7 +149,6 @@ type Client struct {
 	httpProxyIP   string
 	httpProxyPort string
 
-	chPingProxiesConf    chan pingProxiesConf
 	googleAdsFilter      func() bool
 	googleAdsOptionsLock sync.RWMutex
 	googleAdsOptions     *config.GoogleSearchAdsOptions
@@ -213,7 +212,6 @@ func NewClient(
 		adSwapTargetURL:                        adSwapTargetURL,
 		googleAdsFilter:                        allowGoogleSearchAds,
 		reverseDNS:                             reverseDNS,
-		chPingProxiesConf:                      make(chan pingProxiesConf, 1),
 		googleAdsOptions:                       nil,
 		googleAdsOptionsLock:                   sync.RWMutex{},
 		adTrackUrl:                             adTrackUrl,
@@ -253,7 +251,6 @@ func NewClient(
 	}
 	client.reportProxyLocationLoop()
 	client.iptool, _ = iptool.New()
-	go client.pingProxiesLoop()
 	go func() {
 		for {
 			if geolookup.GetCountry(0) != "" {
@@ -444,7 +441,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 
 	conf := &socks5.Config{
 		HandleConnect: func(ctx context.Context, conn net.Conn, req *socks5.Request, replySuccess func(boundAddr net.Addr) error, replyError func(err error) error) error {
-			op, ctx := ops.BeginWithNewBeam("proxy", ctx)
+			op := ops.Begin("proxy")
 			defer op.End()
 
 			host := fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port)
@@ -478,7 +475,7 @@ func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reade
 // Configure updates the client's configuration. Configure can be called
 // before or after ListenAndServe, and can be called multiple times. If
 // no error occurred, then the new dialers are returned.
-func (client *Client) Configure(proxies map[string]*apipb.ProxyConfig) []balancer.Dialer {
+func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []balancer.Dialer {
 	log.Debug("Configure() called")
 	dialers, err := client.initBalancer(proxies)
 	if err != nil {
@@ -519,7 +516,7 @@ func (client *Client) Stop() error {
 var TimeoutWaitingForDNSResolutionMap = 5 * time.Second
 
 func (client *Client) dial(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {
-	op := ops.BeginWithBeam("proxied_dialer", ctx)
+	op := ops.Begin("proxied_dialer")
 	op.Set("local_proxy_type", "http")
 	op.OriginPort(addr, "")
 	defer op.End()
@@ -560,9 +557,13 @@ func (client *Client) doDial(
 	dialDirect := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		if v, ok := dnsResolutionMapForDirectDials[addr]; ok {
 			log.Debugf("Bypassed DNS resolution: dialing %v as %v", addr, v)
-			return netx.DialContext(ctx, network, v)
+			conn, err := netx.DialContext(ctx, network, v)
+			op.FailIf(err)
+			return conn, err
 		} else {
-			return netx.DialContext(ctx, network, addr)
+			conn, err := netx.DialContext(ctx, network, addr)
+			op.FailIf(err)
+			return conn, err
 		}
 	}
 
@@ -636,6 +637,7 @@ func (client *Client) doDial(
 		log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
 		op.Set("shortcut_direct", true)
 		op.Set("shortcut_direct_ip", ip)
+		op.Set("shortcut_origin", addr)
 		return dialDirect(ctx, "tcp", addr)
 	}
 
@@ -826,4 +828,24 @@ func (client *Client) ConfigureGoogleAds(opts config.GoogleSearchAdsOptions) {
 	client.googleAdsOptionsLock.Lock()
 	client.googleAdsOptions = &opts
 	client.googleAdsOptionsLock.Unlock()
+}
+
+// initBalancer takes hosts from cfg.ChainedServers and it uses them to create a
+// balancer. Returns the new dialers.
+func (client *Client) initBalancer(proxies map[string]*commonconfig.ProxyConfig) ([]balancer.Dialer, error) {
+	if len(proxies) == 0 {
+		return nil, fmt.Errorf("No chained servers configured, not initializing balancer")
+	}
+
+	chained.PersistSessionStates(client.configDir)
+	dialers := chained.CreateDialers(client.configDir, proxies, client.user)
+	client.bal.Reset(dialers)
+
+	go func() {
+		for hasSucceeding := range client.bal.HasSucceedingDialer {
+			client.statsTracker.SetHasSucceedingProxy(hasSucceeding)
+		}
+	}()
+
+	return dialers, nil
 }

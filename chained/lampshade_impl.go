@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/keyman"
@@ -26,7 +26,7 @@ type lampshadeImpl struct {
 	setOp          func(op *ops.Op)
 }
 
-func newLampshadeImpl(name, addr string, pc *apipb.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newLampshadeImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(pc.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", addr))

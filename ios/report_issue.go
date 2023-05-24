@@ -125,7 +125,7 @@ func reportIssueViaAPI(
 	}
 
 	// TODO determine the country code
-	err = issue.SendIssueReport(issueText, "country-code-placeholder", appVersion, proText, platform, description, emailAddress, attachments)
+	err = issue.SendReport(issueText, "country-code-placeholder", appVersion, proText, platform, description, emailAddress, attachments)
 	if err != nil {
 		log.Errorf("unable to send ios issue report: %v", err)
 	}

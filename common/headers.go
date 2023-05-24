@@ -31,6 +31,7 @@ const (
 	ClientCountryHeader                 = "X-Lantern-Client-Country"
 	RandomNoiseHeader                   = "X-Lantern-Rand"
 	SleepHeader                         = "X-Lantern-Sleep"
+	LocaleHeader                        = "X-Lantern-Locale"
 	XBQHeader                           = "XBQ"
 	XBQHeaderv2                         = "XBQv2"
 )
@@ -91,6 +92,7 @@ func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth
 			req.Header.Set(UserIdHeader, strconv.FormatInt(userID, 10))
 		}
 	}
+	req.Header.Set(LocaleHeader, uc.GetLanguage())
 }
 
 // AddCommonHeaders sets standard http headers on a request

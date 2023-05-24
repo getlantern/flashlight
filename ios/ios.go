@@ -10,11 +10,11 @@ import (
 
 	tun2socks "github.com/eycorsican/go-tun2socks/core"
 
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/dnsgrab"
 	"github.com/getlantern/dnsgrab/persistentcache"
 	"github.com/getlantern/errors"
 
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/buffers"
@@ -272,7 +272,7 @@ func (c *client) loadDialers() ([]balancer.Dialer, error) {
 	cf := &configurer{configFolderPath: c.configDir}
 	chained.PersistSessionStates(c.configDir)
 
-	proxies := make(map[string]*apipb.ProxyConfig)
+	proxies := make(map[string]*config.ProxyConfig)
 	_, _, err := cf.openConfig(proxiesYaml, proxies, []byte{})
 	if err != nil {
 		return nil, err

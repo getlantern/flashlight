@@ -8,9 +8,10 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/embeddedconfig"
@@ -130,8 +131,8 @@ featureoptions:
 
 func TestMatomoEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
-	assert.True(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, common.Version, 1, false, "us"), "Matomo is enabled for a low User ID")
-	assert.True(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, common.Version, 500, false, "us"), "Matomo is enabled for a high User ID")
+	assert.False(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, common.Version, 1, false, "us"), "Matomo is disabled for a low User ID")
+	assert.False(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, common.Version, 500, false, "us"), "Matomo is disabled for a high User ID")
 }
 
 func TestDetour(t *testing.T) {
@@ -156,43 +157,20 @@ func TestShortcut(t *testing.T) {
 	}
 }
 
-func TestReplicaByCountry(t *testing.T) {
-	assert := assert.New(t)
-	fos := getReplicaOptionsRoot(t)
-	assert.Contains(fos.ByCountry, "RU")
-	assert.NotContains(fos.ByCountry, "AU")
-	assert.NotEmpty(fos.ByCountry)
-	globalTrackers := fos.Trackers
-	assert.NotEmpty(globalTrackers)
-	// Check the countries pull in the trackers using the anchor. Just change this if they stop
-	// using the same trackers. I really don't want this to break out the gate is all.
-	assert.Equal(fos.ByCountry["CN"].Trackers, globalTrackers)
-	// It's okay for Russia to have different trackers.
-	assert.NotEmpty(fos.ByCountry["RU"].Trackers)
-	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
-}
-
 func TestChatEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
 	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "ae"), "Chat is disabled in UAE when running 7.0.0")
 	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "cn"), "Chat is disabled outside UAE when running 7.0.0")
 	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "6.9.7", 1, false, "ae"), "Chat is disabled in Iran when running 6.9.7")
-	assert.True(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "99.0.0", 1, false, "us"), "Chat is enabled in USA when running QA version 99.0.0")
+	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "99.0.0", 1, false, "us"), "Chat is disabled in USA when running QA version 99.0.0")
 }
 
 func TestReplicaEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
 	assert.True(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "6.9.11", 1, false, "ru"), "Replica is enabled in Russia when running 6.9.11")
 	assert.True(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "7.0.0", 1, false, "ir"), "Replica is enabled in Iran when running 7.0.0")
-	assert.False(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "7.0.0", 1, false, "us"), "Replica is not enabled in USA when running 7.0.0")
 	assert.False(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "6.9.10", 1, false, "ru"), "Replica is not enabled in Russia when running 6.9.10")
 	assert.True(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "99.0.0", 1, false, "us"), "Replica is enabled in USA when running QA version 99.0.0")
-}
-
-func getReplicaOptionsRoot(t *testing.T) (fos ReplicaOptionsRoot) {
-	g := globalFromTemplate(t)
-	require.NoError(t, g.UnmarshalFeatureOptions(FeatureReplica, &fos))
-	return
 }
 
 func globalFromTemplate(t *testing.T) *Global {

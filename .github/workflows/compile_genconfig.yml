@@ -7,14 +7,14 @@ name: Compile genconfig binary
 on:
   push:
     branches: [ main ]
-  
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04 # the binary produced on newer Ubuntu versions won't run on our rather old cloudmaster
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -22,7 +22,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
-        go-version: 1.18
+        go-version: 1.19
     - name: Granting private modules access
       run: |
         git config --global url."https://${{ secrets.GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
@@ -38,14 +38,21 @@ jobs:
         args: -fq
     - id: commit
       uses: pr-mpt/actions-commit-hash@v1
+    - name: Bump version and push tag
+      id: bump_tag
+      uses: anothrNick/github-tag-action@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WITH_V: true
+        DEFAULT_BUMP: patch
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.commit.outputs.short }}
-        release_name: genconfig release ${{ steps.commit.outputs.short }}
+        tag_name: ${{ steps.bump_tag.outputs.tag }}
+        release_name: genconfig release ${{ steps.bump_tag.outputs.tag }}
         draft: false
         prerelease: false
     - name: Upload Release Asset

@@ -3,18 +3,18 @@ package chained
 import (
 	"context"
 	stls "crypto/tls"
-	"crypto/x509"
 	"encoding/binary"
 	"encoding/hex"
-	"encoding/pem"
 	stderrors "errors"
 	"net"
 	"strings"
 	"sync"
 	"time"
 
+	tls "github.com/refraction-networking/utls"
+
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/hellosplitter"
@@ -22,7 +22,6 @@ import (
 	"github.com/getlantern/tlsmasq"
 	"github.com/getlantern/tlsmasq/ptlshs"
 	"github.com/getlantern/tlsutil"
-	tls "github.com/refraction-networking/utls"
 )
 
 type tlsMasqImpl struct {
@@ -33,32 +32,17 @@ type tlsMasqImpl struct {
 	tlsClientHelloSplitting bool
 }
 
-func newTLSMasqImpl(configDir, name, addr string, pc *apipb.ProxyConfig, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	const timeout = 5 * time.Second
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	decodeUint16 := func(s string) (uint16, error) {
-		b, err := hex.DecodeString(strings.TrimPrefix(s, "0x"))
-		if err != nil {
-			return 0, err
-		}
-		return binary.BigEndian.Uint16(b), nil
+	suites, err := cipherSuites(ptSetting(pc, "tlsmasq_suites"), name)
+	if err != nil {
+		return nil, errors.New("could not parse suites for: %v", name)
 	}
 
-	suites := []uint16{}
-	suiteStrings := strings.Split(ptSetting(pc, "tlsmasq_suites"), ",")
-	if len(suiteStrings) == 1 && suiteStrings[0] == "" {
-		return nil, errors.New("no cipher suites specified")
-	}
-	for _, s := range suiteStrings {
-		suite, err := decodeUint16(s)
-		if err != nil {
-			return nil, errors.New("bad cipher string '%s': %v", s, err)
-		}
-		suites = append(suites, suite)
-	}
 	versStr := ptSetting(pc, "tlsmasq_tlsminversion")
 	minVersion, err := decodeUint16(versStr)
 	if err != nil {
@@ -74,8 +58,8 @@ func newTLSMasqImpl(configDir, name, addr string, pc *apipb.ProxyConfig, uc comm
 		return nil, errors.New("expected %d-byte secret string, got %d bytes", len(secret), len(secretBytes))
 	}
 	copy(secret[:], secretBytes)
-	sni := ptSetting(pc, "tlsmasq_sni")
-	if sni == "" {
+	masqSNI := ptSetting(pc, "tlsmasq_sni")
+	if masqSNI == "" {
 		return nil, errors.New("server name indicator must be configured")
 	}
 	// It's okay if this is unset - it'll just result in us using the default.
@@ -86,44 +70,66 @@ func newTLSMasqImpl(configDir, name, addr string, pc *apipb.ProxyConfig, uc comm
 		return nil, errors.New("malformed server address: %v", err)
 	}
 
-	// Add the proxy cert to the root CAs as proxy certs are self-signed.
-	if pc.Cert == "" {
-		return nil, errors.New("no proxy certificate configured")
-	}
-	block, rest := pem.Decode([]byte(pc.Cert))
-	if block == nil {
-		return nil, errors.New("failed to decode proxy certificate as PEM block")
-	}
-	if len(rest) > 0 {
-		return nil, errors.New("unexpected extra data in proxy certificate PEM")
-	}
-	cert, err := x509.ParseCertificate(block.Bytes)
+	proxyTLS, hellos, err := tlsConfigForProxy(ctx, configDir, name, pc, uc)
 	if err != nil {
-		return nil, errors.New("failed to parse proxy certificate: %v", err)
+		return nil, errors.New("error generating TLS config: %v", err)
 	}
-	pool := x509.NewCertPool()
-	pool.AddCert(cert)
 
-	pCfg, hellos := tlsConfigForProxy(ctx, configDir, name, pc, uc)
-	pCfg.ServerName = sni
-	pCfg.InsecureSkipVerify = InsecureSkipVerifyTLSMasqOrigin
+	// For tlsmasq proxies, the TLS config we generated in the previous step is the config used in
+	// the initial handshake with the masquerade origin. Thus we need to make some modifications.
+	outerTLS := tls.Config{
+		CipherSuites:       proxyTLS.CipherSuites,
+		KeyLogWriter:       proxyTLS.KeyLogWriter,
+		ServerName:         masqSNI,
+		InsecureSkipVerify: InsecureSkipVerifyTLSMasqOrigin,
+	}
 
 	cfg := tlsmasq.DialerConfig{
 		ProxiedHandshakeConfig: ptlshs.DialerConfig{
-			Handshaker: &utlsHandshaker{pCfg, &helloRoller{hellos: hellos}, sync.Mutex{}},
+			Handshaker: &utlsHandshaker{&outerTLS, &helloRoller{hellos: hellos}, sync.Mutex{}},
 			Secret:     secret,
 			NonceTTL:   nonceTTL,
 		},
+		// This is the config used for the second, wrapped handshake with the proxy itself.
 		TLSConfig: &stls.Config{
 			MinVersion:   minVersion,
 			CipherSuites: suites,
 			// Proxy certificates are valid for the host (usually their IP address).
-			ServerName: host,
-			RootCAs:    pool,
+			ServerName:            host,
+			InsecureSkipVerify:    proxyTLS.InsecureSkipVerify,
+			VerifyPeerCertificate: proxyTLS.VerifyPeerCertificate,
+			RootCAs:               proxyTLS.RootCAs,
+			KeyLogWriter:          proxyTLS.KeyLogWriter,
 		},
 	}
 
 	return &tlsMasqImpl{reportDialCore: reportDialCore, addr: addr, cfg: cfg, tlsClientHelloSplitting: pc.TLSClientHelloSplitting}, nil
+}
+
+func decodeUint16(s string) (uint16, error) {
+	b, err := hex.DecodeString(strings.TrimPrefix(s, "0x"))
+	if err != nil {
+		return 0, err
+	}
+	return binary.BigEndian.Uint16(b), nil
+}
+
+func cipherSuites(cipherSuites, name string) ([]uint16, error) {
+	suiteStrings := strings.Split(cipherSuites, ",")
+	if len(suiteStrings) == 1 && suiteStrings[0] == "" {
+		// No suites specified. Setting them to nil will cause the default suites to be used.
+		log.Debugf("No suites specified, using default suites for %s", name)
+		return nil, nil
+	}
+	suites := []uint16{}
+	for _, s := range suiteStrings {
+		suite, err := decodeUint16(s)
+		if err != nil {
+			return nil, errors.New("bad cipher string '%s': %v", s, err)
+		}
+		suites = append(suites, suite)
+	}
+	return suites, nil
 }
 
 func (impl *tlsMasqImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
@@ -170,17 +176,6 @@ type utlsHandshaker struct {
 func (h *utlsHandshaker) Handshake(conn net.Conn) (*ptlshs.HandshakeResult, error) {
 	r := h.roller.getCopy()
 	defer h.roller.updateTo(r)
-
-	isHelloErr := func(err error) bool {
-		// We assume that everything other than timeouts or transient network errors might be
-		// related to the hello. This may be a little aggressive, but it's better that the client is
-		// willing to try other hellos, rather than get stuck in a loop on a bad one.
-		var netErr net.Error
-		if !stderrors.As(err, &netErr) {
-			return true
-		}
-		return !netErr.Temporary() && !netErr.Timeout()
-	}
 
 	currentHello := r.current()
 	uconn, err := currentHello.uconn(conn, h.cfg.Clone())

@@ -11,26 +11,26 @@ import (
 	"github.com/blang/semver"
 	"github.com/getlantern/errors"
 	"github.com/mitchellh/mapstructure"
+
+	globalConfig "github.com/getlantern/flashlight/config/global"
 )
 
 const (
 	FeatureAuth                 = "auth"
 	FeatureProxyBench           = "proxybench"
-	FeaturePingProxies          = "pingproxies"
 	FeatureTrafficLog           = "trafficlog"
 	FeatureNoBorda              = "noborda"
 	FeatureProbeProxies         = "probeproxies"
 	FeatureShortcut             = "shortcut"
 	FeatureDetour               = "detour"
 	FeatureNoHTTPSEverywhere    = "nohttpseverywhere"
-	FeatureReplica              = "replica"
+	FeatureReplica              = globalConfig.FeatureReplica
 	FeatureProxyWhitelistedOnly = "proxywhitelistedonly"
 	FeatureTrackYouTube         = "trackyoutube"
 	FeatureGoogleSearchAds      = "googlesearchads"
 	FeatureYinbiWallet          = "yinbiwallet"
 	FeatureYinbi                = "yinbi"
 	FeatureGoogleAnalytics      = "googleanalytics"
-	FeatureMatomo               = "matomo"
 	FeatureChat                 = "chat"
 	FeatureOtel                 = "otel"
 	FeatureP2PFreePeer          = "p2pfreepeer"
@@ -41,91 +41,18 @@ var (
 	// to have stable calculation of fraction until the client restarts.
 	randomFloat = rand.Float64()
 
-	errAbsentOption    = errors.New("option is absent")
+	errAbsentOption    = globalConfig.ErrFeatureOptionAbsent
 	errMalformedOption = errors.New("malformed option")
 )
 
-// FeatureOptions is an interface implemented by all feature options
-type FeatureOptions interface {
-	fromMap(map[string]interface{}) error
-}
-
-type ReplicaOptionsRoot struct {
-	// This is the default.
-	ReplicaOptions `mapstructure:",squash"`
-	// Options tailored to country. This could be used to pattern match any arbitrary string really.
-	// mapstructure should ignore the field name.
-	ByCountry map[string]ReplicaOptions `mapstructure:",remain"`
-	// Deprecated. An unmatched country uses the embedded ReplicaOptions.ReplicaRustEndpoint.
-	// Removing this will break unmarshalling config.
-	ReplicaRustDefaultEndpoint string
-	// Deprecated. Use ByCountry.ReplicaRustEndpoint.
-	ReplicaRustEndpoints map[string]string
-}
-
-func (ro *ReplicaOptionsRoot) fromMap(m map[string]interface{}) error {
-	return mapstructure.Decode(m, ro)
-}
-
-type ReplicaOptions struct {
-	// Use infohash and old-style prefixing simultaneously for now. Later, the old-style can be removed.
-	WebseedBaseUrls []string
-	Trackers        []string
-	StaticPeerAddrs []string
-	// Merged with the webseed URLs when the metadata and data buckets are merged.
-	MetadataBaseUrls []string
-	// The replica-rust endpoint to use. There's only one because object uploads and ownership are
-	// fixed to a specific bucket, and replica-rust endpoints are 1:1 with a bucket.
-	ReplicaRustEndpoint string
-	// A set of info hashes (20 bytes, hex-encoded) to which proxies should announce themselves.
-	ProxyAnnounceTargets []string
-	// A set of info hashes where p2p-proxy peers can be found.
-	ProxyPeerInfoHashes []string
-	CustomCA            string
-}
-
-func (ro *ReplicaOptions) GetWebseedBaseUrls() []string {
-	return ro.WebseedBaseUrls
-}
-
-func (ro *ReplicaOptions) GetTrackers() []string {
-	return ro.Trackers
-}
-
-func (ro *ReplicaOptions) GetStaticPeerAddrs() []string {
-	return ro.StaticPeerAddrs
-}
-
-func (ro *ReplicaOptions) GetMetadataBaseUrls() []string {
-	return ro.MetadataBaseUrls
-}
-
-func (ro *ReplicaOptions) GetReplicaRustEndpoint() string {
-	return ro.ReplicaRustEndpoint
-}
-
-func (ro *ReplicaOptions) GetCustomCA() string {
-	return ro.CustomCA
-}
-
-// XXX <11-07-2022, soltzen> DEPREACTED in favor of
-// github.com/getlantern/libp2p
-func (ro *ReplicaOptions) GetProxyAnnounceTargets() []string {
-	return nil
-}
-
-// XXX <11-07-2022, soltzen> DEPREACTED in favor of
-// github.com/getlantern/libp2p
-func (ro *ReplicaOptions) GetProxyPeerInfoHashes() []string {
-	return nil
-}
+type FeatureOptions = globalConfig.FeatureOptions
 
 type P2PFreePeerOptions struct {
 	RegistrarEndpoint string   `mapstructure:"registrar_endpoint"`
 	DomainWhitelist   []string `mapstructure:"domain_whitelist"`
 }
 
-func (o *P2PFreePeerOptions) fromMap(m map[string]interface{}) error {
+func (o *P2PFreePeerOptions) FromMap(m map[string]interface{}) error {
 	var err error
 	o.RegistrarEndpoint, err = somethingFromMap[string](m, "registrar_endpoint")
 	if err != nil {
@@ -143,7 +70,7 @@ type P2PCensoredPeerOptions struct {
 	Bep44TargetsAndSalts []string `mapstructure:"bep44_targets_and_salts"`
 }
 
-func (o *P2PCensoredPeerOptions) fromMap(m map[string]interface{}) error {
+func (o *P2PCensoredPeerOptions) FromMap(m map[string]interface{}) error {
 	var err error
 	o.Bep44TargetsAndSalts, err = stringArrFromMap(m, "bep44_targets_and_salts")
 	if err != nil {
@@ -168,7 +95,7 @@ type PartnerAd struct {
 	Probability float32
 }
 
-func (o *GoogleSearchAdsOptions) fromMap(m map[string]interface{}) error {
+func (o *GoogleSearchAdsOptions) FromMap(m map[string]interface{}) error {
 	// since keywords can be regexp and we don't want to compile them each time we compare, define a custom decode hook
 	// that will convert string to regexp and error out on syntax issues
 	config := &mapstructure.DecoderConfig{
@@ -191,19 +118,6 @@ func (o *GoogleSearchAdsOptions) fromMap(m map[string]interface{}) error {
 	}
 
 	return decoder.Decode(m)
-}
-
-type PingProxiesOptions struct {
-	Interval time.Duration
-}
-
-func (o *PingProxiesOptions) fromMap(m map[string]interface{}) error {
-	interval, err := durationFromMap(m, "interval")
-	if err != nil {
-		return err
-	}
-	o.Interval = interval
-	return nil
 }
 
 // TrafficLogOptions represents options for github.com/getlantern/trafficlog-flashlight.
@@ -242,7 +156,7 @@ type TrafficLogOptions struct {
 	TimeBeforeDenialReset time.Duration
 }
 
-func (o *TrafficLogOptions) fromMap(m map[string]interface{}) error {
+func (o *TrafficLogOptions) FromMap(m map[string]interface{}) error {
 	var err error
 	o.CaptureBytes, err = somethingFromMap[int](m, "capturebytes")
 	if err != nil {
@@ -341,8 +255,8 @@ func (g ClientGroup) Validate() error {
 	return nil
 }
 
-//Includes checks if the ClientGroup includes the user, device and country
-//combination, assuming the group has been validated.
+// Includes checks if the ClientGroup includes the user, device and country
+// combination, assuming the group has been validated.
 func (g ClientGroup) Includes(platform, appName, version string, userID int64, isPro bool, geoCountry string) bool {
 	if g.UserCeil > 0 {
 		// Unknown user ID doesn't belong to any user range

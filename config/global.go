@@ -5,11 +5,13 @@ import (
 	"errors"
 	"time"
 
-	"github.com/getlantern/flashlight/browsers/simbrowser"
-	"github.com/getlantern/flashlight/domainrouting"
-	"github.com/getlantern/flashlight/otel"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/keyman"
+
+	"github.com/getlantern/flashlight/browsers/simbrowser"
+	"github.com/getlantern/flashlight/domainrouting"
+	"github.com/getlantern/flashlight/embeddedconfig"
+	"github.com/getlantern/flashlight/otel"
 )
 
 // Global contains general configuration for Lantern either set globally via
@@ -23,9 +25,6 @@ type Global struct {
 	UpdateServerURL       string
 	BordaReportInterval   time.Duration
 	BordaSamplePercentage float64
-	// ReportIssueEmail is the recipient of the email sent when the user
-	// reports issue.
-	ReportIssueEmail string
 
 	// AdSettings are the settings to use for showing ads to mobile clients
 	AdSettings *AdSettings
@@ -38,10 +37,10 @@ type Global struct {
 	ProxiedSites *domainrouting.ProxiedSitesConfig
 
 	// DomainRoutingRules specifies routing rules for specific domains, such as forcing proxing, forcing direct dials, etc.
-	DomainRoutingRules domainrouting.Rules
+	DomainRoutingRules domainrouting.RulesMap
 
 	// NamedDomainRoutingRules specifies routing rules for specific domains, grouped by name.
-	NamedDomainRoutingRules map[string]domainrouting.Rules
+	NamedDomainRoutingRules map[string]domainrouting.RulesMap
 
 	// TrustedCAs are trusted CAs for domain fronting domains only.
 	TrustedCAs []*fronted.CA
@@ -104,7 +103,7 @@ func (cfg *Global) UnmarshalFeatureOptions(feature string, opts FeatureOptions) 
 	if !exists {
 		return errAbsentOption
 	}
-	return opts.fromMap(m)
+	return opts.FromMap(m)
 }
 
 // TrustedCACerts returns a certificate pool containing the TrustedCAs from this
@@ -153,4 +152,11 @@ func (cfg *Global) validate() error {
 		}
 	}
 	return nil
+}
+
+// Returns the global config in structured form, by executing the template without any data. This is useful for consuming parts of the config that aren't templatized.
+func GetEmbeddedGlobalSansTemplateData() (*Global, error) {
+	var g Global
+	err := embeddedconfig.ExecuteAndUnmarshalGlobal(nil, &g)
+	return &g, err
 }

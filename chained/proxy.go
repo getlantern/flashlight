@@ -13,20 +13,22 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/samber/lo"
+	"google.golang.org/protobuf/proto"
+
+	"github.com/getlantern/common/config"
 	"github.com/getlantern/ema"
 	"github.com/getlantern/enhttp"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/idletiming"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
-	"github.com/samber/lo"
-	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -72,12 +74,12 @@ type nopCloser struct{}
 func (c nopCloser) close() {}
 
 // CreateDialers creates a list of Proxies (balancer.Dialer) with supplied server info.
-func CreateDialers(configDir string, proxies map[string]*apipb.ProxyConfig, uc common.UserConfig) []balancer.Dialer {
+func CreateDialers(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) []balancer.Dialer {
 	return lo.Values(CreateDialersMap(configDir, proxies, uc))
 }
 
 // CreateDialersMap creates a map of Proxies (balancer.Dialer) with supplied server info.
-func CreateDialersMap(configDir string, proxies map[string]*apipb.ProxyConfig, uc common.UserConfig) map[string]balancer.Dialer {
+func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) map[string]balancer.Dialer {
 	mappedDialers := make(map[string]balancer.Dialer)
 	groups := groupByMultipathEndpoint(proxies)
 	for endpoint, group := range groups {
@@ -106,7 +108,7 @@ func CreateDialersMap(configDir string, proxies map[string]*apipb.ProxyConfig, u
 }
 
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
-func CreateDialer(configDir, name string, s *apipb.ProxyConfig, uc common.UserConfig) (balancer.Dialer, error) {
+func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserConfig) (balancer.Dialer, error) {
 	addr, transport, network, err := extractParams(s)
 	if err != nil {
 		return nil, err
@@ -119,7 +121,7 @@ func CreateDialer(configDir, name string, s *apipb.ProxyConfig, uc common.UserCo
 	return p, nil
 }
 
-func extractParams(s *apipb.ProxyConfig) (addr, transport, network string, err error) {
+func extractParams(s *config.ProxyConfig) (addr, transport, network string, err error) {
 	if theForceAddr != "" && theForceToken != "" {
 		forceProxy(s)
 	}
@@ -150,7 +152,7 @@ func extractParams(s *apipb.ProxyConfig) (addr, transport, network string, err e
 	return
 }
 
-func createImpl(configDir, name, addr, transport string, s *apipb.ProxyConfig, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	coreDialer := func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error) {
 		return reportDialCore(op, func() (net.Conn, error) {
 			return netx.DialContext(ctx, "tcp", addr)
@@ -190,6 +192,10 @@ func createImpl(configDir, name, addr, transport string, s *apipb.ProxyConfig, u
 		impl, err = newWSSImpl(addr, s, reportDialCore)
 	case "tlsmasq":
 		impl, err = newTLSMasqImpl(configDir, name, addr, s, uc, reportDialCore)
+	case "starbridge":
+		impl, err = newStarbridgeImpl(name, addr, s, reportDialCore)
+	case "broflake":
+		impl, err = newBroflakeImpl(s, reportDialCore)
 	default:
 		err = errors.New("Unknown transport: %v", transport).With("addr", addr).With("plugabble-transport", transport)
 	}
@@ -205,7 +211,7 @@ func createImpl(configDir, name, addr, transport string, s *apipb.ProxyConfig, u
 
 	if s.MultiplexedAddr != "" || transport == "utphttp" ||
 		transport == "utphttps" || transport == "utpobfs4" ||
-		transport == "tlsmasq" {
+		transport == "tlsmasq" || transport == "starbridge" {
 		impl, err = multiplexed(impl, name, s)
 		if err != nil {
 			return nil, err
@@ -227,7 +233,7 @@ func ForceProxy(forceAddr string, forceToken string) {
 	theForceAddr, theForceToken = forceAddr, forceToken
 }
 
-func forceProxy(s *apipb.ProxyConfig) {
+func forceProxy(s *config.ProxyConfig) {
 	s.Addr = theForceAddr
 	s.AuthToken = theForceToken
 	s.Cert = ""
@@ -289,7 +295,7 @@ type proxy struct {
 	multiplexed         bool
 	addr                string
 	authToken           string
-	location            *apipb.ProxyLocation
+	location            *config.ProxyConfig_ProxyLocation
 	user                common.UserConfig
 	trusted             bool
 	bias                int
@@ -301,12 +307,13 @@ type proxy struct {
 	mostRecentABETime   time.Time
 	numPreconnecting    func() int
 	numPreconnected     func() int
+	allowedDomains      *domainrouting.Rules
 	closeCh             chan bool
 	closeOnce           sync.Once
 	mx                  sync.Mutex
 }
 
-func newProxy(name, addr, protocol, network string, s *apipb.ProxyConfig, uc common.UserConfig) (*proxy, error) {
+func newProxy(name, addr, protocol, network string, s *config.ProxyConfig, uc common.UserConfig) (*proxy, error) {
 	p := &proxy{
 		name:             name,
 		protocol:         protocol,
@@ -328,7 +335,7 @@ func newProxy(name, addr, protocol, network string, s *apipb.ProxyConfig, uc com
 	}
 	// Make sure we don't panic if there's no location.
 	if s.Location != nil {
-		p.location = proto.Clone(s.Location).(*apipb.ProxyLocation)
+		p.location = proto.Clone(s.Location).(*config.ProxyConfig_ProxyLocation)
 	}
 
 	if p.bias == 0 && s.ENHTTPURL != "" {
@@ -360,6 +367,15 @@ func newProxy(name, addr, protocol, network string, s *apipb.ProxyConfig, uc com
 			}
 			return dfConn, err
 		}
+	}
+	if len(s.AllowedDomains) > 0 {
+		// Some proxies like Broflake only support a limited set of domains. This sets up domain routing
+		// rules based on what was configured in the proxy config.
+		rulesMap := make(domainrouting.RulesMap)
+		for _, domain := range s.AllowedDomains {
+			rulesMap[domain] = domainrouting.MustProxy
+		}
+		p.allowedDomains = domainrouting.NewRules(rulesMap)
 	}
 	return p, nil
 }
@@ -440,16 +456,16 @@ func (p *proxy) realEstRTT() time.Duration {
 //
 // Bandwidth estimates are provided to clients following the below protocol:
 //
-// 1. On every inbound connection, we interrogate BBR congestion control
-//    parameters to determine the estimated bandwidth, extrapolate this to what
-//    we would expected for a 2.5 MB transfer using a linear estimation based on
-//    how much data has actually been transferred on the connection and then
-//    maintain an exponential moving average (EMA) of these estimates per remote
-//    (client) IP.
-// 2. If a client includes HTTP header "X-BBR: <anything>", we include header
-//    X-BBR-ABE: <EMA bandwidth in Mbps> in the HTTP response.
-// 3. If a client includes HTTP header "X-BBR: clear", we clear stored estimate
-//    data for the client's IP.
+//  1. On every inbound connection, we interrogate BBR congestion control
+//     parameters to determine the estimated bandwidth, extrapolate this to what
+//     we would expected for a 2.5 MB transfer using a linear estimation based on
+//     how much data has actually been transferred on the connection and then
+//     maintain an exponential moving average (EMA) of these estimates per remote
+//     (client) IP.
+//  2. If a client includes HTTP header "X-BBR: <anything>", we include header
+//     X-BBR-ABE: <EMA bandwidth in Mbps> in the HTTP response.
+//  3. If a client includes HTTP header "X-BBR: clear", we clear stored estimate
+//     data for the client's IP.
 func (p *proxy) EstBandwidth() float64 {
 	if p.bias != 0 {
 		// For biased proxies, return an extreme bandwidth in proportion to the bias

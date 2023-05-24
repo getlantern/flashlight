@@ -7,9 +7,10 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/embeddedconfig"
@@ -129,30 +130,8 @@ featureoptions:
 
 func TestMatomoEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
-	assert.True(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, 1, false, "us"), "Matomo is enabled for a low User ID")
-	assert.True(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, 500, false, "us"), "Matomo is enabled for a high User ID")
-}
-
-func TestReplicaByCountry(t *testing.T) {
-	assert := assert.New(t)
-	fos := getReplicaOptionsRoot(t)
-	assert.Contains(fos.ByCountry, "RU")
-	assert.NotContains(fos.ByCountry, "AU")
-	assert.NotEmpty(fos.ByCountry)
-	globalTrackers := fos.Trackers
-	assert.NotEmpty(globalTrackers)
-	// Check the countries pull in the trackers using the anchor. Just change this if they stop
-	// using the same trackers. I really don't want this to break out the gate is all.
-	assert.Equal(fos.ByCountry["CN"].Trackers, globalTrackers)
-	// It's okay for Russia to have different trackers.
-	assert.NotEmpty(fos.ByCountry["RU"].Trackers)
-	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
-}
-
-func getReplicaOptionsRoot(t *testing.T) (fos ReplicaOptionsRoot) {
-	g := globalFromTemplate(t)
-	require.NoError(t, g.UnmarshalFeatureOptions(FeatureReplica, &fos))
-	return
+	assert.False(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, 1, false, "us"), "Matomo is disabled for a low User ID")
+	assert.False(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, 500, false, "us"), "Matomo is disabled for a high User ID")
 }
 
 func globalFromTemplate(t *testing.T) *Global {

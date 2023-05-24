@@ -1,18 +1,19 @@
 package config
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 	"testing"
-	"text/template"
 	"time"
 
-	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	replicaConfig "github.com/getlantern/replica/config"
+	"github.com/getlantern/yaml"
+
 	"github.com/getlantern/flashlight/common"
+	globalConfig "github.com/getlantern/flashlight/config/global"
 	"github.com/getlantern/flashlight/embeddedconfig"
 )
 
@@ -106,8 +107,6 @@ featureoptions:
     waittimesincefailedinstall: 24h
     userdenialthreshold: 3
     timebeforedenialreset: 2160h
-  pingproxies:
-    interval: 1h
 `
 	gl := NewGlobal()
 	require.NoError(t, yaml.Unmarshal([]byte(yml), gl))
@@ -122,16 +121,6 @@ featureoptions:
 	require.Equal(t, 24*time.Hour, opts.WaitTimeSinceFailedInstall)
 	require.Equal(t, 3, opts.UserDenialThreshold)
 	require.Equal(t, 2160*time.Hour, opts.TimeBeforeDenialReset)
-
-	var opts2 PingProxiesOptions
-	require.NoError(t, gl.UnmarshalFeatureOptions(FeaturePingProxies, &opts2))
-	require.Equal(t, time.Hour, opts2.Interval)
-}
-
-func TestMatomoEnabled(t *testing.T) {
-	gl := globalFromTemplate(t)
-	assert.True(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, common.Version, 1, false, "us"), "Matomo is enabled for a low User ID")
-	assert.True(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, common.Version, 500, false, "us"), "Matomo is enabled for a high User ID")
 }
 
 func TestDetour(t *testing.T) {
@@ -147,10 +136,12 @@ func TestShortcut(t *testing.T) {
 	gl := globalFromTemplate(t)
 	for _, country := range []string{"cn", "ir"} {
 		for _, os := range []string{"android", "windows", "darwin", "linux"} {
-			if country == "cn" {
-				assert.True(t, gl.FeatureEnabled(FeatureShortcut, os, common.DefaultAppName, common.Version, 1, false, country), fmt.Sprintf("shortcut is enabled for %s in %s", os, country))
-			} else {
-				assert.False(t, gl.FeatureEnabled(FeatureShortcut, os, common.DefaultAppName, common.Version, 1, false, country), fmt.Sprintf("shortcut is disabled for %s in %s", os, country))
+			for _, version := range []string{common.Version, "7.4.0"} {
+				if country == "cn" && version != "7.4.0" {
+					assert.True(t, gl.FeatureEnabled(FeatureShortcut, os, common.DefaultAppName, version, 1, false, country), fmt.Sprintf("shortcut is enabled for %s version %s in %s", os, version, country))
+				} else {
+					assert.False(t, gl.FeatureEnabled(FeatureShortcut, os, common.DefaultAppName, version, 1, false, country), fmt.Sprintf("shortcut is disabled for %s version %s in %s", os, version, country))
+				}
 			}
 		}
 	}
@@ -158,25 +149,17 @@ func TestShortcut(t *testing.T) {
 
 func TestReplicaByCountry(t *testing.T) {
 	assert := assert.New(t)
-	fos := getReplicaOptionsRoot(t)
+	fos := requireGetReplicaOptionsRoot(t)
 	assert.Contains(fos.ByCountry, "RU")
 	assert.NotContains(fos.ByCountry, "AU")
 	assert.NotEmpty(fos.ByCountry)
 	globalTrackers := fos.Trackers
 	assert.NotEmpty(globalTrackers)
-	// Check the countries pull in the trackers using the anchor. Just change this if they stop
-	// using the same trackers. I really don't want this to break out the gate is all.
-	assert.Equal(fos.ByCountry["CN"].Trackers, globalTrackers)
+	// Check that YAML anchors are working. This isn't very robust as we're testing specifics of the
+	// actual production config, but there are so many transforms applied to the global config by
+	// many different YAML implementations I want to be sure.
 	assert.NotEmpty(fos.ByCountry["RU"].Trackers)
 	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
-}
-
-// TestReplicaConfigBackwardsCompatibility checks if the old Replica config format (with "ReplicaRustEndpoints") still work with the new config, which has country-specific configs (using ByCountry["RU"]
-func TestReplicaConfigBackwardsCompatibility(t *testing.T) {
-	assert := assert.New(t)
-	fos := getReplicaOptionsRoot(t)
-	// This checks that the alias propagates to the old config correctly.
-	assert.Equal(fos.ByCountry["RU"].ReplicaRustEndpoint, fos.ReplicaRustEndpoints["RU"])
 }
 
 func TestP2PEnabledAndFeatures(t *testing.T) {
@@ -208,15 +191,14 @@ func TestChatEnabled(t *testing.T) {
 	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "ir"), "Chat is disabled in Iran when running 7.0.0")
 	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "cn"), "Chat is disabled in CN when running 7.0.0")
 	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "6.9.7", 1, false, "ae"), "Chat is disabled in Iran when running 6.9.7")
-	assert.True(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.1.0", 1, false, "ae"), "Chat is enabled in China when running 7.1")
-	assert.True(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "99.0.0", 1, false, "us"), "Chat is enabled in USA when running QA version 99.0.0")
+	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.1.0", 1, false, "ae"), "Chat is disabled in China when running 7.1")
+	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "99.0.0", 1, false, "us"), "Chat is disabled in USA when running QA version 99.0.0")
 }
 
 func TestReplicaEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
 	assert.True(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "6.9.11", 1, false, "ru"), "Replica is enabled in Russia when running 6.9.11")
 	assert.True(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "7.0.0", 1, false, "ir"), "Replica is enabled in Iran when running 6.9.11")
-	assert.False(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "7.0.0", 1, false, "us"), "Replica is not enabled in USA when running 7.0.0")
 	assert.False(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "6.9.10", 1, false, "ru"), "Replica is not enabled in Russia when running 6.9.10")
 	assert.False(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "6.9.11", 1, false, "us"), "Replica is not enabled in USA when running 6.9.11")
 	assert.True(t, gl.FeatureEnabled(FeatureReplica, "android", common.DefaultAppName, "99.0.0", 1, false, "us"), "Replica is enabled in USA when running QA version 99.0.0")
@@ -228,17 +210,21 @@ func TestOtelEnabled(t *testing.T) {
 	assert.True(t, gl.FeatureEnabled(FeatureOtel, "android", common.DefaultAppName, "7.0.0", 500, false, "ae"), "Otel is enabled for high user in UAE")
 }
 
-func getReplicaOptionsRoot(t *testing.T) (fos ReplicaOptionsRoot) {
-	g := globalFromTemplate(t)
-	require.NoError(t, g.UnmarshalFeatureOptions(FeatureReplica, &fos))
+func requireGetReplicaOptionsRoot(t *testing.T) (fos replicaConfig.ReplicaOptionsRoot) {
+	var g globalConfig.Raw
+	err := embeddedconfig.ExecuteAndUnmarshalGlobal(nil, &g)
+	if err != nil {
+		panic(err)
+	}
+	err = globalConfig.UnmarshalFeatureOptions(g, globalConfig.FeatureReplica, &fos)
+	if err != nil {
+		panic(err)
+	}
 	return
 }
 
 func globalFromTemplate(t *testing.T) *Global {
-	var w bytes.Buffer
-	// We could write into a pipe, but that requires concurrency and we're old-school in tests.
-	require.NoError(t, template.Must(template.New("").Parse(embeddedconfig.GlobalTemplate)).Execute(&w, nil))
-	g := &Global{}
-	require.NoError(t, yaml.Unmarshal(w.Bytes(), g))
+	g, err := GetEmbeddedGlobalSansTemplateData()
+	require.NoError(t, err)
 	return g
 }
