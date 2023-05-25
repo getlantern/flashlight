@@ -2,11 +2,11 @@ package ios
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/issue"
 	"github.com/getlantern/flashlight/logging"
@@ -32,7 +32,7 @@ func init() {
 	}()
 }
 
-// // Deprecated in favor of reportIssueViaAPI()
+// // Deprecated in favor of reportIssueIos()
 // // ReportIssueViaEmail reports an issue via email.
 // func ReportIssueViaEmail(isPro bool, userID int, proToken, deviceID, appVersion, deviceModel, iosVersion, emailAddress, issue, appLogsDir, tunnelLogsDir, proxiesYamlPath string) error {
 // 	proText := "no"
@@ -76,32 +76,29 @@ func init() {
 // 	return email.Send(context.TODO(), msg)
 // }
 
-// reportIssueViaAPI reports an issue via the lantern-cloud/issue API
+// reportIssueIos reports an issue via the lantern-cloud/issue API
 // TODO where should this be invoked?
-func reportIssueViaAPI(
+func reportIssueIos(
+	userConfig common.UserConfig,
 	isPro bool,
 	userID int,
-	proToken,
-	deviceID,
-	appVersion,
+	// proToken,   // provided by common.UserConfig
+	// deviceID,   // provided by common.UserConfig
+	// appVersion, // provided by common.UserConfig
 	deviceModel,
 	iosVersion,
-	emailAddress,
+	userEmail,
 	issueText,
 	appLogsDir,
 	tunnelLogsDir,
 	proxiesYamlPath string) (err error) {
 
-	proText := "no"
+	subscriptionLevel := "Free"
 	if isPro {
-		proText = "yes"
+		subscriptionLevel = "Pro"
 	}
 
-	description := deviceID // TODO determine where the "description" field is passed in from iOS
-	platform := fmt.Sprintf("%v (iOS %v)", deviceModel, iosVersion)
-
-	// make an empty slice of a slice of bytes
-	attachments := [][]byte{}
+	attachments := []*issue.Attachment{}
 
 	// attach app logs and tunnel logs
 	b := &bytes.Buffer{}
@@ -113,7 +110,10 @@ func reportIssueViaAPI(
 	if err != nil {
 		log.Errorf("unable to zip log files: %v", err)
 	} else {
-		attachments = append(attachments, b.Bytes())
+		attachments = append(attachments, &issue.Attachment{
+			Name: "logs.zip",
+			Data: b.Bytes(),
+		})
 	}
 
 	// attach proxies.yaml
@@ -121,11 +121,22 @@ func reportIssueViaAPI(
 	if err != nil {
 		log.Errorf("unable to read proxies.yaml for reporting issue: %v", err)
 	} else {
-		attachments = append(attachments, bytes)
+		attachments = append(attachments, &issue.Attachment{
+			Name: "proxies.yaml",
+			Data: bytes,
+		})
 	}
 
-	// TODO determine the country code
-	err = issue.SendReport(issueText, "country-code-placeholder", appVersion, proText, platform, description, emailAddress, attachments)
+	err = issue.SendReport(
+		userConfig,
+		issueText,                 // TODO get index integer for issue
+		"description placeholder", // TODO capture iOS user comments as "description"
+		subscriptionLevel,
+		userEmail,
+		deviceModel,         // "Model Name"
+		"model placeholder", // TODO this should be "Model Number"
+		iosVersion,
+		attachments)
 	if err != nil {
 		log.Errorf("unable to send ios issue report: %v", err)
 	}

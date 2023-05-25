@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -48,5 +49,16 @@ func TestReportIssue(t *testing.T) {
 		return
 	}
 
-	assert.NoError(t, reportIssueViaAPI(false, 1, "protoken", "Test's iPhone", "0.0.1", "TestMachine", "1.0", "jay+unittest@getlantern.org", "This is just a test", appLogsDir, tunnelLogsDir, proxiesYaml.Name()))
+	assert.NoError(t, reportIssueIos(
+		common.UserConfig, // TODO why error?
+		true,
+		123,
+		"iPhone 6",
+		"iOS 9.3.2",
+		"jay+unittest@getlantern.org",
+		"this is a test issue",
+		appLogsDir,
+		tunnelLogsDir,
+		proxiesYaml.Name()),
+	)
 }

@@ -42,8 +42,8 @@ func SendReport(
 	description string,
 	subscriptionLevel string,
 	userEmail string,
-	device string,
-	model string,
+	device string, // common name
+	model string, // alphanumeric name
 	osVersion string,
 	attachments []*Attachment,
 ) (err error) {
