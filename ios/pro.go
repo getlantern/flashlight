@@ -210,6 +210,7 @@ func getProClient() (*proclient.Client, error) {
 
 	pc := proclient.NewClient(&http.Client{
 		Transport: rt,
+		Timeout:   30 * time.Second,
 	}, func(req *http.Request, uc common.UserConfig) {
 		common.AddCommonHeaders(uc, req)
 	})
