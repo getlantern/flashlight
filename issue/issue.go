@@ -18,8 +18,8 @@ import (
 
 var (
 	log            = golog.LoggerFor("flashlight.issue")
-	maxLogTailSize = 1024768   // TODO are both of these needed?
-	maxLogSize     = "1024768" // TODO are both of these needed?
+	maxLogTailSize = 1024768
+	maxLogSize     = "1024768"
 
 	client = &http.Client{
 		Transport: proxied.ChainedThenFronted(),
@@ -27,7 +27,7 @@ var (
 )
 
 const (
-	requestURL = "https://issue.iantem.io/v1/issue"
+	requestURL = "https://api.iantem.io/v1/issue"
 )
 
 type Attachment struct {
