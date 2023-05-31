@@ -343,8 +343,6 @@ github.com/getlantern/errors v0.0.0-20190325191628-abdb3e3e36f7/go.mod h1:l+xpFB
 github.com/getlantern/errors v1.0.1/go.mod h1:l+xpFBrCtDLpK9qNjxs+cHU6+BAdlBaxHqikB6Lku3A=
 github.com/getlantern/errors v1.0.3 h1:Ne4Ycj7NI1BtSyAfVeAT/DNoxz7/S2BUc3L2Ht1YSHE=
 github.com/getlantern/errors v1.0.3/go.mod h1:m8C7H1qmouvsGpwQqk/6NUpIVMpfzUPn608aBZDYV04=
-github.com/getlantern/errors v1.0.4-0.20221103205529-5fd7acea87b6 h1:+ciOzJXGn9zTT9ktG8JjM1002RIFd+2FT4bz7+B+jG0=
-github.com/getlantern/errors v1.0.4-0.20221103205529-5fd7acea87b6/go.mod h1:m8C7H1qmouvsGpwQqk/6NUpIVMpfzUPn608aBZDYV04=
 github.com/getlantern/event v0.0.0-20210901195647-a7e3145142e6 h1:sjFsoQHJqzDiwgbOLHnG/zYIpN1Sbmv/7gk1ie/KkHg=
 github.com/getlantern/event v0.0.0-20210901195647-a7e3145142e6/go.mod h1:iToZ3dqm/iFxRHPHUHUrF1JZtg0e06ZSXD1BuiGoUaY=
 github.com/getlantern/eventual v0.0.0-20180125201821-84b02499361b/go.mod h1:O8T3zFEcY6+LRXFcVV4q8mEu2tDIixG8edC84DfswBc=
@@ -361,12 +359,8 @@ github.com/getlantern/filepersist v0.0.0-20210901195658-ed29a1cb0b7c h1:mcz27xtA
 github.com/getlantern/filepersist v0.0.0-20210901195658-ed29a1cb0b7c/go.mod h1:8DGAx0LNUfXNnEH+fXI0s3OCBA/351kZCiz/8YSK3i8=
 github.com/getlantern/framed v0.0.0-20190601192238-ceb6431eeede h1:yrU6Px3ZkvCsDLPryPGi6FN+2iqFPq+JeCb7EFoDBhw=
 github.com/getlantern/framed v0.0.0-20190601192238-ceb6431eeede/go.mod h1:nhnoiS6DE6zfe+BaCMU4YI01UpsuiXnDqM5S8jxHuuI=
-github.com/getlantern/fronted v0.0.0-20230504005103-fd9a1fb8337b h1:YsAa9VwB/R4up+DYGhxhZNwbU1O/UlnKMj30A9MVQUg=
-github.com/getlantern/fronted v0.0.0-20230504005103-fd9a1fb8337b/go.mod h1:Xdd/fUUIu5HI/WBnUFTKWJmIbOq9HrhEs5zAWavQtUg=
-github.com/getlantern/fronted v0.0.0-20230518133520-a7a17ed0fc30 h1:nktJq67/cSqiUZxoy/kPLpkAuVSb3tQojagrj5y7oz4=
-github.com/getlantern/fronted v0.0.0-20230518133520-a7a17ed0fc30/go.mod h1:HGe2a5LAanMKLb5BZHwDntWt5sme18AqEmJnfBgsDqc=
-github.com/getlantern/fronted v0.0.0-20230531172211-13856a180f35 h1:t6ADhGnK6blX5GKejeQT4Lb+Gfh4TxHWEqetp09mK3w=
-github.com/getlantern/fronted v0.0.0-20230531172211-13856a180f35/go.mod h1:HGe2a5LAanMKLb5BZHwDntWt5sme18AqEmJnfBgsDqc=
+github.com/getlantern/fronted v0.0.0-20230531191840-04f726562322 h1:/XavEI3ciJjF/2yyAajcUV86mbHnCXlJ8sGsEa4xiF4=
+github.com/getlantern/fronted v0.0.0-20230531191840-04f726562322/go.mod h1:HGe2a5LAanMKLb5BZHwDntWt5sme18AqEmJnfBgsDqc=
 github.com/getlantern/geo v0.0.0-20221101125300-c661769d5822 h1:DhGGljbbvnXmBhh11b2MLTrkdkSIROy5Op1eylsM74U=
 github.com/getlantern/geo v0.0.0-20221101125300-c661769d5822/go.mod h1:Xw0BLEMmlFOQ1FCBqqWfYEhc2Ss6V4S/56U0oKH/QFU=
 github.com/getlantern/geolookup v0.0.0-20230327091034-aebe73c6eef4 h1:Ju9l1RretVWJTNo2vpl/xAW8Dcuiyg5kJC6LRBpCigw=
@@ -463,12 +457,7 @@ github.com/getlantern/netx v0.0.0-20211206143627-7ccfeb739cbd h1:z5IehLDMqMwJ0oe
 github.com/getlantern/netx v0.0.0-20211206143627-7ccfeb739cbd/go.mod h1:WEXF4pfIfnHBUAKwLa4DW7kcEINtG6wjUkbL2btwXZQ=
 github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
 github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
-github.com/getlantern/ops v0.0.0-20220713155959-1315d978fff7 h1:Od0xvR4iK3gZwhkIbxnHw4Teusv+n5G/F9dW7x+C2f0=
 github.com/getlantern/ops v0.0.0-20220713155959-1315d978fff7/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
-github.com/getlantern/ops v0.0.0-20230424193308-26325dfed3cf h1:q8nsH0Lx9fP8HY6T9rA1zogvOzO9JtbUI5BXkh7wxxI=
-github.com/getlantern/ops v0.0.0-20230424193308-26325dfed3cf/go.mod h1:R7HfJVLsnSeqaDWkiUlU+ANBjac4oYmXGrrps8vW7CM=
-github.com/getlantern/ops v0.0.0-20230519221148-e552416b95b3 h1:ClLmCy+fX9pYpoUmppeQyD1xRmOfnqWGvqFbPPzetDU=
-github.com/getlantern/ops v0.0.0-20230519221148-e552416b95b3/go.mod h1:4ZS1E4MsVQygsQUDm9/KTOr/89Cbx1NBNdOuoXhiMS8=
 github.com/getlantern/ops v0.0.0-20230519221840-1283e026181c h1:qcPAzA1ZDnwx618jAgQmxo6UvJkw2SkM1L4ofncmEhI=
 github.com/getlantern/ops v0.0.0-20230519221840-1283e026181c/go.mod h1:g2ueCncOwWenlAr56Fh90FwsACkelqqtFUDLAHg1mng=
 github.com/getlantern/osversion v0.0.0-20230401075644-c2a30e73c451 h1:3Nn0AqIlImbb0TE4oFhr4BETBZhRUPo9GuebHvMzWB4=
