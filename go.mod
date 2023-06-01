@@ -45,7 +45,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
 	github.com/getlantern/borda v0.0.0-20230421223744-4e208135f082
-	github.com/getlantern/broflake v0.0.0-20230523155939-6087765e3b2d
+	github.com/getlantern/broflake v0.0.0-20230531115137-0a04eca86c4e
 	github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493
 	github.com/getlantern/cmux/v2 v2.0.0-20230301223233-dac79088a4c0
 	github.com/getlantern/cmuxprivate v0.0.0-20211216020409-d29d0d38be54
@@ -66,7 +66,7 @@ require (
 	github.com/getlantern/golog v0.0.0-20230503153817-8e72de7e0a65
 	github.com/getlantern/hellosplitter v0.1.1
 	github.com/getlantern/hidden v0.0.0-20220104173330-f221c5a24770
-	github.com/getlantern/http-proxy-lantern/v2 v2.8.1-0.20230523190222-947cdb9be2f0
+	github.com/getlantern/http-proxy-lantern/v2 v2.8.1-0.20230601103508-c0171773c700
 	github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
 	github.com/getlantern/idletiming v0.0.0-20201229174729-33d04d220c4e
