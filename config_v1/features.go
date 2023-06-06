@@ -341,7 +341,7 @@ func (g ClientGroup) Includes(appName string, userID int64, isPro bool, geoCount
 		if err != nil {
 			return false
 		}
-		if !expectedRange(semver.MustParse(common.Version)) {
+		if !expectedRange(semver.MustParse(common.ApplicationVersion)) {
 			return false
 		}
 	}

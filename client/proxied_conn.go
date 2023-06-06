@@ -14,7 +14,7 @@ type proxiedConn struct {
 // OnRequest implements proxy.RequestAware
 func (conn *proxiedConn) OnRequest(req *http.Request) {
 	// consumed and removed by http-proxy-lantern/versioncheck
-	req.Header.Set(common.VersionHeader, common.Version)
+	req.Header.Set(common.ApplicationVersionHeader, common.LibraryVersion)
 
 	// By default the proxy at this point has swapped any Proxy-Connection headers for Connection.
 	// In this chained proxy case, we want to swap it back.
