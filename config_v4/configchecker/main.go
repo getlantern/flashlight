@@ -18,9 +18,10 @@ import (
 	"net/url"
 	"os"
 
+	config "github.com/getlantern/flashlight/v7/config"
+	domainrouting "github.com/getlantern/flashlight/v7/domainrouting"
+
 	commonconfig "github.com/getlantern/common/config"
-	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/yaml"
 )
 

@@ -8,10 +8,10 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/keyman"
 
-	"github.com/getlantern/flashlight/browsers/simbrowser"
-	"github.com/getlantern/flashlight/domainrouting"
-	"github.com/getlantern/flashlight/embeddedconfig"
-	"github.com/getlantern/flashlight/otel"
+	"github.com/getlantern/flashlight/v7/browsers/simbrowser"
+	domainrouting "github.com/getlantern/flashlight/v7/domainrouting"
+	embeddedconfig "github.com/getlantern/flashlight/v7/embeddedconfig"
+	otel "github.com/getlantern/flashlight/v7/otel"
 )
 
 // Global contains general configuration for Lantern either set globally via

@@ -3,8 +3,9 @@ package pro
 import (
 	"net/http"
 
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/pro/client"
+	"github.com/getlantern/flashlight/v7/pro/client"
+
+	"github.com/getlantern/flashlight/v7/common"
 )
 
 // MigrateDeviceID migrates the user's device ID from the old to the new scheme (only relevant to desktop builds)

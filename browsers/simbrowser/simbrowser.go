@@ -5,11 +5,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/deterministic"
-	"github.com/getlantern/flashlight/geolookup"
-	"github.com/getlantern/golog"
+	common "github.com/getlantern/flashlight/v7/common"
+	deterministic "github.com/getlantern/flashlight/v7/deterministic"
+	geolookup "github.com/getlantern/flashlight/v7/geolookup"
+
 	tls "github.com/refraction-networking/utls"
+
+	"github.com/getlantern/golog"
 )
 
 // This timeout should be longer than anything a caller might pass to us. We use this to avoid

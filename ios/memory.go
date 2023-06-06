@@ -13,7 +13,9 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
-	"github.com/getlantern/flashlight/chained"
+
+	"github.com/getlantern/flashlight/v7/chained"
+
 	"github.com/getlantern/netx"
 )
 

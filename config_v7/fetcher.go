@@ -15,8 +15,8 @@ import (
 
 	"github.com/getlantern/detour"
 
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/ops"
+	common "github.com/getlantern/flashlight/v7/common"
+	ops "github.com/getlantern/flashlight/v7/ops"
 )
 
 var (

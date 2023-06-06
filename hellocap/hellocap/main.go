@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/getlantern/flashlight/browsers"
-	"github.com/getlantern/flashlight/hellocap"
+	browsers "github.com/getlantern/flashlight/v7/browsers"
+	hellocap "github.com/getlantern/flashlight/v7/hellocap"
 )
 
 var timeout = flag.Duration("timeout", 10*time.Second, "")

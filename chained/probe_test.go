@@ -8,8 +8,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/getlantern/flashlight/v7/common"
+
 	"github.com/getlantern/common/config"
-	"github.com/getlantern/flashlight/common"
 )
 
 func TestProbe(t *testing.T) {

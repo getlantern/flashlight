@@ -13,10 +13,11 @@ import (
 
 	tls "github.com/refraction-networking/utls"
 
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/ops"
+
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/hellosplitter"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tlsmasq"

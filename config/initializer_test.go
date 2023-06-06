@@ -6,10 +6,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/getlantern/flashlight/v7/common"
+
+	"github.com/stretchr/testify/assert"
+
 	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/flashlight/common"
-	"github.com/stretchr/testify/assert"
 )
 
 // TestInit tests initializing configs.

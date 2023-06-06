@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/getlantern/flashlight/config"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -15,16 +14,18 @@ import (
 	"strings"
 	"time"
 
+	config "github.com/getlantern/flashlight/v7/config"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/andybalholm/brotli"
 
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/proxy/v2/filters"
 
-	"github.com/getlantern/flashlight/chained"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/flashlight/pro"
+	chained "github.com/getlantern/flashlight/v7/chained"
+	common "github.com/getlantern/flashlight/v7/common"
+	ops "github.com/getlantern/flashlight/v7/ops"
+	pro "github.com/getlantern/flashlight/v7/pro"
 )
 
 var adSwapJavaScriptInjections = map[string]string{

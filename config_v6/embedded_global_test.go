@@ -3,7 +3,8 @@ package config
 import (
 	"testing"
 
-	"github.com/getlantern/flashlight/embeddedconfig"
+	"github.com/getlantern/flashlight/v7/embeddedconfig"
+
 	"github.com/stretchr/testify/assert"
 )
 

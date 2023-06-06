@@ -8,7 +8,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/getlantern/flashlight/hellocap"
+	hellocap "github.com/getlantern/flashlight/v7/hellocap"
+
 	tls "github.com/refraction-networking/utls"
 )
 

@@ -9,9 +9,10 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/yaml"
 
+	common "github.com/getlantern/flashlight/v7/common"
+	embeddedconfig "github.com/getlantern/flashlight/v7/embeddedconfig"
+
 	commonconfig "github.com/getlantern/common/config"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/embeddedconfig"
 )
 
 var (

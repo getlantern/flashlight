@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/getlantern/flashlight/browsers"
+	browsers "github.com/getlantern/flashlight/v7/browsers"
 )
 
 var timeout = flag.Duration("timeout", 5*time.Second, "")

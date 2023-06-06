@@ -7,13 +7,15 @@ import (
 	"net"
 	"net/url"
 
+	tls "github.com/refraction-networking/utls"
+
+	"github.com/getlantern/flashlight/v7/ops"
+
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tinywss"
 	"github.com/getlantern/tlsdialer/v3"
-	tls "github.com/refraction-networking/utls"
 )
 
 type wssImpl struct {

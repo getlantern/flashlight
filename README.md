@@ -43,65 +43,6 @@ You can build an SDK for use by external applications either for Android or for 
 * Force git to use ssh instead of https by running
   `git config --global url."git@github.com:".insteadOf "https://github.com/"`
 
-### Android SDK
-make lanternsdk-android.aar
-
-### iOS SDK
-make Lanternsdk.xcframework
-
-#### iOS SDK Usage
-
-The below shows how to start Lantern and use it. When iOS puts the hosting app the sleep and wakes it up again, Lantern's proxy listener
-will hang because the socket becomes unconnected but Go doesn't notice it. So it's necessary to call `LanternsdkStart` every time the
-app wakes, which will start a new listener and return its new address.
-
-A good place to do this is in
-[applicationDidBecomeActive](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1622956-applicationdidbecomeactive),
-which is called when the app first starts and every time it wakes.
-
-```swift
-
-import Lanternsdk
-
-...
-
-let configDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(".lantern")
-let deviceID = UIDevice.current.identifierForVendor!.uuidString
-
-var error: NSError?
-let proxyAddr = Lanternsdk.LanternsdkStart("TestApp",
-                            configDir.path,
-                            deviceID,
-                            true, // proxyAll
-                            60000, // start timeout
-                            &error)
-if let err = error {
-    throw err
-}
-
-if let host = proxyAddr?.httpHost {
-    if let port = proxyAddr?.httpPort {
-        let proxyConfig = URLSessionConfiguration.default
-        // see https://stackoverflow.com/questions/42617582/how-to-use-urlsession-with-proxy-in-swift-3#42731010
-        proxyConfig.connectionProxyDictionary = [AnyHashable: Any]()
-        proxyConfig.connectionProxyDictionary?[kCFNetworkProxiesHTTPEnable as String] = 1
-        proxyConfig.connectionProxyDictionary?[kCFNetworkProxiesHTTPProxy as String] = host
-        proxyConfig.connectionProxyDictionary?[kCFNetworkProxiesHTTPPort as String] = port
-        proxyConfig.connectionProxyDictionary?[kCFStreamPropertyHTTPSProxyHost as String] = host
-        proxyConfig.connectionProxyDictionary?[kCFStreamPropertyHTTPSProxyPort as String] = port
-
-        let session = URLSession.init(configuration: proxyConfig)
-        // you can now use this session and everything is proxied
-    }
-}
-
-```
-
-
-#### TestApp
-
-lanternsdk/TestApp contains a test iOS application demonstrating use of the lanternsdk on iOS.
-
 ## A note on iOS and memory usage
 The iOS application needs to run as a background process on iOS, meaning that it's severely memory restricted. Because of this, we disable a lot of protocols and extra features using `// go:build !ios` in order to conserve memory.
 
@@ -123,3 +64,30 @@ See `./config/features.go` for a list of features. Below is a non-extensive desc
 Allows the client to act either as a FreePeer or a CensoredPeer.
 
 See overview of the p2p-proxying story here: https://docs.google.com/document/d/1JUjZHgpnunmwG3wUwlSmCKFwOGOXkkwyGd7cgrOJzbs/edit
+
+## A Note on Versioning
+Until recently, flashlight and the applications that use it used only a single versions number, whatever the application itself was built with. This version number was used for various things:
+
+- Displaying a version number in the UI
+- Checking which application features are enabled based on the global configuration
+- Telling our server infrastructure (especially config-server) what version of Lantern we're running so that it can assign appropriate proxies based on what that version supports
+- Checking whether there's an update available via autoupdate
+
+Because the various applications that use flashlight are in their own repos and built independently of each other, this created a coordination problem. Specifically, since pluggable transport support depends on the code level of flashlight, not of the application itself, we had to either synchronize the version numbering between the different apps, or configure the server-side infrastructure to recognize that depending on the application, different version numbers might actually mean the same flashlight code level.
+
+To rectify this, flashlight now uses two different version numbers.
+
+Application Version - this is like the original Version that's baked in at application build time. It is still used for displaying the version in the UI, checking enabled features, and auto-updates.
+
+Library Version - this is based on the flashlight version tag.
+
+### When and how to update Library Version
+Whenever we release a new version of the flashlight library, we tag it using standard [Go module version numbering], for example `git tag v7.5.3`. Then, go update lantern-desktop and android-lantern to use that version of the flashlight library. That's it.
+
+#### What about major version changes
+When changing major versions, for example v7 to v8, we need to udpate the package name as usual with Go. That means:
+
+1. Update the `module` directive in `go.mod`
+2. Find all imports of `github.com/getlantern/flashlight/v7` and replace with `github.com/getlantern/flashlight/v8`
+3. In dependent projects, perform the same search and replace as above
+4. Also, dependent projects set embedded flashlight variables in their Makefiles, so make sure to update those paths per the above search and replace too

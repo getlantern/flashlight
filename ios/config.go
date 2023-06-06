@@ -19,12 +19,13 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/yaml"
 
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/config"
+	"github.com/getlantern/flashlight/v7/email"
+	"github.com/getlantern/flashlight/v7/embeddedconfig"
+	"github.com/getlantern/flashlight/v7/geolookup"
+
 	commonconfig "github.com/getlantern/common/config"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/flashlight/email"
-	"github.com/getlantern/flashlight/embeddedconfig"
-	"github.com/getlantern/flashlight/geolookup"
 )
 
 const (
@@ -119,7 +120,7 @@ func (cf *configurer) configure(userID int, proToken string, refreshProxies bool
 				config.FeatureProbeProxies,
 				common.Platform,
 				cf.uc.AppName,
-				common.Version,
+				common.ApplicationVersion,
 				int64(cf.uc.UserID),
 				cf.uc.Token != "",
 				cf.uc.Country)

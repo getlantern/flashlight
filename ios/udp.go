@@ -8,8 +8,9 @@ import (
 
 	"github.com/eycorsican/go-tun2socks/core"
 
+	"github.com/getlantern/flashlight/v7/chained"
+
 	"github.com/getlantern/dnsgrab"
-	"github.com/getlantern/flashlight/chained"
 )
 
 // UDPDialer provides a mechanism for dialing outbound UDP connections that bypass the VPN.

@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"sync"
 
+	common "github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/pro/client"
+
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/pro/client"
 	"github.com/getlantern/golog"
 )
 

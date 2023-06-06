@@ -8,8 +8,8 @@ import (
 
 	"github.com/getlantern/fronted"
 
-	"github.com/getlantern/flashlight/common"
-	proclient "github.com/getlantern/flashlight/pro/client"
+	common "github.com/getlantern/flashlight/v7/common"
+	proclient "github.com/getlantern/flashlight/v7/pro/client"
 )
 
 // ProCredentials are credentials that authenticate a pro account

@@ -19,7 +19,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/getlantern/flashlight/logging"
+	logging "github.com/getlantern/flashlight/v7/logging"
+
 	"github.com/getlantern/golog"
 )
 

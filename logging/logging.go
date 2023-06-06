@@ -19,7 +19,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/rotator"
 
-	"github.com/getlantern/flashlight/util"
+	util "github.com/getlantern/flashlight/v7/util"
 )
 
 const (

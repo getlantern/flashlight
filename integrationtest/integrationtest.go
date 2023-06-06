@@ -31,7 +31,7 @@ import (
 	"github.com/getlantern/waitforserver"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/client"
+	"github.com/getlantern/flashlight/v7/client"
 )
 
 const (

@@ -41,7 +41,6 @@ Ios.framework
 *.aar
 *.jar
 .vscode
-Lanternsdk*framework*
 xcuserdata
 .gomobilecache
 vendor

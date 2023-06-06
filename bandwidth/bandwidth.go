@@ -7,7 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/flashlight/common"
+	common "github.com/getlantern/flashlight/v7/common"
+
 	"github.com/getlantern/golog"
 )
 

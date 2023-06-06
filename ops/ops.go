@@ -16,8 +16,8 @@ import (
 	"github.com/getlantern/ops"
 	"github.com/getlantern/osversion"
 
-	"github.com/getlantern/flashlight/bandwidth"
-	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/v7/bandwidth"
+	"github.com/getlantern/flashlight/v7/common"
 )
 
 // ProxyType is the type of various proxy channel
@@ -314,7 +314,7 @@ func InitGlobalContext(appName string, deviceID string, isPro func() bool, getCo
 	// Using "application" allows us to distinguish between errors from the
 	// lantern client vs other sources like the http-proxy, etop.
 	ops.SetGlobal("app", fmt.Sprintf("%s-client", strings.ToLower(appName)))
-	ops.SetGlobal("app_version", fmt.Sprintf("%v (%v)", common.Version, common.RevisionDate))
+	ops.SetGlobal("app_version", fmt.Sprintf("%v (%v)", common.ApplicationVersion, common.RevisionDate))
 	ops.SetGlobal("go_version", runtime.Version())
 	ops.SetGlobal("os_name", common.Platform)
 	ops.SetGlobal("os_arch", runtime.GOARCH)

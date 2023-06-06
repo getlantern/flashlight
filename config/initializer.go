@@ -11,8 +11,8 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/embeddedconfig"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/embeddedconfig"
 )
 
 const packageLogPrefix = "flashlight.config"

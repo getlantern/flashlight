@@ -13,14 +13,15 @@ import (
 	"time"
 
 	"github.com/anacrolix/dht/v2/krpc"
-	"github.com/getlantern/dhtup"
-	"github.com/getlantern/golog"
-	"github.com/getlantern/rot13"
 	"github.com/getsentry/sentry-go"
 	"gopkg.in/yaml.v3"
 
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/ops"
+
+	"github.com/getlantern/dhtup"
+	"github.com/getlantern/golog"
+	"github.com/getlantern/rot13"
 )
 
 // Source specifies where the config is from when dispatching.

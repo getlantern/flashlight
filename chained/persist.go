@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/flashlight/balancer"
+	balancer "github.com/getlantern/flashlight/v7/balancer"
 )
 
 var (

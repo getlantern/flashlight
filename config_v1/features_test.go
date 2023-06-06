@@ -5,11 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/yaml"
+
+	"github.com/getlantern/flashlight/v7/common"
 )
 
 func TestValidate(t *testing.T) {

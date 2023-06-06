@@ -6,11 +6,11 @@ import (
 	"context"
 	"net"
 
+	"github.com/getlantern/flashlight/v7/ops"
+
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/kcpwrapper"
-
-	"github.com/getlantern/flashlight/ops"
 )
 
 // KCPConfig adapts kcpwrapper.DialerConfig to the currently deployed

@@ -26,8 +26,8 @@ import (
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/netx"
 
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/ops"
 )
 
 const (
@@ -57,7 +57,7 @@ func success(resp *http.Response) bool {
 func changeUserAgent(req *http.Request) {
 	secondary := req.Header.Get("User-Agent")
 	ua := strings.TrimSpace(fmt.Sprintf("%s/%s (%s/%s) %s",
-		common.DefaultAppName, common.Version, common.Platform, runtime.GOARCH, secondary))
+		common.DefaultAppName, common.ApplicationVersion, common.Platform, runtime.GOARCH, secondary))
 	req.Header.Set("User-Agent", ua)
 }
 

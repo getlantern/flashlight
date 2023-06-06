@@ -9,7 +9,7 @@ import (
 
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/common"
+	common "github.com/getlantern/flashlight/v7/common"
 )
 
 var (

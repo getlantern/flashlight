@@ -12,7 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/v7/common"
+
 	"github.com/stretchr/testify/assert"
 )
 

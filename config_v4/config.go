@@ -11,12 +11,13 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/getlantern/rot13"
-	"github.com/getlantern/yaml"
 	"github.com/getsentry/sentry-go"
 
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/ops"
+
+	"github.com/getlantern/rot13"
+	"github.com/getlantern/yaml"
 )
 
 // Source specifies where the config is from when dispatching.
@@ -107,10 +108,10 @@ type options struct {
 // config onto a channel for processing by a dispatch function. This will read
 // configs in the following order:
 //
-// 1. Configs saved on disk, if any
-// 2. Configs embedded in the binary according to the specified name, if any.
-// 3. Configs fetched remotely, and those will be piped back over and over
-//   again as the remote configs change (but only if they change).
+//  1. Configs saved on disk, if any
+//  2. Configs embedded in the binary according to the specified name, if any.
+//  3. Configs fetched remotely, and those will be piped back over and over
+//     again as the remote configs change (but only if they change).
 //
 // pipeConfig returns a function that can be used to stop polling
 func pipeConfig(opts *options) (stop func()) {

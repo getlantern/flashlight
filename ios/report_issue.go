@@ -7,8 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/getlantern/flashlight/email"
-	"github.com/getlantern/flashlight/logging"
+	email "github.com/getlantern/flashlight/v7/email"
+	logging "github.com/getlantern/flashlight/v7/logging"
+
 	"github.com/getlantern/fronted"
 )
 

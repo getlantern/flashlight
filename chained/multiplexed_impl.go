@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/xtaci/smux"
+
+	"github.com/getlantern/flashlight/v7/ops"
+
 	"github.com/getlantern/cmux/v2"
 	"github.com/getlantern/cmuxprivate"
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/psmux"
-	"github.com/xtaci/smux"
-
-	"github.com/getlantern/flashlight/ops"
 )
 
 const (

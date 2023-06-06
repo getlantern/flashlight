@@ -1,24 +1,33 @@
 package common
 
+import (
+	"runtime/debug"
+	"strings"
+
+	"github.com/blang/semver"
+)
+
 const (
-	// DefaultPackageVersion is the default version of the package for auto-update
+	// DefaultApplicationVersion is the default version of the application for auto-update
 	// purposes. while in development mode we probably would not want auto-updates to be
 	// applied. Using a big number here prevents such auto-updates without
 	// disabling the feature completely. The "make package-*" tool will take care
 	// of bumping this version number so you don't have to do it by hand.
-	DefaultPackageVersion = "9999.99.99"
+	DefaultApplicationVersion = "9999.99.99-dev"
 )
 
 var (
-	// CompileTimePackageVersion is set at compile-time for production builds
-	CompileTimePackageVersion string = ""
+	// CompileTimeApplicationVersion is set at compile-time by application production builds
+	CompileTimeApplicationVersion string = ""
 
-	// PackageVersion is the version of the package to use depending on if we're
-	// in development, production, etc.
-	PackageVersion = bestPackageVersion()
+	// ApplicationVersion is the version of the package to use depending on if we're
+	// in development, production, etc. ApplicationVersion is used by the Features mechanism
+	// to determine which features to enable/disable.
+	ApplicationVersion = bestApplicationVersion()
 
-	// Version is the version of Lantern we're running.
-	Version string
+	// LibraryVersion is hardcoded. LibraryVersion is mostly used in the X-Lantern-Version header
+	// for purposes of proxy assignment.
+	LibraryVersion = "9999.99.99"
 
 	// RevisionDate is the date of the most recent code revision.
 	RevisionDate string // The revision date and time that is associated with the version string.
@@ -27,22 +36,31 @@ var (
 	BuildDate string // The actual date and time the binary was built.
 )
 
-func bestPackageVersion() string {
-	if CompileTimePackageVersion != "" {
-		return CompileTimePackageVersion
+func bestApplicationVersion() string {
+	if CompileTimeApplicationVersion != "" {
+		return CompileTimeApplicationVersion
 	}
-	return DefaultPackageVersion
+	return DefaultApplicationVersion
 }
 
 func init() {
-	if !InDevelopment() {
-		// packageVersion has precedence over GIT revision. This will happen when
-		// packing a version intended for release.
-		Version = PackageVersion
+	buildInfo, ok := debug.ReadBuildInfo()
+	if !ok {
+		panic("Unable to read build info")
 	}
 
-	if Version == "" {
-		Version = DefaultPackageVersion + "-dev"
+versionLoop:
+	for _, dep := range buildInfo.Deps {
+		if strings.HasPrefix(dep.Path, "github.com/getlantern/flashlight") && strings.HasPrefix(dep.Version, "v") {
+			version := dep.Version[1:]
+			log.Debugf("Flashlight version is %v", version)
+			_, parseErr := semver.Parse(version)
+			if parseErr == nil {
+				log.Debugf("Setting LibraryVersion to %v", version)
+				LibraryVersion = version
+				break versionLoop
+			}
+		}
 	}
 
 	if RevisionDate == "" {
@@ -52,5 +70,5 @@ func init() {
 
 // InDevelopment indicates whether this built was built in development.
 func InDevelopment() bool {
-	return PackageVersion == DefaultPackageVersion
+	return ApplicationVersion == DefaultApplicationVersion
 }

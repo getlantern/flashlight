@@ -18,13 +18,14 @@ import (
 	"go.uber.org/atomic"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/getlantern/flashlight/v7/apipb"
+	"github.com/getlantern/flashlight/v7/balancer"
+	"github.com/getlantern/flashlight/v7/chained"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/config"
+	"github.com/getlantern/flashlight/v7/proxied"
+
 	commonconfig "github.com/getlantern/common/config"
-	"github.com/getlantern/flashlight/apipb"
-	"github.com/getlantern/flashlight/balancer"
-	"github.com/getlantern/flashlight/chained"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
 )
 

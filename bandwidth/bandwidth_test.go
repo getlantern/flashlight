@@ -6,9 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/eventual"
-	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/v7/common"
+
 	"github.com/stretchr/testify/assert"
+
+	"github.com/getlantern/eventual"
 )
 
 func TestRoundTrip(t *testing.T) {

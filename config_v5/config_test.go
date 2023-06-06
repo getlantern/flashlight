@@ -8,13 +8,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/fronted"
-	"github.com/getlantern/golog"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/getlantern/fronted"
+	"github.com/getlantern/golog"
+
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/embeddedconfig"
+
 	commonconfig "github.com/getlantern/common/config"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/embeddedconfig"
 )
 
 func TestEmptyEmbedded(t *testing.T) {

@@ -6,10 +6,12 @@ import (
 	"net"
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
-	"github.com/getlantern/common/config"
-	"github.com/getlantern/flashlight/ops"
 	"gitlab.com/yawning/obfs4.git/transports/base"
 	"gitlab.com/yawning/obfs4.git/transports/obfs4"
+
+	"github.com/getlantern/flashlight/v7/ops"
+
+	"github.com/getlantern/common/config"
 )
 
 type obfs4Impl struct {

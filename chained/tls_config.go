@@ -11,11 +11,12 @@ import (
 
 	tls "github.com/refraction-networking/utls"
 
+	"github.com/getlantern/flashlight/v7/browsers/simbrowser"
+	common "github.com/getlantern/flashlight/v7/common"
+	ops "github.com/getlantern/flashlight/v7/ops"
+
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/browsers/simbrowser"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/tlsresumption"
 )
 

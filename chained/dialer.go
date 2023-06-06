@@ -21,11 +21,11 @@ import (
 	"github.com/getlantern/idletiming"
 	gp "github.com/getlantern/proxy/v2"
 
-	"github.com/getlantern/flashlight/balancer"
-	"github.com/getlantern/flashlight/bandwidth"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/domainrouting"
-	"github.com/getlantern/flashlight/ops"
+	balancer "github.com/getlantern/flashlight/v7/balancer"
+	bandwidth "github.com/getlantern/flashlight/v7/bandwidth"
+	common "github.com/getlantern/flashlight/v7/common"
+	domainrouting "github.com/getlantern/flashlight/v7/domainrouting"
+	ops "github.com/getlantern/flashlight/v7/ops"
 )
 
 const (
