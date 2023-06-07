@@ -35,16 +35,16 @@ import (
 	"github.com/getlantern/proxy/v2/filters"
 	"github.com/getlantern/shortcut"
 
-	"github.com/getlantern/flashlight/balancer"
-	"github.com/getlantern/flashlight/buffers"
-	"github.com/getlantern/flashlight/chained"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/flashlight/domainrouting"
-	"github.com/getlantern/flashlight/geolookup"
-	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/flashlight/stats"
-	"github.com/getlantern/flashlight/status"
+	"github.com/getlantern/flashlight/v7/balancer"
+	"github.com/getlantern/flashlight/v7/buffers"
+	"github.com/getlantern/flashlight/v7/chained"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/config"
+	"github.com/getlantern/flashlight/v7/domainrouting"
+	"github.com/getlantern/flashlight/v7/geolookup"
+	"github.com/getlantern/flashlight/v7/ops"
+	"github.com/getlantern/flashlight/v7/stats"
+	"github.com/getlantern/flashlight/v7/status"
 )
 
 var (

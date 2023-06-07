@@ -12,9 +12,9 @@ import (
 	replicaConfig "github.com/getlantern/replica/config"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/common"
-	globalConfig "github.com/getlantern/flashlight/config/global"
-	"github.com/getlantern/flashlight/embeddedconfig"
+	"github.com/getlantern/flashlight/v7/common"
+	globalConfig "github.com/getlantern/flashlight/v7/config/global"
+	"github.com/getlantern/flashlight/v7/embeddedconfig"
 )
 
 func TestValidate(t *testing.T) {

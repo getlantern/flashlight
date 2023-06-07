@@ -20,11 +20,11 @@ import (
 	"github.com/getlantern/yaml"
 
 	commonconfig "github.com/getlantern/common/config"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/flashlight/email"
-	"github.com/getlantern/flashlight/embeddedconfig"
-	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/config"
+	"github.com/getlantern/flashlight/v7/email"
+	"github.com/getlantern/flashlight/v7/embeddedconfig"
+	"github.com/getlantern/flashlight/v7/geolookup"
 )
 
 const (

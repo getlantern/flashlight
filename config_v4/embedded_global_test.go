@@ -3,8 +3,9 @@ package config
 import (
 	"testing"
 
-	"github.com/getlantern/flashlight/embeddedconfig"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/getlantern/flashlight/v7/embeddedconfig"
 )
 
 func TestEmbeddedGlobal(t *testing.T) {

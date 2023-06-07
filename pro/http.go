@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/v7/proxied"
 )
 
 var (

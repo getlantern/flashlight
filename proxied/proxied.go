@@ -26,8 +26,8 @@ import (
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/netx"
 
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/ops"
 )
 
 const (

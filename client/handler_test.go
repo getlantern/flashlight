@@ -11,14 +11,16 @@ import (
 	"time"
 
 	"github.com/andybalholm/brotli"
-	"github.com/getlantern/flashlight/config"
+	"github.com/stretchr/testify/require"
+
+	"github.com/getlantern/flashlight/v7/config"
 	"github.com/getlantern/proxy/v2/filters"
 	sc "github.com/getlantern/shortcut"
 	"github.com/getlantern/yaml"
-	"github.com/stretchr/testify/require"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/httpseverywhere"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestNormalizeExoAd(t *testing.T) {

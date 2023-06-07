@@ -3,7 +3,7 @@ package client
 import (
 	"strings"
 
-	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/v7/balancer"
 )
 
 type location struct {

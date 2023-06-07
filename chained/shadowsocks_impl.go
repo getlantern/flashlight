@@ -17,8 +17,8 @@ import (
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
 
-	"github.com/getlantern/flashlight/chained/prefixgen"
-	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/v7/chained/prefixgen"
+	"github.com/getlantern/flashlight/v7/ops"
 )
 
 const (

@@ -4,7 +4,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/v7/ops"
 )
 
 // Used by the Client to track operations on a per-connection basis. Concurrency safe.

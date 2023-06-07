@@ -13,7 +13,7 @@ import (
 	"github.com/blang/semver"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/v7/common"
 )
 
 const (

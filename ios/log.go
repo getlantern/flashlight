@@ -1,7 +1,7 @@
 package ios
 
 import (
-	"github.com/getlantern/flashlight/ios/logger"
+	"github.com/getlantern/flashlight/v7/ios/logger"
 	"github.com/getlantern/golog"
 )
 

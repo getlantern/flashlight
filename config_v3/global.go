@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/getlantern/flashlight/browsers/simbrowser"
-	"github.com/getlantern/flashlight/domainrouting"
+	"github.com/getlantern/flashlight/v7/browsers/simbrowser"
+	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/keyman"
 )

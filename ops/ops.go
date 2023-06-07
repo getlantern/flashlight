@@ -16,8 +16,8 @@ import (
 	"github.com/getlantern/ops"
 	"github.com/getlantern/osversion"
 
-	"github.com/getlantern/flashlight/bandwidth"
-	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/v7/bandwidth"
+	"github.com/getlantern/flashlight/v7/common"
 )
 
 // ProxyType is the type of various proxy channel

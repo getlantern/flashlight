@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/getlantern/flashlight/browsers"
+	"github.com/getlantern/flashlight/v7/browsers"
 )
 
 func printBrowserDetails(b browsers.Browser) {

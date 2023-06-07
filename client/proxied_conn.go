@@ -4,7 +4,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/v7/common"
 )
 
 type proxiedConn struct {
