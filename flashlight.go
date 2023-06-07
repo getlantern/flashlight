@@ -220,7 +220,7 @@ func (f *Flashlight) calcFeature(global *config.Global, country, feature string)
 	return global.FeatureEnabled(feature,
 		common.Platform,
 		f.userConfig.GetAppName(),
-		common.Version,
+		common.ApplicationVersion,
 		f.userConfig.GetUserID(),
 		f.isPro(),
 		country)
@@ -585,6 +585,6 @@ func (f *Flashlight) applyClientConfig(cfg *config.Global) {
 }
 
 func displayVersion() {
-	log.Debugf("---- flashlight version: %s, release: %s, build revision date: %s, build date: %s ----",
-		common.Version, common.PackageVersion, common.RevisionDate, common.BuildDate)
+	log.Debugf("---- application version: %s, library version: %s, build revision date: %s, build date: %s ----",
+		common.ApplicationVersion, common.LibraryVersion, common.RevisionDate, common.BuildDate)
 }
