@@ -26,7 +26,7 @@ func init() {
 
 versionLoop:
 	for _, dep := range buildInfo.Deps {
-		if strings.HasPrefix(dep.Path, "github.com/getlantern/flashlight/v7") && strings.HasPrefix(dep.Version, "v") {
+		if strings.HasPrefix(dep.Path, "github.com/getlantern/flashlight") && strings.HasPrefix(dep.Version, "v") {
 			version := dep.Version[1:]
 			log.Debugf("Flashlight version is %v", version)
 			_, parseErr := semver.Parse(version)
