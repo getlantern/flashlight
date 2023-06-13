@@ -13,9 +13,6 @@ var (
 
 	// LibraryVersion is determined at runtime based on the version of the lantern library that's been included.
 	LibraryVersion = ""
-
-	// BuildDate is the date the code was actually built.
-	BuildDate string // The actual date and time the binary was built.
 )
 
 func init() {

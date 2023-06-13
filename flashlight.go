@@ -585,6 +585,6 @@ func (f *Flashlight) applyClientConfig(cfg *config.Global) {
 }
 
 func displayVersion(appVersion, revisionDate string) {
-	log.Debugf("---- application version: %s, library version: %s, build revision date: %s, build date: %s ----",
-		appVersion, common.LibraryVersion, revisionDate, common.BuildDate)
+	log.Debugf("---- application version: %s, library version: %s, build revision date: %s ----",
+		appVersion, common.LibraryVersion, revisionDate)
 }
