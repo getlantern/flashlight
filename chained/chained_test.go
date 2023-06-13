@@ -15,8 +15,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/common/config"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/golog"
 )
 

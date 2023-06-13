@@ -12,8 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/flashlight/common"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/getlantern/flashlight/v7/common"
 )
 
 // Test to make sure user agent registration, listening, etc is all working.

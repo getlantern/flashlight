@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/getlantern/common/config"
-	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/v7/common"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/v7/ops"
 	"golang.org/x/sys/windows/registry"
 )
 

@@ -41,7 +41,6 @@
 // The utility scripts vpn.bash and direct.bash provide convenient ways to route traffic via the VPN
 // or go back to routing traffic directly. You'll need to change the settings in routes.bash to match
 // your system.
-//
 package main
 
 import (
@@ -66,7 +65,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/uuid"
 
-	"github.com/getlantern/flashlight/ios"
+	"github.com/getlantern/flashlight/v7/ios"
 )
 
 var (

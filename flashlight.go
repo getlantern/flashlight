@@ -19,22 +19,22 @@ import (
 	"github.com/getlantern/ops"
 	"github.com/getlantern/proxybench"
 
-	"github.com/getlantern/flashlight/balancer"
-	"github.com/getlantern/flashlight/bypass"
-	"github.com/getlantern/flashlight/chained"
-	"github.com/getlantern/flashlight/client"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/flashlight/domainrouting"
-	"github.com/getlantern/flashlight/email"
-	"github.com/getlantern/flashlight/geolookup"
-	"github.com/getlantern/flashlight/goroutines"
-	"github.com/getlantern/flashlight/logging"
-	fops "github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/flashlight/otel"
-	"github.com/getlantern/flashlight/proxied"
-	"github.com/getlantern/flashlight/shortcut"
-	"github.com/getlantern/flashlight/stats"
+	"github.com/getlantern/flashlight/v7/balancer"
+	"github.com/getlantern/flashlight/v7/bypass"
+	"github.com/getlantern/flashlight/v7/chained"
+	"github.com/getlantern/flashlight/v7/client"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/config"
+	"github.com/getlantern/flashlight/v7/domainrouting"
+	"github.com/getlantern/flashlight/v7/email"
+	"github.com/getlantern/flashlight/v7/geolookup"
+	"github.com/getlantern/flashlight/v7/goroutines"
+	"github.com/getlantern/flashlight/v7/logging"
+	fops "github.com/getlantern/flashlight/v7/ops"
+	"github.com/getlantern/flashlight/v7/otel"
+	"github.com/getlantern/flashlight/v7/proxied"
+	"github.com/getlantern/flashlight/v7/shortcut"
+	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/quicproxy"
 )
 
@@ -220,7 +220,7 @@ func (f *Flashlight) calcFeature(global *config.Global, country, feature string)
 	return global.FeatureEnabled(feature,
 		common.Platform,
 		f.userConfig.GetAppName(),
-		common.Version,
+		"", // features internal to flashlight are not controllable by application version, since flashlight doesn't know the version
 		f.userConfig.GetUserID(),
 		f.isPro(),
 		country)
@@ -308,6 +308,8 @@ func (f *Flashlight) applyOtel(cfg *config.Global) {
 // New creates a client proxy.
 func New(
 	appName string,
+	appVersion string,
+	revisionDate string,
 	configDir string,
 	enableVPN bool,
 	disconnected func() bool,
@@ -337,12 +339,10 @@ func New(
 	if onConfigUpdate == nil {
 		onConfigUpdate = func(_ *config.Global, src config.Source) {}
 	}
-	displayVersion()
+	displayVersion(appVersion, revisionDate)
 	deviceID := userConfig.GetDeviceID()
-	if common.InDevelopment() {
-		log.Debugf("You can query for this device's activity in borda under device id: %v", deviceID)
-	}
-	fops.InitGlobalContext(appName, deviceID, isPro, func() string { return geolookup.GetCountry(0) })
+	log.Debugf("You can query for this device's activity under device id: %v", deviceID)
+	fops.InitGlobalContext(appName, appVersion, revisionDate, deviceID, isPro, func() string { return geolookup.GetCountry(0) })
 	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 
 	f := &Flashlight{
@@ -584,7 +584,7 @@ func (f *Flashlight) applyClientConfig(cfg *config.Global) {
 	}
 }
 
-func displayVersion() {
-	log.Debugf("---- flashlight version: %s, release: %s, build revision date: %s, build date: %s ----",
-		common.Version, common.PackageVersion, common.RevisionDate, common.BuildDate)
+func displayVersion(appVersion, revisionDate string) {
+	log.Debugf("---- application version: %s, library version: %s, build revision date: %s, build date: %s ----",
+		appVersion, common.LibraryVersion, revisionDate, common.BuildDate)
 }

@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/pro/client"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/pro/client"
 )
 
 func TestUsers(t *testing.T) {

@@ -15,8 +15,8 @@ import (
 	geo "github.com/getlantern/geolookup"
 	"github.com/getlantern/golog"
 
-	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/v7/ops"
+	"github.com/getlantern/flashlight/v7/proxied"
 )
 
 var (

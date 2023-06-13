@@ -10,7 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/getlantern/flashlight/browsers"
+	"github.com/getlantern/flashlight/v7/browsers"
 )
 
 func defaultBrowser(ctx context.Context) (browser, error) {

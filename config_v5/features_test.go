@@ -13,8 +13,12 @@ import (
 
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/embeddedconfig"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/embeddedconfig"
+)
+
+const (
+	applicationVersion = "9999.99.99-dev"
 )
 
 func TestValidate(t *testing.T) {
@@ -30,41 +34,41 @@ func TestValidate(t *testing.T) {
 }
 
 func TestIncludes(t *testing.T) {
-	assert.True(t, ClientGroup{}.Includes(common.Platform, common.DefaultAppName, common.Version, 0, true, "whatever"), "zero value should include all combinations")
-	assert.True(t, ClientGroup{}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, false, "whatever"), "zero value should include all combinations")
-	assert.True(t, ClientGroup{UserCeil: 0.12}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, false, "whatever"), "match user range")
-	assert.False(t, ClientGroup{UserCeil: 0.11}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, false, "whatever"), "user range does not match")
-	assert.False(t, ClientGroup{UserCeil: 0.11}.Includes(common.Platform, common.DefaultAppName, common.Version, 0, false, "whatever"), "unknown user ID should not belong to any user range")
+	assert.True(t, ClientGroup{}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 0, true, "whatever"), "zero value should include all combinations")
+	assert.True(t, ClientGroup{}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, false, "whatever"), "zero value should include all combinations")
+	assert.True(t, ClientGroup{UserCeil: 0.12}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, false, "whatever"), "match user range")
+	assert.False(t, ClientGroup{UserCeil: 0.11}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, false, "whatever"), "user range does not match")
+	assert.False(t, ClientGroup{UserCeil: 0.11}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 0, false, "whatever"), "unknown user ID should not belong to any user range")
 
-	assert.True(t, ClientGroup{FreeOnly: true}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, false, "whatever"), "user status met")
-	assert.False(t, ClientGroup{ProOnly: true}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, false, "whatever"), "user status unmet")
-	assert.True(t, ClientGroup{ProOnly: true}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "user status met")
-	assert.False(t, ClientGroup{FreeOnly: true}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "user status unmet")
+	assert.True(t, ClientGroup{FreeOnly: true}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, false, "whatever"), "user status met")
+	assert.False(t, ClientGroup{ProOnly: true}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, false, "whatever"), "user status unmet")
+	assert.True(t, ClientGroup{ProOnly: true}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, true, "whatever"), "user status met")
+	assert.False(t, ClientGroup{FreeOnly: true}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, true, "whatever"), "user status unmet")
 
 	// The default AppName is "Default"
-	assert.True(t, ClientGroup{Application: (common.DefaultAppName)}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "application met, case insensitive")
-	assert.True(t, ClientGroup{Application: strings.ToUpper(common.DefaultAppName)}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "application met, case insensitive")
-	assert.False(t, ClientGroup{Application: "Beam"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "application unmet, case insensitive")
-	assert.False(t, ClientGroup{Application: "beam"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "application unmet, case insensitive")
+	assert.True(t, ClientGroup{Application: (common.DefaultAppName)}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, true, "whatever"), "application met, case insensitive")
+	assert.True(t, ClientGroup{Application: strings.ToUpper(common.DefaultAppName)}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, true, "whatever"), "application met, case insensitive")
+	assert.False(t, ClientGroup{Application: "Beam"}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, true, "whatever"), "application unmet, case insensitive")
+	assert.False(t, ClientGroup{Application: "beam"}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, true, "whatever"), "application unmet, case insensitive")
 
 	// The client version is 9999.99.99-dev when in development mode
-	assert.True(t, ClientGroup{VersionConstraints: "> 5.1.0"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "version met")
-	assert.True(t, ClientGroup{VersionConstraints: "> 5.1.0 < 10000.0.0"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "version met")
-	assert.False(t, ClientGroup{VersionConstraints: "< 5.1.0"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "version unmet")
+	assert.True(t, ClientGroup{VersionConstraints: "> 5.1.0"}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, true, "whatever"), "version met")
+	assert.True(t, ClientGroup{VersionConstraints: "> 5.1.0 < 10000.0.0"}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, true, "whatever"), "version met")
+	assert.False(t, ClientGroup{VersionConstraints: "< 5.1.0"}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, true, "whatever"), "version unmet")
 
 	// Platforms tests are likely run
-	assert.True(t, ClientGroup{Platforms: "linux,darwin,windows"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "platform met")
+	assert.True(t, ClientGroup{Platforms: "linux,darwin,windows"}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, true, "whatever"), "platform met")
 	// Platforms tests are unlikely run
-	assert.False(t, ClientGroup{Platforms: "ios,android"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever"), "platform unmet")
+	assert.False(t, ClientGroup{Platforms: "ios,android"}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, true, "whatever"), "platform unmet")
 
-	assert.True(t, ClientGroup{GeoCountries: "ir   , cn"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "IR"), "country met")
-	assert.False(t, ClientGroup{GeoCountries: "us"}.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "IR"), "country unmet")
+	assert.True(t, ClientGroup{GeoCountries: "ir   , cn"}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, true, "IR"), "country met")
+	assert.False(t, ClientGroup{GeoCountries: "us"}.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, true, "IR"), "country unmet")
 
 	// Fraction calculation should be stable
 	g := ClientGroup{Fraction: 0.1}
 	hits := 0
 	for i := 0; i < 1000; i++ {
-		if g.Includes(common.Platform, common.DefaultAppName, common.Version, 111, true, "whatever") {
+		if g.Includes(common.Platform, common.DefaultAppName, applicationVersion, 111, true, "whatever") {
 			hits++
 		}
 	}
@@ -90,10 +94,10 @@ featuresenabled:
 	if !assert.NoError(t, yaml.Unmarshal([]byte(yml), gl)) {
 		return
 	}
-	assert.True(t, gl.FeatureEnabled(FeatureReplica, common.Platform, common.DefaultAppName, common.Version, 111, false, "au"), "met the first group")
-	assert.True(t, gl.FeatureEnabled(FeatureReplica, common.Platform, common.DefaultAppName, common.Version, 111, true, ""), "met the second group")
-	assert.False(t, gl.FeatureEnabled(FeatureReplica, common.Platform, common.DefaultAppName, common.Version, 211, false, "au"), "unmet both groups")
-	assert.False(t, gl.FeatureEnabled(FeatureReplica, common.Platform, common.DefaultAppName, common.Version, 111, false, ""), "unmet both groups")
+	assert.True(t, gl.FeatureEnabled(FeatureReplica, common.Platform, common.DefaultAppName, applicationVersion, 111, false, "au"), "met the first group")
+	assert.True(t, gl.FeatureEnabled(FeatureReplica, common.Platform, common.DefaultAppName, applicationVersion, 111, true, ""), "met the second group")
+	assert.False(t, gl.FeatureEnabled(FeatureReplica, common.Platform, common.DefaultAppName, applicationVersion, 211, false, "au"), "unmet both groups")
+	assert.False(t, gl.FeatureEnabled(FeatureReplica, common.Platform, common.DefaultAppName, applicationVersion, 111, false, ""), "unmet both groups")
 }
 
 func TestUnmarshalFeatureOptions(t *testing.T) {
@@ -131,15 +135,15 @@ featureoptions:
 
 func TestMatomoEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
-	assert.False(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, common.Version, 1, false, "us"), "Matomo is disabled for a low User ID")
-	assert.False(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, common.Version, 500, false, "us"), "Matomo is disabled for a high User ID")
+	assert.False(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, applicationVersion, 1, false, "us"), "Matomo is disabled for a low User ID")
+	assert.False(t, gl.FeatureEnabled(FeatureMatomo, common.Platform, common.DefaultAppName, applicationVersion, 500, false, "us"), "Matomo is disabled for a high User ID")
 }
 
 func TestDetour(t *testing.T) {
 	gl := globalFromTemplate(t)
 	for _, country := range []string{"cn"} {
 		for _, os := range []string{"android", "windows", "darwin", "linux"} {
-			assert.False(t, gl.FeatureEnabled(FeatureDetour, os, common.DefaultAppName, common.Version, 1, false, country), fmt.Sprintf("detour is disabled for %s in %s", os, country))
+			assert.False(t, gl.FeatureEnabled(FeatureDetour, os, common.DefaultAppName, applicationVersion, 1, false, country), fmt.Sprintf("detour is disabled for %s in %s", os, country))
 		}
 	}
 }
@@ -149,9 +153,9 @@ func TestShortcut(t *testing.T) {
 	for _, country := range []string{"cn", "ir"} {
 		for _, os := range []string{"android", "windows", "darwin", "linux"} {
 			if country == "cn" {
-				assert.True(t, gl.FeatureEnabled(FeatureShortcut, os, common.DefaultAppName, common.Version, 1, false, country), fmt.Sprintf("shortcut is enabled for %s in %s", os, country))
+				assert.True(t, gl.FeatureEnabled(FeatureShortcut, os, common.DefaultAppName, applicationVersion, 1, false, country), fmt.Sprintf("shortcut is enabled for %s in %s", os, country))
 			} else {
-				assert.False(t, gl.FeatureEnabled(FeatureShortcut, os, common.DefaultAppName, common.Version, 1, false, country), fmt.Sprintf("shortcut is disabled for %s in %s", os, country))
+				assert.False(t, gl.FeatureEnabled(FeatureShortcut, os, common.DefaultAppName, applicationVersion, 1, false, country), fmt.Sprintf("shortcut is disabled for %s in %s", os, country))
 			}
 		}
 	}
