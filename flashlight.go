@@ -147,7 +147,7 @@ func (f *Flashlight) EnabledFeatures() map[string]bool {
 	f.mxGlobal.RUnlock()
 	country := geolookup.GetCountry(0)
 	for feature := range global.FeaturesEnabled {
-		if f.calcFeature(global, country, feature) {
+		if f.calcFeature(global, country, "0.0.1", feature) {
 			featuresEnabled[feature] = true
 		}
 	}
@@ -192,16 +192,21 @@ func (f *Flashlight) DisableNamedDomainRules(names ...string) {
 	}
 }
 
-// FeatureEnabled returns true if the input feature is enabled for this flashlight instance. Feature
+// featureEnabled returns true if the input feature is enabled for this flashlight instance. Feature
 // names are tracked in the config package.
-func (f *Flashlight) FeatureEnabled(feature string) bool {
+func (f *Flashlight) featureEnabled(feature string) bool {
+	// features internal to flashlight are not controllable by application version, since flashlight doesn't know the version, so we use a very low version number just to make sure it parses
+	return f.FeatureEnabled(feature, "0.0.1")
+}
+
+func (f *Flashlight) FeatureEnabled(feature, applicationVersion string) bool {
 	f.mxGlobal.RLock()
 	global := f.global
 	f.mxGlobal.RUnlock()
-	return f.calcFeature(global, geolookup.GetCountry(0), feature)
+	return f.calcFeature(global, geolookup.GetCountry(0), applicationVersion, feature)
 }
 
-func (f *Flashlight) calcFeature(global *config.Global, country, feature string) bool {
+func (f *Flashlight) calcFeature(global *config.Global, country, applicationVersion, feature string) bool {
 	// Special case: Use defaults for blocking related features until geolookup is finished
 	// to avoid accidentally generating traffic that could trigger blocking.
 	enabled, blockingRelated := blockingRelevantFeatures[feature]
@@ -220,7 +225,7 @@ func (f *Flashlight) calcFeature(global *config.Global, country, feature string)
 	return global.FeatureEnabled(feature,
 		common.Platform,
 		f.userConfig.GetAppName(),
-		"", // features internal to flashlight are not controllable by application version, since flashlight doesn't know the version
+		applicationVersion,
 		f.userConfig.GetUserID(),
 		f.isPro(),
 		country)
@@ -286,7 +291,7 @@ func (f *Flashlight) applyProxyBench(cfg *config.Global) {
 	go func() {
 		// Wait a while for geolookup to happen before checking if we can turn on proxybench
 		geolookup.GetCountry(1 * time.Minute)
-		if f.FeatureEnabled(config.FeatureProxyBench) {
+		if f.featureEnabled(config.FeatureProxyBench) {
 			startProxyBenchOnce.Do(func() {
 				opts := &proxybench.Opts{
 					UpdateURL: "https://s3.amazonaws.com/lantern/proxybench.json",
@@ -300,7 +305,7 @@ func (f *Flashlight) applyProxyBench(cfg *config.Global) {
 }
 
 func (f *Flashlight) applyOtel(cfg *config.Global) {
-	if cfg.Otel != nil && f.FeatureEnabled(config.FeatureOtel) {
+	if cfg.Otel != nil && f.featureEnabled(config.FeatureOtel) {
 		otel.Configure(cfg.Otel)
 	}
 }
@@ -411,34 +416,34 @@ func New(
 	}
 
 	useShortcut := func() bool {
-		return !_proxyAll() && f.FeatureEnabled(config.FeatureShortcut) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !_proxyAll() && f.featureEnabled(config.FeatureShortcut) && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	useDetour := func() bool {
-		return !_proxyAll() && f.FeatureEnabled(config.FeatureDetour) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !_proxyAll() && f.featureEnabled(config.FeatureDetour) && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	proxyAll := func() bool {
 		useShortcutOrDetour := useShortcut() || useDetour()
-		return !useShortcutOrDetour && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !useShortcutOrDetour && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	cl, err := client.NewClient(
 		f.configDir,
 		disconnected,
-		func() bool { return f.FeatureEnabled(config.FeatureProbeProxies) },
+		func() bool { return f.featureEnabled(config.FeatureProbeProxies) },
 		proxyAll,
 		useShortcut,
 		shortcut.Allow,
 		useDetour,
 		func() bool {
-			return !f.FeatureEnabled(config.FeatureNoHTTPSEverywhere)
+			return !f.featureEnabled(config.FeatureNoHTTPSEverywhere)
 		},
 		func() bool {
-			return common.Platform != "android" && (f.FeatureEnabled(config.FeatureTrackYouTube) || f.FeatureEnabled(config.FeatureGoogleSearchAds))
+			return common.Platform != "android" && (f.featureEnabled(config.FeatureTrackYouTube) || f.featureEnabled(config.FeatureGoogleSearchAds))
 		},
 		func() bool {
-			return _googleAds() && f.FeatureEnabled(config.FeatureGoogleSearchAds)
+			return _googleAds() && f.featureEnabled(config.FeatureGoogleSearchAds)
 		},
 		userConfig,
 		statsTracker,
