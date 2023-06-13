@@ -13,7 +13,6 @@ import (
 	"github.com/blang/semver"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/v7/common"
 )
 
 const (
@@ -35,6 +34,8 @@ const (
 	FeatureGoogleAnalytics      = "googleanalytics"
 	FeatureMatomo               = "matomo"
 	FeatureChat                 = "chat"
+
+	applicationVersion = "9999.99.99-dev"
 )
 
 var (
@@ -320,7 +321,7 @@ func (g ClientGroup) Includes(platform, appName string, userID int64, isPro bool
 		if err != nil {
 			return false
 		}
-		if !expectedRange(semver.MustParse(common.ApplicationVersion)) {
+		if !expectedRange(semver.MustParse(applicationVersion)) {
 			return false
 		}
 	}

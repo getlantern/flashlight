@@ -52,12 +52,12 @@ func success(resp *http.Response) bool {
 	return (resp.StatusCode > 199 && resp.StatusCode < 400) || resp.StatusCode == http.StatusUpgradeRequired
 }
 
-// changeUserAgent prepends app version and OSARCH to the User-Agent header
+// changeUserAgent prepends library version and OSARCH to the User-Agent header
 // of req to facilitate debugging on server side.
 func changeUserAgent(req *http.Request) {
 	secondary := req.Header.Get("User-Agent")
 	ua := strings.TrimSpace(fmt.Sprintf("%s/%s (%s/%s) %s",
-		common.DefaultAppName, common.ApplicationVersion, common.Platform, runtime.GOARCH, secondary))
+		common.DefaultAppName, common.LibraryVersion, common.Platform, runtime.GOARCH, secondary))
 	req.Header.Set("User-Agent", ua)
 }
 

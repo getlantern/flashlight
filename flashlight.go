@@ -220,7 +220,7 @@ func (f *Flashlight) calcFeature(global *config.Global, country, feature string)
 	return global.FeatureEnabled(feature,
 		common.Platform,
 		f.userConfig.GetAppName(),
-		common.ApplicationVersion,
+		"", // features internal to flashlight are not controllable by application version, since flashlight doesn't know the version
 		f.userConfig.GetUserID(),
 		f.isPro(),
 		country)
@@ -308,6 +308,8 @@ func (f *Flashlight) applyOtel(cfg *config.Global) {
 // New creates a client proxy.
 func New(
 	appName string,
+	appVersion string,
+	revisionDate string,
 	configDir string,
 	enableVPN bool,
 	disconnected func() bool,
@@ -337,12 +339,10 @@ func New(
 	if onConfigUpdate == nil {
 		onConfigUpdate = func(_ *config.Global, src config.Source) {}
 	}
-	displayVersion()
+	displayVersion(appVersion, revisionDate)
 	deviceID := userConfig.GetDeviceID()
-	if common.InDevelopment() {
-		log.Debugf("You can query for this device's activity in borda under device id: %v", deviceID)
-	}
-	fops.InitGlobalContext(appName, deviceID, isPro, func() string { return geolookup.GetCountry(0) })
+	log.Debugf("You can query for this device's activity under device id: %v", deviceID)
+	fops.InitGlobalContext(appName, appVersion, revisionDate, deviceID, isPro, func() string { return geolookup.GetCountry(0) })
 	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 
 	f := &Flashlight{
@@ -584,7 +584,7 @@ func (f *Flashlight) applyClientConfig(cfg *config.Global) {
 	}
 }
 
-func displayVersion() {
+func displayVersion(appVersion, revisionDate string) {
 	log.Debugf("---- application version: %s, library version: %s, build revision date: %s, build date: %s ----",
-		common.ApplicationVersion, common.LibraryVersion, common.RevisionDate, common.BuildDate)
+		appVersion, common.LibraryVersion, revisionDate, common.BuildDate)
 }

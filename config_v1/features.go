@@ -33,6 +33,8 @@ const (
 	FeatureYinbiWallet          = "yinbiwallet"
 	FeatureYinbi                = "yinbi"
 	FeatureAnalytics            = "analytics"
+
+	applicationVersion = "9999.99.99-dev"
 )
 
 var (
@@ -341,7 +343,7 @@ func (g ClientGroup) Includes(appName string, userID int64, isPro bool, geoCount
 		if err != nil {
 			return false
 		}
-		if !expectedRange(semver.MustParse(common.ApplicationVersion)) {
+		if !expectedRange(semver.MustParse(applicationVersion)) {
 			return false
 		}
 	}
