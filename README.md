@@ -75,14 +75,14 @@ Until recently, flashlight and the applications that use it used only a single v
 
 Because the various applications that use flashlight are in their own repos and built independently of each other, this created a coordination problem. Specifically, since pluggable transport support depends on the code level of flashlight, not of the application itself, we had to either synchronize the version numbering between the different apps, or configure the server-side infrastructure to recognize that depending on the application, different version numbers might actually mean the same flashlight code level.
 
-To rectify this, flashlight now uses two different version numbers.
+To rectify this, we now uses two different version numbers.
 
-Application Version - this is like the original Version that's baked in at application build time. It is still used for displaying the version in the UI, checking enabled features, and auto-updates.
+Library Version - this is the version of the flashlight library and is based on the flashlight version tag.
 
-Library Version - this is based on the flashlight version tag.
+Application Version - this is like the original Version that's baked in at application build time. It is still used for displaying the version in the UI, checking enabled features, and auto-updates. This version is NOT compiled into the flashlight library but is handled by the applications themselves and passed to flashlight when necessary (for example when checking enabled features).
 
 ### When and how to update Library Version
-Whenever we release a new version of the flashlight library, we tag it using standard [Go module version numbering], for example `git tag v7.5.3`. Then, go update lantern-desktop and android-lantern to use that version of the flashlight library. That's it.
+Whenever we release a new version of the flashlight library, we tag it using standard [Go module version numbering], for example `git tag v7.5.3`. Then, we update lantern-desktop and android-lantern to use that version of the flashlight library. That's it.
 
 #### What about major version changes
 When changing major versions, for example v7 to v8, we need to udpate the package name as usual with Go. That means:
