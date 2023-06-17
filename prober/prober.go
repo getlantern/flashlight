@@ -73,7 +73,7 @@ func main() {
 		DeviceID: "XXXXXXXX",
 		UserID:   0,
 		Token:    "protoken",
-	})
+	}, false)
 	if err != nil {
 		log.Fatalf("Unable to create dialer: %v", err)
 	}

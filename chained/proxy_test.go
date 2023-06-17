@@ -4,8 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/getlantern/common/config"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/getlantern/common/config"
 )
 
 var (
@@ -15,7 +16,7 @@ var (
 func TestTrusted(t *testing.T) {
 	d, _ := CreateDialer(tempConfigDir, "test-proxy",
 		&config.ProxyConfig{Addr: "1.1.1.1", AuthToken: "abcd", Cert: "", PluggableTransport: ""},
-		newTestUserConfig())
+		newTestUserConfig(), false)
 	assert.False(t, d.Trusted(), "HTTP proxy should not be trusted")
 	assert.NotContains(t, d.JustifiedLabel(), trustedSuffix)
 
@@ -26,12 +27,12 @@ func TestTrusted(t *testing.T) {
 			"iat-mode": "0",
 		},
 	}
-	d, _ = CreateDialer(tempConfigDir, "test-proxy", si, newTestUserConfig())
+	d, _ = CreateDialer(tempConfigDir, "test-proxy", si, newTestUserConfig(), false)
 	assert.False(t, d.Trusted(), "OBFS4 proxy should not be trusted by default")
 	assert.NotContains(t, d.JustifiedLabel(), trustedSuffix)
 
 	si.Trusted = true
-	d, _ = CreateDialer(tempConfigDir, "test-proxy", si, newTestUserConfig())
+	d, _ = CreateDialer(tempConfigDir, "test-proxy", si, newTestUserConfig(), false)
 	assert.True(t, d.Trusted(), "OBFS4 proxy should be trusted if explicitly declared")
 	assert.Contains(t, d.JustifiedLabel(), trustedSuffix)
 }

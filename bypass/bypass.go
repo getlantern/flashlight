@@ -77,11 +77,10 @@ func (b *bypass) OnProxies(infos map[string]*commonconfig.ProxyConfig, configDir
 		}
 	}
 
-	dialers := chained.CreateDialersMap(configDir, supportedInfos, userConfig)
 	for k, v := range supportedInfos {
-		dialer := dialers[k]
-		if dialer == nil {
-			log.Errorf("No dialer for %v", k)
+		dialer, err := chained.CreateDialer(configDir, k, v, userConfig, false)
+		if err != nil {
+			log.Errorf("failed to create dialer '%s' for bypass: %v", k, err)
 			continue
 		}
 
@@ -90,6 +89,7 @@ func (b *bypass) OnProxies(infos map[string]*commonconfig.ProxyConfig, configDir
 		pc.Name = k
 		// Kill the cert to avoid it taking up unnecessary space.
 		pc.Cert = ""
+
 		p := b.newProxy(k, pc, configDir, userConfig, dialer)
 		b.proxies = append(b.proxies, p)
 		go p.start()

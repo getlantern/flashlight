@@ -22,7 +22,7 @@ func TestProbe(t *testing.T) {
 
 		proxy, err := CreateDialer(tempConfigDir, "test-proxy", &config.ProxyConfig{
 			Addr: server.Listener.Addr().String(),
-		}, &common.UserConfigData{})
+		}, &common.UserConfigData{}, false)
 		assert.NoError(t, err)
 
 		assert.True(t, proxy.Probe(forPerformance))
@@ -49,7 +49,7 @@ func TestProbe(t *testing.T) {
 func TestProbeFailing(t *testing.T) {
 	uc := &common.UserConfigData{}
 	addr := "localhost:1"
-	proxy, err := CreateDialer(tempConfigDir, "test-proxy", &config.ProxyConfig{Addr: addr}, uc)
+	proxy, err := CreateDialer(tempConfigDir, "test-proxy", &config.ProxyConfig{Addr: addr}, uc, false)
 	assert.NoError(t, err)
 	assert.False(t, proxy.Probe(false),
 		"testing against non-existent port should have failed")
@@ -59,7 +59,7 @@ func TestProbeFailing(t *testing.T) {
 			rw.WriteHeader(http.StatusServiceUnavailable)
 		}))
 	addr = server.Listener.Addr().String()
-	proxy, err = CreateDialer(tempConfigDir, "test-proxy", &config.ProxyConfig{Addr: addr}, uc)
+	proxy, err = CreateDialer(tempConfigDir, "test-proxy", &config.ProxyConfig{Addr: addr}, uc, false)
 	assert.NoError(t, err)
 	// Disable below to avoid wasting 20s in CI
 	// assert.False(t, proxy.Probe(false),

@@ -86,7 +86,7 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 		if endpoint == "" {
 			log.Debugf("Adding %d individual chained servers", len(group))
 			for name, s := range group {
-				dialer, err := CreateDialer(configDir, name, s, uc)
+				dialer, err := CreateDialer(configDir, name, s, uc, true)
 				if err != nil {
 					log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
 					continue
@@ -108,16 +108,26 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 }
 
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
-func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserConfig) (balancer.Dialer, error) {
+func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserConfig, reportDials bool) (balancer.Dialer, error) {
 	addr, transport, network, err := extractParams(s)
 	if err != nil {
 		return nil, err
 	}
+
 	p, err := newProxy(name, addr, transport, network, s, uc)
+	if err != nil {
+		return nil, err
+	}
+
+	if !reportDials {
+		p.disableReporting = true
+	}
+
 	p.impl, err = createImpl(configDir, name, addr, transport, s, uc, p.reportDialCore)
 	if err != nil {
 		return nil, err
 	}
+
 	return p, nil
 }
 
@@ -301,6 +311,7 @@ type proxy struct {
 	bias                int
 	impl                proxyImpl
 	dialOrigin          dialOriginFn
+	disableReporting    bool // false by default
 	emaRTT              *ema.EMA
 	emaRTTDev           *ema.EMA
 	emaSuccessRate      *ema.EMA
