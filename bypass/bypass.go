@@ -24,6 +24,7 @@ import (
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/config"
+	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/golog"
 )
@@ -41,6 +42,11 @@ var (
 const (
 	dfEndpoint    = "https://iantem.io/api/v1/bypass"
 	proxyEndpoint = "https://api.iantem.io/v1/bypass"
+
+	// version is the bypass client version. It is not necessary to update this value on every
+	// change to bypass; this should only be updated when the backend needs to make decisions unique
+	// to a new version of bypass.
+	version int32 = 1
 )
 
 type bypass struct {
@@ -131,6 +137,9 @@ func (p *proxy) start() {
 }
 
 func (p *proxy) sendToBypass() int64 {
+	op := ops.Begin("send_to_bypass")
+	defer op.End()
+
 	// We alternate between domain fronting and proxying to ensure that, in aggregate, we
 	// send both equally. We avoid sending both a domain fronted and a proxied request
 	// in rapid succession to avoid the blocking detection itself being a signal.
@@ -140,10 +149,12 @@ func (p *proxy) sendToBypass() int64 {
 		log.Debug("Using proxy directly")
 		rt = p.proxyRoundTripper
 		endpoint = proxyEndpoint
+		op.Set("fronted", false)
 	} else {
 		rt = p.dfRoundTripper
 		log.Debug("Using domain fronting")
 		endpoint = dfEndpoint
+		op.Set("fronted", true)
 	}
 
 	req, err := p.newRequest(p.userConfig, endpoint)
@@ -155,7 +166,7 @@ func (p *proxy) sendToBypass() int64 {
 	log.Debugf("Sending traffic for bypass server: %v", p.name)
 	resp, err := rt.RoundTrip(req)
 	if err != nil || resp == nil {
-		log.Errorf("Unable to post chained server info: %v", err)
+		op.FailIf(log.Errorf("Unable to post chained server info: %v", err))
 		return 0
 	}
 	defer func() {
@@ -178,7 +189,7 @@ func (p *proxy) sendToBypass() int64 {
 		}
 	}
 	if resp.StatusCode != http.StatusOK {
-		log.Errorf("Unexpected response code %v: for response %#v", resp.Status, resp)
+		op.FailIf(log.Errorf("Unexpected response code %v: for response %#v", resp.Status, resp))
 	} else {
 		log.Debugf("Successfully got response from: %v", p.name)
 	}
@@ -221,6 +232,7 @@ func (p *proxy) newRequest(userConfig common.UserConfig, endpoint string) (*http
 			Track:  p.ProxyConfig.Track,
 			Region: p.ProxyConfig.Region,
 		},
+		Version: version,
 	}
 
 	infopb, err := proto.Marshal(bypassRequest)
