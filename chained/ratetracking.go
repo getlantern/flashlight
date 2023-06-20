@@ -9,7 +9,7 @@ import (
 	"github.com/dustin/go-humanize"
 
 	borda "github.com/getlantern/borda/client"
-	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/measured"
 )
 

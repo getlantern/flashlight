@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/getlantern/dnsgrab"
-	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/v7/balancer"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/netx"
 )

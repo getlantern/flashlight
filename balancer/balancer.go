@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/golog"
 )
 

@@ -15,11 +15,11 @@ import (
 	"github.com/getlantern/dnsgrab/persistentcache"
 	"github.com/getlantern/errors"
 
-	"github.com/getlantern/flashlight/balancer"
-	"github.com/getlantern/flashlight/bandwidth"
-	"github.com/getlantern/flashlight/buffers"
-	"github.com/getlantern/flashlight/chained"
-	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/v7/balancer"
+	"github.com/getlantern/flashlight/v7/bandwidth"
+	"github.com/getlantern/flashlight/v7/buffers"
+	"github.com/getlantern/flashlight/v7/chained"
+	"github.com/getlantern/flashlight/v7/common"
 )
 
 const (

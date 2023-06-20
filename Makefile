@@ -33,25 +33,12 @@ define prep-for-mobile
 	gomobile init
 endef
 
-lanternsdk-android.aar: $(SOURCES)
-	$(call prep-for-mobile) && \
-	echo "LDFLAGS $(LDFLAGS)" && \
-	echo "Running gomobile with `which gomobile` version `gomobile version` ..." && \
-	gomobile bind -cache `pwd`/.gomobilecache -o=lanternsdk-android.aar -target=android -tags='headless publicsdk' -ldflags="$(LDFLAGS)" github.com/getlantern/flashlight/lanternsdk
-
-# we build the LanternSDK.framework in two steps to use XCFramework
-# See https://stackoverflow.com/questions/63942997/generate-xcframework-file-with-gomobile
-Lanternsdk.xcframework: $(SOURCES)
-	@$(call prep-for-mobile) && \
-	echo "Running gomobile with `which gomobile` version `gomobile version` ..." && \
-	gomobile bind -cache `pwd`/.gomobilecache -o=Lanternsdk.xcframework -target=ios -tags='headless publicsdk' -ldflags="$(LDFLAGS)" github.com/getlantern/flashlight/lanternsdk
-
 %.pb.go: %.proto
 	go build -o build/protoc-gen-go google.golang.org/protobuf/cmd/protoc-gen-go
 	protoc --go_out=. --plugin=build/protoc-gen-go --go_opt=paths=source_relative $<
 
 clean:
-	rm -rf .gomobilecache lanternsdk-android.aar Lanternsdk.xcframework
+	rm -rf .gomobilecache
 
 .PHONY: install-githooks
 install-githooks:

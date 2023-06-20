@@ -7,11 +7,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	borda "github.com/getlantern/borda/client"
 	"github.com/getlantern/common/config"
-	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/mockconn"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestRateTracking(t *testing.T) {

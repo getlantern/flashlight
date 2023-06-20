@@ -8,7 +8,7 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/v7/common"
 )
 
 func generateDeviceId() string {

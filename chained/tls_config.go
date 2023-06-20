@@ -13,9 +13,9 @@ import (
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/browsers/simbrowser"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/v7/browsers/simbrowser"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/tlsresumption"
 )
 

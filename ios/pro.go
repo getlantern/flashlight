@@ -8,8 +8,8 @@ import (
 
 	"github.com/getlantern/fronted"
 
-	"github.com/getlantern/flashlight/common"
-	proclient "github.com/getlantern/flashlight/pro/client"
+	"github.com/getlantern/flashlight/v7/common"
+	proclient "github.com/getlantern/flashlight/v7/pro/client"
 )
 
 // ProCredentials are credentials that authenticate a pro account
@@ -210,6 +210,7 @@ func getProClient() (*proclient.Client, error) {
 
 	pc := proclient.NewClient(&http.Client{
 		Transport: rt,
+		Timeout:   30 * time.Second,
 	}, func(req *http.Request, uc common.UserConfig) {
 		common.AddCommonHeaders(uc, req)
 	})

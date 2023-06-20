@@ -13,7 +13,6 @@ import (
 	"github.com/blang/semver"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/common"
 )
 
 const (
@@ -35,6 +34,8 @@ const (
 	FeatureGoogleAnalytics      = "googleanalytics"
 	FeatureMatomo               = "matomo"
 	FeatureChat                 = "chat"
+
+	applicationVersion = "9999.99.99-dev"
 )
 
 var (
@@ -292,8 +293,8 @@ func (g ClientGroup) Validate() error {
 	return nil
 }
 
-//Includes checks if the ClientGroup includes the user, device and country
-//combination, assuming the group has been validated.
+// Includes checks if the ClientGroup includes the user, device and country
+// combination, assuming the group has been validated.
 func (g ClientGroup) Includes(platform, appName string, userID int64, isPro bool, geoCountry string) bool {
 	if g.UserCeil > 0 {
 		// Unknown user ID doesn't belong to any user range
@@ -320,7 +321,7 @@ func (g ClientGroup) Includes(platform, appName string, userID int64, isPro bool
 		if err != nil {
 			return false
 		}
-		if !expectedRange(semver.MustParse(common.Version)) {
+		if !expectedRange(semver.MustParse(applicationVersion)) {
 			return false
 		}
 	}

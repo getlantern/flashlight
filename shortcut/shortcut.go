@@ -16,7 +16,7 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/shortcut"
 
-	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getlantern/flashlight/v7/geolookup"
 )
 
 var (

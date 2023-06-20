@@ -12,8 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/getlantern/flashlight/ops"
 	"howett.net/plist"
+
+	"github.com/getlantern/flashlight/v7/ops"
 )
 
 // ErrorUnknownBundleID means that an unknown bundle ID was encountered. However, this bundle ID may

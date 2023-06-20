@@ -14,8 +14,8 @@ import (
 	"github.com/getlantern/rot13"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/ops"
 )
 
 // Source specifies where the config is from when dispatching.
