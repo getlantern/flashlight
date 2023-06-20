@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/getlantern/flashlight/browsers"
+	"github.com/getlantern/flashlight/v7/browsers"
 )
 
 // mimicDefaultBrowser chooses a Browser which mimics the system's default web browser.

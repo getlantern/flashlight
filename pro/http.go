@@ -2,8 +2,9 @@ package pro
 
 import (
 	"net/http"
+	"time"
 
-	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/v7/proxied"
 )
 
 var (
@@ -23,5 +24,6 @@ func getHTTPClient(rt http.RoundTripper) *http.Client {
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
+		Timeout: 30 * time.Second,
 	}
 }

@@ -9,15 +9,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/flashlight/embeddedconfig"
-	"github.com/getlantern/flashlight/proxied"
+	"github.com/keighl/mandrill"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/getlantern/flashlight/v7/config"
+	"github.com/getlantern/flashlight/v7/embeddedconfig"
+	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/yaml"
-	"github.com/keighl/mandrill"
-	"github.com/stretchr/testify/assert"
 )
 
 var logger = golog.LoggerFor("email-test")

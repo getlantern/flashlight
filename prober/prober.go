@@ -40,8 +40,8 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/chained"
-	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/v7/chained"
+	"github.com/getlantern/flashlight/v7/common"
 )
 
 var (

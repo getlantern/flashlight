@@ -14,16 +14,17 @@ import (
 	"sync"
 	"time"
 
+	"github.com/keighl/mandrill"
+
 	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	pops "github.com/getlantern/ops"
 	"github.com/getlantern/yaml"
-	"github.com/keighl/mandrill"
 
-	"github.com/getlantern/flashlight/geolookup"
-	"github.com/getlantern/flashlight/logging"
-	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/flashlight/util"
+	"github.com/getlantern/flashlight/v7/geolookup"
+	"github.com/getlantern/flashlight/v7/logging"
+	"github.com/getlantern/flashlight/v7/ops"
+	"github.com/getlantern/flashlight/v7/util"
 )
 
 var (

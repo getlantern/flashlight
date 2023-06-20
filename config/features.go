@@ -9,10 +9,11 @@ import (
 	"time"
 
 	"github.com/blang/semver"
-	"github.com/getlantern/errors"
 	"github.com/mitchellh/mapstructure"
 
-	globalConfig "github.com/getlantern/flashlight/config/global"
+	"github.com/getlantern/errors"
+
+	globalConfig "github.com/getlantern/flashlight/v7/config/global"
 )
 
 const (

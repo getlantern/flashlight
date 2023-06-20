@@ -19,22 +19,22 @@ import (
 	"github.com/getlantern/ops"
 	"github.com/getlantern/proxybench"
 
-	"github.com/getlantern/flashlight/balancer"
-	"github.com/getlantern/flashlight/bypass"
-	"github.com/getlantern/flashlight/chained"
-	"github.com/getlantern/flashlight/client"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/flashlight/domainrouting"
-	"github.com/getlantern/flashlight/email"
-	"github.com/getlantern/flashlight/geolookup"
-	"github.com/getlantern/flashlight/goroutines"
-	"github.com/getlantern/flashlight/logging"
-	fops "github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/flashlight/otel"
-	"github.com/getlantern/flashlight/proxied"
-	"github.com/getlantern/flashlight/shortcut"
-	"github.com/getlantern/flashlight/stats"
+	"github.com/getlantern/flashlight/v7/balancer"
+	"github.com/getlantern/flashlight/v7/bypass"
+	"github.com/getlantern/flashlight/v7/chained"
+	"github.com/getlantern/flashlight/v7/client"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/config"
+	"github.com/getlantern/flashlight/v7/domainrouting"
+	"github.com/getlantern/flashlight/v7/email"
+	"github.com/getlantern/flashlight/v7/geolookup"
+	"github.com/getlantern/flashlight/v7/goroutines"
+	"github.com/getlantern/flashlight/v7/logging"
+	fops "github.com/getlantern/flashlight/v7/ops"
+	"github.com/getlantern/flashlight/v7/otel"
+	"github.com/getlantern/flashlight/v7/proxied"
+	"github.com/getlantern/flashlight/v7/shortcut"
+	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/quicproxy"
 )
 
@@ -147,7 +147,7 @@ func (f *Flashlight) EnabledFeatures() map[string]bool {
 	f.mxGlobal.RUnlock()
 	country := geolookup.GetCountry(0)
 	for feature := range global.FeaturesEnabled {
-		if f.calcFeature(global, country, feature) {
+		if f.calcFeature(global, country, "0.0.1", feature) {
 			featuresEnabled[feature] = true
 		}
 	}
@@ -192,16 +192,21 @@ func (f *Flashlight) DisableNamedDomainRules(names ...string) {
 	}
 }
 
-// FeatureEnabled returns true if the input feature is enabled for this flashlight instance. Feature
+// featureEnabled returns true if the input feature is enabled for this flashlight instance. Feature
 // names are tracked in the config package.
-func (f *Flashlight) FeatureEnabled(feature string) bool {
+func (f *Flashlight) featureEnabled(feature string) bool {
+	// features internal to flashlight are not controllable by application version, since flashlight doesn't know the version, so we use a very low version number just to make sure it parses
+	return f.FeatureEnabled(feature, "0.0.1")
+}
+
+func (f *Flashlight) FeatureEnabled(feature, applicationVersion string) bool {
 	f.mxGlobal.RLock()
 	global := f.global
 	f.mxGlobal.RUnlock()
-	return f.calcFeature(global, geolookup.GetCountry(0), feature)
+	return f.calcFeature(global, geolookup.GetCountry(0), applicationVersion, feature)
 }
 
-func (f *Flashlight) calcFeature(global *config.Global, country, feature string) bool {
+func (f *Flashlight) calcFeature(global *config.Global, country, applicationVersion, feature string) bool {
 	// Special case: Use defaults for blocking related features until geolookup is finished
 	// to avoid accidentally generating traffic that could trigger blocking.
 	enabled, blockingRelated := blockingRelevantFeatures[feature]
@@ -220,7 +225,7 @@ func (f *Flashlight) calcFeature(global *config.Global, country, feature string)
 	return global.FeatureEnabled(feature,
 		common.Platform,
 		f.userConfig.GetAppName(),
-		common.Version,
+		applicationVersion,
 		f.userConfig.GetUserID(),
 		f.isPro(),
 		country)
@@ -286,7 +291,7 @@ func (f *Flashlight) applyProxyBench(cfg *config.Global) {
 	go func() {
 		// Wait a while for geolookup to happen before checking if we can turn on proxybench
 		geolookup.GetCountry(1 * time.Minute)
-		if f.FeatureEnabled(config.FeatureProxyBench) {
+		if f.featureEnabled(config.FeatureProxyBench) {
 			startProxyBenchOnce.Do(func() {
 				opts := &proxybench.Opts{
 					UpdateURL: "https://s3.amazonaws.com/lantern/proxybench.json",
@@ -300,7 +305,7 @@ func (f *Flashlight) applyProxyBench(cfg *config.Global) {
 }
 
 func (f *Flashlight) applyOtel(cfg *config.Global) {
-	if cfg.Otel != nil && f.FeatureEnabled(config.FeatureOtel) {
+	if cfg.Otel != nil && f.featureEnabled(config.FeatureOtel) {
 		otel.Configure(cfg.Otel)
 	}
 }
@@ -308,6 +313,8 @@ func (f *Flashlight) applyOtel(cfg *config.Global) {
 // New creates a client proxy.
 func New(
 	appName string,
+	appVersion string,
+	revisionDate string,
 	configDir string,
 	enableVPN bool,
 	disconnected func() bool,
@@ -337,12 +344,10 @@ func New(
 	if onConfigUpdate == nil {
 		onConfigUpdate = func(_ *config.Global, src config.Source) {}
 	}
-	displayVersion()
+	displayVersion(appVersion, revisionDate)
 	deviceID := userConfig.GetDeviceID()
-	if common.InDevelopment() {
-		log.Debugf("You can query for this device's activity in borda under device id: %v", deviceID)
-	}
-	fops.InitGlobalContext(appName, deviceID, isPro, func() string { return geolookup.GetCountry(0) })
+	log.Debugf("You can query for this device's activity under device id: %v", deviceID)
+	fops.InitGlobalContext(appName, appVersion, revisionDate, deviceID, isPro, func() string { return geolookup.GetCountry(0) })
 	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 
 	f := &Flashlight{
@@ -411,34 +416,34 @@ func New(
 	}
 
 	useShortcut := func() bool {
-		return !_proxyAll() && f.FeatureEnabled(config.FeatureShortcut) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !_proxyAll() && f.featureEnabled(config.FeatureShortcut) && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	useDetour := func() bool {
-		return !_proxyAll() && f.FeatureEnabled(config.FeatureDetour) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !_proxyAll() && f.featureEnabled(config.FeatureDetour) && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	proxyAll := func() bool {
 		useShortcutOrDetour := useShortcut() || useDetour()
-		return !useShortcutOrDetour && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !useShortcutOrDetour && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	cl, err := client.NewClient(
 		f.configDir,
 		disconnected,
-		func() bool { return f.FeatureEnabled(config.FeatureProbeProxies) },
+		func() bool { return f.featureEnabled(config.FeatureProbeProxies) },
 		proxyAll,
 		useShortcut,
 		shortcut.Allow,
 		useDetour,
 		func() bool {
-			return !f.FeatureEnabled(config.FeatureNoHTTPSEverywhere)
+			return !f.featureEnabled(config.FeatureNoHTTPSEverywhere)
 		},
 		func() bool {
-			return common.Platform != "android" && (f.FeatureEnabled(config.FeatureTrackYouTube) || f.FeatureEnabled(config.FeatureGoogleSearchAds))
+			return common.Platform != "android" && (f.featureEnabled(config.FeatureTrackYouTube) || f.featureEnabled(config.FeatureGoogleSearchAds))
 		},
 		func() bool {
-			return _googleAds() && f.FeatureEnabled(config.FeatureGoogleSearchAds)
+			return _googleAds() && f.featureEnabled(config.FeatureGoogleSearchAds)
 		},
 		userConfig,
 		statsTracker,
@@ -584,7 +589,7 @@ func (f *Flashlight) applyClientConfig(cfg *config.Global) {
 	}
 }
 
-func displayVersion() {
-	log.Debugf("---- flashlight version: %s, release: %s, build revision date: %s, build date: %s ----",
-		common.Version, common.PackageVersion, common.RevisionDate, common.BuildDate)
+func displayVersion(appVersion, revisionDate string) {
+	log.Debugf("---- application version: %s, library version: %s, build revision date: %s ----",
+		appVersion, common.LibraryVersion, revisionDate)
 }

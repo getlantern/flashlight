@@ -8,8 +8,9 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/getlantern/flashlight/hellocap"
 	tls "github.com/refraction-networking/utls"
+
+	"github.com/getlantern/flashlight/v7/hellocap"
 )
 
 const helloCacheFilename = "hello-cache.active-capture"

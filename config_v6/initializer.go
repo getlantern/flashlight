@@ -10,8 +10,8 @@ import (
 	"github.com/getlantern/yaml"
 
 	commonconfig "github.com/getlantern/common/config"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/embeddedconfig"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/embeddedconfig"
 )
 
 var (

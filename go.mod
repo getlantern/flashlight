@@ -1,4 +1,4 @@
-module github.com/getlantern/flashlight
+module github.com/getlantern/flashlight/v7
 
 go 1.19
 

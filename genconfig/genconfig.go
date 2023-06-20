@@ -27,8 +27,8 @@ import (
 	"github.com/getlantern/tlsdialer/v3"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/flashlight/embeddedconfig"
+	"github.com/getlantern/flashlight/v7/config"
+	"github.com/getlantern/flashlight/v7/embeddedconfig"
 
 	tls "github.com/refraction-networking/utls"
 )

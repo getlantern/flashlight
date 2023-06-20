@@ -25,10 +25,10 @@ import (
 	"github.com/getlantern/mockconn"
 	"github.com/getlantern/shortcut"
 
-	"github.com/getlantern/flashlight/balancer"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/domainrouting"
-	"github.com/getlantern/flashlight/stats"
+	"github.com/getlantern/flashlight/v7/balancer"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/domainrouting"
+	"github.com/getlantern/flashlight/v7/stats"
 )
 
 var logger = golog.LoggerFor("client-test")

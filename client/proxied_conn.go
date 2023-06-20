@@ -4,7 +4,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/v7/common"
 )
 
 type proxiedConn struct {
@@ -14,7 +14,7 @@ type proxiedConn struct {
 // OnRequest implements proxy.RequestAware
 func (conn *proxiedConn) OnRequest(req *http.Request) {
 	// consumed and removed by http-proxy-lantern/versioncheck
-	req.Header.Set(common.VersionHeader, common.Version)
+	req.Header.Set(common.VersionHeader, common.LibraryVersion)
 
 	// By default the proxy at this point has swapped any Proxy-Connection headers for Connection.
 	// In this chained proxy case, we want to swap it back.

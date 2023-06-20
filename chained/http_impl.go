@@ -4,7 +4,7 @@ import (
 	"context"
 	"net"
 
-	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/v7/ops"
 )
 
 type httpImpl struct {

@@ -11,8 +11,8 @@ import (
 	"github.com/getlantern/broflake/clientcore"
 	broflake_common "github.com/getlantern/broflake/common"
 	"github.com/getlantern/common/config"
-	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/v7/ops"
+	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/golog"
 )
 

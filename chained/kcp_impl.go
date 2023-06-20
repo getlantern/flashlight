@@ -10,7 +10,7 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/kcpwrapper"
 
-	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/v7/ops"
 )
 
 // KCPConfig adapts kcpwrapper.DialerConfig to the currently deployed
