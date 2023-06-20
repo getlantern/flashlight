@@ -44,3 +44,4 @@ Ios.framework
 xcuserdata
 .gomobilecache
 vendor
+build
