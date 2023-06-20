@@ -1,34 +1,49 @@
-//go:build integration
-// +build integration
-
 package issue
 
 import (
-	"crypto/tls"
-	"net/http"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
+	"time"
 
-	"github.com/getlantern/golog"
+	"gopkg.in/yaml.v2"
+
+	"github.com/getlantern/flashlight/v7/config"
+	"github.com/getlantern/flashlight/v7/geolookup"
+	"github.com/getlantern/fronted"
 )
 
-var logger = golog.LoggerFor("issue_test")
-
 func TestMain(m *testing.M) {
-	client = &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				// TODO: Move the service to iantem.io
-				InsecureSkipVerify: true,
-			},
-		},
-	}
 	tempConfigDir, err := os.MkdirTemp("", "issue_test")
 	if err != nil {
-		logger.Errorf("Unable to create temp config dir: %v", err)
+		log.Errorf("Unable to create temp config dir: %v", err)
 		os.Exit(1)
 	}
 	defer os.RemoveAll(tempConfigDir)
+
+	// Init domain-fronting
+	global, err := ioutil.ReadFile("../embeddedconfig/global.yaml")
+	if err != nil {
+		log.Errorf("Unable to load embedded global config: %v", err)
+		os.Exit(1)
+	}
+	cfg := config.NewGlobal()
+	err = yaml.Unmarshal(global, cfg)
+	if err != nil {
+		log.Errorf("Unable to unmarshal embedded global config: %v", err)
+		os.Exit(1)
+	}
+	certs, err := cfg.TrustedCACerts()
+	if err != nil {
+		log.Errorf("Unable to read trusted certs: %v", err)
+	}
+	log.Debug(cfg.Client.FrontedProviders())
+	fronted.Configure(certs, cfg.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(tempConfigDir, "masquerade_cache"))
+
+	// Perform initial geolookup with a high timeout so that we don't later timeout when trying to
+	geolookup.Refresh()
+	geolookup.GetCountry(1 * time.Minute)
 	os.Exit(m.Run())
 }
 

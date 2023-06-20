@@ -22,12 +22,12 @@ var (
 	maxLogSize     = "1024768"
 
 	client = &http.Client{
-		Transport: proxied.ChainedThenFronted(),
+		Transport: proxied.Fronted(0),
 	}
 )
 
 const (
-	requestURL = "https://api.iantem.io/v1/issue"
+	requestURL = "https://iantem.io/api/v1/issue"
 )
 
 type Attachment struct {
