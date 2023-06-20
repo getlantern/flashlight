@@ -42,6 +42,7 @@ func TestSendReport(t *testing.T) {
 		"Description placeholder",
 		"pro",
 		"jay+test@getlantern.org",
+		"7.1.1",
 		"Samsung Galaxy S10",
 		"SM-G973F",
 		"11",

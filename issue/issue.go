@@ -8,11 +8,11 @@ import (
 
 	proto "github.com/golang/protobuf/proto"
 
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/geolookup"
-	"github.com/getlantern/flashlight/logging"
-	"github.com/getlantern/flashlight/proxied"
-	"github.com/getlantern/flashlight/util"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/geolookup"
+	"github.com/getlantern/flashlight/v7/logging"
+	"github.com/getlantern/flashlight/v7/proxied"
+	"github.com/getlantern/flashlight/v7/util"
 	"github.com/getlantern/golog"
 )
 
@@ -42,6 +42,7 @@ func SendReport(
 	description string,
 	subscriptionLevel string,
 	userEmail string,
+	appVersion string,
 	device string, // common name
 	model string, // alphanumeric name
 	osVersion string,
@@ -56,6 +57,7 @@ func SendReport(
 		description,
 		subscriptionLevel,
 		userEmail,
+		appVersion,
 		device,
 		model,
 		osVersion,
@@ -72,6 +74,7 @@ func sendReport(
 	description string,
 	subscriptionLevel string,
 	userEmail string,
+	appVersion string,
 	device string,
 	model string,
 	osVersion string,
@@ -81,7 +84,7 @@ func sendReport(
 	log.Debug("capturing issue report metadata")
 	r.Type = Request_ISSUE_TYPE(issueType)
 	r.CountryCode = geolookup.GetCountry(5 * time.Second)
-	r.AppVersion = common.Version
+	r.AppVersion = appVersion
 	r.SubscriptionLevel = subscriptionLevel
 	r.Platform = common.Platform
 	r.Description = description
