@@ -18,7 +18,7 @@ import (
 
 var (
 	log        = golog.LoggerFor("flashlight.issue")
-	maxLogSize = 10000000
+	maxLogSize = 1024768
 
 	client = &http.Client{
 		Transport: proxied.Fronted(0),
