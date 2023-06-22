@@ -53,7 +53,7 @@ func TestSendReport(t *testing.T) {
 		"1",
 		"token",
 		"en",
-		int(Request_NO_ACCESSS),
+		int(Request_NO_ACCESS),
 		"Description placeholder",
 		"pro",
 		"jay+test@getlantern.org",
