@@ -17,9 +17,8 @@ import (
 )
 
 var (
-	log            = golog.LoggerFor("flashlight.issue")
-	maxLogTailSize = 1024768
-	maxLogSize     = "1024768"
+	log        = golog.LoggerFor("flashlight.issue")
+	maxLogSize = 10000000
 
 	client = &http.Client{
 		Transport: proxied.Fronted(0),
@@ -81,7 +80,6 @@ func sendReport(
 	attachments []*Attachment) error {
 	r := &Request{}
 
-	log.Debug("capturing issue report metadata")
 	r.Type = Request_ISSUE_TYPE(issueType)
 	r.CountryCode = geolookup.GetCountry(5 * time.Second)
 	r.AppVersion = appVersion
@@ -106,14 +104,14 @@ func sendReport(
 	}
 
 	// Zip logs
-	if maxLogSize != "" {
-		if size, err := util.ParseFileSize(maxLogSize); err != nil {
+	if maxLogSize > 0 {
+		if size, err := util.ParseFileSize(strconv.Itoa(maxLogSize)); err != nil {
 			log.Error(err)
 		} else {
 			log.Debug("zipping log files for issue report")
 			buf := &bytes.Buffer{}
 			folder := "logs"
-			if _, err := logging.ZipLogFiles(buf, folder, size, int64(maxLogTailSize)); err == nil {
+			if _, err := logging.ZipLogFiles(buf, folder, size, int64(maxLogSize)); err == nil {
 				r.Attachments = append(r.Attachments, &Request_Attachment{
 					Type:    "application/zip",
 					Name:    folder + ".zip",
@@ -132,7 +130,7 @@ func sendReport(
 		return err
 	}
 
-	resp, err := client.Post(requestURL, "application/zip", bytes.NewBuffer(out))
+	resp, err := client.Post(requestURL, "application/protobuf", bytes.NewBuffer(out))
 	if err != nil {
 		log.Errorf("unable to send issue report: %v", err)
 		return err
