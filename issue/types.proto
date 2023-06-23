@@ -10,7 +10,7 @@ message Request {
         PAYMENT_FAIL = 0;
         CANNOT_LOGIN = 1;
         ALWAYS_SPINNING = 2;
-        NO_ACCESSS = 3;
+        NO_ACCESS = 3;
         SLOW = 4;
         CANNOT_LINK_DEVICE = 5;
         CRASHES = 6;
