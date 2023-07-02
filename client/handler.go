@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 	"time"
@@ -318,6 +319,13 @@ func (client *Client) interceptProRequest(cs *filters.ConnectionState, r *http.R
 	log.Debugf("Intercepting request to pro server: %v", r.URL.Path)
 	r.URL.Path = r.URL.Path[4:]
 	pro.PrepareProRequest(r, client.user)
+
+	dump, err := httputil.DumpRequestOut(r, true)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Debugf("HTTP request dump: %q", dump)
+
 	r.Header.Del("Origin")
 	resp, err := pro.GetHTTPClient().Do(r)
 	if err != nil {
