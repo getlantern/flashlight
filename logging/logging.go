@@ -263,7 +263,7 @@ func ZipLogFilesFrom(w io.Writer, maxBytes int64, maxTextBytes int64, dirs map[s
 			return "", nil
 		}
 
-		log.Debugf("Got %d bytes of log tail from %v", len(tail), mostRecentFile)
+		log.Debugf("Got %d bytes of log tail from %v", len(tail), mostRecent.file)
 		return string(tail), nil
 	}
 
