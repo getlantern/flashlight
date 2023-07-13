@@ -59,10 +59,25 @@ func Configure(cfg *Config) {
 	} else {
 		log.Debug("Will report traces to OpenTelemetry")
 		// Create a TracerProvider that uses the above exporter
+		attributes := []attribute.KeyValue{
+			semconv.ServiceNameKey.String("flashlight"),
+		}
+		// Copy global attributes from ops
+		globalAttributesFromOps := ops.AsMap(nil, true)
+		for k, v := range globalAttributesFromOps {
+			switch t := v.(type) {
+			case string:
+				attributes = append(attributes, attribute.String(k, t))
+			case bool:
+				attributes = append(attributes, attribute.Bool(k, t))
+			default:
+				// we're really only interested in string and bool attributes right now
+			}
+		}
 		resource :=
 			resource.NewWithAttributes(
 				semconv.SchemaURL,
-				semconv.ServiceNameKey.String("flashlight"),
+				attributes...,
 			)
 		tp := sdktrace.NewTracerProvider(
 			sdktrace.WithBatcher(exporter),
