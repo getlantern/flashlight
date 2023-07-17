@@ -14,6 +14,8 @@ import (
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/golog"
+
+	"go.opentelemetry.io/otel"
 )
 
 func init() {
@@ -107,6 +109,12 @@ func makeBroflakeOptions(pc *config.ProxyConfig) (
 	if genesisAddr := ptSetting(pc, "broflake_genesisaddr"); genesisAddr != "" {
 		wo.GenesisAddr = genesisAddr
 	}
+
+	// XXX: We force Flashlight's Broflake client to report telemetry in all cases. (It's not an
+	// option that's parameterized via ProxyConfig). We don't consider whether Flashlight has properly
+	// enabled and configured Otel, so enabling Otel here does not guarantee that things will work!
+	wo.OtelEnabled = true
+	wo.OtelTracer = otel.GetTracerProvider().Tracer("broflake")
 
 	// XXX: config.ProxyConfig pluggabletransportsettings do not support serialization of rich types like
 	// time.Duration. Consequently, we're somewhat riskily rehydrating our two timeout values here by
