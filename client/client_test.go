@@ -362,14 +362,15 @@ func TestTimeoutCheckingShortcut(t *testing.T) {
 	client.requestTimeout = requestTimeout
 	client.useDetour = func() bool { return false }
 	client.useShortcut = func() bool { return true }
+
 	client.shortcutMethod = func(ctx context.Context, addr string) (shortcut.Method, net.IP) {
-		// In theory allowShortcut should never exceed the context deadline,
-		// but it could happen in cases like computer resuming from sleeping.
-		time.Sleep(requestTimeout * 2)
+		// force shortcutMethod to wait for cxt to expire
+		<-ctx.Done()
 		return shortcut.Unknown, nil
 	}
 
-	dialer := mockconn.SucceedingDialer([]byte("whatever"))
+	mockResponse := []byte("HTTP/1.1 500 no response\r\n\r\n")
+	dialer := mockconn.SucceedingDialer(mockResponse)
 	resetBalancer(client, dialer.Dial)
 	req, _ := http.NewRequest("GET", "http://unknown:80", nil)
 	res, _ := roundTrip(client, req)
