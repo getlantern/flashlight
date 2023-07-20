@@ -307,6 +307,8 @@ github.com/getlantern/broflake v0.0.0-20230719003700-410c8a863ed5 h1:pxVovk2Je83
 github.com/getlantern/broflake v0.0.0-20230719003700-410c8a863ed5/go.mod h1:+pEMMhs+s8ZXvN2KkDX8a0jNINVwyZ682qzc4bmraGk=
 github.com/getlantern/broflake v0.0.0-20230719204503-7ec419291413 h1:JHbJhR/tjOPYA62g/7/p86owA23nnv+A4siaR2YUKqs=
 github.com/getlantern/broflake v0.0.0-20230719204503-7ec419291413/go.mod h1:Dx1qAwekJdF3IfDICzBFJ+fER8F0tU2g9pkFjGSf7qU=
+github.com/getlantern/broflake v0.0.0-20230720180617-832a5e273f50 h1:d/kGRNSTVHZDYzdPHPLzU3YhsyM4z027d77zF6WLjsE=
+github.com/getlantern/broflake v0.0.0-20230720180617-832a5e273f50/go.mod h1:Ehdl8IASN5rJi9brldVuCjTDcSU25nvaGRlzNprgeQo=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
 github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493 h1:8WjDNmpDLFVsAfcnHxqF4pfVKkdAQxyJ9iCHB4LxSfc=
 github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
