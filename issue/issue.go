@@ -2,7 +2,9 @@ package issue
 
 import (
 	"bytes"
+	"context"
 	"net/http"
+	"net/http/httputil"
 	"strconv"
 	"time"
 
@@ -36,6 +38,7 @@ type Attachment struct {
 
 // Sends an issue report to lantern-cloud/issue, which is then forwarded to ticket system via API
 func SendReport(
+	ctx context.Context,
 	userConfig common.UserConfig,
 	issueType int,
 	description string,
@@ -48,6 +51,7 @@ func SendReport(
 	attachments []*Attachment,
 ) (err error) {
 	return sendReport(
+		ctx,
 		userConfig.GetDeviceID(),
 		strconv.Itoa(int(userConfig.GetUserID())),
 		userConfig.GetToken(),
@@ -65,6 +69,7 @@ func SendReport(
 }
 
 func sendReport(
+	ctx context.Context,
 	deviceID string,
 	userID string,
 	proToken string,
@@ -130,13 +135,26 @@ func sendReport(
 		return err
 	}
 
-	resp, err := client.Post(requestURL, "application/protobuf", bytes.NewBuffer(out))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, requestURL, bytes.NewReader(out))
 	if err != nil {
-		log.Errorf("unable to send issue report: %v", err)
-		return err
-	} else {
-		log.Debugf("issue report sent: %v", resp)
+		return log.Errorf("creating request: %w", err)
+	}
+	req.Header.Set("content-type", "application/x-protobuf")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return log.Errorf("unable to send issue report: %v", err)
 	}
 
-	return err
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		b, err := httputil.DumpResponse(resp, true)
+		if err != nil {
+			log.Debugf("Unable to get failed response body for [%s]", requestURL)
+		}
+		return log.Errorf("Bad response status: %d | response:\n%#v", resp.StatusCode, string(b))
+	}
+
+	log.Debugf("issue report sent: %v", resp)
+	return nil
 }
