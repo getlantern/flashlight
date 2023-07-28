@@ -19489,7 +19489,7 @@ featureoptions:
 featuresenabled:
   showads:
   - label: ShowAds
-    geocountries: us
+    geocountries: us,in
     platforms: android
   noborda:
   - label: disablebordaglobally
