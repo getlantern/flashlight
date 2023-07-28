@@ -60,7 +60,6 @@ var (
 	blacklist    = make(filter)
 	proxiedSites = make(filter)
 	ftVersion    string
-	showAds      = false
 
 	inputCh       = make(chan string)
 	masqueradesCh = make(chan *masquerade)
@@ -540,7 +539,6 @@ func buildModel(configDir string, configName string, cas map[string]*castat) (ma
 		"cloudfrontMasquerades": cfMasquerades,
 		"providers":             enabledProviders,
 		"proxiedsites":          ps,
-		"showAds":               showAds,
 		"ftVersion":             ftVersion,
 	}, nil
 }

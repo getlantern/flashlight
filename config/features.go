@@ -36,6 +36,7 @@ const (
 	FeatureOtel                 = "otel"
 	FeatureP2PFreePeer          = "p2pfreepeer"
 	FeatureP2PCensoredPeer      = "p2pcensoredpeer"
+	FeatureInterstitialAds      = "interstitialads"
 )
 
 var (

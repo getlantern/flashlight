@@ -19487,10 +19487,6 @@ featureoptions:
     capturebytes: 10485760
     savebytes: 10485760
 featuresenabled:
-  showads:
-  - label: ShowAds
-    geocountries: us,in
-    platforms: android
   noborda:
   - label: disablebordaglobally
   nodetour:
