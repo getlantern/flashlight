@@ -521,8 +521,8 @@ github.com/getlantern/tlsresumption v0.0.0-20211216020551-6a3f901d86b9/go.mod h1
 github.com/getlantern/tlsutil v0.2.0/go.mod h1:Vxsyr9DVnYwsqHaEzMYkg9fT8aBrnO2eI+gdICMQbQU=
 github.com/getlantern/tlsutil v0.5.3 h1:g1FjuG4/OTZe8kkbEmpSxvT9rXzYOG9jO4jHiDeQIxM=
 github.com/getlantern/tlsutil v0.5.3/go.mod h1:lVgvr4nxuQ1ocOho90UB6LnHFlpP16TXAGpHR8Z0QnI=
-github.com/getlantern/utls v0.0.0-20221011213556-17014cb6fc4a h1:A12K3qOcLk8kwp+NB7OonNskzaYA+tIXvTPuk0Gor6I=
-github.com/getlantern/utls v0.0.0-20221011213556-17014cb6fc4a/go.mod h1:xleouNszTteqmcvv1JZiPuBY+MnTh/xV34mi0HYmiqk=
+github.com/getlantern/utls v0.0.0-20230801230015-21ad1b626d98 h1:UCeiluJqJF+U8QkJHVzBNofpvxZb7hKI1EkQ9dBqFjA=
+github.com/getlantern/utls v0.0.0-20230801230015-21ad1b626d98/go.mod h1:xleouNszTteqmcvv1JZiPuBY+MnTh/xV34mi0HYmiqk=
 github.com/getlantern/uuid v1.1.2-0.20190507182000-5c9436b8c718/go.mod h1:uX10hOzZUUDR+oYNSIks+RcozOEiwTNC/K2rw9SUi1k=
 github.com/getlantern/uuid v1.2.0 h1:pGrGaCV7XEaG6lvjWkwf8Y92BjB/9yFmkKsNFpRQ7rc=
 github.com/getlantern/uuid v1.2.0/go.mod h1:uX10hOzZUUDR+oYNSIks+RcozOEiwTNC/K2rw9SUi1k=
