@@ -224,7 +224,7 @@ featureoptions:
     metadatabaseurls: &AllReplicaBaseUrls
     # This is a domain access endpoint for the Replica Cloudflare R2 bucket. See https://dash.cloudflare.com/1c693b3f1031ed33f68653b1e67dfbef/r2/overview/buckets/replica/settings and the domain's DNS configuration.
     - https://replica-r2.lantern.io/
-    replicarustendpoint: &FrankfurtReplicaRust http://replica-search-aws.lantern.io/
+    replicarustendpoint: &ReplicaRustEndpoint http://replica-search.lantern.io/
     staticpeeraddrs: []
     # This list is from https://github.com/getlantern/dhtup/blob/c8fde3e1a38abcb9709df07194ea2de3ae33bdbe/trackers.go#L14
     # We want to cover several transports (schemes here), support announces for Replica content and otherwise, and ensure results for regional differences. To that end a China tracker would be nice if it wasn't a vulnerability.
@@ -241,24 +241,24 @@ featureoptions:
 
     # These are for compatibility with clients that don't load all options per-country. They can be removed when android-lantern is released with the fix to use the updated ReplicaOptions handling.
 
-    replicarustdefaultendpoint: *FrankfurtReplicaRust
+    replicarustdefaultendpoint: *ReplicaRustEndpoint
 
     # This probably isn't needed, but some tests might still assume that "CN" is a key, and I'm not 100% YAML won't barf if this field is missing. Also it means that old clients might not fallback to a hardcoded Global instance and use this instead. All the reasons.
 
     replicarustendpoints:
-      "CN": *FrankfurtReplicaRust
+      "CN": *ReplicaRustEndpoint
 
     # Here follows options per-country
 
     "IR":
       trackers: *GlobalTrackers
       staticpeeraddrs: [&IranReplicaPeer "81.12.39.55:42069"]
-      replicarustendpoint: *FrankfurtReplicaRust
+      replicarustendpoint: *ReplicaRustEndpoint
       metadatabaseurls: *AllReplicaBaseUrls
       webseedbaseurls: *AllReplicaBaseUrls
     "RU":
       metadatabaseurls: *AllReplicaBaseUrls
-      replicarustendpoint: *FrankfurtReplicaRust
+      replicarustendpoint: *ReplicaRustEndpoint
       trackers: *GlobalTrackers
       webseedbaseurls: *AllReplicaBaseUrls
       staticpeeraddrs: [&RussiaReplicaPeers "94.242.59.118:42069"]
@@ -443,7 +443,7 @@ replica:
   trackers: *GlobalTrackers
   staticpeeraddrs: []
   metadatabaseurls: *AllReplicaBaseUrls
-  replicaserviceendpoint: *FrankfurtReplicaRust
+  ReplicaRustEndpoint: *ReplicaRustEndpoint
 
 otel:
   endpoint: api.honeycomb.io:443
