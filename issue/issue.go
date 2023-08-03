@@ -3,6 +3,7 @@ package issue
 import (
 	"bytes"
 	"net/http"
+	"net/http/httputil"
 	"strconv"
 	"time"
 
@@ -130,13 +131,26 @@ func sendReport(
 		return err
 	}
 
-	resp, err := client.Post(requestURL, "application/protobuf", bytes.NewBuffer(out))
+	req, err := http.NewRequest(http.MethodPost, requestURL, bytes.NewReader(out))
 	if err != nil {
-		log.Errorf("unable to send issue report: %v", err)
-		return err
-	} else {
-		log.Debugf("issue report sent: %v", resp)
+		return log.Errorf("creating request: %w", err)
+	}
+	req.Header.Set("content-type", "application/x-protobuf")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return log.Errorf("unable to send issue report: %v", err)
 	}
 
-	return err
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		b, err := httputil.DumpResponse(resp, true)
+		if err != nil {
+			log.Debugf("Unable to get failed response body for [%s]", requestURL)
+		}
+		return log.Errorf("Bad response status: %d | response:\n%#v", resp.StatusCode, string(b))
+	}
+
+	log.Debugf("issue report sent: %v", resp)
+	return nil
 }
