@@ -49,7 +49,6 @@ func SendReport(
 	attachments []*Attachment,
 ) (err error) {
 	return sendReport(
-		ctx,
 		userConfig.GetDeviceID(),
 		strconv.Itoa(int(userConfig.GetUserID())),
 		userConfig.GetToken(),
