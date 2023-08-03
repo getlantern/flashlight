@@ -1,7 +1,6 @@
 package issue
 
 import (
-	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -50,7 +49,6 @@ func TestMain(m *testing.M) {
 
 func TestSendReport(t *testing.T) {
 	err := sendReport(
-		context.Background(),
 		"34qsdf-24qsadf-32542q",
 		"1",
 		"token",

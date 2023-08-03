@@ -2,7 +2,6 @@ package issue
 
 import (
 	"bytes"
-	"context"
 	"net/http"
 	"net/http/httputil"
 	"strconv"
@@ -38,7 +37,6 @@ type Attachment struct {
 
 // Sends an issue report to lantern-cloud/issue, which is then forwarded to ticket system via API
 func SendReport(
-	ctx context.Context,
 	userConfig common.UserConfig,
 	issueType int,
 	description string,
@@ -69,7 +67,6 @@ func SendReport(
 }
 
 func sendReport(
-	ctx context.Context,
 	deviceID string,
 	userID string,
 	proToken string,
@@ -135,7 +132,7 @@ func sendReport(
 		return err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, requestURL, bytes.NewReader(out))
+	req, err := http.NewRequest(http.MethodPost, requestURL, bytes.NewReader(out))
 	if err != nil {
 		return log.Errorf("creating request: %w", err)
 	}
