@@ -6,7 +6,7 @@ replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.31.1-0.20230104154904-d810c964a217
 
-replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20221011213556-17014cb6fc4a
+replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20230801230015-21ad1b626d98
 
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20221004112352-e7c04248adcb
 
