@@ -26,9 +26,58 @@ If you're making changes to structure of the configuration, you need to ensure t
 
 ## Adding new domain fronting mappings
 
-In addition to adding the domains that forward on Cloudfront and Akamai, you also have to add the appropriate lines to [this](https://github.com/getlantern/flashlight/blob/main/genconfig/provider_map.yaml).
+In addition to creating the domain front mappings in Cloudfront and Akamai, you also have to add the appropriate lines to [provider_map.yaml](https://github.com/getlantern/flashlight/blob/main/genconfig/provider_map.yaml) with format: <masked orgin domain>: <provider front-facing URL>.
+> [!IMPORTANT]
+> **Domain mappings must be added for both Cloudfront and Akamai!**
 
-Mappings on Cloudfront and Akamai can be added using the terraform config in `lantern-cloud`.
+### Adding mapping through `lantern-cloud`
+Mappings on Cloudfront and Akamai can be added using the terraform config in [Lantern Cloud](https://github.com/getlantern/lantern-cloud).
+
+### Adding mappings using the web consoles
+* **Cloudfront**
+
+    Open up the [Cloudfront Distributions Console](https://us-east-1.console.aws.amazon.com/cloudfront/v3/home?region=us-west-2#/distributions).
+    Click 'Create Distribution' and enter the information as follows:
+    * **Origin Domain**: Domain Cloudfront will send the request to.
+    * **Name**: Use origin domain.
+    * **Allowed HTTP methods**: Leave as default if only GET requests are needed, otherwise select the 3rd option to allow POST requests.
+    * **Cache key and origin request**: Select the appropiate policies for each.
+      - Cache: select optimized or disable if requests should not be cached. 
+      - Origin request: select policy based on what user information should be left in the request when sent to the Origin Domain. Can be left at 'None' if user info doesn't need to be forwarded.
+    Everything else can be left at the default values unless neccessary. It will take several minutes to deploy after saving. 
+    The front-facing URL can be found in the 'Domain name' column from the distributions table. Add this to [provider_map.yaml](https://github.com/getlantern/flashlight/blob/main/genconfig/provider_map.yaml).
+
+* **Akamai**
+
+    Open up the [Akamai Property Manager](https://control.akamai.com/apps/property-manager/#/groups/127281/properties). 
+    Click 'New Property' and select 'Dynamic Site Accelerator'. Select 'Property Manager' as the method to set it up. Enter a meaningfull property name, select 'latest' as the rull format, and click next.
+    **Configuring**
+
+    * **Property Version Information**: 
+      > [!IMPORTANT]
+      > Security Options must be set to *Standard TLS ready*
+
+    * **Property Hostnames**:
+      Click '+Hostnames' -> 'Add Hostname'. Set to `<name>.dsa.akamai.getiantem.org`, where name is a meaningful descriptor (usually the same as the property name). This will be the front-facing URL that is added to [provider_map.yaml](https://github.com/getlantern/flashlight/blob/main/genconfig/provider_map.yaml). Click next and it will generate an Edge Hostname, then submit.
+      > [!NOTE]
+      > It should now show the hostname in the list and certificate value should be `No certificate (HTTP Only)`.
+
+    * **Property Configuration Settings**: 
+      - *Origin Server Hostname*: Domain request will be sent to.
+      - *Send True Client IP Header*: Set to no.
+      Leave everything else as the default values.
+
+      Click '+Behavior' -> 'Standard property behavor'.
+      - Add content provider code and select 'Site Accelerator - 742552'.
+      - Add caching and set appropiate caching option.
+
+      From the tabs on the left go to 'Augment insights' -> 'Traffic reporting' and ensure the content provider code is the same as mentioned above.
+      Click 'Save'.
+
+      Go to the activate tab on the top of the page and activate on staging and production. It will take several minutes to activate.
+
+### Testing domain mappings
+Domain mappings can be tested using the [ddftool](https://github.com/getlantern/ddftool).
 
 ## Building
 In CI, `flashlight` used `GH_TOKEN` for access to private repositories.

@@ -1,3 +1,6 @@
+#
+# See https://github.com/getlantern/flashlight/README.md for instructions on how to add domain fronting mappings
+#
 cloudfront:
   ping: 'http://d157vud77ygy87.cloudfront.net/ping'
   rejectStatus: 403
