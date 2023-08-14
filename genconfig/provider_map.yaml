@@ -16,12 +16,7 @@ cloudfront:
     objects.githubusercontent.com: d15b4vylwwabfh.cloudfront.net
     mandrillapp.com: d2rh3u0miqci5a.cloudfront.net
     replica-search.lantern.io: d7kybcoknm3oo.cloudfront.net
-    replica-search-staging.lantern.io: d36vwf34kviguu.cloudfront.net
-    replica-search-aws.lantern.io: d380ddt46en4sh.cloudfront.net
-    replica-frankfurt.lantern.io: d3mm73d1kmj7zd.cloudfront.net
-    replica-search-ir.lantern.io: d2989l3kuj93v8.cloudfront.net
-    replica-thumbnailer-ir.lantern.io: d132le39uhgr75.cloudfront.net
-    replica-thumbnailer.lantern.io: d2b627m7r9v7iw.cloudfront.net
+    replica-r2.lantern.io: d2w4c4n9jigxy2.cloudfront.net
     bf-freddie.herokuapp.com: d2rhc0fs939ppy.cloudfront.net
     ssl.google-analytics.com: d2iwjfhwkzfkuj.cloudfront.net
 akamai:
@@ -42,11 +37,6 @@ akamai:
     objects.githubusercontent.com: objects-githubusercontent.dsa.akamai.getiantem.org
     mandrillapp.com: mandrillapp.dsa.akamai.getiantem.org
     replica-search.lantern.io: replica-search.dsa.akamai.lantern.io
-    replica-search-staging.lantern.io: replica-search-staging.dsa.akamai.lantern.io
-    replica-search-aws.lantern.io: replica-search-aws.dsa.akamai.lantern.io
-    replica-frankfurt.lantern.io: replica-frankfurt.dsa.akamai.lantern.io
-    replica-search-ir.lantern.io: replica-search-ir.dsa.akamai.lantern.io
-    replica-thumbnailer-ir.lantern.io: replica-thumbnailer-ir.dsa.akamai.lantern.io
-    replica-thumbnailer.lantern.io: replica-thumbnailer.dsa.akamai.lantern.io
+    replica-r2.lantern.io: replica-r2.dsa.akamai.getiantem.org
     bf-freddie.herokuapp.com: freddie.dsa.akamai.getiantem.org
     ssl.google-analytics.com: google-analytics.dsa.akamai.getiantem.org
