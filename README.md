@@ -26,7 +26,7 @@ If you're making changes to structure of the configuration, you need to ensure t
 
 ## Adding new domain fronting mappings
 
-In addition to creating the domain front mappings in Cloudfront and Akamai, you also have to add the appropriate lines to [provider_map.yaml](https://github.com/getlantern/flashlight/blob/main/genconfig/provider_map.yaml) with format: <masked orgin domain>: <provider front-facing URL>.
+In addition to creating the domain front mappings in Cloudfront and Akamai, you also have to add the appropriate lines to [provider_map.yaml](https://github.com/getlantern/flashlight/blob/main/genconfig/provider_map.yaml) with format: <masked origin domain>: <provider front-facing URL>.
 > [!IMPORTANT]
 > **Domain mappings must be added for both Cloudfront and Akamai!**
 
@@ -50,7 +50,7 @@ Mappings on Cloudfront and Akamai can be added using the terraform config in [La
 * **Akamai**
 
     Open up the [Akamai Property Manager](https://control.akamai.com/apps/property-manager/#/groups/127281/properties). 
-    Click 'New Property' and select 'Dynamic Site Accelerator'. Select 'Property Manager' as the method to set it up. Enter a meaningfull property name, select 'latest' as the rull format, and click next.
+    Click 'New Property' and select 'Dynamic Site Accelerator'. Select 'Property Manager' as the method to set it up. Enter a meaningful property name, select 'latest' as the rule format, and click next.
     **Configuring**
 
     * **Property Version Information**: 
@@ -64,8 +64,8 @@ Mappings on Cloudfront and Akamai can be added using the terraform config in [La
 
     * **Property Configuration Settings**: 
       - *Origin Server Hostname*: Domain request will be sent to.
-      - *Send True Client IP Header*: Set to no.
-      Leave everything else as the default values.
+      - *Send True Client IP Header*: Set to no. Leave everything else as the default values.
+      - Set the `Origin Server` `Forward Host Header` and `Cache Key Hostname` to `Origin Hostname` if the property is masquerading as the origin.
 
       Click '+Behavior' -> 'Standard property behavor'.
       - Add content provider code and select 'Site Accelerator - 742552'.
@@ -77,7 +77,7 @@ Mappings on Cloudfront and Akamai can be added using the terraform config in [La
       Go to the activate tab on the top of the page and activate on staging and production. It will take several minutes to activate.
 
 ### Testing domain mappings
-Domain mappings can be tested using the [ddftool](https://github.com/getlantern/ddftool).
+Domain mappings can be tested using the [ddftool](https://github.com/getlantern/ddftool). You'll want to find valid IPs for each provider, then test for expected responses using `https://<provider mapping front-facing domain name>/<some origin domain path for testing>`.
 
 ## Building
 In CI, `flashlight` used `GH_TOKEN` for access to private repositories.
