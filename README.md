@@ -77,7 +77,7 @@ Mappings on Cloudfront and Akamai can be added using the terraform config in [La
       Go to the activate tab on the top of the page and activate on staging and production. It will take several minutes to activate.
 
 ### Testing domain mappings
-Domain mappings can be tested using the [ddftool](https://github.com/getlantern/ddftool). You'll want to find valid IPs for each provider, then test for expected responses using `https://<provider mapping front-facing domain name>/<some origin domain path for testing>`.
+Domain mappings can be tested using the [ddftool](https://github.com/getlantern/ddftool). You'll want to first use the ddftool to find valid IPs for each provider, then test for the expected response using one of the respective IPs and `https://<provider mapping front-facing domain name>/<some origin domain path for testing>` for the URL.
 
 ## Building
 In CI, `flashlight` used `GH_TOKEN` for access to private repositories.
