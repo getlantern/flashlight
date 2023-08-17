@@ -38,7 +38,11 @@ func (hs helloSpec) utlsSpec() (tls.ClientHelloID, *tls.ClientHelloSpec, error) 
 		return hs.id, nil, errors.New("sample hello is too small")
 	}
 
-	spec, err := tls.FingerprintClientHello(hs.sample[tlsRecordHeaderLen:])
+	fp := &tls.Fingerprinter{
+		AllowBluntMimicry: false,
+		AlwaysAddPadding:  false,
+	}
+	spec, err := fp.FingerprintClientHello(hs.sample[tlsRecordHeaderLen:])
 	if err != nil {
 		return hs.id, nil, errors.New("failed to fingerprint sample hello: %v", err)
 	}

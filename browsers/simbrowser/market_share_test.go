@@ -3,16 +3,17 @@ package simbrowser
 import (
 	"testing"
 
-	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/require"
+
+	"github.com/getlantern/yaml"
 )
 
 func TestMarketShareDataYamlRoundTrip(t *testing.T) {
 	msd := MarketShareData{
-		Chrome:           0.4,
-		Firefox:          0.3,
-		Edge:             0.2,
-		InternetExplorer: 0.1,
+		Chrome:  0.4,
+		Firefox: 0.3,
+		Edge:    0.2,
+		Safari:  0.1,
 	}
 
 	b, err := yaml.Marshal(msd)

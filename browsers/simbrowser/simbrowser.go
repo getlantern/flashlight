@@ -33,7 +33,6 @@ var (
 	chrome     = Browser{Chrome, 30 * time.Minute, tls.HelloChrome_Auto}
 	firefox    = Browser{Firefox, 24 * time.Hour, tls.HelloFirefox_Auto}
 	edge       = Browser{Edge, 10 * time.Hour, tls.HelloEdge_Auto}
-	explorer   = Browser{InternetExplorer, 600 * time.Minute, tls.HelloExplorer_11}
 	threeSixty = Browser{ThreeSixtySecureBrowser, 9 * time.Hour, tls.Hello360_Auto}
 	qq         = Browser{QQBrowser, 30 * time.Minute, tls.HelloQQ_Auto}
 	safari     = Browser{Safari, 24 * time.Hour, tls.HelloSafari_Auto}
@@ -106,7 +105,8 @@ func ChooseForUser(ctx context.Context, uc common.UserConfig) Browser {
 	}
 
 	choice := deterministic.MakeWeightedChoice(uc.GetUserID(), weightedChoices)
-	return choice.(browserChoice).Browser
+	browser := choice.(browserChoice).Browser
+	return browser
 }
 
 func max(a, b time.Duration) time.Duration {

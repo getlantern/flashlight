@@ -8,10 +8,11 @@ package chained
 import (
 	"strconv"
 
-	"github.com/getlantern/common/config"
-	"github.com/getlantern/golog"
 	tls "github.com/refraction-networking/utls"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/getlantern/common/config"
+	"github.com/getlantern/golog"
 )
 
 var log = golog.LoggerFor("chained")
@@ -186,7 +187,7 @@ var availableClientHelloIDs = map[string]tls.ClientHelloID{
 	"HelloChrome_Auto":      tls.HelloChrome_Auto,
 	"HelloChrome_58":        tls.HelloChrome_58,
 	"HelloChrome_62":        tls.HelloChrome_62,
-	"HelloChrome_106":       tls.HelloChrome_106,
+	"HelloChrome_102":       tls.HelloChrome_102,
 	"HelloEdge_Auto":        tls.HelloEdge_Auto,
 	"Hello360_Auto":         tls.Hello360_Auto,
 	"HelloQQ_Auto":          tls.HelloQQ_Auto,
