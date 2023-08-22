@@ -6,8 +6,6 @@ replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.31.1-0.20230104154904-d810c964a217
 
-replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20230801230015-21ad1b626d98
-
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20221004112352-e7c04248adcb
 
 //replace github.com/getlantern/yinbi-server => ../yinbi-server
@@ -65,7 +63,7 @@ require (
 	github.com/getlantern/golog v0.0.0-20230503153817-8e72de7e0a65
 	github.com/getlantern/hellosplitter v0.1.1
 	github.com/getlantern/hidden v0.0.0-20220104173330-f221c5a24770
-	github.com/getlantern/http-proxy-lantern/v2 v2.8.2
+	github.com/getlantern/http-proxy-lantern/v2 v2.8.3-0.20230817000022-0c0681432cb9
 	github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
 	github.com/getlantern/idletiming v0.0.0-20201229174729-33d04d220c4e
@@ -112,7 +110,7 @@ require (
 	github.com/mitchellh/go-server-timing v1.0.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pborman/uuid v1.2.1
-	github.com/refraction-networking/utls v1.0.0
+	github.com/refraction-networking/utls v1.3.3
 	github.com/samber/lo v1.38.1
 	github.com/shadowsocks/go-shadowsocks2 v0.1.5
 	github.com/stretchr/testify v1.8.3
@@ -125,7 +123,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.16.0
 	go.opentelemetry.io/otel/trace v1.16.0
 	go.uber.org/atomic v1.10.0
-	golang.org/x/sys v0.8.0
+	golang.org/x/sys v0.9.0
 	google.golang.org/protobuf v1.30.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -180,6 +178,7 @@ require (
 	github.com/elazarl/goproxy v0.0.0-20221015165544-a0805db90819 // indirect
 	github.com/enobufs/go-nats v0.0.1 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
+	github.com/gaukas/godicttls v0.0.3 // indirect
 	github.com/getlantern/byteexec v0.0.0-20220903142956-e6ed20032cfd // indirect
 	github.com/getlantern/cmux v0.0.0-20230301223233-dac79088a4c0 // indirect
 	github.com/getlantern/context v0.0.0-20220418194847-3d5e7a086201 // indirect
@@ -226,7 +225,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.2 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
-	github.com/klauspost/compress v1.16.0 // indirect
+	github.com/klauspost/compress v1.16.6 // indirect
 	github.com/klauspost/cpuid v1.3.1 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/klauspost/reedsolomon v1.9.9 // indirect
@@ -302,12 +301,12 @@ require (
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/crypto v0.9.0 // indirect
+	golang.org/x/crypto v0.10.0 // indirect
 	golang.org/x/exp v0.0.0-20221217163422-3c43f8badb15 // indirect
 	golang.org/x/mod v0.8.0 // indirect
-	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/net v0.11.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/text v0.10.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.6.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

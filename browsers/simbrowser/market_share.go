@@ -29,7 +29,6 @@ const (
 	Firefox                             = "Firefox"
 	Safari                              = "Safari"
 	Edge                                = "Edge"
-	InternetExplorer                    = "InternetExplorer"
 	ThreeSixtySecureBrowser             = "ThreeSixtySecure"
 	QQBrowser                           = "QQBrowser"
 )
@@ -44,8 +43,6 @@ func browserByType(t BrowserType) (*Browser, error) {
 		return &safari, nil
 	case Edge:
 		return &edge, nil
-	case InternetExplorer:
-		return &explorer, nil
 	case ThreeSixtySecureBrowser:
 		return &threeSixty, nil
 	case QQBrowser:
@@ -69,22 +66,22 @@ func (bc browserChoice) Weight() int { return int(bc.marketShare * 100) }
 var (
 	marketShareLock sync.RWMutex
 	marketShareData = map[CountryCode][]browserChoice{
-		// https://gs.statcounter.com/browser-market-share/desktop/worldwide#monthly-201910-202009-bar
+		// https://gs.statcounter.com/browser-market-share/desktop/worldwide/#monthly-202301-202308-bar
 		globally: {
-			{chrome, 0.70},
-			{firefox, 0.08},
-			{safari, 0.08},
-			{edge, 0.05},
+			{chrome, 0.65},
+			{safari, 0.12},
+			{edge, 0.11},
+			{firefox, 0.06},
 		},
-		// https://gs.statcounter.com/browser-market-share/desktop/china#monthly-201910-202009-bar
+		// https://gs.statcounter.com/browser-market-share/desktop/china/#monthly-202301-202308-bar
 		// We switched Chrome and 360 because we felt that was more accurate. Sogou Explorer is not
 		// represented because it is not supported by utls.
 		"CN": {
-			{threeSixty, 0.39},
-			{chrome, 0.25},
-			{firefox, 0.08},
-			{qq, 0.07},
-			{explorer, 0.05},
+			{threeSixty, 0.38},
+			{edge, 0.21},
+			{chrome, 0.19},
+			{qq, 0.09},
+			{firefox, 0.03},
 		},
 	}
 )
