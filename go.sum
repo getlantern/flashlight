@@ -293,8 +293,8 @@ github.com/getlantern/appdir v0.0.0-20160830121117-659a155d06e8/go.mod h1:3vR6+j
 github.com/getlantern/appdir v0.0.0-20180320102544-7c0f9d241ea7/go.mod h1:3vR6+jQdWfWojZ77w+htCqEF5MO/Y2twJOpAvFuM9po=
 github.com/getlantern/borda v0.0.0-20230421223744-4e208135f082 h1:Ka9rIAgef8zYhBr/VgLrt5+Qs7zE33g0OButzpIGcSs=
 github.com/getlantern/borda v0.0.0-20230421223744-4e208135f082/go.mod h1:oCpQojhSaK0F/6rWMrDvN8/QFHQhTC9Gb3uf7GcqPQQ=
-github.com/getlantern/broflake v0.0.0-20230720180617-832a5e273f50 h1:d/kGRNSTVHZDYzdPHPLzU3YhsyM4z027d77zF6WLjsE=
-github.com/getlantern/broflake v0.0.0-20230720180617-832a5e273f50/go.mod h1:Ehdl8IASN5rJi9brldVuCjTDcSU25nvaGRlzNprgeQo=
+github.com/getlantern/broflake v0.0.0-20230822184836-0b9bbcadd5c6 h1:/G1jb7daSg1FkEEFbvRRM7A927uErx5vEMVwrTcVzp0=
+github.com/getlantern/broflake v0.0.0-20230822184836-0b9bbcadd5c6/go.mod h1:Ehdl8IASN5rJi9brldVuCjTDcSU25nvaGRlzNprgeQo=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
 github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493 h1:8WjDNmpDLFVsAfcnHxqF4pfVKkdAQxyJ9iCHB4LxSfc=
 github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
@@ -394,8 +394,8 @@ github.com/getlantern/hidden v0.0.0-20220104173330-f221c5a24770 h1:cSrD9ryDfTV2y
 github.com/getlantern/hidden v0.0.0-20220104173330-f221c5a24770/go.mod h1:GOQsoDnEHl6ZmNIL+5uVo+JWRFWozMEp18Izcb++H+A=
 github.com/getlantern/http-proxy v0.0.3-0.20230405160101-eb4bf4e4a733 h1:bAVwkX1pvHqqrxuoZ2ElGr2FElnjE/+yOpqUSOrVnJg=
 github.com/getlantern/http-proxy v0.0.3-0.20230405160101-eb4bf4e4a733/go.mod h1:zsMtNKXEfy+y3RBqe3wcd05VivKAswrIvlVsFrj7Fwk=
-github.com/getlantern/http-proxy-lantern/v2 v2.8.3-0.20230817000022-0c0681432cb9 h1:gKlCFexSPVLBtkYck66wX48+BFS9pcmuaJ1NQe/tGTs=
-github.com/getlantern/http-proxy-lantern/v2 v2.8.3-0.20230817000022-0c0681432cb9/go.mod h1:2HsMsUPrRYi4059BpzZTiUfnRy6B4E6NPc8RC91ILIo=
+github.com/getlantern/http-proxy-lantern/v2 v2.8.3-0.20230822194736-c6ce61180a3a h1:nR1zM2FsFZF4P4hRuAosn9ob0LnkiYyM3SHgPFI5C6Q=
+github.com/getlantern/http-proxy-lantern/v2 v2.8.3-0.20230822194736-c6ce61180a3a/go.mod h1:Ghj3WWaSmNBeDbSElm/Zsnb/xUiZjGDTAN9h2javcHE=
 github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca h1:Of3VwFEfKbVnK5/VGy05XUbi6QvTs5Y2eLDfPv3O50E=
 github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca/go.mod h1:TNC/xJFmctsSGyXqcnVWwCRCPD/4zGQP7yBVnLDRa/U=
 github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c h1:+JnT+Rwa/3rksc4Zi0u6fJ/WX+tPK58GtsrcXWVUU2U=
