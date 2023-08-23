@@ -22,8 +22,8 @@ type helloSpec struct {
 }
 
 // This function is guaranteed to return one of the following:
-//   - A non-custom client hello ID (i.e. not utls.ClientHelloCustom)
-//   - utls.ClientHelloCustom and a non-nil utls.ClientHelloSpec.
+//   - A non-custom client hello ID (i.e. not utls.HelloCustom)
+//   - utls.HelloCustom and a non-nil utls.ClientHelloSpec.
 //   - An error (if the above is not possible)
 func (hs helloSpec) utlsSpec() (tls.ClientHelloID, *tls.ClientHelloSpec, error) {
 	const tlsRecordHeaderLen = 5
@@ -42,7 +42,7 @@ func (hs helloSpec) utlsSpec() (tls.ClientHelloID, *tls.ClientHelloSpec, error) 
 		AllowBluntMimicry: false,
 		AlwaysAddPadding:  false,
 	}
-	spec, err := fp.FingerprintClientHello(hs.sample[tlsRecordHeaderLen:])
+	spec, err := fp.FingerprintClientHello(hs.sample)
 	if err != nil {
 		return hs.id, nil, errors.New("failed to fingerprint sample hello: %v", err)
 	}
@@ -63,6 +63,28 @@ func (hs helloSpec) uconn(transport net.Conn, cfg *tls.Config) (*tls.UConn, erro
 		return nil, errors.New("failed to apply custom hello: %v", err)
 	}
 	return uconn, nil
+}
+
+func (hs helloSpec) supportsSessionTickets() (bool, error) {
+	id, spec, err := hs.utlsSpec()
+	if err != nil {
+		return false, errors.New("failed to get hello spec: %v", err)
+	}
+	if spec == nil {
+		// this can happen if we're not using a custom spec
+		_spec, err := tls.UTLSIdToSpec(id)
+		if err != nil {
+			return false, errors.New("failed to get spec for hello %v: %v", id, err)
+		}
+		spec = &_spec
+	}
+	for _, extension := range spec.Extensions {
+		_, isSessionTicket := extension.(*tls.SessionTicketExtension)
+		if isSessionTicket {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 type helloRoller struct {

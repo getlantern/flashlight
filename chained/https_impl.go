@@ -23,6 +23,7 @@ type httpsImpl struct {
 	tlsConfig               *tls.Config
 	roller                  *helloRoller
 	tlsClientHelloSplitting bool
+	requiresSessionTickets  bool
 	sync.Mutex
 }
 
@@ -45,6 +46,7 @@ func newHTTPSImpl(configDir, name, addr string, pc *config.ProxyConfig, uc commo
 		tlsConfig:               tlsConfig,
 		roller:                  &helloRoller{hellos: hellos},
 		tlsClientHelloSplitting: pc.TLSClientHelloSplitting,
+		requiresSessionTickets:  pc.TLSClientSessionState != "",
 	}, nil
 }
 
@@ -55,10 +57,22 @@ func (impl *httpsImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, er
 	currentHello := r.current()
 	helloID, helloSpec, err := currentHello.utlsSpec()
 	if err != nil {
-		log.Debugf("failed to generate valid utls hello spec; advancing roller: %v", err)
 		r.advance()
-		return nil, errors.New("failed to generate valid utls hello spec: %v", err)
+		return nil, errors.New("failed to generate valid utls hello spec, advancing roller: %v", err)
 	}
+
+	if impl.requiresSessionTickets && helloID != tls.HelloGolang {
+		supportsSessionTickets, err := currentHello.supportsSessionTickets()
+		if err != nil {
+			r.advance()
+			return nil, errors.New("unable to determine if hello %v supports session tickets, advancing roller: %v", helloID, err)
+		}
+		if !supportsSessionTickets {
+			r.advance()
+			return nil, errors.New("session ticket is required, but hello %v does not support them; advancing roller", helloID)
+		}
+	}
+
 	d := tlsdialer.Dialer{
 		DoDial: func(network, addr string, timeout time.Duration) (net.Conn, error) {
 			tcpConn, err := impl.dialCore(op, ctx, impl.addr)
