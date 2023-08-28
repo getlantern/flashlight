@@ -34,7 +34,7 @@ require (
 	github.com/OperatorFoundation/Starbridge-go/Starbridge/v3 v3.0.15
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/anacrolix/dht/v2 v2.20.0
-	github.com/anacrolix/go-libutp v1.2.0
+	github.com/anacrolix/go-libutp v1.3.1
 	github.com/anacrolix/missinggo/v2 v2.7.1
 	github.com/andybalholm/brotli v1.0.5
 	github.com/blang/semver v3.5.1+incompatible
