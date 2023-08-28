@@ -29,13 +29,11 @@ import (
 	"github.com/getlantern/flashlight/v7/email"
 	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/flashlight/v7/goroutines"
-	"github.com/getlantern/flashlight/v7/logging"
 	fops "github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/otel"
 	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/flashlight/v7/shortcut"
 	"github.com/getlantern/flashlight/v7/stats"
-	"github.com/getlantern/quicproxy"
 )
 
 var (
@@ -59,9 +57,6 @@ var (
 
 func init() {
 	netx.EnableNAT64AutoDiscovery()
-
-	// Init logger for different packages
-	quicproxy.Log = logging.FlashlightLogger{Logger: quicProxyLogger}
 }
 
 // HandledErrorType is used to differentiate error types to handlers configured via
