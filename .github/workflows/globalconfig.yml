@@ -38,6 +38,8 @@ jobs:
         git config user.email github-actions@github.com
         git pull
         git add embeddedconfig/global.yaml
+        # Don't continue if there's no changes.
+        git diff-index --quiet HEAD && exit
         git commit -m "pushing auto-generated embedded global config"
         echo "pushing to main"
         git push origin main
