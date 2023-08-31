@@ -13,11 +13,9 @@ import (
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/proxied"
-	"github.com/getlantern/golog"
 )
 
 func init() {
-	log = golog.LoggerFor("broflake")
 	broflake_common.SetDebugLogger(log.AsDebugLogger())
 }
 
