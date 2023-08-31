@@ -188,6 +188,7 @@ var availableClientHelloIDs = map[string]tls.ClientHelloID{
 	"HelloChrome_58":        tls.HelloChrome_58,
 	"HelloChrome_62":        tls.HelloChrome_62,
 	"HelloChrome_102":       tls.HelloChrome_102,
+	"HelloChrome_106":       tls.HelloChrome_106_Shuffle,
 	"HelloEdge_Auto":        tls.HelloEdge_Auto,
 	"Hello360_Auto":         tls.Hello360_Auto,
 	"HelloQQ_Auto":          tls.HelloQQ_Auto,

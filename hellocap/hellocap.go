@@ -13,6 +13,8 @@ import (
 	"os/exec"
 	"sync"
 
+	utls "github.com/refraction-networking/utls"
+
 	"github.com/getlantern/tlsutil"
 )
 
@@ -127,7 +129,17 @@ func (c *capturingConn) checkHello(newBytes []byte) {
 		c.helloBuf.Write(newBytes)
 		nHello, parseErr := tlsutil.ValidateClientHello(c.helloBuf.Bytes())
 		if parseErr == nil {
-			c.onHello(c.helloBuf.Bytes()[:nHello], nil)
+			f := &utls.Fingerprinter{
+				AllowBluntMimicry: false,
+				AlwaysAddPadding:  false,
+			}
+			_, err := f.FingerprintClientHello(c.helloBuf.Bytes()[:nHello])
+			if err != nil {
+				c.onHello(nil, err)
+			} else {
+				fmt.Println("fingerprinting okay")
+				c.onHello(c.helloBuf.Bytes()[:nHello], nil)
+			}
 			c.helloRead = true
 		} else if !errors.Is(parseErr, io.ErrUnexpectedEOF) {
 			c.onHello(nil, fmt.Errorf("could not parse captured bytes as a ClientHello: %w", parseErr))
