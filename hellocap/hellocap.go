@@ -135,9 +135,8 @@ func (c *capturingConn) checkHello(newBytes []byte) {
 			}
 			_, err := f.FingerprintClientHello(c.helloBuf.Bytes()[:nHello])
 			if err != nil {
-				c.onHello(nil, err)
+				c.onHello(nil, fmt.Errorf("fingerprint failure: %w", err))
 			} else {
-				fmt.Println("fingerprinting okay")
 				c.onHello(c.helloBuf.Bytes()[:nHello], nil)
 			}
 			c.helloRead = true
