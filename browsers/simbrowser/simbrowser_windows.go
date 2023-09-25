@@ -20,8 +20,6 @@ func mimicDefaultBrowser(ctx context.Context) (*Browser, error) {
 		return &firefox, nil
 	case browsers.Edge, browsers.EdgeLegacy:
 		return &edge, nil
-	case browsers.InternetExplorer:
-		return &explorer, nil
 	case browsers.ThreeSixtySecureBrowser:
 		return &threeSixty, nil
 	case browsers.QQBrowser:
