@@ -42,7 +42,7 @@ require (
 	github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/getlantern/borda v0.0.0-20230421223744-4e208135f082
-	github.com/getlantern/broflake v0.0.0-20230927230412-003c9ef0fe25
+	github.com/getlantern/broflake v0.0.0-20230928170657-97fc977bdc6f
 	github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493
 	github.com/getlantern/cmux/v2 v2.0.0-20230301223233-dac79088a4c0
 	github.com/getlantern/cmuxprivate v0.0.0-20211216020409-d29d0d38be54
