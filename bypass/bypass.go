@@ -33,7 +33,7 @@ var (
 
 	// some pluggable transports don't work with bypass
 	unsupportedTransports = map[string]bool{
-		"broflake": true,
+		"bu": true,
 	}
 )
 

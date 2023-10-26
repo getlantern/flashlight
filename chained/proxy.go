@@ -194,8 +194,8 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 		impl, err = newTLSMasqImpl(configDir, name, addr, s, uc, reportDialCore)
 	case "starbridge":
 		impl, err = newStarbridgeImpl(name, addr, s, reportDialCore)
-	case "broflake":
-		impl, err = newBroflakeImpl(s, reportDialCore)
+	case "bu":
+		impl, err = newBUImpl(s, reportDialCore)
 	default:
 		err = errors.New("Unknown transport: %v", transport).With("addr", addr).With("plugabble-transport", transport)
 	}
@@ -369,7 +369,7 @@ func newProxy(name, addr, protocol, network string, s *config.ProxyConfig, uc co
 		}
 	}
 	if len(s.AllowedDomains) > 0 {
-		// Some proxies like Broflake only support a limited set of domains. This sets up domain routing
+		// Some proxies like BU only support a limited set of domains. This sets up domain routing
 		// rules based on what was configured in the proxy config.
 		rulesMap := make(domainrouting.RulesMap)
 		for _, domain := range s.AllowedDomains {
