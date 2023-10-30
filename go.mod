@@ -73,14 +73,14 @@ require (
 	github.com/getlantern/keyman v0.0.0-20230503155501-4e864ca2175b
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
 	github.com/getlantern/measured v0.0.0-20210507000559-ec5307b2b8be
-	github.com/getlantern/mitm v0.0.0-20210622063317-e6510574903b
+	github.com/getlantern/mitm v0.0.0-20231025115752-54d3e43899b7
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20220920195041-55195f38df73
 	github.com/getlantern/netx v0.0.0-20211206143627-7ccfeb739cbd
 	github.com/getlantern/ops v0.0.0-20230519221840-1283e026181c
 	github.com/getlantern/osversion v0.0.0-20230401075644-c2a30e73c451
-	github.com/getlantern/proxy/v2 v2.0.1-0.20220303164029-b34b76e0e581
+	github.com/getlantern/proxy/v2 v2.0.1-0.20231025120008-e5de10082549
 	github.com/getlantern/proxybench v0.0.0-20220404140110-f49055cb86de
 	github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683
 	github.com/getlantern/quicwrapper v0.0.0-20230523101504-1ec066b7f869
@@ -112,7 +112,7 @@ require (
 	github.com/refraction-networking/utls v1.3.3
 	github.com/samber/lo v1.38.1
 	github.com/shadowsocks/go-shadowsocks2 v0.1.5
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	github.com/vulcand/oxy v1.4.2
 	github.com/xtaci/smux v1.5.24
 	gitlab.com/yawning/obfs4.git v0.0.0-20220904064028-336a71d6e4cf
