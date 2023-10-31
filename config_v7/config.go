@@ -16,7 +16,6 @@ import (
 	"github.com/getsentry/sentry-go"
 	"gopkg.in/yaml.v3"
 
-	"github.com/getlantern/dhtup"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/rot13"
 
@@ -109,8 +108,6 @@ type options struct {
 	// dictate whether the fetcher will use dual fetching (from fronted and
 	// chained URLs) or not.
 	rt http.RoundTripper
-
-	dhtupContext *dhtup.Context
 }
 
 var globalConfigDhtTarget krpc.ID
@@ -207,33 +204,6 @@ func pipeConfig(opts *options) (stop func()) {
 				dispatch(cfg, Fetched)
 			}, fetcher, opts.sleep,
 			golog.LoggerFor(fmt.Sprintf("%v.%v.fetcher.http", packageLogPrefix, opts.name)))
-
-		if opts.dhtupContext != nil {
-			dhtFetcher := dhtFetcher{
-				dhtupResource: dhtup.NewResource(dhtup.ResourceInput{
-					DhtTarget:  globalConfigDhtTarget,
-					DhtContext: opts.dhtupContext,
-					FilePath:   opts.name,
-					// Empty this to force data to be obtained through peers.
-					WebSeedUrls: []string{"https://globalconfig.flashlightproxy.com/dhtup/"},
-					Salt:        []byte("globalconfig"),
-					// Empty this to force metainfo to be obtained via peers.
-					MetainfoUrls: []string{
-						// This won't work for changes until the CloudFlare caches are flushed as part of updates.
-						"https://globalconfig.flashlightproxy.com/dhtup/globalconfig.torrent",
-						// Bypass CloudFlare cache.
-						"https://s3.ap-northeast-1.amazonaws.com/globalconfig.flashlightproxy.com/dhtup/globalconfig.torrent",
-					},
-				}),
-			}
-			go conf.configFetcher(
-				stopCh,
-				func(cfg interface{}) {
-					dispatch(cfg, Dht)
-				},
-				dhtFetcher, opts.sleep,
-				golog.LoggerFor(fmt.Sprintf("%v.%v.fetcher.dht", packageLogPrefix, opts.name)))
-		}
 	} else {
 		log.Debugf("Using sticky config")
 	}

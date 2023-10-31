@@ -35,7 +35,6 @@ require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/anacrolix/dht/v2 v2.20.0
 	github.com/anacrolix/go-libutp v1.3.1
-	github.com/anacrolix/missinggo/v2 v2.7.1
 	github.com/andybalholm/brotli v1.0.5
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/dustin/go-humanize v1.0.1
@@ -48,7 +47,6 @@ require (
 	github.com/getlantern/cmuxprivate v0.0.0-20211216020409-d29d0d38be54
 	github.com/getlantern/common v1.2.1-0.20230427204521-6ac18c21db39
 	github.com/getlantern/detour v0.0.0-20230503144615-d3106a68f79e
-	github.com/getlantern/dhtup v0.0.0-20230218071625-e78bcd432e4b
 	github.com/getlantern/dnsgrab v0.0.0-20211216020425-5d5e155a01a8
 	github.com/getlantern/domains v0.0.0-20220311111720-94f59a903271
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
@@ -147,6 +145,7 @@ require (
 	github.com/anacrolix/log v0.13.2-0.20221123232138-02e2764801c3 // indirect
 	github.com/anacrolix/missinggo v1.3.0 // indirect
 	github.com/anacrolix/missinggo/perf v1.0.0 // indirect
+	github.com/anacrolix/missinggo/v2 v2.7.1 // indirect
 	github.com/anacrolix/mmsg v1.0.0 // indirect
 	github.com/anacrolix/multiless v0.3.1-0.20221221005021-2d12701f83f7 // indirect
 	github.com/anacrolix/squirrel v0.4.1-0.20220122230132-14b040773bac // indirect
@@ -180,6 +179,7 @@ require (
 	github.com/getlantern/byteexec v0.0.0-20220903142956-e6ed20032cfd // indirect
 	github.com/getlantern/cmux v0.0.0-20230301223233-dac79088a4c0 // indirect
 	github.com/getlantern/context v0.0.0-20220418194847-3d5e7a086201 // indirect
+	github.com/getlantern/dhtup v0.0.0-20230218063409-258bc7570a27 // indirect
 	github.com/getlantern/dns v0.0.0-20210120185712-8d005533efa0 // indirect
 	github.com/getlantern/elevate v0.0.0-20220903142053-479ab992b264 // indirect
 	github.com/getlantern/enproxy v0.0.0-20180913191734-002212d417a4 // indirect
