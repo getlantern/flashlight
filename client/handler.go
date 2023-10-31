@@ -20,7 +20,7 @@ import (
 	"github.com/andybalholm/brotli"
 
 	"github.com/getlantern/idletiming"
-	"github.com/getlantern/proxy/v2/filters"
+	"github.com/getlantern/proxy/v3/filters"
 
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/common"

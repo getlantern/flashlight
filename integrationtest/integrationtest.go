@@ -26,7 +26,7 @@ import (
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/golog"
-	proxy "github.com/getlantern/http-proxy-lantern/v2"
+	hproxy "github.com/getlantern/http-proxy-lantern/v2"
 	"github.com/getlantern/tlsdefaults"
 	"github.com/getlantern/waitforserver"
 	"github.com/getlantern/yaml"
@@ -221,7 +221,7 @@ func (helper *Helper) startProxyServer() error {
 		return err
 	}
 
-	s1 := &proxy.Proxy{
+	s1 := &hproxy.Proxy{
 		TestingLocal:              true,
 		HTTPAddr:                  helper.HTTPSProxyServerAddr,
 		HTTPMultiplexAddr:         helper.HTTPSSmuxProxyServerAddr,
@@ -247,7 +247,7 @@ func (helper *Helper) startProxyServer() error {
 	}
 
 	// kcp server
-	s2 := &proxy.Proxy{
+	s2 := &hproxy.Proxy{
 		TestingLocal: true,
 		HTTPAddr:     "127.0.0.1:0",
 		KCPConf:      kcpConfFile.Name(),
@@ -260,7 +260,7 @@ func (helper *Helper) startProxyServer() error {
 
 	// psmux multiplexed http
 	// smux multiplexed http
-	s3 := &proxy.Proxy{
+	s3 := &hproxy.Proxy{
 		TestingLocal:      true,
 		HTTPS:             true,
 		HTTPMultiplexAddr: helper.HTTPSPsmuxProxyServerAddr,

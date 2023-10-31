@@ -31,8 +31,8 @@ import (
 	"github.com/getlantern/iptool"
 	"github.com/getlantern/mitm"
 	"github.com/getlantern/netx"
-	"github.com/getlantern/proxy/v2"
-	"github.com/getlantern/proxy/v2/filters"
+	"github.com/getlantern/proxy/v3"
+	"github.com/getlantern/proxy/v3/filters"
 	"github.com/getlantern/shortcut"
 
 	"github.com/getlantern/flashlight/v7/balancer"
