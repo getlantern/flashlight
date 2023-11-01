@@ -7,7 +7,6 @@ import (
 	"time"
 
 	commonconfig "github.com/getlantern/common/config"
-	"github.com/getlantern/dhtup"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/yaml"
 
@@ -38,7 +37,7 @@ func Init(
 	configDir string, flags map[string]interface{}, userConfig common.UserConfig,
 	proxiesDispatch func(interface{}, Source), onProxiesSaveError func(error),
 	origGlobalDispatch func(interface{}, Source), onGlobalSaveError func(error),
-	rt http.RoundTripper, dhtupContext *dhtup.Context) (stop func()) {
+	rt http.RoundTripper) (stop func()) {
 
 	staging := isStaging(flags)
 	proxyConfigURL := checkOverrides(flags, getProxyURL(staging), "proxies.yaml.gz")
@@ -46,8 +45,7 @@ func Init(
 
 	return InitWithURLs(
 		configDir, flags, userConfig, proxiesDispatch, onProxiesSaveError,
-		origGlobalDispatch, onGlobalSaveError, proxyConfigURL, globalConfigURL, rt,
-		dhtupContext)
+		origGlobalDispatch, onGlobalSaveError, proxyConfigURL, globalConfigURL, rt)
 }
 
 type cfgWithSource struct {
@@ -63,8 +61,7 @@ func InitWithURLs(
 	configDir string, flags map[string]interface{}, userConfig common.UserConfig,
 	origProxiesDispatch func(interface{}, Source), onProxiesSaveError func(error),
 	origGlobalDispatch func(interface{}, Source), onGlobalSaveError func(error),
-	proxyURL string, globalURL string, rt http.RoundTripper,
-	dhtupContext *dhtup.Context) (stop func()) {
+	proxyURL string, globalURL string, rt http.RoundTripper) (stop func()) {
 
 	var mx sync.RWMutex
 	globalConfigPollInterval := DefaultGlobalConfigPollInterval
@@ -151,9 +148,8 @@ func InitWithURLs(
 			defer mx.RUnlock()
 			return globalConfigPollInterval
 		},
-		sticky:       isSticky(flags),
-		rt:           rt,
-		dhtupContext: dhtupContext,
+		sticky: isSticky(flags),
+		rt:     rt,
 	}
 
 	stopGlobal := pipeConfig(globalOptions)

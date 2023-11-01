@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/getlantern/flashlight/v7/config"
-	"github.com/getlantern/proxy/v2/filters"
+	"github.com/getlantern/proxy/v3/filters"
 	sc "github.com/getlantern/shortcut"
 	"github.com/getlantern/yaml"
 

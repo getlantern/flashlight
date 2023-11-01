@@ -19,7 +19,7 @@ import (
 	"github.com/getlantern/bufconn"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/idletiming"
-	gp "github.com/getlantern/proxy/v2"
+	gp "github.com/getlantern/proxy/v3"
 
 	"github.com/getlantern/flashlight/v7/balancer"
 	"github.com/getlantern/flashlight/v7/bandwidth"

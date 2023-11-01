@@ -43,7 +43,7 @@ func TestInit(t *testing.T) {
 				req.Header.Add(common.CfgSvrAuthTokenHeader, "staging-token")
 				return nil, nil
 			},
-		}, nil)
+		})
 	defer stop()
 
 	_, valid := gotProxies.Get(time.Second * 12)
@@ -86,7 +86,7 @@ func TestInitWithURLs(t *testing.T) {
 			inTempDir("."), flags, newTestUserConfig(),
 			proxiesDispatch, nil,
 			globalDispatch, nil,
-			proxyConfigURL, globalConfigURL, &http.Transport{}, nil)
+			proxyConfigURL, globalConfigURL, &http.Transport{})
 		defer stop()
 
 		// sleep some amount
