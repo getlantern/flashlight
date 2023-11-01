@@ -151,7 +151,7 @@ require (
 	github.com/anacrolix/squirrel v0.4.1 // indirect
 	github.com/anacrolix/stm v0.4.1-0.20221221005312-96d17df0e496 // indirect
 	github.com/anacrolix/sync v0.4.0 // indirect
-	github.com/anacrolix/torrent v1.52.6-0.20230816110201-613470861e67 // indirect
+	github.com/anacrolix/torrent v1.52.6 // indirect
 	github.com/anacrolix/upnp v0.1.3-0.20220123035249-922794e51c96 // indirect
 	github.com/anacrolix/utp v0.1.0 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
