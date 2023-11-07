@@ -233,7 +233,7 @@ func sendTemplate(ctx context.Context, msg *Message) error {
 		log.Debug("No proxies.yaml included to send to mandrill")
 	}
 
-	responses, err := client.MessagesSendTemplate(ctx, mmsg, msg.Template, "")
+	responses, err := client.MessagesSendTemplate(mmsg, msg.Template, "")
 	if err != nil {
 		return err
 	}
