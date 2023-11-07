@@ -1,0 +1,21 @@
+diff a/go.sum b/go.sum	(rejected hunks)
+@@ -288,8 +288,8 @@ github.com/getlantern/hidden v0.0.0-20220104173330-f221c5a24770 h1:cSrD9ryDfTV2y
+ github.com/getlantern/hidden v0.0.0-20220104173330-f221c5a24770/go.mod h1:GOQsoDnEHl6ZmNIL+5uVo+JWRFWozMEp18Izcb++H+A=
+ github.com/getlantern/http-proxy v0.0.3-0.20230405160101-eb4bf4e4a733 h1:bAVwkX1pvHqqrxuoZ2ElGr2FElnjE/+yOpqUSOrVnJg=
+ github.com/getlantern/http-proxy v0.0.3-0.20230405160101-eb4bf4e4a733/go.mod h1:zsMtNKXEfy+y3RBqe3wcd05VivKAswrIvlVsFrj7Fwk=
+-github.com/getlantern/http-proxy-lantern/v2 v2.8.2 h1:kET59ivzejmIODw1m/6J1f+MS/pesxYlyaiUaJbnXZc=
+-github.com/getlantern/http-proxy-lantern/v2 v2.8.2/go.mod h1:QTlMxJhd74PZqtDmZ4g99EYSWBVrWu5d/LBWV/mKRGE=
++github.com/getlantern/http-proxy-lantern/v2 v2.9.1 h1:6hAAa58fOZ3tURZZ89CmjT9cXnzF6NOcmeiPalHCpFU=
++github.com/getlantern/http-proxy-lantern/v2 v2.9.1/go.mod h1:Sslzrsi5xdreseF4V5e7VB9KmvMIklmFN2POUU05/KA=
+ github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca h1:Of3VwFEfKbVnK5/VGy05XUbi6QvTs5Y2eLDfPv3O50E=
+ github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca/go.mod h1:TNC/xJFmctsSGyXqcnVWwCRCPD/4zGQP7yBVnLDRa/U=
+ github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c h1:+JnT+Rwa/3rksc4Zi0u6fJ/WX+tPK58GtsrcXWVUU2U=
+@@ -511,7 +511,7 @@ github.com/google/go-cmp v0.4.1/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/
+ github.com/google/go-cmp v0.5.2/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
+ github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
+ github.com/google/go-cmp v0.5.8/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
+-github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
++github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
+ github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
+ github.com/google/gopacket v1.1.17/go.mod h1:UdDNZ1OO62aGYVnPhxT1U6aI7ukYtA/kB8vaU0diBUM=
+ github.com/google/gopacket v1.1.19 h1:ves8RnFZPGiFnTS0uPQStjwru6uO6h+nlr9j6fL7kF8=

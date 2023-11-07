@@ -153,7 +153,6 @@ func (p *proxy) DialContext(ctx context.Context, network, addr string) (conn net
 		return nil, err == errUpstream, err
 	}
 
-	conn = p.withRateTracking(conn, addr, ctx)
 	if network == balancer.NetworkConnect {
 		// only mark success if we did a CONNECT request because that involves a
 		// full round-trip to/from the proxy
