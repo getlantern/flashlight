@@ -81,7 +81,7 @@ require (
 	github.com/getlantern/proxy/v3 v3.0.0-20231031142453-252ab678e6b7
 	github.com/getlantern/proxybench v0.0.0-20220404140110-f49055cb86de
 	github.com/getlantern/psmux v1.5.15
-	github.com/getlantern/quicwrapper v0.0.0-20231108050751-5e6d34067422
+	github.com/getlantern/quicwrapper v0.0.0-20231108050956-d40f907fc227
 	github.com/getlantern/replica v0.14.2
 	github.com/getlantern/rot13 v0.0.0-20220822172233-370767b2f782
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2

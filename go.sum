@@ -199,6 +199,7 @@ github.com/bradfitz/iter v0.0.0-20191230175014-e8f45d346db8/go.mod h1:spo1JLcs67
 github.com/cenkalti/backoff/v4 v4.2.1 h1:y4OZtCnogmCPw98Zjyt5a6+QwPLGkiQsYW5oUqylYbM=
 github.com/cenkalti/backoff/v4 v4.2.1/go.mod h1:Y3VNntkOUPxTVeUxJ/G5vcM//AlwfmyYozVcomhLiZE=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
+github.com/cespare/xxhash v1.1.0 h1:a6HrQnmkObjyL+Gs60czilIUGqrzKutQD6XZog3p+ko=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/cespare/xxhash/v2 v2.1.1/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/cespare/xxhash/v2 v2.2.0 h1:DC2CZ1Ep5Y4k3ZQ899DldepgrayRUGE6BBZ/cd9Cj44=
@@ -470,6 +471,8 @@ github.com/getlantern/quicwrapper v0.0.0-20231107235119-169ee329eff1 h1:laV0NpZF
 github.com/getlantern/quicwrapper v0.0.0-20231107235119-169ee329eff1/go.mod h1:77PSwCiIHtZ5CL/4vBymzeuF3Htm3FlW9w2ZWwT8tYM=
 github.com/getlantern/quicwrapper v0.0.0-20231108050751-5e6d34067422 h1:QI+v2kttBDcDVdRkIsEFtwnDuYnj74FkD+4sKNqMBlY=
 github.com/getlantern/quicwrapper v0.0.0-20231108050751-5e6d34067422/go.mod h1:77PSwCiIHtZ5CL/4vBymzeuF3Htm3FlW9w2ZWwT8tYM=
+github.com/getlantern/quicwrapper v0.0.0-20231108050956-d40f907fc227 h1:NM4EiPZqVjbJkjtP3QsPTAoFq90jPdOVrPfLUZ+fgrA=
+github.com/getlantern/quicwrapper v0.0.0-20231108050956-d40f907fc227/go.mod h1:77PSwCiIHtZ5CL/4vBymzeuF3Htm3FlW9w2ZWwT8tYM=
 github.com/getlantern/ratelimit v0.0.0-20220926192648-933ab81a6fc7 h1:47FJ5kTeXc3I1VPpi2hWW9I16/Y3K0cpUq/B7oWJGF8=
 github.com/getlantern/ratelimit v0.0.0-20220926192648-933ab81a6fc7/go.mod h1:OOqKCIkspqXtIWEex4uhH1H9l7NGekT9i3Hs591ZDk4=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c h1:IkjF+RwRs8B/RsuD638eUFO2K/227OO2B1FLXGp17Ro=
