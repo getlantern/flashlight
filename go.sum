@@ -468,6 +468,8 @@ github.com/getlantern/quicwrapper v0.0.0-20230523101504-1ec066b7f869 h1:nx0sr8jX
 github.com/getlantern/quicwrapper v0.0.0-20230523101504-1ec066b7f869/go.mod h1:0k08ZBlQon93TrW6KmBLhLSz89qHQFR2LstGlIRgYo8=
 github.com/getlantern/quicwrapper v0.0.0-20231107235119-169ee329eff1 h1:laV0NpZFZ262Ey9/Z0vwRyTB9XidmMLxOPnuwMVMl/4=
 github.com/getlantern/quicwrapper v0.0.0-20231107235119-169ee329eff1/go.mod h1:77PSwCiIHtZ5CL/4vBymzeuF3Htm3FlW9w2ZWwT8tYM=
+github.com/getlantern/quicwrapper v0.0.0-20231108050751-5e6d34067422 h1:QI+v2kttBDcDVdRkIsEFtwnDuYnj74FkD+4sKNqMBlY=
+github.com/getlantern/quicwrapper v0.0.0-20231108050751-5e6d34067422/go.mod h1:77PSwCiIHtZ5CL/4vBymzeuF3Htm3FlW9w2ZWwT8tYM=
 github.com/getlantern/ratelimit v0.0.0-20220926192648-933ab81a6fc7 h1:47FJ5kTeXc3I1VPpi2hWW9I16/Y3K0cpUq/B7oWJGF8=
 github.com/getlantern/ratelimit v0.0.0-20220926192648-933ab81a6fc7/go.mod h1:OOqKCIkspqXtIWEex4uhH1H9l7NGekT9i3Hs591ZDk4=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c h1:IkjF+RwRs8B/RsuD638eUFO2K/227OO2B1FLXGp17Ro=
