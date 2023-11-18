@@ -16,7 +16,6 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/ops"
-	"github.com/getlantern/proxybench"
 
 	"github.com/getlantern/flashlight/v7/balancer"
 	"github.com/getlantern/flashlight/v7/bypass"
@@ -36,8 +35,7 @@ import (
 )
 
 var (
-	log                 = golog.LoggerFor("flashlight")
-	startProxyBenchOnce sync.Once
+	log = golog.LoggerFor("flashlight")
 
 	// blockingRelevantFeatures lists all features that might affect blocking and gives their
 	// default enabled status (until we know the country)
@@ -105,7 +103,6 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	f.mxGlobal.Unlock()
 	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
 	f.applyClientConfig(cfg)
-	f.applyProxyBench(cfg)
 	f.applyOtel(cfg)
 	select {
 	case f.onBordaConfigured <- true:
@@ -276,23 +273,6 @@ func (f *Flashlight) startConfigFetch() func() {
 		proxiesDispatch, onProxiesSaveError,
 		globalDispatch, onConfigSaveError, rt)
 	return stopConfig
-}
-
-func (f *Flashlight) applyProxyBench(cfg *config.Global) {
-	go func() {
-		// Wait a while for geolookup to happen before checking if we can turn on proxybench
-		geolookup.GetCountry(1 * time.Minute)
-		if f.featureEnabled(config.FeatureProxyBench) {
-			startProxyBenchOnce.Do(func() {
-				opts := &proxybench.Opts{
-					UpdateURL: "https://s3.amazonaws.com/lantern/proxybench.json",
-				}
-				proxybench.Start(opts, func(timing time.Duration, ctx map[string]interface{}) {})
-			})
-		} else {
-			log.Debug("proxybench disabled")
-		}
-	}()
 }
 
 func (f *Flashlight) applyOtel(cfg *config.Global) {

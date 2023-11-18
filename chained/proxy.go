@@ -180,8 +180,6 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 			log.Tracef("Cert configured for %s, will dial with tls", addr)
 			impl, err = newHTTPSImpl(configDir, name, addr, s, uc, coreDialer)
 		}
-	case "obfs4", "utpobfs4":
-		impl, err = newOBFS4Impl(name, addr, s, coreDialer)
 	case "lampshade":
 		impl, err = newLampshadeImpl(name, addr, s, reportDialCore)
 	case "quic_ietf":
