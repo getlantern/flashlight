@@ -134,6 +134,16 @@ func extractParams(s *config.ProxyConfig) (addr, transport, network string, err 
 		addr = s.MultiplexedAddr
 	}
 	transport = s.PluggableTransport
+	switch transport {
+	case "":
+		transport = "http"
+	case "http", "https", "utphttp", "utphttps":
+		transport = strings.TrimRight(transport, "s")
+		if s.Cert == "" {
+		} else {
+			transport = transport + "s"
+		}
+	}
 	network = "tcp"
 	switch transport {
 	case "quic_ietf":
@@ -151,9 +161,14 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 	var impl proxyImpl
 	var err error
 	switch transport {
-	case "", "https":
-		log.Tracef("Cert configured for %s, will dial with tls", addr)
-		impl, err = newHTTPSImpl(configDir, name, addr, s, uc, coreDialer)
+	case "", "http", "https":
+		if s.Cert == "" {
+			log.Errorf("No Cert configured for %s, will dial with plain tcp", addr)
+			impl = newHTTPImpl(addr, coreDialer)
+		} else {
+			log.Tracef("Cert configured for %s, will dial with tls", addr)
+			impl, err = newHTTPSImpl(configDir, name, addr, s, uc, coreDialer)
+		}
 	case "lampshade":
 		impl, err = newLampshadeImpl(name, addr, s, reportDialCore)
 	case "quic_ietf":
