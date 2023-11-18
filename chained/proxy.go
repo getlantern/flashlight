@@ -116,6 +116,7 @@ func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserC
 	p, err := newProxy(name, addr, transport, network, s, uc)
 	p.impl, err = createImpl(configDir, name, addr, transport, s, uc, p.reportDialCore)
 	if err != nil {
+		log.Debugf("Unable to create proxy implementation for %v: %v", name, err)
 		return nil, err
 	}
 	return p, nil
