@@ -6,8 +6,6 @@ toolchain go1.21.4
 
 replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220805074304-4a43a9ed4ec6
 
-replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.31.1-0.20230104154904-d810c964a217
-
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20221004112352-e7c04248adcb
 
 //replace github.com/getlantern/yinbi-server => ../yinbi-server
@@ -35,7 +33,6 @@ require (
 	github.com/OperatorFoundation/Starbridge-go/Starbridge/v3 v3.0.17
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/anacrolix/dht/v2 v2.20.0
-	github.com/anacrolix/go-libutp v1.3.1
 	github.com/andybalholm/brotli v1.0.5
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/dustin/go-humanize v1.0.1
@@ -141,6 +138,7 @@ require (
 	github.com/anacrolix/confluence v1.12.0 // indirect
 	github.com/anacrolix/envpprof v1.2.1 // indirect
 	github.com/anacrolix/generics v0.0.0-20230816103846-fe11fdc0e0e3 // indirect
+	github.com/anacrolix/go-libutp v1.3.1 // indirect
 	github.com/anacrolix/log v0.14.0 // indirect
 	github.com/anacrolix/missinggo v1.3.0 // indirect
 	github.com/anacrolix/missinggo/perf v1.0.0 // indirect
