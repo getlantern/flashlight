@@ -18,7 +18,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -42,11 +41,6 @@ const (
 
 	Etag        = "X-Lantern-Etag"
 	IfNoneMatch = "X-Lantern-If-None-Match"
-
-	obfs4SubDir = ".obfs4"
-
-	// The default (1024) eats up a good chunk of the race detector's cap of 8192 goroutines.
-	obfs4HandshakeConcurrency = 100
 
 	shadowsocksSecret   = "foobarbaz"
 	shadowsocksUpstream = "local"
@@ -74,11 +68,7 @@ type Helper struct {
 	t                             *testing.T
 	ConfigDir                     string
 	HTTPSProxyServerAddr          string
-	HTTPSUTPAddr                  string
-	OBFS4ProxyServerAddr          string
-	OBFS4UTPProxyServerAddr       string
 	LampshadeProxyServerAddr      string
-	LampshadeUTPProxyServerAddr   string
 	QUICIETFProxyServerAddr       string
 	WSSProxyServerAddr            string
 	ShadowsocksProxyServerAddr    string
@@ -116,11 +106,7 @@ func NewHelper(t *testing.T, basePort int) (*Helper, error) {
 		t:                             t,
 		ConfigDir:                     ConfigDir,
 		HTTPSProxyServerAddr:          nextListenAddr(),
-		HTTPSUTPAddr:                  nextListenAddr(),
-		OBFS4ProxyServerAddr:          nextListenAddr(),
-		OBFS4UTPProxyServerAddr:       nextListenAddr(),
 		LampshadeProxyServerAddr:      nextListenAddr(),
-		LampshadeUTPProxyServerAddr:   nextListenAddr(),
 		QUICIETFProxyServerAddr:       nextListenAddr(),
 		WSSProxyServerAddr:            nextListenAddr(),
 		ShadowsocksProxyServerAddr:    nextListenAddr(),
@@ -173,6 +159,10 @@ func NewHelper(t *testing.T, basePort int) (*Helper, error) {
 	return helper, nil
 }
 
+func (helper *Helper) SetProtocol(protocol string) {
+	helper.protocol.Store(protocol)
+}
+
 // Close closes the integration test helper and cleans up.
 // TODO: actually stop the proxy (not currently supported by API)
 func (helper *Helper) Close() {
@@ -222,19 +212,16 @@ func (helper *Helper) startProxyServer() error {
 	}
 
 	s1 := &hproxy.Proxy{
-		TestingLocal:              true,
-		HTTPAddr:                  helper.HTTPSProxyServerAddr,
-		HTTPMultiplexAddr:         helper.HTTPSSmuxProxyServerAddr,
-		Obfs4Addr:                 helper.OBFS4ProxyServerAddr,
-		Obfs4Dir:                  filepath.Join(helper.ConfigDir, obfs4SubDir),
-		Obfs4HandshakeConcurrency: obfs4HandshakeConcurrency,
-		LampshadeAddr:             helper.LampshadeProxyServerAddr,
-		QUICIETFAddr:              helper.QUICIETFProxyServerAddr,
-		WSSAddr:                   helper.WSSProxyServerAddr,
-		TLSMasqAddr:               helper.TLSMasqProxyServerAddr,
-		ShadowsocksAddr:           helper.ShadowsocksProxyServerAddr,
-		ShadowsocksMultiplexAddr:  helper.ShadowsocksmuxProxyServerAddr,
-		ShadowsocksSecret:         shadowsocksSecret,
+		TestingLocal:             true,
+		HTTPAddr:                 helper.HTTPSProxyServerAddr,
+		HTTPMultiplexAddr:        helper.HTTPSSmuxProxyServerAddr,
+		LampshadeAddr:            helper.LampshadeProxyServerAddr,
+		QUICIETFAddr:             helper.QUICIETFProxyServerAddr,
+		WSSAddr:                  helper.WSSProxyServerAddr,
+		TLSMasqAddr:              helper.TLSMasqProxyServerAddr,
+		ShadowsocksAddr:          helper.ShadowsocksProxyServerAddr,
+		ShadowsocksMultiplexAddr: helper.ShadowsocksmuxProxyServerAddr,
+		ShadowsocksSecret:        shadowsocksSecret,
 
 		TLSMasqSecret:     tlsmasqServerSecret,
 		TLSMasqOriginAddr: helper.tlsMasqOriginAddr,
@@ -413,89 +400,65 @@ func (helper *Helper) buildProxies(proto string) (map[string]*config.ProxyConfig
 	var srv config.ProxyConfig
 	err := yaml.Unmarshal(proxiesTemplate, &srv)
 	if err != nil {
-		return nil, fmt.Errorf("Could not unmarshal config %v", err)
+		return nil, fmt.Errorf("could not unmarshal config %v", err)
 	}
 
 	srv.AuthToken = Token
-	if proto == "obfs4" || proto == "utpobfs4" {
-		if proto == "utpobfs4" {
-			srv.Addr = helper.OBFS4UTPProxyServerAddr
-		} else {
-			srv.Addr = helper.OBFS4ProxyServerAddr
-		}
-		srv.PluggableTransport = proto
-		srv.PluggableTransportSettings = map[string]string{
-			"iat-mode": "0",
-		}
 
-		bridgelineFile, err2 := ioutil.ReadFile(filepath.Join(filepath.Join(helper.ConfigDir, obfs4SubDir), "obfs4_bridgeline.txt"))
-		if err2 != nil {
-			return nil, fmt.Errorf("Could not read obfs4_bridgeline.txt: %v", err2)
+	cert, err2 := ioutil.ReadFile(CertFile)
+	if err2 != nil {
+		return nil, fmt.Errorf("could not read cert %v", err2)
+	}
+	srv.Cert = string(cert)
+	if proto == "lampshade" {
+		srv.Addr = helper.LampshadeProxyServerAddr
+		srv.PluggableTransport = "lampshade"
+	} else if proto == "quic_ietf" {
+		srv.Addr = helper.QUICIETFProxyServerAddr
+		srv.PluggableTransport = "quic_ietf"
+	} else if proto == "wss" {
+		srv.Addr = helper.WSSProxyServerAddr
+		srv.PluggableTransport = "wss"
+		srv.PluggableTransportSettings = map[string]string{
+			"url":         fmt.Sprintf("https://%s", helper.WSSProxyServerAddr),
+			"multiplexed": "true",
 		}
-		obfs4extract := regexp.MustCompile(".+cert=([^\\s]+).+")
-		srv.Cert = string(obfs4extract.FindSubmatch(bridgelineFile)[1])
+	} else if proto == "tlsmasq" {
+		srv.Addr = helper.TLSMasqProxyServerAddr
+		srv.PluggableTransport = "tlsmasq"
+		srv.PluggableTransportSettings = map[string]string{
+			"tlsmasq_sni":           tlsmasqSNI,
+			"tlsmasq_suites":        tlsmasqSuites,
+			"tlsmasq_tlsminversion": tlsmasqMinVersion,
+			"tlsmasq_secret":        tlsmasqServerSecret,
+		}
+	} else if proto == "shadowsocks" {
+		srv.Addr = helper.ShadowsocksProxyServerAddr
+		srv.PluggableTransport = "shadowsocks"
+		srv.PluggableTransportSettings = map[string]string{
+			"shadowsocks_secret":   shadowsocksSecret,
+			"shadowsocks_upstream": shadowsocksUpstream,
+			"shadowsocks_cipher":   shadowsocksCipher,
+		}
+	} else if proto == "shadowsocks-mux" {
+		srv.Addr = "multiplexed"
+		srv.MultiplexedAddr = helper.ShadowsocksmuxProxyServerAddr
+		srv.PluggableTransport = "shadowsocks"
+		srv.PluggableTransportSettings = map[string]string{
+			"shadowsocks_secret":   shadowsocksSecret,
+			"shadowsocks_upstream": shadowsocksUpstream,
+			"shadowsocks_cipher":   shadowsocksCipher,
+		}
+	} else if proto == "https+smux" {
+		srv.Addr = "multiplexed"
+		srv.MultiplexedAddr = helper.HTTPSSmuxProxyServerAddr
+		// the default is smux, so srv.MultiplexedProtocol is unset
+	} else if proto == "https+psmux" {
+		srv.Addr = "multiplexed"
+		srv.MultiplexedAddr = helper.HTTPSPsmuxProxyServerAddr
+		srv.MultiplexedProtocol = "psmux"
 	} else {
-		cert, err2 := ioutil.ReadFile(CertFile)
-		if err2 != nil {
-			return nil, fmt.Errorf("Could not read cert %v", err2)
-		}
-		srv.Cert = string(cert)
-		if proto == "lampshade" {
-			srv.Addr = helper.LampshadeProxyServerAddr
-			srv.PluggableTransport = "lampshade"
-		} else if proto == "quic_ietf" {
-			srv.Addr = helper.QUICIETFProxyServerAddr
-			srv.PluggableTransport = "quic_ietf"
-		} else if proto == "wss" {
-			srv.Addr = helper.WSSProxyServerAddr
-			srv.PluggableTransport = "wss"
-			srv.PluggableTransportSettings = map[string]string{
-				"url":         fmt.Sprintf("https://%s", helper.WSSProxyServerAddr),
-				"multiplexed": "true",
-			}
-		} else if proto == "utphttps" {
-			srv.Addr = helper.HTTPSUTPAddr
-			srv.PluggableTransport = "utphttps"
-		} else if proto == "utplampshade" {
-			srv.Addr = helper.LampshadeUTPProxyServerAddr
-			srv.PluggableTransport = "utplampshade"
-		} else if proto == "tlsmasq" {
-			srv.Addr = helper.TLSMasqProxyServerAddr
-			srv.PluggableTransport = "tlsmasq"
-			srv.PluggableTransportSettings = map[string]string{
-				"tlsmasq_sni":           tlsmasqSNI,
-				"tlsmasq_suites":        tlsmasqSuites,
-				"tlsmasq_tlsminversion": tlsmasqMinVersion,
-				"tlsmasq_secret":        tlsmasqServerSecret,
-			}
-		} else if proto == "shadowsocks" {
-			srv.Addr = helper.ShadowsocksProxyServerAddr
-			srv.PluggableTransport = "shadowsocks"
-			srv.PluggableTransportSettings = map[string]string{
-				"shadowsocks_secret":   shadowsocksSecret,
-				"shadowsocks_upstream": shadowsocksUpstream,
-				"shadowsocks_cipher":   shadowsocksCipher,
-			}
-		} else if proto == "shadowsocks-mux" {
-			srv.Addr = "multiplexed"
-			srv.MultiplexedAddr = helper.ShadowsocksmuxProxyServerAddr
-			srv.PluggableTransport = "shadowsocks"
-			srv.PluggableTransportSettings = map[string]string{
-				"shadowsocks_secret":   shadowsocksSecret,
-				"shadowsocks_upstream": shadowsocksUpstream,
-				"shadowsocks_cipher":   shadowsocksCipher,
-			}
-		} else if proto == "https+smux" {
-			srv.Addr = "multiplexed"
-			srv.MultiplexedAddr = helper.HTTPSSmuxProxyServerAddr
-			// the default is smux, so srv.MultiplexedProtocol is unset
-		} else if proto == "https+psmux" {
-			srv.Addr = "multiplexed"
-			srv.MultiplexedAddr = helper.HTTPSPsmuxProxyServerAddr
-			srv.MultiplexedProtocol = "psmux"
-		} else {
-			srv.Addr = helper.HTTPSProxyServerAddr
-		}
+		srv.Addr = helper.HTTPSProxyServerAddr
 	}
 	return map[string]*config.ProxyConfig{"proxy-" + proto: &srv}, nil
 }

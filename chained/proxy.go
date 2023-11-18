@@ -134,19 +134,9 @@ func extractParams(s *config.ProxyConfig) (addr, transport, network string, err 
 		addr = s.MultiplexedAddr
 	}
 	transport = s.PluggableTransport
-	switch transport {
-	case "":
-		transport = "http"
-	case "http", "https", "utphttp", "utphttps":
-		transport = strings.TrimRight(transport, "s")
-		if s.Cert == "" {
-		} else {
-			transport = transport + "s"
-		}
-	}
 	network = "tcp"
 	switch transport {
-	case "utphttp", "utphttps", "utpobfs4", "quic_ietf":
+	case "quic_ietf":
 		network = "udp"
 	}
 	return
@@ -158,28 +148,12 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 			return netx.DialContext(ctx, "tcp", addr)
 		})
 	}
-	if strings.HasPrefix(transport, "utp") {
-		dialer, err := utpDialer()
-		if err != nil {
-			return nil, err
-		}
-		coreDialer = func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error) {
-			return reportDialCore(op, func() (net.Conn, error) {
-				return dialer(ctx, addr)
-			})
-		}
-	}
 	var impl proxyImpl
 	var err error
 	switch transport {
-	case "", "http", "https", "utphttp", "utphttps":
-		if s.Cert == "" {
-			log.Errorf("No Cert configured for %s, will dial with plain tcp", addr)
-			impl = newHTTPImpl(addr, coreDialer)
-		} else {
-			log.Tracef("Cert configured for %s, will dial with tls", addr)
-			impl, err = newHTTPSImpl(configDir, name, addr, s, uc, coreDialer)
-		}
+	case "", "https":
+		log.Tracef("Cert configured for %s, will dial with tls", addr)
+		impl, err = newHTTPSImpl(configDir, name, addr, s, uc, coreDialer)
 	case "lampshade":
 		impl, err = newLampshadeImpl(name, addr, s, reportDialCore)
 	case "quic_ietf":
@@ -203,13 +177,11 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 
 	allowPreconnecting := false
 	switch transport {
-	case "http", "https", "utphttp", "utphttps", "obfs4", "utpobfs4", "tlsmasq":
+	case "https", "tlsmasq":
 		allowPreconnecting = true
 	}
 
-	if s.MultiplexedAddr != "" || transport == "utphttp" ||
-		transport == "utphttps" || transport == "utpobfs4" ||
-		transport == "tlsmasq" || transport == "starbridge" {
+	if s.MultiplexedAddr != "" || transport == "tlsmasq" || transport == "starbridge" {
 		impl, err = multiplexed(impl, name, s)
 		if err != nil {
 			return nil, err
