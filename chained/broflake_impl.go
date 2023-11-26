@@ -46,7 +46,7 @@ func newBroflakeImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (p
 		return nil, err
 	}
 
-	ql.DialAndMaintainQUICConnection()
+	go ql.DialAndMaintainQUICConnection()
 
 	return &broflakeImpl{
 		reportDialCore: reportDialCore,

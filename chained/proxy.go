@@ -116,6 +116,7 @@ func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserC
 	p, err := newProxy(name, addr, transport, network, s, uc)
 	p.impl, err = createImpl(configDir, name, addr, transport, s, uc, p.reportDialCore)
 	if err != nil {
+		log.Debugf("Unable to create proxy implementation for %v: %v", name, err)
 		return nil, err
 	}
 	return p, nil
@@ -146,7 +147,7 @@ func extractParams(s *config.ProxyConfig) (addr, transport, network string, err 
 	}
 	network = "tcp"
 	switch transport {
-	case "utphttp", "utphttps", "utpobfs4", "quic_ietf":
+	case "quic_ietf":
 		network = "udp"
 	}
 	return
@@ -158,21 +159,10 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 			return netx.DialContext(ctx, "tcp", addr)
 		})
 	}
-	if strings.HasPrefix(transport, "utp") {
-		dialer, err := utpDialer()
-		if err != nil {
-			return nil, err
-		}
-		coreDialer = func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error) {
-			return reportDialCore(op, func() (net.Conn, error) {
-				return dialer(ctx, addr)
-			})
-		}
-	}
 	var impl proxyImpl
 	var err error
 	switch transport {
-	case "", "http", "https", "utphttp", "utphttps":
+	case "", "http", "https":
 		if s.Cert == "" {
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", addr)
 			impl = newHTTPImpl(addr, coreDialer)
@@ -180,8 +170,6 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 			log.Tracef("Cert configured for %s, will dial with tls", addr)
 			impl, err = newHTTPSImpl(configDir, name, addr, s, uc, coreDialer)
 		}
-	case "obfs4", "utpobfs4":
-		impl, err = newOBFS4Impl(name, addr, s, coreDialer)
 	case "lampshade":
 		impl, err = newLampshadeImpl(name, addr, s, reportDialCore)
 	case "quic_ietf":
@@ -205,13 +193,11 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 
 	allowPreconnecting := false
 	switch transport {
-	case "http", "https", "utphttp", "utphttps", "obfs4", "utpobfs4", "tlsmasq":
+	case "https", "tlsmasq":
 		allowPreconnecting = true
 	}
 
-	if s.MultiplexedAddr != "" || transport == "utphttp" ||
-		transport == "utphttps" || transport == "utpobfs4" ||
-		transport == "tlsmasq" || transport == "starbridge" {
+	if s.MultiplexedAddr != "" || transport == "tlsmasq" || transport == "starbridge" {
 		impl, err = multiplexed(impl, name, s)
 		if err != nil {
 			return nil, err
