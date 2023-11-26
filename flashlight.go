@@ -315,6 +315,7 @@ func New(
 		onConfigUpdate = func(_ *config.Global, src config.Source) {}
 	}
 	displayVersion(appVersion, revisionDate)
+	common.CompileTimeApplicationVersion = appVersion
 	deviceID := userConfig.GetDeviceID()
 	log.Debugf("You can query for this device's activity under device id: %v", deviceID)
 	fops.InitGlobalContext(appName, appVersion, revisionDate, deviceID, isPro, func() string { return geolookup.GetCountry(0) })

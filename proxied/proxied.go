@@ -54,6 +54,7 @@ func success(resp *http.Response) bool {
 
 // changeUserAgent prepends library version and OSARCH to the User-Agent header
 // of req to facilitate debugging on server side.
+// NOTE: This doesn't appear to be used anywhere on the server side.
 func changeUserAgent(req *http.Request) {
 	secondary := req.Header.Get("User-Agent")
 	ua := strings.TrimSpace(fmt.Sprintf("%s/%s (%s/%s) %s",

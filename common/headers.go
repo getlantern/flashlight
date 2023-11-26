@@ -13,6 +13,7 @@ import (
 const (
 	AppHeader                           = "X-Lantern-App"
 	VersionHeader                       = "X-Lantern-Version"
+	LibraryVersionHeader                = "X-Lantern-Library-Version"
 	DeviceIdHeader                      = "X-Lantern-Device-Id"
 	SupportedDataCaps                   = "X-Lantern-Supported-Data-Caps"
 	TimeZoneHeader                      = "X-Lantern-Time-Zone"
@@ -44,7 +45,8 @@ var (
 // AddCommonNonUserHeaders adds all common headers that are not
 // user or device specific.
 func AddCommonNonUserHeaders(uc UserConfig, req *http.Request) {
-	req.Header.Set(VersionHeader, LibraryVersion)
+	req.Header.Set(VersionHeader, CompileTimeApplicationVersion)
+	req.Header.Set(LibraryVersionHeader, LibraryVersion)
 	for k, v := range uc.GetInternalHeaders() {
 		if v != "" {
 			req.Header.Set(k, v)
