@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	borda "github.com/getlantern/borda/client"
 	"github.com/getlantern/jibber_jabber"
 	"github.com/getlantern/ops"
 	"github.com/getlantern/osversion"
@@ -35,10 +34,6 @@ const (
 	// NB - a beam is like a tracing ID and has nothing to do with the application named "beam"
 	CtxKeyBeam = contextKey("beam")
 	ctxKeyOp   = contextKey("op")
-)
-
-var (
-	beam_seq uint64
 )
 
 // Op decorates an ops.Op with convenience methods.
@@ -285,28 +280,28 @@ func (op *Op) CoreDialTime(elapsed time.Duration, err error) *Op {
 
 // SetMetric sets a named metric. Metrics will be reported as borda values
 // rather than dimensions.
-func (op *Op) SetMetric(name string, value borda.Val) *Op {
+func (op *Op) SetMetric(name string, value Val) *Op {
 	return op.Set(name, value)
 }
 
 func (op *Op) SetMetricSum(name string, value float64) *Op {
-	return op.Set(name, borda.Sum(value))
+	return op.Set(name, Sum(value))
 }
 
 func (op *Op) SetMetricMin(name string, value float64) *Op {
-	return op.Set(name, borda.Min(value))
+	return op.Set(name, Min(value))
 }
 
 func (op *Op) SetMetricMax(name string, value float64) *Op {
-	return op.Set(name, borda.Max(value))
+	return op.Set(name, Max(value))
 }
 
 func (op *Op) SetMetricAvg(name string, value float64) *Op {
-	return op.Set(name, borda.Avg(value))
+	return op.Set(name, Avg(value))
 }
 
 func (op *Op) SetMetricPercentile(name string, value float64) *Op {
-	return op.Set(name, borda.Percentile(value))
+	return op.Set(name, Percentile(value))
 }
 
 // InitGlobalContext configures global context info
