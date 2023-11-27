@@ -12,8 +12,8 @@ import (
 
 const (
 	AppHeader                           = "X-Lantern-App"
+	LibraryVersionHeader                = "X-Lantern-Version"
 	AppVersionHeader                    = "X-Lantern-App-Version"
-	LibraryVersionHeader                = "X-Lantern-Lib-Version"
 	DeviceIdHeader                      = "X-Lantern-Device-Id"
 	SupportedDataCapsHeader             = "X-Lantern-Supported-Data-Caps"
 	TimeZoneHeader                      = "X-Lantern-Time-Zone"
