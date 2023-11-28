@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	mrand "math/rand"
+
+	"github.com/shirou/gopsutil/host"
 )
 
 const (
@@ -24,6 +26,7 @@ const (
 	BBRBytesSentHeader                  = "X-BBR-Sent"
 	BBRAvailableBandwidthEstimateHeader = "X-BBR-ABE"
 	EtagHeader                          = "X-Lantern-Etag"
+	KernelArchHeader                    = "X-Lantern-KernelArch"
 	IfNoneMatchHeader                   = "X-Lantern-If-None-Match"
 	PingHeader                          = "X-Lantern-Ping"
 	PlatformHeader                      = "X-Lantern-Platform"
@@ -56,6 +59,7 @@ func AddCommonNonUserHeaders(uc UserConfig, req *http.Request) {
 
 	req.Header.Set(PlatformHeader, Platform)
 	req.Header.Set(AppHeader, uc.GetAppName())
+	req.Header.Set(KernelArchHeader, kernelArch())
 	req.Header.Add(SupportedDataCaps, "monthly")
 	req.Header.Add(SupportedDataCaps, "weekly")
 	req.Header.Add(SupportedDataCaps, "daily")
@@ -68,6 +72,16 @@ func AddCommonNonUserHeaders(uc UserConfig, req *http.Request) {
 	// We include a random length string here to make it harder for censors to identify lantern
 	// based on consistent packet lengths.
 	req.Header.Add(RandomNoiseHeader, randomizedString())
+}
+
+// kernelArch returns the kernel architecture, or "noarch-" and platform if it can't be determined.
+func kernelArch() string {
+	arch, err := host.KernelArch()
+	if err != nil {
+		log.Debugf("omitting kernel arch header because: %v", err)
+		return "noarch-" + Platform
+	}
+	return arch
 }
 
 // AddCommonHeadersWithOptions sets standard http headers on a request bound

@@ -44,6 +44,11 @@ func assertHeaders(t *testing.T, resHeaders http.Header, expHeaders map[string]s
 	}
 }
 
+func TestArch(t *testing.T) {
+	arch := kernelArch()
+	assert.NotEmpty(t, arch)
+}
+
 func TestCORSMiddleware(t *testing.T) {
 	uiAddr := "http://localhost:2000"
 	cases := []CorsSpec{
