@@ -9,7 +9,7 @@ import (
 
 	mrand "math/rand"
 
-	"github.com/shirou/gopsutil/host"
+	"github.com/shirou/gopsutil/v3/host"
 )
 
 const (
