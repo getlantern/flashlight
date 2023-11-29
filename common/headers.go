@@ -14,9 +14,10 @@ import (
 
 const (
 	AppHeader                           = "X-Lantern-App"
-	VersionHeader                       = "X-Lantern-Version"
+	LibraryVersionHeader                = "X-Lantern-Version"
+	AppVersionHeader                    = "X-Lantern-App-Version"
 	DeviceIdHeader                      = "X-Lantern-Device-Id"
-	SupportedDataCaps                   = "X-Lantern-Supported-Data-Caps"
+	SupportedDataCapsHeader             = "X-Lantern-Supported-Data-Caps"
 	TimeZoneHeader                      = "X-Lantern-Time-Zone"
 	TokenHeader                         = "X-Lantern-Auth-Token"
 	UserIdHeader                        = "X-Lantern-User-Id"
@@ -47,7 +48,8 @@ var (
 // AddCommonNonUserHeaders adds all common headers that are not
 // user or device specific.
 func AddCommonNonUserHeaders(uc UserConfig, req *http.Request) {
-	req.Header.Set(VersionHeader, LibraryVersion)
+	req.Header.Set(AppVersionHeader, CompileTimeApplicationVersion)
+	req.Header.Set(LibraryVersionHeader, LibraryVersion)
 	for k, v := range uc.GetInternalHeaders() {
 		if v != "" {
 			req.Header.Set(k, v)
@@ -59,10 +61,10 @@ func AddCommonNonUserHeaders(uc UserConfig, req *http.Request) {
 
 	req.Header.Set(PlatformHeader, Platform)
 	req.Header.Set(AppHeader, uc.GetAppName())
-	req.Header.Set(KernelArchHeader, kernelArch())
-	req.Header.Add(SupportedDataCaps, "monthly")
-	req.Header.Add(SupportedDataCaps, "weekly")
-	req.Header.Add(SupportedDataCaps, "daily")
+  req.Header.Set(KernelArchHeader, kernelArch())
+	req.Header.Add(SupportedDataCapsHeader, "monthly")
+	req.Header.Add(SupportedDataCapsHeader, "weekly")
+	req.Header.Add(SupportedDataCapsHeader, "daily")
 	tz, err := uc.GetTimeZone()
 	if err != nil {
 		log.Debugf("omitting timezone header because: %v", err)
