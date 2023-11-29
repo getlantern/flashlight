@@ -1,5 +1,5 @@
 //
-// Copied from lantern-cloud at c6be7460be2f0c7e110db0360ef573a048b54c2f. DO NOT EDIT.
+// Copied from lantern-cloud at a2ebb22f252f078477ab4bd0458a661089f82fea. DO NOT EDIT.
 //
 
 syntax = "proto3";
@@ -10,11 +10,11 @@ option go_package = "github.com/getlantern/lantern-cloud/cmd/api/apipb";
 // copied from there).
 message LegacyConnectConfig {
     message ProxyLocation {
-        string city = 1;
-        string country = 2;
-        string country_code = 3;
-        float latitude = 4;
-        float longitude = 5;
+      string city = 1;
+      string country = 2;
+      string country_code = 3;
+      float latitude = 4;
+      float longitude = 5;
     }
 
     string name = 1;
@@ -46,7 +46,12 @@ message LegacyConnectConfig {
 
 message BypassRequest {
     LegacyConnectConfig config = 1;
-}
+
+    // Version is a version specifier denoting the version of bypass used on the client. It is not
+    // necessary to update this value on every change to bypass; this should only be updated when the
+    // backend needs to make decisions unique to a new version of bypass.
+    int32 version = 2;
+  }
 
 message BypassResponse {
     string random = 1;
