@@ -64,6 +64,25 @@ type LinkCodeResponse struct {
 	ExpireAt int64
 }
 
+type Plan struct {
+	Id                     string           `json:"id,omitempty"`
+	Description            string           `json:"description,omitempty"`
+	BestValue              bool             `json:"bestValue,omitempty"`
+	UsdPrice               int64            `json:"usdPrice,omitempty"`
+	Price                  map[string]int64 `json:"price,omitempty"`
+	ExpectedMonthlyPrice   map[string]int64 `json:"expectedMonthlyPrice,omitempty"`
+	TotalCostBilledOneTime string           `json:"totalCostBilledOneTime,omitempty"`
+	OneMonthCost           string           `json:"oneMonthCost,omitempty"`
+	TotalCost              string           `json:"totalCost,omitempty"`
+	FormattedBonus         string           `json:"formattedBonus,omitempty"`
+	RenewalText            string           `json:"renewalText,omitempty"`
+}
+
+type PlansResponse struct {
+	BaseResponse
+	Plans []*Plan `json:"plans,omitempty"`
+}
+
 type Client struct {
 	httpClient *http.Client
 	preparePro func(*http.Request, common.UserConfig)
@@ -111,6 +130,40 @@ func (c *Client) UserData(user common.UserConfig) (*UserDataResponse, error) {
 		return nil, err
 	}
 
+	return resp, nil
+}
+
+// Plans returns a list of Pro plans
+func (c *Client) Plans(user common.UserConfig) (*PlansResponse, error) {
+	query := url.Values{
+		"locale": {user.GetLanguage()},
+	}
+
+	resp := &PlansResponse{}
+	if err := c.execute(user, http.MethodGet, "plans", query, resp); err != nil {
+		log.Errorf("Failed to fetch plans: %v", err)
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+type paymentMethodsResponse struct {
+	*PaymentMethodsResponse `json:",inline"`
+	BaseResponse
+}
+
+// PaymentMethods returns a list of payment options available to the given user
+func (c *Client) PaymentMethods(user common.UserConfig) (*paymentMethodsResponse, error) {
+	query := url.Values{
+		"locale": {user.GetLanguage()},
+	}
+
+	resp := &paymentMethodsResponse{PaymentMethodsResponse: &PaymentMethodsResponse{}}
+	if err := c.execute(user, http.MethodGet, "plans-v3", query, resp); err != nil {
+		log.Errorf("Failed to fetch payment methods: %v", err)
+		return nil, err
+	}
 	return resp, nil
 }
 

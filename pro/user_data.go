@@ -116,6 +116,11 @@ func NewUser(uc common.UserConfig) (*client.User, error) {
 	return newUserWithClient(uc, httpClient)
 }
 
+// NewClient creates a new pro Client
+func NewClient() *client.Client {
+	return client.NewClient(httpClient, PrepareProRequestWithOptions)
+}
+
 // newUserWithClient creates a new user via Pro API, and updates local cache
 // using the specified http client.
 func newUserWithClient(uc common.UserConfig, hc *http.Client) (*client.User, error) {
