@@ -61,7 +61,7 @@ func AddCommonNonUserHeaders(uc UserConfig, req *http.Request) {
 
 	req.Header.Set(PlatformHeader, Platform)
 	req.Header.Set(AppHeader, uc.GetAppName())
-  req.Header.Set(KernelArchHeader, kernelArch())
+	req.Header.Set(KernelArchHeader, kernelArch())
 	req.Header.Add(SupportedDataCapsHeader, "monthly")
 	req.Header.Add(SupportedDataCapsHeader, "weekly")
 	req.Header.Add(SupportedDataCapsHeader, "daily")
@@ -81,7 +81,11 @@ func kernelArch() string {
 	arch, err := host.KernelArch()
 	if err != nil {
 		log.Debugf("omitting kernel arch header because: %v", err)
-		return "noarch-" + Platform
+		return "noarch-" + err.Error()
+	}
+	if arch == "" {
+		log.Debugf("omitting kernel arch header because it is empty")
+		return "emptyarch-" + Platform
 	}
 	return arch
 }
