@@ -138,10 +138,16 @@ featuresenabled:
     - label: cn-shortcut
       geocountries: cn
       versionconstraints: "!7.4.0"
-  #  - label: ir-desktop-shortcut
-  #    geocountries: ir
-  #    platforms: windows,darwin,linux
+  # - label: ir-desktop-shortcut
+  #   geocountries: ir
+  #   platforms: windows,darwin,linux
   # probeproxies is not enabled anywhere
+  probeproxies:
+    - label: probeir
+      geocountries: ir
+    - label: probeuscn
+      geocountries: us,cn
+
   ######## End of New-Style configuration for detour, shortcut and probeproxies ########
 
   ######## Old-Style configuration for detour, shortcut and probeproxies. These are enabled by default and have to be disabled in the config. ########
@@ -160,17 +166,7 @@ featuresenabled:
       geocountries: ir
     - label: shortcut-broken
       geocountries: uz,ru
-    - label: china-experiment
-      geocountries: cn
-      versionconstraints: "=7.4.0"
-  noprobeproxies:
-    - label: stealth
-      geocountries: ir
-    - label: stealth
-      geocountries: us,cn
-      platforms: windows,darwin,linux
-      userfloor: 0.5
-      userceil: 1.0
+  # noprobeproxies:
   ######## End of Old-Style configuration for detour, shortcut and probeproxies ########
 
   proxybench:
