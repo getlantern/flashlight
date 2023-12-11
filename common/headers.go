@@ -81,7 +81,7 @@ func kernelArch() string {
 	arch, err := host.KernelArch()
 	if err != nil {
 		log.Debugf("omitting kernel arch header because: %v", err)
-		return "noarch-" + err.Error()
+		return "noarch-" + Platform + "-" + err.Error()
 	}
 	if arch == "" {
 		log.Debugf("omitting kernel arch header because it is empty")
