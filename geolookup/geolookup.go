@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"net/http"
 	"os"
@@ -37,8 +36,9 @@ const (
 )
 
 type GeoInfo struct {
-	IP   string
-	City *geo.City
+	IP       string
+	City     *geo.City
+	FromDisk bool
 }
 
 func init() {
@@ -108,7 +108,9 @@ func EnablePersistence(geoFile string) {
 		if err == nil {
 			log.Debugf("Initializing geolocation info from %v", persistToFile)
 			dec := json.NewDecoder(file)
-			gi := &GeoInfo{}
+			gi := &GeoInfo{
+				FromDisk: true,
+			}
 			decodeErr := dec.Decode(gi)
 			if decodeErr != nil {
 				log.Errorf(
@@ -152,7 +154,7 @@ func init() {
 func run() {
 	for range refreshRequest {
 		gi := lookup()
-		if gi.IP == GetIP(0) {
+		if gi.IP == GetIP(0) && !gi.FromDisk {
 			log.Debug("public IP did not change - not notifying watchers")
 			continue
 		}
@@ -180,7 +182,7 @@ func setGeoInfo(gi *GeoInfo, persist bool) {
 			)
 			return
 		}
-		writeErr := ioutil.WriteFile(persistToFile, b, 0644)
+		writeErr := os.WriteFile(persistToFile, b, 0644)
 		if writeErr != nil {
 			log.Errorf(
 				"Error persisting geolocation info to %v: %v",
@@ -227,7 +229,11 @@ func doLookup() (*GeoInfo, error) {
 		log.Errorf("Could not lookup IP %v", err)
 		return nil, op.FailIf(err)
 	}
-	return &GeoInfo{ip, city}, nil
+	return &GeoInfo{
+			IP:       ip,
+			City:     city,
+			FromDisk: false},
+		nil
 }
 
 func SetDefaultRoundTripper() {
