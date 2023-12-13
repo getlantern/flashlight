@@ -153,15 +153,36 @@ func init() {
 
 func run() {
 	for range refreshRequest {
-		gi := lookup()
-		if gi.IP == GetIP(0) && !gi.FromDisk {
-			log.Debug("public IP did not change - not notifying watchers")
+		geoInfo := lookup()
+
+		// Check if the IP has changed and if the old IP is simply cached from
+		// disk. If it is cached, we should still notify anyone looking for
+		// a new IP because they won't have been notified of the IP on disk,
+		// as that is loaded very soon on startup.
+		if !isNew(geoInfo) {
+			log.Debug("public IP from network did not change - not notifying watchers")
 			continue
 		}
+		log.Debug("Setting new geolocation info")
 		mx.Lock()
-		setGeoInfo(gi, true)
+		setGeoInfo(geoInfo, true)
 		mx.Unlock()
 	}
+}
+
+func isNew(newGeoInfo *GeoInfo) bool {
+	if newGeoInfo == nil {
+		return false
+	}
+	oldGeoInfo, err := GetGeoInfo(0)
+	if err != nil {
+		return true
+	}
+	if oldGeoInfo == nil {
+		return true
+	}
+	return oldGeoInfo.IP != newGeoInfo.IP ||
+		oldGeoInfo.FromDisk != newGeoInfo.FromDisk
 }
 
 func setGeoInfo(gi *GeoInfo, persist bool) {
