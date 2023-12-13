@@ -79,21 +79,20 @@ type ProxyListener interface {
 }
 
 type Flashlight struct {
-	configDir         string
-	flagsAsMap        map[string]interface{}
-	userConfig        common.UserConfig
-	isPro             func() bool
-	mxGlobal          sync.RWMutex
-	global            *config.Global
-	onProxiesUpdate   func([]balancer.Dialer, config.Source)
-	onConfigUpdate    func(*config.Global, config.Source)
-	onBordaConfigured chan bool
-	autoReport        func() bool
-	client            *client.Client
-	op                *fops.Op
-	errorHandler      func(HandledErrorType, error)
-	mxProxyListeners  sync.RWMutex
-	proxyListeners    []func(map[string]*commonconfig.ProxyConfig, config.Source)
+	configDir        string
+	flagsAsMap       map[string]interface{}
+	userConfig       common.UserConfig
+	isPro            func() bool
+	mxGlobal         sync.RWMutex
+	global           *config.Global
+	onProxiesUpdate  func([]balancer.Dialer, config.Source)
+	onConfigUpdate   func(*config.Global, config.Source)
+	autoReport       func() bool
+	client           *client.Client
+	op               *fops.Op
+	errorHandler     func(HandledErrorType, error)
+	mxProxyListeners sync.RWMutex
+	proxyListeners   []func(map[string]*commonconfig.ProxyConfig, config.Source)
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
@@ -104,12 +103,6 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
 	f.applyClientConfig(cfg)
 	f.applyOtel(cfg)
-	select {
-	case f.onBordaConfigured <- true:
-		// okay
-	default:
-		// ignore
-	}
 	f.onConfigUpdate(cfg, src)
 	f.reconfigureGoogleAds()
 }
@@ -209,6 +202,9 @@ func (f *Flashlight) calcFeature(global *config.Global, country, applicationVers
 	if global == nil {
 		log.Error("No global configuration!")
 		return enabled
+	}
+	if blockingRelated {
+		log.Debugf("Checking blocking related feature %v with country set to %v", feature, country)
 	}
 	return global.FeatureEnabled(feature,
 		common.Platform,
@@ -322,16 +318,15 @@ func New(
 	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 
 	f := &Flashlight{
-		configDir:         configDir,
-		flagsAsMap:        flagsAsMap,
-		userConfig:        userConfig,
-		isPro:             isPro,
-		global:            nil,
-		onProxiesUpdate:   onProxiesUpdate,
-		onConfigUpdate:    onConfigUpdate,
-		onBordaConfigured: make(chan bool, 1),
-		autoReport:        autoReport,
-		op:                fops.Begin("client_started"),
+		configDir:       configDir,
+		flagsAsMap:      flagsAsMap,
+		userConfig:      userConfig,
+		isPro:           isPro,
+		global:          nil,
+		onProxiesUpdate: onProxiesUpdate,
+		onConfigUpdate:  onConfigUpdate,
+		autoReport:      autoReport,
+		op:              fops.Begin("client_started"),
 		errorHandler: func(t HandledErrorType, err error) {
 			log.Errorf("%v: %v", t, err)
 		},
@@ -500,13 +495,6 @@ func (f *Flashlight) RunClientListeners(httpProxyAddr, socksProxyAddr string,
 		log.Debug("Started client HTTP proxy")
 		proxied.SetProxyAddr(f.client.Addr)
 		email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
-
-		// wait for borda to be configured before proceeding
-		select {
-		case <-f.onBordaConfigured:
-		case <-time.After(5 * time.Second):
-			log.Debug("borda didn't get configured quickly, proceed anyway")
-		}
 
 		ops.Go(func() {
 			// wait for geo info before reporting so that we know the client ip and
