@@ -8,10 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/getlantern/eventual/v2"
 	"github.com/getlantern/fronted"
+	"github.com/stretchr/testify/require"
 )
 
 const initialInfo = `
@@ -195,4 +194,30 @@ func TestFronted(t *testing.T) {
 		string(b),
 		"persisted geolocation information should have changed",
 	)
+}
+
+func TestIsNew(t *testing.T) {
+	type args struct {
+		newGeoInfo *GeoInfo
+		oldGeoInfo *GeoInfo
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{"nil new should be not new", args{nil, &GeoInfo{FromDisk: true}}, false},
+		{"nil existing should be new", args{&GeoInfo{}, nil}, true},
+		{"old from disk should be new", args{&GeoInfo{IP: "1.1.1.1", FromDisk: false}, &GeoInfo{IP: "1.1.1.1", FromDisk: true}}, true},
+		{"old not from disk should not be new", args{&GeoInfo{IP: "1.1.1.1", FromDisk: false}, &GeoInfo{IP: "1.1.1.1", FromDisk: false}}, false},
+		{"new IP should be new", args{&GeoInfo{IP: "1.1.1.2", FromDisk: false}, &GeoInfo{IP: "1.1.1.1", FromDisk: false}}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			currentGeoInfo.Set(tt.args.oldGeoInfo)
+			if got := isNew(tt.args.newGeoInfo); got != tt.want {
+				t.Errorf("isNew() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
