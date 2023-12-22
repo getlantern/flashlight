@@ -114,6 +114,45 @@ func (c *Client) UserData(user common.UserConfig) (*UserDataResponse, error) {
 	return resp, nil
 }
 
+type plansResponse struct {
+	BaseResponse
+	*PlansResponse `json:",inline"`
+}
+
+// Plans returns a list of Pro plans
+func (c *Client) Plans(user common.UserConfig) (*plansResponse, error) {
+	query := url.Values{
+		"locale": {user.GetLanguage()},
+	}
+
+	resp := &plansResponse{PlansResponse: &PlansResponse{}}
+	if err := c.execute(user, http.MethodGet, "plans", query, resp); err != nil {
+		log.Errorf("Failed to fetch plans: %v", err)
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+type paymentMethodsResponse struct {
+	*PaymentMethodsResponse `json:",inline"`
+	BaseResponse
+}
+
+// PaymentMethods returns a list of payment options available to the given user
+func (c *Client) PaymentMethods(user common.UserConfig) (*paymentMethodsResponse, error) {
+	query := url.Values{
+		"locale": {user.GetLanguage()},
+	}
+
+	resp := &paymentMethodsResponse{PaymentMethodsResponse: &PaymentMethodsResponse{}}
+	if err := c.execute(user, http.MethodGet, "plans-v3", query, resp); err != nil {
+		log.Errorf("Failed to fetch payment methods: %v", err)
+		return nil, err
+	}
+	return resp, nil
+}
+
 // RecoverProAccount attempts to recover an existing Pro account linked to this email address and device ID
 func (c *Client) RecoverProAccount(user common.UserConfig, emailAddress string) (*LinkResponse, error) {
 	query := url.Values{

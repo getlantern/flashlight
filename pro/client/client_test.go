@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -16,7 +17,7 @@ func generateDeviceId() string {
 }
 
 func generateUser() *common.UserConfigData {
-	return common.NewUserConfigData(common.DefaultAppName, generateDeviceId(), 0, "", nil, "en-US")
+	return common.NewUserConfigData(common.DefaultAppName, generateDeviceId(), 35, "aasfge", nil, "en-US")
 }
 
 func init() {
@@ -58,10 +59,24 @@ func TestGetUserData(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.True(t, res.User.ID != 0)
 		assert.Equal(t, res.User.ID, user.UserID)
-		// This is not set currently, this could be enabled if status is returned again ...
-		// See https://github.com/getlantern/pro-server-neu/commit/cda2f9565bd1fde16334e57e00e2b5572423880c
-		// assert.Equal(t, "ok", res.Status)
 	}
+}
+
+func TestGetPlans(t *testing.T) {
+	user := generateUser()
+	res, err := createClient().UserCreate(user)
+	if !assert.NoError(t, err) {
+		return
+	}
+	user.UserID = res.User.ID
+	user.Token = res.User.Token
+
+	plansRes, err := createClient().Plans(user)
+	if !assert.NoError(t, err) {
+		return
+	}
+	fmt.Println(plansRes.PlansResponse.Plans)
+	assert.True(t, len(plansRes.PlansResponse.Plans) > 0)
 }
 
 func TestUserDataMissing(t *testing.T) {
