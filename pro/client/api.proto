@@ -59,3 +59,16 @@ message PurchaseRequest {
 message PurchaseResponse {
     bool success = 1;
 }
+
+message PaymentRedirectRequest {
+    string plan = 1;
+    string provider = 2;
+    string currency = 3;
+    string email = 4;
+    string deviceName = 5;
+    string countryCode = 6;
+}
+
+message PaymentRedirectResponse {
+    string redirect = 1;
+}

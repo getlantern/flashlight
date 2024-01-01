@@ -134,6 +134,35 @@ func (c *Client) Plans(user common.UserConfig) (*plansResponse, error) {
 	return resp, nil
 }
 
+type paymentRedirectResponse struct {
+	BaseResponse
+	*PaymentRedirectResponse `json:",inline"`
+}
+
+// PaymentRedirect is called when the continue to payment button is clicked and returns a redirect URL
+func (c *Client) PaymentRedirect(user common.UserConfig, req *PaymentRedirectRequest) (*paymentRedirectResponse, error) {
+	query := url.Values{
+		"countryCode": {"US"},
+		"currency": {"usd"},
+		"deviceName": {"Windows 10"},
+		"email":  {"azar138186@gmail.com"},
+		"plan": {"1y-usd-10"},
+		"provider": {req.Provider},
+		//"locale": {user.GetLanguage()},
+	}
+
+	b, _ := json.Marshal(user)
+	log.Debugf("User config is %v", string(b))
+
+	resp := &paymentRedirectResponse{PaymentRedirectResponse: &PaymentRedirectResponse{}}
+	if err := c.execute(user, http.MethodGet, "payment-redirect", query, resp); err != nil {
+		log.Errorf("Failed to fetch payment redirect: %v", err)
+		return nil, err
+	}
+	log.Debugf("Redirect is %s", resp.Redirect)
+	return resp, nil
+}
+
 type paymentMethodsResponse struct {
 	*PaymentMethodsResponse `json:",inline"`
 	BaseResponse

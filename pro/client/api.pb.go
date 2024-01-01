@@ -591,6 +591,140 @@ func (x *PurchaseResponse) GetSuccess() bool {
 	return false
 }
 
+type PaymentRedirectRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Plan        string `protobuf:"bytes,1,opt,name=plan,proto3" json:"plan,omitempty"`
+	Provider    string `protobuf:"bytes,2,opt,name=provider,proto3" json:"provider,omitempty"`
+	Currency    string `protobuf:"bytes,3,opt,name=currency,proto3" json:"currency,omitempty"`
+	Email       string `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`
+	DeviceName  string `protobuf:"bytes,5,opt,name=deviceName,proto3" json:"deviceName,omitempty"`
+	CountryCode string `protobuf:"bytes,6,opt,name=countryCode,proto3" json:"countryCode,omitempty"`
+}
+
+func (x *PaymentRedirectRequest) Reset() {
+	*x = PaymentRedirectRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_pro_client_api_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PaymentRedirectRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PaymentRedirectRequest) ProtoMessage() {}
+
+func (x *PaymentRedirectRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pro_client_api_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PaymentRedirectRequest.ProtoReflect.Descriptor instead.
+func (*PaymentRedirectRequest) Descriptor() ([]byte, []int) {
+	return file_pro_client_api_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *PaymentRedirectRequest) GetPlan() string {
+	if x != nil {
+		return x.Plan
+	}
+	return ""
+}
+
+func (x *PaymentRedirectRequest) GetProvider() string {
+	if x != nil {
+		return x.Provider
+	}
+	return ""
+}
+
+func (x *PaymentRedirectRequest) GetCurrency() string {
+	if x != nil {
+		return x.Currency
+	}
+	return ""
+}
+
+func (x *PaymentRedirectRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *PaymentRedirectRequest) GetDeviceName() string {
+	if x != nil {
+		return x.DeviceName
+	}
+	return ""
+}
+
+func (x *PaymentRedirectRequest) GetCountryCode() string {
+	if x != nil {
+		return x.CountryCode
+	}
+	return ""
+}
+
+type PaymentRedirectResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Redirect string `protobuf:"bytes,1,opt,name=redirect,proto3" json:"redirect,omitempty"`
+}
+
+func (x *PaymentRedirectResponse) Reset() {
+	*x = PaymentRedirectResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_pro_client_api_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PaymentRedirectResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PaymentRedirectResponse) ProtoMessage() {}
+
+func (x *PaymentRedirectResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pro_client_api_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PaymentRedirectResponse.ProtoReflect.Descriptor instead.
+func (*PaymentRedirectResponse) Descriptor() ([]byte, []int) {
+	return file_pro_client_api_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *PaymentRedirectResponse) GetRedirect() string {
+	if x != nil {
+		return x.Redirect
+	}
+	return ""
+}
+
 var File_pro_client_api_proto protoreflect.FileDescriptor
 
 var file_pro_client_api_proto_rawDesc = []byte{
@@ -690,14 +824,29 @@ var file_pro_client_api_proto_rawDesc = []byte{
 	0x72, 0x43, 0x6f, 0x64, 0x65, 0x22, 0x2c, 0x0a, 0x10, 0x50, 0x75, 0x72, 0x63, 0x68, 0x61, 0x73,
 	0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x73, 0x75, 0x63,
 	0x63, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x73, 0x75, 0x63, 0x63,
-	0x65, 0x73, 0x73, 0x2a, 0x39, 0x0a, 0x08, 0x50, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x12,
-	0x12, 0x0a, 0x0e, 0x50, 0x52, 0x4f, 0x56, 0x49, 0x44, 0x45, 0x52, 0x5f, 0x55, 0x4e, 0x53, 0x45,
-	0x54, 0x10, 0x00, 0x12, 0x0a, 0x0a, 0x06, 0x53, 0x54, 0x52, 0x49, 0x50, 0x45, 0x10, 0x01, 0x12,
-	0x0d, 0x0a, 0x09, 0x46, 0x52, 0x45, 0x45, 0x4b, 0x41, 0x53, 0x53, 0x41, 0x10, 0x02, 0x42, 0x2d,
-	0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x65, 0x74,
-	0x6c, 0x61, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x2f, 0x66, 0x6c, 0x61, 0x73, 0x68, 0x6c, 0x69, 0x67,
-	0x68, 0x74, 0x2f, 0x70, 0x72, 0x6f, 0x2f, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x73, 0x73, 0x22, 0xbc, 0x01, 0x0a, 0x16, 0x50, 0x61, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x52,
+	0x65, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12,
+	0x0a, 0x04, 0x70, 0x6c, 0x61, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x70, 0x6c,
+	0x61, 0x6e, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x12, 0x1a,
+	0x0a, 0x08, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x63, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x08, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x63, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x65, 0x6d,
+	0x61, 0x69, 0x6c, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x65, 0x6d, 0x61, 0x69, 0x6c,
+	0x12, 0x1e, 0x0a, 0x0a, 0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x4e, 0x61, 0x6d, 0x65, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x4e, 0x61, 0x6d, 0x65,
+	0x12, 0x20, 0x0a, 0x0b, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x72, 0x79, 0x43, 0x6f, 0x64, 0x65, 0x18,
+	0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x72, 0x79, 0x43, 0x6f,
+	0x64, 0x65, 0x22, 0x35, 0x0a, 0x17, 0x50, 0x61, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x64,
+	0x69, 0x72, 0x65, 0x63, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1a, 0x0a,
+	0x08, 0x72, 0x65, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x08, 0x72, 0x65, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x2a, 0x39, 0x0a, 0x08, 0x50, 0x72, 0x6f,
+	0x76, 0x69, 0x64, 0x65, 0x72, 0x12, 0x12, 0x0a, 0x0e, 0x50, 0x52, 0x4f, 0x56, 0x49, 0x44, 0x45,
+	0x52, 0x5f, 0x55, 0x4e, 0x53, 0x45, 0x54, 0x10, 0x00, 0x12, 0x0a, 0x0a, 0x06, 0x53, 0x54, 0x52,
+	0x49, 0x50, 0x45, 0x10, 0x01, 0x12, 0x0d, 0x0a, 0x09, 0x46, 0x52, 0x45, 0x45, 0x4b, 0x41, 0x53,
+	0x53, 0x41, 0x10, 0x02, 0x42, 0x2d, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
+	0x6f, 0x6d, 0x2f, 0x67, 0x65, 0x74, 0x6c, 0x61, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x2f, 0x66, 0x6c,
+	0x61, 0x73, 0x68, 0x6c, 0x69, 0x67, 0x68, 0x74, 0x2f, 0x70, 0x72, 0x6f, 0x2f, 0x63, 0x6c, 0x69,
+	0x65, 0x6e, 0x74, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -713,31 +862,33 @@ func file_pro_client_api_proto_rawDescGZIP() []byte {
 }
 
 var file_pro_client_api_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_pro_client_api_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_pro_client_api_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_pro_client_api_proto_goTypes = []interface{}{
-	(Provider)(0),                  // 0: Provider
-	(*Plan)(nil),                   // 1: Plan
-	(*PlansResponse)(nil),          // 2: PlansResponse
-	(*PaymentProvider)(nil),        // 3: PaymentProvider
-	(*PaymentMethod)(nil),          // 4: PaymentMethod
-	(*PaymentMethodsResponse)(nil), // 5: PaymentMethodsResponse
-	(*PurchaseRequest)(nil),        // 6: PurchaseRequest
-	(*PurchaseResponse)(nil),       // 7: PurchaseResponse
-	nil,                            // 8: Plan.PriceEntry
-	nil,                            // 9: Plan.ExpectedMonthlyPriceEntry
-	nil,                            // 10: PaymentProvider.DataEntry
-	nil,                            // 11: PaymentMethodsResponse.ProvidersEntry
-	(*structpb.ListValue)(nil),     // 12: google.protobuf.ListValue
+	(Provider)(0),                   // 0: Provider
+	(*Plan)(nil),                    // 1: Plan
+	(*PlansResponse)(nil),           // 2: PlansResponse
+	(*PaymentProvider)(nil),         // 3: PaymentProvider
+	(*PaymentMethod)(nil),           // 4: PaymentMethod
+	(*PaymentMethodsResponse)(nil),  // 5: PaymentMethodsResponse
+	(*PurchaseRequest)(nil),         // 6: PurchaseRequest
+	(*PurchaseResponse)(nil),        // 7: PurchaseResponse
+	(*PaymentRedirectRequest)(nil),  // 8: PaymentRedirectRequest
+	(*PaymentRedirectResponse)(nil), // 9: PaymentRedirectResponse
+	nil,                             // 10: Plan.PriceEntry
+	nil,                             // 11: Plan.ExpectedMonthlyPriceEntry
+	nil,                             // 12: PaymentProvider.DataEntry
+	nil,                             // 13: PaymentMethodsResponse.ProvidersEntry
+	(*structpb.ListValue)(nil),      // 14: google.protobuf.ListValue
 }
 var file_pro_client_api_proto_depIdxs = []int32{
-	8,  // 0: Plan.price:type_name -> Plan.PriceEntry
-	9,  // 1: Plan.expectedMonthlyPrice:type_name -> Plan.ExpectedMonthlyPriceEntry
+	10, // 0: Plan.price:type_name -> Plan.PriceEntry
+	11, // 1: Plan.expectedMonthlyPrice:type_name -> Plan.ExpectedMonthlyPriceEntry
 	1,  // 2: PlansResponse.plans:type_name -> Plan
-	10, // 3: PaymentProvider.data:type_name -> PaymentProvider.DataEntry
+	12, // 3: PaymentProvider.data:type_name -> PaymentProvider.DataEntry
 	3,  // 4: PaymentMethod.providers:type_name -> PaymentProvider
-	11, // 5: PaymentMethodsResponse.providers:type_name -> PaymentMethodsResponse.ProvidersEntry
+	13, // 5: PaymentMethodsResponse.providers:type_name -> PaymentMethodsResponse.ProvidersEntry
 	0,  // 6: PurchaseRequest.provider:type_name -> Provider
-	12, // 7: PaymentMethodsResponse.ProvidersEntry.value:type_name -> google.protobuf.ListValue
+	14, // 7: PaymentMethodsResponse.ProvidersEntry.value:type_name -> google.protobuf.ListValue
 	8,  // [8:8] is the sub-list for method output_type
 	8,  // [8:8] is the sub-list for method input_type
 	8,  // [8:8] is the sub-list for extension type_name
@@ -835,6 +986,30 @@ func file_pro_client_api_proto_init() {
 				return nil
 			}
 		}
+		file_pro_client_api_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PaymentRedirectRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_pro_client_api_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PaymentRedirectResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -842,7 +1017,7 @@ func file_pro_client_api_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_pro_client_api_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   11,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
