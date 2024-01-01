@@ -142,13 +142,11 @@ type paymentRedirectResponse struct {
 // PaymentRedirect is called when the continue to payment button is clicked and returns a redirect URL
 func (c *Client) PaymentRedirect(user common.UserConfig, req *PaymentRedirectRequest) (*paymentRedirectResponse, error) {
 	query := url.Values{
-		"countryCode": {"US"},
-		"currency": {"usd"},
-		"deviceName": {"Windows 10"},
-		"email":  {"azar138186@gmail.com"},
-		"plan": {"1y-usd-10"},
+		"countryCode": {req.CountryCode},
+		"deviceName": {req.DeviceName},
+		"email":  {req.Email},
+		"plan": {req.Plan},
 		"provider": {req.Provider},
-		//"locale": {user.GetLanguage()},
 	}
 
 	b, _ := json.Marshal(user)
