@@ -96,7 +96,7 @@ type Flashlight struct {
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
-	log.Debugf("Got global config from %v", src)
+	log.Debugf("Got global config from %v: %#v", src, cfg)
 	f.mxGlobal.Lock()
 	f.global = cfg
 	f.mxGlobal.Unlock()
@@ -118,6 +118,7 @@ func (f *Flashlight) reconfigureGoogleAds() {
 
 // EnabledFeatures gets all features enabled based on current conditions
 func (f *Flashlight) EnabledFeatures() map[string]bool {
+	log.Debug("EnabledFeatures::Getting enabled features")
 	featuresEnabled := make(map[string]bool)
 	f.mxGlobal.RLock()
 	if f.global == nil {
@@ -127,10 +128,14 @@ func (f *Flashlight) EnabledFeatures() map[string]bool {
 	global := f.global
 	f.mxGlobal.RUnlock()
 	country := geolookup.GetCountry(0)
+	log.Debugf("EnabledFeatures::Country is %v", country)
 	for feature := range global.FeaturesEnabled {
-		if f.calcFeature(global, country, "0.0.1", feature) {
+		log.Debugf("EnabledFeatures::calculating feature %v", feature)
+		enabled := f.calcFeature(global, country, "0.0.1", feature)
+		if enabled {
 			featuresEnabled[feature] = true
 		}
+		log.Debugf("EnabledFeatures::feature %v is %v", feature, enabled)
 	}
 	return featuresEnabled
 }
@@ -196,7 +201,7 @@ func (f *Flashlight) calcFeature(global *config.Global, country, applicationVers
 		if enabled {
 			enabledText = "enabled"
 		}
-		log.Debugf("Blocking related feature %v %v because geolookup has not yet finished", feature, enabledText)
+		log.Debugf("Features::Blocking related feature %v %v because geolookup has not yet finished", feature, enabledText)
 		return enabled
 	}
 	if global == nil {
@@ -204,7 +209,7 @@ func (f *Flashlight) calcFeature(global *config.Global, country, applicationVers
 		return enabled
 	}
 	if blockingRelated {
-		log.Debugf("Checking blocking related feature %v with country set to %v", feature, country)
+		log.Debugf("Features::Checking blocking related feature %v with country set to %v", feature, country)
 	}
 	return global.FeatureEnabled(feature,
 		common.Platform,
@@ -396,7 +401,10 @@ func New(
 	cl, err := client.NewClient(
 		f.configDir,
 		disconnected,
-		func() bool { return f.featureEnabled(config.FeatureProbeProxies) },
+		func() bool {
+			log.Debugf("Features::checking if probe proxies are enabled")
+			return f.featureEnabled(config.FeatureProbeProxies)
+		},
 		proxyAll,
 		useShortcut,
 		shortcut.Allow,

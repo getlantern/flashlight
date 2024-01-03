@@ -81,7 +81,7 @@ func NewGlobal() *Global {
 func (cfg *Global) FeatureEnabled(feature, platform, appName, version string, userID int64, isPro bool,
 	geoCountry string) bool {
 	enabled, _ := cfg.FeatureEnabledWithLabel(feature, platform, appName, version, userID, isPro, geoCountry)
-	log.Tracef("Feature %v enabled for user %v in country %v?: %v", feature, userID, geoCountry, enabled)
+	log.Debugf("Features::Feature %v enabled for user %v in country %v?: %v", feature, userID, geoCountry, enabled)
 	return enabled
 }
 
@@ -91,6 +91,7 @@ func (cfg *Global) FeatureEnabledWithLabel(feature, platform, appName, version s
 	geoCountry string) (enabled bool, label string) {
 	groups, exists := cfg.FeaturesEnabled[feature]
 	if !exists {
+		log.Debugf("Features::Feature %v not enabled", feature)
 		return false, ""
 	}
 	for _, g := range groups {
@@ -98,6 +99,7 @@ func (cfg *Global) FeatureEnabledWithLabel(feature, platform, appName, version s
 			return true, g.Label
 		}
 	}
+	log.Debugf("Features::Feature %v returning false", feature)
 	return false, ""
 }
 
