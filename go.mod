@@ -1,8 +1,6 @@
 module github.com/getlantern/flashlight/v7
 
-go 1.21
-
-toolchain go1.21.4
+go 1.20
 
 replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220805074304-4a43a9ed4ec6
 
@@ -10,7 +8,7 @@ replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-2022
 
 //replace github.com/getlantern/yinbi-server => ../yinbi-server
 
-// replace github.com/getlantern/mandrill => /home/soltzen/dev/soltzen/mandrill
+//replace github.com/getlantern/mandrill => /home/soltzen/dev/soltzen/mandrill
 
 //replace github.com/getlantern/auth-server => ../auth-server
 
