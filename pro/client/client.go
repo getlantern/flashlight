@@ -352,6 +352,8 @@ func (c *Client) execute(user common.UserConfig, method, path string, query url.
 		return err
 	}
 
+	req.Header.Set("Referer", "http://localhost:37457/")
+
 	query["locale"] = []string{user.GetLanguage()}
 	req.URL.RawQuery = query.Encode()
 
