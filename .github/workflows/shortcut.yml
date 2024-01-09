@@ -15,6 +15,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v4
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
@@ -22,7 +23,6 @@ jobs:
     - name: Granting private modules access
       run: |
           git config --global url."https://${{ secrets.CI_PRIVATE_REPOS_GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-    - uses: actions/checkout@v4
     - run: |
         cd ./shortcut
         ./genlist.sh
