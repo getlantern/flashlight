@@ -25,7 +25,7 @@ message PaymentProvider {
     map<string, string> data = 2;
 }
 
-message PaymentMethod {
+message ProPaymentMethod {
     string method = 1;
     repeated PaymentProvider providers = 2;
 }
