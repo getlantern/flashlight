@@ -25,7 +25,8 @@ const (
 
 	// UpdateServerURL is the URL of the update server. Different applications
 	// hit the server on separate paths "/update/<AppName>".
-	UpdateServerURL = "https://update.getlantern.org/"
+	// UpdateServerURL = "https://update.getlantern.org/"
+	UpdateServerURL = "http://127.0.0.1:9999"
 )
 
 var (
