@@ -2,7 +2,7 @@ syntax = "proto3";
 import "google/protobuf/struct.proto";
 option go_package = "github.com/getlantern/flashlight/pro/client";
 
-message Plan {
+message ProPlan {
   string id = 1;
   string description = 2;
   bool bestValue = 3;
@@ -17,17 +17,17 @@ message Plan {
 }
 
 message PlansResponse {
-    repeated Plan plans = 1;
+    repeated ProPlan plans = 1;
 }
 
-message PaymentProvider {
+message ProPaymentProvider {
     string name = 1;
     map<string, string> data = 2;
 }
 
 message ProPaymentMethod {
     string method = 1;
-    repeated PaymentProvider providers = 2;
+    repeated ProPaymentProvider providers = 2;
 }
 
 message PaymentMethodsResponse {
