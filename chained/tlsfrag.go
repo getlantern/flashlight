@@ -1,7 +1,9 @@
 package chained
 
 import (
+	"bytes"
 	"net"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -32,20 +34,41 @@ func makeFragFunc(pc *config.ProxyConfig) (tlsfrag.FragFunc, bool) {
 	}
 
 	// fragStr should be of the form <frag func> or <frag func>:<func config>.
-	// Example: "index:3"
+	// Example: "index:3" or "regex:foo.*" or "indexOf:test"
 	funcType, cfg, hasCfg := strings.Cut(fragStr, ":")
+	if !hasCfg {
+		log.Error("tlsfrag: missing config specifier")
+		return nil, false
+	}
 	switch funcType {
 	case "index":
-		if !hasCfg {
-			log.Error("tlsfrag: missing index specifier")
-			return nil, false
-		}
-
 		index, err := strconv.Atoi(cfg)
 		if err != nil {
 			log.Errorf("tlsfrag: bad index specifier: %v", err)
+			return nil, false
 		}
 		return func(_ []byte) int { return index }, true
+	case "regex":
+		regex, err := regexp.Compile(cfg)
+		if err != nil {
+			log.Errorf("tlsfrag: bad regex specifier: %v", err)
+			return nil, false
+		}
+		return func(b []byte) int {
+			loc := regex.FindIndex(b)
+			if loc == nil {
+				return 0
+			}
+			return loc[0]
+		}, true
+	case "indexOf":
+		return func(b []byte) int {
+			index := bytes.Index(b, []byte(cfg))
+			if index == -1 {
+				return 0
+			}
+			return index
+		}, true
 
 	default:
 		log.Errorf("tlsfrag: unrecognized func type '%s'", funcType)
