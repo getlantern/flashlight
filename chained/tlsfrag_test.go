@@ -20,7 +20,7 @@ func TestTLSFragConn(t *testing.T) {
 	resultType := reflect.TypeOf(result)
 	require.Equal(t, "*net.TCPConn", resultType.String())
 
-	pc.PluggableTransportSettings["tlsfrag_split_index"] = "1"
+	pc.PluggableTransportSettings["tlsfrag"] = "index:1"
 	result = tlsFragConn(conn, pc)
 	resultType = reflect.TypeOf(result)
 	require.NotEqual(t, "*net.TCPConn", resultType.String())
