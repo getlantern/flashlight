@@ -30,6 +30,7 @@ type tlsMasqImpl struct {
 	addr                    string
 	cfg                     tlsmasq.DialerConfig
 	tlsClientHelloSplitting bool
+	proxyConfig             *config.ProxyConfig
 }
 
 func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
@@ -103,7 +104,12 @@ func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc com
 		},
 	}
 
-	return &tlsMasqImpl{reportDialCore: reportDialCore, addr: addr, cfg: cfg, tlsClientHelloSplitting: pc.TLSClientHelloSplitting}, nil
+	return &tlsMasqImpl{reportDialCore: reportDialCore,
+		addr:                    addr,
+		cfg:                     cfg,
+		tlsClientHelloSplitting: pc.TLSClientHelloSplitting,
+		proxyConfig:             pc,
+	}, nil
 }
 
 func decodeUint16(s string) (uint16, error) {
@@ -143,6 +149,8 @@ func (impl *tlsMasqImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, 
 		tcpConn = hellosplitter.Wrap(tcpConn, splitClientHello)
 	}
 	conn := tlsmasq.Client(tcpConn, impl.cfg)
+
+	conn = tlsFragConn(tcpConn, impl.proxyConfig)
 
 	// We execute the handshake as part of the dial. Otherwise, preconnecting wouldn't do
 	// much for us.

@@ -183,8 +183,6 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 		impl, err = newStarbridgeImpl(name, addr, s, reportDialCore)
 	case "broflake":
 		impl, err = newBroflakeImpl(s, reportDialCore)
-	case "tlsfrag":
-		impl, err = newTLSFrag(addr, s)
 	default:
 		err = errors.New("Unknown transport: %v", transport).With("addr", addr).With("plugabble-transport", transport)
 	}
