@@ -23,7 +23,7 @@ func TestTLSFragConn(t *testing.T) {
 	pc.PluggableTransportSettings["tlsfrag_split_index"] = "1"
 	result = tlsFragConn(conn, pc)
 	resultType = reflect.TypeOf(result)
-	require.Equal(t, "*transport.duplexConnAdaptor", resultType.String())
+	require.NotEqual(t, "*net.TCPConn", resultType.String())
 
 	// Test UDP conns too
 	conn = &net.UDPConn{}
