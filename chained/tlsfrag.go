@@ -32,6 +32,7 @@ func makeFragFunc(pc *config.ProxyConfig) (tlsfrag.FragFunc, bool) {
 	}
 
 	// fragStr should be of the form <frag func> or <frag func>:<func config>.
+	// Example: "index:3"
 	funcType, cfg, hasCfg := strings.Cut(fragStr, ":")
 	switch funcType {
 	case "index":
