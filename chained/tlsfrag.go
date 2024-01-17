@@ -11,7 +11,7 @@ import (
 func tlsFragConn(conn net.Conn, pc *config.ProxyConfig) net.Conn {
 	splitHello, index := splitHelloInfo(pc)
 	if splitHello {
-		if conn, ok := conn.(*net.TCPConn); !ok {
+		if _, ok := conn.(*net.TCPConn); !ok {
 			return conn
 		}
 		tlsFragConn, err := tlsfrag.WrapConnFunc(conn.(*net.TCPConn), func(record []byte) (n int) {
