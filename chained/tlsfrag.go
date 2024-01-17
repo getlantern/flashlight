@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/Jigsaw-Code/outline-sdk/transport"
+	"github.com/Jigsaw-Code/outline-sdk/transport/tls"
 	"github.com/Jigsaw-Code/outline-sdk/transport/tlsfrag"
 
 	"github.com/getlantern/common/config"
@@ -32,7 +33,12 @@ func newTLSFrag(addr string, proxyConfig *config.ProxyConfig) (proxyImpl, error)
 		return nil, fmt.Errorf("invalid tlsfrag option: %v. It should be a number", lenStr)
 	}
 
-	dialer, err := tlsfrag.NewFixedLenStreamDialer(&transport.TCPStreamDialer{}, fixedLen)
+	tlsDialer, err := tls.NewStreamDialer(&transport.TCPStreamDialer{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create tls dialer: %v", err)
+	}
+
+	dialer, err := tlsfrag.NewFixedLenStreamDialer(tlsDialer, fixedLen)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create tlsfrag dialer: %v", err)
 	}
