@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Jigsaw-Code/outline-sdk/transport"
 	"github.com/Jigsaw-Code/outline-sdk/transport/tlsfrag"
 
 	"github.com/getlantern/common/config"
@@ -15,10 +16,7 @@ import (
 func tlsFragConn(conn net.Conn, pc *config.ProxyConfig) net.Conn {
 	fragFunc, ok := makeFragFunc(pc)
 	if ok {
-		if _, ok := conn.(*net.TCPConn); !ok {
-			return conn
-		}
-		tlsFragConn, err := tlsfrag.WrapConnFunc(conn.(*net.TCPConn), fragFunc)
+		tlsFragConn, err := tlsfrag.WrapConnFunc(&streamConn{conn}, fragFunc)
 		if err != nil {
 			return conn
 		}
@@ -75,3 +73,17 @@ func makeFragFunc(pc *config.ProxyConfig) (tlsfrag.FragFunc, bool) {
 		return nil, false
 	}
 }
+
+type streamConn struct {
+	net.Conn
+}
+
+func (sc *streamConn) CloseRead() error {
+	return sc.Close()
+}
+
+func (sc *streamConn) CloseWrite() error {
+	return sc.Close()
+}
+
+var _ transport.StreamConn = (*streamConn)(nil)
