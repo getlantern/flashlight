@@ -1,50 +1,40 @@
 package chained
 
 import (
-	"context"
-	"fmt"
 	"net"
 	"strconv"
 
-	"github.com/Jigsaw-Code/outline-sdk/transport"
-	"github.com/Jigsaw-Code/outline-sdk/transport/tls"
 	"github.com/Jigsaw-Code/outline-sdk/transport/tlsfrag"
-
 	"github.com/getlantern/common/config"
-	"github.com/getlantern/flashlight/v7/ops"
 )
 
-type tlsfragImpl struct {
-	nopCloser
-	addr   string
-	dialer transport.StreamDialer
+func tlsFragConn(conn net.Conn, pc *config.ProxyConfig) net.Conn {
+	splitHello, index := splitHelloInfo(pc)
+	if splitHello {
+		if conn, ok := conn.(*net.TCPConn); !ok {
+			return conn
+		}
+		tlsFragConn, err := tlsfrag.WrapConnFunc(conn.(*net.TCPConn), func(record []byte) (n int) {
+			return index
+		})
+		if err != nil {
+			return conn
+		}
+		return tlsFragConn
+	}
+	return conn
 }
 
-var _ proxyImpl = (*tlsfragImpl)(nil)
-
-func newTLSFrag(addr string, proxyConfig *config.ProxyConfig) (proxyImpl, error) {
-	lenStr, ok := proxyConfig.PluggableTransportSettings["splitLen"]
+func splitHelloInfo(pc *config.ProxyConfig) (bool, int) {
+	indexStr, ok := pc.PluggableTransportSettings["tlsfrag_split_index"]
 	if !ok {
-		return nil, fmt.Errorf("splitLen option is missing")
+		return false, 0
 	}
 
-	fixedLen, err := strconv.Atoi(lenStr)
+	index, err := strconv.Atoi(indexStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid tlsfrag option: %v. It should be a number", lenStr)
+		log.Errorf("invalid tlsfrag option: %v. It should be a number", indexStr)
+		return false, 0
 	}
-
-	tlsDialer, err := tls.NewStreamDialer(&transport.TCPStreamDialer{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create tls dialer: %v", err)
-	}
-
-	dialer, err := tlsfrag.NewFixedLenStreamDialer(tlsDialer, fixedLen)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create tlsfrag dialer: %v", err)
-	}
-	return &tlsfragImpl{addr: addr, dialer: dialer}, nil
-}
-
-func (impl *tlsfragImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
-	return impl.dialer.Dial(ctx, impl.addr)
+	return true, index
 }
