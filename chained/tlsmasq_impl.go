@@ -148,9 +148,8 @@ func (impl *tlsMasqImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, 
 	if impl.tlsClientHelloSplitting {
 		tcpConn = hellosplitter.Wrap(tcpConn, splitClientHello)
 	}
+	tcpConn = tlsFragConn(tcpConn, impl.proxyConfig)
 	conn := tlsmasq.Client(tcpConn, impl.cfg)
-
-	conn = tlsFragConn(tcpConn, impl.proxyConfig)
 
 	// We execute the handshake as part of the dial. Otherwise, preconnecting wouldn't do
 	// much for us.
