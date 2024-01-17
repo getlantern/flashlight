@@ -25,6 +25,21 @@ func TestTLSFragConn(t *testing.T) {
 	resultType = reflect.TypeOf(result)
 	require.NotEqual(t, "*net.TCPConn", resultType.String())
 
+	pc.PluggableTransportSettings["tlsfrag"] = "regex:1"
+	result = tlsFragConn(conn, pc)
+	resultType = reflect.TypeOf(result)
+	require.NotEqual(t, "*net.TCPConn", resultType.String())
+
+	pc.PluggableTransportSettings["tlsfrag"] = "incorrect:1"
+	result = tlsFragConn(conn, pc)
+	resultType = reflect.TypeOf(result)
+	require.Equal(t, "*net.TCPConn", resultType.String())
+
+	pc.PluggableTransportSettings["tlsfrag"] = "regex:"
+	result = tlsFragConn(conn, pc)
+	resultType = reflect.TypeOf(result)
+	require.Equal(t, "*net.TCPConn", resultType.String())
+
 	// Test UDP conns too
 	conn = &net.UDPConn{}
 	pc = &config.ProxyConfig{

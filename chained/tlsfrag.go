@@ -38,6 +38,10 @@ func makeFragFunc(pc *config.ProxyConfig) (tlsfrag.FragFunc, bool) {
 		log.Error("tlsfrag: missing config specifier")
 		return nil, false
 	}
+	if cfg == "" {
+		log.Error("tlsfrag: empty config specifier")
+		return nil, false
+	}
 	switch funcType {
 	case "index":
 		index, err := strconv.Atoi(cfg)
