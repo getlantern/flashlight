@@ -1,6 +1,7 @@
 package chained
 
 import (
+	"encoding/hex"
 	"net"
 	"reflect"
 	"sync/atomic"
@@ -13,6 +14,12 @@ import (
 
 // this is a hello packet with localhost encoded in the SNI field
 var hello = []byte{22, 3, 1, 0, 135, 1, 0, 0, 131, 3, 3, 48, 53, 69, 203, 240, 58, 77, 56, 159, 42, 153, 251, 106, 51, 38, 204, 75, 107, 173, 175, 235, 47, 66, 133, 56, 177, 148, 100, 25, 71, 144, 144, 0, 0, 26, 192, 47, 192, 43, 192, 17, 192, 7, 192, 19, 192, 9, 192, 20, 192, 10, 0, 5, 0, 47, 0, 53, 192, 18, 0, 10, 1, 0, 0, 64, 0, 0, 0, 14, 0, 12, 0, 0, 9, 108, 111, 99, 97, 108, 104, 111, 115, 116, 0, 5, 0, 5, 1, 0, 0, 0, 0, 0, 10, 0, 8, 0, 6, 0, 23, 0, 24, 0, 25, 0, 11, 0, 2, 1, 0, 0, 13, 0, 10, 0, 8, 4, 1, 4, 3, 2, 1, 2, 3, 255, 1, 0, 1, 0}
+
+func TestHexEncoding(t *testing.T) {
+	byteLen := len(hello)
+	hex := hex.EncodeToString(hello)
+	require.Equal(t, byteLen*2, len(hex))
+}
 
 func TestTLSFragConn(t *testing.T) {
 	var conn net.Conn = &net.TCPConn{}

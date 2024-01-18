@@ -1,6 +1,7 @@
 package chained
 
 import (
+	"encoding/hex"
 	"net"
 	"regexp"
 	"strconv"
@@ -50,18 +51,18 @@ func makeFragFunc(pc *config.ProxyConfig) (tlsfrag.FragFunc, bool) {
 		}
 		return func(_ []byte) int { return index }, true
 	case "regex":
-		regex, err := regexp.Compile(cfg)
+		regex, err := regexp.Compile(hex.EncodeToString([]byte(cfg)))
 		if err != nil {
 			log.Errorf("tlsfrag: bad regex specifier: %v", err)
 			return nil, false
 		}
 		return func(b []byte) int {
-			loc := regex.FindIndex(b)
+			loc := regex.FindIndex([]byte(hex.EncodeToString(b)))
 			if loc == nil {
 				return 0
 			}
-			log.Debugf("tlsfrag: regex match at index: %v", loc[0])
-			return loc[0]
+			log.Debugf("tlsfrag: regex match at index: %v", loc[0]/2)
+			return loc[0] / 2
 		}, true
 
 	default:
