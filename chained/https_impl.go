@@ -25,10 +25,12 @@ type httpsImpl struct {
 	tlsClientHelloSplitting bool
 	requiresSessionTickets  bool
 	proxyConfig             *config.ProxyConfig
+	connWrappers            []connWrapper
 	sync.Mutex
 }
 
-func newHTTPSImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig, dialCore coreDialer) (proxyImpl, error) {
+func newHTTPSImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig, dialCore coreDialer,
+	connWrappers ...connWrapper) (proxyImpl, error) {
 	const timeout = 5 * time.Second
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -50,6 +52,7 @@ func newHTTPSImpl(configDir, name, addr string, pc *config.ProxyConfig, uc commo
 		tlsClientHelloSplitting: pc.TLSClientHelloSplitting,
 		requiresSessionTickets:  pc.TLSClientSessionState != "",
 		proxyConfig:             pc,
+		connWrappers:            connWrappers,
 	}, nil
 }
 
@@ -85,7 +88,9 @@ func (impl *httpsImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, er
 			if impl.tlsClientHelloSplitting {
 				tcpConn = hellosplitter.Wrap(tcpConn, splitClientHello)
 			}
-			tcpConn = tlsFragConn(tcpConn, impl.proxyConfig)
+			for _, wrapper := range impl.connWrappers {
+				tcpConn = wrapper(tcpConn, impl.proxyConfig)
+			}
 
 			return tcpConn, err
 		},

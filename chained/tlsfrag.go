@@ -12,7 +12,7 @@ import (
 	"github.com/getlantern/common/config"
 )
 
-func tlsFragConn(conn net.Conn, pc *config.ProxyConfig) net.Conn {
+func wrapTLSFrag(conn net.Conn, pc *config.ProxyConfig) net.Conn {
 	fragFunc, ok := makeFragFunc(pc)
 	if ok {
 		tlsFragConn, err := tlsfrag.WrapConnFunc(&streamConn{conn}, fragFunc)

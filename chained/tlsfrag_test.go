@@ -21,27 +21,27 @@ func TestTLSFragConn(t *testing.T) {
 		PluggableTransportSettings: map[string]string{},
 	}
 
-	fragConn := tlsFragConn(conn, pc)
+	fragConn := wrapTLSFrag(conn, pc)
 	resultType := reflect.TypeOf(fragConn)
 	require.Equal(t, "*net.TCPConn", resultType.String())
 
 	pc.PluggableTransportSettings["tlsfrag"] = "index:1"
-	fragConn = tlsFragConn(conn, pc)
+	fragConn = wrapTLSFrag(conn, pc)
 	resultType = reflect.TypeOf(fragConn)
 	require.NotEqual(t, "*net.TCPConn", resultType.String())
 
 	pc.PluggableTransportSettings["tlsfrag"] = "regex:1"
-	fragConn = tlsFragConn(conn, pc)
+	fragConn = wrapTLSFrag(conn, pc)
 	resultType = reflect.TypeOf(fragConn)
 	require.NotEqual(t, "*net.TCPConn", resultType.String())
 
 	pc.PluggableTransportSettings["tlsfrag"] = "incorrect:1"
-	fragConn = tlsFragConn(conn, pc)
+	fragConn = wrapTLSFrag(conn, pc)
 	resultType = reflect.TypeOf(fragConn)
 	require.Equal(t, "*net.TCPConn", resultType.String())
 
 	pc.PluggableTransportSettings["tlsfrag"] = "regex:"
-	fragConn = tlsFragConn(conn, pc)
+	fragConn = wrapTLSFrag(conn, pc)
 	resultType = reflect.TypeOf(fragConn)
 	require.Equal(t, "*net.TCPConn", resultType.String())
 
@@ -51,12 +51,12 @@ func TestTLSFragConn(t *testing.T) {
 		PluggableTransportSettings: map[string]string{},
 	}
 
-	fragConn = tlsFragConn(conn, pc)
+	fragConn = wrapTLSFrag(conn, pc)
 	resultType = reflect.TypeOf(fragConn)
 	require.Equal(t, "*net.UDPConn", resultType.String())
 
 	pc.PluggableTransportSettings["tlsfrag"] = "1"
-	fragConn = tlsFragConn(conn, pc)
+	fragConn = wrapTLSFrag(conn, pc)
 	resultType = reflect.TypeOf(fragConn)
 	require.Equal(t, "*net.UDPConn", resultType.String())
 
@@ -80,7 +80,7 @@ func TestTLSFragConn(t *testing.T) {
 	require.Equal(t, len(hello), int(serverRead.Load()))
 	serverRead.Store(0)
 
-	fragConn = tlsFragConn(client, pc)
+	fragConn = wrapTLSFrag(client, pc)
 	_, err = fragConn.Write(hello)
 	require.NoError(t, err)
 	time.Sleep(200 * time.Millisecond)

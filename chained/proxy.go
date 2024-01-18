@@ -54,6 +54,8 @@ var (
 	createKeyLogWriterOnce sync.Once
 )
 
+type connWrapper func(net.Conn, *config.ProxyConfig) net.Conn
+
 // proxyImpl is the interface to hide the details of client side logic for
 // different types of pluggable transports.
 type proxyImpl interface {
@@ -152,7 +154,8 @@ func extractParams(s *config.ProxyConfig) (addr, transport, network string, err 
 	return
 }
 
-func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, uc common.UserConfig,
+	reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	coreDialer := func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error) {
 		return reportDialCore(op, func() (net.Conn, error) {
 			return netx.DialContext(ctx, "tcp", addr)
@@ -167,7 +170,8 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 			impl = newHTTPImpl(addr, coreDialer)
 		} else {
 			log.Tracef("Cert configured for %s, will dial with tls", addr)
-			impl, err = newHTTPSImpl(configDir, name, addr, s, uc, coreDialer)
+			impl, err = newHTTPSImpl(configDir, name, addr, s, uc, coreDialer,
+				wrapTLSFrag)
 		}
 	case "lampshade":
 		impl, err = newLampshadeImpl(name, addr, s, reportDialCore)
@@ -178,7 +182,8 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 	case "wss":
 		impl, err = newWSSImpl(addr, s, reportDialCore)
 	case "tlsmasq":
-		impl, err = newTLSMasqImpl(configDir, name, addr, s, uc, reportDialCore)
+		impl, err = newTLSMasqImpl(configDir, name, addr, s, uc, reportDialCore,
+			wrapTLSFrag)
 	case "starbridge":
 		impl, err = newStarbridgeImpl(name, addr, s, reportDialCore)
 	case "broflake":
