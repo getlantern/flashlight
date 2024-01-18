@@ -92,6 +92,15 @@ func TestTLSFragConn(t *testing.T) {
 	require.NoError(t, err)
 	time.Sleep(200 * time.Millisecond)
 	require.True(t, int(serverRead.Load()) > len(hello))
+	serverRead.Store(0)
+
+	pc.PluggableTransportSettings["tlsfrag"] = "rand:10,80"
+	fragConn = wrapTLSFrag(client, pc)
+	_, err = fragConn.Write(hello)
+	require.NoError(t, err)
+	time.Sleep(200 * time.Millisecond)
+	require.True(t, int(serverRead.Load()) > len(hello))
+
 	client.Close()
 	server.Close()
 }
