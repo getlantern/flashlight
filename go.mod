@@ -26,6 +26,7 @@ replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336
 replace github.com/Jigsaw-Code/outline-ss-server => github.com/getlantern/lantern-shadowsocks v1.3.6-0.20230301223223-150b18ac427d
 
 require (
+	github.com/Jigsaw-Code/outline-sdk v0.0.11
 	github.com/Jigsaw-Code/outline-ss-server v1.4.0
 	github.com/OperatorFoundation/Replicant-go/Replicant/v3 v3.0.23
 	github.com/OperatorFoundation/Starbridge-go/Starbridge/v3 v3.0.17
@@ -45,7 +46,6 @@ require (
 	github.com/getlantern/dnsgrab v0.0.0-20211216020425-5d5e155a01a8
 	github.com/getlantern/domains v0.0.0-20220311111720-94f59a903271
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
-	github.com/getlantern/enhttp v0.0.0-20210901195634-6f89d45ee033
 	github.com/getlantern/errors v1.0.3
 	github.com/getlantern/event v0.0.0-20210901195647-a7e3145142e6
 	github.com/getlantern/eventual v1.0.0
@@ -175,6 +175,7 @@ require (
 	github.com/getlantern/dhtup v0.0.0-20230218063409-258bc7570a27 // indirect
 	github.com/getlantern/dns v0.0.0-20210120185712-8d005533efa0 // indirect
 	github.com/getlantern/elevate v0.0.0-20220903142053-479ab992b264 // indirect
+	github.com/getlantern/enhttp v0.0.0-20210901195634-6f89d45ee033 // indirect
 	github.com/getlantern/fdcount v0.0.0-20210503151800-5decd65b3731 // indirect
 	github.com/getlantern/filepersist v0.0.0-20210901195658-ed29a1cb0b7c // indirect
 	github.com/getlantern/framed v0.0.0-20190601192238-ceb6431eeede // indirect
@@ -289,7 +290,7 @@ require (
 	go.uber.org/mock v0.3.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/crypto v0.16.0 // indirect
+	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
