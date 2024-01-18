@@ -31,9 +31,11 @@ type tlsMasqImpl struct {
 	cfg                     tlsmasq.DialerConfig
 	tlsClientHelloSplitting bool
 	proxyConfig             *config.ProxyConfig
+	connWrappers            []connWrapper
 }
 
-func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig,
+	reportDialCore reportDialCoreFn, connWrappers ...connWrapper) (proxyImpl, error) {
 	const timeout = 5 * time.Second
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -148,7 +150,9 @@ func (impl *tlsMasqImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, 
 	if impl.tlsClientHelloSplitting {
 		tcpConn = hellosplitter.Wrap(tcpConn, splitClientHello)
 	}
-	tcpConn = tlsFragConn(tcpConn, impl.proxyConfig)
+	for _, wrapper := range impl.connWrappers {
+		tcpConn = wrapper(tcpConn, impl.proxyConfig)
+	}
 	conn := tlsmasq.Client(tcpConn, impl.cfg)
 
 	// We execute the handshake as part of the dial. Otherwise, preconnecting wouldn't do
