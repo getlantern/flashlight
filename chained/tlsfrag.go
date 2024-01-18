@@ -1,7 +1,6 @@
 package chained
 
 import (
-	"bytes"
 	"net"
 	"regexp"
 	"strconv"
@@ -32,7 +31,7 @@ func makeFragFunc(pc *config.ProxyConfig) (tlsfrag.FragFunc, bool) {
 	}
 
 	// fragStr should be of the form <frag func> or <frag func>:<func config>.
-	// Example: "index:3" or "regex:foo.*" or "indexOf:test"
+	// Example: "index:3" or "regex:foo.*" or "regex:test"
 	funcType, cfg, hasCfg := strings.Cut(fragStr, ":")
 	if !hasCfg {
 		log.Error("tlsfrag: missing config specifier")
@@ -63,15 +62,6 @@ func makeFragFunc(pc *config.ProxyConfig) (tlsfrag.FragFunc, bool) {
 			}
 			log.Debugf("tlsfrag: regex match at index: %v", loc[0])
 			return loc[0]
-		}, true
-	case "indexOf":
-		return func(b []byte) int {
-			index := bytes.Index(b, []byte(cfg))
-			if index == -1 {
-				return 0
-			}
-			log.Debugf("tlsfrag: indexOf match at index: %v", index)
-			return index
 		}, true
 
 	default:

@@ -73,7 +73,7 @@ func TestTLSFragConn(t *testing.T) {
 		}
 	}()
 
-	pc.PluggableTransportSettings["tlsfrag"] = "indexOf:localhost"
+	pc.PluggableTransportSettings["tlsfrag"] = "regex:localhost"
 	_, err := client.Write(hello)
 	time.Sleep(200 * time.Millisecond)
 	require.NoError(t, err)
@@ -85,16 +85,6 @@ func TestTLSFragConn(t *testing.T) {
 	require.NoError(t, err)
 	time.Sleep(200 * time.Millisecond)
 	require.True(t, int(serverRead.Load()) > len(hello))
-
-	serverRead.Store(0)
-	pc.PluggableTransportSettings["tlsfrag"] = "regex:localhost"
-
-	fragConn = tlsFragConn(client, pc)
-	_, err = fragConn.Write(hello)
-	require.NoError(t, err)
-	time.Sleep(200 * time.Millisecond)
-	require.True(t, int(serverRead.Load()) > len(hello))
-
 	client.Close()
 	server.Close()
 }
