@@ -61,6 +61,7 @@ func makeFragFunc(pc *config.ProxyConfig) (tlsfrag.FragFunc, bool) {
 			if loc == nil {
 				return 0
 			}
+			log.Debugf("tlsfrag: regex match at index: %v", loc[0])
 			return loc[0]
 		}, true
 	case "indexOf":
@@ -69,6 +70,7 @@ func makeFragFunc(pc *config.ProxyConfig) (tlsfrag.FragFunc, bool) {
 			if index == -1 {
 				return 0
 			}
+			log.Debugf("tlsfrag: indexOf match at index: %v", index)
 			return index
 		}, true
 
