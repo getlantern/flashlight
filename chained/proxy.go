@@ -18,15 +18,11 @@ import (
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/ema"
-	"github.com/getlantern/enhttp"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/v7/balancer"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/ops"
-	"github.com/getlantern/fronted"
-	"github.com/getlantern/idletiming"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 )
@@ -57,6 +53,8 @@ var (
 	tlsKeyLogWriter        io.Writer
 	createKeyLogWriterOnce sync.Once
 )
+
+type connWrapper func(net.Conn, *config.ProxyConfig) net.Conn
 
 // proxyImpl is the interface to hide the details of client side logic for
 // different types of pluggable transports.
@@ -114,6 +112,9 @@ func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserC
 		return nil, err
 	}
 	p, err := newProxy(name, addr, transport, network, s, uc)
+	if err != nil {
+		return nil, err
+	}
 	p.impl, err = createImpl(configDir, name, addr, transport, s, uc, p.reportDialCore)
 	if err != nil {
 		log.Debugf("Unable to create proxy implementation for %v: %v", name, err)
@@ -153,7 +154,8 @@ func extractParams(s *config.ProxyConfig) (addr, transport, network string, err 
 	return
 }
 
-func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, uc common.UserConfig,
+	reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	coreDialer := func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error) {
 		return reportDialCore(op, func() (net.Conn, error) {
 			return netx.DialContext(ctx, "tcp", addr)
@@ -168,7 +170,8 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 			impl = newHTTPImpl(addr, coreDialer)
 		} else {
 			log.Tracef("Cert configured for %s, will dial with tls", addr)
-			impl, err = newHTTPSImpl(configDir, name, addr, s, uc, coreDialer)
+			impl, err = newHTTPSImpl(configDir, name, addr, s, uc, coreDialer,
+				wrapTLSFrag)
 		}
 	case "lampshade":
 		impl, err = newLampshadeImpl(name, addr, s, reportDialCore)
@@ -179,7 +182,8 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 	case "wss":
 		impl, err = newWSSImpl(addr, s, reportDialCore)
 	case "tlsmasq":
-		impl, err = newTLSMasqImpl(configDir, name, addr, s, uc, reportDialCore)
+		impl, err = newTLSMasqImpl(configDir, name, addr, s, uc, reportDialCore,
+			wrapTLSFrag)
 	case "starbridge":
 		impl, err = newStarbridgeImpl(name, addr, s, reportDialCore)
 	case "broflake":
@@ -324,36 +328,6 @@ func newProxy(name, addr, protocol, network string, s *config.ProxyConfig, uc co
 		p.location = proto.Clone(s.Location).(*config.ProxyConfig_ProxyLocation)
 	}
 
-	if p.bias == 0 && s.ENHTTPURL != "" {
-		// By default, do not prefer ENHTTP proxies. Use a very low bias as domain-
-		// fronting is our very-last resort.
-		p.bias = -10
-	}
-
-	if s.ENHTTPURL != "" {
-		tr := &frontedTransport{rt: eventual.NewValue()}
-		go func() {
-			rt, ok := fronted.NewDirect(5 * time.Minute)
-			if !ok {
-				log.Errorf("Unable to initialize domain-fronting for enhttp")
-				return
-			}
-			tr.rt.Set(rt)
-		}()
-		dial := enhttp.NewDialer(&http.Client{
-			Transport: tr,
-		}, s.ENHTTPURL)
-		p.dialOrigin = func(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
-			dfConn, err := p.reportedDial(func(op *ops.Op) (net.Conn, error) { return dial(network, addr) })
-			dfConn, err = overheadWrapper(true)(dfConn, op.FailIf(err))
-			if err == nil {
-				dfConn = idletiming.Conn(dfConn, IdleTimeout, func() {
-					log.Debug("enhttp connection idled")
-				})
-			}
-			return dfConn, err
-		}
-	}
 	if len(s.AllowedDomains) > 0 {
 		// Some proxies like Broflake only support a limited set of domains. This sets up domain routing
 		// rules based on what was configured in the proxy config.
