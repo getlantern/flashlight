@@ -26,7 +26,7 @@ replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336
 replace github.com/Jigsaw-Code/outline-ss-server => github.com/getlantern/lantern-shadowsocks v1.3.6-0.20230301223223-150b18ac427d
 
 require (
-	github.com/Jigsaw-Code/outline-sdk v0.0.11
+	github.com/Jigsaw-Code/outline-sdk v0.0.12
 	github.com/Jigsaw-Code/outline-ss-server v1.4.0
 	github.com/OperatorFoundation/Replicant-go/Replicant/v3 v3.0.23
 	github.com/OperatorFoundation/Starbridge-go/Starbridge/v3 v3.0.17
@@ -293,7 +293,7 @@ require (
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 // indirect
 	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/sync v0.4.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
