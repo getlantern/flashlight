@@ -20,6 +20,7 @@ func wrapTLSFrag(conn net.Conn, pc *config.ProxyConfig) net.Conn {
 	if ok {
 		tlsFragConn, err := tlsfrag.WrapConnFunc(&streamConn{conn}, fragFunc)
 		if err != nil {
+			log.Errorf("tlsfrag: wrapping error: %w", err)
 			return conn
 		}
 		return tlsFragConn

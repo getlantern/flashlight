@@ -111,6 +111,7 @@ func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc com
 		cfg:                     cfg,
 		tlsClientHelloSplitting: pc.TLSClientHelloSplitting,
 		proxyConfig:             pc,
+		connWrappers:            connWrappers,
 	}, nil
 }
 
