@@ -226,7 +226,7 @@ func TestCASInterstitialAdsEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
 	assert.False(t, gl.FeatureEnabled(FeatureCASInterstitialAds, "android", common.DefaultAppName, "7.0.0", 1, false, "in"), "CASInterstitial ads are disable in India")
 	assert.False(t, gl.FeatureEnabled(FeatureCASInterstitialAds, "android", common.DefaultAppName, "7.0.0", 1, false, "cn"), "CASInterstitial ads are disable in China")
-	assert.False(t, gl.FeatureEnabled(FeatureCASInterstitialAds, "android", common.DefaultAppName, "7.0.0", 1, false, "ru"), "CASInterstitial ads are enabled in Russia")
+	assert.True(t, gl.FeatureEnabled(FeatureCASInterstitialAds, "android", common.DefaultAppName, "7.0.0", 1, false, "ru"), "CASInterstitial ads are enabled in Russia")
 	assert.False(t, gl.FeatureEnabled(FeatureCASInterstitialAds, "windows", common.DefaultAppName, "7.0.0", 1, false, "in"), "CASInterstitial ads are disabled on Windows")
 }
 
