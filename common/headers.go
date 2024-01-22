@@ -31,6 +31,7 @@ const (
 	IfNoneMatchHeader                   = "X-Lantern-If-None-Match"
 	PingHeader                          = "X-Lantern-Ping"
 	PlatformHeader                      = "X-Lantern-Platform"
+	PlatformVersionHeader               = "X-Lantern-PlatVer"
 	ProxyDialTimeoutHeader              = "X-Lantern-Dial-Timeout"
 	ClientCountryHeader                 = "X-Lantern-Client-Country"
 	RandomNoiseHeader                   = "X-Lantern-Rand"
@@ -60,6 +61,7 @@ func AddCommonNonUserHeaders(uc UserConfig, req *http.Request) {
 	}
 
 	req.Header.Set(PlatformHeader, Platform)
+	req.Header.Set(PlatformVersionHeader, platformVersion())
 	req.Header.Set(AppHeader, uc.GetAppName())
 	req.Header.Set(KernelArchHeader, kernelArch())
 	req.Header.Add(SupportedDataCapsHeader, "monthly")
@@ -74,6 +76,19 @@ func AddCommonNonUserHeaders(uc UserConfig, req *http.Request) {
 	// We include a random length string here to make it harder for censors to identify lantern
 	// based on consistent packet lengths.
 	req.Header.Add(RandomNoiseHeader, randomizedString())
+}
+
+func platformVersion() string {
+	_, _, pver, err := host.PlatformInformation()
+	if err != nil {
+		log.Debugf("omitting os version header because: %v", err)
+		return "noosversion-" + Platform + "-" + err.Error()
+	}
+	if pver == "" {
+		log.Debugf("omitting os version header because it is empty")
+		return "emptyosversion-" + Platform
+	}
+	return pver
 }
 
 // kernelArch returns the kernel architecture, or "noarch-" and platform if it can't be determined.
