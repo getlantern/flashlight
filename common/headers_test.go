@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/shirou/gopsutil/v3/host"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -49,9 +48,7 @@ func TestArch(t *testing.T) {
 	arch := kernelArch()
 	assert.NotEmpty(t, arch)
 
-	_, plat, pver, err := host.PlatformInformation()
-	fmt.Printf("PlatformInformation: %s %s %s %v\n", plat, pver, arch, err)
-	assert.NoError(t, err)
+	pver := platformVersion()
 	assert.NotEmpty(t, pver)
 }
 
