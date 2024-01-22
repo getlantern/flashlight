@@ -30,9 +30,12 @@ type tlsMasqImpl struct {
 	addr                    string
 	cfg                     tlsmasq.DialerConfig
 	tlsClientHelloSplitting bool
+	proxyConfig             *config.ProxyConfig
+	connWrappers            []connWrapper
 }
 
-func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig,
+	reportDialCore reportDialCoreFn, connWrappers ...connWrapper) (proxyImpl, error) {
 	const timeout = 5 * time.Second
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -103,7 +106,13 @@ func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc com
 		},
 	}
 
-	return &tlsMasqImpl{reportDialCore: reportDialCore, addr: addr, cfg: cfg, tlsClientHelloSplitting: pc.TLSClientHelloSplitting}, nil
+	return &tlsMasqImpl{reportDialCore: reportDialCore,
+		addr:                    addr,
+		cfg:                     cfg,
+		tlsClientHelloSplitting: pc.TLSClientHelloSplitting,
+		proxyConfig:             pc,
+		connWrappers:            connWrappers,
+	}, nil
 }
 
 func decodeUint16(s string) (uint16, error) {
@@ -141,6 +150,9 @@ func (impl *tlsMasqImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, 
 	}
 	if impl.tlsClientHelloSplitting {
 		tcpConn = hellosplitter.Wrap(tcpConn, splitClientHello)
+	}
+	for _, wrapper := range impl.connWrappers {
+		tcpConn = wrapper(tcpConn, impl.proxyConfig)
 	}
 	conn := tlsmasq.Client(tcpConn, impl.cfg)
 
