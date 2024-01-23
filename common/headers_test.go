@@ -47,6 +47,9 @@ func assertHeaders(t *testing.T, resHeaders http.Header, expHeaders map[string]s
 func TestArch(t *testing.T) {
 	arch := kernelArch()
 	assert.NotEmpty(t, arch)
+
+	pver := platformVersion()
+	assert.NotEmpty(t, pver)
 }
 
 func TestCORSMiddleware(t *testing.T) {
