@@ -131,6 +131,7 @@ require (
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/ajwerner/btree v0.0.0-20211221152037-f427b3e689c0 // indirect
 	github.com/alecthomas/atomic v0.1.0-alpha2 // indirect
+	github.com/alextanhongpin/go-bandit v0.0.0-20191125130111-30de60d69bae
 	github.com/anacrolix/chansync v0.3.0 // indirect
 	github.com/anacrolix/confluence v1.12.0 // indirect
 	github.com/anacrolix/envpprof v1.2.1 // indirect
