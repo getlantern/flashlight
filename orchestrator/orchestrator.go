@@ -42,13 +42,50 @@ func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (n
 	// We have to be careful here about virtual, multiplexed connections, as the
 	// initial TCP dial will have different performance characteristics than the
 	// subsequent virtual connection dials.
-	conn, _, err := o.dialers[chosenArm].DialContext(ctx, network, addr)
-	if err != nil {
-		log.Errorf("dialer %d failed: %v", chosenArm, err)
-		o.bandit.Update(chosenArm, 0)
-		return nil, err
+	for i := 0; i < len(o.dialers); i++ {
+		dialer := o.dialers[chosenArm]
+		conn, failedUpstream, err := dialer.DialContext(ctx, network, addr)
+		if err != nil {
+			log.Errorf("dialer %d failed: %v", chosenArm, err)
+			if !failedUpstream {
+				o.bandit.Update(chosenArm, 0)
+			}
+			continue
+		}
+		// Tell the dialer to update the bandit with it's throughput after 5 seconds.
+		dt := newDataTrackingConn(conn)
+
+		// Feels like this could be optimized more, but I'm not sure how.
+		time.AfterFunc(5*time.Second, func() {
+			o.bandit.Update(chosenArm, float64(dt.dataRecv)/5)
+		})
+		return dt, err
 	}
-	return conn, err
+	return nil, log.Errorf("all dialers failed")
+}
+
+func newDataTrackingConn(conn net.Conn) *dataTrackingConn {
+	return &dataTrackingConn{
+		Conn: conn,
+	}
+}
+
+type dataTrackingConn struct {
+	net.Conn
+	dataSent uint64
+	dataRecv uint64
+}
+
+func (c *dataTrackingConn) Write(b []byte) (int, error) {
+	n, err := c.Conn.Write(b)
+	c.dataSent += uint64(n)
+	return n, err
+}
+
+func (c *dataTrackingConn) Read(b []byte) (int, error) {
+	n, err := c.Conn.Read(b)
+	c.dataRecv += uint64(n)
+	return n, err
 }
 
 // Dialer provides the ability to dial a proxy and obtain information needed to
