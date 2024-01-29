@@ -13,8 +13,7 @@ import (
 
 var log = golog.LoggerFor("orchestrator")
 
-// Orchestrator is responsible for continually choosting the optimized
-// dialer.
+// Orchestrator is responsible for continually choosting the optimized dialer.
 type Orchestrator struct {
 	dialers []Dialer
 	bandit  *bandit.EpsilonGreedy
@@ -53,34 +52,31 @@ func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (n
 			continue
 		}
 		// Give a small reward for a successful dial.
-		o.bandit.Update(chosenArm, 0.1)
+		o.bandit.Update(chosenArm, 0.01)
 		// Tell the dialer to update the bandit with it's throughput after 5 seconds.
 		dt := newDataTrackingConn(conn)
-
-		// Feels like this could be optimized more, but I'm not sure how.
-		const seconds = 5
-		time.AfterFunc(seconds*time.Second, func() {
-			o.bandit.Update(chosenArm, normalizeReceiveSpeed(seconds, dt.dataRecv))
+		time.AfterFunc(secondsForSample*time.Second, func() {
+			o.bandit.Update(chosenArm, normalizeReceiveSpeed(dt.dataRecv))
 		})
 		return dt, err
 	}
 	return nil, log.Errorf("all dialers failed")
 }
 
-const bytesPerGigabit = 125000000
+const secondsForSample = 5
 
-func normalizeReceiveSpeed(seconds float64, dataRecv uint64) float64 {
+// 200Mbps in bytes per second is the upper end of speeds we expect to see.
+const topExpectedSpeed = 200 * 125000
+
+func normalizeReceiveSpeed(dataRecv uint64) float64 {
 	// Return a normalized value between 0 and 1 representing the dailer's
-	// bandwidth as a percentage of a theoreticaly upper bound of 100Mbps.
-	if seconds == 0 {
-		return 0
-	}
+	// bandwidth as a percentage of a theoreticaly upper bound of 200Mbps.
 	if dataRecv == 0 {
 		return 0
 	}
 	// We consider 200Mbps to be the upper bound of what we can expect from a
 	// dialer.
-	speed := (float64(dataRecv) / seconds) / bytesPerGigabit
+	speed := (float64(dataRecv) / secondsForSample) / topExpectedSpeed
 	if speed > 1 {
 		return 1
 	}
