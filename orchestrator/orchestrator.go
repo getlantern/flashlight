@@ -3,6 +3,7 @@ package orchestrator
 import (
 	"context"
 	"io"
+	"math"
 	"math/rand"
 	"net"
 	"time"
@@ -52,7 +53,7 @@ func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (n
 			continue
 		}
 		// Give a small reward for a successful dial.
-		o.bandit.Update(chosenArm, 0.01)
+		o.bandit.Update(chosenArm, 0.005)
 		// Tell the dialer to update the bandit with it's throughput after 5 seconds.
 		dt := newDataTrackingConn(conn)
 		time.AfterFunc(secondsForSample*time.Second, func() {
@@ -75,12 +76,8 @@ func normalizeReceiveSpeed(dataRecv uint64) float64 {
 		return 0
 	}
 	// We consider 200Mbps to be the upper bound of what we can expect from a
-	// dialer.
-	speed := (float64(dataRecv) / secondsForSample) / topExpectedSpeed
-	if speed > 1 {
-		return 1
-	}
-	return speed
+	// dialer, and that or anything above that is a reward of 1.
+	return math.Min((float64(dataRecv)/secondsForSample)/topExpectedSpeed, 1.0)
 }
 
 func newDataTrackingConn(conn net.Conn) *dataTrackingConn {
