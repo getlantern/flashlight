@@ -25,9 +25,9 @@ import (
 	"github.com/getlantern/mockconn"
 	"github.com/getlantern/shortcut"
 
-	"github.com/getlantern/flashlight/v7/balancer"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/domainrouting"
+	"github.com/getlantern/flashlight/v7/orchestrator"
 	"github.com/getlantern/flashlight/v7/stats"
 )
 
@@ -74,10 +74,11 @@ func newTestUserConfig() *common.UserConfigData {
 }
 
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
-	client.bal.Reset([]balancer.Dialer{&testDialer{
+	d, _ := orchestrator.New([]orchestrator.Dialer{&testDialer{
 		name: "test-dialer",
 		dial: dialer,
 	}})
+	client.dialer = d
 }
 
 func newClient() *Client {

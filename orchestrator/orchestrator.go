@@ -16,12 +16,19 @@ var log = golog.LoggerFor("orchestrator")
 
 // Orchestrator is responsible for continually choosting the optimized dialer.
 type Orchestrator struct {
-	dialers []Dialer
-	bandit  *bandit.EpsilonGreedy
+	dialers        []Dialer
+	bandit         *bandit.EpsilonGreedy
+	onActiveDialer func(Dialer)
 }
 
 // New creates a new Orchestrator given the available dialers.
 func New(dialers []Dialer) (*Orchestrator, error) {
+	return NewWithCallback(dialers, func(Dialer) {})
+}
+
+// NewWithCallback creates a new Orchestrator given the available dialers and a
+// callback to be called when a dialer is selected.
+func NewWithCallback(dialers []Dialer, onActiveDialer func(Dialer)) (*Orchestrator, error) {
 	b, err := bandit.NewEpsilonGreedy(0.1, nil, nil)
 	if err != nil {
 		log.Errorf("Unable to create bandit: %v", err)
@@ -31,8 +38,9 @@ func New(dialers []Dialer) (*Orchestrator, error) {
 	b.Init(len(dialers))
 
 	return &Orchestrator{
-		dialers: dialers,
-		bandit:  b,
+		dialers:        dialers,
+		bandit:         b,
+		onActiveDialer: onActiveDialer,
 	}, nil
 }
 
@@ -49,6 +57,8 @@ func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (n
 			log.Errorf("dialer %d failed: %v", chosenArm, err)
 			if !failedUpstream {
 				o.bandit.Update(chosenArm, 0)
+			} else {
+				o.bandit.Update(chosenArm, 0.0005)
 			}
 			continue
 		}
@@ -59,6 +69,7 @@ func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (n
 		time.AfterFunc(secondsForSample*time.Second, func() {
 			o.bandit.Update(chosenArm, normalizeReceiveSpeed(dt.dataRecv))
 		})
+		o.onActiveDialer(dialer)
 		return dt, err
 	}
 	return nil, log.Errorf("all dialers failed")
@@ -78,6 +89,12 @@ func normalizeReceiveSpeed(dataRecv uint64) float64 {
 	// We consider 200Mbps to be the upper bound of what we can expect from a
 	// dialer, and that or anything above that is a reward of 1.
 	return math.Min((float64(dataRecv)/secondsForSample)/topExpectedSpeed, 1.0)
+}
+
+func (o *Orchestrator) Close() {
+	for _, dialer := range o.dialers {
+		dialer.Stop()
+	}
 }
 
 func newDataTrackingConn(conn net.Conn) *dataTrackingConn {

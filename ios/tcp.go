@@ -12,6 +12,7 @@ import (
 
 	"github.com/getlantern/dnsgrab"
 	"github.com/getlantern/flashlight/v7/balancer"
+	"github.com/getlantern/flashlight/v7/orchestrator"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/netx"
 )
@@ -38,9 +39,9 @@ type proxiedTCPHandler struct {
 	mx                    sync.RWMutex
 }
 
-func newProxiedTCPHandler(c *client, bal *balancer.Balancer, grabber dnsgrab.Server) *proxiedTCPHandler {
+func newProxiedTCPHandler(c *client, dialer *orchestrator.Orchestrator, grabber dnsgrab.Server) *proxiedTCPHandler {
 	result := &proxiedTCPHandler{
-		dialOut:               bal.DialContext,
+		dialOut:               dialer.DialContext,
 		client:                c,
 		grabber:               grabber,
 		mtu:                   c.mtu,

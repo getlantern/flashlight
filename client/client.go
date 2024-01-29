@@ -43,6 +43,7 @@ import (
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/flashlight/v7/ops"
+	"github.com/getlantern/flashlight/v7/orchestrator"
 	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/flashlight/v7/status"
 )
@@ -115,7 +116,8 @@ type Client struct {
 	requestTimeout time.Duration
 
 	// Balanced CONNECT dialers.
-	bal *balancer.Balancer
+	//bal *balancer.Balancer
+	dialer *orchestrator.Orchestrator
 
 	proxy proxy.Proxy
 
@@ -192,9 +194,9 @@ func NewClient(
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
 	client := &Client{
-		configDir:                              configDir,
-		requestTimeout:                         requestTimeout,
-		bal:                                    balancer.New(allowProbes, time.Duration(requestTimeout)),
+		configDir:      configDir,
+		requestTimeout: requestTimeout,
+		//bal:                                    balancer.New(allowProbes, time.Duration(requestTimeout)),
 		disconnected:                           disconnected,
 		allowProbes:                            allowProbes,
 		proxyAll:                               proxyAll,
@@ -249,7 +251,6 @@ func NewClient(
 	if mitmErr != nil {
 		log.Errorf("Unable to initialize MITM: %v", mitmErr)
 	}
-	client.reportProxyLocationLoop()
 	client.iptool, _ = iptool.New()
 	go func() {
 		for {
@@ -313,29 +314,6 @@ func (c *Client) MITMOptions() *mitm.Opts {
 		}
 	}
 	return nil
-}
-
-func (client *Client) GetBalancer() *balancer.Balancer {
-	return client.bal
-}
-
-func (client *Client) reportProxyLocationLoop() {
-	ch := client.bal.OnActiveDialer()
-	var activeProxy string
-	go func() {
-		for {
-			proxy := <-ch
-			if proxy.Name() == activeProxy {
-				continue
-			}
-			countryCode, country, city := proxyLoc(proxy)
-			client.statsTracker.SetActiveProxyLocation(
-				city,
-				country,
-				countryCode,
-			)
-		}
-	}()
 }
 
 // Addr returns the address at which the client is listening with HTTP, blocking
@@ -475,7 +453,7 @@ func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reade
 // Configure updates the client's configuration. Configure can be called
 // before or after ListenAndServe, and can be called multiple times. If
 // no error occurred, then the new dialers are returned.
-func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []balancer.Dialer {
+func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []orchestrator.Dialer {
 	log.Debug("Configure() called")
 	dialers, err := client.initBalancer(proxies)
 	if err != nil {
@@ -483,7 +461,7 @@ func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []
 		return nil
 	}
 	chained.PersistSessionStates(client.configDir)
-	chained.TrackStatsFor(dialers, client.configDir, client.allowProbes())
+	//chained.TrackStatsFor(dialers, client.configDir, client.allowProbes())
 	return dialers
 }
 
@@ -581,7 +559,7 @@ func (client *Client) doDial(
 			proto = balancer.NetworkConnect
 		}
 		start := time.Now()
-		conn, err := client.bal.DialContext(ctx, proto, addr)
+		conn, err := client.dialer.DialContext(ctx, proto, addr)
 		if log.IsTraceEnabled() {
 			log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)
 		}
@@ -832,20 +810,24 @@ func (client *Client) ConfigureGoogleAds(opts config.GoogleSearchAdsOptions) {
 
 // initBalancer takes hosts from cfg.ChainedServers and it uses them to create a
 // balancer. Returns the new dialers.
-func (client *Client) initBalancer(proxies map[string]*commonconfig.ProxyConfig) ([]balancer.Dialer, error) {
+func (client *Client) initBalancer(proxies map[string]*commonconfig.ProxyConfig) ([]orchestrator.Dialer, error) {
 	if len(proxies) == 0 {
-		return nil, fmt.Errorf("No chained servers configured, not initializing balancer")
+		return nil, fmt.Errorf("no chained servers configured, not initializing orchestrator")
 	}
 
 	chained.PersistSessionStates(client.configDir)
 	dialers := chained.CreateDialers(client.configDir, proxies, client.user)
-	client.bal.Reset(dialers)
-
-	go func() {
-		for hasSucceeding := range client.bal.HasSucceedingDialer {
-			client.statsTracker.SetHasSucceedingProxy(hasSucceeding)
-		}
-	}()
-
+	dialer, err := orchestrator.NewWithCallback(dialers, func(d orchestrator.Dialer) {
+		countryCode, country, city := proxyLoc(d)
+		client.statsTracker.SetActiveProxyLocation(
+			city,
+			country,
+			countryCode,
+		)
+	})
+	if err != nil {
+		return nil, err
+	}
+	client.dialer = dialer
 	return dialers, nil
 }

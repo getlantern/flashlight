@@ -31,10 +31,7 @@ func TrackStatsFor(dialers []balancer.Dialer, configDir string, probeIfNecessary
 		probeIfRequired(dialers)
 	}
 
-	statsTrackingDialers = make([]balancer.Dialer, 0, len(dialers))
-	for _, d := range dialers {
-		statsTrackingDialers = append(statsTrackingDialers, d)
-	}
+	statsTrackingDialers = append(statsTrackingDialers, dialers...)
 
 	statsMx.Unlock()
 

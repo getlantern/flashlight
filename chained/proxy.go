@@ -19,10 +19,10 @@ import (
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/ema"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/v7/balancer"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/ops"
+	"github.com/getlantern/flashlight/v7/orchestrator"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 )
@@ -71,14 +71,14 @@ type nopCloser struct{}
 
 func (c nopCloser) close() {}
 
-// CreateDialers creates a list of Proxies (balancer.Dialer) with supplied server info.
-func CreateDialers(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) []balancer.Dialer {
+// CreateDialers creates a list of Proxies (orchestrator.Dialer) with supplied server info.
+func CreateDialers(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) []orchestrator.Dialer {
 	return lo.Values(CreateDialersMap(configDir, proxies, uc))
 }
 
-// CreateDialersMap creates a map of Proxies (balancer.Dialer) with supplied server info.
-func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) map[string]balancer.Dialer {
-	mappedDialers := make(map[string]balancer.Dialer)
+// CreateDialersMap creates a map of Proxies (orchestrator.Dialer) with supplied server info.
+func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) map[string]orchestrator.Dialer {
+	mappedDialers := make(map[string]orchestrator.Dialer)
 	groups := groupByMultipathEndpoint(proxies)
 	for endpoint, group := range groups {
 		if endpoint == "" {
@@ -106,7 +106,7 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 }
 
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
-func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserConfig) (balancer.Dialer, error) {
+func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserConfig) (orchestrator.Dialer, error) {
 	addr, transport, network, err := extractParams(s)
 	if err != nil {
 		return nil, err
@@ -393,7 +393,7 @@ func (p *proxy) updateEstRTT(rtt time.Duration) {
 	p.emaRTTDev.UpdateDuration(deviation)
 }
 
-// EstRTT implements the method from the balancer.Dialer interface. The
+// EstRTT implements the method from the orchestrator.Dialer interface. The
 // value is updated from the round trip time of CONNECT request (minus the time
 // to dial origin) or the HTTP ping. RTT deviation is also taken into account,
 // so the value is higher if the proxy has a larger deviation over time, even if
@@ -412,7 +412,7 @@ func (p *proxy) realEstRTT() time.Duration {
 	return time.Duration(p.emaRTT.Get() + rttDevK*p.emaRTTDev.Get())
 }
 
-// EstBandwidth implements the method from the balancer.Dialer interface.
+// EstBandwidth implements the method from the orchestrator.Dialer interface.
 //
 // Bandwidth estimates are provided to clients following the below protocol:
 //
