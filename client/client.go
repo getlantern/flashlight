@@ -5,8 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"math"
 	"net"
 	"net/http"
 	"path/filepath"
@@ -82,8 +80,6 @@ var (
 
 	// interval before rewriting the same URL to HTTPS, to avoid redirect loop.
 	httpsRewriteInterval = 10 * time.Second
-
-	forever = time.Duration(math.MaxInt64)
 
 	// See http://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address
 	validHostnameRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
@@ -193,10 +189,14 @@ func NewClient(
 	if err != nil {
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
+	orchestrator, err := orchestrator.New([]orchestrator.Dialer{})
+	if err != nil {
+		return nil, errors.New("Unable to create orchestrator: %v", err)
+	}
 	client := &Client{
-		configDir:      configDir,
-		requestTimeout: requestTimeout,
-		//bal:                                    balancer.New(allowProbes, time.Duration(requestTimeout)),
+		configDir:                              configDir,
+		requestTimeout:                         requestTimeout,
+		dialer:                                 orchestrator,
 		disconnected:                           disconnected,
 		allowProbes:                            allowProbes,
 		proxyAll:                               proxyAll,
@@ -455,13 +455,13 @@ func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reade
 // no error occurred, then the new dialers are returned.
 func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []orchestrator.Dialer {
 	log.Debug("Configure() called")
-	dialers, err := client.initBalancer(proxies)
+	dialers, err := client.initOrchestrator(proxies)
 	if err != nil {
 		log.Error(err)
 		return nil
 	}
 	chained.PersistSessionStates(client.configDir)
-	//chained.TrackStatsFor(dialers, client.configDir, client.allowProbes())
+	chained.TrackStatsFor(dialers, client.configDir, client.allowProbes())
 	return dialers
 }
 
@@ -797,7 +797,7 @@ func errorResponse(_ *filters.ConnectionState, req *http.Request, _ bool, err er
 	}
 
 	return &http.Response{
-		Body:       ioutil.NopCloser(bytes.NewBuffer(htmlerr)),
+		Body:       io.NopCloser(bytes.NewBuffer(htmlerr)),
 		StatusCode: http.StatusServiceUnavailable,
 	}
 }
@@ -808,9 +808,9 @@ func (client *Client) ConfigureGoogleAds(opts config.GoogleSearchAdsOptions) {
 	client.googleAdsOptionsLock.Unlock()
 }
 
-// initBalancer takes hosts from cfg.ChainedServers and it uses them to create a
-// balancer. Returns the new dialers.
-func (client *Client) initBalancer(proxies map[string]*commonconfig.ProxyConfig) ([]orchestrator.Dialer, error) {
+// initOrchestrator takes hosts from cfg.ChainedServers and it uses them to create a
+// new orchestrator. Returns the new dialers.
+func (client *Client) initOrchestrator(proxies map[string]*commonconfig.ProxyConfig) ([]orchestrator.Dialer, error) {
 	if len(proxies) == 0 {
 		return nil, fmt.Errorf("no chained servers configured, not initializing orchestrator")
 	}
@@ -824,6 +824,7 @@ func (client *Client) initBalancer(proxies map[string]*commonconfig.ProxyConfig)
 			country,
 			countryCode,
 		)
+		client.statsTracker.SetHasSucceedingProxy(true)
 	})
 	if err != nil {
 		return nil, err

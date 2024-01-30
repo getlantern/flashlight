@@ -36,7 +36,6 @@ func NewWithCallback(dialers []Dialer, onActiveDialer func(Dialer)) (*Orchestrat
 	}
 
 	b.Init(len(dialers))
-
 	return &Orchestrator{
 		dialers:        dialers,
 		bandit:         b,
@@ -45,6 +44,7 @@ func NewWithCallback(dialers []Dialer, onActiveDialer func(Dialer)) (*Orchestrat
 }
 
 func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	log.Debug("orchestrator::DialContext")
 	chosenArm := o.bandit.SelectArm(rand.Float64())
 
 	// We have to be careful here about virtual, multiplexed connections, as the
@@ -52,9 +52,10 @@ func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (n
 	// subsequent virtual connection dials.
 	for i := 0; i < len(o.dialers); i++ {
 		dialer := o.dialers[chosenArm]
+		log.Debugf("orchestrator::dialer %d: %s", chosenArm, dialer.Label())
 		conn, failedUpstream, err := dialer.DialContext(ctx, network, addr)
 		if err != nil {
-			log.Errorf("dialer %d failed: %v", chosenArm, err)
+			log.Errorf("orchestrator::dialer %d failed: %v", chosenArm, err)
 			if !failedUpstream {
 				o.bandit.Update(chosenArm, 0)
 			} else {
