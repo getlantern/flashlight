@@ -179,7 +179,8 @@ func (cf *chainedAndFronted) setFetcher(fetcher http.RoundTripper) {
 	cf.mu.Unlock()
 }
 
-// RoundTrip will attempt to execute the specified HTTP request using only a chained fetcher
+// RoundTrip will attempt to execute the specified HTTP request using both a chained and
+// fronted server, simply returning the first response to arrive.
 func (cf *chainedAndFronted) RoundTrip(req *http.Request) (*http.Response, error) {
 	var op *ops.Op
 	ctx := req.Context()

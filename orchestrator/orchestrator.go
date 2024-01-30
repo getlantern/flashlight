@@ -30,11 +30,6 @@ func New(dialers []Dialer) (*Orchestrator, error) {
 // callback to be called when a dialer is selected.
 func NewWithCallback(dialers []Dialer, onActiveDialer func(Dialer)) (*Orchestrator, error) {
 	log.Debugf("Creating orchestrator with %d dialers", len(dialers))
-
-	// We can not create a multi-armed bandit with no arms.
-	if len(dialers) == 0 {
-		return nil, log.Errorf("No dialers provided")
-	}
 	b, err := bandit.NewEpsilonGreedy(0.1, nil, nil)
 	if err != nil {
 		log.Errorf("Unable to create bandit: %v", err)
@@ -51,6 +46,10 @@ func NewWithCallback(dialers []Dialer, onActiveDialer func(Dialer)) (*Orchestrat
 
 func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
 	log.Debug("orchestrator::DialContext")
+	// We can not create a multi-armed bandit with no arms.
+	if len(o.dialers) == 0 {
+		return nil, log.Error("Cannot dial with no dialers")
+	}
 	chosenArm := o.bandit.SelectArm(rand.Float64())
 
 	// We have to be careful here about virtual, multiplexed connections, as the
