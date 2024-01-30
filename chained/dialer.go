@@ -5,11 +5,11 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -26,12 +26,6 @@ import (
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/ops"
-)
-
-const (
-	minCheckInterval      = 10 * time.Second
-	maxCheckInterval      = 15 * time.Minute
-	dialCoreCheckInterval = 30 * time.Second
 )
 
 var (
@@ -180,7 +174,6 @@ func (p *proxy) MarkFailure() {
 	atomic.StoreInt64(&p.consecSuccesses, 0)
 	newCF := atomic.AddInt64(&p.consecFailures, 1)
 	log.Tracef("Dialer %s consecutive failures: %d -> %d", p.Label(), newCF-1, newCF)
-	return
 }
 
 // defaultDialOrigin implements the method from serverConn. With standard proxies, this
@@ -195,15 +188,13 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 		return nil, err
 	}
 
-	conn, err = overheadWrapper(true)(conn, op.FailIf(err))
 	var timeout time.Duration
 	if deadline, set := ctx.Deadline(); set {
 		conn.SetDeadline(deadline)
 		// Set timeout based on our given deadline, minus a 2 second fudge factor
-		timeUntilDeadline := deadline.Sub(time.Now())
-		timeout = timeUntilDeadline - 2*time.Second
+		timeout := time.Until(deadline) - 2*time.Second
 		if timeout < 0 {
-			log.Errorf("Not enough time left for server to dial upstream within %v, return errUpstream immediately", timeUntilDeadline)
+			log.Errorf("Not enough time left for server to dial upstream within %v, return errUpstream immediately", timeout)
 			return nil, errUpstream
 		}
 	}
@@ -281,7 +272,11 @@ func (p *proxy) checkCONNECTResponse(op *ops.Op, r *bufio.Reader, req *http.Requ
 		var body []byte
 		if resp.Body != nil {
 			defer resp.Body.Close()
-			body, _ = ioutil.ReadAll(resp.Body)
+			body, _ = io.ReadAll(resp.Body)
+		}
+		if strings.Contains(string(body), "requested local address") {
+			log.Debugf("Server refused to request local address: %v", string(body))
+			return errUpstream
 		}
 		log.Errorf("Bad status code on CONNECT response %d: %v", resp.StatusCode, string(body))
 		return errUpstream

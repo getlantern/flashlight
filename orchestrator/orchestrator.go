@@ -29,6 +29,7 @@ func New(dialers []Dialer) (*Orchestrator, error) {
 // NewWithCallback creates a new Orchestrator given the available dialers and a
 // callback to be called when a dialer is selected.
 func NewWithCallback(dialers []Dialer, onActiveDialer func(Dialer)) (*Orchestrator, error) {
+	log.Debugf("Creating orchestrator with %d dialers", len(dialers))
 	b, err := bandit.NewEpsilonGreedy(0.1, nil, nil)
 	if err != nil {
 		log.Errorf("Unable to create bandit: %v", err)
@@ -52,19 +53,21 @@ func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (n
 	// subsequent virtual connection dials.
 	for i := 0; i < len(o.dialers); i++ {
 		dialer := o.dialers[chosenArm]
-		log.Debugf("orchestrator::dialer %d: %s", chosenArm, dialer.Label())
+		log.Debugf("orchestrator::dialer %d: %s at %v", chosenArm, dialer.Label(), dialer.Addr())
 		conn, failedUpstream, err := dialer.DialContext(ctx, network, addr)
 		if err != nil {
-			log.Errorf("orchestrator::dialer %d failed: %v", chosenArm, err)
 			if !failedUpstream {
+				log.Errorf("Dialer %v failed: %v", dialer.Name(), err)
 				o.bandit.Update(chosenArm, 0)
 			} else {
+				log.Debugf("Dialer %v failed upstream...", dialer.Name())
 				o.bandit.Update(chosenArm, 0.0005)
 			}
 			continue
 		}
 		// Give a small reward for a successful dial.
 		o.bandit.Update(chosenArm, 0.005)
+
 		// Tell the dialer to update the bandit with it's throughput after 5 seconds.
 		dt := newDataTrackingConn(conn)
 		time.AfterFunc(secondsForSample*time.Second, func() {
@@ -93,6 +96,7 @@ func normalizeReceiveSpeed(dataRecv uint64) float64 {
 }
 
 func (o *Orchestrator) Close() {
+	log.Debug("Closing all dialers")
 	for _, dialer := range o.dialers {
 		dialer.Stop()
 	}

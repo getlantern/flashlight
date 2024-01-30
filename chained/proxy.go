@@ -490,7 +490,7 @@ func (p *proxy) reportDialCore(op *ops.Op, dialCore func() (net.Conn, error)) (n
 	delta := elapsed()
 	log.Tracef("Core dial time to %v was %v", p.name, delta)
 	op.CoreDialTime(delta, err)
-	return overheadWrapper(false)(conn, err)
+	return conn, err
 }
 
 func (p *proxy) reportedDial(dial func(op *ops.Op) (net.Conn, error)) (net.Conn, error) {
