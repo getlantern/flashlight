@@ -14,6 +14,16 @@ import (
 
 var log = golog.LoggerFor("orchestrator")
 
+const (
+	// NetworkConnect is a pseudo network name to instruct the dialer to establish
+	// a CONNECT tunnel to the proxy.
+	NetworkConnect = "connect"
+	// NetworkPersistent is a pseudo network name to instruct the dialer to
+	// signal the proxy to establish a persistent HTTP connection over which
+	// one or more HTTP requests can be sent directly.
+	NetworkPersistent = "persistent"
+)
+
 // Orchestrator is responsible for continually choosting the optimized dialer.
 type Orchestrator struct {
 	dialers        []Dialer

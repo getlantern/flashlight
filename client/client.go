@@ -33,7 +33,6 @@ import (
 	"github.com/getlantern/proxy/v3/filters"
 	"github.com/getlantern/shortcut"
 
-	"github.com/getlantern/flashlight/v7/balancer"
 	"github.com/getlantern/flashlight/v7/buffers"
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/common"
@@ -547,7 +546,7 @@ func (client *Client) doDial(
 
 	dialProxied := func(ctx context.Context, _unused, addr string) (net.Conn, error) {
 		op.Set("remotely_proxied", true)
-		proto := balancer.NetworkPersistent
+		proto := orchestrator.NetworkPersistent
 		if isCONNECT {
 			// UGLY HACK ALERT! In this case, we know we need to send a CONNECT request
 			// to the chained server. We need to send that request from chained/dialer.go
@@ -556,7 +555,7 @@ func (client *Client) doDial(
 			// that is effectively always "tcp" in the end, but we look for this
 			// special "transport" in the dialer and send a CONNECT request in that
 			// case.
-			proto = balancer.NetworkConnect
+			proto = orchestrator.NetworkConnect
 		}
 		start := time.Now()
 		conn, err := client.dialer.DialContext(ctx, proto, addr)

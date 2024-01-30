@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/getlantern/dnsgrab"
-	"github.com/getlantern/flashlight/v7/balancer"
 	"github.com/getlantern/flashlight/v7/orchestrator"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/netx"
@@ -67,7 +66,7 @@ func (h *proxiedTCPHandler) handleDial() {
 	runtime.LockOSThread()
 
 	for req := range h.dialRequests {
-		upstream, err := h.dialOut(req.ctx, balancer.NetworkConnect, req.addr)
+		upstream, err := h.dialOut(req.ctx, orchestrator.NetworkConnect, req.addr)
 		if err == nil {
 			req.upstream <- upstream
 		} else {
