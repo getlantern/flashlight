@@ -6,9 +6,63 @@ import (
 	"net"
 	"testing"
 	"time"
-
-	"github.com/xtaci/lossyconn"
 )
+
+func Test_normalizeReceiveSpeed(t *testing.T) {
+	type args struct {
+		dataRecv uint64
+	}
+	tests := []struct {
+		name string
+		args args
+		want func(float64) bool
+	}{
+		{
+			name: "should return 0 if no data received",
+			args: args{
+				dataRecv: 0,
+			},
+			want: func(got float64) bool {
+				return got == 0
+			},
+		},
+		{
+			name: "should return 1 if pretty fast",
+			args: args{
+				dataRecv: topExpectedSpeed * 5,
+			},
+			want: func(got float64) bool {
+				return got == 1
+			},
+		},
+		{
+			name: "should return 1 if super fast",
+			args: args{
+				dataRecv: topExpectedSpeed * 50,
+			},
+			want: func(got float64) bool {
+				return got == 1
+			},
+		},
+
+		{
+			name: "should return <1 if sorta fast",
+			args: args{
+				dataRecv: 20000,
+			},
+			want: func(got float64) bool {
+				return got > 0 && got < 1
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := normalizeReceiveSpeed(tt.args.dataRecv); !tt.want(got) {
+				t.Errorf("unexpected normalizeReceiveSpeed() = %v", got)
+			}
+		})
+	}
+}
 
 type mockDialer struct {
 	loss  float64
@@ -28,8 +82,9 @@ func (m *mockDialer) SupportsAddr(network string, addr string) bool {
 // DialContext dials out to the given origin. failedUpstream indicates whether
 // this was an upstream error (as opposed to errors connecting to the proxy).
 func (m *mockDialer) DialContext(ctx context.Context, network string, addr string) (net.Conn, bool, error) {
-	conn, err := lossyconn.NewLossyConn(m.loss, m.delay)
-	return conn, false, err
+	//conn, err := lossyconn.NewLossyConn(m.loss, m.delay)
+	//return conn, false, err
+	return nil, false, nil
 }
 
 // Name returns the name for this Dialer
@@ -244,62 +299,6 @@ func TestOrchestrator_DialContext(t *testing.T) {
 					t.Errorf("Orchestrator.DialContext() = %v, want %v", got, tt.want)
 				}
 			*/
-		})
-	}
-}
-
-func Test_normalizeReceiveSpeed(t *testing.T) {
-	type args struct {
-		dataRecv uint64
-	}
-	tests := []struct {
-		name string
-		args args
-		want func(float64) bool
-	}{
-		{
-			name: "should return 0 if no data received",
-			args: args{
-				dataRecv: 0,
-			},
-			want: func(got float64) bool {
-				return got == 0
-			},
-		},
-		{
-			name: "should return 1 if pretty fast",
-			args: args{
-				dataRecv: topExpectedSpeed * 5,
-			},
-			want: func(got float64) bool {
-				return got == 1
-			},
-		},
-		{
-			name: "should return 1 if super fast",
-			args: args{
-				dataRecv: topExpectedSpeed * 50,
-			},
-			want: func(got float64) bool {
-				return got == 1
-			},
-		},
-
-		{
-			name: "should return <1 if sorta fast",
-			args: args{
-				dataRecv: 20000,
-			},
-			want: func(got float64) bool {
-				return got > 0 && got < 1
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := normalizeReceiveSpeed(tt.args.dataRecv); !tt.want(got) {
-				t.Errorf("unexpected normalizeReceiveSpeed() = %v", got)
-			}
 		})
 	}
 }

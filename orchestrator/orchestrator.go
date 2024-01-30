@@ -65,6 +65,10 @@ func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (n
 				o.bandit.Update(chosenArm, 0)
 			} else {
 				log.Debugf("Dialer %v failed upstream...", dialer.Name())
+				// This can happen, for example, if the upstream server is down, or
+				// if the DNS resolves to localhost, for example. It is also possible
+				// that the proxy is blacklisted by upstream sites for some reason,
+				// so we have to choose some reasonable value.
 				o.bandit.Update(chosenArm, 0.005)
 			}
 			continue
