@@ -61,12 +61,14 @@ func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (n
 				o.bandit.Update(chosenArm, 0)
 			} else {
 				log.Debugf("Dialer %v failed upstream...", dialer.Name())
-				o.bandit.Update(chosenArm, 0.0005)
+				o.bandit.Update(chosenArm, 0.005)
 			}
 			continue
 		}
-		// Give a small reward for a successful dial.
-		o.bandit.Update(chosenArm, 0.005)
+		// We don't give any special reward for a successful dial here and just rely on
+		// the normalized raw throughput to determine the reward. This is because the
+		// reward system takes into account how many tries there have been for a given
+		// "arm", so giving a reward here would be double-counting.
 
 		// Tell the dialer to update the bandit with it's throughput after 5 seconds.
 		dt := newDataTrackingConn(conn)
