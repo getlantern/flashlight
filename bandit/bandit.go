@@ -3,7 +3,6 @@ package bandit
 import (
 	"context"
 	"io"
-	"math"
 	"math/rand"
 	"net"
 	"time"
@@ -126,7 +125,7 @@ const secondsForSample = 6
 
 // 1 Mbps in bytes per second is the upper end of speeds we expect to see in such a
 // short time period.
-const topExpectedSpeed = 125000
+const topExpectedBytes = 125000
 
 func normalizeReceiveSpeed(dataRecv uint64) float64 {
 	// Return a normalized value between 0 and 1 representing the dailer's
@@ -134,9 +133,8 @@ func normalizeReceiveSpeed(dataRecv uint64) float64 {
 	if dataRecv == 0 {
 		return 0
 	}
-	// We consider 200Mbps to be the upper bound of what we can expect from a
-	// dialer, and that or anything above that is a reward of 1.
-	return math.Min((float64(dataRecv)/secondsForSample)/topExpectedSpeed, 1.0)
+	// Record the bytes in relation to the top expected speed.
+	return (float64(dataRecv) / secondsForSample) / topExpectedBytes
 }
 
 func (o *BanditDialer) Close() {
