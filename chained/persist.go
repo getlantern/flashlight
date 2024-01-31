@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/flashlight/v7/orchestrator"
+	"github.com/getlantern/flashlight/v7/bandit"
 )
 
 var (
-	statsTrackingDialers []orchestrator.Dialer
+	statsTrackingDialers []bandit.Dialer
 
 	statsMx sync.Mutex
 
@@ -22,7 +22,7 @@ var (
 
 // TrackStatsFor enables periodic checkpointing of the given proxies' stats to
 // disk.
-func TrackStatsFor(dialers []orchestrator.Dialer, configDir string, probeIfNecessary bool) {
+func TrackStatsFor(dialers []bandit.Dialer, configDir string, probeIfNecessary bool) {
 	statsMx.Lock()
 
 	statsFilePath := filepath.Join(configDir, "proxystats.csv")
@@ -40,8 +40,7 @@ func TrackStatsFor(dialers []orchestrator.Dialer, configDir string, probeIfNeces
 	})
 }
 
-func probeIfRequired(dialers []orchestrator.Dialer) {
-	//sorted := orchestrator.SortDialers(dialers)
+func probeIfRequired(dialers []bandit.Dialer) {
 	rttOfTopProxy := dialers[0].EstRTT()
 	for i, dialer := range dialers {
 		// probe is automatically required for relatively new dialers
@@ -59,8 +58,8 @@ func probeIfRequired(dialers []orchestrator.Dialer) {
 	}
 }
 
-func applyExistingStats(statsFile string, dialers []orchestrator.Dialer) {
-	dialersMap := make(map[string]orchestrator.Dialer, len(dialers))
+func applyExistingStats(statsFile string, dialers []bandit.Dialer) {
+	dialersMap := make(map[string]bandit.Dialer, len(dialers))
 	for _, d := range dialers {
 		dialersMap[d.Addr()] = d
 	}
@@ -157,7 +156,7 @@ func persistStats(statsFilePath string) {
 	for {
 		time.Sleep(15 * time.Second)
 		statsMx.Lock()
-		dialers := make([]orchestrator.Dialer, 0, len(statsTrackingDialers))
+		dialers := make([]bandit.Dialer, 0, len(statsTrackingDialers))
 		for _, d := range statsTrackingDialers {
 			dialers = append(dialers, d)
 		}
@@ -166,7 +165,7 @@ func persistStats(statsFilePath string) {
 	}
 }
 
-func doPersistStats(statsFile string, dialers []orchestrator.Dialer) {
+func doPersistStats(statsFile string, dialers []bandit.Dialer) {
 
 	out, err := os.OpenFile(fmt.Sprintf("%v.tmp", statsFile), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {

@@ -3,7 +3,7 @@ package ios
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sync"
 	"time"
@@ -15,11 +15,11 @@ import (
 	"github.com/getlantern/dnsgrab/persistentcache"
 	"github.com/getlantern/errors"
 
+	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/bandwidth"
 	"github.com/getlantern/flashlight/v7/buffers"
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/common"
-	"github.com/getlantern/flashlight/v7/orchestrator"
 )
 
 const (
@@ -109,7 +109,7 @@ type ClientWriter interface {
 type cw struct {
 	ipStack        io.WriteCloser
 	client         *client
-	dialer         *orchestrator.Orchestrator
+	dialer         *bandit.BanditDialer
 	quotaTextPath  string
 	lastSavedQuota time.Time
 }
@@ -131,13 +131,13 @@ func (c *cw) Write(b []byte) (int, error) {
 			go func() {
 				if quota == nil {
 					log.Debug("Clearing bandwidth quota file")
-					writeErr := ioutil.WriteFile(c.quotaTextPath, []byte{}, 0644)
+					writeErr := os.WriteFile(c.quotaTextPath, []byte{}, 0644)
 					if writeErr != nil {
 						log.Errorf("Unable to clear quota file: %v", writeErr)
 					}
 				} else {
 					log.Debugf("Saving bandwidth quota file with %d/%d", quota.MiBUsed, quota.MiBAllowed)
-					writeErr := ioutil.WriteFile(c.quotaTextPath, []byte(fmt.Sprintf("%d/%d", quota.MiBUsed, quota.MiBAllowed)), 0644)
+					writeErr := os.WriteFile(c.quotaTextPath, []byte(fmt.Sprintf("%d/%d", quota.MiBUsed, quota.MiBAllowed)), 0644)
 					if writeErr != nil {
 						log.Errorf("Unable to write quota file: %v", writeErr)
 					}
@@ -157,7 +157,10 @@ func (c *cw) Reconfigure() {
 		panic(log.Errorf("Unable to load dialers on reconfigure: %v", err))
 	}
 
-	c.dialer, err = orchestrator.New(dialers)
+	c.dialer, err = bandit.New(dialers)
+	if err != nil {
+		log.Errorf("Unable to create dialer on reconfigure: %v", err)
+	}
 }
 
 func (c *cw) Close() error {
@@ -177,7 +180,7 @@ type client struct {
 	uc              *UserConfig
 	tcpHandler      *proxiedTCPHandler
 	udpHandler      *directUDPHandler
-	ipStack         tun2socks.LWIPStack
+	//ipStack         tun2socks.LWIPStack
 	clientWriter    *cw
 	memoryAvailable int64
 	started         time.Time
@@ -219,7 +222,10 @@ func (c *client) start() (ClientWriter, error) {
 	if err != nil {
 		return nil, err
 	}
-	dialer, err := orchestrator.New(dialers)
+	dialer, err := bandit.New(dialers)
+	if err != nil {
+		return nil, err
+	}
 
 	// We use a persistent cache for dnsgrab because some clients seem to hang on to our fake IP addresses for a while, even though we set a TTL of 1 second.
 	// That can be a problem when the network extension is automatically restarted. Caching the dns cache on disk allows us to successfully reverse look up
@@ -268,7 +274,7 @@ func (c *client) loadUserConfig() error {
 	return nil
 }
 
-func (c *client) loadDialers() ([]orchestrator.Dialer, error) {
+func (c *client) loadDialers() ([]bandit.Dialer, error) {
 	cf := &configurer{configFolderPath: c.configDir}
 	chained.PersistSessionStates(c.configDir)
 

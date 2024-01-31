@@ -1,4 +1,4 @@
-package orchestrator
+package bandit
 
 import (
 	"bytes"

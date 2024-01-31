@@ -1,4 +1,4 @@
-package orchestrator
+package bandit
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"github.com/getlantern/golog"
 )
 
-var log = golog.LoggerFor("orchestrator")
+var log = golog.LoggerFor("mabdialer")
 
 const (
 	// NetworkConnect is a pseudo network name to instruct the dialer to establish
@@ -25,21 +25,21 @@ const (
 	NetworkPersistent = "persistent"
 )
 
-// Orchestrator is responsible for continually choosting the optimized dialer.
-type Orchestrator struct {
+// BanditDialer is responsible for continually choosing the optimized dialer.
+type BanditDialer struct {
 	dialers      []Dialer
 	bandit       *bandit.EpsilonGreedy
 	statsTracker stats.Tracker
 }
 
 // New creates a new Orchestrator given the available dialers.
-func New(dialers []Dialer) (*Orchestrator, error) {
+func New(dialers []Dialer) (*BanditDialer, error) {
 	return NewWithCallback(dialers, stats.NewNoop())
 }
 
 // NewWithCallback creates a new Orchestrator given the available dialers and a
 // callback to be called when a dialer is selected.
-func NewWithCallback(dialers []Dialer, statsTracker stats.Tracker) (*Orchestrator, error) {
+func NewWithCallback(dialers []Dialer, statsTracker stats.Tracker) (*BanditDialer, error) {
 	log.Debugf("Creating orchestrator with %d dialers", len(dialers))
 	b, err := bandit.NewEpsilonGreedy(0.1, nil, nil)
 	if err != nil {
@@ -48,14 +48,14 @@ func NewWithCallback(dialers []Dialer, statsTracker stats.Tracker) (*Orchestrato
 	}
 
 	b.Init(len(dialers))
-	return &Orchestrator{
+	return &BanditDialer{
 		dialers:      dialers,
 		bandit:       b,
 		statsTracker: statsTracker,
 	}, nil
 }
 
-func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
 	deadline, _ := ctx.Deadline()
 	log.Debugf("orchestrator::DialContext::time remaining: %v", time.Until(deadline))
 	// We can not create a multi-armed bandit with no arms.
@@ -108,7 +108,7 @@ func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (n
 	return nil, log.Errorf("all dialers failed")
 }
 
-func (o *Orchestrator) onSuccess(dialer Dialer) {
+func (o *BanditDialer) onSuccess(dialer Dialer) {
 	countryCode, country, city := proxyLoc(dialer)
 	o.statsTracker.SetActiveProxyLocation(
 		city,
@@ -118,7 +118,7 @@ func (o *Orchestrator) onSuccess(dialer Dialer) {
 	o.statsTracker.SetHasSucceedingProxy(true)
 }
 
-func (o *Orchestrator) onFailure() {
+func (o *BanditDialer) onFailure() {
 	o.statsTracker.SetHasSucceedingProxy(false)
 }
 
@@ -139,7 +139,7 @@ func normalizeReceiveSpeed(dataRecv uint64) float64 {
 	return math.Min((float64(dataRecv)/secondsForSample)/topExpectedSpeed, 1.0)
 }
 
-func (o *Orchestrator) Close() {
+func (o *BanditDialer) Close() {
 	log.Debug("Closing all dialers")
 	for _, dialer := range o.dialers {
 		dialer.Stop()

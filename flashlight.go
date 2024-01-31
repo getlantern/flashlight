@@ -17,6 +17,7 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/ops"
 
+	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/bypass"
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/client"
@@ -27,7 +28,6 @@ import (
 	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/flashlight/v7/goroutines"
 	fops "github.com/getlantern/flashlight/v7/ops"
-	"github.com/getlantern/flashlight/v7/orchestrator"
 	"github.com/getlantern/flashlight/v7/otel"
 	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/flashlight/v7/shortcut"
@@ -85,7 +85,7 @@ type Flashlight struct {
 	isPro            func() bool
 	mxGlobal         sync.RWMutex
 	global           *config.Global
-	onProxiesUpdate  func([]orchestrator.Dialer, config.Source)
+	onProxiesUpdate  func([]bandit.Dialer, config.Source)
 	onConfigUpdate   func(*config.Global, config.Source)
 	autoReport       func() bool
 	client           *client.Client
@@ -291,7 +291,7 @@ func New(
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
 	onConfigUpdate func(*config.Global, config.Source),
-	onProxiesUpdate func([]orchestrator.Dialer, config.Source),
+	onProxiesUpdate func([]bandit.Dialer, config.Source),
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	isPro func() bool,
@@ -305,7 +305,7 @@ func New(
 	log.Debugf("Using configdir: %v", configDir)
 
 	if onProxiesUpdate == nil {
-		onProxiesUpdate = func(_ []orchestrator.Dialer, src config.Source) {}
+		onProxiesUpdate = func(_ []bandit.Dialer, src config.Source) {}
 	}
 	if onConfigUpdate == nil {
 		onConfigUpdate = func(_ *config.Global, src config.Source) {}

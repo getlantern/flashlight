@@ -25,9 +25,9 @@ import (
 	"github.com/getlantern/mockconn"
 	"github.com/getlantern/shortcut"
 
+	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/domainrouting"
-	"github.com/getlantern/flashlight/v7/orchestrator"
 	"github.com/getlantern/flashlight/v7/stats"
 )
 
@@ -74,7 +74,7 @@ func newTestUserConfig() *common.UserConfigData {
 }
 
 func resetOrchestrator(client *Client, dialer func(network, addr string) (net.Conn, error)) {
-	d, _ := orchestrator.New([]orchestrator.Dialer{&testDialer{
+	d, _ := bandit.New([]bandit.Dialer{&testDialer{
 		name: "test-dialer",
 		dial: dialer,
 	}})
