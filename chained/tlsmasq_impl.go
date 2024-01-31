@@ -36,10 +36,6 @@ type tlsMasqImpl struct {
 
 func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig,
 	reportDialCore reportDialCoreFn, connWrappers ...connWrapper) (proxyImpl, error) {
-	const timeout = 5 * time.Second
-
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
 
 	suites, err := cipherSuites(ptSetting(pc, "tlsmasq_suites"), name)
 	if err != nil {
@@ -73,7 +69,7 @@ func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc com
 		return nil, errors.New("malformed server address: %v", err)
 	}
 
-	proxyTLS, hellos, err := tlsConfigForProxy(ctx, configDir, name, pc, uc)
+	proxyTLS, hellos, err := tlsConfigForProxy(context.Background(), configDir, name, pc, uc)
 	if err != nil {
 		return nil, errors.New("error generating TLS config: %v", err)
 	}

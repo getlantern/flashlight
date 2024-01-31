@@ -262,6 +262,8 @@ func NewClient(
 			<-geolookup.OnRefresh()
 		}
 	}()
+
+	go client.cacheClientHellos()
 	return client, nil
 }
 
@@ -822,4 +824,11 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 	}
 	client.dialer = dialer
 	return dialers, nil
+}
+
+func (client *Client) cacheClientHellos() {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	// Try to snag a hello from the browser.
+	chained.ActivelyObtainBrowserHello(ctx, client.configDir)
 }

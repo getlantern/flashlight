@@ -31,12 +31,7 @@ type httpsImpl struct {
 
 func newHTTPSImpl(configDir, name, addr string, pc *config.ProxyConfig, uc common.UserConfig, dialCore coreDialer,
 	connWrappers ...connWrapper) (proxyImpl, error) {
-	const timeout = 5 * time.Second
-
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	tlsConfig, hellos, err := tlsConfigForProxy(ctx, configDir, name, pc, uc)
+	tlsConfig, hellos, err := tlsConfigForProxy(context.Background(), configDir, name, pc, uc)
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", addr))
 	}
