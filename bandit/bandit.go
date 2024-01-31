@@ -13,7 +13,7 @@ import (
 	"github.com/getlantern/golog"
 )
 
-var log = golog.LoggerFor("mabdialer")
+var log = golog.LoggerFor("bandit")
 
 const (
 	// NetworkConnect is a pseudo network name to instruct the dialer to establish
@@ -32,15 +32,15 @@ type BanditDialer struct {
 	statsTracker stats.Tracker
 }
 
-// New creates a new Orchestrator given the available dialers.
+// New creates a new bandit given the available dialers.
 func New(dialers []Dialer) (*BanditDialer, error) {
-	return NewWithCallback(dialers, stats.NewNoop())
+	return NewWithStats(dialers, stats.NewNoop())
 }
 
-// NewWithCallback creates a new Orchestrator given the available dialers and a
+// NewWithStats creates a new BanditDialer given the available dialers and a
 // callback to be called when a dialer is selected.
-func NewWithCallback(dialers []Dialer, statsTracker stats.Tracker) (*BanditDialer, error) {
-	log.Debugf("Creating orchestrator with %d dialers", len(dialers))
+func NewWithStats(dialers []Dialer, statsTracker stats.Tracker) (*BanditDialer, error) {
+	log.Debugf("Creating bandit with %d dialers", len(dialers))
 	b, err := bandit.NewEpsilonGreedy(0.1, nil, nil)
 	if err != nil {
 		log.Errorf("Unable to create bandit: %v", err)
@@ -57,7 +57,7 @@ func NewWithCallback(dialers []Dialer, statsTracker stats.Tracker) (*BanditDiale
 
 func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
 	deadline, _ := ctx.Deadline()
-	log.Debugf("orchestrator::DialContext::time remaining: %v", time.Until(deadline))
+	log.Debugf("bandit::DialContext::time remaining: %v", time.Until(deadline))
 	// We can not create a multi-armed bandit with no arms.
 	if len(o.dialers) == 0 {
 		return nil, log.Error("Cannot dial with no dialers")
@@ -72,7 +72,7 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	// subsequent virtual connection dials.
 	for i := 0; i < len(o.dialers); i++ {
 		dialer := o.dialers[chosenArm]
-		log.Debugf("orchestrator::dialer %d: %s at %v", chosenArm, dialer.Label(), dialer.Addr())
+		log.Debugf("bandit::dialer %d: %s at %v", chosenArm, dialer.Label(), dialer.Addr())
 		conn, failedUpstream, err := dialer.DialContext(ctx, network, addr)
 		if err != nil {
 			if !failedUpstream {

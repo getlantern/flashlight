@@ -454,7 +454,7 @@ func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reade
 // no error occurred, then the new dialers are returned.
 func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []bandit.Dialer {
 	log.Debug("Configure() called")
-	dialers, err := client.initOrchestrator(proxies)
+	dialers, err := client.initDialers(proxies)
 	if err != nil {
 		log.Error(err)
 		return nil
@@ -807,16 +807,16 @@ func (client *Client) ConfigureGoogleAds(opts config.GoogleSearchAdsOptions) {
 	client.googleAdsOptionsLock.Unlock()
 }
 
-// initOrchestrator takes hosts from cfg.ChainedServers and it uses them to create a
-// new orchestrator. Returns the new dialers.
-func (client *Client) initOrchestrator(proxies map[string]*commonconfig.ProxyConfig) ([]bandit.Dialer, error) {
+// initDialers takes hosts from cfg.ChainedServers and it uses them to create a
+// new dialer. Returns the new dialers.
+func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) ([]bandit.Dialer, error) {
 	if len(proxies) == 0 {
-		return nil, fmt.Errorf("no chained servers configured, not initializing orchestrator")
+		return nil, fmt.Errorf("no chained servers configured, not initializing dialers")
 	}
 
 	chained.PersistSessionStates(client.configDir)
 	dialers := chained.CreateDialers(client.configDir, proxies, client.user)
-	dialer, err := bandit.NewWithCallback(dialers, client.statsTracker)
+	dialer, err := bandit.NewWithStats(dialers, client.statsTracker)
 	if err != nil {
 		return nil, err
 	}

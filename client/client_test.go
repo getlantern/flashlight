@@ -73,7 +73,7 @@ func newTestUserConfig() *common.UserConfigData {
 	return common.NewUserConfigData(common.DefaultAppName, "device", 1234, "protoken", nil, "en-US")
 }
 
-func resetOrchestrator(client *Client, dialer func(network, addr string) (net.Conn, error)) {
+func resetDialers(client *Client, dialer func(network, addr string) (net.Conn, error)) {
 	d, _ := bandit.New([]bandit.Dialer{&testDialer{
 		name: "test-dialer",
 		dial: dialer,
@@ -115,7 +115,7 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 func TestServeHTTPOk(t *testing.T) {
 	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n")
 	client := newClient()
-	resetOrchestrator(client, mockconn.SucceedingDialer(mockResponse).Dial)
+	resetDialers(client, mockconn.SucceedingDialer(mockResponse).Dial)
 
 	req, _ := http.NewRequest("CONNECT", "https://b.com:443", nil)
 	resp, err := roundTrip(client, req)
@@ -133,7 +133,7 @@ func TestServeHTTPTimeout(t *testing.T) {
 
 	// Set the orchestrator to a new Dial() func that waits "client.requestTimeout" * 2
 	// before running
-	resetOrchestrator(
+	resetDialers(
 		client, // Client
 		func(network, addr string) (net.Conn, error) { // Dial() func
 			time.Sleep(client.requestTimeout * 2)
@@ -221,7 +221,7 @@ func TestDialShortcut(t *testing.T) {
 	// http.Transport to print "Unsolicited response received on idle HTTP
 	// channel..." and return readLoopPeekFailLocked error.
 	delayed404 := mockconn.SlowResponder(mockconn.SucceedingDialer(mockResponse), 50*time.Millisecond)
-	resetOrchestrator(client, delayed404.Dial)
+	resetDialers(client, delayed404.Dial)
 
 	req, _ = http.NewRequest("GET", site.URL, nil)
 	res, _ = roundTrip(client, req)
@@ -311,7 +311,7 @@ func TestLeakingDomainsRequiringProxy(t *testing.T) {
 	// http.Transport to print "Unsolicited response received on idle HTTP
 	// channel..." and return readLoopPeekFailLocked error.
 	delayed418 := mockconn.SlowResponder(mockconn.SucceedingDialer(mockResponse), 50*time.Millisecond)
-	resetOrchestrator(client, delayed418.Dial)
+	resetDialers(client, delayed418.Dial)
 
 	req, _ := http.NewRequest("GET", "http://getiantem.org", nil)
 	res, _ := roundTrip(client, req)
@@ -372,7 +372,7 @@ func TestTimeoutCheckingShortcut(t *testing.T) {
 
 	mockResponse := []byte("HTTP/1.1 500 no response\r\n\r\n")
 	dialer := mockconn.SucceedingDialer(mockResponse)
-	resetOrchestrator(client, dialer.Dial)
+	resetDialers(client, dialer.Dial)
 	req, _ := http.NewRequest("GET", "http://unknown:80", nil)
 	res, _ := roundTrip(client, req)
 	assert.Equal(t, 503, res.StatusCode, "should fail if checking shortcut list times out")
@@ -382,7 +382,7 @@ func TestTimeoutCheckingShortcut(t *testing.T) {
 func TestAccessingProxyPort(t *testing.T) {
 	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n")
 	client := newClient()
-	resetOrchestrator(client, mockconn.SucceedingDialer(mockResponse).Dial)
+	resetDialers(client, mockconn.SucceedingDialer(mockResponse).Dial)
 
 	go func() {
 		client.ListenAndServeHTTP("localhost:", func() {
