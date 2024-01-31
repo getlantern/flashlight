@@ -1,6 +1,6 @@
 module github.com/getlantern/flashlight/v7
 
-go 1.20
+go 1.21
 
 replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220805074304-4a43a9ed4ec6
 
@@ -103,7 +103,6 @@ require (
 	github.com/refraction-networking/utls v1.3.3
 	github.com/samber/lo v1.38.1
 	github.com/shadowsocks/go-shadowsocks2 v0.1.5
-	github.com/shirou/gopsutil/v3 v3.23.10
 	github.com/stretchr/testify v1.8.4
 	github.com/vulcand/oxy v1.4.2
 	github.com/xtaci/smux v1.5.24
@@ -199,7 +198,6 @@ require (
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
@@ -220,7 +218,6 @@ require (
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/klauspost/reedsolomon v1.9.9 // indirect
 	github.com/libp2p/go-buffer-pool v0.0.2 // indirect
-	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mdlayher/netlink v1.1.0 // indirect
 	github.com/mholt/archiver/v3 v3.5.1 // indirect
@@ -255,16 +252,14 @@ require (
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/prometheus/client_golang v1.15.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/quic-go/qtls-go1-20 v0.4.1 // indirect
-	github.com/quic-go/quic-go v0.40.0 // indirect
+	github.com/quic-go/quic-go v0.41.0 // indirect
 	github.com/rs/dnscache v0.0.0-20211102005908-e0241e321417 // indirect
 	github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46 // indirect
-	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8 // indirect
@@ -275,8 +270,6 @@ require (
 	github.com/ti-mo/netfilter v0.3.1 // indirect
 	github.com/tidwall/btree v1.6.0 // indirect
 	github.com/tjfoc/gmsm v1.3.2 // indirect
-	github.com/tklauser/go-sysconf v0.3.12 // indirect
-	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/tkuchiki/go-timezone v0.2.0 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
