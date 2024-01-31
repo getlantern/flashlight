@@ -56,12 +56,14 @@ func NewWithCallback(dialers []Dialer, statsTracker stats.Tracker) (*Orchestrato
 }
 
 func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	deadline, ok := ctx.Deadline()
-	log.Debugf("orchestrator::DialContext::deadline set: %v remaining: %v", ok, time.Until(deadline))
+	deadline, _ := ctx.Deadline()
+	log.Debugf("orchestrator::DialContext::time remaining: %v", time.Until(deadline))
 	// We can not create a multi-armed bandit with no arms.
 	if len(o.dialers) == 0 {
 		return nil, log.Error("Cannot dial with no dialers")
 	}
+
+	start := time.Now()
 
 	chosenArm := o.bandit.SelectArm(rand.Float64())
 
@@ -82,10 +84,11 @@ func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (n
 				// if the DNS resolves to localhost, for example. It is also possible
 				// that the proxy is blacklisted by upstream sites for some reason,
 				// so we have to choose some reasonable value.
-				o.bandit.Update(chosenArm, 0.005)
+				o.bandit.Update(chosenArm, 0.00005)
 			}
 			continue
 		}
+		log.Debugf("Dialer %v dialed in %v seconds", dialer.Name(), time.Since(start).Seconds())
 		// We don't give any special reward for a successful dial here and just rely on
 		// the normalized raw throughput to determine the reward. This is because the
 		// reward system takes into account how many tries there have been for a given
@@ -94,7 +97,9 @@ func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (n
 		// Tell the dialer to update the bandit with it's throughput after 5 seconds.
 		dt := newDataTrackingConn(conn)
 		time.AfterFunc(secondsForSample*time.Second, func() {
-			o.bandit.Update(chosenArm, normalizeReceiveSpeed(dt.dataRecv))
+			speed := normalizeReceiveSpeed(dt.dataRecv)
+			log.Debugf("Dialer %v received %v bytes in %v seconds, normalized speed: %v", dialer.Name(), dt.dataRecv, secondsForSample, speed)
+			o.bandit.Update(chosenArm, speed)
 		})
 		o.onSuccess(dialer)
 		return dt, err
@@ -104,7 +109,6 @@ func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (n
 }
 
 func (o *Orchestrator) onSuccess(dialer Dialer) {
-	log.Debugf("Dialer %v succeeded", dialer.Name())
 	countryCode, country, city := proxyLoc(dialer)
 	o.statsTracker.SetActiveProxyLocation(
 		city,
@@ -118,10 +122,11 @@ func (o *Orchestrator) onFailure() {
 	o.statsTracker.SetHasSucceedingProxy(false)
 }
 
-const secondsForSample = 5
+const secondsForSample = 6
 
-// 200Mbps in bytes per second is the upper end of speeds we expect to see.
-const topExpectedSpeed = 200 * 125000
+// 1 Mbps in bytes per second is the upper end of speeds we expect to see in such a
+// short time period.
+const topExpectedSpeed = 125000
 
 func normalizeReceiveSpeed(dataRecv uint64) float64 {
 	// Return a normalized value between 0 and 1 representing the dailer's

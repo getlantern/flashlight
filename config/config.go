@@ -12,7 +12,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/anacrolix/dht/v2/krpc"
 	"github.com/getsentry/sentry-go"
 	"gopkg.in/yaml.v3"
 
@@ -108,16 +107,6 @@ type options struct {
 	// dictate whether the fetcher will use dual fetching (from fronted and
 	// chained URLs) or not.
 	rt http.RoundTripper
-}
-
-var globalConfigDhtTarget krpc.ID
-
-func init() {
-	// TODO: Expose this as configuration. For now it's based on a specific private key and salt.
-	err := globalConfigDhtTarget.UnmarshalText([]byte("c384439ab2239a3dd4294351540e647fdec8af5f"))
-	if err != nil {
-		panic(err)
-	}
 }
 
 // pipeConfig creates a new config pipeline for reading a specified type of

@@ -82,7 +82,8 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 	groups := groupByMultipathEndpoint(proxies)
 	for endpoint, group := range groups {
 		if endpoint == "" {
-			log.Debugf("Adding %d individual chained servers", len(group))
+			// Also print the stack trace to help us debug
+			log.Debugf("Creating map for %d individual chained servers", len(group))
 			for name, s := range group {
 				dialer, err := CreateDialer(configDir, name, s, uc)
 				if err != nil {
@@ -93,7 +94,7 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 				mappedDialers[name] = dialer
 			}
 		} else {
-			log.Debugf("Adding %d chained servers for multipath endpoint %s", len(group), endpoint)
+			log.Debugf("Creating map for %d chained servers for multipath endpoint %s", len(group), endpoint)
 			dialer, err := CreateMPDialer(configDir, endpoint, group, uc)
 			if err != nil {
 				log.Errorf("Unable to configure multipath server to %v. Received error: %v", endpoint, err)
