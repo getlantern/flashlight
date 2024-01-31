@@ -1,3 +1,4 @@
+// +build !ios
 syntax = "proto3";
 import "google/protobuf/struct.proto";
 option go_package = "github.com/getlantern/flashlight/pro/client";
