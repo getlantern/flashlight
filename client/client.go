@@ -826,6 +826,8 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 	return dialers, nil
 }
 
+// Creates a local server to capture client hello messages from the browser and
+// caches them.
 func (client *Client) cacheClientHellos() {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
