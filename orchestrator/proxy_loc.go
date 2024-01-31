@@ -1,9 +1,7 @@
-package client
+package orchestrator
 
 import (
 	"strings"
-
-	"github.com/getlantern/flashlight/v7/orchestrator"
 )
 
 type location struct {
@@ -133,7 +131,7 @@ var (
 	}
 )
 
-func proxyLoc(proxy orchestrator.Dialer) (countryCode string, country string, city string) {
+func proxyLoc(proxy Dialer) (countryCode string, country string, city string) {
 	countryCode, country, city = proxy.Location()
 	if countryCode != "" {
 		return

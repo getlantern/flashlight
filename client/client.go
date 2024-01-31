@@ -816,15 +816,7 @@ func (client *Client) initOrchestrator(proxies map[string]*commonconfig.ProxyCon
 
 	chained.PersistSessionStates(client.configDir)
 	dialers := chained.CreateDialers(client.configDir, proxies, client.user)
-	dialer, err := orchestrator.NewWithCallback(dialers, func(d orchestrator.Dialer) {
-		countryCode, country, city := proxyLoc(d)
-		client.statsTracker.SetActiveProxyLocation(
-			city,
-			country,
-			countryCode,
-		)
-		client.statsTracker.SetHasSucceedingProxy(true)
-	})
+	dialer, err := orchestrator.NewWithCallback(dialers, client.statsTracker)
 	if err != nil {
 		return nil, err
 	}

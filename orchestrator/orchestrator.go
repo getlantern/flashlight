@@ -9,6 +9,7 @@ import (
 	"time"
 
 	bandit "github.com/alextanhongpin/go-bandit"
+	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/golog"
 )
 
@@ -26,19 +27,19 @@ const (
 
 // Orchestrator is responsible for continually choosting the optimized dialer.
 type Orchestrator struct {
-	dialers        []Dialer
-	bandit         *bandit.EpsilonGreedy
-	onActiveDialer func(Dialer)
+	dialers      []Dialer
+	bandit       *bandit.EpsilonGreedy
+	statsTracker stats.Tracker
 }
 
 // New creates a new Orchestrator given the available dialers.
 func New(dialers []Dialer) (*Orchestrator, error) {
-	return NewWithCallback(dialers, func(Dialer) {})
+	return NewWithCallback(dialers, stats.NewNoop())
 }
 
 // NewWithCallback creates a new Orchestrator given the available dialers and a
 // callback to be called when a dialer is selected.
-func NewWithCallback(dialers []Dialer, onActiveDialer func(Dialer)) (*Orchestrator, error) {
+func NewWithCallback(dialers []Dialer, statsTracker stats.Tracker) (*Orchestrator, error) {
 	log.Debugf("Creating orchestrator with %d dialers", len(dialers))
 	b, err := bandit.NewEpsilonGreedy(0.1, nil, nil)
 	if err != nil {
@@ -48,18 +49,20 @@ func NewWithCallback(dialers []Dialer, onActiveDialer func(Dialer)) (*Orchestrat
 
 	b.Init(len(dialers))
 	return &Orchestrator{
-		dialers:        dialers,
-		bandit:         b,
-		onActiveDialer: onActiveDialer,
+		dialers:      dialers,
+		bandit:       b,
+		statsTracker: statsTracker,
 	}, nil
 }
 
 func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	log.Debug("orchestrator::DialContext")
+	deadline, ok := ctx.Deadline()
+	log.Debugf("orchestrator::DialContext::deadline set: %v remaining: %v", ok, time.Until(deadline))
 	// We can not create a multi-armed bandit with no arms.
 	if len(o.dialers) == 0 {
 		return nil, log.Error("Cannot dial with no dialers")
 	}
+
 	chosenArm := o.bandit.SelectArm(rand.Float64())
 
 	// We have to be careful here about virtual, multiplexed connections, as the
@@ -93,10 +96,26 @@ func (o *Orchestrator) DialContext(ctx context.Context, network, addr string) (n
 		time.AfterFunc(secondsForSample*time.Second, func() {
 			o.bandit.Update(chosenArm, normalizeReceiveSpeed(dt.dataRecv))
 		})
-		o.onActiveDialer(dialer)
+		o.onSuccess(dialer)
 		return dt, err
 	}
+	o.onFailure()
 	return nil, log.Errorf("all dialers failed")
+}
+
+func (o *Orchestrator) onSuccess(dialer Dialer) {
+	log.Debugf("Dialer %v succeeded", dialer.Name())
+	countryCode, country, city := proxyLoc(dialer)
+	o.statsTracker.SetActiveProxyLocation(
+		city,
+		country,
+		countryCode,
+	)
+	o.statsTracker.SetHasSucceedingProxy(true)
+}
+
+func (o *Orchestrator) onFailure() {
+	o.statsTracker.SetHasSucceedingProxy(false)
 }
 
 const secondsForSample = 5
