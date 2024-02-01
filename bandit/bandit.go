@@ -82,7 +82,7 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 		if !dialer.SupportsAddr(network, addr) {
 			// If this dialer doesn't allow this domain, we need to choose a different one,
 			// but without giving this dialer a low reward.
-			chosenArm = o.differentArm(chosenArm, len(o.dialers))
+			chosenArm = differentArm(chosenArm, len(o.dialers), o.bandit)
 			continue
 		}
 		log.Debugf("bandit::dialer %d: %s at %v", chosenArm, dialer.Label(), dialer.Addr())
@@ -100,7 +100,7 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 				o.bandit.Update(chosenArm, 0.00005)
 			}
 			// Mark the failure and try another.
-			chosenArm = o.differentArm(chosenArm, len(o.dialers))
+			chosenArm = differentArm(chosenArm, len(o.dialers), o.bandit)
 			continue
 		}
 		log.Debugf("Dialer %v dialed in %v seconds", dialer.Name(), time.Since(start).Seconds())
@@ -126,7 +126,7 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 }
 
 // Choose a different arm than the one we already have, if possible.
-func (o *BanditDialer) differentArm(existingArm int, numDialers int) int {
+func differentArm(existingArm int, numDialers int, eg *bandit.EpsilonGreedy) int {
 	// We let the bandit choose a new arm (or at least try to) versus just rotating to the next
 	// dialer because we want to use the bandit's algorithm for optimizing exploration
 	// versus exploitation, i.e. it will choose another dialer with a probability
@@ -134,10 +134,11 @@ func (o *BanditDialer) differentArm(existingArm int, numDialers int) int {
 	// or not we need more data from it. Basically, it will choose a more useful
 	// dialer than our random selection.
 	if numDialers == 1 {
+		log.Debugf("Only one dialer, so returning the existing arm: %v", existingArm)
 		return existingArm
 	}
-	for i := 0; i < 20; i++ {
-		newArm := o.bandit.SelectArm(rand.Float64())
+	for i := 0; i < 30; i++ {
+		newArm := eg.SelectArm(rand.Float64())
 		if newArm != existingArm {
 			return newArm
 		}
