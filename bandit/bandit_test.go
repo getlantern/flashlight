@@ -25,13 +25,13 @@ func TestNewWithStats(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "should return an error if there are no dialers",
+			name: "should still succeed even if there are no dialers",
 			args: args{
 				dialers:      nil,
 				statsTracker: stats.NewNoop(),
 			},
 			want:    nil,
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "should return a BanditDialer if there's only one dialer",
@@ -95,18 +95,11 @@ func TestBanditDialer_DialContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			o := &BanditDialer{
-				dialers:      tt.fields.dialers,
-				statsTracker: stats.NewNoop(),
-			}
-			var err error
-			o.bandit, err = bandit.NewEpsilonGreedy(0.1, nil, nil)
+			o, err := New(tt.fields.dialers)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if len(o.dialers) > 0 {
-				o.bandit.Init(len(o.dialers))
-			}
+
 			got, err := o.DialContext(context.Background(), "tcp", "localhost:8080")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BanditDialer.DialContext() error = %v, wantErr %v", err, tt.wantErr)

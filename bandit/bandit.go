@@ -49,9 +49,6 @@ func New(dialers []Dialer) (*BanditDialer, error) {
 // callback to be called when a dialer is selected.
 func NewWithStats(dialers []Dialer, statsTracker stats.Tracker) (*BanditDialer, error) {
 	log.Debugf("Creating bandit with %d dialers", len(dialers))
-	if len(dialers) == 0 {
-		return nil, fmt.Errorf("cannot create bandit with no dialers")
-	}
 	b, err := bandit.NewEpsilonGreedy(0.1, nil, nil)
 	if err != nil {
 		log.Errorf("unable to create bandit: %v", err)
