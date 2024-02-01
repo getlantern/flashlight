@@ -104,7 +104,7 @@ func TestBanditDialer_DialContext(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if len(o.dialers) > 1 {
+			if len(o.dialers) > 0 {
 				o.bandit.Init(len(o.dialers))
 			}
 			got, err := o.DialContext(context.Background(), "tcp", "localhost:8080")
