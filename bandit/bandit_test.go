@@ -13,6 +13,50 @@ import (
 	"github.com/getlantern/flashlight/v7/stats"
 )
 
+func TestNewWithStats(t *testing.T) {
+	type args struct {
+		dialers      []Dialer
+		statsTracker stats.Tracker
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *BanditDialer
+		wantErr bool
+	}{
+		{
+			name: "should return an error if there are no dialers",
+			args: args{
+				dialers:      nil,
+				statsTracker: stats.NewNoop(),
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "should return a BanditDialer if there's only one dialer",
+			args: args{
+				dialers:      []Dialer{newTcpConnDialer()},
+				statsTracker: stats.NewNoop(),
+			},
+			want:    &BanditDialer{},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := NewWithStats(tt.args.dialers, tt.args.statsTracker)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewWithStats() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.want != nil && !reflect.TypeOf(got).AssignableTo(reflect.TypeOf(tt.want)) {
+				t.Errorf("BanditDialer.DialContext() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestBanditDialer_DialContext(t *testing.T) {
 	type fields struct {
 		dialers []Dialer
@@ -75,11 +119,6 @@ func TestBanditDialer_DialContext(t *testing.T) {
 			if tt.want != nil && !reflect.TypeOf(got).AssignableTo(reflect.TypeOf(tt.want)) {
 				t.Errorf("BanditDialer.DialContext() = %v, want %v", got, tt.want)
 			}
-			/*
-				if !reflect.DeepEqual(got, tt.want) {
-					t.Errorf("BanditDialer.DialContext() = %v, want %v", got, tt.want)
-				}
-			*/
 		})
 	}
 }

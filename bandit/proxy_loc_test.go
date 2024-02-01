@@ -209,10 +209,6 @@ func (d *testDialer) recalcRTT() {
 	}
 }
 
-func (d *testDialer) connectivityChecksSinceLast() int {
-	return int(atomic.SwapInt32(&d.connectivityChecks, 0))
-}
-
 func (d *testDialer) DataSent() uint64 {
 	return 0
 }
