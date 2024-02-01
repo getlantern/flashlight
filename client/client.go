@@ -37,7 +37,6 @@ import (
 	"github.com/getlantern/flashlight/v7/buffers"
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/common"
-	"github.com/getlantern/flashlight/v7/config"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/flashlight/v7/ops"
@@ -145,9 +144,6 @@ type Client struct {
 	httpProxyIP   string
 	httpProxyPort string
 
-	googleAdsFilter      func() bool
-	googleAdsOptionsLock sync.RWMutex
-	googleAdsOptions     *config.GoogleSearchAdsOptions
 	adTrackUrl           func() string
 	allowGoogleSearchAds func() bool
 	allowMITM            func() bool
@@ -210,12 +206,8 @@ func NewClient(
 		allowPrivateHosts:                      allowPrivateHosts,
 		lang:                                   lang,
 		adSwapTargetURL:                        adSwapTargetURL,
-		googleAdsFilter:                        allowGoogleSearchAds,
 		reverseDNS:                             reverseDNS,
-		googleAdsOptions:                       nil,
-		googleAdsOptionsLock:                   sync.RWMutex{},
 		adTrackUrl:                             adTrackUrl,
-		allowGoogleSearchAds:                   allowGoogleSearchAds,
 		allowMITM:                              allowMITM,
 		eventWithLabel:                         eventWithLabel,
 		httpListener:                           eventual.NewValue(),
@@ -455,11 +447,13 @@ func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reade
 // no error occurred, then the new dialers are returned.
 func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []bandit.Dialer {
 	log.Debug("Configure() called")
-	dialers, err := client.initDialers(proxies)
+	dialers, dialer, err :=
+		initDialers(proxies, client.configDir, client.statsTracker, client.user)
 	if err != nil {
 		log.Error(err)
 		return nil
 	}
+	client.dialer = dialer
 	chained.PersistSessionStates(client.configDir)
 	chained.TrackStatsFor(dialers, client.configDir, client.allowProbes())
 	return dialers
@@ -802,27 +796,22 @@ func errorResponse(_ *filters.ConnectionState, req *http.Request, _ bool, err er
 	}
 }
 
-func (client *Client) ConfigureGoogleAds(opts config.GoogleSearchAdsOptions) {
-	client.googleAdsOptionsLock.Lock()
-	client.googleAdsOptions = &opts
-	client.googleAdsOptionsLock.Unlock()
-}
-
 // initDialers takes hosts from cfg.ChainedServers and it uses them to create a
 // new dialer. Returns the new dialers.
-func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) ([]bandit.Dialer, error) {
+func initDialers(proxies map[string]*commonconfig.ProxyConfig,
+	configDir string, stats stats.Tracker,
+	uc common.UserConfig) ([]bandit.Dialer, *bandit.BanditDialer, error) {
 	if len(proxies) == 0 {
-		return nil, fmt.Errorf("no chained servers configured, not initializing dialers")
+		return nil, nil, fmt.Errorf("no chained servers configured, not initializing dialers")
 	}
 
-	chained.PersistSessionStates(client.configDir)
-	dialers := chained.CreateDialers(client.configDir, proxies, client.user)
-	dialer, err := bandit.NewWithStats(dialers, client.statsTracker)
+	chained.PersistSessionStates(configDir)
+	dialers := chained.CreateDialers(configDir, proxies, uc)
+	dialer, err := bandit.NewWithStats(dialers, stats)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	client.dialer = dialer
-	return dialers, nil
+	return dialers, dialer, nil
 }
 
 // Creates a local server to capture client hello messages from the browser and

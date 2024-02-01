@@ -104,16 +104,6 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	f.applyClientConfig(cfg)
 	f.applyOtel(cfg)
 	f.onConfigUpdate(cfg, src)
-	f.reconfigureGoogleAds()
-}
-
-func (f *Flashlight) reconfigureGoogleAds() {
-	var opts config.GoogleSearchAdsOptions
-	if err := f.FeatureOptions(config.FeatureGoogleSearchAds, &opts); err == nil {
-		f.client.ConfigureGoogleAds(opts)
-	} else {
-		log.Errorf("Unable to configure google search ads: %v", err)
-	}
 }
 
 // EnabledFeatures gets all features enabled based on current conditions
