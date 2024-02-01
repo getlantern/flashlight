@@ -17,18 +17,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
+	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/detour"
-	"github.com/getlantern/golog"
-	"github.com/getlantern/mockconn"
-	"github.com/getlantern/shortcut"
-
 	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/stats"
+	"github.com/getlantern/golog"
+	"github.com/getlantern/mockconn"
+	"github.com/getlantern/shortcut"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var logger = golog.LoggerFor("client-test")
@@ -598,4 +597,22 @@ type response struct {
 
 func (r *response) nested() (*http.Response, error) {
 	return http.ReadResponse(r.br, r.req)
+}
+
+func Test_initDialers(t *testing.T) {
+	proxies := newProxies()
+	stats := stats.NewNoop()
+	uc := common.NullUserConfig{}
+	dialers, banditDialer, err := initDialers(proxies, "", stats, uc)
+	assert.NoError(t, err)
+	assert.NotNil(t, dialers)
+	assert.NotNil(t, banditDialer)
+}
+
+func newProxies() map[string]*commonconfig.ProxyConfig {
+	proxies := make(map[string]*commonconfig.ProxyConfig)
+	proxies["proxy1"] = &commonconfig.ProxyConfig{
+		Addr: "proxy1",
+	}
+	return proxies
 }
