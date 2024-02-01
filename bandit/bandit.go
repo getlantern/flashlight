@@ -127,12 +127,15 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 
 // Choose a different arm than the one we already have, if possible.
 func (o *BanditDialer) differentArm(existingArm int, numDialers int) int {
-	// We let the bandit choose a new arm 10 times versus just rotating to the next
+	// We let the bandit choose a new arm (or at least try to) versus just rotating to the next
 	// dialer because we want to use the bandit's algorithm for optimizing exploration
 	// versus exploitation, i.e. it will choose another dialer with a probability
 	// proportional to how well it has performed in the past as well as to whether
 	// or not we need more data from it. Basically, it will choose a more useful
 	// dialer than our random selection.
+	if numDialers == 1 {
+		return existingArm
+	}
 	for i := 0; i < 20; i++ {
 		newArm := o.bandit.SelectArm(rand.Float64())
 		if newArm != existingArm {
