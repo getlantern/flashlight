@@ -4169,6 +4169,78 @@ featureoptions:
       - campaign: persagg
         description: ''
         keywords:
+        - "\u7F8E\u519B"
+        - "\u51FB\u6BC1"
+        - "\u80E1\u585E"
+        - "\u6B66\u88C5"
+        - "\u4E00\u679A"
+        - "\u51C6\u5907"
+        - "\u53D1\u5C04"
+        - "\u5BFC\u5F39"
+        name: "\u7F8E\u519B\u51FB\u6BC1\u80E1\u585E\u6B66\u88C5\u4E00\u679A\u6B63\u51C6\
+          \u5907\u53D1\u5C04\u7684\u5BFC\u5F39"
+        probability: 1.0
+        url: https://www.voachinese.com/a/us-hits-houthi-missile-being-prepared-for-launch-20240131/7465593.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u767D\u5BAB"
+        - "\u5BA3\u626C"
+        - "\u4E2D\u56FD"
+        - "\u63A5\u89E6"
+        - "\u53D6\u5F97"
+        - "\u5F97\u6210"
+        - "\u6210\u529F"
+        - "\u53D6\u5F97\u6210\u529F"
+        name: "\u767D\u5BAB\u5BA3\u626C\u4E0E\u4E2D\u56FD\u63A5\u89E6\u53D6\u5F97\u6210\
+          \u529F"
+        probability: 1.0
+        url: https://www.voachinese.com/a/white-house-touts-china-outreach-success-20240131/7465586.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E60\u8FD1\u5E73"
+        - "\u63A5\u53D7"
+        - "\u963F\u5BCC\u6C57"
+        - "\u5927\u4F7F"
+        - "\u56FD\u4E66"
+        - "\u662F\u5426"
+        - "\u610F\u5473"
+        - "\u610F\u5473\u7740"
+        - "\u4E2D\u56FD"
+        - "\u6B63\u5F0F"
+        - "\u627F\u8BA4"
+        - "\u5854\u5229"
+        - "\u5854\u5229\u73ED"
+        - "\u653F\u6743"
+        name: "\u4E60\u8FD1\u5E73\u63A5\u53D7\u963F\u5BCC\u6C57\u5927\u4F7F\u56FD\u4E66\
+          \u662F\u5426\u610F\u5473\u7740\u4E2D\u56FD\u6B63\u5F0F\u627F\u8BA4\u5854\
+          \u5229\u73ED\u653F\u6743\uFF1F"
+        probability: 1.0
+        url: https://www.voachinese.com/a/china-s-president-issues-ambassador-credentials-to-afghanistan-20240131/7465536.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u56FD\u9645"
+        - "\u793E\u4F1A"
+        - "\u63A8\u52A8"
+        - "\u518D\u6B21"
+        - "\u505C\u706B"
+        - "\u4E4B\u9645"
+        - "\u4EE5\u8272\u5217"
+        - "\u519B\u961F"
+        - "\u88AD\u51FB"
+        - "\u52A0\u6C99"
+        - "\u5317\u90E8"
+        - "\u5357\u90E8"
+        name: "\u56FD\u9645\u793E\u4F1A\u63A8\u52A8\u518D\u6B21\u505C\u706B\u4E4B\u9645\
+          \uFF0C\u4EE5\u8272\u5217\u519B\u961F\u88AD\u51FB\u52A0\u6C99\u5317\u90E8\
+          \u548C\u5357\u90E8 \u202F\u202F\u202F\u202F\u202F\u202F"
+        probability: 1.0
+        url: https://www.voachinese.com/a/israeli-forces-strike-northern-southern-gaza-amid-push-for-new-halt-in-fighting-20240131/7465515.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
         - "\u4E9A\u592A"
         - "\u62A5\u9053"
         - '2024'
@@ -4649,88 +4721,390 @@ featureoptions:
           \ \u5939\u7F1D\u4E2D\u7684\u56DE\u5FC6"
         probability: 1.0
         url: https://www.voachinese.com/a/state-enforced-amnesia-over-wuhan-lockdown-20240131/7464672.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u56FD\u9645"
-        - "\u539F\u5B50"
-        - "\u673A\u6784"
-        - "\u539F\u5B50\u80FD"
-        - "\u56FD\u9645\u539F\u5B50\u80FD\u673A\u6784"
-        - "\u62A5\u544A"
-        - "\u6307\u51FA"
-        - "\u798F\u5C9B"
-        - "\u5904\u7406"
-        - "\u6392\u653E"
-        - "\u7B26\u5408"
-        - "\u56FD\u9645"
-        - "\u6807\u51C6"
-        - "\u56FD\u9645\u6807\u51C6"
-        name: "\u56FD\u9645\u539F\u5B50\u80FD\u673A\u6784\u62A5\u544A\u6307\u51FA\u798F\
-          \u5C9B\u6838\u5904\u7406\u6C34\u6392\u653E\u7B26\u5408\u56FD\u9645\u6807\
-          \u51C6"
-        probability: 1.0
-        url: https://www.voachinese.com/a/iaea-reports-fukushima-discharge-meeting-standards-20240131/7464600.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u8C03\u67E5"
-        - "\u4E2D\u56FD"
-        - "\u5E72\u9884"
-        - "\u9009\u4E3E"
-        - "\u4E4B\u9645"
-        - "\u52A0\u62FF"
-        - "\u52A0\u62FF\u5927"
-        - "\u5916\u4EA4"
-        - "\u5916\u4EA4\u90E8"
-        - "\u9ED1\u5BA2"
-        - "\u653B\u51FB"
-        - "\u9ED1\u5BA2\u653B\u51FB"
-        name: "\u8C03\u67E5\u4E2D\u56FD\u5E72\u9884\u9009\u4E3E\u4E4B\u9645 \u52A0\
-          \u62FF\u5927\u5916\u4EA4\u90E8\u906D\u9ED1\u5BA2\u653B\u51FB"
-        probability: 1.0
-        url: https://www.voachinese.com/a/canada-s-foreign-affairs-department-hacked-as-it-continues-inquiry-into-alleged-china-interference-20240131/7464591.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u5229\u6587"
-        - "\u6C99\u5229\u6587"
-        - "\u7F8E\u56FD"
-        - "\u5BF9\u534E"
-        - "\u6218\u7565"
-        - "\u594F\u6548"
-        - "\u5C3D\u5FEB"
-        - "\u5B89\u6392"
-        - "\u62DC\u4E60"
-        - "\u901A\u8BDD"
-        name: "\u6C99\u5229\u6587\uFF1A\u7F8E\u56FD\u5BF9\u534E\u6218\u7565\u594F\u6548\
-          \uFF0C\u5C3D\u5FEB\u5B89\u6392\u62DC\u4E60\u901A\u8BDD"
-        probability: 1.0
-        url: https://www.voachinese.com/a/jake-sullivan-on-us-china-relations-in-20240131/7464547.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u767D\u5BAB"
-        - "\u56FD\u5B89"
-        - "\u987E\u95EE"
-        - "\u5229\u6587"
-        - "\u6C99\u5229\u6587"
-        - "\u8868\u793A"
-        - "\u62DC\u4E60"
-        - "\u7BA1\u63A7"
-        - "\u7F8E\u4E2D"
-        - "\u4E2D\u5173"
-        - "\u5173\u7CFB"
-        - "\u7F8E\u4E2D\u5173\u7CFB"
-        - "\u81F3\u5173"
-        - "\u91CD\u8981"
-        - "\u81F3\u5173\u91CD\u8981"
-        name: "\u767D\u5BAB\u56FD\u5B89\u987E\u95EE\u6C99\u5229\u6587\u8868\u793A\
-          \ \u62DC\u4E60\u4F1A\u5BF9\u7BA1\u63A7\u7F8E\u4E2D\u5173\u7CFB\u81F3\u5173\
-          \u91CD\u8981"
-        probability: 1.0
-        url: https://www.voachinese.com/a/nsa-sullivan-says-biden-xi-talk-central-to-manage-relationship-20240131/7464527.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       usagm_fa:
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u062E\u062A\u0635\u0627\u0635\u06CC\u061B"
+        - "\u0633\u0647"
+        - "\u0639\u0636\u0648"
+        - "\u0645\u062C\u0644\u0633"
+        - "\u0646\u0645\u0627\u06CC\u0646\u062F\u06AF\u0627\u0646"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u062E\u0648\u0627\u0633\u062A\u0627\u0631"
+        - "\u0628\u0631\u062E\u0648\u0631\u062F"
+        - "\u062C\u062F\u06CC"
+        - "\u0628\u0627\u0632\u062F\u0627\u0631\u0646\u062F\u0647"
+        - "\u0628\u0627"
+        - "\u062C\u0645\u0647\u0648\u0631\u06CC"
+        - "\u0627\u0633\u0644\u0627\u0645\u06CC"
+        - "\u0634\u062F\u0646\u062F"
+        name: "\u0627\u062E\u062A\u0635\u0627\u0635\u06CC\u061B \u0633\u0647 \u0639\
+          \u0636\u0648 \u0645\u062C\u0644\u0633 \u0646\u0645\u0627\u06CC\u0646\u062F\
+          \u06AF\u0627\u0646 \u0622\u0645\u0631\u06CC\u06A9\u0627 \u062E\u0648\u0627\
+          \u0633\u062A\u0627\u0631 \u0628\u0631\u062E\u0648\u0631\u062F \u062C\u062F\
+          \u06CC \u0648 \u0628\u0627\u0632\u062F\u0627\u0631\u0646\u062F\u0647 \u0628\
+          \u0627 \u062C\u0645\u0647\u0648\u0631\u06CC \u0627\u0633\u0644\u0627\u0645\
+          \u06CC \u0634\u062F\u0646\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/exclusive-three-us-house-members-call-for-a-serious-and-deterrent-response-to-the-islamic-republic/7465658.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0631\u0648\u06CC\u062A\u0631\u0632:"
+        - "\u06A9\u062A\u0627\u0626\u0628"
+        - "\u062D\u0632\u0628\u200C\u0627\u0644\u0644\u0647"
+        - "\u062A\u062D\u062A"
+        - "\u0641\u0634\u0627\u0631"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u0645\u062C\u0628\u0648\u0631"
+        - "\u0628\u0647"
+        - "\u062A\u0639\u0644\u06CC\u0642"
+        - "\u062D\u0645\u0644\u0627\u062A"
+        - "\u062E\u0648\u062F"
+        - "\u0634\u062F\u0647\u200C\u0627\u0633\u062A"
+        name: "\u0631\u0648\u06CC\u062A\u0631\u0632: \u06A9\u062A\u0627\u0626\u0628\
+          \ \u062D\u0632\u0628\u200C\u0627\u0644\u0644\u0647 \u062A\u062D\u062A \u0641\
+          \u0634\u0627\u0631 \u0627\u06CC\u0631\u0627\u0646 \n \u0645\u062C\u0628\u0648\
+          \u0631 \u0628\u0647 \u062A\u0639\u0644\u06CC\u0642 \u062D\u0645\u0644\u0627\
+          \u062A \u062E\u0648\u062F \u0634\u062F\u0647\u200C\u0627\u0633\u062A"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/32800207.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062E\u0637"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06F3:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F3:\u06F0\
+          \u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/32781776.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u06AF\u0632\u0627\u0631\u0634"
+        - "\u062A\u062D\u0642\u06CC\u0642\u06CC\u061B"
+        - "\u0631\u0648\u062D\u0627\u0646\u06CC\u0648\u0646"
+        - "\u062F\u0631"
+        - "\u0642\u062F\u0631\u062A"
+        - "\u0628\u0647"
+        - "\u0631\u0648\u0627\u06CC\u062A"
+        - "\u0622\u0645\u0627\u0631"
+        name: "\u06AF\u0632\u0627\u0631\u0634 \u062A\u062D\u0642\u06CC\u0642\u06CC\
+          \u061B \u0631\u0648\u062D\u0627\u0646\u06CC\u0648\u0646 \u062F\u0631 \u0642\
+          \u062F\u0631\u062A \u0628\u0647 \u0631\u0648\u0627\u06CC\u062A \u0622\u0645\
+          \u0627\u0631"
+        probability: 1.0
+        url: https://ir.voanews.com/a/iran-clergies-mullahs-pollitical-power/7465154.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0631\u0633\u0627\u0646\u0647\u200C\u0647\u0627\u06CC"
+        - "\u0627\u0633\u0631\u0627\u0626\u06CC\u0644"
+        - "\u0627\u0632"
+        - "\u0637\u0631\u062D"
+        - "\u0622\u0632\u0627\u062F\u06CC"
+        - "\u06F3\u06F5"
+        - "\u06AF\u0631\u0648\u06AF\u0627\u0646"
+        - "\u062F\u0631"
+        - "\u0627\u0632\u0627\u06CC"
+        - "\u06F3\u06F5"
+        - "\u0631\u0648\u0632"
+        - "\u0622\u062A\u0634\u200C\u0628\u0633"
+        - "\u062E\u0628\u0631"
+        - "\u062F\u0627\u062F\u0646\u062F"
+        name: "\u0631\u0633\u0627\u0646\u0647\u200C\u0647\u0627\u06CC \u0627\u0633\
+          \u0631\u0627\u0626\u06CC\u0644 \u0627\u0632 \u0637\u0631\u062D \u0622\u0632\
+          \u0627\u062F\u06CC \u06F3\u06F5 \u06AF\u0631\u0648\u06AF\u0627\u0646 \u062F\
+          \u0631 \u0627\u0632\u0627\u06CC \u06F3\u06F5 \u0631\u0648\u0632 \u0622\u062A\
+          \u0634\u200C\u0628\u0633 \u062E\u0628\u0631 \u062F\u0627\u062F\u0646\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/32800197.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0648\u0627\u0644\u062F\u06CC\u0646"
+        - "\u062C\u0648\u0627\u0646"
+        - "\u0633\u0648\u0626\u062F\u06CC"
+        - "\u062F\u0631"
+        - "\u0628\u0646\u062F"
+        - "\u062C\u0645\u0647\u0648\u0631\u06CC"
+        - "\u0627\u0633\u0644\u0627\u0645\u06CC\u060C"
+        - "\u062E\u0648\u0627\u0633\u062A\u0627\u0631"
+        - "\u0622\u0632\u0627\u062F\u06CC"
+        - "\u0641\u0631\u0632\u0646\u062F\u0634\u0627\u0646"
+        - "\u0634\u062F\u0646\u062F\u060C"
+        - "\u062D\u062A\u06CC"
+        - "\u0628\u0647"
+        - "\u0642\u06CC\u0645\u062A"
+        - "\u062A\u0628\u0627\u062F\u0644"
+        - "\u0628\u0627"
+        - "\u062D\u0645\u06CC\u062F"
+        - "\u0646\u0648\u0631\u06CC"
+        name: "\u0648\u0627\u0644\u062F\u06CC\u0646 \u062C\u0648\u0627\u0646 \u0633\
+          \u0648\u0626\u062F\u06CC \u062F\u0631 \u0628\u0646\u062F \u062C\u0645\u0647\
+          \u0648\u0631\u06CC \u0627\u0633\u0644\u0627\u0645\u06CC\u060C \u062E\u0648\
+          \u0627\u0633\u062A\u0627\u0631 \u0622\u0632\u0627\u062F\u06CC \u0641\u0631\
+          \u0632\u0646\u062F\u0634\u0627\u0646 \u0634\u062F\u0646\u062F\u060C \u062D\
+          \u062A\u06CC \u0628\u0647 \u0642\u06CC\u0645\u062A \u062A\u0628\u0627\u062F\
+          \u0644 \u0628\u0627 \u062D\u0645\u06CC\u062F \u0646\u0648\u0631\u06CC"
+        probability: 1.0
+        url: https://ir.voanews.com/a/family-of-swede-held-in-iran-call-for-prisoner-swap/7465628.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\xAB\u0645\u0642\u0627\u0648\u0645\u062A"
+        - "\u0627\u0633\u0644\u0627\u0645\u06CC"
+        - "\u0639\u0631\u0627\u0642\xBB"
+        - "\u0631\u0627"
+        - "\u0645\u0642\u0635\u0631"
+        - "\u062D\u0645\u0644\u0647"
+        - "\u067E\u0647\u067E\u0627\u062F\u06CC"
+        - "\u0628\u0647"
+        - "\u0633\u0631\u0628\u0627\u0632\u0627\u0646"
+        - "\u062E\u0648\u062F"
+        - "\u062F\u0631"
+        - "\u0627\u0631\u062F\u0646"
+        - "\u062F\u0627\u0646\u0633\u062A\u061B"
+        - "\u0627\u0646\u062A\u0642\u0627\u0645"
+        - "\u062F\u0631"
+        - "\u0631\u0627\u0647"
+        - "\u0627\u0633\u062A"
+        name: "\u0622\u0645\u0631\u06CC\u06A9\u0627 \xAB\u0645\u0642\u0627\u0648\u0645\
+          \u062A \u0627\u0633\u0644\u0627\u0645\u06CC \u0639\u0631\u0627\u0642\xBB\
+          \ \u0631\u0627 \u0645\u0642\u0635\u0631 \u062D\u0645\u0644\u0647 \u067E\u0647\
+          \u067E\u0627\u062F\u06CC \u0628\u0647 \u0633\u0631\u0628\u0627\u0632\u0627\
+          \u0646 \u062E\u0648\u062F \u062F\u0631 \u0627\u0631\u062F\u0646 \u062F\u0627\
+          \u0646\u0633\u062A\u061B \u0627\u0646\u062A\u0642\u0627\u0645 \u062F\u0631\
+          \ \u0631\u0627\u0647 \u0627\u0633\u062A"
+        probability: 1.0
+        url: https://ir.voanews.com/a/umbrella-group-islamic-resistance-in-iraq-responsible-for-strike-that-killed-3-troops-in-jordan-us/7465613.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0631\u0626\u06CC\u0633"
+        - "\u0627\u0641\u200C\u0628\u06CC\u200C\u0622\u06CC"
+        - "\u0645\u06CC\u200C\u06AF\u0648\u06CC\u062F"
+        - "\u0647\u06A9\u0631\u0647\u0627\u06CC"
+        - "\u0686\u06CC\u0646\u06CC"
+        - "\u0628\u0647\u200C\u062F\u0646\u0628\u0627\u0644"
+        - "\u062D\u0645\u0644\u0647"
+        - "\u0628\u0647"
+        - "\u0632\u06CC\u0631\u0633\u0627\u062E\u062A\u200C\u0647\u0627\u06CC"
+        - "\u062D\u06CC\u0627\u062A\u06CC"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u0647\u0633\u062A\u0646\u062F"
+        name: "\u0631\u0626\u06CC\u0633 \u0627\u0641\u200C\u0628\u06CC\u200C\u0622\
+          \u06CC \u0645\u06CC\u200C\u06AF\u0648\u06CC\u062F \u0647\u06A9\u0631\u0647\
+          \u0627\u06CC \u0686\u06CC\u0646\u06CC \u0628\u0647\u200C\u062F\u0646\u0628\
+          \u0627\u0644 \u062D\u0645\u0644\u0647 \u0628\u0647 \u0632\u06CC\u0631\u0633\
+          \u0627\u062E\u062A\u200C\u0647\u0627\u06CC \u062D\u06CC\u0627\u062A\u06CC\
+          \ \u0622\u0645\u0631\u06CC\u06A9\u0627 \u0647\u0633\u062A\u0646\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/32800198.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u062E\u062A\u0635\u0627\u0635\u06CC\u061B"
+        - "\u0633\u0641\u06CC\u0631"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u062F\u0631"
+        - "\u0627\u0645\u0648\u0631"
+        - "\u0622\u0632\u0627\u062F\u06CC"
+        - "\u0645\u0630\u0647\u0628\u06CC:"
+        - "\u0645\u0631\u062F\u0645"
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u0628\u0647"
+        - "\xAB\u0646\u0642\u0637\u0647"
+        - "\u062C\u0648\u0634\xBB"
+        - "\u0646\u0632\u062F\u06CC\u06A9"
+        - "\u0645\u06CC\u200C\u0634\u0648\u0646\u062F"
+        name: "\u0627\u062E\u062A\u0635\u0627\u0635\u06CC\u061B \u0633\u0641\u06CC\
+          \u0631 \u0622\u0645\u0631\u06CC\u06A9\u0627 \u062F\u0631 \u0627\u0645\u0648\
+          \u0631 \u0622\u0632\u0627\u062F\u06CC \u0645\u0630\u0647\u0628\u06CC: \u0645\
+          \u0631\u062F\u0645 \u0627\u06CC\u0631\u0627\u0646 \u0628\u0647 \xAB\u0646\
+          \u0642\u0637\u0647 \u062C\u0648\u0634\xBB \u0646\u0632\u062F\u06CC\u06A9\
+          \ \u0645\u06CC\u200C\u0634\u0648\u0646\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/exclusive-sam-brownback-iranian-people-are-approaching-the-boiling-point-/7465498.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0622\u0632\u0627\u062F\u06CC"
+        - "\u06F3\u06F5"
+        - "\u06AF\u0631\u0648\u06AF\u0627\u0646"
+        - "\u0628\u0647"
+        - "\u0627\u0632\u0627\u06CC"
+        - "\u0622\u062A\u0634\u200C\u0628\u0633"
+        - "\u06F3\u06F5"
+        - "\u0631\u0648\u0632\u0647\u061B"
+        - "\u0645\u0648\u0633\u0627\u062F"
+        - "\u0637\u0631\u062D"
+        - "\u0645\u0628\u0627\u062F\u0644\u0647"
+        - "\u06AF\u0631\u0648\u06AF\u0627\u0646\u200C\u0647\u0627"
+        - "\u0628\u0627"
+        - "\u062D\u0645\u0627\u0633"
+        - "\u0631\u0627"
+        - "\u0628\u0647"
+        - "\u06A9\u0627\u0628\u06CC\u0646\u0647"
+        - "\u062C\u0646\u06AF"
+        - "\u0627\u0633\u0631\u0627\u0626\u06CC\u0644"
+        - "\u0633\u067E\u0631\u062F"
+        name: "\u0622\u0632\u0627\u062F\u06CC \u06F3\u06F5 \u06AF\u0631\u0648\u06AF\
+          \u0627\u0646 \u0628\u0647 \u0627\u0632\u0627\u06CC \u0622\u062A\u0634\u200C\
+          \u0628\u0633 \u06F3\u06F5 \u0631\u0648\u0632\u0647\u061B \u0645\u0648\u0633\
+          \u0627\u062F \u0637\u0631\u062D \u0645\u0628\u0627\u062F\u0644\u0647 \u06AF\
+          \u0631\u0648\u06AF\u0627\u0646\u200C\u0647\u0627 \u0628\u0627 \u062D\u0645\
+          \u0627\u0633 \u0631\u0627 \u0628\u0647 \u06A9\u0627\u0628\u06CC\u0646\u0647\
+          \ \u062C\u0646\u06AF \u0627\u0633\u0631\u0627\u0626\u06CC\u0644 \u0633\u067E\
+          \u0631\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/israel-hamas-new-hostage-exchange-deal-plan/7465587.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062E\u0637"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06F2:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F2:\u06F0\
+          \u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/32781773.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u06AF\u0627\u0631\u062F"
+        - "\u0645\u0644\u06CC"
+        - "\u0627\u06CC\u0627\u0644\u0627\u062A"
+        - "\u0645\u062A\u062D\u062F\u0647"
+        - "\u0645\u062C\u0631\u0648\u062D"
+        - "\u0634\u062F\u0646"
+        - "\u0633\u0631\u0628\u0627\u0632\u0627\u0646"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627\u06CC\u06CC"
+        - "\u062F\u0631"
+        - "\u062D\u0645\u0644\u0647"
+        - "\u067E\u0647\u067E\u0627\u062F\u06CC"
+        - "\u0627\u062E\u06CC\u0631"
+        - "\u0631\u0627"
+        - "\u062A\u0627\u06CC\u06CC\u062F"
+        - "\u06A9\u0631\u062F"
+        name: "\u06AF\u0627\u0631\u062F \u0645\u0644\u06CC \u0627\u06CC\u0627\u0644\
+          \u0627\u062A \u0645\u062A\u062D\u062F\u0647 \u0645\u062C\u0631\u0648\u062D\
+          \ \u0634\u062F\u0646 \u0633\u0631\u0628\u0627\u0632\u0627\u0646 \u0622\u0645\
+          \u0631\u06CC\u06A9\u0627\u06CC\u06CC \u062F\u0631 \u062D\u0645\u0644\u0647\
+          \ \u067E\u0647\u067E\u0627\u062F\u06CC \u0627\u062E\u06CC\u0631 \u0631\u0627\
+          \ \u062A\u0627\u06CC\u06CC\u062F \u06A9\u0631\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/ational-guard-confirms-soldiers-injured-in-northeast-jordan-near-syrian-border/7465455.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u06CC\u0644\u06CC\u0627\u0631\u062F\u0631"
+        - "\u0631\u0648\u0633"
+        - "\u062F\u0631"
+        - "\u0634\u06A9\u0627\u06CC\u062A"
+        - "\u0627\u0632"
+        - "\u0645\u0648\u0633\u0633\u0647"
+        - "\u062D\u0631\u0627\u062C"
+        - "\u0633\u0627\u062A\u0628\u06CC\u0632"
+        - "\u0628\u0647"
+        - "\u0627\u062A\u0647\u0627\u0645"
+        - "\xAB\u06A9\u0644\u0627\u0647\u0628\u0631\u062F\u0627\u0631\u06CC\xBB"
+        - "\u0634\u06A9\u0633\u062A"
+        - "\u062E\u0648\u0631\u062F"
+        name: "\u0645\u06CC\u0644\u06CC\u0627\u0631\u062F\u0631 \u0631\u0648\u0633\
+          \ \u062F\u0631 \u0634\u06A9\u0627\u06CC\u062A \u0627\u0632 \u0645\u0648\u0633\
+          \u0633\u0647 \u062D\u0631\u0627\u062C \u0633\u0627\u062A\u0628\u06CC\u0632\
+          \ \u0628\u0647 \u0627\u062A\u0647\u0627\u0645 \xAB\u06A9\u0644\u0627\u0647\
+          \u0628\u0631\u062F\u0627\u0631\u06CC\xBB \u0634\u06A9\u0633\u062A \u062E\
+          \u0648\u0631\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/32800193.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062E\u0637"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06F1:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F1:\u06F0\
+          \u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/32781770.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0634\u0628\u06A9\u0647"
+        - "\u062A\u0644\u0648\u06CC\u0632\u06CC\u0648\u0646\u06CC"
+        - "\xAB\u0645\u0646\u0648\u062A\u0648\xBB"
+        - "\u0628\u0647"
+        - "\u0641\u0639\u0627\u0644\u06CC\u062A"
+        - "\u062E\u0648\u062F"
+        - "\u067E\u0627\u06CC\u0627\u0646"
+        - "\u062F\u0627\u062F"
+        name: "\u0634\u0628\u06A9\u0647 \u062A\u0644\u0648\u06CC\u0632\u06CC\u0648\
+          \u0646\u06CC \xAB\u0645\u0646\u0648\u062A\u0648\xBB \u0628\u0647 \u0641\u0639\
+          \u0627\u0644\u06CC\u062A  \u062E\u0648\u062F \u067E\u0627\u06CC\u0627\u0646\
+          \ \u062F\u0627\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/32800180.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062C\u0646\u06AF"
+        - "\u062F\u0631"
+        - "\u063A\u0632\u0647"
+        - "\u0627\u062F\u0627\u0645\u0647"
+        - "\u062F\u0627\u0631\u062F\u061B"
+        - "\u062D\u0645\u0627\u0633"
+        - "\u0645\u06CC\u200C\u06AF\u0648\u06CC\u062F"
+        - "\u0645\u0634\u063A\u0648\u0644"
+        - "\u0628\u0631\u0631\u0633\u06CC"
+        - "\u0627\u0653\u062A\u0634\u200C\u0628\u0633"
+        - "\u0627\u0653\u0632\u0627\u062F\u06CC"
+        - "\u06AF\u0631\u0648\u06AF\u0627\u0646\u200C\u0647\u0627\u0633\u062A"
+        name: "\u062C\u0646\u06AF \u062F\u0631 \u063A\u0632\u0647 \u0627\u062F\u0627\
+          \u0645\u0647 \u062F\u0627\u0631\u062F\u061B \u062D\u0645\u0627\u0633 \u0645\
+          \u06CC\u200C\u06AF\u0648\u06CC\u062F \u0645\u0634\u063A\u0648\u0644 \u0628\
+          \u0631\u0631\u0633\u06CC \u0627\u0653\u062A\u0634\u200C\u0628\u0633 \u0648\
+          \ \u0627\u0653\u0632\u0627\u062F\u06CC \u06AF\u0631\u0648\u06AF\u0627\u0646\
+          \u200C\u0647\u0627\u0633\u062A"
+        probability: 1.0
+        url: https://ir.voanews.com/a/war-gaza-hamas-hostages-ceasefire-israel/7465419.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u067E\u0633"
+        - "\u0627\u0632"
+        - "\u067E\u06CC\u0631\u0648\u0632\u06CC"
+        - "\u062F\u0634\u0648\u0627\u0631"
+        - "\u0645\u0642\u0627\u0628\u0644"
+        - "\u0633\u0648\u0631\u06CC\u0647\u060C"
+        - "\u062D\u0631\u06CC\u0641"
+        - "\u0698\u0627\u067E\u0646"
+        - "\u062F\u0631"
+        - "\u0645\u0631\u062D\u0644\u0647"
+        - "\u06CC\u06A9\u200C\u0686\u0647\u0627\u0631\u0645"
+        - "\u0646\u0647\u0627\u06CC\u06CC"
+        - "\u0634\u062F"
+        name: "\u0627\u06CC\u0631\u0627\u0646 \u067E\u0633 \u0627\u0632 \u067E\u06CC\
+          \u0631\u0648\u0632\u06CC \u062F\u0634\u0648\u0627\u0631 \u0645\u0642\u0627\
+          \u0628\u0644 \u0633\u0648\u0631\u06CC\u0647\u060C \u062D\u0631\u06CC\u0641\
+          \ \u0698\u0627\u067E\u0646 \u062F\u0631 \u0645\u0631\u062D\u0644\u0647 \u06CC\
+          \u06A9\u200C\u0686\u0647\u0627\u0631\u0645 \u0646\u0647\u0627\u06CC\u06CC\
+          \ \u0634\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/iran-wins-syria-in-asian-footbal-cup/7465366.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u062C\u0644\u0647"
+        - "\u0646\u06CC\u0645\u0647\u200C\u0634\u0628"
+        name: "\u0645\u062C\u0644\u0647 \u0646\u06CC\u0645\u0647\u200C\u0634\u0628"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/32781768.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -4883,7 +5257,7 @@ featureoptions:
         - "\u067E\u0648\u0644:"
         - "\u062D\u0645\u0644\u0627\u062A"
         - "\u062D\u0648\u062B\u06CC\u200C\u0647\u0627"
-        - "\u062A\u062D\u0631\u0627\u062A"
+        - "\u062A\u0631\u062F\u062F"
         - "\u0627\u0632"
         - "\u0645\u0633\u06CC\u0631"
         - "\u062F\u0631\u06CC\u0627\u06CC"
@@ -4896,10 +5270,10 @@ featureoptions:
         - "\u0627\u0633\u062A"
         name: "\u0635\u0646\u062F\u0648\u0642 \u0628\u06CC\u0646\u200C\u0627\u0644\
           \u0645\u0644\u0644\u06CC \u067E\u0648\u0644: \u062D\u0645\u0644\u0627\u062A\
-          \ \u062D\u0648\u062B\u06CC\u200C\u0647\u0627 \u062A\u062D\u0631\u0627\u062A\
-          \ \u0627\u0632 \u0645\u0633\u06CC\u0631 \u062F\u0631\u06CC\u0627\u06CC \u0633\
-          \u0631\u062E \u0631\u0627 \u06F3\u06F0 \u062F\u0631\u0635\u062F \u06A9\u0627\
-          \u0647\u0634 \u062F\u0627\u062F\u0647 \u0627\u0633\u062A"
+          \ \u062D\u0648\u062B\u06CC\u200C\u0647\u0627 \u062A\u0631\u062F\u062F \u0627\
+          \u0632 \u0645\u0633\u06CC\u0631 \u062F\u0631\u06CC\u0627\u06CC \u0633\u0631\
+          \u062E \u0631\u0627 \u06F3\u06F0 \u062F\u0631\u0635\u062F \u06A9\u0627\u0647\
+          \u0634 \u062F\u0627\u062F\u0647 \u0627\u0633\u062A"
         probability: 1.0
         url: https://ir.voanews.com/a/red-sea-container-shipping-down-30-over-attacks/7465169.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
@@ -5060,18 +5434,6 @@ featureoptions:
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0622\u063A\u0627\u0632"
-        - "\u06CC\u06A9"
-        - "\u0627\u0646\u0641\u062C\u0627\u0631"
-        - "\u0627\u0631\u0632\u06CC"
-        - "\u062F\u06CC\u06AF\u0631"
-        name: "\u0622\u063A\u0627\u0632 \u06CC\u06A9 \u0627\u0646\u0641\u062C\u0627\
-          \u0631 \u0627\u0631\u0632\u06CC \u062F\u06CC\u06AF\u0631"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/32799973.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
         - "\u0627\u06CC\u0633\u062A\u06AF\u0627\u0647"
         - "\u0641\u0631\u062F\u0627:"
         - "\u0622\u063A\u0627\u0632"
@@ -5084,6 +5446,18 @@ featureoptions:
           \ \u0627\u0631\u0632\u06CC \u062F\u06CC\u06AF\u0631"
         probability: 1.0
         url: https://www.radiofarda.com/a/32781763.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0622\u063A\u0627\u0632"
+        - "\u06CC\u06A9"
+        - "\u0627\u0646\u0641\u062C\u0627\u0631"
+        - "\u0627\u0631\u0632\u06CC"
+        - "\u062F\u06CC\u06AF\u0631"
+        name: "\u0622\u063A\u0627\u0632 \u06CC\u06A9 \u0627\u0646\u0641\u062C\u0627\
+          \u0631 \u0627\u0631\u0632\u06CC \u062F\u06CC\u06AF\u0631"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/32799973.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -5119,80 +5493,6 @@ featureoptions:
       - campaign: persagg
         description: ''
         keywords:
-        - "\u062F\u0648\u0645\u06CC\u0646"
-        - "\u0631\u0648\u0632"
-        - "\u0627\u0639\u062A\u0635\u0627\u0628"
-        - "\u0628\u0627\u0632\u0627\u0631"
-        - "\u0633\u0645\u06CC\u0631\u0645"
-        - "\u062F\u0631"
-        - "\u0627\u0639\u062A\u0631\u0627\u0636"
-        - "\u0628\u0647"
-        - "\u0635\u062F\u0648\u0631"
-        - "\u062D\u06A9\u0645"
-        - "\u0627\u0639\u062F\u0627\u0645"
-        - "\u0628\u0631\u0627\u06CC"
-        - "\u062F\u0648"
-        - "\u062C\u0648\u0627\u0646"
-        - "\u0645\u0639\u062A\u0631\u0636"
-        name: "\u062F\u0648\u0645\u06CC\u0646 \u0631\u0648\u0632 \u0627\u0639\u062A\
-          \u0635\u0627\u0628 \u0628\u0627\u0632\u0627\u0631 \u0633\u0645\u06CC\u0631\
-          \u0645 \u062F\u0631 \u0627\u0639\u062A\u0631\u0627\u0636 \u0628\u0647 \u0635\
-          \u062F\u0648\u0631 \u062D\u06A9\u0645 \u0627\u0639\u062F\u0627\u0645 \u0628\
-          \u0631\u0627\u06CC \u062F\u0648 \u062C\u0648\u0627\u0646 \u0645\u0639\u062A\
-          \u0631\u0636"
-        probability: 1.0
-        url: https://ir.voanews.com/a/strike-bazaar-semirom-protest-against-execution-protestors/7465112.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u062D\u0645\u0627\u0633"
-        - "\u0645\u06CC\u200C\u06AF\u0648\u06CC\u062F"
-        - "\u06F1\u06F5\u06F0"
-        - "\u062A\u0646"
-        - "\u062F\u0631"
-        - "\u063A\u0632\u0647"
-        - "\u0637\u06CC"
-        - "\u06F2\u06F4"
-        - "\u0633\u0627\u0639\u062A"
-        - "\u06AF\u0630\u0634\u062A\u0647"
-        - "\u06A9\u0634\u062A\u0647"
-        - "\u0634\u062F\u0646\u062F"
-        name: "\u062D\u0645\u0627\u0633 \u0645\u06CC\u200C\u06AF\u0648\u06CC\u062F\
-          \ \u06F1\u06F5\u06F0 \u062A\u0646 \u062F\u0631 \u063A\u0632\u0647 \u0637\
-          \u06CC \u06F2\u06F4 \u0633\u0627\u0639\u062A \u06AF\u0630\u0634\u062A\u0647\
-          \ \u06A9\u0634\u062A\u0647 \u0634\u062F\u0646\u062F"
-        probability: 1.0
-        url: https://ir.voanews.com/a/israel-hezbolloah-hamas-gaza/7464870.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
-        - "\u0686\u0646\u062F"
-        - "\u0634\u0631\u06A9\u062A"
-        - "\u062F\u0631"
-        - "\u062A\u0631\u06A9\u06CC\u0647"
-        - "\u0644\u0628\u0646\u0627\u0646"
-        - "\u0631\u0627"
-        - "\u0628\u0647"
-        - "\u062F\u0644\u06CC\u0644"
-        - "\u0627\u0631\u062A\u0628\u0627\u0637"
-        - "\u0628\u0627"
-        - "\u062D\u0632\u0628\u200C\u0627\u0644\u0644\u0647"
-        - "\u0633\u067E\u0627\u0647"
-        - "\u067E\u0627\u0633\u062F\u0627\u0631\u0627\u0646"
-        - "\u062A\u062D\u0631\u06CC\u0645"
-        - "\u06A9\u0631\u062F"
-        name: "\u0622\u0645\u0631\u06CC\u06A9\u0627 \u0686\u0646\u062F \u0634\u0631\
-          \u06A9\u062A \u062F\u0631 \u062A\u0631\u06A9\u06CC\u0647 \u0648 \u0644\u0628\
-          \u0646\u0627\u0646 \u0631\u0627 \u0628\u0647 \u062F\u0644\u06CC\u0644 \u0627\
-          \u0631\u062A\u0628\u0627\u0637 \u0628\u0627 \u062D\u0632\u0628\u200C\u0627\
-          \u0644\u0644\u0647 \u0648 \u0633\u067E\u0627\u0647 \u067E\u0627\u0633\u062F\
-          \u0627\u0631\u0627\u0646 \u062A\u062D\u0631\u06CC\u0645 \u06A9\u0631\u062F"
-        probability: 1.0
-        url: https://ir.voanews.com/a/us-sanctions-iran-hezbollah/7464998.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
         - "\u0645\u0646\u0637\u0642"
         - "\u0631\u06CC\u0627\u0636\u06CC"
         - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
@@ -5205,16 +5505,6 @@ featureoptions:
           \u0634\u0646\u06CC \u0627\u062D\u0633\u0627\u0633\u0627\u062A"
         probability: 1.0
         url: https://www.radiofarda.com/a/32799746.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0628\u062D\u062B\u200C\u0628\u0631\u0627\u0646\u06AF\u06CC\u0632-"
-        - "\u062A\u062C\u0627\u0631\u062A"
-        - "\u0632\u0628\u0627\u0644\u0647"
-        name: "\u0628\u062D\u062B\u200C\u0628\u0631\u0627\u0646\u06AF\u06CC\u0632\
-          - \u062A\u062C\u0627\u0631\u062A \u0632\u0628\u0627\u0644\u0647"
-        probability: 1.0
-        url: https://ir.voanews.com/a/7465050.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -5240,241 +5530,364 @@ featureoptions:
           \u0648\u0646 \u06A9\u0631\u062F\u0647 \u0627\u0633\u062A"
         probability: 1.0
         url: https://www.radiofarda.com/a/putin-says-u-s-patriot-system-used-by-ukraine-to-shoot-down-russian-plane-last-week/32799933.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      usagm_fa_weekly:
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0645\u062C\u0644\u0647"
-        - "\u0634\u0628"
-        name: "\u0645\u062C\u0644\u0647 \u06F8 \u0634\u0628"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/32781760.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
-        - "\u0686\u0647\u0627\u0631"
-        - "\u0634\u062E\u0635"
-        - "\u062D\u0642\u0648\u0642\u06CC"
-        - "\u062D\u0642\u06CC\u0642\u06CC"
-        - "\u0631\u0627"
-        - "\u0628\u0647\u200C\u062F\u0644\u06CC\u0644"
-        - "\u062A\u0627\u0645\u06CC\u0646"
-        - "\u0645\u0627\u0644\u06CC"
-        - "\u0646\u06CC\u0631\u0648\u06CC"
-        - "\u0642\u062F\u0633"
-        - "\u06AF\u0631\u0648\u0647"
+        - "\u0631\u0648\u06CC\u062A\u0631\u0632:"
+        - "\u06A9\u062A\u0627\u0626\u0628"
         - "\u062D\u0632\u0628\u200C\u0627\u0644\u0644\u0647"
-        - "\u0644\u0628\u0646\u0627\u0646"
-        - "\u062A\u062D\u0631\u06CC\u0645"
-        - "\u06A9\u0631\u062F"
-        name: "\u0622\u0645\u0631\u06CC\u06A9\u0627 \u0686\u0647\u0627\u0631 \u0634\
-          \u062E\u0635 \u062D\u0642\u0648\u0642\u06CC \u0648 \u062D\u0642\u06CC\u0642\
-          \u06CC \u0631\u0627 \u0628\u0647\u200C\u062F\u0644\u06CC\u0644 \u062A\u0627\
-          \u0645\u06CC\u0646 \u0645\u0627\u0644\u06CC \u0646\u06CC\u0631\u0648\u06CC\
-          \ \u0642\u062F\u0633 \u0648 \u06AF\u0631\u0648\u0647 \u062D\u0632\u0628\u200C\
-          \u0627\u0644\u0644\u0647 \u0644\u0628\u0646\u0627\u0646 \u062A\u062D\u0631\
-          \u06CC\u0645 \u06A9\u0631\u062F"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/us-targets-iranian-hezbollah-financial-network-treasury-dept-says/32799960.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0627\u0633\u062A\u0642\u0631\u0627\u0631"
-        - "\u06AF\u0633\u062A\u0631\u062F\u0647"
-        - "\u0646\u0627\u0648\u0647\u0627\u06CC"
-        - "\u0647\u0646\u062F"
-        - "\u062F\u0631"
-        - "\u0646\u0632\u062F\u06CC\u06A9\u06CC"
-        - "\u062F\u0631\u06CC\u0627\u06CC"
-        - "\u0633\u0631\u062E"
-        - "\u0628\u0631\u0627\u06CC"
-        - "\u0645\u0642\u0627\u0628\u0644\u0647"
-        - "\u0628\u0627"
-        - "\u062F\u0632\u062F\u06CC"
-        - "\u062F\u0631\u06CC\u0627\u06CC\u06CC"
-        name: "\u0627\u0633\u062A\u0642\u0631\u0627\u0631 \u06AF\u0633\u062A\u0631\
-          \u062F\u0647 \u0646\u0627\u0648\u0647\u0627\u06CC \u0647\u0646\u062F \u062F\
-          \u0631 \u0646\u0632\u062F\u06CC\u06A9\u06CC \u062F\u0631\u06CC\u0627\u06CC\
-          \ \u0633\u0631\u062E \u0628\u0631\u0627\u06CC \u0645\u0642\u0627\u0628\u0644\
-          \u0647 \u0628\u0627 \u062F\u0632\u062F\u06CC \u062F\u0631\u06CC\u0627\u06CC\
-          \u06CC"
-        probability: 1.0
-        url: https://ir.voanews.com/a/india-navy-hijacking-arabiansea-houthis/7464969.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0627\u062E\u0628\u0627\u0631"
-        - "\u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
-        name: "\u0627\u062E\u0628\u0627\u0631 \u0634\u0627\u0645\u06AF\u0627\u0647\
-          \u06CC"
-        probability: 1.0
-        url: https://ir.voanews.com/a/7465007.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u062A\u0645\u0631\u06CC\u0646\u0627\u062A"
-        - "\u0622\u0645\u0627\u062F\u0647\u200C\u0633\u0627\u0632\u06CC"
-        - "\u062A\u06CC\u0645"
-        - "\u0645\u0644\u06CC"
-        - "\u0648\u0627\u062A\u0631\u067E\u0644\u0648\u06CC"
-        - "\u0646\u0648\u062C\u0648\u0627\u0646\u0627\u0646"
+        - "\u062A\u062D\u062A"
+        - "\u0641\u0634\u0627\u0631"
         - "\u0627\u06CC\u0631\u0627\u0646"
-        name: "\u062A\u0645\u0631\u06CC\u0646\u0627\u062A \u0622\u0645\u0627\u062F\
-          \u0647\u200C\u0633\u0627\u0632\u06CC \u062A\u06CC\u0645 \u0645\u0644\u06CC\
-          \ \u0648\u0627\u062A\u0631\u067E\u0644\u0648\u06CC \u0646\u0648\u062C\u0648\
-          \u0627\u0646\u0627\u0646 \u0627\u06CC\u0631\u0627\u0646"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/32799608.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u062F\u06CC\u0648\u0627\u0646"
-        - "\u0628\u06CC\u0646\u200C\u0627\u0644\u0645\u0644\u0644\u06CC"
-        - "\u062F\u0627\u062F\u06AF\u0633\u062A\u0631\u06CC"
-        - "\u062D\u06A9\u0645"
-        - "\u062E\u0648\u062F"
-        - "\u062F\u0631\u0628\u0627\u0631\u0647"
-        - "\u0634\u06A9\u0627\u06CC\u062A"
-        - "\u0627\u0648\u06A9\u0631\u0627\u06CC\u0646"
-        - "\u0627\u0632"
-        - "\u0631\u0648\u0633\u06CC\u0647"
-        - "\u0631\u0627"
-        - "\u0627\u0639\u0644\u0627\u0645"
-        - "\u0645\u06CC\u200C\u06A9\u0646\u062F"
-        name: "\u062F\u06CC\u0648\u0627\u0646 \u0628\u06CC\u0646\u200C\u0627\u0644\
-          \u0645\u0644\u0644\u06CC \u062F\u0627\u062F\u06AF\u0633\u062A\u0631\u06CC\
-          \ \u062D\u06A9\u0645 \u062E\u0648\u062F \u062F\u0631\u0628\u0627\u0631\u0647\
-          \ \u0634\u06A9\u0627\u06CC\u062A \u0627\u0648\u06A9\u0631\u0627\u06CC\u0646\
-          \ \u0627\u0632 \u0631\u0648\u0633\u06CC\u0647 \u0631\u0627 \u0627\u0639\u0644\
-          \u0627\u0645 \u0645\u06CC\u200C\u06A9\u0646\u062F"
-        probability: 1.0
-        url: https://ir.voanews.com/a/world-court-to-rule-on-whether-russia-violated-international-treaties-in-ukraine/7464897.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0627\u062F\u0627\u0645\u0647"
-        - "\u062D\u0645\u0644\u0627\u062A"
-        - "\u0631\u0648\u0633\u06CC\u0647"
+        - "\u0645\u062C\u0628\u0648\u0631"
         - "\u0628\u0647"
-        - "\u0645\u0646\u0627\u0637\u0642"
-        - "\u063A\u06CC\u0631\u0646\u0638\u0627\u0645\u06CC"
-        - "\u0627\u0648\u06A9\u0631\u0627\u06CC\u0646\u061B"
-        - "\u0645\u0639\u0627\u0648\u0646"
-        - "\u0648\u0632\u06CC\u0631"
-        - "\u062E\u0627\u0631\u062C\u0647"
+        - "\u062A\u0639\u0644\u06CC\u0642"
+        - "\u062D\u0645\u0644\u0627\u062A"
+        - "\u062E\u0648\u062F"
+        - "\u0634\u062F\u0647\u200C\u0627\u0633\u062A"
+        name: "\u0631\u0648\u06CC\u062A\u0631\u0632: \u06A9\u062A\u0627\u0626\u0628\
+          \ \u062D\u0632\u0628\u200C\u0627\u0644\u0644\u0647 \u062A\u062D\u062A \u0641\
+          \u0634\u0627\u0631 \u0627\u06CC\u0631\u0627\u0646 \n \u0645\u062C\u0628\u0648\
+          \u0631 \u0628\u0647 \u062A\u0639\u0644\u06CC\u0642 \u062D\u0645\u0644\u0627\
+          \u062A \u062E\u0648\u062F \u0634\u062F\u0647\u200C\u0627\u0633\u062A"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/32800207.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0633\u0631\u062E\u0637"
+        - "\u062E\u0628\u0631\u0647\u0627"
+        - "\u06F3:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F3:\u06F0\
+          \u06F0"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/32781776.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u06AF\u0632\u0627\u0631\u0634"
+        - "\u062A\u062D\u0642\u06CC\u0642\u06CC\u061B"
+        - "\u0631\u0648\u062D\u0627\u0646\u06CC\u0648\u0646"
+        - "\u062F\u0631"
+        - "\u0642\u062F\u0631\u062A"
+        - "\u0628\u0647"
+        - "\u0631\u0648\u0627\u06CC\u062A"
+        - "\u0622\u0645\u0627\u0631"
+        name: "\u06AF\u0632\u0627\u0631\u0634 \u062A\u062D\u0642\u06CC\u0642\u06CC\
+          \u061B \u0631\u0648\u062D\u0627\u0646\u06CC\u0648\u0646 \u062F\u0631 \u0642\
+          \u062F\u0631\u062A \u0628\u0647 \u0631\u0648\u0627\u06CC\u062A \u0622\u0645\
+          \u0627\u0631"
+        probability: 1.0
+        url: https://ir.voanews.com/a/iran-clergies-mullahs-pollitical-power/7465154.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0631\u0633\u0627\u0646\u0647\u200C\u0647\u0627\u06CC"
+        - "\u0627\u0633\u0631\u0627\u0626\u06CC\u0644"
+        - "\u0627\u0632"
+        - "\u0637\u0631\u062D"
+        - "\u0622\u0632\u0627\u062F\u06CC"
+        - "\u06F3\u06F5"
+        - "\u06AF\u0631\u0648\u06AF\u0627\u0646"
+        - "\u062F\u0631"
+        - "\u0627\u0632\u0627\u06CC"
+        - "\u06F3\u06F5"
+        - "\u0631\u0648\u0632"
+        - "\u0622\u062A\u0634\u200C\u0628\u0633"
+        - "\u062E\u0628\u0631"
+        - "\u062F\u0627\u062F\u0646\u062F"
+        name: "\u0631\u0633\u0627\u0646\u0647\u200C\u0647\u0627\u06CC \u0627\u0633\
+          \u0631\u0627\u0626\u06CC\u0644 \u0627\u0632 \u0637\u0631\u062D \u0622\u0632\
+          \u0627\u062F\u06CC \u06F3\u06F5 \u06AF\u0631\u0648\u06AF\u0627\u0646 \u062F\
+          \u0631 \u0627\u0632\u0627\u06CC \u06F3\u06F5 \u0631\u0648\u0632 \u0622\u062A\
+          \u0634\u200C\u0628\u0633 \u062E\u0628\u0631 \u062F\u0627\u062F\u0646\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/32800197.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0648\u0627\u0644\u062F\u06CC\u0646"
+        - "\u062C\u0648\u0627\u0646"
+        - "\u0633\u0648\u0626\u062F\u06CC"
+        - "\u062F\u0631"
+        - "\u0628\u0646\u062F"
+        - "\u062C\u0645\u0647\u0648\u0631\u06CC"
+        - "\u0627\u0633\u0644\u0627\u0645\u06CC\u060C"
+        - "\u062E\u0648\u0627\u0633\u062A\u0627\u0631"
+        - "\u0622\u0632\u0627\u062F\u06CC"
+        - "\u0641\u0631\u0632\u0646\u062F\u0634\u0627\u0646"
+        - "\u0634\u062F\u0646\u062F\u060C"
+        - "\u062D\u062A\u06CC"
+        - "\u0628\u0647"
+        - "\u0642\u06CC\u0645\u062A"
+        - "\u062A\u0628\u0627\u062F\u0644"
+        - "\u0628\u0627"
+        - "\u062D\u0645\u06CC\u062F"
+        - "\u0646\u0648\u0631\u06CC"
+        name: "\u0648\u0627\u0644\u062F\u06CC\u0646 \u062C\u0648\u0627\u0646 \u0633\
+          \u0648\u0626\u062F\u06CC \u062F\u0631 \u0628\u0646\u062F \u062C\u0645\u0647\
+          \u0648\u0631\u06CC \u0627\u0633\u0644\u0627\u0645\u06CC\u060C \u062E\u0648\
+          \u0627\u0633\u062A\u0627\u0631 \u0622\u0632\u0627\u062F\u06CC \u0641\u0631\
+          \u0632\u0646\u062F\u0634\u0627\u0646 \u0634\u062F\u0646\u062F\u060C \u062D\
+          \u062A\u06CC \u0628\u0647 \u0642\u06CC\u0645\u062A \u062A\u0628\u0627\u062F\
+          \u0644 \u0628\u0627 \u062D\u0645\u06CC\u062F \u0646\u0648\u0631\u06CC"
+        probability: 1.0
+        url: https://ir.voanews.com/a/family-of-swede-held-in-iran-call-for-prisoner-swap/7465628.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
         - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
-        - "\u0648\u0627\u0631\u062F"
-        - "\u06A9\u06CC\u200C\u06CC\u0641"
-        - "\u0634\u062F"
-        name: "\u0627\u062F\u0627\u0645\u0647 \u062D\u0645\u0644\u0627\u062A \u0631\
-          \u0648\u0633\u06CC\u0647 \u0628\u0647 \u0645\u0646\u0627\u0637\u0642 \u063A\
-          \u06CC\u0631\u0646\u0638\u0627\u0645\u06CC \u0627\u0648\u06A9\u0631\u0627\
-          \u06CC\u0646\u061B \u0645\u0639\u0627\u0648\u0646 \u0648\u0632\u06CC\u0631\
-          \ \u062E\u0627\u0631\u062C\u0647 \u0622\u0645\u0631\u06CC\u06A9\u0627 \u0648\
-          \u0627\u0631\u062F \u06A9\u06CC\u200C\u06CC\u0641 \u0634\u062F"
+        - "\xAB\u0645\u0642\u0627\u0648\u0645\u062A"
+        - "\u0627\u0633\u0644\u0627\u0645\u06CC"
+        - "\u0639\u0631\u0627\u0642\xBB"
+        - "\u0631\u0627"
+        - "\u0645\u0642\u0635\u0631"
+        - "\u062D\u0645\u0644\u0647"
+        - "\u067E\u0647\u067E\u0627\u062F\u06CC"
+        - "\u0628\u0647"
+        - "\u0633\u0631\u0628\u0627\u0632\u0627\u0646"
+        - "\u062E\u0648\u062F"
+        - "\u062F\u0631"
+        - "\u0627\u0631\u062F\u0646"
+        - "\u062F\u0627\u0646\u0633\u062A\u061B"
+        - "\u0627\u0646\u062A\u0642\u0627\u0645"
+        - "\u062F\u0631"
+        - "\u0631\u0627\u0647"
+        - "\u0627\u0633\u062A"
+        name: "\u0622\u0645\u0631\u06CC\u06A9\u0627 \xAB\u0645\u0642\u0627\u0648\u0645\
+          \u062A \u0627\u0633\u0644\u0627\u0645\u06CC \u0639\u0631\u0627\u0642\xBB\
+          \ \u0631\u0627 \u0645\u0642\u0635\u0631 \u062D\u0645\u0644\u0647 \u067E\u0647\
+          \u067E\u0627\u062F\u06CC \u0628\u0647 \u0633\u0631\u0628\u0627\u0632\u0627\
+          \u0646 \u062E\u0648\u062F \u062F\u0631 \u0627\u0631\u062F\u0646 \u062F\u0627\
+          \u0646\u0633\u062A\u061B \u0627\u0646\u062A\u0642\u0627\u0645 \u062F\u0631\
+          \ \u0631\u0627\u0647 \u0627\u0633\u062A"
         probability: 1.0
-        url: https://ir.voanews.com/a/senior-us-official-in-ukraine-for-talks-amid-uncertainty-over-aid/7464886.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://ir.voanews.com/a/umbrella-group-islamic-resistance-in-iraq-responsible-for-strike-that-killed-3-troops-in-jordan-us/7465613.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0645\u062C\u0644\u0647"
-        - "\u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
-        name: "\u0645\u062C\u0644\u0647 \u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
+        - "\u0631\u0626\u06CC\u0633"
+        - "\u0627\u0641\u200C\u0628\u06CC\u200C\u0622\u06CC"
+        - "\u0645\u06CC\u200C\u06AF\u0648\u06CC\u062F"
+        - "\u0647\u06A9\u0631\u0647\u0627\u06CC"
+        - "\u0686\u06CC\u0646\u06CC"
+        - "\u0628\u0647\u200C\u062F\u0646\u0628\u0627\u0644"
+        - "\u062D\u0645\u0644\u0647"
+        - "\u0628\u0647"
+        - "\u0632\u06CC\u0631\u0633\u0627\u062E\u062A\u200C\u0647\u0627\u06CC"
+        - "\u062D\u06CC\u0627\u062A\u06CC"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u0647\u0633\u062A\u0646\u062F"
+        name: "\u0631\u0626\u06CC\u0633 \u0627\u0641\u200C\u0628\u06CC\u200C\u0622\
+          \u06CC \u0645\u06CC\u200C\u06AF\u0648\u06CC\u062F \u0647\u06A9\u0631\u0647\
+          \u0627\u06CC \u0686\u06CC\u0646\u06CC \u0628\u0647\u200C\u062F\u0646\u0628\
+          \u0627\u0644 \u062D\u0645\u0644\u0647 \u0628\u0647 \u0632\u06CC\u0631\u0633\
+          \u0627\u062E\u062A\u200C\u0647\u0627\u06CC \u062D\u06CC\u0627\u062A\u06CC\
+          \ \u0622\u0645\u0631\u06CC\u06A9\u0627 \u0647\u0633\u062A\u0646\u062F"
         probability: 1.0
-        url: https://www.radiofarda.com/a/32781758.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/32800198.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0634\u0627\u0647\u0632\u0627\u062F\u0647"
-        - "\u0631\u0636\u0627"
-        - "\u067E\u0647\u0644\u0648\u06CC:"
+        - "\u0627\u062E\u062A\u0635\u0627\u0635\u06CC\u061B"
+        - "\u0633\u0641\u06CC\u0631"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u062F\u0631"
+        - "\u0627\u0645\u0648\u0631"
+        - "\u0622\u0632\u0627\u062F\u06CC"
+        - "\u0645\u0630\u0647\u0628\u06CC:"
         - "\u0645\u0631\u062F\u0645"
         - "\u0627\u06CC\u0631\u0627\u0646"
         - "\u0628\u0647"
+        - "\xAB\u0646\u0642\u0637\u0647"
+        - "\u062C\u0648\u0634\xBB"
+        - "\u0646\u0632\u062F\u06CC\u06A9"
+        - "\u0645\u06CC\u200C\u0634\u0648\u0646\u062F"
+        name: "\u0627\u062E\u062A\u0635\u0627\u0635\u06CC\u061B \u0633\u0641\u06CC\
+          \u0631 \u0622\u0645\u0631\u06CC\u06A9\u0627 \u062F\u0631 \u0627\u0645\u0648\
+          \u0631 \u0622\u0632\u0627\u062F\u06CC \u0645\u0630\u0647\u0628\u06CC: \u0645\
+          \u0631\u062F\u0645 \u0627\u06CC\u0631\u0627\u0646 \u0628\u0647 \xAB\u0646\
+          \u0642\u0637\u0647 \u062C\u0648\u0634\xBB \u0646\u0632\u062F\u06CC\u06A9\
+          \ \u0645\u06CC\u200C\u0634\u0648\u0646\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/exclusive-sam-brownback-iranian-people-are-approaching-the-boiling-point-/7465498.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
         - "\u0622\u0632\u0627\u062F\u06CC"
-        - "\u062F\u0633\u062A"
-        - "\u062E\u0648\u0627\u0647\u0646\u062F"
-        - "\u06CC\u0627\u0641\u062A"
-        name: "\u0634\u0627\u0647\u0632\u0627\u062F\u0647 \u0631\u0636\u0627 \u067E\
-          \u0647\u0644\u0648\u06CC: \u0645\u0631\u062F\u0645 \u0627\u06CC\u0631\u0627\
-          \u0646 \u0628\u0647 \u0622\u0632\u0627\u062F\u06CC \u062F\u0633\u062A \u062E\
-          \u0648\u0627\u0647\u0646\u062F \u06CC\u0627\u0641\u062A"
+        - "\u06F3\u06F5"
+        - "\u06AF\u0631\u0648\u06AF\u0627\u0646"
+        - "\u0628\u0647"
+        - "\u0627\u0632\u0627\u06CC"
+        - "\u0622\u062A\u0634\u200C\u0628\u0633"
+        - "\u06F3\u06F5"
+        - "\u0631\u0648\u0632\u0647\u061B"
+        - "\u0645\u0648\u0633\u0627\u062F"
+        - "\u0637\u0631\u062D"
+        - "\u0645\u0628\u0627\u062F\u0644\u0647"
+        - "\u06AF\u0631\u0648\u06AF\u0627\u0646\u200C\u0647\u0627"
+        - "\u0628\u0627"
+        - "\u062D\u0645\u0627\u0633"
+        - "\u0631\u0627"
+        - "\u0628\u0647"
+        - "\u06A9\u0627\u0628\u06CC\u0646\u0647"
+        - "\u062C\u0646\u06AF"
+        - "\u0627\u0633\u0631\u0627\u0626\u06CC\u0644"
+        - "\u0633\u067E\u0631\u062F"
+        name: "\u0622\u0632\u0627\u062F\u06CC \u06F3\u06F5 \u06AF\u0631\u0648\u06AF\
+          \u0627\u0646 \u0628\u0647 \u0627\u0632\u0627\u06CC \u0622\u062A\u0634\u200C\
+          \u0628\u0633 \u06F3\u06F5 \u0631\u0648\u0632\u0647\u061B \u0645\u0648\u0633\
+          \u0627\u062F \u0637\u0631\u062D \u0645\u0628\u0627\u062F\u0644\u0647 \u06AF\
+          \u0631\u0648\u06AF\u0627\u0646\u200C\u0647\u0627 \u0628\u0627 \u062D\u0645\
+          \u0627\u0633 \u0631\u0627 \u0628\u0647 \u06A9\u0627\u0628\u06CC\u0646\u0647\
+          \ \u062C\u0646\u06AF \u0627\u0633\u0631\u0627\u0626\u06CC\u0644 \u0633\u067E\
+          \u0631\u062F"
         probability: 1.0
-        url: https://ir.voanews.com/a/iran-shahzadeh-reza-pahlavi-/7464868.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://ir.voanews.com/a/israel-hamas-new-hostage-exchange-deal-plan/7465587.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0631\u0648\u0627\u06CC\u062A"
-        - "\u0634\u0628\u0646\u0645"
-        - "\u0637\u0644\u0648\u0639\u06CC"
-        - "\u0627\u0632"
-        - "\u0641\u06CC\u0644\u0645\u06CC"
-        - "\u06A9\u0647"
-        - "\u062F\u0631\u0628\u0627\u0631\u06C0"
-        - "\u0686\u0647\u0644\u0645"
-        - "\u062D\u062F\u06CC\u062B"
-        - "\u0646\u062C\u0641\u06CC"
-        - "\u0633\u0627\u062E\u062A"
-        name: "\u0631\u0648\u0627\u06CC\u062A \u0634\u0628\u0646\u0645 \u0637\u0644\
-          \u0648\u0639\u06CC \u0627\u0632 \u0641\u06CC\u0644\u0645\u06CC \u06A9\u0647\
-          \ \u062F\u0631\u0628\u0627\u0631\u06C0 \u0686\u0647\u0644\u0645 \u062D\u062F\
-          \u06CC\u062B \u0646\u062C\u0641\u06CC \u0633\u0627\u062E\u062A"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/32798194.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
+        - "\u0633\u0631\u062E\u0637"
         - "\u062E\u0628\u0631\u0647\u0627"
-        - "\u06AF\u0632\u0627\u0631\u0634\u200C\u0647\u0627"
-        - "\u06F1\u06F8:\u06F0\u06F0"
-        name: "\u062E\u0628\u0631\u0647\u0627 \u0648 \u06AF\u0632\u0627\u0631\u0634\
-          \u200C\u0647\u0627 \u06F1\u06F8:\u06F0\u06F0"
+        - "\u06F2:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F2:\u06F0\
+          \u06F0"
         probability: 1.0
-        url: https://www.radiofarda.com/a/32781756.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/32781773.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0631\u0648\u0627\u06CC\u062A"
-        - "\u0634\u0628\u0646\u0645"
-        - "\u0637\u0644\u0648\u0639\u06CC"
+        - "\u06AF\u0627\u0631\u062F"
+        - "\u0645\u0644\u06CC"
+        - "\u0627\u06CC\u0627\u0644\u0627\u062A"
+        - "\u0645\u062A\u062D\u062F\u0647"
+        - "\u0645\u062C\u0631\u0648\u062D"
+        - "\u0634\u062F\u0646"
+        - "\u0633\u0631\u0628\u0627\u0632\u0627\u0646"
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627\u06CC\u06CC"
+        - "\u062F\u0631"
+        - "\u062D\u0645\u0644\u0647"
+        - "\u067E\u0647\u067E\u0627\u062F\u06CC"
+        - "\u0627\u062E\u06CC\u0631"
+        - "\u0631\u0627"
+        - "\u062A\u0627\u06CC\u06CC\u062F"
+        - "\u06A9\u0631\u062F"
+        name: "\u06AF\u0627\u0631\u062F \u0645\u0644\u06CC \u0627\u06CC\u0627\u0644\
+          \u0627\u062A \u0645\u062A\u062D\u062F\u0647 \u0645\u062C\u0631\u0648\u062D\
+          \ \u0634\u062F\u0646 \u0633\u0631\u0628\u0627\u0632\u0627\u0646 \u0622\u0645\
+          \u0631\u06CC\u06A9\u0627\u06CC\u06CC \u062F\u0631 \u062D\u0645\u0644\u0647\
+          \ \u067E\u0647\u067E\u0627\u062F\u06CC \u0627\u062E\u06CC\u0631 \u0631\u0627\
+          \ \u062A\u0627\u06CC\u06CC\u062F \u06A9\u0631\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/ational-guard-confirms-soldiers-injured-in-northeast-jordan-near-syrian-border/7465455.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u06CC\u0644\u06CC\u0627\u0631\u062F\u0631"
+        - "\u0631\u0648\u0633"
+        - "\u062F\u0631"
+        - "\u0634\u06A9\u0627\u06CC\u062A"
         - "\u0627\u0632"
-        - "\u0641\u06CC\u0644\u0645\u06CC"
-        - "\u06A9\u0647"
-        - "\u062F\u0631\u0628\u0627\u0631\u0647"
-        - "\u0686\u0647\u0644\u0645"
-        - "\u062D\u062F\u06CC\u062B"
-        - "\u0646\u062C\u0641\u06CC"
-        - "\u0633\u0627\u062E\u062A\u0647"
-        - "\u0627\u0633\u062A"
-        name: "\u0631\u0648\u0627\u06CC\u062A \u0634\u0628\u0646\u0645 \u0637\u0644\
-          \u0648\u0639\u06CC \u0627\u0632 \u0641\u06CC\u0644\u0645\u06CC \u06A9\u0647\
-          \ \u062F\u0631\u0628\u0627\u0631\u0647 \u0686\u0647\u0644\u0645 \u062D\u062F\
-          \u06CC\u062B \u0646\u062C\u0641\u06CC \u0633\u0627\u062E\u062A\u0647 \u0627\
-          \u0633\u062A"
+        - "\u0645\u0648\u0633\u0633\u0647"
+        - "\u062D\u0631\u0627\u062C"
+        - "\u0633\u0627\u062A\u0628\u06CC\u0632"
+        - "\u0628\u0647"
+        - "\u0627\u062A\u0647\u0627\u0645"
+        - "\xAB\u06A9\u0644\u0627\u0647\u0628\u0631\u062F\u0627\u0631\u06CC\xBB"
+        - "\u0634\u06A9\u0633\u062A"
+        - "\u062E\u0648\u0631\u062F"
+        name: "\u0645\u06CC\u0644\u06CC\u0627\u0631\u062F\u0631 \u0631\u0648\u0633\
+          \ \u062F\u0631 \u0634\u06A9\u0627\u06CC\u062A \u0627\u0632 \u0645\u0648\u0633\
+          \u0633\u0647 \u062D\u0631\u0627\u062C \u0633\u0627\u062A\u0628\u06CC\u0632\
+          \ \u0628\u0647 \u0627\u062A\u0647\u0627\u0645 \xAB\u06A9\u0644\u0627\u0647\
+          \u0628\u0631\u062F\u0627\u0631\u06CC\xBB \u0634\u06A9\u0633\u062A \u062E\
+          \u0648\u0631\u062F"
         probability: 1.0
-        url: https://www.radiofarda.com/a/32799488.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+        url: https://www.radiofarda.com/a/32800193.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0631\u06CC\u0646\u0631"
-        - "\u0645\u0627\u0631\u06CC\u0627"
-        - "\u0645\u0648\u0633\u06CC\u0642\u06CC"
-        - "\u0627\u06CC\u0645\u0648"
-        name: "\u0631\u06CC\u0646\u0631 \u0645\u0627\u0631\u06CC\u0627 \u0648 \u0645\
-          \u0648\u0633\u06CC\u0642\u06CC \u0627\u06CC\u0645\u0648"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/32799748.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
+        - "\u0633\u0631\u062E\u0637"
         - "\u062E\u0628\u0631\u0647\u0627"
-        - "\u06AF\u0632\u0627\u0631\u0634\u200C\u0647\u0627"
-        - "\u06F1\u06F7:\u06F0\u06F0"
-        name: "\u062E\u0628\u0631\u0647\u0627 \u0648 \u06AF\u0632\u0627\u0631\u0634\
-          \u200C\u0647\u0627 \u06F1\u06F7:\u06F0\u06F0"
+        - "\u06F1:\u06F0\u06F0"
+        name: "\u0633\u0631\u062E\u0637 \u062E\u0628\u0631\u0647\u0627 \u06F1:\u06F0\
+          \u06F0"
         probability: 1.0
-        url: https://www.radiofarda.com/a/32781753.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      usagm_fa_weekly:
+        url: https://www.radiofarda.com/a/32781770.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0634\u0628\u06A9\u0647"
+        - "\u062A\u0644\u0648\u06CC\u0632\u06CC\u0648\u0646\u06CC"
+        - "\xAB\u0645\u0646\u0648\u062A\u0648\xBB"
+        - "\u0628\u0647"
+        - "\u0641\u0639\u0627\u0644\u06CC\u062A"
+        - "\u062E\u0648\u062F"
+        - "\u067E\u0627\u06CC\u0627\u0646"
+        - "\u062F\u0627\u062F"
+        name: "\u0634\u0628\u06A9\u0647 \u062A\u0644\u0648\u06CC\u0632\u06CC\u0648\
+          \u0646\u06CC \xAB\u0645\u0646\u0648\u062A\u0648\xBB \u0628\u0647 \u0641\u0639\
+          \u0627\u0644\u06CC\u062A  \u062E\u0648\u062F \u067E\u0627\u06CC\u0627\u0646\
+          \ \u062F\u0627\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/32800180.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u062C\u0646\u06AF"
+        - "\u062F\u0631"
+        - "\u063A\u0632\u0647"
+        - "\u0627\u062F\u0627\u0645\u0647"
+        - "\u062F\u0627\u0631\u062F\u061B"
+        - "\u062D\u0645\u0627\u0633"
+        - "\u0645\u06CC\u200C\u06AF\u0648\u06CC\u062F"
+        - "\u0645\u0634\u063A\u0648\u0644"
+        - "\u0628\u0631\u0631\u0633\u06CC"
+        - "\u0627\u0653\u062A\u0634\u200C\u0628\u0633"
+        - "\u0627\u0653\u0632\u0627\u062F\u06CC"
+        - "\u06AF\u0631\u0648\u06AF\u0627\u0646\u200C\u0647\u0627\u0633\u062A"
+        name: "\u062C\u0646\u06AF \u062F\u0631 \u063A\u0632\u0647 \u0627\u062F\u0627\
+          \u0645\u0647 \u062F\u0627\u0631\u062F\u061B \u062D\u0645\u0627\u0633 \u0645\
+          \u06CC\u200C\u06AF\u0648\u06CC\u062F \u0645\u0634\u063A\u0648\u0644 \u0628\
+          \u0631\u0631\u0633\u06CC \u0627\u0653\u062A\u0634\u200C\u0628\u0633 \u0648\
+          \ \u0627\u0653\u0632\u0627\u062F\u06CC \u06AF\u0631\u0648\u06AF\u0627\u0646\
+          \u200C\u0647\u0627\u0633\u062A"
+        probability: 1.0
+        url: https://ir.voanews.com/a/war-gaza-hamas-hostages-ceasefire-israel/7465419.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0627\u06CC\u0631\u0627\u0646"
+        - "\u067E\u0633"
+        - "\u0627\u0632"
+        - "\u067E\u06CC\u0631\u0648\u0632\u06CC"
+        - "\u062F\u0634\u0648\u0627\u0631"
+        - "\u0645\u0642\u0627\u0628\u0644"
+        - "\u0633\u0648\u0631\u06CC\u0647\u060C"
+        - "\u062D\u0631\u06CC\u0641"
+        - "\u0698\u0627\u067E\u0646"
+        - "\u062F\u0631"
+        - "\u0645\u0631\u062D\u0644\u0647"
+        - "\u06CC\u06A9\u200C\u0686\u0647\u0627\u0631\u0645"
+        - "\u0646\u0647\u0627\u06CC\u06CC"
+        - "\u0634\u062F"
+        name: "\u0627\u06CC\u0631\u0627\u0646 \u067E\u0633 \u0627\u0632 \u067E\u06CC\
+          \u0631\u0648\u0632\u06CC \u062F\u0634\u0648\u0627\u0631 \u0645\u0642\u0627\
+          \u0628\u0644 \u0633\u0648\u0631\u06CC\u0647\u060C \u062D\u0631\u06CC\u0641\
+          \ \u0698\u0627\u067E\u0646 \u062F\u0631 \u0645\u0631\u062D\u0644\u0647 \u06CC\
+          \u06A9\u200C\u0686\u0647\u0627\u0631\u0645 \u0646\u0647\u0627\u06CC\u06CC\
+          \ \u0634\u062F"
+        probability: 1.0
+        url: https://ir.voanews.com/a/iran-wins-syria-in-asian-footbal-cup/7465366.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0645\u062C\u0644\u0647"
+        - "\u0646\u06CC\u0645\u0647\u200C\u0634\u0628"
+        name: "\u0645\u062C\u0644\u0647 \u0646\u06CC\u0645\u0647\u200C\u0634\u0628"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/32781768.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -5627,7 +6040,7 @@ featureoptions:
         - "\u067E\u0648\u0644:"
         - "\u062D\u0645\u0644\u0627\u062A"
         - "\u062D\u0648\u062B\u06CC\u200C\u0647\u0627"
-        - "\u062A\u062D\u0631\u0627\u062A"
+        - "\u062A\u0631\u062F\u062F"
         - "\u0627\u0632"
         - "\u0645\u0633\u06CC\u0631"
         - "\u062F\u0631\u06CC\u0627\u06CC"
@@ -5640,10 +6053,10 @@ featureoptions:
         - "\u0627\u0633\u062A"
         name: "\u0635\u0646\u062F\u0648\u0642 \u0628\u06CC\u0646\u200C\u0627\u0644\
           \u0645\u0644\u0644\u06CC \u067E\u0648\u0644: \u062D\u0645\u0644\u0627\u062A\
-          \ \u062D\u0648\u062B\u06CC\u200C\u0647\u0627 \u062A\u062D\u0631\u0627\u062A\
-          \ \u0627\u0632 \u0645\u0633\u06CC\u0631 \u062F\u0631\u06CC\u0627\u06CC \u0633\
-          \u0631\u062E \u0631\u0627 \u06F3\u06F0 \u062F\u0631\u0635\u062F \u06A9\u0627\
-          \u0647\u0634 \u062F\u0627\u062F\u0647 \u0627\u0633\u062A"
+          \ \u062D\u0648\u062B\u06CC\u200C\u0647\u0627 \u062A\u0631\u062F\u062F \u0627\
+          \u0632 \u0645\u0633\u06CC\u0631 \u062F\u0631\u06CC\u0627\u06CC \u0633\u0631\
+          \u062E \u0631\u0627 \u06F3\u06F0 \u062F\u0631\u0635\u062F \u06A9\u0627\u0647\
+          \u0634 \u062F\u0627\u062F\u0647 \u0627\u0633\u062A"
         probability: 1.0
         url: https://ir.voanews.com/a/red-sea-container-shipping-down-30-over-attacks/7465169.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
@@ -6600,25 +7013,6 @@ featureoptions:
       - campaign: persagg
         description: ''
         keywords:
-        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
-        - "\u0645\u0648\u0634\u06A9"
-        - "\u062D\u0648\u062B\u06CC\u200C\u0647\u0627"
-        - "\u0631\u0627"
-        - "\u0628\u0631"
-        - "\u0641\u0631\u0627\u0632"
-        - "\u062F\u0631\u06CC\u0627\u06CC"
-        - "\u0633\u0631\u062E"
-        - "\u0633\u0631\u0646\u06AF\u0648\u0646"
-        - "\u06A9\u0631\u062F"
-        name: "\u0622\u0645\u0631\u06CC\u06A9\u0627 \u0645\u0648\u0634\u06A9 \u062D\
-          \u0648\u062B\u06CC\u200C\u0647\u0627 \u0631\u0627 \u0628\u0631 \u0641\u0631\
-          \u0627\u0632 \u062F\u0631\u06CC\u0627\u06CC \u0633\u0631\u062E \u0633\u0631\
-          \u0646\u06AF\u0648\u0646 \u06A9\u0631\u062F"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/us-shoots-down-missile-fired-by-houthis-toward-red-sea-pentagon-says/32799027.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
         - "\u0627\u06CC\u0631\u0627\u0646"
         - "\u0645\u06CC\u200C\u06AF\u0648\u06CC\u062F"
         - "\u0628\u0647"
@@ -6638,6 +7032,25 @@ featureoptions:
           \u0627\u0647\u062F \u062F\u0627\u062F"
         probability: 1.0
         url: https://www.radiofarda.com/a/32799008.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
+        - "\u0645\u0648\u0634\u06A9"
+        - "\u062D\u0648\u062B\u06CC\u200C\u0647\u0627"
+        - "\u0631\u0627"
+        - "\u0628\u0631"
+        - "\u0641\u0631\u0627\u0632"
+        - "\u062F\u0631\u06CC\u0627\u06CC"
+        - "\u0633\u0631\u062E"
+        - "\u0633\u0631\u0646\u06AF\u0648\u0646"
+        - "\u06A9\u0631\u062F"
+        name: "\u0622\u0645\u0631\u06CC\u06A9\u0627 \u0645\u0648\u0634\u06A9 \u062D\
+          \u0648\u062B\u06CC\u200C\u0647\u0627 \u0631\u0627 \u0628\u0631 \u0641\u0631\
+          \u0627\u0632 \u062F\u0631\u06CC\u0627\u06CC \u0633\u0631\u062E \u0633\u0631\
+          \u0646\u06AF\u0648\u0646 \u06A9\u0631\u062F"
+        probability: 1.0
+        url: https://www.radiofarda.com/a/us-shoots-down-missile-fired-by-houthis-toward-red-sea-pentagon-says/32799027.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -18845,23 +19258,6 @@ featureoptions:
       - campaign: persagg
         description: ''
         keywords:
-        - "\u06AF\u0632\u0627\u0631\u0634"
-        - "\u062A\u062D\u0642\u06CC\u0642\u06CC:"
-        - "\u0627\u06CC\u0631\u0627\u0646"
-        - "\u0631\u06A9\u0648\u0631\u062F"
-        - "\u062F\u0627\u0631"
-        - "\u062A\u0648\u0631\u0645"
-        - "\u062F\u0631"
-        - "\u062E\u0627\u0648\u0631\u0645\u06CC\u0627\u0646\u0647"
-        name: "\u06AF\u0632\u0627\u0631\u0634 \u062A\u062D\u0642\u06CC\u0642\u06CC\
-          : \u0627\u06CC\u0631\u0627\u0646 \u0631\u06A9\u0648\u0631\u062F \u062F\u0627\
-          \u0631 \u062A\u0648\u0631\u0645 \u062F\u0631 \u062E\u0627\u0648\u0631\u0645\
-          \u06CC\u0627\u0646\u0647"
-        probability: 1.0
-        url: https://ir.voanews.com/a/iran-inflation-economy-standards/7455425.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
         - "\u0627\u0641\u0632\u0627\u06CC\u0634"
         - "\u0631\u0648\u0632\u0645\u0631\u0647"
         - "\u0642\u06CC\u0645\u062A"
@@ -18884,364 +19280,110 @@ featureoptions:
           \ \u0642\u06CC\u0645\u062A \u0632\u0646\u062F\u06AF\u06CC"
         probability: 1.0
         url: https://www.radiofarda.com/a/32781402.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u062D\u0645\u0644\u0647"
-        - "\u062D\u0648\u062B\u06CC\u200C\u0647\u0627"
-        - "\u0628\u0647"
-        - "\u062F\u0648"
-        - "\u06A9\u0634\u062A\u06CC"
-        - "\u0628\u0627"
-        - "\u067E\u0631\u0686\u0645"
-        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
-        - "\u062F\u0631"
-        - "\u0646\u0632\u062F\u06CC\u06A9\u06CC"
-        - "\u06CC\u0645\u0646\u061B"
-        - "\u0633\u0646\u062A\u06A9\u0627\u0645:"
-        - "\u0622\u0633\u06CC\u0628\u06CC"
-        - "\u0648\u0627\u0631\u062F"
-        - "\u0646\u0634\u062F"
-        name: "\u062D\u0645\u0644\u0647 \u062D\u0648\u062B\u06CC\u200C\u0647\u0627\
-          \ \u0628\u0647 \u062F\u0648 \u06A9\u0634\u062A\u06CC \u0628\u0627 \u067E\
-          \u0631\u0686\u0645 \u0622\u0645\u0631\u06CC\u06A9\u0627 \u062F\u0631 \u0646\
-          \u0632\u062F\u06CC\u06A9\u06CC \u06CC\u0645\u0646\u061B \u0633\u0646\u062A\
-          \u06A9\u0627\u0645: \u0622\u0633\u06CC\u0628\u06CC \u0648\u0627\u0631\u062F\
-          \ \u0646\u0634\u062F"
-        probability: 1.0
-        url: https://ir.voanews.com/a/yemen-houthis2-ship-iran/7455393.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u062A\u0623\u06CC\u06CC\u062F"
-        - "\xAB\u062F\u0633\u062A\u0648\u0631"
-        - "\u0636\u0628\u0637\xBB"
-        - "\u062E\u0627\u0646\u0647"
-        - "\u0645\u0627\u062F\u0631"
-        - "\u0646\u0631\u06AF\u0633"
-        - "\u0645\u0646\u0635\u0648\u0631\u06CC\u061B"
-        - "\u0645\u062D\u0645\u062F"
-        - "\u0645\u0642\u06CC\u0645\u06CC\u060C"
-        - "\u062D\u0642\u0648\u0642\u062F\u0627\u0646:"
-        - "\u062F\u0631"
-        - "\u0627\u06CC\u0646"
-        - "\xAB\u0631\u0698\u06CC\u0645\xBB"
-        - "\u0638\u0644\u0645"
-        - "\u0627\u0646\u062A\u0647\u0627"
-        - "\u0646\u062F\u0627\u0631\u062F"
-        name: "\u062A\u0623\u06CC\u06CC\u062F \xAB\u062F\u0633\u062A\u0648\u0631 \u0636\
-          \u0628\u0637\xBB \u062E\u0627\u0646\u0647 \u0645\u0627\u062F\u0631 \u0646\
-          \u0631\u06AF\u0633 \u0645\u0646\u0635\u0648\u0631\u06CC\u061B \u0645\u062D\
-          \u0645\u062F \u0645\u0642\u06CC\u0645\u06CC\u060C \u062D\u0642\u0648\u0642\
-          \u062F\u0627\u0646: \u062F\u0631 \u0627\u06CC\u0646 \xAB\u0631\u0698\u06CC\
-          \u0645\xBB \u0638\u0644\u0645 \u0627\u0646\u062A\u0647\u0627 \u0646\u062F\
-          \u0627\u0631\u062F"
-        probability: 1.0
-        url: https://ir.voanews.com/a/confiscation-house-narges-mansouri-political-prisoner-iran/7455398.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u062E\u0628\u0631\u0647\u0627"
-        - "\u06AF\u0632\u0627\u0631\u0634\u200C\u0647\u0627"
-        - "\u06F2\u06F1:\u06F0\u06F0"
-        name: "\u062E\u0628\u0631\u0647\u0627 \u0648 \u06AF\u0632\u0627\u0631\u0634\
-          \u200C\u0647\u0627 \u06F2\u06F1:\u06F0\u06F0"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/32781401.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0628\u0644\u0648\u0645\u0628\u0631\u06AF:"
-        - "\u0627\u06CC\u0631\u0627\u0646"
-        - "\u0628\u0627"
-        - "\u0627\u0631\u0633\u0627\u0644"
-        - "\u067E\u0647\u067E\u0627\u062F\u0647\u0627\u06CC"
-        - "\u0645\u0647\u0627\u062C\u0631-\u06F6"
-        - "\u0628\u0647"
-        - "\u062C\u0646\u06AF"
-        - "\u062F\u0627\u062E\u0644\u06CC"
-        - "\u062F\u0631"
-        - "\u0633\u0648\u062F\u0627\u0646"
-        - "\u062F\u0627\u0645\u0646"
-        - "\u0645\u06CC\u200C\u0632\u0646\u062F"
-        name: "\u0628\u0644\u0648\u0645\u0628\u0631\u06AF: \u0627\u06CC\u0631\u0627\
-          \u0646 \u0628\u0627 \u0627\u0631\u0633\u0627\u0644 \u067E\u0647\u067E\u0627\
-          \u062F\u0647\u0627\u06CC \u0645\u0647\u0627\u062C\u0631-\u06F6 \u0628\u0647\
-          \ \u062C\u0646\u06AF \u062F\u0627\u062E\u0644\u06CC \u062F\u0631 \u0633\u0648\
-          \u062F\u0627\u0646 \u062F\u0627\u0645\u0646 \u0645\u06CC\u200C\u0632\u0646\
-          \u062F"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/iranian-drones-become-latest-proxy-tool-in-sudan-s-civil-war/32790323.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0647\u0634\u062F\u0627\u0631"
-        - "\u062D\u0648\u062B\u06CC\u200C\u0647\u0627"
-        - "\u0628\u0647"
-        - "\u0634\u0647\u0631\u0648\u0646\u062F\u0627\u0646"
-        - "\u0622\u0645\u0631\u06CC\u06A9\u0627\u06CC\u06CC"
-        - "\u0628\u0631\u06CC\u062A\u0627\u0646\u06CC\u0627\u06CC\u06CC:"
-        - "\u0638\u0631\u0641"
-        - "\u06F3\u06F0"
-        - "\u0631\u0648\u0632"
-        - "\u06CC\u0645\u0646"
-        - "\u0631\u0627"
-        - "\u062A\u0631\u06A9"
-        - "\u06A9\u0646\u06CC\u062F"
-        name: "\u0647\u0634\u062F\u0627\u0631 \u062D\u0648\u062B\u06CC\u200C\u0647\
-          \u0627 \u0628\u0647 \u0634\u0647\u0631\u0648\u0646\u062F\u0627\u0646 \u0622\
-          \u0645\u0631\u06CC\u06A9\u0627\u06CC\u06CC \u0648 \u0628\u0631\u06CC\u062A\
-          \u0627\u0646\u06CC\u0627\u06CC\u06CC: \u0638\u0631\u0641 \u06F3\u06F0 \u0631\
-          \u0648\u0632 \u06CC\u0645\u0646 \u0631\u0627 \u062A\u0631\u06A9 \u06A9\u0646\
-          \u06CC\u062F"
-        probability: 1.0
-        url: https://ir.voanews.com/a/yemen-houthis-un-ngos/7455351.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u062D\u0645\u0644\u0647"
-        - "\u0646\u0627\u0641\u0631\u062C\u0627\u0645"
-        - "\u0628\u0647"
-        - "\u06CC\u06A9"
-        - "\u06A9\u0634\u062A\u06CC"
-        - "\u0639\u0628\u0648\u0631\u06CC"
-        - "\u0627\u0632"
-        - "\u062F\u0631\u06CC\u0627\u06CC"
-        - "\u0633\u0631\u062E\u061B"
-        - "\u062D\u0648\u062B\u06CC\u200C\u0647\u0627"
-        - "\u062E\u0648\u0627\u0633\u062A\u0627\u0631"
-        - "\u062E\u0631\u0648\u062C"
-        - "\u0634\u0647\u0631\u0648\u0646\u062F\u0627\u0646"
-        - "\u0622\u0645\u0631\u06CC\u06A9\u0627"
-        - "\u0628\u0631\u06CC\u062A\u0627\u0646\u06CC\u0627"
-        - "\u0627\u0632"
-        - "\u06CC\u0645\u0646"
-        - "\u0634\u062F\u0646\u062F"
-        name: "\u062D\u0645\u0644\u0647 \u0646\u0627\u0641\u0631\u062C\u0627\u0645\
-          \ \u0628\u0647 \u06CC\u06A9 \u06A9\u0634\u062A\u06CC \u0639\u0628\u0648\u0631\
-          \u06CC \u0627\u0632 \u062F\u0631\u06CC\u0627\u06CC \u0633\u0631\u062E\u061B\
-          \ \u062D\u0648\u062B\u06CC\u200C\u0647\u0627 \u062E\u0648\u0627\u0633\u062A\
-          \u0627\u0631 \u062E\u0631\u0648\u062C \u0634\u0647\u0631\u0648\u0646\u062F\
-          \u0627\u0646 \u0622\u0645\u0631\u06CC\u06A9\u0627 \u0648 \u0628\u0631\u06CC\
-          \u062A\u0627\u0646\u06CC\u0627 \u0627\u0632 \u06CC\u0645\u0646 \u0634\u062F\
-          \u0646\u062F"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/crew-reports-explosion-close-to-us-flagged-vessel-south-of-yemen-s-mokha---ambrey/32790291.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0633\u0642\u0648\u0637"
-        - "\u0647\u0648\u0627\u067E\u06CC\u0645\u0627\u06CC"
-        - "\u062A\u0631\u0627\u0628\u0631\u06CC"
-        - "\u0646\u0638\u0627\u0645\u06CC"
-        - "\u0631\u0648\u0633\u06CC\u0647"
-        - "\xAB\u062D\u0627\u0645\u0644"
-        - "\u0627\u0633\u06CC\u0631\u0627\u0646"
-        - "\u0627\u0648\u06A9\u0631\u0627\u06CC\u0646\u06CC\xBB\u061B"
-        - "\u06A9\u06CC\u200C\u06CC\u0641:"
-        - "\u062F\u0631"
-        - "\u062D\u0627\u0644"
-        - "\u0628\u0631\u0631\u0633\u06CC"
-        - "\u0633\u0627\u0646\u062D\u0647"
-        - "\u0647\u0633\u062A\u06CC\u0645"
-        name: "\u0633\u0642\u0648\u0637 \u0647\u0648\u0627\u067E\u06CC\u0645\u0627\
-          \u06CC \u062A\u0631\u0627\u0628\u0631\u06CC \u0646\u0638\u0627\u0645\u06CC\
-          \ \u0631\u0648\u0633\u06CC\u0647 \xAB\u062D\u0627\u0645\u0644 \u0627\u0633\
-          \u06CC\u0631\u0627\u0646 \u0627\u0648\u06A9\u0631\u0627\u06CC\u0646\u06CC\
-          \xBB\u061B \u06A9\u06CC\u200C\u06CC\u0641: \u062F\u0631 \u062D\u0627\u0644\
-          \ \u0628\u0631\u0631\u0633\u06CC \u0633\u0627\u0646\u062D\u0647 \u0647\u0633\
-          \u062A\u06CC\u0645"
-        probability: 1.0
-        url: https://ir.voanews.com/a/russian-military-transport-plane-crashes/7455317.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0628\u062D\u062B\u200C\u0628\u0631\u0627\u0646\u06AF\u06CC\u0632-"
-        - "\u0628\u062D\u0631\u0627\u0646"
-        - "\u0632\u0628\u0627\u0644\u0647"
-        - "\u062F\u0631"
-        - "\u062A\u0648\u0646\u0633/"
-        - "\u0642\u0633\u0645\u062A"
-        - "\u0627\u0648\u0644"
-        name: "\u0628\u062D\u062B\u200C\u0628\u0631\u0627\u0646\u06AF\u06CC\u0632\
-          - \u0628\u062D\u0631\u0627\u0646 \u0632\u0628\u0627\u0644\u0647 \u062F\u0631\
-          \ \u062A\u0648\u0646\u0633/ \u0642\u0633\u0645\u062A \u0627\u0648\u0644"
-        probability: 1.0
-        url: https://ir.voanews.com/a/7455376.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0645\u062C\u0644\u0647"
-        - "\u0634\u0628"
-        name: "\u0645\u062C\u0644\u0647 \u06F8 \u0634\u0628"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/32781399.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u067E\u0627\u067E"
-        - "\u0641\u0631\u0627\u0646\u0633\u06CC\u0633"
-        - "\u062F\u0631"
-        - "\u0645\u0648\u0631\u062F"
-        - "\u062E\u0637\u0631\u0627\u062A"
-        - "\xAB\u06AF\u0645\u0631\u0627\u0647\u200C\u06A9\u0646\u0646\u062F\u0647\xBB"
-        - "\u0647\u0648\u0634"
-        - "\u0645\u0635\u0646\u0648\u0639\u06CC"
-        - "\u0647\u0634\u062F\u0627\u0631"
-        - "\u062F\u0627\u062F"
-        name: "\u067E\u0627\u067E \u0641\u0631\u0627\u0646\u0633\u06CC\u0633 \u062F\
-          \u0631 \u0645\u0648\u0631\u062F \u062E\u0637\u0631\u0627\u062A \xAB\u06AF\
-          \u0645\u0631\u0627\u0647\u200C\u06A9\u0646\u0646\u062F\u0647\xBB \u0647\u0648\
-          \u0634 \u0645\u0635\u0646\u0648\u0639\u06CC \u0647\u0634\u062F\u0627\u0631\
-          \ \u062F\u0627\u062F"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/pope-francis-victim-of-ai-warns-against-its-perverse-dangers/32790269.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0635\u0646\u0639\u062A"
-        - "\u0647\u0648\u0627\u0646\u0648\u0631\u062F\u06CC"
-        - "\u062C\u0647\u0627\u0646"
-        - "\u0628\u0631\u0627\u06CC"
-        - "\u062D\u0644"
-        - "\u0641\u0648\u0631\u06CC"
-        - "\u0645\u0634\u06A9\u0644\u0627\u062A"
-        - "\u0646\u0627\u0634\u06CC"
-        - "\u0627\u0632"
-        - "\u062A\u062F\u0627\u062E\u0644"
-        - "\xAB\u062C\u06CC\u200C\u067E\u06CC\u200C\u0627\u0633\xBB"
-        - "\u062A\u0644\u0627\u0634"
-        - "\u0645\u06CC\u200C\u06A9\u0646\u062F"
-        name: "\u0635\u0646\u0639\u062A \u0647\u0648\u0627\u0646\u0648\u0631\u062F\
-          \u06CC \u062C\u0647\u0627\u0646 \u0628\u0631\u0627\u06CC \u062D\u0644 \u0641\
-          \u0648\u0631\u06CC \u0645\u0634\u06A9\u0644\u0627\u062A \u0646\u0627\u0634\
-          \u06CC \u0627\u0632 \u062A\u062F\u0627\u062E\u0644 \xAB\u062C\u06CC\u200C\
-          \u067E\u06CC\u200C\u0627\u0633\xBB \u062A\u0644\u0627\u0634 \u0645\u06CC\
-          \u200C\u06A9\u0646\u062F"
-        probability: 1.0
-        url: https://ir.voanews.com/a/aviation-sector-seeks-urgent-solutions-for-gps-interference/7455293.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0645\u062C\u0644\u0647"
-        - "\u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
-        name: "\u0645\u062C\u0644\u0647 \u0634\u0627\u0645\u06AF\u0627\u0647\u06CC"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/32781397.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u06AF\u0641\u062A\u200C\u0648\u06AF\u0648"
-        - "\u0628\u0627"
-        - "\u0622\u06CC\u062F\u0627"
-        - "\u06A9\u06CC\u062E\u0627\u06CC\u06CC\u061B"
-        - "\u0627\u06AF\u0631"
-        - "\u0627\u06CC\u0631\u0627\u0646"
-        - "\u0628\u0648\u062F\u0645\u060C"
-        - "\u0627\u0645\u06A9\u0627\u0646"
-        - "\u0646\u062F\u0627\u0634\u062A"
-        - "\u062F\u06CC\u06AF\u0631"
-        - "\u0628\u0627\u062D\u062C\u0627\u0628"
-        - "\u0628\u0627\u0632\u06CC"
-        - "\u06A9\u0646\u0645"
-        name: "\u06AF\u0641\u062A\u200C\u0648\u06AF\u0648 \u0628\u0627 \u0622\u06CC\
-          \u062F\u0627 \u06A9\u06CC\u062E\u0627\u06CC\u06CC\u061B \u0627\u06AF\u0631\
-          \ \u0627\u06CC\u0631\u0627\u0646 \u0628\u0648\u062F\u0645\u060C \u0627\u0645\
-          \u06A9\u0627\u0646 \u0646\u062F\u0627\u0634\u062A \u062F\u06CC\u06AF\u0631\
-          \ \u0628\u0627\u062D\u062C\u0627\u0628 \u0628\u0627\u0632\u06CC \u06A9\u0646\
-          \u0645"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/32789823.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u062E\u0628\u0631\u0647\u0627"
-        - "\u06AF\u0632\u0627\u0631\u0634\u200C\u0647\u0627"
-        - "\u06F1\u06F8:\u06F0\u06F0"
-        name: "\u062E\u0628\u0631\u0647\u0627 \u0648 \u06AF\u0632\u0627\u0631\u0634\
-          \u200C\u0647\u0627 \u06F1\u06F8:\u06F0\u06F0"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/32781395.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0631\u0648\u06CC\u062A\u0631\u0632:"
-        - "\u0646\u06CC\u0631\u0648\u0647\u0627\u06CC"
-        - "\u0622\u0645\u0631\u06CC\u06A9\u0627\u06CC\u06CC"
-        - "\u062F\u0631"
-        - "\u0646\u0632\u062F\u06CC\u06A9"
-        - "\u0641\u0631\u0648\u062F\u06AF\u0627\u0647"
-        - "\u0627\u0631\u0628\u06CC\u0644"
-        - "\u0647\u062F\u0641"
-        - "\u062D\u0645\u0644\u0647"
-        - "\u067E\u0647\u067E\u0627\u062F\u06CC"
-        - "\u0642\u0631\u0627\u0631"
-        - "\u06AF\u0631\u0641\u062A\u0646\u062F"
-        name: "\u0631\u0648\u06CC\u062A\u0631\u0632: \u0646\u06CC\u0631\u0648\u0647\
-          \u0627\u06CC \u0622\u0645\u0631\u06CC\u06A9\u0627\u06CC\u06CC \u062F\u0631\
-          \ \u0646\u0632\u062F\u06CC\u06A9 \u0641\u0631\u0648\u062F\u06AF\u0627\u0647\
-          \ \u0627\u0631\u0628\u06CC\u0644 \u0647\u062F\u0641 \u062D\u0645\u0644\u0647\
-          \ \u067E\u0647\u067E\u0627\u062F\u06CC \u0642\u0631\u0627\u0631 \u06AF\u0631\
-          \u0641\u062A\u0646\u062F"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/armed-drone-targets-base-housing-u-s-forces-near-iraq-s-erbil-airport---two-sources/32790101.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u06AF\u0641\u062A\u200C\u0648\u06AF\u0648"
-        - "\u0628\u0627"
-        - "\u0633\u062E\u0646\u06AF\u0648\u06CC"
-        - "\u062F\u0641\u062A\u0631"
-        - "\u062D\u0642\u0648\u0642"
-        - "\u0628\u0634\u0631"
-        - "\u0633\u0627\u0632\u0645\u0627\u0646"
-        - "\u0645\u0644\u0644:"
-        - "\u0628\u0631\u0627\u06CC"
-        - "\u062A\u0648\u0642\u0641"
-        - "\u0627\u0639\u062F\u0627\u0645\u200C\u0647\u0627"
-        - "\u062F\u0631"
-        - "\u0627\u06CC\u0631\u0627\u0646"
-        - "\u0686\u0647"
-        - "\u0645\u06CC\u200C\u06A9\u0646\u06CC\u062F\u061F"
-        name: "\u06AF\u0641\u062A\u200C\u0648\u06AF\u0648 \u0628\u0627 \u0633\u062E\
-          \u0646\u06AF\u0648\u06CC \u062F\u0641\u062A\u0631 \u062D\u0642\u0648\u0642\
-          \ \u0628\u0634\u0631 \u0633\u0627\u0632\u0645\u0627\u0646 \u0645\u0644\u0644\
-          : \u0628\u0631\u0627\u06CC \u062A\u0648\u0642\u0641 \u0627\u0639\u062F\u0627\
-          \u0645\u200C\u0647\u0627 \u062F\u0631 \u0627\u06CC\u0631\u0627\u0646 \u0686\
-          \u0647 \u0645\u06CC\u200C\u06A9\u0646\u06CC\u062F\u061F"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/32790094.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u0622\u06CC\u062F\u0627"
-        - "\u06A9\u06CC\u062E\u0627\u06CC\u06CC:"
-        - "\u0646\u0633\u0644"
-        - "\u0642\u0628\u0644"
-        - "\u0628\u0647\u200C\u062E\u0627\u0637\u0631"
-        - "\u067E\u0630\u06CC\u0631\u0634"
-        - "\u062D\u062C\u0627\u0628"
-        - "\u0628\u0647"
-        - "\u0645\u0627"
-        - "\u0628\u062F\u0647\u06A9\u0627\u0631"
-        - "\u0627\u0633\u062A"
-        name: "\u0622\u06CC\u062F\u0627 \u06A9\u06CC\u062E\u0627\u06CC\u06CC: \u0646\
-          \u0633\u0644 \u0642\u0628\u0644 \u0628\u0647\u200C\u062E\u0627\u0637\u0631\
-          \ \u067E\u0630\u06CC\u0631\u0634 \u062D\u062C\u0627\u0628 \u0628\u0647 \u0645\
-          \u0627 \u0628\u062F\u0647\u06A9\u0627\u0631 \u0627\u0633\u062A"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/32789938.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u062E\u0628\u0631\u0647\u0627"
-        - "\u06AF\u0632\u0627\u0631\u0634\u200C\u0647\u0627"
-        - "\u06F1\u06F7:\u06F0\u06F0"
-        name: "\u062E\u0628\u0631\u0647\u0627 \u0648 \u06AF\u0632\u0627\u0631\u0634\
-          \u200C\u0647\u0627 \u06F1\u06F7:\u06F0\u06F0"
-        probability: 1.0
-        url: https://www.radiofarda.com/a/32781392.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       usagm_weekly:
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u7F8E\u519B"
+        - "\u51FB\u6BC1"
+        - "\u80E1\u585E"
+        - "\u6B66\u88C5"
+        - "\u4E00\u679A"
+        - "\u51C6\u5907"
+        - "\u53D1\u5C04"
+        - "\u5BFC\u5F39"
+        name: "\u7F8E\u519B\u51FB\u6BC1\u80E1\u585E\u6B66\u88C5\u4E00\u679A\u6B63\u51C6\
+          \u5907\u53D1\u5C04\u7684\u5BFC\u5F39"
+        probability: 1.0
+        url: https://www.voachinese.com/a/us-hits-houthi-missile-being-prepared-for-launch-20240131/7465593.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u767D\u5BAB"
+        - "\u5BA3\u626C"
+        - "\u4E2D\u56FD"
+        - "\u63A5\u89E6"
+        - "\u53D6\u5F97"
+        - "\u5F97\u6210"
+        - "\u6210\u529F"
+        - "\u53D6\u5F97\u6210\u529F"
+        name: "\u767D\u5BAB\u5BA3\u626C\u4E0E\u4E2D\u56FD\u63A5\u89E6\u53D6\u5F97\u6210\
+          \u529F"
+        probability: 1.0
+        url: https://www.voachinese.com/a/white-house-touts-china-outreach-success-20240131/7465586.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E60\u8FD1\u5E73"
+        - "\u63A5\u53D7"
+        - "\u963F\u5BCC\u6C57"
+        - "\u5927\u4F7F"
+        - "\u56FD\u4E66"
+        - "\u662F\u5426"
+        - "\u610F\u5473"
+        - "\u610F\u5473\u7740"
+        - "\u4E2D\u56FD"
+        - "\u6B63\u5F0F"
+        - "\u627F\u8BA4"
+        - "\u5854\u5229"
+        - "\u5854\u5229\u73ED"
+        - "\u653F\u6743"
+        name: "\u4E60\u8FD1\u5E73\u63A5\u53D7\u963F\u5BCC\u6C57\u5927\u4F7F\u56FD\u4E66\
+          \u662F\u5426\u610F\u5473\u7740\u4E2D\u56FD\u6B63\u5F0F\u627F\u8BA4\u5854\
+          \u5229\u73ED\u653F\u6743\uFF1F"
+        probability: 1.0
+        url: https://www.voachinese.com/a/china-s-president-issues-ambassador-credentials-to-afghanistan-20240131/7465536.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u56FD\u9645"
+        - "\u793E\u4F1A"
+        - "\u63A8\u52A8"
+        - "\u518D\u6B21"
+        - "\u505C\u706B"
+        - "\u4E4B\u9645"
+        - "\u4EE5\u8272\u5217"
+        - "\u519B\u961F"
+        - "\u88AD\u51FB"
+        - "\u52A0\u6C99"
+        - "\u5317\u90E8"
+        - "\u5357\u90E8"
+        name: "\u56FD\u9645\u793E\u4F1A\u63A8\u52A8\u518D\u6B21\u505C\u706B\u4E4B\u9645\
+          \uFF0C\u4EE5\u8272\u5217\u519B\u961F\u88AD\u51FB\u52A0\u6C99\u5317\u90E8\
+          \u548C\u5357\u90E8 \u202F\u202F\u202F\u202F\u202F\u202F"
+        probability: 1.0
+        url: https://www.voachinese.com/a/israeli-forces-strike-northern-southern-gaza-amid-push-for-new-halt-in-fighting-20240131/7465515.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E9A\u592A"
+        - "\u62A5\u9053"
+        - '2024'
+        - '31'
+        - "\u97F3\u9891"
+        name: "\u300A\u4E9A\u592A\u62A5\u9053\u300B2024\u5E741\u670831\u65E5\u97F3\
+          \u9891"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/apr-audio/yp-01312024095329.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
+      - campaign: persagg
+        description: ''
+        keywords:
+        - "\u4E13\u680F"
+        - "\u7F51\u7EDC"
+        - "\u535A\u5F08"
+        - "\u6D77\u5916"
+        - "\u5A92\u4F53"
+        - "\u89C2\u9009\u56E2"
+        - "\u76F4\u64AD"
+        - "\u53F0\u6E7E"
+        - "\u5927\u9009"
+        - "\u6548\u679C"
+        - "\u5982\u4F55"
+        name: "\u4E13\u680F | \u7F51\u7EDC\u535A\u5F08: \u6D77\u5916\u81EA\u5A92\u4F53\
+          \u89C2\u9009\u56E2\u76F4\u64AD\u53F0\u6E7E\u5927\u9009\u6548\u679C\u5982\
+          \u4F55\uFF1F"
+        probability: 1.0
+        url: https://www.rfa.org/mandarin/zhuanlan/wangluoboyi/iwar-01312024153004.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
       - campaign: persagg
         description: ''
         keywords:
@@ -25081,27 +25223,6 @@ featureoptions:
       - campaign: persagg
         description: ''
         keywords:
-        - "\u56DE\u5E94"
-        - "\u738B\u5FD7\u5B89"
-        - "\u8D28\u7591"
-        - "\u6C11\u8FDB"
-        - "\u6C11\u8FDB\u515A"
-        - "\u4E13\u4E1A"
-        - "\u5E76\u975E"
-        - "\u5206\u533A"
-        - "\u7ACB\u59D4"
-        - "\u540D\u5355"
-        - "\u6392\u5E8F"
-        - "\u552F\u4E00"
-        - "\u8003\u91CF"
-        name: "\u56DE\u5E94\u738B\u5FD7\u5B89\u8D28\u7591\u3000\u6C11\u8FDB\u515A\uFF1A\
-          \u4E13\u4E1A\u5E76\u975E\u4E0D\u5206\u533A\u7ACB\u59D4\u540D\u5355\u6392\
-          \u5E8F\u552F\u4E00\u8003\u91CF"
-        probability: 1.0
-        url: https://www.rfa.org/mandarin/Xinwen/3-01242024112003.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
         - "\u79F0\u5144\u9053\u5F1F"
         - "\u521A\u8FC7"
         - "\u4E2D\u8D8A"
@@ -25151,115 +25272,6 @@ featureoptions:
           \u8F7B\u4EBA\u4E0D\u613F\u88AB\u4E24\u5CB8\u8BAE\u9898\u7ED1\u67B6"
         probability: 1.0
         url: https://www.voachinese.com/a/taiwanese-young-people-s-views-on-the-2024-election-results-and-the-future-of-cross-strait-relations-20240124/7454950.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u56FD\u4E8B"
-        - "\u5149\u6790"
-        - "\u53F0\u6E7E"
-        - "\u9009\u4E3E"
-        - "\u5317\u4EAC"
-        - "\u52A9\u9009"
-        - "\u5C34\u5C2C"
-        - "\u4F55\u5728"
-        name: "\u56FD\u4E8B\u5149\u6790\uFF1A\u53F0\u6E7E\u9009\u4E3E\u4E2D\u201C\u5317\
-          \u4EAC\u52A9\u9009\u201D\u7684\u5C34\u5C2C\u4F55\u5728\uFF1F"
-        probability: 1.0
-        url: https://www.voachinese.com/a/china-threat-in-taiwan-election-20240124/7454921.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u592A\u5E73"
-        - "\u592A\u5E73\u6D0B"
-        - "\u5C9B\u56FD"
-        - "\u7459\u9C81"
-        - "\u53F0\u6E7E"
-        - "\u65AD\u4EA4"
-        - "\u4E2D\u56FD"
-        - "\u6B63\u5F0F"
-        - "\u590D\u4EA4"
-        name: "\u592A\u5E73\u6D0B\u5C9B\u56FD\u7459\u9C81\u4E0E\u53F0\u6E7E\u65AD\u4EA4\
-          \u540E \u4E0E\u4E2D\u56FD\u6B63\u5F0F\u590D\u4EA4"
-        probability: 1.0
-        url: https://www.voachinese.com/a/china-nauru-officially-reestablished-diplomatic-relationship-20240124/7454874.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u4E94\u89D2"
-        - "\u5927\u697C"
-        - "\u4E94\u89D2\u5927\u697C"
-        - "\u7F8E\u8D8A"
-        - "\u5173\u7CFB"
-        - "\u8FDC\u5927"
-        - "\u5927\u4E8E"
-        - "\u8FDC\u5927\u4E8E"
-        - "\u9632\u52A1"
-        - "\u5408\u4F5C"
-        - "\u5173\u4E8E"
-        - "\u4E2D\u56FD"
-        name: "\u4E94\u89D2\u5927\u697C\uFF1A\u7F8E\u8D8A\u5173\u7CFB\u8FDC\u5927\u4E8E\
-          \u9632\u52A1\u5408\u4F5C\u6216\u5173\u4E8E\u4E2D\u56FD"
-        probability: 1.0
-        url: https://www.voachinese.com/a/us-says-relationship-with-vietnam-is-more-than-defense-ties-and-more-than-about-china-20240124/7454861.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u5E03\u4EC0"
-        - "\u5E03\u4EC0\u5C14"
-        - "\u65B0\u7F55\u5E03\u4EC0\u5C14\u5DDE"
-        - "\u521D\u9009"
-        - "\u5931\u5229"
-        - "\u9ED1\u5229"
-        - "\u8A93\u8A00"
-        - "\u7EE7\u7EED"
-        - "\u594B\u6597"
-        name: "\u65B0\u7F55\u5E03\u4EC0\u5C14\u5DDE\u521D\u9009\u5931\u5229 \u9ED1\
-          \u5229\u8A93\u8A00\u7EE7\u7EED\u594B\u6597"
-        probability: 1.0
-        url: https://www.voachinese.com/a/haley-vows-to-fight-on-with-a-strong-finish-albeit-loss-in-the-pivotal-new-hampshire-primary-20240124/7454808.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u8425\u5546"
-        - "\u73AF\u5883"
-        - "\u52A0\u901F"
-        - "\u6076\u5316"
-        - "\u4E2D\u56FD"
-        - "\u91D1\u878D"
-        - "\u76D1\u7BA1"
-        - "\u91D1\u878D\u76D1\u7BA1"
-        - "\u673A\u6784"
-        - "\u52A0\u5927"
-        - "\u5927\u529B"
-        - "\u529B\u5EA6"
-        - "\u52A0\u5927\u529B\u5EA6"
-        - "\u5438\u5F15"
-        - "\u5916\u8D44"
-        - "\u5438\u5F15\u5916\u8D44"
-        name: "\u8425\u5546\u73AF\u5883\u52A0\u901F\u6076\u5316 \u4E2D\u56FD\u91D1\
-          \u878D\u76D1\u7BA1\u673A\u6784\u79F0\u5C06\u52A0\u5927\u529B\u5EA6\u5438\
-          \u5F15\u5916\u8D44"
-        probability: 1.0
-        url: https://www.voachinese.com/a/china-tries-again-to-woo-foreign-investment-20240124/7454802.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
-      - campaign: persagg
-        description: ''
-        keywords:
-        - "\u9999\u6E2F"
-        - "\u6559\u80B2"
-        - "\u5C40\u957F"
-        - "\u6559\u80B2\u5C40"
-        - "\u6559\u80B2\u5C40\u957F"
-        - "\u8BBF\u82F1"
-        - "\u516C\u5F00"
-        - "\u6D3B\u52A8"
-        - "\u62C5\u5FC3"
-        - "\u53D7\u5230"
-        - "\u6297\u8BAE"
-        - "\u53D6\u6D88"
-        name: "\u9999\u6E2F\u6559\u80B2\u5C40\u957F\u8BBF\u82F1 \u516C\u5F00\u6D3B\
-          \u52A8\u6216\u56E0\u62C5\u5FC3\u53D7\u5230\u6297\u8BAE\u88AB\u53D6\u6D88"
-        probability: 1.0
-        url: https://www.voachinese.com/a/talk-by-hong-kong-education-secretary-in-uk-cancelled-as-hongkongers-plan-protest-20240124/7454783.html?utm_medium=proxy&utm_campaign=persagg&utm_source=lantern&utm_content=ad
     pattern: '#taw'
   p2pcensoredpeer:
     bep44_targets_and_salts:
