@@ -71,12 +71,12 @@ type nopCloser struct{}
 
 func (c nopCloser) close() {}
 
-// CreateDialers creates a list of Proxies (orchestrator.Dialer) with supplied server info.
+// CreateDialers creates a list of Proxies (bandit.Dialer) with supplied server info.
 func CreateDialers(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) []bandit.Dialer {
 	return lo.Values(CreateDialersMap(configDir, proxies, uc))
 }
 
-// CreateDialersMap creates a map of Proxies (orchestrator.Dialer) with supplied server info.
+// CreateDialersMap creates a map of Proxies (bandit.Dialer) with supplied server info.
 func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) map[string]bandit.Dialer {
 	mappedDialers := make(map[string]bandit.Dialer)
 	groups := groupByMultipathEndpoint(proxies)
@@ -394,7 +394,7 @@ func (p *proxy) updateEstRTT(rtt time.Duration) {
 	p.emaRTTDev.UpdateDuration(deviation)
 }
 
-// EstRTT implements the method from the orchestrator.Dialer interface. The
+// EstRTT implements the method from the bandit.Dialer interface. The
 // value is updated from the round trip time of CONNECT request (minus the time
 // to dial origin) or the HTTP ping. RTT deviation is also taken into account,
 // so the value is higher if the proxy has a larger deviation over time, even if
@@ -413,7 +413,7 @@ func (p *proxy) realEstRTT() time.Duration {
 	return time.Duration(p.emaRTT.Get() + rttDevK*p.emaRTTDev.Get())
 }
 
-// EstBandwidth implements the method from the orchestrator.Dialer interface.
+// EstBandwidth implements the method from the bandit.Dialer interface.
 //
 // Bandwidth estimates are provided to clients following the below protocol:
 //

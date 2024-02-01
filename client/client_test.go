@@ -131,7 +131,7 @@ func TestServeHTTPTimeout(t *testing.T) {
 	client := newClient()
 	client.requestTimeout = 500 * time.Millisecond
 
-	// Set the orchestrator to a new Dial() func that waits "client.requestTimeout" * 2
+	// Set the bandit to a new Dial() func that waits "client.requestTimeout" * 2
 	// before running
 	resetDialers(
 		client, // Client

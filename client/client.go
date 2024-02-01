@@ -110,8 +110,7 @@ type Client struct {
 	// requestTimeout: (optional) timeout to process the request from application
 	requestTimeout time.Duration
 
-	// Balanced CONNECT dialers.
-	//bal *balancer.Balancer
+	// Dialer that uses multi-armed bandit to select the best proxy to use.
 	dialer *bandit.BanditDialer
 
 	proxy proxy.Proxy
@@ -190,7 +189,7 @@ func NewClient(
 	}
 	banditDialer, err := bandit.New([]bandit.Dialer{})
 	if err != nil {
-		return nil, errors.New("Unable to create orchestrator: %v", err)
+		return nil, errors.New("Unable to create bandit: %v", err)
 	}
 	client := &Client{
 		configDir:                              configDir,
