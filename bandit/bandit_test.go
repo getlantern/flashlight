@@ -226,9 +226,7 @@ func Test_differentArm(t *testing.T) {
 	}
 }
 
-type tcpConnDialer struct {
-	conn *net.TCPConn
-}
+type tcpConnDialer struct{}
 
 // Addr implements Dialer.
 func (*tcpConnDialer) Addr() string {
