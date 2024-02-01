@@ -3,7 +3,7 @@ package ios
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sync"
 	"time"
@@ -15,7 +15,7 @@ import (
 	"github.com/getlantern/dnsgrab/persistentcache"
 	"github.com/getlantern/errors"
 
-	"github.com/getlantern/flashlight/v7/balancer"
+	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/bandwidth"
 	"github.com/getlantern/flashlight/v7/buffers"
 	"github.com/getlantern/flashlight/v7/chained"
@@ -109,7 +109,7 @@ type ClientWriter interface {
 type cw struct {
 	ipStack        io.WriteCloser
 	client         *client
-	bal            *balancer.Balancer
+	dialer         *bandit.BanditDialer
 	quotaTextPath  string
 	lastSavedQuota time.Time
 }
@@ -131,13 +131,13 @@ func (c *cw) Write(b []byte) (int, error) {
 			go func() {
 				if quota == nil {
 					log.Debug("Clearing bandwidth quota file")
-					writeErr := ioutil.WriteFile(c.quotaTextPath, []byte{}, 0644)
+					writeErr := os.WriteFile(c.quotaTextPath, []byte{}, 0644)
 					if writeErr != nil {
 						log.Errorf("Unable to clear quota file: %v", writeErr)
 					}
 				} else {
 					log.Debugf("Saving bandwidth quota file with %d/%d", quota.MiBUsed, quota.MiBAllowed)
-					writeErr := ioutil.WriteFile(c.quotaTextPath, []byte(fmt.Sprintf("%d/%d", quota.MiBUsed, quota.MiBAllowed)), 0644)
+					writeErr := os.WriteFile(c.quotaTextPath, []byte(fmt.Sprintf("%d/%d", quota.MiBUsed, quota.MiBAllowed)), 0644)
 					if writeErr != nil {
 						log.Errorf("Unable to write quota file: %v", writeErr)
 					}
@@ -157,11 +157,14 @@ func (c *cw) Reconfigure() {
 		panic(log.Errorf("Unable to load dialers on reconfigure: %v", err))
 	}
 
-	c.bal.Reset(dialers)
+	c.dialer, err = bandit.New(dialers)
+	if err != nil {
+		log.Errorf("Unable to create dialer on reconfigure: %v", err)
+	}
 }
 
 func (c *cw) Close() error {
-	c.bal.Close()
+	c.dialer.Close()
 	c.client.packetsOut.Close()
 	return nil
 }
@@ -177,7 +180,7 @@ type client struct {
 	uc              *UserConfig
 	tcpHandler      *proxiedTCPHandler
 	udpHandler      *directUDPHandler
-	ipStack         tun2socks.LWIPStack
+	//ipStack         tun2socks.LWIPStack
 	clientWriter    *cw
 	memoryAvailable int64
 	started         time.Time
@@ -219,7 +222,10 @@ func (c *client) start() (ClientWriter, error) {
 	if err != nil {
 		return nil, err
 	}
-	bal := balancer.New(func() bool { return c.uc.AllowProbes }, 30*time.Second, dialers...)
+	dialer, err := bandit.New(dialers)
+	if err != nil {
+		return nil, err
+	}
 
 	// We use a persistent cache for dnsgrab because some clients seem to hang on to our fake IP addresses for a while, even though we set a TTL of 1 second.
 	// That can be a problem when the network extension is automatically restarted. Caching the dns cache on disk allows us to successfully reverse look up
@@ -238,7 +244,7 @@ func (c *client) start() (ClientWriter, error) {
 		return nil, errors.New("Unable to start dnsgrab: %v", err)
 	}
 
-	c.tcpHandler = newProxiedTCPHandler(c, bal, grabber)
+	c.tcpHandler = newProxiedTCPHandler(c, dialer, grabber)
 	c.udpHandler = newDirectUDPHandler(c, c.udpDialer, grabber, c.capturedDNSHost)
 
 	ipStack := tun2socks.NewLWIPStack()
@@ -251,7 +257,7 @@ func (c *client) start() (ClientWriter, error) {
 	c.clientWriter = &cw{
 		ipStack:       ipStack,
 		client:        c,
-		bal:           bal,
+		dialer:        dialer,
 		quotaTextPath: filepath.Join(c.configDir, "quota.txt"),
 	}
 
@@ -268,7 +274,7 @@ func (c *client) loadUserConfig() error {
 	return nil
 }
 
-func (c *client) loadDialers() ([]balancer.Dialer, error) {
+func (c *client) loadDialers() ([]bandit.Dialer, error) {
 	cf := &configurer{configFolderPath: c.configDir}
 	chained.PersistSessionStates(c.configDir)
 

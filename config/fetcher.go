@@ -4,7 +4,7 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -157,6 +157,6 @@ func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op) ([]byte, time.Durati
 	}()
 
 	log.Debug("Fetched cloud config")
-	body, err := ioutil.ReadAll(gzReader)
+	body, err := io.ReadAll(gzReader)
 	return body, sleepTime, err
 }

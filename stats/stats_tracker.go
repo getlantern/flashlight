@@ -241,3 +241,60 @@ func (t *tracker) update(update func(stats Stats) Stats) {
 	}
 	t.mx.Unlock()
 }
+
+// Make sure that Noop implements Tracker
+var _ Tracker = (*Noop)(nil)
+
+// Returns a new Noop Tracker
+func NewNoop() Tracker {
+	return &Noop{}
+}
+
+// Noop is a no-op implementation of Tracker
+type Noop struct{}
+
+// Latest returns the latest Stats that are being tracked
+func (s *Noop) Latest() Stats { return Stats{} }
+
+// AddListener registers a new listener for stats updates and returns a
+// function that can be used to close the listener.
+func (s *Noop) AddListener(_ func(newStats Stats)) (close func()) {
+	return func() {}
+}
+
+// SetActiveProxyLocation updates the location of last successfully dialed
+// proxy. countryCode is in ISO Alpha-2 form, see
+// http://www.nationsonline.org/oneworld/country_code_list.htm
+func (s *Noop) SetActiveProxyLocation(city string, country string, countryCode string) {}
+
+// IncHTTPSUpgrades indicates that Lantern client redirects a HTTP request
+// to HTTPS via HTTPSEverywhere.
+func (s *Noop) IncHTTPSUpgrades() {}
+
+// IncAdsBlocked indicates that a proxy request is blocked per easylist rules.
+func (s *Noop) IncAdsBlocked() {}
+
+// SetDisconnected indicates that we've entered disconnected mode
+func (s *Noop) SetDisconnected(val bool) {}
+
+// SetHasSucceedingProxy indicates that we do (or don't) have a succeeding
+// proxy.
+func (s *Noop) SetHasSucceedingProxy(val bool) {}
+
+// SetHitDataCap indicates that we've hit the data cap
+func (s *Noop) SetHitDataCap(val bool) {}
+
+// SetIsPro indicates that we're pro
+func (s *Noop) SetIsPro(val bool) {}
+
+// SetYinbiEnabled indicates that the user is eligible to participate in the
+// Yinbi giveaway
+func (s *Noop) SetYinbiEnabled(val bool) {}
+
+// SetAlert indicates that some alert needs user attention. If transient is
+// true, the alert will be cleared automatically 10 seconds later.
+func (s *Noop) SetAlert(alertType AlertType, details string, transient bool) {}
+
+// ClearAlert clears the alert state if the current alert has the specific
+// type.
+func (s *Noop) ClearAlert(alertType AlertType) {}

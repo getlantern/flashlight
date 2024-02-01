@@ -19,7 +19,7 @@ import (
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/ema"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/v7/balancer"
+	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/ops"
@@ -71,18 +71,19 @@ type nopCloser struct{}
 
 func (c nopCloser) close() {}
 
-// CreateDialers creates a list of Proxies (balancer.Dialer) with supplied server info.
-func CreateDialers(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) []balancer.Dialer {
+// CreateDialers creates a list of Proxies (bandit.Dialer) with supplied server info.
+func CreateDialers(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) []bandit.Dialer {
 	return lo.Values(CreateDialersMap(configDir, proxies, uc))
 }
 
-// CreateDialersMap creates a map of Proxies (balancer.Dialer) with supplied server info.
-func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) map[string]balancer.Dialer {
-	mappedDialers := make(map[string]balancer.Dialer)
+// CreateDialersMap creates a map of Proxies (bandit.Dialer) with supplied server info.
+func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) map[string]bandit.Dialer {
+	mappedDialers := make(map[string]bandit.Dialer)
 	groups := groupByMultipathEndpoint(proxies)
 	for endpoint, group := range groups {
 		if endpoint == "" {
-			log.Debugf("Adding %d individual chained servers", len(group))
+			// Also print the stack trace to help us debug
+			log.Debugf("Creating map for %d individual chained servers", len(group))
 			for name, s := range group {
 				dialer, err := CreateDialer(configDir, name, s, uc)
 				if err != nil {
@@ -93,7 +94,7 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 				mappedDialers[name] = dialer
 			}
 		} else {
-			log.Debugf("Adding %d chained servers for multipath endpoint %s", len(group), endpoint)
+			log.Debugf("Creating map for %d chained servers for multipath endpoint %s", len(group), endpoint)
 			dialer, err := CreateMPDialer(configDir, endpoint, group, uc)
 			if err != nil {
 				log.Errorf("Unable to configure multipath server to %v. Received error: %v", endpoint, err)
@@ -106,7 +107,7 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 }
 
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
-func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserConfig) (balancer.Dialer, error) {
+func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserConfig) (bandit.Dialer, error) {
 	addr, transport, network, err := extractParams(s)
 	if err != nil {
 		return nil, err
@@ -393,7 +394,7 @@ func (p *proxy) updateEstRTT(rtt time.Duration) {
 	p.emaRTTDev.UpdateDuration(deviation)
 }
 
-// EstRTT implements the method from the balancer.Dialer interface. The
+// EstRTT implements the method from the bandit.Dialer interface. The
 // value is updated from the round trip time of CONNECT request (minus the time
 // to dial origin) or the HTTP ping. RTT deviation is also taken into account,
 // so the value is higher if the proxy has a larger deviation over time, even if
@@ -412,7 +413,7 @@ func (p *proxy) realEstRTT() time.Duration {
 	return time.Duration(p.emaRTT.Get() + rttDevK*p.emaRTTDev.Get())
 }
 
-// EstBandwidth implements the method from the balancer.Dialer interface.
+// EstBandwidth implements the method from the bandit.Dialer interface.
 //
 // Bandwidth estimates are provided to clients following the below protocol:
 //
@@ -490,7 +491,7 @@ func (p *proxy) reportDialCore(op *ops.Op, dialCore func() (net.Conn, error)) (n
 	delta := elapsed()
 	log.Tracef("Core dial time to %v was %v", p.name, delta)
 	op.CoreDialTime(delta, err)
-	return overheadWrapper(false)(conn, err)
+	return conn, err
 }
 
 func (p *proxy) reportedDial(dial func(op *ops.Op) (net.Conn, error)) (net.Conn, error) {

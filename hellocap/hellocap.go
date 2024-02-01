@@ -15,8 +15,11 @@ import (
 
 	utls "github.com/refraction-networking/utls"
 
+	"github.com/getlantern/golog"
 	"github.com/getlantern/tlsutil"
 )
+
+var log = golog.LoggerFor("hellocap")
 
 type browser interface {
 	// Uses the browser to make an HTTP GET request of the input address.
@@ -49,6 +52,7 @@ func GetDefaultBrowserHello(ctx context.Context) ([]byte, error) {
 }
 
 func getBrowserHello(ctx context.Context, browser browser) ([]byte, error) {
+	log.Debug("Getting browser hello")
 	type helloResult struct {
 		hello []byte
 		err   error

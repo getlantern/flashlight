@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/flashlight/v7/balancer"
+	"github.com/getlantern/flashlight/v7/bandit"
 )
 
 var (
-	statsTrackingDialers []balancer.Dialer
+	statsTrackingDialers []bandit.Dialer
 
 	statsMx sync.Mutex
 
@@ -22,7 +22,7 @@ var (
 
 // TrackStatsFor enables periodic checkpointing of the given proxies' stats to
 // disk.
-func TrackStatsFor(dialers []balancer.Dialer, configDir string, probeIfNecessary bool) {
+func TrackStatsFor(dialers []bandit.Dialer, configDir string, probeIfNecessary bool) {
 	statsMx.Lock()
 
 	statsFilePath := filepath.Join(configDir, "proxystats.csv")
@@ -31,10 +31,7 @@ func TrackStatsFor(dialers []balancer.Dialer, configDir string, probeIfNecessary
 		probeIfRequired(dialers)
 	}
 
-	statsTrackingDialers = make([]balancer.Dialer, 0, len(dialers))
-	for _, d := range dialers {
-		statsTrackingDialers = append(statsTrackingDialers, d)
-	}
+	statsTrackingDialers = append(statsTrackingDialers, dialers...)
 
 	statsMx.Unlock()
 
@@ -43,17 +40,16 @@ func TrackStatsFor(dialers []balancer.Dialer, configDir string, probeIfNecessary
 	})
 }
 
-func probeIfRequired(dialers []balancer.Dialer) {
-	sorted := balancer.SortDialers(dialers)
-	rttOfTopProxy := sorted[0].EstRTT()
-	for i, dialer := range sorted {
+func probeIfRequired(dialers []bandit.Dialer) {
+	rttOfTopProxy := dialers[0].EstRTT()
+	for i, dialer := range dialers {
 		// probe is automatically required for relatively new dialers
 		probeRequired := dialer.Attempts() < 20
 		if probeRequired {
 			log.Debugf("%v is relatively new, will probe for performance", dialer.Label())
 		} else if i > 0 && dialer.Successes() > 0 && dialer.EstRTT() < rttOfTopProxy {
 			// dialers whose RTT is lower than the top proxy get checked on startup as well
-			log.Debugf("%v is lower RTT than %v, will probe for performance", dialer.Label(), sorted[0].Label())
+			log.Debugf("%v is lower RTT than %v, will probe for performance", dialer.Label(), dialers[0].Label())
 			probeRequired = true
 		}
 		if probeRequired {
@@ -62,8 +58,8 @@ func probeIfRequired(dialers []balancer.Dialer) {
 	}
 }
 
-func applyExistingStats(statsFile string, dialers []balancer.Dialer) {
-	dialersMap := make(map[string]balancer.Dialer, len(dialers))
+func applyExistingStats(statsFile string, dialers []bandit.Dialer) {
+	dialersMap := make(map[string]bandit.Dialer, len(dialers))
 	for _, d := range dialers {
 		dialersMap[d.Addr()] = d
 	}
@@ -160,7 +156,7 @@ func persistStats(statsFilePath string) {
 	for {
 		time.Sleep(15 * time.Second)
 		statsMx.Lock()
-		dialers := make([]balancer.Dialer, 0, len(statsTrackingDialers))
+		dialers := make([]bandit.Dialer, 0, len(statsTrackingDialers))
 		for _, d := range statsTrackingDialers {
 			dialers = append(dialers, d)
 		}
@@ -169,7 +165,7 @@ func persistStats(statsFilePath string) {
 	}
 }
 
-func doPersistStats(statsFile string, dialers []balancer.Dialer) {
+func doPersistStats(statsFile string, dialers []bandit.Dialer) {
 
 	out, err := os.OpenFile(fmt.Sprintf("%v.tmp", statsFile), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {

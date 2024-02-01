@@ -5,8 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"math"
 	"net"
 	"net/http"
 	"path/filepath"
@@ -35,11 +33,10 @@ import (
 	"github.com/getlantern/proxy/v3/filters"
 	"github.com/getlantern/shortcut"
 
-	"github.com/getlantern/flashlight/v7/balancer"
+	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/buffers"
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/common"
-	"github.com/getlantern/flashlight/v7/config"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/flashlight/v7/ops"
@@ -82,8 +79,6 @@ var (
 	// interval before rewriting the same URL to HTTPS, to avoid redirect loop.
 	httpsRewriteInterval = 10 * time.Second
 
-	forever = time.Duration(math.MaxInt64)
-
 	// See http://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address
 	validHostnameRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
@@ -114,8 +109,8 @@ type Client struct {
 	// requestTimeout: (optional) timeout to process the request from application
 	requestTimeout time.Duration
 
-	// Balanced CONNECT dialers.
-	bal *balancer.Balancer
+	// Dialer that uses multi-armed bandit to select the best proxy to use.
+	dialer *bandit.BanditDialer
 
 	proxy proxy.Proxy
 
@@ -149,9 +144,6 @@ type Client struct {
 	httpProxyIP   string
 	httpProxyPort string
 
-	googleAdsFilter      func() bool
-	googleAdsOptionsLock sync.RWMutex
-	googleAdsOptions     *config.GoogleSearchAdsOptions
 	adTrackUrl           func() string
 	allowGoogleSearchAds func() bool
 	allowMITM            func() bool
@@ -191,10 +183,14 @@ func NewClient(
 	if err != nil {
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
+	banditDialer, err := bandit.New([]bandit.Dialer{})
+	if err != nil {
+		return nil, errors.New("Unable to create bandit: %v", err)
+	}
 	client := &Client{
 		configDir:                              configDir,
 		requestTimeout:                         requestTimeout,
-		bal:                                    balancer.New(allowProbes, time.Duration(requestTimeout)),
+		dialer:                                 banditDialer,
 		disconnected:                           disconnected,
 		allowProbes:                            allowProbes,
 		proxyAll:                               proxyAll,
@@ -210,12 +206,8 @@ func NewClient(
 		allowPrivateHosts:                      allowPrivateHosts,
 		lang:                                   lang,
 		adSwapTargetURL:                        adSwapTargetURL,
-		googleAdsFilter:                        allowGoogleSearchAds,
 		reverseDNS:                             reverseDNS,
-		googleAdsOptions:                       nil,
-		googleAdsOptionsLock:                   sync.RWMutex{},
 		adTrackUrl:                             adTrackUrl,
-		allowGoogleSearchAds:                   allowGoogleSearchAds,
 		allowMITM:                              allowMITM,
 		eventWithLabel:                         eventWithLabel,
 		httpListener:                           eventual.NewValue(),
@@ -249,7 +241,6 @@ func NewClient(
 	if mitmErr != nil {
 		log.Errorf("Unable to initialize MITM: %v", mitmErr)
 	}
-	client.reportProxyLocationLoop()
 	client.iptool, _ = iptool.New()
 	go func() {
 		for {
@@ -262,6 +253,8 @@ func NewClient(
 			<-geolookup.OnRefresh()
 		}
 	}()
+
+	go client.cacheClientHellos()
 	return client, nil
 }
 
@@ -313,29 +306,6 @@ func (c *Client) MITMOptions() *mitm.Opts {
 		}
 	}
 	return nil
-}
-
-func (client *Client) GetBalancer() *balancer.Balancer {
-	return client.bal
-}
-
-func (client *Client) reportProxyLocationLoop() {
-	ch := client.bal.OnActiveDialer()
-	var activeProxy string
-	go func() {
-		for {
-			proxy := <-ch
-			if proxy.Name() == activeProxy {
-				continue
-			}
-			countryCode, country, city := proxyLoc(proxy)
-			client.statsTracker.SetActiveProxyLocation(
-				city,
-				country,
-				countryCode,
-			)
-		}
-	}()
 }
 
 // Addr returns the address at which the client is listening with HTTP, blocking
@@ -475,13 +445,15 @@ func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reade
 // Configure updates the client's configuration. Configure can be called
 // before or after ListenAndServe, and can be called multiple times. If
 // no error occurred, then the new dialers are returned.
-func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []balancer.Dialer {
+func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []bandit.Dialer {
 	log.Debug("Configure() called")
-	dialers, err := client.initBalancer(proxies)
+	dialers, dialer, err :=
+		initDialers(proxies, client.configDir, client.statsTracker, client.user)
 	if err != nil {
 		log.Error(err)
 		return nil
 	}
+	client.dialer = dialer
 	chained.PersistSessionStates(client.configDir)
 	chained.TrackStatsFor(dialers, client.configDir, client.allowProbes())
 	return dialers
@@ -569,7 +541,7 @@ func (client *Client) doDial(
 
 	dialProxied := func(ctx context.Context, _unused, addr string) (net.Conn, error) {
 		op.Set("remotely_proxied", true)
-		proto := balancer.NetworkPersistent
+		proto := bandit.NetworkPersistent
 		if isCONNECT {
 			// UGLY HACK ALERT! In this case, we know we need to send a CONNECT request
 			// to the chained server. We need to send that request from chained/dialer.go
@@ -578,10 +550,10 @@ func (client *Client) doDial(
 			// that is effectively always "tcp" in the end, but we look for this
 			// special "transport" in the dialer and send a CONNECT request in that
 			// case.
-			proto = balancer.NetworkConnect
+			proto = bandit.NetworkConnect
 		}
 		start := time.Now()
-		conn, err := client.bal.DialContext(ctx, proto, addr)
+		conn, err := client.dialer.DialContext(ctx, proto, addr)
 		if log.IsTraceEnabled() {
 			log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)
 		}
@@ -819,33 +791,34 @@ func errorResponse(_ *filters.ConnectionState, req *http.Request, _ bool, err er
 	}
 
 	return &http.Response{
-		Body:       ioutil.NopCloser(bytes.NewBuffer(htmlerr)),
+		Body:       io.NopCloser(bytes.NewBuffer(htmlerr)),
 		StatusCode: http.StatusServiceUnavailable,
 	}
 }
 
-func (client *Client) ConfigureGoogleAds(opts config.GoogleSearchAdsOptions) {
-	client.googleAdsOptionsLock.Lock()
-	client.googleAdsOptions = &opts
-	client.googleAdsOptionsLock.Unlock()
-}
-
-// initBalancer takes hosts from cfg.ChainedServers and it uses them to create a
-// balancer. Returns the new dialers.
-func (client *Client) initBalancer(proxies map[string]*commonconfig.ProxyConfig) ([]balancer.Dialer, error) {
+// initDialers takes hosts from cfg.ChainedServers and it uses them to create a
+// new dialer. Returns the new dialers.
+func initDialers(proxies map[string]*commonconfig.ProxyConfig,
+	configDir string, stats stats.Tracker,
+	uc common.UserConfig) ([]bandit.Dialer, *bandit.BanditDialer, error) {
 	if len(proxies) == 0 {
-		return nil, fmt.Errorf("No chained servers configured, not initializing balancer")
+		return nil, nil, fmt.Errorf("no chained servers configured, not initializing dialers")
 	}
 
-	chained.PersistSessionStates(client.configDir)
-	dialers := chained.CreateDialers(client.configDir, proxies, client.user)
-	client.bal.Reset(dialers)
+	chained.PersistSessionStates(configDir)
+	dialers := chained.CreateDialers(configDir, proxies, uc)
+	dialer, err := bandit.NewWithStats(dialers, stats)
+	if err != nil {
+		return nil, nil, err
+	}
+	return dialers, dialer, nil
+}
 
-	go func() {
-		for hasSucceeding := range client.bal.HasSucceedingDialer {
-			client.statsTracker.SetHasSucceedingProxy(hasSucceeding)
-		}
-	}()
-
-	return dialers, nil
+// Creates a local server to capture client hello messages from the browser and
+// caches them.
+func (client *Client) cacheClientHellos() {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	// Try to snag a hello from the browser.
+	chained.ActivelyObtainBrowserHello(ctx, client.configDir)
 }

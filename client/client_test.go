@@ -17,18 +17,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
+	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/detour"
-	"github.com/getlantern/golog"
-	"github.com/getlantern/mockconn"
-	"github.com/getlantern/shortcut"
-
-	"github.com/getlantern/flashlight/v7/balancer"
+	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/stats"
+	"github.com/getlantern/golog"
+	"github.com/getlantern/mockconn"
+	"github.com/getlantern/shortcut"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var logger = golog.LoggerFor("client-test")
@@ -73,11 +72,12 @@ func newTestUserConfig() *common.UserConfigData {
 	return common.NewUserConfigData(common.DefaultAppName, "device", 1234, "protoken", nil, "en-US")
 }
 
-func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
-	client.bal.Reset([]balancer.Dialer{&testDialer{
+func resetDialers(client *Client, dialer func(network, addr string) (net.Conn, error)) {
+	d, _ := bandit.New([]bandit.Dialer{&testDialer{
 		name: "test-dialer",
 		dial: dialer,
 	}})
+	client.dialer = d
 }
 
 func newClient() *Client {
@@ -114,7 +114,7 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 func TestServeHTTPOk(t *testing.T) {
 	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n")
 	client := newClient()
-	resetBalancer(client, mockconn.SucceedingDialer(mockResponse).Dial)
+	resetDialers(client, mockconn.SucceedingDialer(mockResponse).Dial)
 
 	req, _ := http.NewRequest("CONNECT", "https://b.com:443", nil)
 	resp, err := roundTrip(client, req)
@@ -130,9 +130,9 @@ func TestServeHTTPTimeout(t *testing.T) {
 	client := newClient()
 	client.requestTimeout = 500 * time.Millisecond
 
-	// Set the balancer to a new Dial() func that waits "client.requestTimeout" * 2
+	// Set the bandit to a new Dial() func that waits "client.requestTimeout" * 2
 	// before running
-	resetBalancer(
+	resetDialers(
 		client, // Client
 		func(network, addr string) (net.Conn, error) { // Dial() func
 			time.Sleep(client.requestTimeout * 2)
@@ -142,21 +142,25 @@ func TestServeHTTPTimeout(t *testing.T) {
 	req, err := http.NewRequest("CONNECT", "https://a.com:443", nil)
 	require.NoError(t, err)
 	resp, err := roundTrip(client, req)
-	require.ErrorIs(t, err, context.DeadlineExceeded)
+	_, ok := err.(*bandit.BanditError)
+	require.True(t, ok, "should return a BanditError")
 	require.Equal(t, http.StatusOK, resp.StatusCode, "CONNECT requests should always succeed")
 
 	req, err = http.NewRequest("GET", "http://b.com/action", nil)
 	require.NoError(t, err)
 	req.Header.Set("Accept", "text/html")
 	resp, err = roundTrip(client, req)
-	require.ErrorIs(t, err, context.DeadlineExceeded)
+
+	// Unfortunately, this hits the proxy package that doesn't properly wrap
+	// the error, so we can't check for a BanditError here.
+	require.Contains(t, err.Error(), "No dialer succeeded after")
 	require.Equal(t, http.StatusServiceUnavailable, resp.StatusCode, "It should respond 503 Service Unavailable with error page")
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	require.Contains(t, string(body), "<title>Lantern: Error Accessing Page</title>", "should respond with error page")
 	// The error page when dialing an inaccessible page with Lantern actually
 	// contains the dial error. See `./status/generic_error.html`
-	require.Contains(t, string(body), context.DeadlineExceeded.Error())
+	require.Contains(t, string(body), "No dialer succeeded after")
 }
 
 func TestIsAddressProxyable(t *testing.T) {
@@ -220,7 +224,7 @@ func TestDialShortcut(t *testing.T) {
 	// http.Transport to print "Unsolicited response received on idle HTTP
 	// channel..." and return readLoopPeekFailLocked error.
 	delayed404 := mockconn.SlowResponder(mockconn.SucceedingDialer(mockResponse), 50*time.Millisecond)
-	resetBalancer(client, delayed404.Dial)
+	resetDialers(client, delayed404.Dial)
 
 	req, _ = http.NewRequest("GET", site.URL, nil)
 	res, _ = roundTrip(client, req)
@@ -310,7 +314,7 @@ func TestLeakingDomainsRequiringProxy(t *testing.T) {
 	// http.Transport to print "Unsolicited response received on idle HTTP
 	// channel..." and return readLoopPeekFailLocked error.
 	delayed418 := mockconn.SlowResponder(mockconn.SucceedingDialer(mockResponse), 50*time.Millisecond)
-	resetBalancer(client, delayed418.Dial)
+	resetDialers(client, delayed418.Dial)
 
 	req, _ := http.NewRequest("GET", "http://getiantem.org", nil)
 	res, _ := roundTrip(client, req)
@@ -371,7 +375,7 @@ func TestTimeoutCheckingShortcut(t *testing.T) {
 
 	mockResponse := []byte("HTTP/1.1 500 no response\r\n\r\n")
 	dialer := mockconn.SucceedingDialer(mockResponse)
-	resetBalancer(client, dialer.Dial)
+	resetDialers(client, dialer.Dial)
 	req, _ := http.NewRequest("GET", "http://unknown:80", nil)
 	res, _ := roundTrip(client, req)
 	assert.Equal(t, 503, res.StatusCode, "should fail if checking shortcut list times out")
@@ -381,7 +385,7 @@ func TestTimeoutCheckingShortcut(t *testing.T) {
 func TestAccessingProxyPort(t *testing.T) {
 	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n")
 	client := newClient()
-	resetBalancer(client, mockconn.SucceedingDialer(mockResponse).Dial)
+	resetDialers(client, mockconn.SucceedingDialer(mockResponse).Dial)
 
 	go func() {
 		client.ListenAndServeHTTP("localhost:", func() {
@@ -593,4 +597,22 @@ type response struct {
 
 func (r *response) nested() (*http.Response, error) {
 	return http.ReadResponse(r.br, r.req)
+}
+
+func Test_initDialers(t *testing.T) {
+	proxies := newProxies()
+	stats := stats.NewNoop()
+	uc := common.NullUserConfig{}
+	dialers, banditDialer, err := initDialers(proxies, "", stats, uc)
+	assert.NoError(t, err)
+	assert.NotNil(t, dialers)
+	assert.NotNil(t, banditDialer)
+}
+
+func newProxies() map[string]*commonconfig.ProxyConfig {
+	proxies := make(map[string]*commonconfig.ProxyConfig)
+	proxies["proxy1"] = &commonconfig.ProxyConfig{
+		Addr: "proxy1",
+	}
+	return proxies
 }

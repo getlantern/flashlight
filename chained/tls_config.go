@@ -28,7 +28,6 @@ import (
 // ClientHelloSpec will be non-nil if and only if the ClientHelloID is tls.HelloCustom.
 func tlsConfigForProxy(ctx context.Context, configDir, proxyName string, pc *config.ProxyConfig, uc common.UserConfig) (
 	*tls.Config, []helloSpec, error) {
-
 	configuredHelloID := clientHelloID(pc)
 	var ss *tls.ClientSessionState
 	var err error
@@ -134,7 +133,7 @@ func getBrowserHello(ctx context.Context, configDir string, uc common.UserConfig
 	op.Set("platform", runtime.GOOS)
 	defer op.End()
 
-	hello, err := activelyObtainBrowserHello(ctx, configDir)
+	hello, err := cachedHello(configDir)
 	if err == nil {
 		return *hello
 	}

@@ -1,12 +1,9 @@
 package client
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -15,9 +12,6 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/v7/config"
-
-	"github.com/PuerkitoBio/goquery"
-	"github.com/andybalholm/brotli"
 
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/proxy/v3/filters"
@@ -128,10 +122,6 @@ func (client *Client) filter(cs *filters.ConnectionState, req *http.Request, nex
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
 	}
 
-	if client.googleAdsFilter() && strings.Contains(strings.ToLower(req.Host), ".google.") && req.Method == "GET" && req.URL.Path == "/search" {
-		return client.divertGoogleSearchAds(cs, req, next)
-	}
-
 	return next(cs, req)
 }
 
@@ -233,54 +223,6 @@ func (client *Client) getTrackAdUrl(originalUrl string, campaign string) string 
 	}
 	newUrl.RawQuery = q.Encode()
 	return newUrl.String()
-}
-
-func (client *Client) divertGoogleSearchAds(cs *filters.ConnectionState, req *http.Request, next filters.Next) (*http.Response, *filters.ConnectionState, error) {
-	client.googleAdsOptionsLock.RLock()
-	opts := client.googleAdsOptions
-	client.googleAdsOptionsLock.RUnlock()
-	resp, cs, err := next(cs, req)
-
-	// if both requests succeed, extract partner ads and inject them
-	if err == nil && opts != nil {
-		body := bytes.NewBuffer(nil)
-		if _, err = io.Copy(body, brotli.NewReader(resp.Body)); err != nil {
-			return resp, cs, err
-		}
-		_ = resp.Body.Close()
-		resp.Body = ioutil.NopCloser(bytes.NewBufferString(body.String())) // restore the body, since we consumed it. In case we don't modify anything
-		var doc *goquery.Document
-		doc, err = goquery.NewDocumentFromReader(body)
-		if err != nil {
-			return resp, cs, err
-		}
-
-		// find existing ads based on the pattern in config
-		adNode := doc.Find(opts.Pattern)
-		if len(adNode.Nodes) == 0 {
-			return resp, cs, err
-		}
-
-		// extract search query
-		var query string
-		query, err = url.QueryUnescape(req.URL.Query().Get("q"))
-		if err != nil {
-			return resp, cs, err
-		}
-		// inject new ads
-		adNode.ReplaceWithHtml(client.generateAds(opts, strings.Split(query, ",")))
-
-		// serialize DOM to string
-		var htmlResult string
-		htmlResult, err = doc.Html()
-		if err != nil {
-			return resp, cs, err
-		}
-
-		resp.Header.Del("Content-Encoding")
-		resp.Body = io.NopCloser(bytes.NewBufferString(htmlResult))
-	}
-	return resp, cs, err
 }
 
 func (client *Client) isHTTPProxyPort(r *http.Request) bool {

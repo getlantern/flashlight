@@ -5,7 +5,7 @@ package chained
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	tls "github.com/refraction-networking/utls"
@@ -15,22 +15,27 @@ import (
 
 const helloCacheFilename = "hello-cache.active-capture"
 
-func activelyObtainBrowserHello(ctx context.Context, configDir string) (*helloSpec, error) {
-	const tlsRecordHeaderLen = 5
-
+func cachedHello(configDir string) (*helloSpec, error) {
 	helloCacheFile := filepath.Join(configDir, helloCacheFilename)
-	sample, err := ioutil.ReadFile(helloCacheFile)
+	sample, err := os.ReadFile(helloCacheFile)
 	if err == nil {
 		return &helloSpec{tls.HelloCustom, sample}, nil
 	}
-	log.Debugf("failed to read actively obtained hello from cache: %v", err)
+	return nil, fmt.Errorf("%w", err)
+}
 
-	sample, err = hellocap.GetDefaultBrowserHello(ctx)
+// ActivelyObtainBrowserHello obtains a sample TLS ClientHello via listening
+// for local traffic.
+func ActivelyObtainBrowserHello(ctx context.Context, configDir string) (*helloSpec, error) {
+	sample, err := hellocap.GetDefaultBrowserHello(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
-	if err := ioutil.WriteFile(helloCacheFile, sample, 0644); err != nil {
+	helloCacheFile := filepath.Join(configDir, helloCacheFilename)
+	if err := os.WriteFile(helloCacheFile, sample, 0644); err != nil {
 		log.Debugf("failed to write actively obtained hello to cache: %v", err)
+	} else {
+		log.Debugf("wrote actively obtained hello to cache")
 	}
 	return &helloSpec{tls.HelloCustom, sample}, nil
 }
