@@ -143,21 +143,25 @@ func TestServeHTTPTimeout(t *testing.T) {
 	req, err := http.NewRequest("CONNECT", "https://a.com:443", nil)
 	require.NoError(t, err)
 	resp, err := roundTrip(client, req)
-	require.Equal(t, err.Error(), "all dialers failed")
+	_, ok := err.(*bandit.BanditError)
+	require.True(t, ok, "should return a BanditError")
 	require.Equal(t, http.StatusOK, resp.StatusCode, "CONNECT requests should always succeed")
 
 	req, err = http.NewRequest("GET", "http://b.com/action", nil)
 	require.NoError(t, err)
 	req.Header.Set("Accept", "text/html")
 	resp, err = roundTrip(client, req)
-	require.Contains(t, err.Error(), "all dialers failed")
+
+	// Unfortunately, this hits the proxy package that doesn't properly wrap
+	// the error, so we can't check for a BanditError here.
+	require.Contains(t, err.Error(), "No dialer succeeded after")
 	require.Equal(t, http.StatusServiceUnavailable, resp.StatusCode, "It should respond 503 Service Unavailable with error page")
 	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	require.Contains(t, string(body), "<title>Lantern: Error Accessing Page</title>", "should respond with error page")
 	// The error page when dialing an inaccessible page with Lantern actually
 	// contains the dial error. See `./status/generic_error.html`
-	require.Contains(t, string(body), "all dialers failed")
+	require.Contains(t, string(body), "No dialer succeeded after")
 }
 
 func TestIsAddressProxyable(t *testing.T) {
