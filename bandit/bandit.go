@@ -126,7 +126,7 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 }
 
 // Choose a different arm than the one we already have, if possible.
-func differentArm(existingArm int, numDialers int, eg *bandit.EpsilonGreedy) int {
+func differentArm(existingArm, numDialers int, eg *bandit.EpsilonGreedy) int {
 	// We let the bandit choose a new arm (or at least try to) versus just rotating to the next
 	// dialer because we want to use the bandit's algorithm for optimizing exploration
 	// versus exploitation, i.e. it will choose another dialer with a probability
@@ -137,13 +137,14 @@ func differentArm(existingArm int, numDialers int, eg *bandit.EpsilonGreedy) int
 		log.Debugf("Only one dialer, so returning the existing arm: %v", existingArm)
 		return existingArm
 	}
-	for i := 0; i < 30; i++ {
+	for i := 0; i < 20; i++ {
 		newArm := eg.SelectArm(rand.Float64())
 		if newArm != existingArm {
 			return newArm
 		}
 	}
-	return existingArm
+	// If we have to choose ourselves, just choose another one.
+	return (existingArm + 1) % numDialers
 }
 
 func (o *BanditDialer) onSuccess(dialer Dialer) {
