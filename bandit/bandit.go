@@ -63,7 +63,6 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	}
 
 	start := time.Now()
-
 	chosenArm := o.bandit.SelectArm(rand.Float64())
 
 	// We have to be careful here about virtual, multiplexed connections, as the
@@ -71,6 +70,12 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	// subsequent virtual connection dials.
 	for i := 0; i < len(o.dialers); i++ {
 		dialer := o.dialers[chosenArm]
+		if !dialer.SupportsAddr(network, addr) {
+			// If this dialer doesn't allow this domain, we need to choose a different one,
+			// but without giving this dialer a low reward.
+			chosenArm = o.differentArm(chosenArm, len(o.dialers))
+			continue
+		}
 		log.Debugf("bandit::dialer %d: %s at %v", chosenArm, dialer.Label(), dialer.Addr())
 		conn, failedUpstream, err := dialer.DialContext(ctx, network, addr)
 		if err != nil {
@@ -85,6 +90,8 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 				// so we have to choose some reasonable value.
 				o.bandit.Update(chosenArm, 0.00005)
 			}
+			// Mark the failure and try another.
+			chosenArm = o.differentArm(chosenArm, len(o.dialers))
 			continue
 		}
 		log.Debugf("Dialer %v dialed in %v seconds", dialer.Name(), time.Since(start).Seconds())
@@ -104,7 +111,21 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 		return dt, err
 	}
 	o.onFailure()
-	return nil, log.Errorf("all dialers failed")
+	return nil, log.Errorf("No dialer succeeded after %v attempts", len(o.dialers))
+}
+
+// Choose a different arm than the one we already have, if possible.
+func (o *BanditDialer) differentArm(existingArm int, numDialers int) int {
+	// We let the bandit choose a new arm 10 times versus just rotating to the next
+	// dialer because we want to the bandit's algorithm for optimizing exploration
+	// versus exploitation.
+	for i := 0; i < 10; i++ {
+		newArm := o.bandit.SelectArm(rand.Float64())
+		if newArm != existingArm {
+			return newArm
+		}
+	}
+	return existingArm
 }
 
 func (o *BanditDialer) onSuccess(dialer Dialer) {
