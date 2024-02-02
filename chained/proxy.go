@@ -78,7 +78,6 @@ func CreateDialers(configDir string, proxies map[string]*config.ProxyConfig, uc 
 
 // CreateDialersMap creates a map of Proxies (bandit.Dialer) with supplied server info.
 func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) map[string]bandit.Dialer {
-	mappedDialers := make(map[string]bandit.Dialer)
 	groups := groupByMultipathEndpoint(proxies)
 
 	// We parallelize the creation of the dialers because some of them may take
@@ -86,8 +85,8 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 	// browser hellos on creation time).
 	wg := &sync.WaitGroup{}
 
-	// Create a lock for the map
-	var lock sync.Mutex
+	// Create a channel for results of the dialers
+	results := make(chan bandit.Dialer, 30)
 	for endpoint, group := range groups {
 		if endpoint == "" {
 			// Also print the stack trace to help us debug
@@ -101,9 +100,7 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 						return
 					}
 					log.Debugf("Adding chained server: %v", dialer.JustifiedLabel())
-					lock.Lock()
-					mappedDialers[name] = dialer
-					lock.Unlock()
+					results <- dialer
 					wg.Done()
 				}(name, s)
 			}
@@ -116,14 +113,17 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 					log.Errorf("Unable to configure multipath server to %v. Received error: %v", endpoint, err)
 					return
 				}
-				lock.Lock()
-				mappedDialers[endpoint] = dialer
-				lock.Unlock()
+				results <- dialer
 				wg.Done()
 			}(endpoint, group)
 		}
 	}
 	wg.Wait()
+	close(results)
+	mappedDialers := make(map[string]bandit.Dialer)
+	for dialer := range results {
+		mappedDialers[dialer.Name()] = dialer
+	}
 
 	return mappedDialers
 }
