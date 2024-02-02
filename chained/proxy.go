@@ -85,6 +85,9 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 	// a long time to initialize (e.g. tls-based proxies that try to read
 	// browser hellos on creation time).
 	wg := &sync.WaitGroup{}
+
+	// Create a lock for the map
+	var lock sync.Mutex
 	for endpoint, group := range groups {
 		if endpoint == "" {
 			// Also print the stack trace to help us debug
@@ -98,7 +101,9 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 						return
 					}
 					log.Debugf("Adding chained server: %v", dialer.JustifiedLabel())
+					lock.Lock()
 					mappedDialers[name] = dialer
+					lock.Unlock()
 					wg.Done()
 				}(name, s)
 			}
@@ -111,12 +116,15 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 					log.Errorf("Unable to configure multipath server to %v. Received error: %v", endpoint, err)
 					return
 				}
+				lock.Lock()
 				mappedDialers[endpoint] = dialer
+				lock.Unlock()
 				wg.Done()
 			}(endpoint, group)
 		}
 	}
 	wg.Wait()
+
 	return mappedDialers
 }
 
