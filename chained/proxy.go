@@ -85,8 +85,9 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 	// browser hellos on creation time).
 	wg := &sync.WaitGroup{}
 
-	// Create a channel for results of the dialers
-	results := make(chan bandit.Dialer, 30)
+	// Create a channel for results of the dialers. Make sure it's plenty big
+	// to avoid blocking.
+	results := make(chan bandit.Dialer, len(proxies)*2)
 	for endpoint, group := range groups {
 		if endpoint == "" {
 			// Also print the stack trace to help us debug
