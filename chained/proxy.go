@@ -78,31 +78,52 @@ func CreateDialers(configDir string, proxies map[string]*config.ProxyConfig, uc 
 
 // CreateDialersMap creates a map of Proxies (bandit.Dialer) with supplied server info.
 func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) map[string]bandit.Dialer {
-	mappedDialers := make(map[string]bandit.Dialer)
 	groups := groupByMultipathEndpoint(proxies)
+
+	// We parallelize the creation of the dialers because some of them may take
+	// a long time to initialize (e.g. tls-based proxies that try to read
+	// browser hellos on creation time).
+	wg := &sync.WaitGroup{}
+	var m sync.Map
+
 	for endpoint, group := range groups {
 		if endpoint == "" {
 			// Also print the stack trace to help us debug
 			log.Debugf("Creating map for %d individual chained servers", len(group))
 			for name, s := range group {
-				dialer, err := CreateDialer(configDir, name, s, uc)
-				if err != nil {
-					log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
-					continue
-				}
-				log.Debugf("Adding chained server: %v", dialer.JustifiedLabel())
-				mappedDialers[name] = dialer
+				wg.Add(1)
+				go func(name string, s *config.ProxyConfig) {
+					defer wg.Done()
+					dialer, err := CreateDialer(configDir, name, s, uc)
+					if err != nil {
+						log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
+						return
+					}
+					log.Debugf("Adding chained server: %v", dialer.JustifiedLabel())
+					m.Store(name, dialer)
+				}(name, s)
 			}
 		} else {
 			log.Debugf("Creating map for %d chained servers for multipath endpoint %s", len(group), endpoint)
-			dialer, err := CreateMPDialer(configDir, endpoint, group, uc)
-			if err != nil {
-				log.Errorf("Unable to configure multipath server to %v. Received error: %v", endpoint, err)
-				continue
-			}
-			mappedDialers[endpoint] = dialer
+			wg.Add(1)
+			go func(endpoint string, group map[string]*config.ProxyConfig) {
+				defer wg.Done()
+				dialer, err := CreateMPDialer(configDir, endpoint, group, uc)
+				if err != nil {
+					log.Errorf("Unable to configure multipath server to %v. Received error: %v", endpoint, err)
+					return
+				}
+				m.Store(endpoint, dialer)
+			}(endpoint, group)
 		}
 	}
+	wg.Wait()
+	mappedDialers := make(map[string]bandit.Dialer)
+	m.Range(func(k, v interface{}) bool {
+		mappedDialers[k.(string)] = v.(bandit.Dialer)
+		return true
+	})
+
 	return mappedDialers
 }
 
