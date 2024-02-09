@@ -345,13 +345,13 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 		op.ProxyType(ops.ProxyChained)
 		log.Debugf("Sending chained request. With body? %v", req.Body != nil)
 		start := time.Now()
-		if _, err := request(false, chainedRT, req); err == nil {
+		if res, err := request(false, chainedRT, req); err == nil {
 			elapsed := time.Since(start)
 			log.Debugf("Chained request for req.URL [%s] succeeded in %v", req.URL.String(), elapsed)
 			atomic.StoreInt64(&chainedRTT, int64(elapsed))
 			switchToChainedIfRequired()
 		} else {
-			log.Debugf("Chained request failed: %v", req.URL.String())
+			log.Debugf("Chained request to %v failed with a %v status code", req.URL.String(), res.StatusCode)
 		}
 	}
 
