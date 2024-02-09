@@ -351,7 +351,11 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 			atomic.StoreInt64(&chainedRTT, int64(elapsed))
 			switchToChainedIfRequired()
 		} else {
-			log.Debugf("Chained request to %v failed with a %v status code", req.URL.String(), res.StatusCode)
+			if res != nil {
+				log.Debugf("Chained request to %v failed with a %v status code", req.URL.String(), res.StatusCode)
+			} else {
+				log.Debugf("Chained request to %v failed", req.URL.String())
+			}
 		}
 	}
 
