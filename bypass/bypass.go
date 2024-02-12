@@ -145,17 +145,19 @@ func (p *proxy) sendToBypass() int64 {
 	// in rapid succession to avoid the blocking detection itself being a signal.
 	var rt http.RoundTripper
 	var endpoint string
+	var fronted bool
 	if p.toggle.Toggle() {
 		log.Debug("Using proxy directly")
 		rt = p.proxyRoundTripper
 		endpoint = proxyEndpoint
-		op.Set("fronted", false)
+		fronted = false
 	} else {
 		rt = p.dfRoundTripper
 		log.Debug("Using domain fronting")
 		endpoint = dfEndpoint
-		op.Set("fronted", true)
+		fronted = true
 	}
+	op.Set("fronted", fronted)
 
 	req, err := p.newRequest(p.userConfig, endpoint)
 	if err != nil {
@@ -189,7 +191,7 @@ func (p *proxy) sendToBypass() int64 {
 		}
 	}
 	if resp.StatusCode != http.StatusOK {
-		log.Errorf("Unexpected response code %v: for response %#v", resp.Status, resp)
+		log.Errorf("Unexpected response code %v: fronted: %v for response %#v", resp.Status, fronted, resp)
 	} else {
 		log.Debugf("Successfully got response from: %v", p.name)
 	}
