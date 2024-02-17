@@ -14,9 +14,6 @@ replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-2022
 
 //replace github.com/getlantern/lantern-server => ../lantern-server
 
-// For https://github.com/crawshaw/sqlite/pull/112 and https://github.com/crawshaw/sqlite/pull/103.
-//replace crawshaw.io/sqlite => github.com/getlantern/sqlite v0.0.0-20220301112206-cb2f8bc7cb56
-
 replace github.com/eycorsican/go-tun2socks => github.com/getlantern/go-tun2socks v1.16.12-0.20201218023150-b68f09e5ae93
 
 // We use a fork of gomobile that allows reusing the cache directory for faster builds, based
@@ -73,7 +70,7 @@ require (
 	github.com/getlantern/proxy/v3 v3.0.0-20231031142453-252ab678e6b7
 	github.com/getlantern/psmux v1.5.15
 	github.com/getlantern/quicwrapper v0.0.0-20231117185542-d951689c4970
-	github.com/getlantern/replica v0.14.2
+	github.com/getlantern/replica v0.14.3
 	github.com/getlantern/rot13 v0.0.0-20220822172233-370767b2f782
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/safechannels v0.0.0-20201218194342-b4e5383e9627
@@ -117,10 +114,7 @@ require (
 	howett.net/plist v1.0.0
 )
 
-require github.com/andybalholm/brotli v1.0.5 // indirect
-
 require (
-	crawshaw.io/sqlite v0.3.3-0.20220618202545-d1964889ea3c // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/OperatorFoundation/ghostwriter-go v1.0.6 // indirect
 	github.com/OperatorFoundation/go-bloom v1.0.1 // indirect
@@ -132,22 +126,23 @@ require (
 	github.com/alecthomas/atomic v0.1.0-alpha2 // indirect
 	github.com/alextanhongpin/go-bandit v0.0.0-20191125130111-30de60d69bae
 	github.com/anacrolix/chansync v0.3.0 // indirect
-	github.com/anacrolix/confluence v1.12.0 // indirect
-	github.com/anacrolix/envpprof v1.2.1 // indirect
-	github.com/anacrolix/generics v0.0.0-20230816103846-fe11fdc0e0e3 // indirect
+	github.com/anacrolix/confluence v1.15.0 // indirect
+	github.com/anacrolix/envpprof v1.3.0 // indirect
+	github.com/anacrolix/generics v0.0.0-20230816105729-c755655aee45 // indirect
 	github.com/anacrolix/go-libutp v1.3.1 // indirect
-	github.com/anacrolix/log v0.14.0 // indirect
+	github.com/anacrolix/log v0.14.6-0.20231202035202-ed7a02cad0b4 // indirect
 	github.com/anacrolix/missinggo v1.3.0 // indirect
 	github.com/anacrolix/missinggo/perf v1.0.0 // indirect
-	github.com/anacrolix/missinggo/v2 v2.7.2-0.20230527121029-a582b4f397b9 // indirect
+	github.com/anacrolix/missinggo/v2 v2.7.2 // indirect
 	github.com/anacrolix/mmsg v1.0.0 // indirect
 	github.com/anacrolix/multiless v0.3.1-0.20221221005021-2d12701f83f7 // indirect
-	github.com/anacrolix/squirrel v0.4.1 // indirect
+	github.com/anacrolix/squirrel v0.6.3 // indirect
 	github.com/anacrolix/stm v0.4.1-0.20221221005312-96d17df0e496 // indirect
-	github.com/anacrolix/sync v0.4.0 // indirect
-	github.com/anacrolix/torrent v1.52.6 // indirect
+	github.com/anacrolix/sync v0.5.1 // indirect
+	github.com/anacrolix/torrent v1.53.3 // indirect
 	github.com/anacrolix/upnp v0.1.3-0.20220123035249-922794e51c96 // indirect
 	github.com/anacrolix/utp v0.1.0 // indirect
+	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/benbjohnson/immutable v0.4.1-0.20221220213129-8932b999621d // indirect
@@ -167,6 +162,7 @@ require (
 	github.com/edsrzf/mmap-go v1.1.0 // indirect
 	github.com/enobufs/go-nats v0.0.1 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
+	github.com/frankban/quicktest v1.14.6 // indirect
 	github.com/gaukas/godicttls v0.0.4 // indirect
 	github.com/getlantern/byteexec v0.0.0-20220903142956-e6ed20032cfd // indirect
 	github.com/getlantern/cmux v0.0.0-20230301223233-dac79088a4c0 // indirect
@@ -195,6 +191,8 @@ require (
 	github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c // indirect
 	github.com/getlantern/telemetry v0.0.0-20230523155019-be7c1d8cd8cb // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
+	github.com/go-llsqlite/adapter v0.0.0-20230927005056-7f5ce7f0c916 // indirect
+	github.com/go-llsqlite/crawshaw v0.5.1 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-redis/redis/v8 v8.11.5 // indirect
@@ -205,6 +203,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/pprof v0.0.0-20230821062121-407c9e7a662f // indirect
 	github.com/google/uuid v1.3.1 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
@@ -216,7 +215,10 @@ require (
 	github.com/klauspost/cpuid v1.3.1 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/klauspost/reedsolomon v1.9.9 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/libp2p/go-buffer-pool v0.0.2 // indirect
+	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mdlayher/netlink v1.1.0 // indirect
 	github.com/mholt/archiver/v3 v3.5.1 // indirect
@@ -256,6 +258,8 @@ require (
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/quic-go/quic-go v0.41.0 // indirect
+	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
+	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/rs/dnscache v0.0.0-20211102005908-e0241e321417 // indirect
 	github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46 // indirect
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
@@ -293,5 +297,10 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20231002182017-d307bd883b97 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231012201019-e917dd12ba7a // indirect
 	google.golang.org/grpc v1.58.3 // indirect
+	modernc.org/libc v1.22.3 // indirect
+	modernc.org/mathutil v1.5.0 // indirect
+	modernc.org/memory v1.5.0 // indirect
+	modernc.org/sqlite v1.21.1 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
+	zombiezen.com/go/sqlite v0.13.1 // indirect
 )
