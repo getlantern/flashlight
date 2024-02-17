@@ -13,7 +13,6 @@ import (
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/v7/common"
-	globalConfig "github.com/getlantern/flashlight/v7/config/global"
 	"github.com/getlantern/flashlight/v7/embeddedconfig"
 )
 
@@ -231,16 +230,7 @@ func TestInterstitialAdsEnabled(t *testing.T) {
 // }
 
 func requireGetReplicaOptionsRoot(t *testing.T) (fos replicaConfig.ReplicaOptionsRoot) {
-	var g globalConfig.Raw
-	err := embeddedconfig.ExecuteAndUnmarshalGlobal(nil, &g)
-	if err != nil {
-		panic(err)
-	}
-	err = globalConfig.UnmarshalFeatureOptions(g, globalConfig.FeatureReplica, &fos)
-	if err != nil {
-		panic(err)
-	}
-	return
+	return embeddedconfig.GlobalReplicaOptions
 }
 
 func globalFromTemplate(t *testing.T) *Global {
