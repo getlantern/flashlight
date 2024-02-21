@@ -107,50 +107,6 @@ func (ro *ReplicaOptions) GetCustomCA() string {
 	return ro.CustomCA
 }
 
-// XXX <11-07-2022, soltzen> DEPREACTED in favor of
-// github.com/getlantern/libp2p
-func (ro *ReplicaOptions) GetProxyAnnounceTargets() []string {
-	return nil
-}
-
-// XXX <11-07-2022, soltzen> DEPREACTED in favor of
-// github.com/getlantern/libp2p
-func (ro *ReplicaOptions) GetProxyPeerInfoHashes() []string {
-	return nil
-}
-
-type P2PFreePeerOptions struct {
-	RegistrarEndpoint string   `mapstructure:"registrar_endpoint"`
-	DomainWhitelist   []string `mapstructure:"domain_whitelist"`
-}
-
-func (o *P2PFreePeerOptions) fromMap(m map[string]interface{}) error {
-	var err error
-	o.RegistrarEndpoint, err = somethingFromMap[string](m, "registrar_endpoint")
-	if err != nil {
-		return err
-	}
-
-	o.DomainWhitelist, err = stringArrFromMap(m, "domain_whitelist")
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-type P2PCensoredPeerOptions struct {
-	Bep44TargetsAndSalts []string `mapstructure:"bep44_targets_and_salts"`
-}
-
-func (o *P2PCensoredPeerOptions) fromMap(m map[string]interface{}) error {
-	var err error
-	o.Bep44TargetsAndSalts, err = stringArrFromMap(m, "bep44_targets_and_salts")
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 type GoogleSearchAdsOptions struct {
 	Pattern     string                 `mapstructure:"pattern"`
 	BlockFormat string                 `mapstructure:"block_format"`
@@ -327,8 +283,8 @@ func (g ClientGroup) Validate() error {
 	return nil
 }
 
-//Includes checks if the ClientGroup includes the user, device and country
-//combination, assuming the group has been validated.
+// Includes checks if the ClientGroup includes the user, device and country
+// combination, assuming the group has been validated.
 func (g ClientGroup) Includes(platform, appName, version string, userID int64, isPro bool, geoCountry string) bool {
 	if g.UserCeil > 0 {
 		// Unknown user ID doesn't belong to any user range

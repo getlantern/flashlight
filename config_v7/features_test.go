@@ -169,29 +169,6 @@ func TestReplicaByCountry(t *testing.T) {
 	assert.Equal(fos.ByCountry["IR"].Trackers, globalTrackers)
 }
 
-func TestP2PEnabledAndFeatures(t *testing.T) {
-	// TODO <04-07-2022, soltzen> This part of the test, along with most other
-	// "enabled" tests in this file, are really weak: they mainly test isolated
-	// cases when they should return the **all** acceptable states and assert
-	// they all work. For example, the test below checks that P2P feature is
-	// **only** enabled in version >= 99.0.0. It does this by asserting that
-	// version == 99.0.0 works and asserting that 7.0.0 doesn't work, while
-	// ignoring the other infinite number of versions that might or might not
-	// work.
-	//
-	// A better test would be to get a list of constraints from an enabled
-	// feature and assert those are the same as what's expected.
-	gl := globalFromTemplate(t)
-	var fpOpts P2PFreePeerOptions
-	require.NoError(t, gl.UnmarshalFeatureOptions(FeatureP2PFreePeer, &fpOpts))
-	require.Contains(t, fpOpts.RegistrarEndpoint, "p2pregistrar")
-	require.NotEmpty(t, fpOpts.DomainWhitelist)
-
-	var cpOpts P2PCensoredPeerOptions
-	require.NoError(t, gl.UnmarshalFeatureOptions(FeatureP2PCensoredPeer, &cpOpts))
-	require.NotEqual(t, 0, len(cpOpts.Bep44TargetsAndSalts))
-}
-
 func TestChatEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
 	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "ae"), "Chat is disabled in UAE when running 7.0.0")
