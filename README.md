@@ -108,12 +108,6 @@ We use "features" to enable/disable different characteristics/techniques in Flas
 
 See `./config/features.go` for a list of features. Below is a non-extensive description of each feature.
 
-### p2pcensoredpeer and p2pfreepeer
-
-Allows the client to act either as a FreePeer or a CensoredPeer.
-
-See overview of the p2p-proxying story here: https://docs.google.com/document/d/1JUjZHgpnunmwG3wUwlSmCKFwOGOXkkwyGd7cgrOJzbs/edit
-
 ## A Note on Versioning
 Until recently, flashlight and the applications that use it used only a single versions number, whatever the application itself was built with. This version number was used for various things:
 

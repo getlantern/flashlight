@@ -29,13 +29,8 @@ const (
 	FeatureProxyWhitelistedOnly = "proxywhitelistedonly"
 	FeatureTrackYouTube         = "trackyoutube"
 	FeatureGoogleSearchAds      = "googlesearchads"
-	FeatureYinbiWallet          = "yinbiwallet"
-	FeatureYinbi                = "yinbi"
-	FeatureGoogleAnalytics      = "googleanalytics"
 	FeatureChat                 = "chat"
 	FeatureOtel                 = "otel"
-	FeatureP2PFreePeer          = "p2pfreepeer"
-	FeatureP2PCensoredPeer      = "p2pcensoredpeer"
 	FeatureInterstitialAds      = "interstitialads"
 	FeatureCASInterstitialAds   = "casinterstitialads"
 )

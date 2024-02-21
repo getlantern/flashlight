@@ -32,8 +32,6 @@ const (
 	FeatureMatomo               = "matomo"
 	FeatureChat                 = "chat"
 	FeatureOtel                 = "otel"
-	FeatureP2PFreePeer          = "p2pfreepeer"
-	FeatureP2PCensoredPeer      = "p2pcensoredpeer"
 )
 
 var (

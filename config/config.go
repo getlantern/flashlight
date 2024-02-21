@@ -29,7 +29,6 @@ const (
 	Saved    Source = "saved"
 	Embedded Source = "embedded"
 	Fetched  Source = "fetched"
-	Dht      Source = "dht"
 )
 
 // Config is an interface for getting proxy data saved locally, embedded
