@@ -28,7 +28,8 @@ func MakeChoice(userID int64, choices ...interface{}) interface{} {
 // constant inputs.
 //
 // To ensure proper distribution of users according to the weights, the following must be true:
-// 	(1) The sum of the weights must be less than the maximum assigned user ID.
+//
+//	(1) The sum of the weights must be less than the maximum assigned user ID.
 //	(2) User IDs must be evenly distributed across their range.
 func MakeWeightedChoice(userID int64, choices []WeightedChoice) WeightedChoice {
 	totalWeight := 0

@@ -135,30 +135,30 @@ func (c *Client) Plans(user common.UserConfig) (*plansResponse, error) {
 }
 
 type paymentRedirectResponse struct {
-       BaseResponse
-       *PaymentRedirectResponse `json:",inline"`
+	BaseResponse
+	*PaymentRedirectResponse `json:",inline"`
 }
 
 // PaymentRedirect is called when the continue to payment button is clicked and returns a redirect URL
 func (c *Client) PaymentRedirect(user common.UserConfig, req *PaymentRedirectRequest) (*paymentRedirectResponse, error) {
-       query := url.Values{
-               "countryCode": {req.CountryCode},
-               "deviceName": {req.DeviceName},
-               "email":  {req.Email},
-               "plan": {req.Plan},
-               "provider": {req.Provider},
-       }
+	query := url.Values{
+		"countryCode": {req.CountryCode},
+		"deviceName":  {req.DeviceName},
+		"email":       {req.Email},
+		"plan":        {req.Plan},
+		"provider":    {req.Provider},
+	}
 
-       b, _ := json.Marshal(user)
-       log.Debugf("User config is %v", string(b))
+	b, _ := json.Marshal(user)
+	log.Debugf("User config is %v", string(b))
 
-       resp := &paymentRedirectResponse{PaymentRedirectResponse: &PaymentRedirectResponse{}}
-       if err := c.execute(user, http.MethodGet, "payment-redirect", query, resp); err != nil {
-               log.Errorf("Failed to fetch payment redirect: %v", err)
-               return nil, err
-       }
-       log.Debugf("Redirect is %s", resp.Redirect)
-       return resp, nil
+	resp := &paymentRedirectResponse{PaymentRedirectResponse: &PaymentRedirectResponse{}}
+	if err := c.execute(user, http.MethodGet, "payment-redirect", query, resp); err != nil {
+		log.Errorf("Failed to fetch payment redirect: %v", err)
+		return nil, err
+	}
+	log.Debugf("Redirect is %s", resp.Redirect)
+	return resp, nil
 }
 
 type paymentMethodsResponse struct {

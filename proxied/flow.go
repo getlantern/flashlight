@@ -15,22 +15,22 @@
 //
 // The code for this example will look like this:
 //
-//     chainedRoundTripper, err := proxied.ChainedNonPersistent("")
-//     require.NoError(t, err)
+//	    chainedRoundTripper, err := proxied.ChainedNonPersistent("")
+//	    require.NoError(t, err)
 //
-//     req, err := http.NewRequest("GET", "http://example.com", nil)
-//     require.NoError(t, err)
-//     flow := NewProxiedFlow(
-//     	&ProxiedFlowInput{
-//     		AddDebugHeaders: true,
-//     	},
-//     )
+//	    req, err := http.NewRequest("GET", "http://example.com", nil)
+//	    require.NoError(t, err)
+//	    flow := NewProxiedFlow(
+//	    	&ProxiedFlowInput{
+//	    		AddDebugHeaders: true,
+//	    	},
+//	    )
 //
-// 	   flow.
-// 	     Add(proxied.FlowComponentID_Chained, chained, true).
-//       Add(proxied.FlowComponentID_Fronted, proxied.Fronted(masqueradeTimeout), false)
-//     resp, err := flow.RoundTrip(req)
-//     require.Error(t, err)
+//		   flow.
+//		     Add(proxied.FlowComponentID_Chained, chained, true).
+//	      Add(proxied.FlowComponentID_Fronted, proxied.Fronted(masqueradeTimeout), false)
+//	    resp, err := flow.RoundTrip(req)
+//	    require.Error(t, err)
 package proxied
 
 import (
@@ -142,11 +142,11 @@ func (f *ProxiedFlow) SetPreferredComponent(id FlowComponentID) *ProxiedFlow {
 
 // RoundTrip makes ProxiedFlow implement the http.RoundTripper interface.
 // This function works in two ways:
-// - the "runner" code occurs in "f.runAllComponents()" and it's responsible
-//   for running all the roundtrippers in the flow (or just the preferred one, if
-//   one exists) and send the responses through "recvFlowRespCh"
-// - the "reciever" code occurs in the "looper" block below and it's
-//   responsible for handling responses and errors
+//   - the "runner" code occurs in "f.runAllComponents()" and it's responsible
+//     for running all the roundtrippers in the flow (or just the preferred one, if
+//     one exists) and send the responses through "recvFlowRespCh"
+//   - the "reciever" code occurs in the "looper" block below and it's
+//     responsible for handling responses and errors
 //
 // This function respects the request's original context
 func (f *ProxiedFlow) RoundTrip(

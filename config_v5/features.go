@@ -258,8 +258,8 @@ func (g ClientGroup) Validate() error {
 	return nil
 }
 
-//Includes checks if the ClientGroup includes the user, device and country
-//combination, assuming the group has been validated.
+// Includes checks if the ClientGroup includes the user, device and country
+// combination, assuming the group has been validated.
 func (g ClientGroup) Includes(platform, appName, version string, userID int64, isPro bool, geoCountry string) bool {
 	if g.UserCeil > 0 {
 		// Unknown user ID doesn't belong to any user range
