@@ -149,6 +149,8 @@ func (c *cw) Write(b []byte) (int, error) {
 	return result, err
 }
 
+// Reconfigure forces the client to reload its dialers. See:
+// https://github.com/getlantern/lantern-client/blob/main/ios/Tunnel/PacketTunnelProvider.swift
 func (c *cw) Reconfigure() {
 	dialers, err := c.client.loadDialers()
 	if err != nil {
@@ -177,7 +179,7 @@ type client struct {
 	mtu             int
 	capturedDNSHost string
 	realDNSHost     string
-	uc              *UserConfig
+	uc              common.UserConfig
 	tcpHandler      *proxiedTCPHandler
 	udpHandler      *directUDPHandler
 	//ipStack         tun2socks.LWIPStack
