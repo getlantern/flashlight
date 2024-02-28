@@ -30,7 +30,8 @@ func TestParallelDial(t *testing.T) {
 
 	parallelDial(dialers, b)
 	require.Eventually(t, func() bool {
-		for _, count := range b.Counts {
+		counts := b.GetCounts()
+		for _, count := range counts {
 			if count < 1 {
 				return false
 			}
