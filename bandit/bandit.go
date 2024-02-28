@@ -5,6 +5,7 @@ import (
 	"io"
 	"math/rand"
 	"net"
+	"sync/atomic"
 	"time"
 
 	bandit "github.com/alextanhongpin/go-bandit"
@@ -119,9 +120,10 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	// "arm", so giving a reward here would be double-counting.
 
 	// Tell the dialer to update the bandit with it's throughput after 5 seconds.
-	dt := newDataTrackingConn(conn)
+	var dataRecv atomic.Uint64
+	dt := newDataTrackingConn(conn, &dataRecv)
 	time.AfterFunc(secondsForSample*time.Second, func() {
-		speed := normalizeReceiveSpeed(dt.dataRecv)
+		speed := normalizeReceiveSpeed(dataRecv.Load())
 		//log.Debugf("Dialer %v received %v bytes in %v seconds, normalized speed: %v", dialer.Name(), dt.dataRecv, secondsForSample, speed)
 		o.bandit.Update(chosenArm, speed)
 	})
@@ -187,27 +189,26 @@ func (o *BanditDialer) Close() {
 	}
 }
 
-func newDataTrackingConn(conn net.Conn) *dataTrackingConn {
+func newDataTrackingConn(conn net.Conn, dataRecv *atomic.Uint64) *dataTrackingConn {
 	return &dataTrackingConn{
-		Conn: conn,
+		Conn:     conn,
+		dataRecv: dataRecv,
 	}
 }
 
 type dataTrackingConn struct {
 	net.Conn
-	dataSent uint64
-	dataRecv uint64
+	dataRecv *atomic.Uint64
 }
 
 func (c *dataTrackingConn) Write(b []byte) (int, error) {
 	n, err := c.Conn.Write(b)
-	c.dataSent += uint64(n)
 	return n, err
 }
 
 func (c *dataTrackingConn) Read(b []byte) (int, error) {
 	n, err := c.Conn.Read(b)
-	c.dataRecv += uint64(n)
+	c.dataRecv.Add(uint64(n))
 	return n, err
 }
 
