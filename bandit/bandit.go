@@ -201,11 +201,6 @@ type dataTrackingConn struct {
 	dataRecv *atomic.Uint64
 }
 
-func (c *dataTrackingConn) Write(b []byte) (int, error) {
-	n, err := c.Conn.Write(b)
-	return n, err
-}
-
 func (c *dataTrackingConn) Read(b []byte) (int, error) {
 	n, err := c.Conn.Read(b)
 	c.dataRecv.Add(uint64(n))
