@@ -66,7 +66,7 @@ func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy) {
 		go func(dialer Dialer, index int) {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
-			conn, _, err := dialer.DialContext(ctx, "tcp", "www.doesnotmatter.com")
+			conn, err := dialer.DialProxy(ctx)
 			defer func() {
 				if conn != nil {
 					conn.Close()
@@ -215,6 +215,10 @@ func (c *dataTrackingConn) Read(b []byte) (int, error) {
 // Dialer provides the ability to dial a proxy and obtain information needed to
 // effectively load balance between dialers.
 type Dialer interface {
+
+	// DialProxy dials the proxy but does not yet dial the origin.
+	DialProxy(ctx context.Context) (net.Conn, error)
+
 	// SupportsAddr indicates whether this Dialer supports the given addr. If it does not, the
 	// balancer will not attempt to dial that addr with this Dialer.
 	SupportsAddr(network, addr string) bool

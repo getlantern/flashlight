@@ -453,6 +453,12 @@ func (p *proxy) EstSuccessRate() float64 {
 	return p.emaSuccessRate.Get()
 }
 
+func (p *proxy) DialProxy(ctx context.Context) (net.Conn, error) {
+	op := ops.Begin("dial_to_chained").ChainedProxy(p.name, p.addr, p.protocol, p.network, p.multiplexed)
+	defer op.End()
+	return p.impl.dialServer(op, ctx)
+}
+
 func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64, failures int64, consecFailures int64, emaRTT time.Duration, mostRecentABETime time.Time, abe int64, emaSuccessRate float64) {
 	p.mx.Lock()
 	atomic.StoreInt64(&p.attempts, attempts)

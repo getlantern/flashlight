@@ -19,7 +19,7 @@ func TestParallelDial(t *testing.T) {
 		&tcpConnDialer{shouldFail: true},
 		&tcpConnDialer{shouldFail: true},
 		&tcpConnDialer{shouldFail: true},
-		&tcpConnDialer{},
+		newTcpConnDialer(),
 	}
 
 	b, err := bandit.NewEpsilonGreedy(0.001, nil, nil)
@@ -260,8 +260,26 @@ func Test_differentArm(t *testing.T) {
 	}
 }
 
+func newTcpConnDialer() Dialer {
+	client, server := net.Pipe()
+	return &tcpConnDialer{
+		client: client,
+		server: server,
+	}
+}
+
 type tcpConnDialer struct {
 	shouldFail bool
+	client     net.Conn
+	server     net.Conn
+}
+
+// DialProxy implements Dialer.
+func (t *tcpConnDialer) DialProxy(ctx context.Context) (net.Conn, error) {
+	if t.shouldFail {
+		return nil, io.EOF
+	}
+	return t.client, nil
 }
 
 // Addr implements Dialer.
@@ -387,8 +405,4 @@ func (*tcpConnDialer) Trusted() bool {
 
 // WriteStats implements Dialer.
 func (*tcpConnDialer) WriteStats(w io.Writer) {
-}
-
-func newTcpConnDialer() Dialer {
-	return &tcpConnDialer{}
 }

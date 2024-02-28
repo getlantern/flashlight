@@ -228,7 +228,7 @@ func TestDialShortcut(t *testing.T) {
 	res, _ = roundTrip(client, req)
 	assert.Equal(t, 1, shortcutVisited, "should check shortcut list")
 	assert.Equal(t, 200, res.StatusCode, "should respond with 200 when a shortcutted site is reachable")
-	body, _ := ioutil.ReadAll(res.Body)
+	body, _ := io.ReadAll(res.Body)
 	assert.Equal(t, "abc", string(body), "should respond with correct content")
 
 	req, _ = http.NewRequest("GET", "http://unknown:80", nil)
@@ -416,6 +416,9 @@ func TestAccessingProxyPort(t *testing.T) {
 	assert.Equal(t, "0", resp.Header.Get("Content-Length"))
 }
 
+// Assert that a testDialer is a bandit.Dialer
+var _ bandit.Dialer = &testDialer{}
+
 type testDialer struct {
 	name      string
 	rtt       time.Duration
@@ -427,6 +430,10 @@ type testDialer struct {
 	successes int64
 	failures  int64
 	stopped   bool
+}
+
+func (d *testDialer) DialProxy(ctx context.Context) (net.Conn, error) {
+	return nil, fmt.Errorf("Not implemented")
 }
 
 // Name returns the name for this Dialer
