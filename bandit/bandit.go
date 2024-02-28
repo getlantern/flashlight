@@ -145,9 +145,9 @@ func (o *BanditDialer) chooseDialerForDomain(dialers []Dialer, network, addr str
 func differentArm(existingArm, numDialers int, eg *bandit.EpsilonGreedy) int {
 	// We try to choose a different arm randomly.
 	for i := 0; i < 20; i++ {
-		// This selects a new arm randomly with protobability 1.0
-		// of choosing exploration vs exploitation.
-		newArm := eg.SelectArm(1.0)
+		// This selects a new arm randomly, essentially forcing exploration by
+		// using a low probability vs a random probability.
+		newArm := eg.SelectArm(0.001)
 		if newArm != existingArm {
 			return newArm
 		}
