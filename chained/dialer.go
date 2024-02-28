@@ -177,12 +177,6 @@ func (p *proxy) MarkFailure() {
 // involves sending either a CONNECT request or a GET request to initiate a
 // persistent connection to the upstream proxy.
 func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
-	select {
-	case <-ctx.Done():
-		log.Debug("Context done for dialing proxy address, returning error.")
-		return nil, ctx.Err()
-	default:
-	}
 	conn, err := p.reportedDial(func(op *ops.Op) (net.Conn, error) {
 		return p.impl.dialServer(op, ctx)
 	})

@@ -170,7 +170,7 @@ func Test_normalizeReceiveSpeed(t *testing.T) {
 		{
 			name: "should return 1 if pretty fast",
 			args: args{
-				dataRecv: topExpectedBytes * secondsForSample,
+				dataRecv: topExpectedBps * secondsForSample,
 			},
 			want: func(got float64) bool {
 				return got == 1
@@ -179,7 +179,7 @@ func Test_normalizeReceiveSpeed(t *testing.T) {
 		{
 			name: "should return 1 if super fast",
 			args: args{
-				dataRecv: topExpectedBytes * 50,
+				dataRecv: topExpectedBps * 50,
 			},
 			want: func(got float64) bool {
 				return got > 1

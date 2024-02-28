@@ -158,7 +158,7 @@ func differentArm(existingArm, numDialers int, eg *bandit.EpsilonGreedy) int {
 }
 
 func (o *BanditDialer) onSuccess(dialer Dialer) {
-	countryCode, country, city := proxyLoc(dialer)
+	countryCode, country, city := dialer.Location()
 	o.statsTracker.SetActiveProxyLocation(
 		city,
 		country,
@@ -173,13 +173,13 @@ func (o *BanditDialer) onFailure() {
 
 const secondsForSample = 6
 
-// A reasonable upper bound for the top expected bytes to receive in a short
-// window. Anything over this will be normalized to over 1.
-const topExpectedBytes = 125000
+// A reasonable upper bound for the top expected bytes to receive per second.
+// Anything over this will be normalized to over 1.
+const topExpectedBps = 125000
 
 func normalizeReceiveSpeed(dataRecv uint64) float64 {
 	// Record the bytes in relation to the top expected speed.
-	return (float64(dataRecv) / secondsForSample) / topExpectedBytes
+	return (float64(dataRecv) / secondsForSample) / topExpectedBps
 }
 
 func (o *BanditDialer) Close() {
