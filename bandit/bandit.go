@@ -56,11 +56,32 @@ func NewWithStats(dialers []Dialer, statsTracker stats.Tracker) (*BanditDialer, 
 	}
 
 	b.Init(len(dialers))
+	parallelDial(dialers, b)
 	return &BanditDialer{
 		dialers:      dialers,
 		bandit:       b,
 		statsTracker: statsTracker,
 	}, nil
+}
+
+// parallelDial dials all the dialers in parallel to measure pure connectivity
+// as a means of seeding the bandit with initial data. This should
+// help weed out dialers/proxies censored users can't connect to at all.
+func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy) {
+	for index, d := range dialers {
+		go func(dialer Dialer, index int) {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			_, _, err := dialer.DialContext(ctx, "tcp", "www.doesnotmatter.com")
+			if err != nil {
+				log.Debugf("Dialer %v failed: %v", dialer.Name(), err)
+				bandit.Update(index, 0)
+				return
+			}
+			log.Debugf("Dialer %v succeeded", dialer.Name())
+			bandit.Update(index, 1)
+		}(d, index)
+	}
 }
 
 func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -72,8 +93,7 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	}
 
 	start := time.Now()
-	chosenArm := o.bandit.SelectArm(rand.Float64())
-	dialer := chooseDialerForDomain(o.dialers, chosenArm, network, addr)
+	dialer, chosenArm := o.chooseDialerForDomain(o.dialers, network, addr)
 
 	// We have to be careful here about virtual, multiplexed connections, as the
 	// initial TCP dial will have different performance characteristics than the
@@ -111,13 +131,14 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	return dt, err
 }
 
-func chooseDialerForDomain(dialers []Dialer, chosenArm int, network, addr string) Dialer {
+func (o *BanditDialer) chooseDialerForDomain(dialers []Dialer, network, addr string) (Dialer, int) {
+	chosenArm := o.bandit.SelectArm(rand.Float64())
 	dialer := dialers[chosenArm]
 	if dialer.SupportsAddr(network, addr) {
-		return dialer
+		return dialer, chosenArm
 	}
 	chosenArm = differentArm(chosenArm, len(dialers), nil)
-	return dialers[chosenArm]
+	return dialers[chosenArm], chosenArm
 }
 
 // Choose a different arm than the one we already have, if possible.
@@ -158,16 +179,11 @@ func (o *BanditDialer) onFailure() {
 
 const secondsForSample = 6
 
-// 1 Mbps in bytes per second is the upper end of speeds we expect to see in such a
-// short time period.
+// A reasonable upper bound for the top expected bytes to receive in a short
+// window. Anything over this will be normalized to over 1.
 const topExpectedBytes = 125000
 
 func normalizeReceiveSpeed(dataRecv uint64) float64 {
-	// Return a normalized value between 0 and 1 representing the dailer's
-	// bandwidth as a percentage of a theoreticaly upper bound of 200Mbps.
-	if dataRecv == 0 {
-		return 0
-	}
 	// Record the bytes in relation to the top expected speed.
 	return (float64(dataRecv) / secondsForSample) / topExpectedBytes
 }
@@ -274,16 +290,6 @@ type Dialer interface {
 
 	// Succeeding indicates whether or not this dialer is currently good to use
 	Succeeding() bool
-
-	// Probe performs active probing of the proxy to better understand
-	// connectivity and performance. If forPerformance is true, the dialer will
-	// probe more and with bigger data in order for bandwidth estimation to
-	// collect enough data to make a decent estimate. Probe returns true if it was
-	// successfully able to communicate with the Proxy.
-	Probe(forPerformance bool) bool
-	// ProbeStats returns probe related stats for the dialer which can be used
-	// to estimate the overhead of active probling.
-	ProbeStats() (successes uint64, successKBs uint64, failures uint64, failedKBs uint64)
 
 	// DataSent returns total bytes of application data sent to connections
 	// created via this dialer.

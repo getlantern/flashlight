@@ -217,17 +217,6 @@ func (d *testDialer) DataRecv() uint64 {
 	return 0
 }
 
-func (d *testDialer) Probe(forPerformance bool) bool {
-	d.recalcRTT()
-	time.Sleep(d.rtt)
-	atomic.AddInt32(&d.connectivityChecks, 1)
-	return true
-}
-
-func (d *testDialer) ProbeStats() (successes uint64, successKBs uint64, failures uint64, failedKBs uint64) {
-	return 0, 0, 0, 0
-}
-
 func (d *testDialer) Stop() {
 	atomic.StoreInt32(&d.stopped, 1)
 }

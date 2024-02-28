@@ -13,117 +13,117 @@ type location struct {
 var (
 	// NOTE: it should contain all values in SMEMBERS cloudmasters
 	dcLocs = map[string]*location{
-		"doams3": &location{
+		"doams3": {
 			"Amsterdam",
 			"Netherlands",
 			"NL",
 		},
-		"doblr1": &location{
+		"doblr1": {
 			"Bangalore",
 			"India",
 			"IN",
 		},
-		"dofra1": &location{
+		"dofra1": {
 			"Frankfurt",
 			"Germany",
 			"DE",
 		},
-		"dolon1": &location{
+		"dolon1": {
 			"London",
 			"United Kingdom",
 			"GB",
 		},
-		"dosgp1": &location{
+		"dosgp1": {
 			"Singapore",
 			"Singapore",
 			"SG",
 		},
-		"dosfo1": &location{
+		"dosfo1": {
 			"San Francisco",
 			"United States",
 			"US",
 		},
-		"donyc3": &location{
+		"donyc3": {
 			"New York",
 			"United States",
 			"US",
 		},
-		"lisgp1": &location{
+		"lisgp1": {
 			"Singapore",
 			"Singapore",
 			"SG",
 		},
-		"litok1": &location{
+		"litok1": {
 			"Tokyo",
 			"Japan",
 			"JP",
 		},
-		"litok2": &location{
+		"litok2": {
 			"Tokyo",
 			"Japan",
 			"JP",
 		},
-		"xfkrkt": &location{
+		"xfkrkt": {
 			"Seoul",
 			"Korea",
 			"KR",
 		},
-		"ggtwnb": &location{
+		"ggtwnb": {
 			"Changhua",
 			"Taiwan",
 			"TW",
 		},
-		"vllhr1": &location{
+		"vllhr1": {
 			"London",
 			"United Kingdom",
 			"GB",
 		},
-		"vllos1": &location{
+		"vllos1": {
 			"Los Angeles",
 			"United States",
 			"US",
 		},
-		"vlsgp1": &location{
+		"vlsgp1": {
 			"Singapore",
 			"Singapore",
 			"SG",
 		},
-		"vltok1": &location{
+		"vltok1": {
 			"Tokyo",
 			"Japan",
 			"JP",
 		},
-		"vltok9": &location{
+		"vltok9": {
 			"Tokyo",
 			"Japan",
 			"JP",
 		},
-		"anhk1b": &location{
+		"anhk1b": {
 			"Hong Kong",
 			"China",
 			"HK",
 		},
-		"sbtk1a": &location{
+		"sbtk1a": {
 			"Tokyo",
 			"Japan",
 			"JP",
 		},
-		"sbtk9a": &location{
+		"sbtk9a": {
 			"Tokyo",
 			"Japan",
 			"JP",
 		},
-		"sbhk1b": &location{
+		"sbhk1b": {
 			"Hong Kong",
 			"China",
 			"HK",
 		},
-		"cdsgz1": &location{
+		"cdsgz1": {
 			"Hong Kong",
 			"China",
 			"HK",
 		},
-		"enhttp": &location{
+		"enhttp": {
 			"New York",
 			"United States",
 			"US",

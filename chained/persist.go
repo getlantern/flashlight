@@ -22,14 +22,11 @@ var (
 
 // TrackStatsFor enables periodic checkpointing of the given proxies' stats to
 // disk.
-func TrackStatsFor(dialers []bandit.Dialer, configDir string, probeIfNecessary bool) {
+func TrackStatsFor(dialers []bandit.Dialer, configDir string) {
 	statsMx.Lock()
 
 	statsFilePath := filepath.Join(configDir, "proxystats.csv")
 	applyExistingStats(statsFilePath, dialers)
-	if probeIfNecessary && len(dialers) > 1 {
-		probeIfRequired(dialers)
-	}
 
 	statsTrackingDialers = append(statsTrackingDialers, dialers...)
 
@@ -38,24 +35,6 @@ func TrackStatsFor(dialers []bandit.Dialer, configDir string, probeIfNecessary b
 	persistOnce.Do(func() {
 		go persistStats(statsFilePath)
 	})
-}
-
-func probeIfRequired(dialers []bandit.Dialer) {
-	rttOfTopProxy := dialers[0].EstRTT()
-	for i, dialer := range dialers {
-		// probe is automatically required for relatively new dialers
-		probeRequired := dialer.Attempts() < 20
-		if probeRequired {
-			log.Debugf("%v is relatively new, will probe for performance", dialer.Label())
-		} else if i > 0 && dialer.Successes() > 0 && dialer.EstRTT() < rttOfTopProxy {
-			// dialers whose RTT is lower than the top proxy get checked on startup as well
-			log.Debugf("%v is lower RTT than %v, will probe for performance", dialer.Label(), dialers[0].Label())
-			probeRequired = true
-		}
-		if probeRequired {
-			go dialer.Probe(true)
-		}
-	}
 }
 
 func applyExistingStats(statsFile string, dialers []bandit.Dialer) {

@@ -109,8 +109,7 @@ func (p *proxy) NumPreconnected() int {
 func (p *proxy) WriteStats(w io.Writer) {
 	estRTT := p.EstRTT().Seconds()
 	estBandwidth := p.EstBandwidth()
-	probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs := p.ProbeStats()
-	_, _ = fmt.Fprintf(w, "%s  P:%3d  R:%3d  A: %5d  S: %5d  CS: %3d  F: %5d  CF: %3d  R: %4.3f  L: %4.0fms  B: %6.2fMbps  T: %7s/%7s  P: %3d(%3dkb)/%3d(%3dkb)\n",
+	_, _ = fmt.Fprintf(w, "%s  P:%3d  R:%3d  A: %5d  S: %5d  CS: %3d  F: %5d  CF: %3d  R: %4.3f  L: %4.0fms  B: %6.2fMbps  T: %7s/%7s\n",
 		p.JustifiedLabel(),
 		p.NumPreconnected(),
 		p.NumPreconnecting(),
@@ -119,8 +118,7 @@ func (p *proxy) WriteStats(w io.Writer) {
 		p.Failures(), p.ConsecFailures(),
 		p.EstSuccessRate(),
 		estRTT*1000, estBandwidth,
-		humanize.Bytes(p.DataSent()), humanize.Bytes(p.DataRecv()),
-		probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs)
+		humanize.Bytes(p.DataSent()), humanize.Bytes(p.DataRecv()))
 	if impl, ok := p.impl.(*multipathImpl); ok {
 		for _, line := range impl.FormatStats() {
 			_, _ = fmt.Fprintf(w, "\t%s\n", line)

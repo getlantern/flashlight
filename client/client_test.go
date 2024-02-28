@@ -89,7 +89,6 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 	client, _ := NewClient(
 		tempConfigDir,
 		func() bool { return false },
-		func() bool { return true },  // allow probes
 		func() bool { return false }, // proxy all
 		func() bool { return false }, // use shortcut
 		func(ctx context.Context, addr string) (shortcut.Method, net.IP) {
@@ -520,10 +519,6 @@ func (d *testDialer) EstSuccessRate() float64 {
 	return 0
 }
 
-func (d *testDialer) ProbeStats() (successes uint64, successKBs uint64, failures uint64, failedKBs uint64) {
-	return 0, 0, 0, 0
-}
-
 func (d *testDialer) Attempts() int64 {
 	return atomic.LoadInt64(&d.attempts)
 }
@@ -557,10 +552,6 @@ func (d *testDialer) DataSent() uint64 {
 }
 
 func (d *testDialer) CheckConnectivity() bool {
-	return true
-}
-
-func (d *testDialer) Probe(forPerformance bool) bool {
 	return true
 }
 

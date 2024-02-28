@@ -11,7 +11,39 @@ import (
 
 	bandit "github.com/alextanhongpin/go-bandit"
 	"github.com/getlantern/flashlight/v7/stats"
+	"github.com/stretchr/testify/require"
 )
+
+func TestParallelDial(t *testing.T) {
+	dialers := []Dialer{
+		&tcpConnDialer{shouldFail: true},
+		&tcpConnDialer{shouldFail: true},
+		&tcpConnDialer{shouldFail: true},
+		&tcpConnDialer{},
+	}
+
+	b, err := bandit.NewEpsilonGreedy(0.001, nil, nil)
+	require.NoError(t, err)
+
+	err = b.Init(len(dialers))
+	require.NoError(t, err)
+
+	parallelDial(dialers, b)
+	require.Eventually(t, func() bool {
+		for _, count := range b.Counts {
+			if count < 1 {
+				return false
+			}
+		}
+		return true
+	}, 5*time.Second, 100*time.Millisecond)
+
+	// Select the arm with with a probability above epsilon
+	// to ensure getting the best performing arm for testing
+	// purposes.
+	arm := b.SelectArm(0.5)
+	require.Equal(t, 3, arm)
+}
 
 func TestNewWithStats(t *testing.T) {
 	type args struct {
@@ -226,7 +258,10 @@ func Test_differentArm(t *testing.T) {
 	}
 }
 
-type tcpConnDialer struct{}
+type tcpConnDialer struct {
+	shouldFail bool
+	dialTime   time.Duration
+}
 
 // Addr implements Dialer.
 func (*tcpConnDialer) Addr() string {
@@ -260,6 +295,12 @@ func (*tcpConnDialer) DataSent() uint64 {
 
 // DialContext implements Dialer.
 func (t *tcpConnDialer) DialContext(ctx context.Context, network string, addr string) (conn net.Conn, failedUpstream bool, err error) {
+	if t.shouldFail {
+		return nil, true, io.EOF
+	}
+	if t.dialTime > 0 {
+		time.Sleep(t.dialTime)
+	}
 	return &net.TCPConn{}, false, nil
 }
 
@@ -315,16 +356,6 @@ func (*tcpConnDialer) NumPreconnected() int {
 // NumPreconnecting implements Dialer.
 func (*tcpConnDialer) NumPreconnecting() int {
 	return 0
-}
-
-// Probe implements Dialer.
-func (*tcpConnDialer) Probe(forPerformance bool) bool {
-	return false
-}
-
-// ProbeStats implements Dialer.
-func (*tcpConnDialer) ProbeStats() (successes uint64, successKBs uint64, failures uint64, failedKBs uint64) {
-	panic("unimplemented")
 }
 
 // Protocol implements Dialer.
