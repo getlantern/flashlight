@@ -101,7 +101,8 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 			if err != nil {
 				// There is no more time left in the overall dial timeout, so we
 				// should stop trying to dial.
-				break
+				log.Debug("Could not allocate partial deadline, stopping dialing.")
+				return nil, err
 			}
 			if partialDeadline.Before(deadline) {
 				var cancel context.CancelFunc
