@@ -260,7 +260,6 @@ func Test_differentArm(t *testing.T) {
 
 type tcpConnDialer struct {
 	shouldFail bool
-	dialTime   time.Duration
 }
 
 // Addr implements Dialer.
@@ -297,9 +296,6 @@ func (*tcpConnDialer) DataSent() uint64 {
 func (t *tcpConnDialer) DialContext(ctx context.Context, network string, addr string) (conn net.Conn, failedUpstream bool, err error) {
 	if t.shouldFail {
 		return nil, true, io.EOF
-	}
-	if t.dialTime > 0 {
-		time.Sleep(t.dialTime)
 	}
 	return &net.TCPConn{}, false, nil
 }
