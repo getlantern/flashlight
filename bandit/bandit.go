@@ -73,56 +73,51 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 
 	start := time.Now()
 	chosenArm := o.bandit.SelectArm(rand.Float64())
+	dialer := chooseDialerForDomain(o.dialers, chosenArm, network, addr)
 
 	// We have to be careful here about virtual, multiplexed connections, as the
 	// initial TCP dial will have different performance characteristics than the
 	// subsequent virtual connection dials.
-	for i := 0; i < len(o.dialers); i++ {
-		dialer := o.dialers[chosenArm]
-		if !dialer.SupportsAddr(network, addr) {
-			// If this dialer doesn't allow this domain, we need to choose a different one,
-			// but without giving this dialer a low reward.
-			chosenArm = differentArm(chosenArm, len(o.dialers), o.bandit)
-			continue
+	log.Debugf("bandit::dialer %d: %s at %v", chosenArm, dialer.Label(), dialer.Addr())
+	conn, failedUpstream, err := dialer.DialContext(ctx, network, addr)
+	if err != nil {
+		if !failedUpstream {
+			log.Errorf("Dialer %v failed: %v", dialer.Name(), err)
+			o.bandit.Update(chosenArm, 0)
+		} else {
+			log.Debugf("Dialer %v failed upstream...", dialer.Name())
+			// This can happen, for example, if the upstream server is down, or
+			// if the DNS resolves to localhost, for example. It is also possible
+			// that the proxy is blacklisted by upstream sites for some reason,
+			// so we have to choose some reasonable value.
+			o.bandit.Update(chosenArm, 0.00005)
 		}
-		log.Debugf("bandit::dialer %d: %s at %v", chosenArm, dialer.Label(), dialer.Addr())
-		conn, failedUpstream, err := dialer.DialContext(ctx, network, addr)
-		if err != nil {
-			if !failedUpstream {
-				log.Errorf("Dialer %v failed: %v", dialer.Name(), err)
-				o.bandit.Update(chosenArm, 0)
-			} else {
-				log.Debugf("Dialer %v failed upstream...", dialer.Name())
-				// This can happen, for example, if the upstream server is down, or
-				// if the DNS resolves to localhost, for example. It is also possible
-				// that the proxy is blacklisted by upstream sites for some reason,
-				// so we have to choose some reasonable value.
-				o.bandit.Update(chosenArm, 0.00005)
-			}
-			// Mark the failure and try another.
-			chosenArm = differentArm(chosenArm, len(o.dialers), o.bandit)
-			continue
-		}
-		log.Debugf("Dialer %v dialed in %v seconds", dialer.Name(), time.Since(start).Seconds())
-		// We don't give any special reward for a successful dial here and just rely on
-		// the normalized raw throughput to determine the reward. This is because the
-		// reward system takes into account how many tries there have been for a given
-		// "arm", so giving a reward here would be double-counting.
+		return nil, err
+	}
+	log.Debugf("Dialer %v dialed in %v seconds", dialer.Name(), time.Since(start).Seconds())
+	// We don't give any special reward for a successful dial here and just rely on
+	// the normalized raw throughput to determine the reward. This is because the
+	// reward system takes into account how many tries there have been for a given
+	// "arm", so giving a reward here would be double-counting.
 
-		// Tell the dialer to update the bandit with it's throughput after 5 seconds.
-		dt := newDataTrackingConn(conn)
-		time.AfterFunc(secondsForSample*time.Second, func() {
-			speed := normalizeReceiveSpeed(dt.dataRecv)
-			//log.Debugf("Dialer %v received %v bytes in %v seconds, normalized speed: %v", dialer.Name(), dt.dataRecv, secondsForSample, speed)
-			o.bandit.Update(chosenArm, speed)
-		})
-		o.onSuccess(dialer)
-		return dt, err
+	// Tell the dialer to update the bandit with it's throughput after 5 seconds.
+	dt := newDataTrackingConn(conn)
+	time.AfterFunc(secondsForSample*time.Second, func() {
+		speed := normalizeReceiveSpeed(dt.dataRecv)
+		//log.Debugf("Dialer %v received %v bytes in %v seconds, normalized speed: %v", dialer.Name(), dt.dataRecv, secondsForSample, speed)
+		o.bandit.Update(chosenArm, speed)
+	})
+	o.onSuccess(dialer)
+	return dt, err
+}
+
+func chooseDialerForDomain(dialers []Dialer, chosenArm int, network, addr string) Dialer {
+	dialer := dialers[chosenArm]
+	if dialer.SupportsAddr(network, addr) {
+		return dialer
 	}
-	o.onFailure()
-	return nil, &BanditError{
-		attempts: len(o.dialers),
-	}
+	chosenArm = differentArm(chosenArm, len(dialers), nil)
+	return dialers[chosenArm]
 }
 
 // Choose a different arm than the one we already have, if possible.

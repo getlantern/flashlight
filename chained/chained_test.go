@@ -164,11 +164,10 @@ func TestBadAddressToServer(t *testing.T) {
 		return nil, fmt.Errorf("fail intentionally")
 	}}
 	l := startServer(t)
-	req, err := p.buildCONNECTRequest("somebadaddressasdfdasfds.asdfasdf.dfads:532400", 5*time.Second+2*time.Millisecond+1*time.Nanosecond)
+	req, err := p.buildCONNECTRequest("somebadaddressasdfdasfds.asdfasdf.dfads:532400")
 	if err != nil {
 		t.Fatalf("Unable to build request: %s", err)
 	}
-	assert.Equal(t, "5003", req.Header.Get(common.ProxyDialTimeoutHeader))
 	conn, err := net.DialTimeout("tcp", l.Addr().String(), 10*time.Second)
 	if err != nil {
 		t.Fatalf("Unable to dial server: %s", err)
