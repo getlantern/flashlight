@@ -65,7 +65,12 @@ func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy) {
 		go func(dialer Dialer, index int) {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
-			_, _, err := dialer.DialContext(ctx, "tcp", "www.doesnotmatter.com")
+			conn, _, err := dialer.DialContext(ctx, "tcp", "www.doesnotmatter.com")
+			defer func() {
+				if conn != nil {
+					conn.Close()
+				}
+			}()
 			if err != nil {
 				log.Debugf("Dialer %v failed: %v", dialer.Name(), err)
 				bandit.Update(index, 0)
