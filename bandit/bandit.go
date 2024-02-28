@@ -150,8 +150,10 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	}
 }
 
-// partialDeadline returns the deadline to use for a single address,
-// when multiple addresses are pending.
+// partialDeadline returns the deadline to use for a single proxy dialer depending
+// on the number of proxies remaining. This is to ensure that we don't spend too
+// much time on any one proxy, or too little time.
+//
 // This is adapated from dial.go in the standard library:
 // https://cs.opensource.google/go/go/+/refs/tags/go1.22.0:src/net/dial.go;l=197
 func partialDeadline(deadline time.Time, addrsRemaining int) (time.Time, error) {
