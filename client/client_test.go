@@ -35,7 +35,7 @@ var logger = golog.LoggerFor("client-test")
 var tempConfigDir string
 
 func TestMain(m *testing.M) {
-	tempConfigDir, err := ioutil.TempDir("", "client_test")
+	tempConfigDir, err := os.MkdirTemp("", "client_test")
 	if err != nil {
 		logger.Errorf("Unable to create temp config dir: %v", err)
 		os.Exit(1)
@@ -141,8 +141,6 @@ func TestServeHTTPTimeout(t *testing.T) {
 	req, err := http.NewRequest("CONNECT", "https://a.com:443", nil)
 	require.NoError(t, err)
 	resp, err := roundTrip(client, req)
-	//_, ok := err.(*bandit.BanditError)
-	//require.True(t, ok, "should return a BanditError but got %v", err)
 	require.Contains(t, err.Error(), "deadline")
 	require.Equal(t, http.StatusOK, resp.StatusCode, "CONNECT requests should always succeed")
 
