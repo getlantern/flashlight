@@ -78,6 +78,12 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	// initial TCP dial will have different performance characteristics than the
 	// subsequent virtual connection dials.
 	for i := 0; i < len(o.dialers); i++ {
+		select {
+		case <-ctx.Done():
+			log.Debug("Overall bandit dial context done")
+			return nil, ctx.Err()
+		default:
+		}
 		dialer := o.dialers[chosenArm]
 		if !dialer.SupportsAddr(network, addr) {
 			// If this dialer doesn't allow this domain, we need to choose a different one,
@@ -86,13 +92,30 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 			continue
 		}
 		log.Debugf("bandit::dialer %d: %s at %v", chosenArm, dialer.Label(), dialer.Addr())
-		conn, failedUpstream, err := dialer.DialContext(ctx, network, addr)
+		dStart := time.Now()
+		// Use a separate context for each dialer to ensure that each dialer
+		// has a chance to dial.
+		dialCtx := ctx
+		if deadline, hasDeadline := ctx.Deadline(); hasDeadline {
+			partialDeadline, err := partialDeadline(deadline, len(o.dialers)-i)
+			if err != nil {
+				// There is no more time left in the overall dial timeout, so we
+				// should stop trying to dial.
+				break
+			}
+			if partialDeadline.Before(deadline) {
+				var cancel context.CancelFunc
+				dialCtx, cancel = context.WithDeadline(ctx, partialDeadline)
+				defer cancel()
+			}
+		}
+		conn, failedUpstream, err := dialer.DialContext(dialCtx, network, addr)
 		if err != nil {
 			if !failedUpstream {
-				log.Errorf("Dialer %v failed: %v", dialer.Name(), err)
+				log.Errorf("Dialer %v failed in %v: %v", dialer.Name(), time.Since(dStart).Seconds(), err)
 				o.bandit.Update(chosenArm, 0)
 			} else {
-				log.Debugf("Dialer %v failed upstream...", dialer.Name())
+				log.Debugf("Dialer %v failed upstream in %v...", dialer.Name(), time.Since(dStart).Seconds())
 				// This can happen, for example, if the upstream server is down, or
 				// if the DNS resolves to localhost, for example. It is also possible
 				// that the proxy is blacklisted by upstream sites for some reason,
@@ -103,7 +126,8 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 			chosenArm = differentArm(chosenArm, len(o.dialers), o.bandit)
 			continue
 		}
-		log.Debugf("Dialer %v dialed in %v seconds", dialer.Name(), time.Since(start).Seconds())
+		log.Debugf("Dialer %v dialed in %v seconds out of %v", dialer.Name(),
+			time.Since(dStart).Seconds(), time.Since(start).Seconds())
 		// We don't give any special reward for a successful dial here and just rely on
 		// the normalized raw throughput to determine the reward. This is because the
 		// reward system takes into account how many tries there have been for a given
@@ -123,6 +147,41 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	return nil, &BanditError{
 		attempts: len(o.dialers),
 	}
+}
+
+// partialDeadline returns the deadline to use for a single address,
+// when multiple addresses are pending.
+// This is adapated from dial.go in the standard library:
+// https://cs.opensource.google/go/go/+/refs/tags/go1.22.0:src/net/dial.go;l=197
+func partialDeadline(deadline time.Time, addrsRemaining int) (time.Time, error) {
+	now := time.Now()
+	if deadline.IsZero() {
+		return deadline, nil
+	}
+	timeRemaining := deadline.Sub(now)
+	if timeRemaining <= 0 {
+		return time.Time{}, fmt.Errorf("no time remaining")
+	}
+	// Tentatively allocate equal time to each remaining address.
+	timeout := timeRemaining / time.Duration(addrsRemaining)
+	// If the time per address is too short, steal from the end of the list.
+	const saneMinimum = 2 * time.Second
+	if timeout < saneMinimum {
+		if timeRemaining < saneMinimum {
+			timeout = timeRemaining
+		} else {
+			timeout = saneMinimum
+		}
+	}
+
+	// We are not dialing in parallel, so don't let any dialer take up too
+	// much time.
+	const saneMaximum = 8 * time.Second
+	if timeout > saneMaximum {
+		timeout = saneMaximum
+	}
+
+	return now.Add(timeout), nil
 }
 
 // Choose a different arm than the one we already have, if possible.

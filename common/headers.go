@@ -30,7 +30,6 @@ const (
 	PingHeader                          = "X-Lantern-Ping"
 	PlatformHeader                      = "X-Lantern-Platform"
 	PlatformVersionHeader               = "X-Lantern-PlatVer"
-	ProxyDialTimeoutHeader              = "X-Lantern-Dial-Timeout"
 	ClientCountryHeader                 = "X-Lantern-Client-Country"
 	RandomNoiseHeader                   = "X-Lantern-Rand"
 	SleepHeader                         = "X-Lantern-Sleep"
