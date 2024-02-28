@@ -219,7 +219,7 @@ func Test_differentArm(t *testing.T) {
 				numDialers: 1,
 			},
 			isError: func(existingArm int, got int) bool {
-				return existingArm != got
+				return existingArm != got || got != 0
 			},
 		},
 
@@ -245,6 +245,7 @@ func Test_differentArm(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
 			eg, err := bandit.NewEpsilonGreedy(0.1, nil, nil)
 			if err != nil {
 				t.Fatal(err)

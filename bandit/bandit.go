@@ -69,6 +69,8 @@ func NewWithStats(dialers []Dialer, statsTracker stats.Tracker) (*BanditDialer, 
 // help weed out dialers/proxies censored users can't connect to at all.
 func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy) {
 	for index, d := range dialers {
+		// Note that the index of the dialer in our list is the index of the arm
+		// in the bandit and that the bandit is concurrent-safe.
 		go func(dialer Dialer, index int) {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
@@ -137,28 +139,22 @@ func (o *BanditDialer) chooseDialerForDomain(dialers []Dialer, network, addr str
 	if dialer.SupportsAddr(network, addr) {
 		return dialer, chosenArm
 	}
-	chosenArm = differentArm(chosenArm, len(dialers), nil)
+	chosenArm = differentArm(chosenArm, len(dialers), o.bandit)
 	return dialers[chosenArm], chosenArm
 }
 
 // Choose a different arm than the one we already have, if possible.
 func differentArm(existingArm, numDialers int, eg *bandit.EpsilonGreedy) int {
-	// We let the bandit choose a new arm (or at least try to) versus just rotating to the next
-	// dialer because we want to use the bandit's algorithm for optimizing exploration
-	// versus exploitation, i.e. it will choose another dialer with a probability
-	// proportional to how well it has performed in the past as well as to whether
-	// or not we need more data from it. Basically, it will choose a more useful
-	// dialer than our random selection.
-	if numDialers == 1 {
-		log.Debugf("Only one dialer, so returning the existing arm: %v", existingArm)
-		return existingArm
-	}
+	// We try to choose a different arm randomly.
 	for i := 0; i < 20; i++ {
-		newArm := eg.SelectArm(rand.Float64())
+		// This selects a new arm randomly with protobability 1.0
+		// of choosing exploration vs exploitation.
+		newArm := eg.SelectArm(1.0)
 		if newArm != existingArm {
 			return newArm
 		}
 	}
+
 	// If we have to choose ourselves, just choose another one.
 	return (existingArm + 1) % numDialers
 }
