@@ -134,7 +134,7 @@ func (p *proxy) DialContext(ctx context.Context, network, addr string) (conn net
 	defer op.End()
 
 	log.Debugf("Dialing origin address %s for proxy %s", addr, p.Label())
-	conn, err = p.dialOrigin(op, ctx, p, network, addr)
+	conn, err = dialOrigin(op, ctx, p, network, addr)
 	if err != nil {
 		op.Set("idled", idletiming.IsIdled(conn))
 		op.FailIf(err)
@@ -173,10 +173,10 @@ func (p *proxy) MarkFailure() {
 	log.Tracef("Dialer %s consecutive failures: %d -> %d", p.Label(), newCF-1, newCF)
 }
 
-// defaultDialOrigin implements the method from serverConn. With standard proxies, this
+// dialOrigin implements the method from serverConn. With standard proxies, this
 // involves sending either a CONNECT request or a GET request to initiate a
 // persistent connection to the upstream proxy.
-func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
+func dialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
 	conn, err := p.reportedDial(func(op *ops.Op) (net.Conn, error) {
 		return p.impl.dialServer(op, ctx)
 	})

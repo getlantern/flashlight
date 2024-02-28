@@ -283,7 +283,6 @@ func (c *consecCounter) Get() int64 {
 type coreDialer func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error)
 
 type reportDialCoreFn func(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error)
-type dialOriginFn func(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error)
 
 type proxy struct {
 	// Store int64's up front to ensure alignment of 64 bit words
@@ -294,10 +293,6 @@ type proxy struct {
 	failures            int64
 	consecFailures      int64
 	abe                 int64 // Mbps scaled by 1000
-	probeSuccesses      uint64
-	probeSuccessKBs     uint64
-	probeFailures       uint64
-	probeFailedKBs      uint64
 	dataSent            uint64
 	dataRecv            uint64
 	consecReadSuccesses consecCounter
@@ -312,7 +307,6 @@ type proxy struct {
 	trusted             bool
 	bias                int
 	impl                proxyImpl
-	dialOrigin          dialOriginFn
 	emaRTT              *ema.EMA
 	emaRTTDev           *ema.EMA
 	emaSuccessRate      *ema.EMA
@@ -336,7 +330,6 @@ func newProxy(name, addr, protocol, network string, s *config.ProxyConfig, uc co
 		user:             uc,
 		trusted:          s.Trusted,
 		bias:             int(s.Bias),
-		dialOrigin:       defaultDialOrigin,
 		emaRTT:           ema.NewDuration(0, rttAlpha),
 		emaRTTDev:        ema.NewDuration(0, rttDevAlpha),
 		emaSuccessRate:   ema.New(1, successRateAlpha), // Consider a proxy success when initializing
