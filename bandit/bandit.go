@@ -2,7 +2,6 @@ package bandit
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"math/rand"
 	"net"
@@ -30,14 +29,6 @@ type BanditDialer struct {
 	dialers      []Dialer
 	bandit       *bandit.EpsilonGreedy
 	statsTracker stats.Tracker
-}
-
-type BanditError struct {
-	attempts int
-}
-
-func (be *BanditError) Error() string {
-	return fmt.Sprintf("No dialer succeeded after %v attempts", be.attempts)
 }
 
 // New creates a new bandit given the available dialers.
