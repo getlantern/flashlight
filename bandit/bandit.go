@@ -66,6 +66,7 @@ func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy) {
 		go func(dialer Dialer, index int) {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
+			start := time.Now()
 			conn, err := dialer.DialProxy(ctx)
 			defer func() {
 				if conn != nil {
@@ -77,7 +78,7 @@ func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy) {
 				bandit.Update(index, 0)
 				return
 			}
-			log.Debugf("Dialer %v succeeded", dialer.Name())
+			log.Debugf("Dialer %v succeeded in %v seconds", dialer.Name(), time.Since(start)*time.Second)
 			bandit.Update(index, 1)
 		}(d, index)
 	}
@@ -137,23 +138,23 @@ func (o *BanditDialer) chooseDialerForDomain(dialers []Dialer, network, addr str
 	if dialer.SupportsAddr(network, addr) {
 		return dialer, chosenArm
 	}
-	chosenArm = differentArm(chosenArm, len(dialers), o.bandit)
+	chosenArm = differentArm(chosenArm, len(dialers))
 	return dialers[chosenArm], chosenArm
 }
 
 // Choose a different arm than the one we already have, if possible.
-func differentArm(existingArm, numDialers int, eg *bandit.EpsilonGreedy) int {
-	// We try to choose a different arm randomly.
+func differentArm(existingArm, numDialers int) int {
+	// This selects a new arm randomly, which is preferable to just choosing
+	// the next one in the list because that will always be the next dialer
+	// after whatever dialer is currently best.
 	for i := 0; i < 20; i++ {
-		// This selects a new arm randomly, essentially forcing exploration by
-		// using a low probability vs a random probability.
-		newArm := eg.SelectArm(0.001)
+		newArm := rand.Intn(numDialers)
 		if newArm != existingArm {
 			return newArm
 		}
 	}
 
-	// If we have to choose ourselves, just choose another one.
+	// If random selection doesn't work, just choose the next one.
 	return (existingArm + 1) % numDialers
 }
 

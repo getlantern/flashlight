@@ -246,14 +246,8 @@ func Test_differentArm(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
-			eg, err := bandit.NewEpsilonGreedy(0.1, nil, nil)
-			if err != nil {
-				t.Fatal(err)
-			}
-			eg.Init(tt.args.numDialers)
-			existingArm := eg.SelectArm(rand.Float64())
-			if got := differentArm(existingArm, tt.args.numDialers, eg); tt.isError(existingArm, got) {
+			existingArm := rand.Intn(tt.args.numDialers)
+			if got := differentArm(existingArm, tt.args.numDialers); tt.isError(existingArm, got) {
 				t.Errorf("differentArm() returned %v and existing is %v", got, existingArm)
 			}
 		})
