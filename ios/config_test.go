@@ -1,7 +1,6 @@
 package ios
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -10,6 +9,7 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/getlantern/flashlight/v7/common"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,18 +19,22 @@ const (
 )
 
 func TestConfigure(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "config_test")
+	common.CompileTimeApplicationVersion = "8.0.0"
+	common.LibraryVersion = "8.0.0"
+	tmpDir, err := os.MkdirTemp("", "config_test")
 	require.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
 
-	ioutil.WriteFile(filepath.Join(tmpDir, "global.yaml"), []byte{}, 0644)
-	ioutil.WriteFile(filepath.Join(tmpDir, "global.yaml.etag"), []byte{}, 0644)
-	ioutil.WriteFile(filepath.Join(tmpDir, "proxies.yaml"), []byte{}, 0644)
-	ioutil.WriteFile(filepath.Join(tmpDir, "proxies.yaml.etag"), []byte{}, 0644)
-	ioutil.WriteFile(filepath.Join(tmpDir, "masquerade_cache"), []byte{}, 0644)
-	ioutil.WriteFile(filepath.Join(tmpDir, "userconfig.yaml"), []byte{}, 0644)
+	os.WriteFile(filepath.Join(tmpDir, "global.yaml"), []byte{}, 0644)
+	os.WriteFile(filepath.Join(tmpDir, "global.yaml.etag"), []byte{}, 0644)
+	os.WriteFile(filepath.Join(tmpDir, "proxies.yaml"), []byte{}, 0644)
+	os.WriteFile(filepath.Join(tmpDir, "proxies.yaml.etag"), []byte{}, 0644)
+	os.WriteFile(filepath.Join(tmpDir, "masquerade_cache"), []byte{}, 0644)
+	os.WriteFile(filepath.Join(tmpDir, "userconfig.yaml"), []byte{}, 0644)
 
-	result1, err := Configure(tmpDir, 0, "", testDeviceID1, true, "")
+	const testUserId = 83901
+	const testToken = "testToken"
+	result1, err := Configure(tmpDir, testUserId, testToken, testDeviceID1, true, "")
 	require.NoError(t, err)
 
 	require.True(t, result1.VPNNeedsReconfiguring)
@@ -46,7 +50,7 @@ func TestConfigure(t *testing.T) {
 	require.NoError(t, err)
 	err = watcher.Add(c.fullPathTo(userConfigYaml))
 	require.NoError(t, err)
-	result2, err := Configure(tmpDir, 0, "", testDeviceID2, true, "")
+	result2, err := Configure(tmpDir, testUserId, testToken, testDeviceID2, true, "")
 	require.NoError(t, err)
 	ips1 := strings.Split(result1.IPSToExcludeFromVPN, ",")
 	ips2 := strings.Split(result2.IPSToExcludeFromVPN, ",")

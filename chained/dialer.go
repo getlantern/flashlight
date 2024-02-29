@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"math"
 	"net"
 	"net/http"
 	"net/url"
@@ -110,8 +109,7 @@ func (p *proxy) NumPreconnected() int {
 func (p *proxy) WriteStats(w io.Writer) {
 	estRTT := p.EstRTT().Seconds()
 	estBandwidth := p.EstBandwidth()
-	probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs := p.ProbeStats()
-	_, _ = fmt.Fprintf(w, "%s  P:%3d  R:%3d  A: %5d  S: %5d  CS: %3d  F: %5d  CF: %3d  R: %4.3f  L: %4.0fms  B: %6.2fMbps  T: %7s/%7s  P: %3d(%3dkb)/%3d(%3dkb)\n",
+	_, _ = fmt.Fprintf(w, "%s  P:%3d  R:%3d  A: %5d  S: %5d  CS: %3d  F: %5d  CF: %3d  R: %4.3f  L: %4.0fms  B: %6.2fMbps  T: %7s/%7s\n",
 		p.JustifiedLabel(),
 		p.NumPreconnected(),
 		p.NumPreconnecting(),
@@ -120,8 +118,7 @@ func (p *proxy) WriteStats(w io.Writer) {
 		p.Failures(), p.ConsecFailures(),
 		p.EstSuccessRate(),
 		estRTT*1000, estBandwidth,
-		humanize.Bytes(p.DataSent()), humanize.Bytes(p.DataRecv()),
-		probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs)
+		humanize.Bytes(p.DataSent()), humanize.Bytes(p.DataRecv()))
 	if impl, ok := p.impl.(*multipathImpl); ok {
 		for _, line := range impl.FormatStats() {
 			_, _ = fmt.Fprintf(w, "\t%s\n", line)
@@ -137,7 +134,7 @@ func (p *proxy) DialContext(ctx context.Context, network, addr string) (conn net
 	defer op.End()
 
 	log.Debugf("Dialing origin address %s for proxy %s", addr, p.Label())
-	conn, err = p.dialOrigin(op, ctx, p, network, addr)
+	conn, err = dialOrigin(op, ctx, p, network, addr)
 	if err != nil {
 		op.Set("idled", idletiming.IsIdled(conn))
 		op.FailIf(err)
@@ -176,10 +173,10 @@ func (p *proxy) MarkFailure() {
 	log.Tracef("Dialer %s consecutive failures: %d -> %d", p.Label(), newCF-1, newCF)
 }
 
-// defaultDialOrigin implements the method from serverConn. With standard proxies, this
+// dialOrigin implements the method from serverConn. With standard proxies, this
 // involves sending either a CONNECT request or a GET request to initiate a
 // persistent connection to the upstream proxy.
-func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
+func dialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
 	conn, err := p.reportedDial(func(op *ops.Op) (net.Conn, error) {
 		return p.impl.dialServer(op, ctx)
 	})
@@ -188,16 +185,6 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 		return nil, err
 	}
 
-	var timeout time.Duration
-	if deadline, set := ctx.Deadline(); set {
-		conn.SetDeadline(deadline)
-		// Set timeout based on our given deadline, minus a 2 second fudge factor
-		timeout := time.Until(deadline) - 2*time.Second
-		if timeout < 0 {
-			log.Errorf("Not enough time left for server to dial upstream within %v, return errUpstream immediately", timeout)
-			return nil, errUpstream
-		}
-	}
 	// Look for our special hacked "connect" transport used to signal
 	// that we should send a CONNECT request and tunnel all traffic through
 	// that.
@@ -206,7 +193,7 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 		log.Trace("Sending CONNECT request")
 		bconn := bufconn.Wrap(conn)
 		conn = bconn
-		err = p.sendCONNECT(op, addr, bconn, timeout)
+		err = p.sendCONNECT(op, addr, bconn)
 	case bandit.NetworkPersistent:
 		log.Trace("Sending GET request to establish persistent HTTP connection")
 		err = p.initPersistentConnection(addr, conn)
@@ -215,8 +202,6 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 		conn.Close()
 		return nil, err
 	}
-	// Unset the deadline to avoid affecting later read/write on the connection.
-	conn.SetDeadline(time.Time{})
 	return conn, nil
 }
 
@@ -231,9 +216,9 @@ func (p *proxy) onFinish(op *ops.Op) {
 	op.ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
 }
 
-func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn bufconn.Conn, timeout time.Duration) error {
+func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn bufconn.Conn) error {
 	reqTime := time.Now()
-	req, err := p.buildCONNECTRequest(addr, timeout)
+	req, err := p.buildCONNECTRequest(addr)
 	if err != nil {
 		return fmt.Errorf("Unable to construct CONNECT request: %s", err)
 	}
@@ -247,7 +232,7 @@ func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn bufconn.Conn, timeout 
 	return err
 }
 
-func (p *proxy) buildCONNECTRequest(addr string, timeout time.Duration) (*http.Request, error) {
+func (p *proxy) buildCONNECTRequest(addr string) (*http.Request, error) {
 	req, err := http.NewRequest(http.MethodConnect, "/", nil)
 	if err != nil {
 		return nil, err
@@ -256,9 +241,6 @@ func (p *proxy) buildCONNECTRequest(addr string, timeout time.Duration) (*http.R
 		Host: addr,
 	}
 	req.Host = addr
-	if timeout != 0 {
-		req.Header.Set(common.ProxyDialTimeoutHeader, fmt.Sprint(int(math.Ceil(timeout.Seconds()*1000))))
-	}
 	p.onRequest(req)
 	return req, nil
 }

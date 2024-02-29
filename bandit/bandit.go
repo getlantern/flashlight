@@ -2,10 +2,10 @@ package bandit
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"math/rand"
 	"net"
+	"sync/atomic"
 	"time"
 
 	bandit "github.com/alextanhongpin/go-bandit"
@@ -32,14 +32,6 @@ type BanditDialer struct {
 	statsTracker stats.Tracker
 }
 
-type BanditError struct {
-	attempts int
-}
-
-func (be *BanditError) Error() string {
-	return fmt.Sprintf("No dialer succeeded after %v attempts", be.attempts)
-}
-
 // New creates a new bandit given the available dialers.
 func New(dialers []Dialer) (*BanditDialer, error) {
 	return NewWithStats(dialers, stats.NewNoop())
@@ -56,11 +48,40 @@ func NewWithStats(dialers []Dialer, statsTracker stats.Tracker) (*BanditDialer, 
 	}
 
 	b.Init(len(dialers))
+	parallelDial(dialers, b)
 	return &BanditDialer{
 		dialers:      dialers,
 		bandit:       b,
 		statsTracker: statsTracker,
 	}, nil
+}
+
+// parallelDial dials all the dialers in parallel to measure pure connectivity
+// as a means of seeding the bandit with initial data. This should
+// help weed out dialers/proxies censored users can't connect to at all.
+func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy) {
+	for index, d := range dialers {
+		// Note that the index of the dialer in our list is the index of the arm
+		// in the bandit and that the bandit is concurrent-safe.
+		go func(dialer Dialer, index int) {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			start := time.Now()
+			conn, err := dialer.DialProxy(ctx)
+			defer func() {
+				if conn != nil {
+					conn.Close()
+				}
+			}()
+			if err != nil {
+				log.Debugf("Dialer %v failed: %v", dialer.Name(), err)
+				bandit.Update(index, 0)
+				return
+			}
+			log.Debugf("Dialer %v succeeded in %v seconds", dialer.Name(), time.Since(start)*time.Second)
+			bandit.Update(index, 1)
+		}(d, index)
+	}
 }
 
 func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -72,83 +93,73 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	}
 
 	start := time.Now()
-	chosenArm := o.bandit.SelectArm(rand.Float64())
+	dialer, chosenArm := o.chooseDialerForDomain(o.dialers, network, addr)
 
 	// We have to be careful here about virtual, multiplexed connections, as the
 	// initial TCP dial will have different performance characteristics than the
 	// subsequent virtual connection dials.
-	for i := 0; i < len(o.dialers); i++ {
-		dialer := o.dialers[chosenArm]
-		if !dialer.SupportsAddr(network, addr) {
-			// If this dialer doesn't allow this domain, we need to choose a different one,
-			// but without giving this dialer a low reward.
-			chosenArm = differentArm(chosenArm, len(o.dialers), o.bandit)
-			continue
+	log.Debugf("bandit::dialer %d: %s at %v", chosenArm, dialer.Label(), dialer.Addr())
+	conn, failedUpstream, err := dialer.DialContext(ctx, network, addr)
+	if err != nil {
+		if !failedUpstream {
+			log.Errorf("Dialer %v failed: %v", dialer.Name(), err)
+			o.bandit.Update(chosenArm, 0)
+		} else {
+			log.Debugf("Dialer %v failed upstream...", dialer.Name())
+			// This can happen, for example, if the upstream server is down, or
+			// if the DNS resolves to localhost, for example. It is also possible
+			// that the proxy is blacklisted by upstream sites for some reason,
+			// so we have to choose some reasonable value.
+			o.bandit.Update(chosenArm, 0.00005)
 		}
-		log.Debugf("bandit::dialer %d: %s at %v", chosenArm, dialer.Label(), dialer.Addr())
-		conn, failedUpstream, err := dialer.DialContext(ctx, network, addr)
-		if err != nil {
-			if !failedUpstream {
-				log.Errorf("Dialer %v failed: %v", dialer.Name(), err)
-				o.bandit.Update(chosenArm, 0)
-			} else {
-				log.Debugf("Dialer %v failed upstream...", dialer.Name())
-				// This can happen, for example, if the upstream server is down, or
-				// if the DNS resolves to localhost, for example. It is also possible
-				// that the proxy is blacklisted by upstream sites for some reason,
-				// so we have to choose some reasonable value.
-				o.bandit.Update(chosenArm, 0.00005)
-			}
-			// Mark the failure and try another.
-			chosenArm = differentArm(chosenArm, len(o.dialers), o.bandit)
-			continue
-		}
-		log.Debugf("Dialer %v dialed in %v seconds", dialer.Name(), time.Since(start).Seconds())
-		// We don't give any special reward for a successful dial here and just rely on
-		// the normalized raw throughput to determine the reward. This is because the
-		// reward system takes into account how many tries there have been for a given
-		// "arm", so giving a reward here would be double-counting.
+		return nil, err
+	}
+	log.Debugf("Dialer %v dialed in %v seconds", dialer.Name(), time.Since(start).Seconds())
+	// We don't give any special reward for a successful dial here and just rely on
+	// the normalized raw throughput to determine the reward. This is because the
+	// reward system takes into account how many tries there have been for a given
+	// "arm", so giving a reward here would be double-counting.
 
-		// Tell the dialer to update the bandit with it's throughput after 5 seconds.
-		dt := newDataTrackingConn(conn)
-		time.AfterFunc(secondsForSample*time.Second, func() {
-			speed := normalizeReceiveSpeed(dt.dataRecv)
-			//log.Debugf("Dialer %v received %v bytes in %v seconds, normalized speed: %v", dialer.Name(), dt.dataRecv, secondsForSample, speed)
-			o.bandit.Update(chosenArm, speed)
-		})
-		o.onSuccess(dialer)
-		return dt, err
+	// Tell the dialer to update the bandit with it's throughput after 5 seconds.
+	var dataRecv atomic.Uint64
+	dt := newDataTrackingConn(conn, &dataRecv)
+	time.AfterFunc(secondsForSample*time.Second, func() {
+		speed := normalizeReceiveSpeed(dataRecv.Load())
+		//log.Debugf("Dialer %v received %v bytes in %v seconds, normalized speed: %v", dialer.Name(), dt.dataRecv, secondsForSample, speed)
+		o.bandit.Update(chosenArm, speed)
+	})
+	o.onSuccess(dialer)
+	return dt, err
+}
+
+func (o *BanditDialer) chooseDialerForDomain(dialers []Dialer, network, addr string) (Dialer, int) {
+	chosenArm := o.bandit.SelectArm(rand.Float64())
+	dialer := dialers[chosenArm]
+	if dialer.SupportsAddr(network, addr) {
+		return dialer, chosenArm
 	}
-	o.onFailure()
-	return nil, &BanditError{
-		attempts: len(o.dialers),
-	}
+	chosenArm = differentArm(chosenArm, len(dialers))
+	return dialers[chosenArm], chosenArm
 }
 
 // Choose a different arm than the one we already have, if possible.
-func differentArm(existingArm, numDialers int, eg *bandit.EpsilonGreedy) int {
-	// We let the bandit choose a new arm (or at least try to) versus just rotating to the next
-	// dialer because we want to use the bandit's algorithm for optimizing exploration
-	// versus exploitation, i.e. it will choose another dialer with a probability
-	// proportional to how well it has performed in the past as well as to whether
-	// or not we need more data from it. Basically, it will choose a more useful
-	// dialer than our random selection.
-	if numDialers == 1 {
-		log.Debugf("Only one dialer, so returning the existing arm: %v", existingArm)
-		return existingArm
-	}
+func differentArm(existingArm, numDialers int) int {
+	// This selects a new arm randomly, which is preferable to just choosing
+	// the next one in the list because that will always be the next dialer
+	// after whatever dialer is currently best.
 	for i := 0; i < 20; i++ {
-		newArm := eg.SelectArm(rand.Float64())
+		newArm := rand.Intn(numDialers)
 		if newArm != existingArm {
 			return newArm
 		}
 	}
-	// If we have to choose ourselves, just choose another one.
+
+	// If random selection doesn't work, just choose the next one.
 	return (existingArm + 1) % numDialers
 }
 
 func (o *BanditDialer) onSuccess(dialer Dialer) {
-	countryCode, country, city := proxyLoc(dialer)
+	countryCode, country, city := dialer.Location()
 	o.statsTracker.SetActiveProxyLocation(
 		city,
 		country,
@@ -163,18 +174,13 @@ func (o *BanditDialer) onFailure() {
 
 const secondsForSample = 6
 
-// 1 Mbps in bytes per second is the upper end of speeds we expect to see in such a
-// short time period.
-const topExpectedBytes = 125000
+// A reasonable upper bound for the top expected bytes to receive per second.
+// Anything over this will be normalized to over 1.
+const topExpectedBps = 125000
 
 func normalizeReceiveSpeed(dataRecv uint64) float64 {
-	// Return a normalized value between 0 and 1 representing the dailer's
-	// bandwidth as a percentage of a theoreticaly upper bound of 200Mbps.
-	if dataRecv == 0 {
-		return 0
-	}
 	// Record the bytes in relation to the top expected speed.
-	return (float64(dataRecv) / secondsForSample) / topExpectedBytes
+	return (float64(dataRecv) / secondsForSample) / topExpectedBps
 }
 
 func (o *BanditDialer) Close() {
@@ -184,33 +190,31 @@ func (o *BanditDialer) Close() {
 	}
 }
 
-func newDataTrackingConn(conn net.Conn) *dataTrackingConn {
+func newDataTrackingConn(conn net.Conn, dataRecv *atomic.Uint64) *dataTrackingConn {
 	return &dataTrackingConn{
-		Conn: conn,
+		Conn:     conn,
+		dataRecv: dataRecv,
 	}
 }
 
 type dataTrackingConn struct {
 	net.Conn
-	dataSent uint64
-	dataRecv uint64
-}
-
-func (c *dataTrackingConn) Write(b []byte) (int, error) {
-	n, err := c.Conn.Write(b)
-	c.dataSent += uint64(n)
-	return n, err
+	dataRecv *atomic.Uint64
 }
 
 func (c *dataTrackingConn) Read(b []byte) (int, error) {
 	n, err := c.Conn.Read(b)
-	c.dataRecv += uint64(n)
+	c.dataRecv.Add(uint64(n))
 	return n, err
 }
 
 // Dialer provides the ability to dial a proxy and obtain information needed to
 // effectively load balance between dialers.
 type Dialer interface {
+
+	// DialProxy dials the proxy but does not yet dial the origin.
+	DialProxy(ctx context.Context) (net.Conn, error)
+
 	// SupportsAddr indicates whether this Dialer supports the given addr. If it does not, the
 	// balancer will not attempt to dial that addr with this Dialer.
 	SupportsAddr(network, addr string) bool
@@ -279,16 +283,6 @@ type Dialer interface {
 
 	// Succeeding indicates whether or not this dialer is currently good to use
 	Succeeding() bool
-
-	// Probe performs active probing of the proxy to better understand
-	// connectivity and performance. If forPerformance is true, the dialer will
-	// probe more and with bigger data in order for bandwidth estimation to
-	// collect enough data to make a decent estimate. Probe returns true if it was
-	// successfully able to communicate with the Proxy.
-	Probe(forPerformance bool) bool
-	// ProbeStats returns probe related stats for the dialer which can be used
-	// to estimate the overhead of active probling.
-	ProbeStats() (successes uint64, successKBs uint64, failures uint64, failedKBs uint64)
 
 	// DataSent returns total bytes of application data sent to connections
 	// created via this dialer.

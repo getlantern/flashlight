@@ -35,7 +35,7 @@ var logger = golog.LoggerFor("client-test")
 var tempConfigDir string
 
 func TestMain(m *testing.M) {
-	tempConfigDir, err := ioutil.TempDir("", "client_test")
+	tempConfigDir, err := os.MkdirTemp("", "client_test")
 	if err != nil {
 		logger.Errorf("Unable to create temp config dir: %v", err)
 		os.Exit(1)
@@ -89,7 +89,6 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 	client, _ := NewClient(
 		tempConfigDir,
 		func() bool { return false },
-		func() bool { return true },  // allow probes
 		func() bool { return false }, // proxy all
 		func() bool { return false }, // use shortcut
 		func(ctx context.Context, addr string) (shortcut.Method, net.IP) {
@@ -142,8 +141,7 @@ func TestServeHTTPTimeout(t *testing.T) {
 	req, err := http.NewRequest("CONNECT", "https://a.com:443", nil)
 	require.NoError(t, err)
 	resp, err := roundTrip(client, req)
-	_, ok := err.(*bandit.BanditError)
-	require.True(t, ok, "should return a BanditError")
+	require.Contains(t, err.Error(), "deadline")
 	require.Equal(t, http.StatusOK, resp.StatusCode, "CONNECT requests should always succeed")
 
 	req, err = http.NewRequest("GET", "http://b.com/action", nil)
@@ -151,16 +149,14 @@ func TestServeHTTPTimeout(t *testing.T) {
 	req.Header.Set("Accept", "text/html")
 	resp, err = roundTrip(client, req)
 
-	// Unfortunately, this hits the proxy package that doesn't properly wrap
-	// the error, so we can't check for a BanditError here.
-	require.Contains(t, err.Error(), "No dialer succeeded after")
+	require.Contains(t, err.Error(), "deadline")
 	require.Equal(t, http.StatusServiceUnavailable, resp.StatusCode, "It should respond 503 Service Unavailable with error page")
 	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	require.Contains(t, string(body), "<title>Lantern: Error Accessing Page</title>", "should respond with error page")
 	// The error page when dialing an inaccessible page with Lantern actually
 	// contains the dial error. See `./status/generic_error.html`
-	require.Contains(t, string(body), "No dialer succeeded after")
+	require.Contains(t, string(body), "deadline")
 }
 
 func TestIsAddressProxyable(t *testing.T) {
@@ -230,7 +226,7 @@ func TestDialShortcut(t *testing.T) {
 	res, _ = roundTrip(client, req)
 	assert.Equal(t, 1, shortcutVisited, "should check shortcut list")
 	assert.Equal(t, 200, res.StatusCode, "should respond with 200 when a shortcutted site is reachable")
-	body, _ := ioutil.ReadAll(res.Body)
+	body, _ := io.ReadAll(res.Body)
 	assert.Equal(t, "abc", string(body), "should respond with correct content")
 
 	req, _ = http.NewRequest("GET", "http://unknown:80", nil)
@@ -418,6 +414,9 @@ func TestAccessingProxyPort(t *testing.T) {
 	assert.Equal(t, "0", resp.Header.Get("Content-Length"))
 }
 
+// Assert that a testDialer is a bandit.Dialer
+var _ bandit.Dialer = &testDialer{}
+
 type testDialer struct {
 	name      string
 	rtt       time.Duration
@@ -429,6 +428,10 @@ type testDialer struct {
 	successes int64
 	failures  int64
 	stopped   bool
+}
+
+func (d *testDialer) DialProxy(ctx context.Context) (net.Conn, error) {
+	return nil, fmt.Errorf("Not implemented")
 }
 
 // Name returns the name for this Dialer
@@ -520,10 +523,6 @@ func (d *testDialer) EstSuccessRate() float64 {
 	return 0
 }
 
-func (d *testDialer) ProbeStats() (successes uint64, successKBs uint64, failures uint64, failedKBs uint64) {
-	return 0, 0, 0, 0
-}
-
 func (d *testDialer) Attempts() int64 {
 	return atomic.LoadInt64(&d.attempts)
 }
@@ -557,10 +556,6 @@ func (d *testDialer) DataSent() uint64 {
 }
 
 func (d *testDialer) CheckConnectivity() bool {
-	return true
-}
-
-func (d *testDialer) Probe(forPerformance bool) bool {
 	return true
 }
 

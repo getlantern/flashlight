@@ -118,7 +118,6 @@ type Client struct {
 	socksListener eventual.Value
 
 	disconnected         func() bool
-	allowProbes          func() bool
 	proxyAll             func() bool
 	useShortcut          func() bool
 	shortcutMethod       func(ctx context.Context, addr string) (shortcut.Method, net.IP)
@@ -161,7 +160,6 @@ type Client struct {
 func NewClient(
 	configDir string,
 	disconnected func() bool,
-	allowProbes func() bool,
 	proxyAll func() bool,
 	useShortcut func() bool,
 	shortcutMethod func(ctx context.Context, addr string) (shortcut.Method, net.IP),
@@ -192,7 +190,6 @@ func NewClient(
 		requestTimeout:                         requestTimeout,
 		dialer:                                 banditDialer,
 		disconnected:                           disconnected,
-		allowProbes:                            allowProbes,
 		proxyAll:                               proxyAll,
 		useShortcut:                            useShortcut,
 		shortcutMethod:                         shortcutMethod,
@@ -455,7 +452,7 @@ func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []
 	}
 	client.dialer = dialer
 	chained.PersistSessionStates(client.configDir)
-	chained.TrackStatsFor(dialers, client.configDir, client.allowProbes())
+	chained.TrackStatsFor(dialers, client.configDir)
 	return dialers
 }
 

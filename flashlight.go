@@ -386,7 +386,6 @@ func New(
 	cl, err := client.NewClient(
 		f.configDir,
 		disconnected,
-		func() bool { return f.featureEnabled(config.FeatureProbeProxies) },
 		proxyAll,
 		useShortcut,
 		shortcut.Allow,
@@ -410,7 +409,7 @@ func New(
 		eventWithLabel,
 	)
 	if err != nil {
-		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)
+		fatalErr := fmt.Errorf("unable to initialize client: %v", err)
 		f.op.FailIf(fatalErr)
 		f.op.End()
 		return nil, fatalErr

@@ -11,7 +11,40 @@ import (
 
 	bandit "github.com/alextanhongpin/go-bandit"
 	"github.com/getlantern/flashlight/v7/stats"
+	"github.com/stretchr/testify/require"
 )
+
+func TestParallelDial(t *testing.T) {
+	dialers := []Dialer{
+		&tcpConnDialer{shouldFail: true},
+		&tcpConnDialer{shouldFail: true},
+		&tcpConnDialer{shouldFail: true},
+		newTcpConnDialer(),
+	}
+
+	b, err := bandit.NewEpsilonGreedy(0.001, nil, nil)
+	require.NoError(t, err)
+
+	err = b.Init(len(dialers))
+	require.NoError(t, err)
+
+	parallelDial(dialers, b)
+	require.Eventually(t, func() bool {
+		counts := b.GetCounts()
+		for _, count := range counts {
+			if count < 1 {
+				return false
+			}
+		}
+		return true
+	}, 5*time.Second, 100*time.Millisecond)
+
+	// Select the arm with with a probability above epsilon
+	// to ensure getting the best performing arm for testing
+	// purposes.
+	arm := b.SelectArm(0.5)
+	require.Equal(t, 3, arm)
+}
 
 func TestNewWithStats(t *testing.T) {
 	type args struct {
@@ -137,7 +170,7 @@ func Test_normalizeReceiveSpeed(t *testing.T) {
 		{
 			name: "should return 1 if pretty fast",
 			args: args{
-				dataRecv: topExpectedBytes * secondsForSample,
+				dataRecv: topExpectedBps * secondsForSample,
 			},
 			want: func(got float64) bool {
 				return got == 1
@@ -146,7 +179,7 @@ func Test_normalizeReceiveSpeed(t *testing.T) {
 		{
 			name: "should return 1 if super fast",
 			args: args{
-				dataRecv: topExpectedBytes * 50,
+				dataRecv: topExpectedBps * 50,
 			},
 			want: func(got float64) bool {
 				return got > 1
@@ -187,7 +220,7 @@ func Test_differentArm(t *testing.T) {
 				numDialers: 1,
 			},
 			isError: func(existingArm int, got int) bool {
-				return existingArm != got
+				return existingArm != got || got != 0
 			},
 		},
 
@@ -213,20 +246,35 @@ func Test_differentArm(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			eg, err := bandit.NewEpsilonGreedy(0.1, nil, nil)
-			if err != nil {
-				t.Fatal(err)
-			}
-			eg.Init(tt.args.numDialers)
-			existingArm := eg.SelectArm(rand.Float64())
-			if got := differentArm(existingArm, tt.args.numDialers, eg); tt.isError(existingArm, got) {
+			existingArm := rand.Intn(tt.args.numDialers)
+			if got := differentArm(existingArm, tt.args.numDialers); tt.isError(existingArm, got) {
 				t.Errorf("differentArm() returned %v and existing is %v", got, existingArm)
 			}
 		})
 	}
 }
 
-type tcpConnDialer struct{}
+func newTcpConnDialer() Dialer {
+	client, server := net.Pipe()
+	return &tcpConnDialer{
+		client: client,
+		server: server,
+	}
+}
+
+type tcpConnDialer struct {
+	shouldFail bool
+	client     net.Conn
+	server     net.Conn
+}
+
+// DialProxy implements Dialer.
+func (t *tcpConnDialer) DialProxy(ctx context.Context) (net.Conn, error) {
+	if t.shouldFail {
+		return nil, io.EOF
+	}
+	return t.client, nil
+}
 
 // Addr implements Dialer.
 func (*tcpConnDialer) Addr() string {
@@ -260,6 +308,9 @@ func (*tcpConnDialer) DataSent() uint64 {
 
 // DialContext implements Dialer.
 func (t *tcpConnDialer) DialContext(ctx context.Context, network string, addr string) (conn net.Conn, failedUpstream bool, err error) {
+	if t.shouldFail {
+		return nil, true, io.EOF
+	}
 	return &net.TCPConn{}, false, nil
 }
 
@@ -317,16 +368,6 @@ func (*tcpConnDialer) NumPreconnecting() int {
 	return 0
 }
 
-// Probe implements Dialer.
-func (*tcpConnDialer) Probe(forPerformance bool) bool {
-	return false
-}
-
-// ProbeStats implements Dialer.
-func (*tcpConnDialer) ProbeStats() (successes uint64, successKBs uint64, failures uint64, failedKBs uint64) {
-	panic("unimplemented")
-}
-
 // Protocol implements Dialer.
 func (*tcpConnDialer) Protocol() string {
 	return "tcp"
@@ -358,8 +399,4 @@ func (*tcpConnDialer) Trusted() bool {
 
 // WriteStats implements Dialer.
 func (*tcpConnDialer) WriteStats(w io.Writer) {
-}
-
-func newTcpConnDialer() Dialer {
-	return &tcpConnDialer{}
 }
