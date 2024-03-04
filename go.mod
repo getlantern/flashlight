@@ -30,8 +30,6 @@ require (
 	github.com/anacrolix/dht/v2 v2.20.0
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/dustin/go-humanize v1.0.1
-	github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff
-	github.com/fsnotify/fsnotify v1.6.0
 	github.com/getlantern/broflake v0.0.0-20231117182649-7d46643a6f87
 	github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493
 	github.com/getlantern/cmux/v2 v2.0.0-20230301223233-dac79088a4c0
@@ -73,7 +71,6 @@ require (
 	github.com/getlantern/replica v0.14.3
 	github.com/getlantern/rot13 v0.0.0-20220822172233-370767b2f782
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
-	github.com/getlantern/safechannels v0.0.0-20201218194342-b4e5383e9627
 	github.com/getlantern/shortcut v0.0.0-20211026183428-bf59a137fdec
 	github.com/getlantern/timezone v0.0.0-20210901200113-3f9de9d360c9
 	github.com/getlantern/tinywss v0.0.0-20211216020538-c10008a7d461
@@ -87,7 +84,6 @@ require (
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
 	github.com/getsentry/sentry-go v0.20.0
 	github.com/golang/protobuf v1.5.3
-	github.com/google/gopacket v1.1.19
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/jaffee/commandeer v0.6.0
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
@@ -113,6 +109,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.0
 )
+
+require github.com/fsnotify/fsnotify v1.6.0 // indirect
 
 require (
 	filippo.io/edwards25519 v1.0.0 // indirect
