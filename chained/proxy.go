@@ -197,8 +197,6 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 		}
 	case "lampshade":
 		impl, err = newLampshadeImpl(name, addr, s, reportDialCore)
-	case "quic_ietf":
-		impl, err = newQUICImpl(name, addr, s, reportDialCore)
 	case "shadowsocks":
 		impl, err = newShadowsocksImpl(name, addr, s, reportDialCore)
 	case "wss":
