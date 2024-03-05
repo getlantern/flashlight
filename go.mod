@@ -1,6 +1,6 @@
 module github.com/getlantern/flashlight/v7
 
-go 1.21
+go 1.20
 
 replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220805074304-4a43a9ed4ec6
 
@@ -32,7 +32,6 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff
 	github.com/fsnotify/fsnotify v1.6.0
-	github.com/getlantern/broflake v0.0.0-20231117182649-7d46643a6f87
 	github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493
 	github.com/getlantern/cmux/v2 v2.0.0-20230301223233-dac79088a4c0
 	github.com/getlantern/cmuxprivate v0.0.0-20211216020409-d29d0d38be54
@@ -114,6 +113,8 @@ require (
 	howett.net/plist v1.0.0
 )
 
+require github.com/getlantern/broflake v0.0.0-20231117182649-7d46643a6f87 // indirect
+
 require (
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/OperatorFoundation/ghostwriter-go v1.0.6 // indirect
@@ -160,7 +161,6 @@ require (
 	github.com/dsoprea/go-utility v0.0.0-20200512094054-1abbbc781176 // indirect
 	github.com/dvyukov/go-fuzz v0.0.0-20210429054444-fca39067bc72 // indirect
 	github.com/edsrzf/mmap-go v1.1.0 // indirect
-	github.com/enobufs/go-nats v0.0.1 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/frankban/quicktest v1.14.6 // indirect
 	github.com/gaukas/godicttls v0.0.4 // indirect
@@ -245,9 +245,7 @@ require (
 	github.com/pion/sdp/v3 v3.0.6 // indirect
 	github.com/pion/srtp/v2 v2.0.15 // indirect
 	github.com/pion/stun v0.6.0 // indirect
-	github.com/pion/transport v0.14.1 // indirect
 	github.com/pion/transport/v2 v2.2.1 // indirect
-	github.com/pion/turn v1.3.7 // indirect
 	github.com/pion/turn/v2 v2.1.0 // indirect
 	github.com/pion/webrtc/v3 v3.2.6 // indirect
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
