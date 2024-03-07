@@ -88,7 +88,6 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 
 	for endpoint, group := range groups {
 		if endpoint == "" {
-			// Also print the stack trace to help us debug
 			log.Debugf("Creating map for %d individual chained servers", len(group))
 			for name, s := range group {
 				wg.Add(1)
