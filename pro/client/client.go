@@ -203,8 +203,8 @@ func (c *Client) EmailExists(user common.UserConfig, emailAddress string) error 
 	}
 
 	resp := &BaseResponse{}
-	if err := c.execute(user, http.MethodPost, "email-exists", query, resp); err != nil {
-		log.Errorf("Failed to request a recovery code: %v", err)
+	if err := c.execute(user, http.MethodGet, "email-exists", query, resp); err != nil {
+		log.Errorf("Failed to check if email exists: %v", err)
 		return err
 	}
 
