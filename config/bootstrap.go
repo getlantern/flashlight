@@ -13,8 +13,7 @@ import (
 )
 
 var (
-	name            = ".packaged-lantern.yaml"
-	lanternYamlName = "lantern.yaml"
+	name = ".packaged-lantern.yaml"
 )
 
 // BootstrapSettings provides access to configuration embedded directly in Lantern installation
@@ -64,7 +63,7 @@ func readSettingsFromFile(yamlPath string) (*BootstrapSettings, error) {
 
 	if trimmed == "" {
 		log.Debugf("Ignoring empty string")
-		return &BootstrapSettings{}, errors.New("Empty string")
+		return &BootstrapSettings{}, errors.New("empty string")
 	}
 	var s BootstrapSettings
 	err = yaml.Unmarshal([]byte(trimmed), &s)

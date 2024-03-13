@@ -241,7 +241,7 @@ func (g ClientGroup) Includes(platform, appName, version string, userID int64, i
 	if g.ProOnly && !isPro {
 		return false
 	}
-	if g.Application != "" && strings.ToLower(g.Application) != strings.ToLower(appName) {
+	if g.Application != "" && !strings.EqualFold(g.Application, appName) {
 		return false
 	}
 	if g.VersionConstraints != "" {
@@ -299,20 +299,4 @@ func durationFromMap(m map[string]interface{}, name string) (time.Duration, erro
 		return 0, errMalformedOption
 	}
 	return d, nil
-}
-
-func stringArrFromMap(m map[string]interface{}, key string) (ret []string, err error) {
-	arr, err := somethingFromMap[[]interface{}](m, key)
-	if err != nil {
-		return nil, err
-	}
-	for _, v := range arr {
-		t, ok := v.(string)
-		if !ok {
-			return nil, fmt.Errorf(
-				"stringArrFromMap: not a valid string target: %+v", m)
-		}
-		ret = append(ret, t)
-	}
-	return ret, nil
 }
