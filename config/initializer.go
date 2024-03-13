@@ -182,7 +182,7 @@ func newProxiesUnmarshaler() func(bytes []byte) (interface{}, error) {
 			return nil, err
 		}
 		if len(servers) == 0 {
-			return nil, errors.New("No chained server")
+			return nil, errors.New("no chained server")
 		}
 		return servers, nil
 	}
