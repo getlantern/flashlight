@@ -60,6 +60,7 @@ require (
 	github.com/getlantern/kcpwrapper v0.0.0-20230327091313-c12d7c17c6de
 	github.com/getlantern/keyman v0.0.0-20230503155501-4e864ca2175b
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
+	github.com/getlantern/lantern-algeneva v0.0.0-20240314203415-69eb8977479a
 	github.com/getlantern/mitm v0.0.0-20231025115752-54d3e43899b7
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
@@ -113,6 +114,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.0
 )
+
+require github.com/getlantern/algeneva v0.0.0-20240222191137-2b4e88234f59 // indirect
 
 require (
 	filippo.io/edwards25519 v1.0.0 // indirect
@@ -301,6 +304,6 @@ require (
 	modernc.org/mathutil v1.5.0 // indirect
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/sqlite v1.21.1 // indirect
-	nhooyr.io/websocket v1.8.7 // indirect
+	nhooyr.io/websocket v1.8.10 // indirect
 	zombiezen.com/go/sqlite v0.13.1 // indirect
 )
