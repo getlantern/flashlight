@@ -6,6 +6,7 @@ import (
 
 	"github.com/getlantern/common/config"
 	algeneva "github.com/getlantern/lantern-algeneva"
+	"github.com/getlantern/netx"
 
 	"github.com/getlantern/flashlight/v7/ops"
 )
@@ -31,7 +32,28 @@ func newAlgenevaImpl(addr string, pc *config.ProxyConfig, reportDialCore reportD
 }
 
 func (a *algenevaImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
-	return a.reportDialCore(op, func() (net.Conn, error) {
-		return algeneva.DialContext(ctx, "tcp", a.addr, a.dialerOps)
+	dialerOps := a.dialerOps
+	dialerOps.Dialer = &algenevaDialer{
+		a.reportDialCore,
+		op,
+	}
+
+	return algeneva.DialContext(ctx, "TCP", a.addr, dialerOps)
+}
+
+// algenevaDialer is a algeneva.Dialer wrapper around a reportDialCore. algeneva accepts an optional
+// Dialer interface which it will use to dial the server and then wrap the resulting connection.
+type algenevaDialer struct {
+	reportDialCore reportDialCoreFn
+	op             *ops.Op
+}
+
+func (d *algenevaDialer) Dial(network, addr string) (net.Conn, error) {
+	return d.DialContext(context.Background(), network, addr)
+}
+
+func (d *algenevaDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	return d.reportDialCore(d.op, func() (net.Conn, error) {
+		return netx.DialContext(ctx, network, addr)
 	})
 }
