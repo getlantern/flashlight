@@ -38,7 +38,7 @@ func (a *algenevaImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, er
 		op,
 	}
 
-	return algeneva.DialContext(ctx, "TCP", a.addr, dialerOps)
+	return algeneva.DialContext(ctx, "tcp", a.addr, dialerOps)
 }
 
 // algenevaDialer is a algeneva.Dialer wrapper around a reportDialCore. algeneva accepts an optional
