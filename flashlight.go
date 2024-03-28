@@ -276,7 +276,6 @@ func New(
 	enableVPN bool,
 	disconnected func() bool,
 	_proxyAll func() bool,
-	_googleAds func() bool,
 	allowPrivateHosts func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
@@ -286,9 +285,7 @@ func New(
 	statsTracker stats.Tracker,
 	isPro func() bool,
 	lang func() string,
-	adSwapTargetURL func() string,
 	reverseDNS func(host string) (string, error),
-	adTrackUrl func() string,
 	eventWithLabel func(category, action, label string),
 ) (*Flashlight, error) {
 	log.Debugf("Running in app: %v", appName)
@@ -393,19 +390,11 @@ func New(
 		func() bool {
 			return !f.featureEnabled(config.FeatureNoHTTPSEverywhere)
 		},
-		func() bool {
-			return common.Platform != "android" && (f.featureEnabled(config.FeatureTrackYouTube) || f.featureEnabled(config.FeatureGoogleSearchAds))
-		},
-		func() bool {
-			return _googleAds() && f.featureEnabled(config.FeatureGoogleSearchAds)
-		},
 		userConfig,
 		statsTracker,
 		allowPrivateHosts,
 		lang,
-		adSwapTargetURL,
 		reverseDNS,
-		adTrackUrl,
 		eventWithLabel,
 	)
 	if err != nil {
