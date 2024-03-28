@@ -350,8 +350,8 @@ github.com/getlantern/probednet v0.0.0-20190725133252-1cfdb2354b4d/go.mod h1:7sl
 github.com/getlantern/probednet v0.0.0-20200930023717-dd97fef56a97/go.mod h1:noglym51kFdkZEV/WjiIzRKV6qwwTI9/vSAjeOI/zCU=
 github.com/getlantern/probednet v0.0.0-20211216020507-22fd9c1d3bf6 h1:8jg6OehdQr90Ybmyc68raXEqM/1hk8E7F2YAUfmcvzE=
 github.com/getlantern/probednet v0.0.0-20211216020507-22fd9c1d3bf6/go.mod h1:noglym51kFdkZEV/WjiIzRKV6qwwTI9/vSAjeOI/zCU=
-github.com/getlantern/proxy/v3 v3.0.0-20240328012858-094653a3bfba h1:VVeAZ7QnJQpCM8IRKrTEzXehCVoz5+L01q0fW++3Bx0=
-github.com/getlantern/proxy/v3 v3.0.0-20240328012858-094653a3bfba/go.mod h1:I5SvkXI843L2Hvsi0TG8H1jCXtaApOemBZZD1/N0Inw=
+github.com/getlantern/proxy/v3 v3.0.0-20240328103708-9185589b6a99 h1:kyd1bT1H7CXasGVLfY4sai9cpDaZ12Ed7Qi7yIeumqw=
+github.com/getlantern/proxy/v3 v3.0.0-20240328103708-9185589b6a99/go.mod h1:I5SvkXI843L2Hvsi0TG8H1jCXtaApOemBZZD1/N0Inw=
 github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683/go.mod h1:GtXRvtMItoflWGLPE7GNq+AdL7BnmpaaNLtDQVD1XHU=
 github.com/getlantern/psmux v1.5.15 h1:VUCEk8MIsvAj90wNYRyY2fE9ZL4LIRhi1W5V9aycA9A=
 github.com/getlantern/psmux v1.5.15/go.mod h1:nyp/sr4uTbWpUh7Q2WovRb07LeLNUxDg8kAdS726FIw=

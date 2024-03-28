@@ -66,7 +66,7 @@ require (
 	github.com/getlantern/netx v0.0.0-20211206143627-7ccfeb739cbd
 	github.com/getlantern/ops v0.0.0-20230519221840-1283e026181c
 	github.com/getlantern/osversion v0.0.0-20230401075644-c2a30e73c451
-	github.com/getlantern/proxy/v3 v3.0.0-20240328012858-094653a3bfba
+	github.com/getlantern/proxy/v3 v3.0.0-20240328103708-9185589b6a99
 	github.com/getlantern/psmux v1.5.15
 	github.com/getlantern/quicwrapper v0.0.0-20231117185542-d951689c4970
 	github.com/getlantern/replica v0.14.3
