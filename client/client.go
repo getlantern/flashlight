@@ -7,7 +7,6 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -25,20 +24,16 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
 	"github.com/getlantern/httpseverywhere"
-	"github.com/getlantern/i18n"
 	"github.com/getlantern/iptool"
-	"github.com/getlantern/mitm"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy/v3"
 	"github.com/getlantern/proxy/v3/filters"
 	"github.com/getlantern/shortcut"
 
 	"github.com/getlantern/flashlight/v7/bandit"
-	"github.com/getlantern/flashlight/v7/buffers"
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/domainrouting"
-	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/flashlight/v7/status"
@@ -214,95 +209,16 @@ func NewClient(
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
 
-	var mitmErr error
-	client.proxy, mitmErr = proxy.New(&proxy.Opts{
-		IdleTimeout:  keepAliveIdleTimeout,
-		BufferSource: buffers.Pool,
-		Filter:       filters.FilterFunc(client.filter),
-		OnError:      errorResponse,
-		Dial:         client.dial,
-		MITMOpts:     client.MITMOptions(),
-		ShouldMITM: func(req *http.Request, upstreamAddr string) bool {
-			userAgent := req.Header.Get("User-Agent")
-			// Only MITM certain browsers
-			// See http://useragentstring.com/pages/useragentstring.php
-			shouldMITM := strings.Contains(userAgent, "Chrome/") || // Chrome
-				strings.Contains(userAgent, "Firefox/") || // Firefox
-				strings.Contains(userAgent, "MSIE") || strings.Contains(userAgent, "Trident") || // Internet Explorer
-				strings.Contains(userAgent, "Edge") || // Microsoft Edge
-				strings.Contains(userAgent, "QQBrowser") || // QQ
-				strings.Contains(userAgent, "360Browser") || strings.Contains(userAgent, "360SE") || strings.Contains(userAgent, "360EE") // 360
-			return shouldMITM
-		},
+	client.proxy = proxy.New(&proxy.Opts{
+		IdleTimeout: keepAliveIdleTimeout,
+		Filter:      filters.FilterFunc(client.filter),
+		OnError:     errorResponse,
+		Dial:        client.dial,
 	})
-	if mitmErr != nil {
-		log.Errorf("Unable to initialize MITM: %v", mitmErr)
-	}
 	client.iptool, _ = iptool.New()
-	go func() {
-		for {
-			if geolookup.GetCountry(0) != "" {
-				if err := client.proxy.ApplyMITMOptions(client.MITMOptions()); err != nil {
-					log.Errorf("Unable to initialize MITM: %v", err)
-				}
-				return
-			}
-			<-geolookup.OnRefresh()
-		}
-	}()
 
 	go client.cacheClientHellos()
 	return client, nil
-}
-
-func (c *Client) MITMOptions() *mitm.Opts {
-	if c.allowMITM() {
-		log.Debug("Enabling MITM")
-
-		domains := []string{
-			// Currently don't bother MITM'ing ad sites since we're not doing ad swapping
-			// "*.doubleclick.net",
-			// "*.g.doubleclick.net",
-			// "adservice.google.com",
-			// "adservice.google.com.hk",
-			// "adservice.google.co.jp",
-			// "adservice.google.nl",
-			// "*.googlesyndication.com",
-			// "*.googletagservices.com",
-			// "googleadservices.com",
-		}
-		// MITM YouTube domains to track statistics on watched videos (list obtained by running ../cmd/youtubescanner/youtubescanner.go)
-		for _, suffix := range MITMSuffixes {
-			domains = append(domains, "*.youtube."+suffix)
-		}
-		// MITM Google search domains to strip the ads/inject relevant data
-		if c.allowGoogleSearchAds() {
-			for _, suffix := range MITMSuffixes {
-				domains = append(domains, "*.google."+suffix)
-			}
-		}
-
-		translationAppName := strings.ToUpper(c.user.GetAppName())
-		return &mitm.Opts{
-			PKFile:             filepath.Join(c.configDir, "mitmkey.pem"),
-			CertFile:           filepath.Join(c.configDir, "mitmcert.pem"),
-			Organization:       "Lantern",
-			InstallCert:        true,
-			InstallPrompt:      i18n.T("BACKEND_MITM_INSTALL_CERT", i18n.T(translationAppName)),
-			WindowsPromptTitle: i18n.T("BACKEND_MITM_INSTALL_CERT", i18n.T(translationAppName)),
-			WindowsPromptBody:  i18n.T("BACKEND_MITM_INSTALL_CERT_WINDOWS_BODY", "certimporter.exe"),
-			InstallCertResult: func(installErr error) {
-				op := ops.Begin("install_mitm_cert")
-				op.FailIf(installErr)
-				if installErr == nil {
-					log.Debug("Successfully installed MITM cert")
-				}
-				op.End()
-			},
-			Domains: domains,
-		}
-	}
-	return nil
 }
 
 // Addr returns the address at which the client is listening with HTTP, blocking
