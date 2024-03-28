@@ -51,7 +51,7 @@ require (
 	github.com/getlantern/golog v0.0.0-20230503153817-8e72de7e0a65
 	github.com/getlantern/hellosplitter v0.1.1
 	github.com/getlantern/hidden v0.0.0-20220104173330-f221c5a24770
-	github.com/getlantern/http-proxy-lantern/v2 v2.10.1-0.20231118011407-9f16767b92eb
+	github.com/getlantern/http-proxy-lantern/v2 v2.10.1-0.20240328104604-a38ea762477d
 	github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca
 	github.com/getlantern/idletiming v0.0.0-20201229174729-33d04d220c4e
 	github.com/getlantern/iptool v0.0.0-20230112135223-c00e863b2696
@@ -113,7 +113,14 @@ require (
 	howett.net/plist v1.0.0
 )
 
-require github.com/getlantern/algeneva v0.0.0-20240222191137-2b4e88234f59 // indirect
+require (
+	git.torproject.org/pluggable-transports/goptlib.git v1.2.0 // indirect
+	github.com/dchest/siphash v1.2.3 // indirect
+	github.com/getlantern/algeneva v0.0.0-20240222191137-2b4e88234f59 // indirect
+	github.com/getlantern/withtimeout v0.0.0-20160829163843-511f017cd913 // indirect
+	gitlab.com/yawning/edwards25519-extra.git v0.0.0-20211229043746-2f91fcc9fbdb // indirect
+	gitlab.com/yawning/obfs4.git v0.0.0-20220204003609-77af0cba934d // indirect
+)
 
 require (
 	filippo.io/edwards25519 v1.0.0 // indirect
