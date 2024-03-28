@@ -138,10 +138,7 @@ type Client struct {
 	httpProxyIP   string
 	httpProxyPort string
 
-	adTrackUrl           func() string
-	allowGoogleSearchAds func() bool
-	allowMITM            func() bool
-	eventWithLabel       func(category, action, label string)
+	eventWithLabel func(category, action, label string)
 
 	httpWg  sync.WaitGroup
 	socksWg sync.WaitGroup
@@ -160,15 +157,11 @@ func NewClient(
 	shortcutMethod func(ctx context.Context, addr string) (shortcut.Method, net.IP),
 	useDetour func() bool,
 	allowHTTPSEverywhere func() bool,
-	allowMITM func() bool,
-	allowGoogleSearchAds func() bool,
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	allowPrivateHosts func() bool,
 	lang func() string,
-	adSwapTargetURL func() string,
 	reverseDNS func(addr string) (string, error),
-	adTrackUrl func() string,
 	eventWithLabel func(category, action, label string),
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
@@ -197,10 +190,7 @@ func NewClient(
 		opsMap:                                 newOpsMap(),
 		allowPrivateHosts:                      allowPrivateHosts,
 		lang:                                   lang,
-		adSwapTargetURL:                        adSwapTargetURL,
 		reverseDNS:                             reverseDNS,
-		adTrackUrl:                             adTrackUrl,
-		allowMITM:                              allowMITM,
 		eventWithLabel:                         eventWithLabel,
 		httpListener:                           eventual.NewValue(),
 		socksListener:                          eventual.NewValue(),
