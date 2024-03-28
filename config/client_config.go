@@ -101,7 +101,7 @@ func (c *ClientConfig) Validate() error {
 		sz += len(p.Masquerades)
 	}
 	if sz == 0 {
-		return errors.New("No masquerades.")
+		return errors.New("no masquerades")
 	}
 
 	return nil

@@ -196,6 +196,21 @@ func (c *Client) RecoverProAccount(user common.UserConfig, emailAddress string) 
 	return resp, nil
 }
 
+// EmailExists checks whether a Pro account exists with the given email address
+func (c *Client) EmailExists(user common.UserConfig, emailAddress string) error {
+	query := url.Values{
+		"email": {emailAddress},
+	}
+
+	resp := &BaseResponse{}
+	if err := c.execute(user, http.MethodGet, "email-exists", query, resp); err != nil {
+		log.Errorf("Failed to check if email exists: %v", err)
+		return err
+	}
+
+	return nil
+}
+
 // RequestRecoveryEmail requests an account recovery email for linking to an existing pro account
 func (c *Client) RequestRecoveryEmail(user common.UserConfig, deviceName, emailAddress string) (err error) {
 	query := url.Values{

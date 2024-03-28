@@ -80,7 +80,7 @@ func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op) ([]byte, time.Durati
 	url := cf.originURL
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, sleepTime, fmt.Errorf("Unable to construct request for cloud config at %s: %s", url, err)
+		return nil, sleepTime, fmt.Errorf("unable to construct request for cloud config at %s: %s", url, err)
 	}
 	if cf.lastCloudConfigETag[url] != "" {
 		// Don't bother fetching if unchanged
@@ -103,10 +103,9 @@ func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op) ([]byte, time.Durati
 	// this prevents the occasional EOFs errors we're seeing with
 	// successive requests
 	req.Close = true
-
 	resp, err := cf.rt.RoundTrip(req.WithContext(ctx))
 	if err != nil {
-		return nil, sleepTime, fmt.Errorf("Unable to fetch cloud config at %s: %s", url, err)
+		return nil, sleepTime, fmt.Errorf("unable to fetch cloud config at %s: %s", url, err)
 	}
 
 	sleepVal := resp.Header.Get("X-Lantern-Config-Sleep")
@@ -138,16 +137,16 @@ func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op) ([]byte, time.Durati
 	} else if resp.StatusCode != 200 {
 		op.HTTPStatusCode(resp.StatusCode)
 		if dumperr != nil {
-			return nil, sleepTime, fmt.Errorf("Bad config response code: %v", resp.StatusCode)
+			return nil, sleepTime, fmt.Errorf("bad config response code: %v", resp.StatusCode)
 		}
-		return nil, sleepTime, fmt.Errorf("Bad config resp:\n%v", string(dump))
+		return nil, sleepTime, fmt.Errorf("bad config resp:\n%v", string(dump))
 	}
 
 	op.Set("config_changed", true)
 	cf.lastCloudConfigETag[url] = resp.Header.Get(common.EtagHeader)
 	gzReader, err := gzip.NewReader(resp.Body)
 	if err != nil {
-		return nil, sleepTime, fmt.Errorf("Unable to open gzip reader: %s", err)
+		return nil, sleepTime, fmt.Errorf("unable to open gzip reader: %s", err)
 	}
 
 	defer func() {

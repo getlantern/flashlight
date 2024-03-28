@@ -19,12 +19,13 @@ import (
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/ema"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/mtime"
+	"github.com/getlantern/netx"
+
 	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/ops"
-	"github.com/getlantern/mtime"
-	"github.com/getlantern/netx"
 )
 
 const (
@@ -88,7 +89,6 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 
 	for endpoint, group := range groups {
 		if endpoint == "" {
-			// Also print the stack trace to help us debug
 			log.Debugf("Creating map for %d individual chained servers", len(group))
 			for name, s := range group {
 				wg.Add(1)
@@ -210,6 +210,8 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 		impl, err = newStarbridgeImpl(name, addr, s, reportDialCore)
 	case "broflake":
 		impl, err = newBroflakeImpl(s, reportDialCore)
+	case "algeneva":
+		impl, err = newAlgenevaImpl(addr, s, reportDialCore)
 	default:
 		err = errors.New("Unknown transport: %v", transport).With("addr", addr).With("plugabble-transport", transport)
 	}
