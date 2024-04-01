@@ -94,17 +94,13 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 		func(ctx context.Context, addr string) (shortcut.Method, net.IP) {
 			return shortcut.Proxy, nil
 		}, // shortcut method
-		func() bool { return true },  // use detour
-		func() bool { return true },  // allow HTTPS everywhere
-		func() bool { return false }, // allow MITM
-		func() bool { return false }, // allow Google Search Ads
+		func() bool { return true }, // use detour
+		func() bool { return true }, // allow HTTPS everywhere
 		newTestUserConfig(),
 		mockStatsTracker{},
 		func() bool { return true }, // allow private hosts
 		func() string { return lang },
-		func() string { return adSwapTargetURL },
 		func(host string) (string, error) { return host, nil },
-		func() string { return "https://tracker/ads" },
 		func(category, action, label string) {},
 	)
 	return client
