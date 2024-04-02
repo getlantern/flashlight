@@ -260,6 +260,38 @@ func (c *Client) RequestDeviceLinkingCode(user common.UserConfig, deviceName str
 	return resp, nil
 }
 
+// LinkCodeApprove approves a device linking code when requesting to use a device with a Pro account
+func (c *Client) LinkCodeApprove(user common.UserConfig, code string) (*BaseResponse, error) {
+	query := url.Values{
+		"code":   {code},
+		"locale": {user.GetLanguage()},
+	}
+
+	var resp BaseResponse
+	if err := c.execute(user, http.MethodPost, "link-code-approve", query, &resp); err != nil {
+		log.Errorf("Failed to approve link code: %v", err)
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// DeviceRemove removes the device with the given ID from a user's Pro account
+func (c *Client) DeviceRemove(user common.UserConfig, deviceID string) (*LinkResponse, error) {
+	query := url.Values{
+		"deviceID": {deviceID},
+		"locale":   {user.GetLanguage()},
+	}
+
+	var resp LinkResponse
+	if err := c.execute(user, http.MethodPost, "user-link-remove", query, &resp); err != nil {
+		log.Errorf("Failed to remove link code: %v", err)
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
 // ValidateDeviceLinkingCode validates a device linking code to allow linking the current device to a pro account via an existing pro device.
 func (c *Client) ValidateDeviceLinkingCode(user common.UserConfig, deviceName, code string) (*LinkResponse, error) {
 	query := url.Values{
