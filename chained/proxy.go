@@ -225,7 +225,7 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 		allowPreconnecting = true
 	}
 
-	if s.MultiplexedAddr != "" || transport == "tlsmasq" || transport == "starbridge" {
+	if s.MultiplexedAddr != "" || transport == "tlsmasq" || transport == "starbridge" || transport == "algeneva" {
 		impl, err = multiplexed(impl, name, s)
 		if err != nil {
 			return nil, err
