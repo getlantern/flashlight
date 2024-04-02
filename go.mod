@@ -60,7 +60,6 @@ require (
 	github.com/getlantern/keyman v0.0.0-20230503155501-4e864ca2175b
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
 	github.com/getlantern/lantern-algeneva v0.0.0-20240402195540-eb1bbf6d7366
-	github.com/getlantern/mitm v0.0.0-20231025115752-54d3e43899b7
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20230510135141-717ed305ef50
