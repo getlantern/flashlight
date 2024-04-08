@@ -93,3 +93,8 @@ func isActive(status string) bool {
 func GetUserDataFast(userID int64) (*User, bool) {
 	return userData.get(userID)
 }
+
+func setUserData(userID int64, user *User) {
+	logger.Debugf("Storing user data for user %v", userID)
+	userData.save(userID, user)
+}
