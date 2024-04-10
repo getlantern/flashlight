@@ -32,6 +32,8 @@ message ProPaymentMethod {
 
 message PaymentMethodsResponse {
     map<string, google.protobuf.ListValue> providers = 1; 
+    map<string, google.protobuf.ListValue> icons = 2; 
+    repeated ProPlan plans = 3;
 }
 
 enum Provider {

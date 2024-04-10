@@ -166,7 +166,7 @@ type paymentMethodsResponse struct {
 	BaseResponse
 }
 
-// PaymentMethods returns a list of payment options available to the given user
+// PaymentMethods returns a list of payment options and list of plans available to the given user
 func (c *Client) PaymentMethods(user common.UserConfig) (*paymentMethodsResponse, error) {
 	query := url.Values{
 		"locale": {user.GetLanguage()},
@@ -177,6 +177,9 @@ func (c *Client) PaymentMethods(user common.UserConfig) (*paymentMethodsResponse
 		log.Errorf("Failed to fetch payment methods: %v", err)
 		return nil, err
 	}
+	log.Debugf("Payment methods Plans: %+v", resp.PaymentMethodsResponse.Plans)
+	log.Debugf("Payment methods Provider: %+v", resp.PaymentMethodsResponse.Providers)
+	log.Debugf("Payment methods Icons: %+v", resp.PaymentMethodsResponse.Icons)
 	return resp, nil
 }
 
