@@ -2,6 +2,7 @@ package chained
 
 import (
 	"context"
+	"fmt"
 	"net"
 
 	"github.com/getlantern/common/config"
@@ -38,7 +39,12 @@ func (a *algenevaImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, er
 		op,
 	}
 
-	return algeneva.DialContext(ctx, "tcp", a.addr, dialerOps)
+	conn, err := algeneva.DialContext(ctx, "tcp", a.addr, dialerOps)
+	if err != nil {
+		return nil, fmt.Errorf("algeneva: %v", err)
+	}
+
+	return conn, nil
 }
 
 // algenevaDialer is a algeneva.Dialer wrapper around a reportDialCore. algeneva accepts an optional
