@@ -166,8 +166,8 @@ type paymentMethodsResponse struct {
 	BaseResponse
 }
 
-// PaymentMethods returns a list of payment options and list of plans available to the given user
-func (c *Client) PaymentMethods(user common.UserConfig) (*paymentMethodsResponse, error) {
+// PaymentMethodsV3 returns a list of payment options available to the given user
+func (c *Client) PaymentMethodsV3(user common.UserConfig) (*paymentMethodsResponse, error) {
 	query := url.Values{
 		"locale": {user.GetLanguage()},
 	}
@@ -175,6 +175,20 @@ func (c *Client) PaymentMethods(user common.UserConfig) (*paymentMethodsResponse
 	resp := &paymentMethodsResponse{PaymentMethodsResponse: &PaymentMethodsResponse{}}
 	if err := c.execute(user, http.MethodGet, "plans-v3", query, resp); err != nil {
 		log.Errorf("Failed to fetch payment methods: %v", err)
+		return nil, err
+	}
+	return resp, nil
+}
+
+// PaymentMethodsV3 returns a list of payment, plans and icons options available to the given user
+func (c *Client) PaymentMethodsV4(user common.UserConfig) (*paymentMethodsResponse, error) {
+	query := url.Values{
+		"locale": {user.GetLanguage()},
+	}
+
+	resp := &paymentMethodsResponse{PaymentMethodsResponse: &PaymentMethodsResponse{}}
+	if err := c.execute(user, http.MethodGet, "plans-v4", query, resp); err != nil {
+		log.Errorf("Failed to fetch payment methods-v4: %v", err)
 		return nil, err
 	}
 	log.Debugf("Payment methods Plans: %+v", resp.PaymentMethodsResponse.Plans)

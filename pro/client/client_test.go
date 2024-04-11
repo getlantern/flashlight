@@ -79,7 +79,7 @@ func TestGetPlans(t *testing.T) {
 	assert.True(t, len(plansRes.PlansResponse.Plans) > 0)
 }
 
-func TestPaymentMethods(t *testing.T) {
+func TestPaymentMethodsV4(t *testing.T) {
 	user := generateUser()
 	res, err := createClient().UserCreate(user)
 	if !assert.NoError(t, err) {
@@ -88,13 +88,14 @@ func TestPaymentMethods(t *testing.T) {
 	user.UserID = res.User.ID
 	user.Token = res.User.Token
 
-	paymentResp, err := createClient().PaymentMethods(user)
+	paymentResp, err := createClient().PaymentMethodsV4(user)
 	if !assert.NoError(t, err) {
 		return
 	}
 	fmt.Println(paymentResp.PaymentMethodsResponse)
 	assert.True(t, len(paymentResp.PaymentMethodsResponse.Icons) > 0)
 	assert.True(t, len(paymentResp.PaymentMethodsResponse.Plans) > 0)
+	assert.True(t, len(paymentResp.PaymentMethodsResponse.Providers) > 0)
 }
 
 func TestUserDataMissing(t *testing.T) {
