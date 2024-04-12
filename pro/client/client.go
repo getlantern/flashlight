@@ -191,9 +191,6 @@ func (c *Client) PaymentMethodsV4(user common.UserConfig) (*paymentMethodsRespon
 		log.Errorf("Failed to fetch payment methods-v4: %v", err)
 		return nil, err
 	}
-	log.Debugf("Payment methods Plans: %+v", resp.PaymentMethodsResponse.Plans)
-	log.Debugf("Payment methods Provider: %+v", resp.PaymentMethodsResponse.Providers)
-	log.Debugf("Payment methods Icons: %+v", resp.PaymentMethodsResponse.Icons)
 	return resp, nil
 }
 
