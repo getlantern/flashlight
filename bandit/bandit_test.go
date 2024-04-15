@@ -46,7 +46,7 @@ func TestParallelDial(t *testing.T) {
 	require.Equal(t, 3, arm)
 }
 
-func TestNewWithStats(t *testing.T) {
+func TestNew(t *testing.T) {
 	type args struct {
 		dialers      []Dialer
 		statsTracker stats.Tracker
@@ -78,9 +78,9 @@ func TestNewWithStats(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewWithStats(tt.args.dialers, tt.args.statsTracker)
+			got, err := New(tt.args.dialers)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("NewWithStats() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if tt.want != nil && !reflect.TypeOf(got).AssignableTo(reflect.TypeOf(tt.want)) {
