@@ -3,6 +3,7 @@ package flashlight
 import (
 	"fmt"
 	"net"
+	"sync"
 	"time"
 
 	commonconfig "github.com/getlantern/common/config"
@@ -36,25 +37,25 @@ type ProxyListener interface {
 type Flashlight struct {
 	configDir  string
 	flagsAsMap map[string]interface{}
-	userConfig common.UserConfig
 	isPro      func() bool
 	autoReport func() bool
 	client     *client.Client
+	clientMu   sync.Mutex
 	op         *fops.Op
 }
 
-// EnableNamedDomainRules adds named domain rules specified as arguments to the domainrouting rules table
-func (f *Flashlight) EnableNamedDomainRules(names ...string) {
-	f.client.EnableNamedDomainRules(names...)
+// Client returns the HTTP client proxy this instance of flashlight is currently configured with
+func (f *Flashlight) Client() *client.Client {
+	f.clientMu.Lock()
+	defer f.clientMu.Unlock()
+	client := f.client
+	return client
 }
 
-// DisableNamedDomainRules removes named domain rules specified as arguments from the domainrouting rules table
-func (f *Flashlight) DisableNamedDomainRules(names ...string) {
-	f.DisableNamedDomainRules(names...)
-}
-
-func (f *Flashlight) SetErrorHandler(handler func(t client.HandledErrorType, err error)) {
-	f.client.SetErrorHandler(handler)
+func (f *Flashlight) SetClient(client *client.Client) {
+	f.clientMu.Lock()
+	defer f.clientMu.Unlock()
+	f.client = client
 }
 
 // New creates a client proxy.
@@ -88,8 +89,6 @@ func New(
 
 	f := &Flashlight{
 		configDir:  configDir,
-		flagsAsMap: flagsAsMap,
-		userConfig: userConfig,
 		isPro:      isPro,
 		autoReport: autoReport,
 		op:         fops.Begin("client_started"),
@@ -154,8 +153,7 @@ func New(
 		f.op.End()
 		return nil, fatalErr
 	}
-
-	f.client = cl
+	f.SetClient(cl)
 	return f, nil
 }
 
