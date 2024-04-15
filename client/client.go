@@ -411,11 +411,8 @@ func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []
 	return dialers
 }
 
-// Start starts background services and runs the client proxy. It blocks as long as
-// the proxy is running.
-func (client *Client) Start(httpProxyAddr, socksProxyAddr string,
-	afterStart func(cl *Client),
-	onError func(err error)) {
+// Start starts background services and runs the client proxy. It blocks as long as the proxy is running.
+func (client *Client) Start(httpProxyAddr, socksProxyAddr string, afterStart func(cl *Client), onError func(err error)) {
 	log.Debug("Starting client proxy background services")
 	// check # of goroutines every minute, print the top 5 stacks with most
 	// goroutines if the # exceeds 800 and is increasing.
