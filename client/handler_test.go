@@ -79,7 +79,7 @@ func TestRewriteHTTPSRedirectLoop(t *testing.T) {
 		return
 	}
 	assert.Equal(t, http.StatusMovedPermanently, resp.StatusCode, "should rewrite to HTTPS at first")
-	assert.Equal(t, resp.Header.Get("Location"), "https://www.hrc.org/", "HTTPS Everywhere should redirect us.")
+	assert.Equal(t, resp.Header.Get("Location"), "https://www.hrc.org:443/", "HTTPS Everywhere should redirect us.")
 
 	// The following is a bit brittle because it actually sends the request to the remote
 	// server, so we are beholden to what the server does. In this case, the server
@@ -100,7 +100,7 @@ func TestRewriteHTTPSRedirectLoop(t *testing.T) {
 		return
 	}
 	assert.Equal(t, http.StatusMovedPermanently, resp.StatusCode, "should rewrite to HTTPS some time later")
-	assert.Equal(t, resp.Header.Get("Location"), "https://www.hrc.org/", "HTTPS Everywhere should redirect us.")
+	assert.Equal(t, resp.Header.Get("Location"), "https://www.hrc.org:443/", "HTTPS Everywhere should redirect us.")
 
 }
 

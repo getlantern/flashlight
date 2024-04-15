@@ -133,6 +133,7 @@ type Client struct {
 	mxProxyListeners sync.RWMutex
 	proxyListeners   []func(map[string]*commonconfig.ProxyConfig, config.Source)
 	// initialization callbacks
+	onReady           func(bool)
 	onProxiesUpdate   func([]bandit.Dialer, config.Source)
 	onConfigUpdate    func(*config.Global, config.Source)
 	onSucceedingProxy func(bool)
@@ -200,6 +201,7 @@ func NewClient(
 			log.Errorf("%v: %v", t, err)
 		},
 		onConfigUpdate:  func(*config.Global, config.Source) {},
+		onReady:         func(bool) {},
 		onProxiesUpdate: func(_ []bandit.Dialer, src config.Source) {},
 		op:              ops.Begin("client_started"),
 		proxyListeners: make([]func(map[string]*commonconfig.ProxyConfig,
@@ -231,6 +233,10 @@ func NewClient(
 
 	client.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
 		log.Debug("Applying proxy config with proxies")
+		if client.onReady != nil {
+			client.onReady(true)
+		}
+
 		dialers := client.Configure(chained.CopyConfigs(proxies))
 		if dialers != nil {
 			client.onProxiesUpdate(dialers, src)
@@ -393,6 +399,11 @@ func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reade
 func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []bandit.Dialer {
 	log.Debug("Configure() called")
 	dialers, dialer, err := client.initDialers(proxies)
+	defer func() {
+		if client.onReady != nil {
+			client.onReady(err != nil)
+		}
+	}()
 	if err != nil {
 		log.Error(err)
 		return nil

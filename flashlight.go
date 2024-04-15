@@ -3,7 +3,6 @@ package flashlight
 import (
 	"fmt"
 	"net"
-	"sync"
 	"time"
 
 	commonconfig "github.com/getlantern/common/config"
@@ -41,8 +40,6 @@ type Flashlight struct {
 	flagsAsMap map[string]interface{}
 	userConfig common.UserConfig
 	isPro      func() bool
-	mxGlobal   sync.RWMutex
-	global     *config.Global
 	autoReport func() bool
 	client     *client.Client
 	op         *fops.Op
@@ -71,6 +68,7 @@ func New(
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
 	onConfigUpdate func(*config.Global, config.Source),
+	onReady func(bool),
 	onProxiesUpdate func([]bandit.Dialer, config.Source),
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
@@ -94,7 +92,6 @@ func New(
 		flagsAsMap: flagsAsMap,
 		userConfig: userConfig,
 		isPro:      isPro,
-		global:     nil,
 		autoReport: autoReport,
 		op:         fops.Begin("client_started"),
 	}
@@ -151,6 +148,8 @@ func New(
 		reverseDNS,
 		eventWithLabel,
 		client.WithConfig(onConfigUpdate),
+		client.WithReady(onReady),
+		client.WithIsPro(isPro),
 		client.WithProxies(onProxiesUpdate),
 	)
 	if err != nil {

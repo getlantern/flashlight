@@ -41,6 +41,9 @@ func (client *Client) onGlobalConfig(cfg *config.Global, src config.Source) {
 	client.applyClientConfig(cfg)
 	client.applyOtel(cfg)
 	client.onConfigUpdate(cfg, src)
+	if client.onReady != nil {
+		client.onReady(true)
+	}
 }
 
 func (client *Client) applyClientConfig(cfg *config.Global) {
