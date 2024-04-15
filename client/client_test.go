@@ -22,6 +22,7 @@ import (
 	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/domainrouting"
+	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mockconn"
@@ -81,23 +82,23 @@ func resetDialers(client *Client, dialer func(network, addr string) (net.Conn, e
 }
 
 func newClient() *Client {
+	userConfig := newTestUserConfig()
+	statsTracker := mockStatsTracker{}
 	TimeoutWaitingForDNSResolutionMap = 1 * time.Millisecond // For testing, don't wait for a code that won't be run anyways
-	return newClientWithLangAndAdSwapTargetURL(testLang, testAdSwapTargetURL)
+	return newClientWithLangAndAdSwapTargetURL(userConfig, statsTracker, testLang, testAdSwapTargetURL)
 }
 
-func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *Client {
+func newClientWithLangAndAdSwapTargetURL(userConfig common.UserConfig, statsTracker stats.Tracker, lang string, adSwapTargetURL string) *Client {
 	client, _ := NewClient(
 		tempConfigDir,
+		ops.Begin("client_started"),
 		func() bool { return false },
-		func() bool { return false }, // proxy all
-		func() bool { return false }, // use shortcut
+		map[string]interface{}{},
 		func(ctx context.Context, addr string) (shortcut.Method, net.IP) {
 			return shortcut.Proxy, nil
 		}, // shortcut method
-		func() bool { return true }, // use detour
-		func() bool { return true }, // allow HTTPS everywhere
-		newTestUserConfig(),
-		mockStatsTracker{},
+		userConfig,
+		statsTracker,
 		func() bool { return true }, // allow private hosts
 		func() string { return lang },
 		func(host string) (string, error) { return host, nil },
@@ -592,9 +593,8 @@ func (r *response) nested() (*http.Response, error) {
 
 func Test_initDialers(t *testing.T) {
 	proxies := newProxies()
-	stats := stats.NewNoop()
-	uc := common.NullUserConfig{}
-	dialers, banditDialer, err := initDialers(proxies, "", stats, uc)
+	client := newClient()
+	dialers, banditDialer, err := client.initDialers(proxies)
 	assert.NoError(t, err)
 	assert.NotNil(t, dialers)
 	assert.NotNil(t, banditDialer)

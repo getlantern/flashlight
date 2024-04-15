@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -31,10 +32,16 @@ import (
 	"github.com/getlantern/shortcut"
 
 	"github.com/getlantern/flashlight/v7/bandit"
+	"github.com/getlantern/flashlight/v7/bypass"
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/config"
 	"github.com/getlantern/flashlight/v7/domainrouting"
+	"github.com/getlantern/flashlight/v7/email"
+	"github.com/getlantern/flashlight/v7/geolookup"
+	"github.com/getlantern/flashlight/v7/goroutines"
 	"github.com/getlantern/flashlight/v7/ops"
+	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/flashlight/v7/status"
 )
@@ -112,13 +119,25 @@ type Client struct {
 	httpListener  eventual.Value
 	socksListener eventual.Value
 
-	disconnected         func() bool
-	proxyAll             func() bool
-	useShortcut          func() bool
-	shortcutMethod       func(ctx context.Context, addr string) (shortcut.Method, net.IP)
-	useDetour            func() bool
-	allowHTTPSEverywhere func() bool
-	user                 common.UserConfig
+	disconnected   func() bool
+	shortcutMethod func(ctx context.Context, addr string) (shortcut.Method, net.IP)
+	flagsAsMap     map[string]interface{}
+	user           common.UserConfig
+
+	// client configuration settings
+	mxGlobal         sync.RWMutex
+	global           *config.Global
+	errorHandler     func(HandledErrorType, error)
+	isPro            func() bool
+	op               *ops.Op
+	mxProxyListeners sync.RWMutex
+	proxyListeners   []func(map[string]*commonconfig.ProxyConfig, config.Source)
+	// initialization callbacks
+	onProxiesUpdate   func([]bandit.Dialer, config.Source)
+	onConfigUpdate    func(*config.Global, config.Source)
+	onSucceedingProxy func(bool)
+	useDetour         func() bool
+	useShortcut       func() bool
 
 	rewriteToHTTPS httpseverywhere.Rewrite
 	rewriteLRU     *lru.Cache
@@ -151,18 +170,17 @@ type Client struct {
 // all traffic, and another function to get Lantern Pro token when required.
 func NewClient(
 	configDir string,
+	op *ops.Op,
 	disconnected func() bool,
-	proxyAll func() bool,
-	useShortcut func() bool,
+	flagsAsMap map[string]interface{},
 	shortcutMethod func(ctx context.Context, addr string) (shortcut.Method, net.IP),
-	useDetour func() bool,
-	allowHTTPSEverywhere func() bool,
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	allowPrivateHosts func() bool,
 	lang func() string,
 	reverseDNS func(addr string) (string, error),
 	eventWithLabel func(category, action, label string),
+	options ...Option,
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
 	rewriteLRU, err := lru.New(100)
@@ -174,15 +192,19 @@ func NewClient(
 		return nil, errors.New("Unable to create bandit: %v", err)
 	}
 	client := &Client{
-		configDir:                              configDir,
-		requestTimeout:                         requestTimeout,
-		dialer:                                 banditDialer,
-		disconnected:                           disconnected,
-		proxyAll:                               proxyAll,
-		useShortcut:                            useShortcut,
+		configDir:      configDir,
+		requestTimeout: requestTimeout,
+		dialer:         banditDialer,
+		disconnected:   disconnected,
+		errorHandler: func(t HandledErrorType, err error) {
+			log.Errorf("%v: %v", t, err)
+		},
+		onConfigUpdate:  func(*config.Global, config.Source) {},
+		onProxiesUpdate: func(_ []bandit.Dialer, src config.Source) {},
+		op:              ops.Begin("client_started"),
+		proxyListeners: make([]func(map[string]*commonconfig.ProxyConfig,
+			config.Source), 0),
 		shortcutMethod:                         shortcutMethod,
-		useDetour:                              useDetour,
-		allowHTTPSEverywhere:                   allowHTTPSEverywhere,
 		user:                                   userConfig,
 		rewriteToHTTPS:                         httpseverywhere.Default(),
 		rewriteLRU:                             rewriteLRU,
@@ -206,6 +228,26 @@ func NewClient(
 		Dial:        client.dial,
 	})
 	client.iptool, _ = iptool.New()
+
+	client.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
+		log.Debug("Applying proxy config with proxies")
+		dialers := client.Configure(chained.CopyConfigs(proxies))
+		if dialers != nil {
+			client.onProxiesUpdate(dialers, src)
+		}
+	})
+
+	client.useDetour = func() bool {
+		return client.featureEnabled(config.FeatureDetour) && !client.featureEnabled(config.FeatureProxyWhitelistedOnly)
+	}
+
+	client.useShortcut = func() bool {
+		return client.featureEnabled(config.FeatureShortcut) && !client.featureEnabled(config.FeatureProxyWhitelistedOnly)
+	}
+
+	for _, option := range options {
+		option(client)
+	}
 
 	go client.cacheClientHellos()
 	return client, nil
@@ -350,8 +392,7 @@ func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reade
 // no error occurred, then the new dialers are returned.
 func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []bandit.Dialer {
 	log.Debug("Configure() called")
-	dialers, dialer, err :=
-		initDialers(proxies, client.configDir, client.statsTracker, client.user)
+	dialers, dialer, err := client.initDialers(proxies)
 	if err != nil {
 		log.Error(err)
 		return nil
@@ -360,6 +401,79 @@ func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []
 	chained.PersistSessionStates(client.configDir)
 	chained.TrackStatsFor(dialers, client.configDir)
 	return dialers
+}
+
+// Start starts background services and runs the client proxy. It blocks as long as
+// the proxy is running.
+func (client *Client) Start(httpProxyAddr, socksProxyAddr string,
+	afterStart func(cl *Client),
+	onError func(err error)) {
+	log.Debug("Starting client proxy background services")
+	// check # of goroutines every minute, print the top 5 stacks with most
+	// goroutines if the # exceeds 800 and is increasing.
+	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
+
+	stopBypass := bypass.Start(client.addProxyListener, client.configDir, client.user)
+
+	stopConfigFetch := client.startConfigFetch()
+	geolookup.EnablePersistence(filepath.Join(client.configDir, "latestgeoinfo.json"))
+	geolookup.Refresh()
+
+	stop := func() {
+		stopConfigFetch()
+		stopMonitor()
+		stopBypass()
+	}
+	defer stop()
+	// Until we know our country, default to IR which has all detection rules
+	log.Debug("Defaulting detour country to IR until real country is known")
+	detour.SetCountry("IR")
+	go func() {
+		// -1 indicates that Get should wait forever
+		country := geolookup.GetCountry(-1)
+		log.Debugf("Setting detour country to %v", country)
+		detour.SetCountry(country)
+	}()
+	if socksProxyAddr != "" {
+		go func() {
+			log.Debug("Starting client SOCKS5 proxy")
+			err := client.ListenAndServeSOCKS5(socksProxyAddr)
+			if err != nil {
+				log.Errorf("Unable to start SOCKS5 proxy: %v", err)
+			}
+		}()
+	}
+
+	if onError == nil {
+		onError = func(_ error) {}
+	}
+	onGeo := geolookup.OnRefresh()
+
+	log.Debug("Starting client HTTP proxy")
+	err := client.ListenAndServeHTTP(httpProxyAddr, func() {
+		log.Debug("Started client HTTP proxy")
+		proxied.SetProxyAddr(client.Addr)
+		email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
+
+		ops.Go(func() {
+			// wait for geo info before reporting so that we know the client ip and
+			// country
+			select {
+			case <-onGeo:
+			case <-time.After(5 * time.Minute):
+				log.Debug("failed to get geolocation info within 5 minutes, just record end of startup anyway")
+			}
+			client.op.End()
+		})
+
+		if afterStart != nil {
+			afterStart(client)
+		}
+	})
+	if err != nil {
+		log.Errorf("Error running client proxy: %v", err)
+		onError(err)
+	}
 }
 
 // Stop is called when the client is no longer needed. It closes the
@@ -701,16 +815,31 @@ func errorResponse(_ *filters.ConnectionState, req *http.Request, _ bool, err er
 
 // initDialers takes hosts from cfg.ChainedServers and it uses them to create a
 // new dialer. Returns the new dialers.
-func initDialers(proxies map[string]*commonconfig.ProxyConfig,
-	configDir string, stats stats.Tracker,
-	uc common.UserConfig) ([]bandit.Dialer, *bandit.BanditDialer, error) {
+func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) ([]bandit.Dialer, *bandit.BanditDialer, error) {
 	if len(proxies) == 0 {
 		return nil, nil, fmt.Errorf("no chained servers configured, not initializing dialers")
 	}
+	uc := client.user
+	stats := client.statsTracker
 
-	chained.PersistSessionStates(configDir)
-	dialers := chained.CreateDialers(configDir, proxies, uc)
-	dialer, err := bandit.NewWithStats(dialers, stats)
+	chained.PersistSessionStates(client.configDir)
+	dialers := chained.CreateDialers(client.configDir, proxies, uc)
+
+	dialer, err := bandit.New(dialers, bandit.OnSuccess(func(dialer bandit.Dialer) {
+		countryCode, country, city := dialer.Location()
+		stats.SetActiveProxyLocation(
+			city,
+			country,
+			countryCode,
+		)
+		stats.SetHasSucceedingProxy(true)
+		if client.onSucceedingProxy != nil {
+			client.onSucceedingProxy(true)
+		}
+	}), bandit.OnError(func(err error) {
+		log.Error(err)
+		stats.SetHasSucceedingProxy(false)
+	}))
 	if err != nil {
 		return nil, nil, err
 	}
