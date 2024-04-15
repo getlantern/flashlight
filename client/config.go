@@ -40,9 +40,9 @@ func (client *Client) onGlobalConfig(cfg *config.Global, src config.Source) {
 	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
 	client.applyClientConfig(cfg)
 	client.applyOtel(cfg)
-	client.onConfigUpdate(cfg, src)
-	if client.onReady != nil {
-		client.onReady(true)
+	client.callbacks.onConfigUpdate(cfg, src)
+	if client.callbacks.onReady != nil {
+		client.callbacks.onReady(true)
 	}
 }
 

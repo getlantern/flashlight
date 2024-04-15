@@ -163,12 +163,12 @@ func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 	afterStart func(cl *client.Client),
 	onError func(err error),
 ) {
-	f.client.Start(httpProxyAddr, socksProxyAddr, afterStart, onError)
+	f.Client().Start(httpProxyAddr, socksProxyAddr, afterStart, onError)
 }
 
 // Stops the local proxy
 func (f *Flashlight) Stop() error {
-	return f.client.Stop()
+	return f.Client().Stop()
 }
 
 func displayVersion(appVersion, revisionDate string) {

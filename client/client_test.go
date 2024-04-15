@@ -209,7 +209,7 @@ func TestDialShortcut(t *testing.T) {
 	res, _ := roundTrip(client, req)
 	assert.Zero(t, shortcutVisited, "should not check shortcut list when shortcut is disabled")
 
-	client.useShortcut = func() bool { return true }
+	client.callbacks.useShortcut = func() bool { return true }
 	// used as a sign that the request is sent to proxy
 	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n")
 	// add some delay before sending back data, as response before the request
@@ -240,7 +240,7 @@ func TestDialShortcut(t *testing.T) {
 	}
 	assert.Equal(t, 404, nestedResp.StatusCode, "should dial proxy if the shortcutted site is unreachable")
 
-	client.useShortcut = func() bool { return true }
+	client.callbacks.useShortcut = func() bool { return true }
 	client.shortcutMethod = func(context.Context, string) (shortcut.Method, net.IP) {
 		shortcutVisited++
 		return shortcut.Proxy, nil
@@ -294,7 +294,7 @@ func TestLeakingDomainsRequiringProxy(t *testing.T) {
 	client.shortcutMethod = func(ctx context.Context, addr string) (shortcut.Method, net.IP) {
 		return shortcut.Proxy, nil
 	}
-	client.useShortcut = func() bool { return false }
+	client.callbacks.useShortcut = func() bool { return false }
 
 	detour.AddToWl(addr, true)
 	defer detour.RemoveFromWl(site.URL)
@@ -357,8 +357,8 @@ func TestTimeoutCheckingShortcut(t *testing.T) {
 	requestTimeout := 10 * time.Millisecond
 	client := newClient()
 	client.requestTimeout = requestTimeout
-	client.useDetour = func() bool { return false }
-	client.useShortcut = func() bool { return true }
+	client.callbacks.useDetour = func() bool { return false }
+	client.callbacks.useShortcut = func() bool { return true }
 
 	client.shortcutMethod = func(ctx context.Context, addr string) (shortcut.Method, net.IP) {
 		// force shortcutMethod to wait for cxt to expire

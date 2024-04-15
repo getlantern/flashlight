@@ -10,21 +10,21 @@ type Option func(*Client)
 // WithConnectionCallback sets the config callback
 func WithSucceedingProxy(onSucceedingProxy func(isConnected bool)) Option {
 	return func(client *Client) {
-		client.onSucceedingProxy = onSucceedingProxy
+		client.callbacks.onSucceedingProxy = onSucceedingProxy
 	}
 }
 
 // WithOnConfig sets the callback that is called when a config is successfully fetched
 func WithOnConfig(onConfigUpdate func(*config.Global, config.Source)) Option {
 	return func(client *Client) {
-		client.onConfigUpdate = onConfigUpdate
+		client.callbacks.onConfigUpdate = onConfigUpdate
 	}
 }
 
 // WithDetour sets the callback that determines whether or not to use detour
 func WithDetour(useDetour func() bool) Option {
 	return func(client *Client) {
-		client.useDetour = useDetour
+		client.callbacks.useDetour = useDetour
 	}
 }
 
@@ -32,21 +32,21 @@ func WithDetour(useDetour func() bool) Option {
 // or needs to be initialized
 func WithReady(onReady func(bool)) Option {
 	return func(client *Client) {
-		client.onReady = onReady
+		client.callbacks.onReady = onReady
 	}
 }
 
 // WithShortcut sets the callback that determines whether or not to use shortcut
 func WithShortcut(useShortcut func() bool) Option {
 	return func(client *Client) {
-		client.useShortcut = useShortcut
+		client.callbacks.useShortcut = useShortcut
 	}
 }
 
 // WithProxies sets the callback when new proxies are received
 func WithProxies(onProxiesUpdate func([]bandit.Dialer, config.Source)) Option {
 	return func(client *Client) {
-		client.onProxiesUpdate = onProxiesUpdate
+		client.callbacks.onProxiesUpdate = onProxiesUpdate
 	}
 }
 

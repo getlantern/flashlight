@@ -49,6 +49,20 @@ func (client *Client) proxyAll() bool {
 	return !useShortcutOrDetour && !client.featureEnabled(config.FeatureProxyWhitelistedOnly)
 }
 
+func (client *Client) useDetour() bool {
+	if client.callbacks.useDetour != nil {
+		return client.callbacks.useDetour()
+	}
+	return client.featureEnabled(config.FeatureDetour) && !client.featureEnabled(config.FeatureProxyWhitelistedOnly)
+}
+
+func (client *Client) useShortcut() bool {
+	if client.callbacks.useShortcut != nil {
+		return client.callbacks.useShortcut()
+	}
+	return client.featureEnabled(config.FeatureShortcut) && !client.featureEnabled(config.FeatureProxyWhitelistedOnly)
+}
+
 // featureEnabled returns true if the input feature is enabled for this flashlight instance. Feature
 // names are tracked in the config package.
 func (client *Client) featureEnabled(feature string) bool {

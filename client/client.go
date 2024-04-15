@@ -103,6 +103,16 @@ func shouldForceProxying() bool {
 	return atomic.LoadInt64(&forceProxying) == 1
 }
 
+// clientCallbacks are the callbacks for initialization states that a Flashlight client is configured to use
+type clientCallbacks struct {
+	onReady           func(bool)
+	onProxiesUpdate   func([]bandit.Dialer, config.Source)
+	onConfigUpdate    func(*config.Global, config.Source)
+	onSucceedingProxy func(bool)
+	useDetour         func() bool
+	useShortcut       func() bool
+}
+
 // Client is an HTTP proxy that accepts connections from local programs and
 // proxies these via remote flashlight servers.
 type Client struct {
@@ -132,13 +142,9 @@ type Client struct {
 	op               *ops.Op
 	mxProxyListeners sync.RWMutex
 	proxyListeners   []func(map[string]*commonconfig.ProxyConfig, config.Source)
+
 	// initialization callbacks
-	onReady           func(bool)
-	onProxiesUpdate   func([]bandit.Dialer, config.Source)
-	onConfigUpdate    func(*config.Global, config.Source)
-	onSucceedingProxy func(bool)
-	useDetour         func() bool
-	useShortcut       func() bool
+	callbacks clientCallbacks
 
 	rewriteToHTTPS httpseverywhere.Rewrite
 	rewriteLRU     *lru.Cache
@@ -200,10 +206,12 @@ func NewClient(
 		errorHandler: func(t HandledErrorType, err error) {
 			log.Errorf("%v: %v", t, err)
 		},
-		onConfigUpdate:  func(*config.Global, config.Source) {},
-		onReady:         func(bool) {},
-		onProxiesUpdate: func(_ []bandit.Dialer, src config.Source) {},
-		op:              ops.Begin("client_started"),
+		callbacks: clientCallbacks{
+			onConfigUpdate:  func(*config.Global, config.Source) {},
+			onReady:         func(bool) {},
+			onProxiesUpdate: func(_ []bandit.Dialer, src config.Source) {},
+		},
+		op: ops.Begin("client_started"),
 		proxyListeners: make([]func(map[string]*commonconfig.ProxyConfig,
 			config.Source), 0),
 		shortcutMethod:                         shortcutMethod,
@@ -231,29 +239,18 @@ func NewClient(
 	})
 	client.iptool, _ = iptool.New()
 
-	client.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
-		log.Debug("Applying proxy config with proxies")
-		if client.onReady != nil {
-			client.onReady(true)
-		}
-
-		dialers := client.Configure(chained.CopyConfigs(proxies))
-		if dialers != nil {
-			client.onProxiesUpdate(dialers, src)
-		}
-	})
-
-	client.useDetour = func() bool {
-		return client.featureEnabled(config.FeatureDetour) && !client.featureEnabled(config.FeatureProxyWhitelistedOnly)
-	}
-
-	client.useShortcut = func() bool {
-		return client.featureEnabled(config.FeatureShortcut) && !client.featureEnabled(config.FeatureProxyWhitelistedOnly)
-	}
-
 	for _, option := range options {
 		option(client)
 	}
+
+	client.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
+		log.Debug("Applying proxy config with proxies")
+		dialers := client.Configure(chained.CopyConfigs(proxies))
+		if dialers != nil {
+			client.callbacks.onReady(true)
+			client.callbacks.onProxiesUpdate(dialers, src)
+		}
+	})
 
 	go client.cacheClientHellos()
 	return client, nil
@@ -400,8 +397,8 @@ func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []
 	log.Debug("Configure() called")
 	dialers, dialer, err := client.initDialers(proxies)
 	defer func() {
-		if client.onReady != nil {
-			client.onReady(err != nil)
+		if client.callbacks.onReady != nil {
+			client.callbacks.onReady(err != nil)
 		}
 	}()
 	if err != nil {
@@ -844,8 +841,8 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 			countryCode,
 		)
 		stats.SetHasSucceedingProxy(true)
-		if client.onSucceedingProxy != nil {
-			client.onSucceedingProxy(true)
+		if client.callbacks.onSucceedingProxy != nil {
+			client.callbacks.onSucceedingProxy(true)
 		}
 	}), bandit.OnError(func(err error) {
 		log.Error(err)
