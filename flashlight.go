@@ -11,10 +11,8 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/netx"
 
-	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/client"
 	"github.com/getlantern/flashlight/v7/common"
-	"github.com/getlantern/flashlight/v7/config"
 	"github.com/getlantern/flashlight/v7/email"
 	"github.com/getlantern/flashlight/v7/geolookup"
 	fops "github.com/getlantern/flashlight/v7/ops"
@@ -63,19 +61,16 @@ func New(
 	configDir string,
 	enableVPN bool,
 	disconnected func() bool,
-	_proxyAll func() bool,
 	allowPrivateHosts func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
-	onConfigUpdate func(*config.Global, config.Source),
-	onReady func(bool),
-	onProxiesUpdate func([]bandit.Dialer, config.Source),
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	isPro func() bool,
 	lang func() string,
 	reverseDNS func(host string) (string, error),
 	eventWithLabel func(category, action, label string),
+	options ...client.Option,
 ) (*Flashlight, error) {
 	log.Debugf("Running in app: %v", appName)
 	log.Debugf("Using configdir: %v", configDir)
@@ -147,10 +142,7 @@ func New(
 		lang,
 		reverseDNS,
 		eventWithLabel,
-		client.WithConfig(onConfigUpdate),
-		client.WithReady(onReady),
-		client.WithIsPro(isPro),
-		client.WithProxies(onProxiesUpdate),
+		options...,
 	)
 	if err != nil {
 		fatalErr := fmt.Errorf("unable to initialize client: %v", err)

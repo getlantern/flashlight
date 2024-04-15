@@ -14,8 +14,8 @@ func WithSucceedingProxy(onSucceedingProxy func(isConnected bool)) Option {
 	}
 }
 
-// WithConfig sets the config callback
-func WithConfig(onConfigUpdate func(*config.Global, config.Source)) Option {
+// WithOnConfig sets the callback that is called when a config is successfully fetched
+func WithOnConfig(onConfigUpdate func(*config.Global, config.Source)) Option {
 	return func(client *Client) {
 		client.onConfigUpdate = onConfigUpdate
 	}
