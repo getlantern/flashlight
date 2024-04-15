@@ -20,8 +20,8 @@ func (client *Client) onGlobalConfig(cfg *config.Global, src config.Source) {
 	client.applyClientConfig(cfg)
 	client.applyOtel(cfg)
 	client.callbacks.onConfigUpdate(cfg, src)
-	if client.callbacks.onReady != nil {
-		client.callbacks.onReady(true)
+	if client.callbacks.onInit != nil {
+		client.callbacks.onInit(true)
 	}
 }
 
