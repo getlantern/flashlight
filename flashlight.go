@@ -53,6 +53,10 @@ func (f *Flashlight) DisableNamedDomainRules(names ...string) {
 	f.DisableNamedDomainRules(names...)
 }
 
+func (f *Flashlight) SetErrorHandler(handler func(t client.HandledErrorType, err error)) {
+	f.client.SetErrorHandler(handler)
+}
+
 // New creates a client proxy.
 func New(
 	appName string,
