@@ -51,10 +51,6 @@ message PaymentRedirectRequest {
     string countryCode = 6;
 }
 
-message PaymentRedirectResponse {
-    string redirect = 1;
-}
-
 message PurchaseRequest {
     Provider provider = 1;
     string email = 2;
