@@ -44,9 +44,10 @@ func newAlgenevaImpl(addr string, pc *config.ProxyConfig, reportDialCore reportD
 
 		certPool := x509.NewCertPool()
 		certPool.AppendCertsFromPEM([]byte(cert))
+		ip, _, _ := net.SplitHostPort(addr)
 		opts.TLSConfig = &tls.Config{
 			RootCAs:    certPool,
-			ServerName: pc.TLSServerNameIndicator,
+			ServerName: ip,
 		}
 	}
 
