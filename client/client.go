@@ -184,6 +184,7 @@ func NewClient(
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	allowPrivateHosts func() bool,
+	isPro func() bool,
 	lang func() string,
 	reverseDNS func(addr string) (string, error),
 	eventWithLabel func(category, action, label string),
@@ -206,10 +207,20 @@ func NewClient(
 		errorHandler: func(t HandledErrorType, err error) {
 			log.Errorf("%v: %v", t, err)
 		},
+		isPro: isPro,
 		callbacks: clientCallbacks{
-			onConfigUpdate:  func(*config.Global, config.Source) {},
-			onInit:          func(bool) {},
-			onProxiesUpdate: func(_ []bandit.Dialer, src config.Source) {},
+			onConfigUpdate: func(*config.Global, config.Source) {
+				log.Debug("[Startup] client config updated")
+			},
+			onInit: func(bool) {
+				log.Debug("[Startup] onInit called")
+			},
+			onProxiesUpdate: func(_ []bandit.Dialer, src config.Source) {
+				log.Debugf("[Startup] onProxiesUpdate called from %v", src)
+			},
+			onSucceedingProxy: func(bool) {
+				log.Debugf("[Startup] onSucceedingProxy called")
+			},
 		},
 		op: ops.Begin("client_started"),
 		proxyListeners: make([]func(map[string]*commonconfig.ProxyConfig,

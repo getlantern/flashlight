@@ -142,6 +142,7 @@ func New(
 		userConfig,
 		statsTracker,
 		allowPrivateHosts,
+		f.isPro,
 		lang,
 		reverseDNS,
 		eventWithLabel,
