@@ -173,4 +173,120 @@ func mockPostRequest(path string, responseBody interface{}) {
 }
 
 // / Since now we stared using mock server, we need to update the expected response
-const expectedPlansV4Response = `{"icons":{"paymentwall":["https://imagedelivery.net/sB6Q2DOuXQsFvrpwTks_kA/5fa28e16-5b78-44b1-f02b-2b80593b5c00/public"],"stripe":["https://imagedelivery.net/sB6Q2DOuXQsFvrpwTks_kA/e02a8c29-20a6-478f-ed01-e93d0dba0800/public","https://imagedelivery.net/sB6Q2DOuXQsFvrpwTks_kA/94870838-0129-417c-d65a-276422eac900/public","https://imagedelivery.net/sB6Q2DOuXQsFvrpwTks_kA/f56ce1a8-96d6-4528-fdc6-da4605f1c500/public"]},"plans":[{"id":"1y-usd-10","description":"One Year Plan","duration":{"days":0,"months":0,"years":1},"price":{"usd":4800},"expectedMonthlyPrice":{"usd":400},"usdPrice":4800,"usdPrice1Y":4800,"usdPrice2Y":8700,"redeemFor":{"days":0,"months":2},"renewalBonus":{"days":0,"months":1},"renewalBonusExpired":{"days":15,"months":0},"renewalBonusExpected":{"days":0,"months":0},"discount":0,"bestValue":false,"level":"pro"},{"id":"2y-usd-10","description":"Two Year Plan","duration":{"days":0,"months":0,"years":2},"price":{"usd":8700},"expectedMonthlyPrice":{"usd":363},"usdPrice":8700,"usdPrice1Y":4800,"usdPrice2Y":8700,"redeemFor":{"days":0,"months":2},"renewalBonus":{"days":0,"months":3},"renewalBonusExpired":{"days":15,"months":1},"renewalBonusExpected":{"days":0,"months":0},"discount":0.0925,"bestValue":true,"level":"pro"}],"providers":{"android":[{"method":"credit-card","providers":[{"name":"stripe","data":{"pubKey":"pk_live_4MSPfR6qNHMwjG86TZJv4NI0"}}]}],"desktop":[{"method":"credit-card","providers":[{"name":"stripe","data":{"pubKey":"pk_live_4MSPfR6qNHMwjG86TZJv4NI0"}}]},{"method":"paymentwall","providers":[{"name":"paymentwall"}]}]}}`
+const expectedPlansV4Response = `{
+	"icons": {
+	  "paymentwall": [
+		"https://imagedelivery.net/sB6Q2DOuXQsFvrpwTks_kA/5fa28e16-5b78-44b1-f02b-2b80593b5c00/public"
+	  ],
+	  "stripe": [
+		"https://imagedelivery.net/sB6Q2DOuXQsFvrpwTks_kA/e02a8c29-20a6-478f-ed01-e93d0dba0800/public",
+		"https://imagedelivery.net/sB6Q2DOuXQsFvrpwTks_kA/94870838-0129-417c-d65a-276422eac900/public",
+		"https://imagedelivery.net/sB6Q2DOuXQsFvrpwTks_kA/f56ce1a8-96d6-4528-fdc6-da4605f1c500/public"
+	  ]
+	},
+	"plans": [
+	  {
+		"id": "1y-usd-10",
+		"description": "One Year Plan",
+		"duration": {
+		  "days": 0,
+		  "months": 0,
+		  "years": 1
+		},
+		"price": {
+		  "usd": 4800
+		},
+		"expectedMonthlyPrice": {
+		  "usd": 400
+		},
+		"usdPrice": 4800,
+		"usdPrice1Y": 4800,
+		"usdPrice2Y": 8700,
+		"redeemFor": {
+		  "days": 0,
+		  "months": 2
+		},
+		"renewalBonus": {
+		  "days": 0,
+		  "months": 1
+		},
+		"renewalBonusExpired": {
+		  "days": 15,
+		  "months": 0
+		},
+		"renewalBonusExpected": {
+		  "days": 0,
+		  "months": 0
+		},
+		"discount": 0,
+		"bestValue": false,
+		"level": "pro"
+	  },
+	  {
+		"id": "2y-usd-10",
+		"description": "Two Year Plan",
+		"duration": {
+		  "days": 0,
+		  "months": 0,
+		  "years": 2
+		},
+		"price": {
+		  "usd": 8700
+		},
+		"expectedMonthlyPrice": {
+		  "usd": 363
+		},
+		"usdPrice": 8700,
+		"usdPrice1Y": 4800,
+		"usdPrice2Y": 8700,
+		"redeemFor": {
+		  "days": 0,
+		  "months": 2
+		},
+		"renewalBonus": {
+		  "days": 0,
+		  "months": 3
+		},
+		"renewalBonusExpired": {
+		  "days": 15,
+		  "months": 1
+		},
+		"renewalBonusExpected": {
+		  "days": 0,
+		  "months": 0
+		},
+		"discount": 0.0925,
+		"bestValue": true,
+		"level": "pro"
+	  }
+	],
+	"providers": {
+	  "android": [
+		{
+		  "method": "credit-card",
+		  "providers": [
+			{
+			  "name": "stripe",
+			  "data": {
+				"pubKey": "pk_live_4MSPfR6qNHMwjG86TZJv4NI0"
+			  }
+			}
+		  ]
+		}
+	  ],
+	  "desktop": [
+		{
+		  "method": "credit-card",
+		  "providers": []
+		},
+		{
+		  "method": "paymentwall",
+		  "providers": [
+			{
+			  "name": "paymentwall"
+			}
+		  ]
+		}
+	  ]
+	}
+  }`
