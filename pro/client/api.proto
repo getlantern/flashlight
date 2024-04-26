@@ -32,25 +32,14 @@ message ProPaymentMethod {
 
 message PaymentMethodsResponse {
     map<string, google.protobuf.ListValue> providers = 1; 
+    map<string, google.protobuf.ListValue> icons = 2; 
+    repeated ProPlan plans = 3;
 }
 
 enum Provider {
     PROVIDER_UNSET = 0;
     STRIPE = 1;
     FREEKASSA = 2;
-}
-
-message PaymentRedirectRequest {
-    string plan = 1;
-    string provider = 2;
-    string currency = 3;
-    string email = 4;
-    string deviceName = 5;
-    string countryCode = 6;
-}
-
-message PaymentRedirectResponse {
-    string redirect = 1;
 }
 
 message PurchaseRequest {
