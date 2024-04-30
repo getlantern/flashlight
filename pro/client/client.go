@@ -134,40 +134,13 @@ func (c *Client) Plans(user common.UserConfig) (*plansResponse, error) {
 	return resp, nil
 }
 
-type paymentRedirectResponse struct {
-	BaseResponse
-	*PaymentRedirectResponse `json:",inline"`
-}
-
-// PaymentRedirect is called when the continue to payment button is clicked and returns a redirect URL
-func (c *Client) PaymentRedirect(user common.UserConfig, req *PaymentRedirectRequest) (*paymentRedirectResponse, error) {
-	query := url.Values{
-		"countryCode": {req.CountryCode},
-		"deviceName":  {req.DeviceName},
-		"email":       {req.Email},
-		"plan":        {req.Plan},
-		"provider":    {req.Provider},
-	}
-
-	b, _ := json.Marshal(user)
-	log.Debugf("User config is %v", string(b))
-
-	resp := &paymentRedirectResponse{PaymentRedirectResponse: &PaymentRedirectResponse{}}
-	if err := c.execute(user, http.MethodGet, "payment-redirect", query, resp); err != nil {
-		log.Errorf("Failed to fetch payment redirect: %v", err)
-		return nil, err
-	}
-	log.Debugf("Redirect is %s", resp.Redirect)
-	return resp, nil
-}
-
 type paymentMethodsResponse struct {
 	*PaymentMethodsResponse `json:",inline"`
 	BaseResponse
 }
 
-// PaymentMethods returns a list of payment options available to the given user
-func (c *Client) PaymentMethods(user common.UserConfig) (*paymentMethodsResponse, error) {
+// PaymentMethodsV3 returns a list of payment options available to the given user
+func (c *Client) PaymentMethodsV3(user common.UserConfig) (*paymentMethodsResponse, error) {
 	query := url.Values{
 		"locale": {user.GetLanguage()},
 	}
@@ -175,6 +148,20 @@ func (c *Client) PaymentMethods(user common.UserConfig) (*paymentMethodsResponse
 	resp := &paymentMethodsResponse{PaymentMethodsResponse: &PaymentMethodsResponse{}}
 	if err := c.execute(user, http.MethodGet, "plans-v3", query, resp); err != nil {
 		log.Errorf("Failed to fetch payment methods: %v", err)
+		return nil, err
+	}
+	return resp, nil
+}
+
+// PaymentMethodsV3 returns a list of payment, plans and icons options available to the given user
+func (c *Client) PaymentMethodsV4(user common.UserConfig) (*paymentMethodsResponse, error) {
+	query := url.Values{
+		"locale": {user.GetLanguage()},
+	}
+
+	resp := &paymentMethodsResponse{PaymentMethodsResponse: &PaymentMethodsResponse{}}
+	if err := c.execute(user, http.MethodGet, "plans-v4", query, resp); err != nil {
+		log.Errorf("Failed to fetch payment methods-v4: %v", err)
 		return nil, err
 	}
 	return resp, nil
