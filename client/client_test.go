@@ -99,7 +99,8 @@ func newClientWithLangAndAdSwapTargetURL(userConfig common.UserConfig, statsTrac
 		}, // shortcut method
 		userConfig,
 		statsTracker,
-		func() bool { return true }, // allow private hosts
+		func() bool { return true },  // allow private hosts
+		func() bool { return false }, // is pro
 		func() string { return lang },
 		func(host string) (string, error) { return host, nil },
 		func(category, action, label string) {},
