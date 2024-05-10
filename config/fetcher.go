@@ -155,7 +155,7 @@ func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op) ([]byte, time.Durati
 		}
 	}()
 
-	log.Debug("Fetched cloud config")
 	body, err := io.ReadAll(gzReader)
+	log.Debugf("Fetched cloud config:\n%v", string(body))
 	return body, sleepTime, err
 }
