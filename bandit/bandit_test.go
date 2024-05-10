@@ -28,9 +28,7 @@ func TestParallelDial(t *testing.T) {
 	err = b.Init(len(dialers))
 	require.NoError(t, err)
 
-	parallelDial(dialers, b, func(err error) {
-
-	})
+	parallelDial(dialers, b)
 	require.Eventually(t, func() bool {
 		counts := b.GetCounts()
 		for _, count := range counts {

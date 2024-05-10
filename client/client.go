@@ -856,9 +856,9 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 			countryCode,
 		)
 		onSuccedingProxy(true)
-	}), bandit.OnError(func(err error, activeDialer bool) {
+	}), bandit.OnError(func(err error) {
 		if err != nil {
-			onSuccedingProxy(activeDialer)
+			onSuccedingProxy(false)
 		}
 	}))
 	if err != nil {

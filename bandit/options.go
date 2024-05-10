@@ -10,7 +10,7 @@ func OnSuccess(onSuccess func(dialer Dialer)) Option {
 }
 
 // OnSuccess sets the onError callback
-func OnError(onError func(error, bool)) Option {
+func OnError(onError func(error)) Option {
 	return func(dialer *BanditDialer) {
 		dialer.onError = onError
 	}

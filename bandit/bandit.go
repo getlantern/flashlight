@@ -28,7 +28,7 @@ const (
 type BanditDialer struct {
 	dialers   []Dialer
 	bandit    *bandit.EpsilonGreedy
-	onError   func(error, bool)
+	onError   func(error)
 	onSuccess func(Dialer)
 }
 
@@ -43,6 +43,7 @@ func New(dialers []Dialer, options ...Option) (*BanditDialer, error) {
 	}
 
 	b.Init(len(dialers))
+	parallelDial(dialers, b)
 	dialer := &BanditDialer{
 		dialers: dialers,
 		bandit:  b,
@@ -51,19 +52,13 @@ func New(dialers []Dialer, options ...Option) (*BanditDialer, error) {
 		option(dialer)
 	}
 
-	parallelDial(dialers, b, func(err error) {
-		if err != nil && dialer.onError != nil {
-			dialer.onError(err, dialer.activeDialer())
-		}
-	})
-
 	return dialer, nil
 }
 
 // parallelDial dials all the dialers in parallel to measure pure connectivity
 // as a means of seeding the bandit with initial data. This should
 // help weed out dialers/proxies censored users can't connect to at all.
-func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy, onError func(error)) {
+func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy) {
 	for index, d := range dialers {
 		// Note that the index of the dialer in our list is the index of the arm
 		// in the bandit and that the bandit is concurrent-safe.
@@ -79,11 +74,6 @@ func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy, onError func(e
 			}()
 			if err != nil {
 				log.Debugf("Dialer %v failed: %v", dialer.Name(), err)
-				// check if we have any dialers available prior to calling the onError callback
-				if onError != nil {
-					onError(err)
-				}
-
 				bandit.Update(index, 0)
 				return
 			}
@@ -123,6 +113,10 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	if err != nil {
 		if !failedUpstream {
 			log.Errorf("Dialer %v failed: %v", dialer.Name(), err)
+			if o.onError != nil {
+				o.onError(err)
+			}
+
 			o.bandit.Update(chosenArm, 0)
 		} else {
 			log.Debugf("Dialer %v failed upstream...", dialer.Name())
