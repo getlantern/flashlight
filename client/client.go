@@ -218,8 +218,8 @@ func NewClient(
 			onProxiesUpdate: func(_ []bandit.Dialer, src config.Source) {
 				log.Debugf("[Startup] onProxiesUpdate called from %v", src)
 			},
-			onSucceedingProxy: func(bool) {
-				log.Debugf("[Startup] onSucceedingProxy called")
+			onSucceedingProxy: func(succeeding bool) {
+				log.Debugf("[Startup] onSucceedingProxy(%t) called", succeeding)
 			},
 		},
 		op: ops.Begin("client_started"),
@@ -841,6 +841,13 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 	chained.PersistSessionStates(client.configDir)
 	dialers := chained.CreateDialers(client.configDir, proxies, uc)
 
+	onSuccedingProxy := func(succeeding bool) {
+		stats.SetHasSucceedingProxy(succeeding)
+		if client.callbacks.onSucceedingProxy != nil {
+			client.callbacks.onSucceedingProxy(succeeding)
+		}
+	}
+
 	dialer, err := bandit.New(dialers, bandit.OnSuccess(func(dialer bandit.Dialer) {
 		countryCode, country, city := dialer.Location()
 		stats.SetActiveProxyLocation(
@@ -848,13 +855,11 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 			country,
 			countryCode,
 		)
-		stats.SetHasSucceedingProxy(true)
-		if client.callbacks.onSucceedingProxy != nil {
-			client.callbacks.onSucceedingProxy(true)
+		onSuccedingProxy(true)
+	}), bandit.OnError(func(err error, activeDialer bool) {
+		if err != nil {
+			onSuccedingProxy(activeDialer)
 		}
-	}), bandit.OnError(func(err error) {
-		log.Error(err)
-		stats.SetHasSucceedingProxy(false)
 	}))
 	if err != nil {
 		return nil, nil, err
