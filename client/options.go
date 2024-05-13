@@ -30,7 +30,7 @@ func WithDetour(useDetour func() bool) Option {
 
 // WithInit sets the callback that is called when flashlight is ready and has a config
 // or needs to be initialized
-func WithInit(onInit func(bool)) Option {
+func WithInit(onInit func()) Option {
 	return func(client *Client) {
 		client.callbacks.onInit = onInit
 	}

@@ -14,11 +14,16 @@ import (
 func (client *Client) onGlobalConfig(cfg *config.Global, src config.Source) {
 	log.Debugf("Got global config from %v", src)
 	client.mxGlobal.Lock()
+	prevGlobal := client.global
 	client.global = cfg
 	client.mxGlobal.Unlock()
+
 	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
 	client.applyClientConfig(cfg)
 	client.applyOtel(cfg)
+	if client.callbacks.onInit != nil && prevGlobal == nil {
+		client.callbacks.onInit()
+	}
 	if client.callbacks.onConfigUpdate != nil {
 		client.callbacks.onConfigUpdate(cfg, src)
 	}
@@ -84,6 +89,7 @@ func (client *Client) applyOtel(cfg *config.Global) {
 func (client *Client) startConfigFetch() func() {
 	proxiesDispatch := func(conf interface{}, src config.Source) {
 		proxyMap := conf.(map[string]*commonconfig.ProxyConfig)
+
 		client.notifyProxyListeners(proxyMap, src)
 	}
 	globalDispatch := func(conf interface{}, src config.Source) {

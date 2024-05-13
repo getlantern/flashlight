@@ -105,7 +105,7 @@ func shouldForceProxying() bool {
 
 // clientCallbacks are the callbacks for initialization states that a Flashlight client is configured to use
 type clientCallbacks struct {
-	onInit            func(bool)
+	onInit            func()
 	onProxiesUpdate   func([]bandit.Dialer, config.Source)
 	onConfigUpdate    func(*config.Global, config.Source)
 	onSucceedingProxy func(bool)
@@ -212,7 +212,7 @@ func NewClient(
 			onConfigUpdate: func(*config.Global, config.Source) {
 				log.Debug("[Startup] client config updated")
 			},
-			onInit: func(bool) {
+			onInit: func() {
 				log.Debug("[Startup] onInit called")
 			},
 			onProxiesUpdate: func(_ []bandit.Dialer, src config.Source) {
