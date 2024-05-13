@@ -14,6 +14,7 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/netx"
 	"github.com/getlantern/ops"
 
 	"github.com/getlantern/flashlight/v7/bandit"
@@ -50,7 +51,9 @@ var (
 )
 
 func init() {
-	//netx.EnableNAT64AutoDiscovery()
+	if common.Platform != "ios" {
+		netx.EnableNAT64AutoDiscovery()
+	}
 }
 
 // HandledErrorType is used to differentiate error types to handlers configured via
