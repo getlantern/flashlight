@@ -83,16 +83,6 @@ func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy) {
 	}
 }
 
-// HasSucceedingDialer checks whether or not bandit is currently configured with a dialer that is able to successfully dial our proxies
-func (o *BanditDialer) hasSucceedingDialer() bool {
-	for _, dialer := range o.dialers {
-		if dialer.Succeeding() {
-			return true
-		}
-	}
-	return false
-}
-
 func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
 	deadline, _ := ctx.Deadline()
 	log.Debugf("bandit::DialContext::time remaining: %v", time.Until(deadline))
@@ -112,7 +102,7 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	if err != nil {
 
 		if o.onError != nil {
-			o.onError(err, o.hasSucceedingDialer())
+			o.onError(err, hasSucceedingDialer(o.dialers))
 		}
 
 		if !failedUpstream {
@@ -146,6 +136,16 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 		o.onSuccess(dialer)
 	}
 	return dt, err
+}
+
+// hasSucceedingDialer checks whether or not any of the given dialers is able to successfully dial our proxies
+func hasSucceedingDialer(dialers []Dialer) bool {
+	for _, dialer := range dialers {
+		if dialer.Succeeding() {
+			return true
+		}
+	}
+	return false
 }
 
 func (o *BanditDialer) chooseDialerForDomain(dialers []Dialer, network, addr string) (Dialer, int) {
