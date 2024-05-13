@@ -28,7 +28,7 @@ const (
 type BanditDialer struct {
 	dialers   []Dialer
 	bandit    *bandit.EpsilonGreedy
-	onError   func(error)
+	onError   func(error, bool)
 	onSuccess func(Dialer)
 }
 
@@ -83,11 +83,10 @@ func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy) {
 	}
 }
 
-// activeDialer returns true if the multi-armed bandit is configured with any arms that have a non-zero reward
-// this is the same as checking if we have any dialers that are able to successfully connect to our proxies
-func (o *BanditDialer) activeDialer() bool {
-	for _, reward := range o.bandit.GetRewards() {
-		if reward > 0 {
+// HasSucceedingDialer checks whether or not bandit is currently configured with a dialer that is able to successfully dial our proxies
+func (o *BanditDialer) hasSucceedingDialer() bool {
+	for _, dialer := range o.dialers {
+		if dialer.Succeeding() {
 			return true
 		}
 	}
@@ -111,12 +110,13 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	log.Debugf("bandit::dialer %d: %s at %v", chosenArm, dialer.Label(), dialer.Addr())
 	conn, failedUpstream, err := dialer.DialContext(ctx, network, addr)
 	if err != nil {
+
+		if o.onError != nil {
+			o.onError(err, o.hasSucceedingDialer())
+		}
+
 		if !failedUpstream {
 			log.Errorf("Dialer %v failed: %v", dialer.Name(), err)
-			if o.onError != nil {
-				o.onError(err)
-			}
-
 			o.bandit.Update(chosenArm, 0)
 		} else {
 			log.Debugf("Dialer %v failed upstream...", dialer.Name())

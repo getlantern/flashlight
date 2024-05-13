@@ -835,7 +835,7 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 	chained.PersistSessionStates(client.configDir)
 	dialers := chained.CreateDialers(client.configDir, proxies, uc)
 
-	onSuccedingProxy := func(succeeding bool) {
+	onSucceedingProxy := func(succeeding bool) {
 		stats.SetHasSucceedingProxy(succeeding)
 		if client.callbacks.onSucceedingProxy != nil {
 			client.callbacks.onSucceedingProxy(succeeding)
@@ -849,10 +849,10 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 			country,
 			countryCode,
 		)
-		onSuccedingProxy(true)
-	}), bandit.OnError(func(err error) {
-		if err != nil {
-			onSuccedingProxy(false)
+		onSucceedingProxy(true)
+	}), bandit.OnError(func(err error, hasSucceedingDialer bool) {
+		if err != nil && !hasSucceedingDialer {
+			onSucceedingProxy(false)
 		}
 	}))
 	if err != nil {

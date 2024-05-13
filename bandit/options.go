@@ -9,8 +9,9 @@ func OnSuccess(onSuccess func(dialer Dialer)) Option {
 	}
 }
 
-// OnSuccess sets the onError callback
-func OnError(onError func(error)) Option {
+// OnError sets the onError callback. When called, it includes an error
+// and whether or not bandit has any succeeding dialers
+func OnError(onError func(error, bool)) Option {
 	return func(dialer *BanditDialer) {
 		dialer.onError = onError
 	}
