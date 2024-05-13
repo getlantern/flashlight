@@ -19,9 +19,8 @@ func (client *Client) onGlobalConfig(cfg *config.Global, src config.Source) {
 	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
 	client.applyClientConfig(cfg)
 	client.applyOtel(cfg)
-	client.callbacks.onConfigUpdate(cfg, src)
-	if client.callbacks.onInit != nil {
-		client.callbacks.onInit(true)
+	if client.callbacks.onConfigUpdate != nil {
+		client.callbacks.onConfigUpdate(cfg, src)
 	}
 }
 

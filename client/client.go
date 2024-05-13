@@ -258,7 +258,6 @@ func NewClient(
 		log.Debug("Applying proxy config with proxies")
 		dialers := client.Configure(chained.CopyConfigs(proxies))
 		if dialers != nil {
-			client.callbacks.onInit(true)
 			client.callbacks.onProxiesUpdate(dialers, src)
 		}
 	})
@@ -407,11 +406,6 @@ func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reade
 func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []bandit.Dialer {
 	log.Debug("Configure() called")
 	dialers, dialer, err := client.initDialers(proxies)
-	defer func() {
-		if client.callbacks.onInit != nil {
-			client.callbacks.onInit(err != nil)
-		}
-	}()
 	if err != nil {
 		log.Error(err)
 		return nil
