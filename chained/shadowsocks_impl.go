@@ -1,9 +1,12 @@
 package chained
 
 import (
+	"bytes"
 	"context"
 	crand "crypto/rand"
+	"crypto/x509"
 	"encoding/binary"
+	"encoding/pem"
 	goerrors "errors"
 	"fmt"
 	"io"
@@ -11,6 +14,8 @@ import (
 	"net"
 	"strconv"
 	"sync"
+
+	tls "github.com/refraction-networking/utls"
 
 	"github.com/Jigsaw-Code/outline-ss-server/client"
 
@@ -31,6 +36,7 @@ type shadowsocksImpl struct {
 	upstream       string
 	rng            *mrand.Rand
 	rngmx          sync.Mutex
+	tlsConfig      *tls.Config
 }
 
 func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
@@ -75,11 +81,49 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 	source := mrand.NewSource(seed)
 	rng := mrand.New(source)
 
+	tlsConfig := &tls.Config{}
+	if cert := pc.Cert; cert != "" {
+		block, rest := pem.Decode([]byte(cert))
+		if block == nil {
+			return nil, errors.New("failed to decode proxy certificate as PEM block")
+		}
+
+		if len(rest) > 0 {
+			return nil, errors.New("unexpected extra data in proxy certificate PEM")
+		}
+
+		if block.Type != "CERTIFICATE" {
+			return nil, errors.New("expected certificate in PEM block")
+		}
+		proxyCert := block.Bytes
+
+		verifyPeerCert := func(peerCerts [][]byte, _ [][]*x509.Certificate) error {
+			if len(peerCerts) == 0 {
+				return errors.New("no peer certificate")
+			}
+			if !bytes.Equal(peerCerts[0], proxyCert) {
+				return errors.New("peer certificate does not match expected")
+			}
+			return nil
+		}
+
+		certPool := x509.NewCertPool()
+		certPool.AppendCertsFromPEM([]byte(cert))
+		ip, _, _ := net.SplitHostPort(addr)
+		tlsConfig = &tls.Config{
+			RootCAs:               certPool,
+			ServerName:            ip,
+			InsecureSkipVerify:    true,
+			VerifyPeerCertificate: verifyPeerCert,
+		}
+	}
+
 	return &shadowsocksImpl{
 		reportDialCore: reportDialCore,
 		client:         cl,
 		upstream:       upstream,
 		rng:            rng,
+		tlsConfig:      tlsConfig,
 	}, nil
 }
 
@@ -91,6 +135,10 @@ func (impl *shadowsocksImpl) dialServer(op *ops.Op, ctx context.Context) (net.Co
 		conn, err := impl.client.DialTCP(nil, impl.generateUpstream())
 		if err != nil {
 			return nil, err
+		}
+		if impl.tlsConfig != nil {
+			tlsConn := tls.Client(conn, impl.tlsConfig)
+			return &ssWrapConn{tlsConn}, nil
 		}
 		return &ssWrapConn{conn}, nil
 	})
