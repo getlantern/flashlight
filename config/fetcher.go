@@ -156,6 +156,9 @@ func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op) ([]byte, time.Durati
 	}()
 
 	body, err := io.ReadAll(gzReader)
-	log.Debugf("Fetched cloud config:\n%v", string(body))
+	if !strings.Contains(url, "global") {
+		log.Debugf("Fetched proxies:\n%v", string(body))
+	}
+	log.Debugf("Fetched cloud config")
 	return body, sleepTime, err
 }
