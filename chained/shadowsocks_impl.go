@@ -5,7 +5,6 @@ import (
 	crand "crypto/rand"
 	"crypto/x509"
 	"encoding/binary"
-	"encoding/pem"
 	goerrors "errors"
 	"fmt"
 	"io"
@@ -43,6 +42,11 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 	cipher := ptSetting(pc, "shadowsocks_cipher")
 	upstream := ptSetting(pc, "shadowsocks_upstream")
 	prefixGen := ptSetting(pc, "shadowsocks_prefix_generator")
+	withTLSStr := ptSetting(pc, "shadowsocks_with_tls")
+	withTLS, err := strconv.ParseBool(withTLSStr)
+	if err != nil {
+		withTLS = false
+	}
 
 	if upstream == "" {
 		upstream = defaultShadowsocksUpstreamSuffix
@@ -80,23 +84,10 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 	source := mrand.NewSource(seed)
 	rng := mrand.New(source)
 
-	tlsConfig := &tls.Config{}
-	if cert := pc.Cert; cert != "" {
-		block, rest := pem.Decode([]byte(cert))
-		if block == nil {
-			return nil, errors.New("failed to decode proxy certificate as PEM block")
-		}
-
-		if len(rest) > 0 {
-			return nil, errors.New("unexpected extra data in proxy certificate PEM")
-		}
-
-		if block.Type != "CERTIFICATE" {
-			return nil, errors.New("expected certificate in PEM block")
-		}
-
+	var tlsConfig *tls.Config = nil
+	if withTLS {
 		certPool := x509.NewCertPool()
-		if ok := certPool.AppendCertsFromPEM([]byte(cert)); !ok {
+		if ok := certPool.AppendCertsFromPEM([]byte(pc.Cert)); !ok {
 			return nil, errors.New("couldn't add certificate to pool")
 		}
 		ip, _, err := net.SplitHostPort(addr)
