@@ -1,7 +1,6 @@
 package chained
 
 import (
-	"bytes"
 	"context"
 	crand "crypto/rand"
 	"crypto/x509"
@@ -95,26 +94,19 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 		if block.Type != "CERTIFICATE" {
 			return nil, errors.New("expected certificate in PEM block")
 		}
-		proxyCert := block.Bytes
-
-		verifyPeerCert := func(peerCerts [][]byte, _ [][]*x509.Certificate) error {
-			if len(peerCerts) == 0 {
-				return errors.New("no peer certificate")
-			}
-			if !bytes.Equal(peerCerts[0], proxyCert) {
-				return errors.New("peer certificate does not match expected")
-			}
-			return nil
-		}
 
 		certPool := x509.NewCertPool()
-		certPool.AppendCertsFromPEM([]byte(cert))
-		ip, _, _ := net.SplitHostPort(addr)
+		if ok := certPool.AppendCertsFromPEM([]byte(cert)); !ok {
+			return nil, errors.New("couldn't add certificate to pool")
+		}
+		ip, _, err := net.SplitHostPort(addr)
+		if err != nil {
+			return nil, errors.New("couldn't split host and port: %v", err)
+		}
+
 		tlsConfig = &tls.Config{
-			RootCAs:               certPool,
-			ServerName:            ip,
-			InsecureSkipVerify:    true,
-			VerifyPeerCertificate: verifyPeerCert,
+			RootCAs:    certPool,
+			ServerName: ip,
 		}
 	}
 
