@@ -3,6 +3,7 @@ package flashlight
 import (
 	"fmt"
 	"net"
+	"net/http"
 	"path/filepath"
 	"sync"
 	"time"
@@ -247,7 +248,12 @@ func (f *Flashlight) startConfigFetch() func() {
 		log.Debugf("Applying global config")
 		f.onGlobalConfig(cfg, src)
 	}
-	rt := proxied.ParallelPreferChained()
+	var rt http.RoundTripper
+	if common.Platform == "ios" {
+		rt = proxied.DirectThenFrontedClient(10 * time.Second).Transport
+	} else {
+		rt = proxied.ParallelPreferChained()
+	}
 
 	onProxiesSaveError := func(err error) {
 		f.errorHandler(ErrorTypeProxySaveFailure, err)
