@@ -47,30 +47,26 @@ func TestParallelDial(t *testing.T) {
 }
 
 func TestNew(t *testing.T) {
-	type args struct {
-		dialers      []Dialer
-		statsTracker stats.Tracker
-	}
 	tests := []struct {
 		name    string
-		args    args
+		opts    Options
 		want    *BanditDialer
 		wantErr bool
 	}{
 		{
 			name: "should still succeed even if there are no dialers",
-			args: args{
-				dialers:      nil,
-				statsTracker: stats.NewNoop(),
+			opts: Options{
+				Dialers:      nil,
+				StatsTracker: stats.NewNoop(),
 			},
 			want:    nil,
 			wantErr: false,
 		},
 		{
 			name: "should return a BanditDialer if there's only one dialer",
-			args: args{
-				dialers:      []Dialer{newTcpConnDialer()},
-				statsTracker: stats.NewNoop(),
+			opts: Options{
+				Dialers:      []Dialer{newTcpConnDialer()},
+				StatsTracker: stats.NewNoop(),
 			},
 			want:    &BanditDialer{},
 			wantErr: false,
@@ -78,7 +74,7 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.dialers)
+			got, err := New(tt.opts)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -91,36 +87,33 @@ func TestNew(t *testing.T) {
 }
 
 func TestBanditDialer_DialContext(t *testing.T) {
-	type fields struct {
-		dialers []Dialer
-	}
 	expectedConn := &dataTrackingConn{}
 	tests := []struct {
 		name    string
-		fields  fields
+		opts    Options
 		want    net.Conn
 		wantErr bool
 	}{
 		{
 			name: "should return an error if there are no dialers",
-			fields: fields{
-				dialers: nil,
+			opts: Options{
+				Dialers: nil,
 			},
 			want:    nil,
 			wantErr: true,
 		},
 		{
 			name: "should return a connection if there's only one dialer",
-			fields: fields{
-				dialers: []Dialer{newTcpConnDialer()},
+			opts: Options{
+				Dialers: []Dialer{newTcpConnDialer()},
 			},
 			want:    expectedConn,
 			wantErr: false,
 		},
 		{
 			name: "should return a connection if there are lots of dialers",
-			fields: fields{
-				dialers: []Dialer{newTcpConnDialer(), newTcpConnDialer(), newTcpConnDialer()},
+			opts: Options{
+				Dialers: []Dialer{newTcpConnDialer(), newTcpConnDialer(), newTcpConnDialer()},
 			},
 			want:    expectedConn,
 			wantErr: false,
@@ -128,7 +121,7 @@ func TestBanditDialer_DialContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			o, err := New(tt.fields.dialers)
+			o, err := New(tt.opts)
 			if err != nil {
 				t.Fatal(err)
 			}

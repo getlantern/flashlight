@@ -195,7 +195,7 @@ func NewClient(
 	if err != nil {
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
-	banditDialer, err := bandit.New([]bandit.Dialer{})
+	banditDialer, err := bandit.New(bandit.Options{})
 	if err != nil {
 		return nil, errors.New("Unable to create bandit: %v", err)
 	}
@@ -830,31 +830,21 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 		return nil, nil, fmt.Errorf("no chained servers configured, not initializing dialers")
 	}
 	uc := client.user
-	stats := client.statsTracker
-
 	chained.PersistSessionStates(client.configDir)
 	dialers := chained.CreateDialers(client.configDir, proxies, uc)
 
-	onSucceedingProxy := func(succeeding bool) {
-		stats.SetHasSucceedingProxy(succeeding)
-		if client.callbacks.onSucceedingProxy != nil {
-			client.callbacks.onSucceedingProxy(succeeding)
-		}
-	}
-
-	dialer, err := bandit.New(dialers, bandit.OnSuccess(func(dialer bandit.Dialer) {
-		countryCode, country, city := dialer.Location()
-		stats.SetActiveProxyLocation(
-			city,
-			country,
-			countryCode,
-		)
-		onSucceedingProxy(true)
-	}), bandit.OnError(func(err error, hasSucceedingDialer bool) {
-		if err != nil && !hasSucceedingDialer {
-			onSucceedingProxy(false)
-		}
-	}))
+	dialer, err := bandit.New(bandit.Options{
+		Dialers: dialers,
+		OnError: func(err error, hasSucceedingDialer bool) {
+			if err != nil && !hasSucceedingDialer {
+				client.callbacks.onSucceedingProxy(false)
+			}
+		},
+		OnSuccess: func(dialer bandit.Dialer) {
+			client.callbacks.onSucceedingProxy(true)
+		},
+		StatsTracker: client.statsTracker,
+	})
 	if err != nil {
 		return nil, nil, err
 	}

@@ -7,7 +7,7 @@ import (
 
 type Option func(*Client)
 
-// WithConnectionCallback sets the config callback
+// WithSucceedingProxy sets the onSucceedingProxy callback
 func WithSucceedingProxy(onSucceedingProxy func(isConnected bool)) Option {
 	return func(client *Client) {
 		client.callbacks.onSucceedingProxy = onSucceedingProxy

@@ -74,10 +74,12 @@ func newTestUserConfig() *common.UserConfigData {
 }
 
 func resetDialers(client *Client, dialer func(network, addr string) (net.Conn, error)) {
-	d, _ := bandit.New([]bandit.Dialer{&testDialer{
-		name: "test-dialer",
-		dial: dialer,
-	}})
+	d, _ := bandit.New(bandit.Options{
+		Dialers: []bandit.Dialer{&testDialer{
+			name: "test-dialer",
+			dial: dialer,
+		}},
+	})
 	client.dialer = d
 }
 

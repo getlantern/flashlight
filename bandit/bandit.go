@@ -9,6 +9,7 @@ import (
 	"time"
 
 	bandit "github.com/alextanhongpin/go-bandit"
+	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/golog"
 )
 
@@ -26,15 +27,36 @@ const (
 
 // BanditDialer is responsible for continually choosing the optimized dialer.
 type BanditDialer struct {
-	dialers   []Dialer
-	bandit    *bandit.EpsilonGreedy
-	onError   func(error, bool)
-	onSuccess func(Dialer)
+	opts         Options
+	dialers      []Dialer
+	bandit       *bandit.EpsilonGreedy
+	statsTracker stats.Tracker
+}
+
+// Options are the options used to create a new bandit
+type Options struct {
+	// The available dialers to use when creating a new bandit
+	Dialers []Dialer
+
+	// OnError is the onError callback that is called when bandit encounters a dial error
+	OnError func(error, bool)
+
+	// OnSuccess is the callback that is called by bandit after a successful dial.
+	OnSuccess func(Dialer)
+
+	// StatsTracker is a stats.Tracker bandit should be configured to use (a callback that is called
+	// when a dialer is selected)
+	StatsTracker stats.Tracker
 }
 
 // New creates a new bandit given the available dialers and options with
 // callbacks to be called when a dialer is selected, an error occurs, etc.
-func New(dialers []Dialer, options ...Option) (*BanditDialer, error) {
+func New(opts Options) (*BanditDialer, error) {
+	if opts.StatsTracker == nil {
+		opts.StatsTracker = stats.NewNoop()
+	}
+
+	dialers := opts.Dialers
 	log.Debugf("Creating bandit with %d dialers", len(dialers))
 	b, err := bandit.NewEpsilonGreedy(0.1, nil, nil)
 	if err != nil {
@@ -45,11 +67,10 @@ func New(dialers []Dialer, options ...Option) (*BanditDialer, error) {
 	b.Init(len(dialers))
 	parallelDial(dialers, b)
 	dialer := &BanditDialer{
-		dialers: dialers,
-		bandit:  b,
-	}
-	for _, option := range options {
-		option(dialer)
+		dialers:      dialers,
+		bandit:       b,
+		opts:         opts,
+		statsTracker: opts.StatsTracker,
 	}
 
 	return dialer, nil
@@ -100,10 +121,7 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	log.Debugf("bandit::dialer %d: %s at %v", chosenArm, dialer.Label(), dialer.Addr())
 	conn, failedUpstream, err := dialer.DialContext(ctx, network, addr)
 	if err != nil {
-
-		if o.onError != nil {
-			o.onError(err, hasSucceedingDialer(o.dialers))
-		}
+		o.onFailure(err)
 
 		if !failedUpstream {
 			log.Errorf("Dialer %v failed: %v", dialer.Name(), err)
@@ -132,9 +150,7 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 		//log.Debugf("Dialer %v received %v bytes in %v seconds, normalized speed: %v", dialer.Name(), dt.dataRecv, secondsForSample, speed)
 		o.bandit.Update(chosenArm, speed)
 	})
-	if o.onSuccess != nil {
-		o.onSuccess(dialer)
-	}
+	o.onSuccess(dialer)
 	return dt, err
 }
 
@@ -172,6 +188,27 @@ func differentArm(existingArm, numDialers int) int {
 
 	// If random selection doesn't work, just choose the next one.
 	return (existingArm + 1) % numDialers
+}
+
+func (o *BanditDialer) onSuccess(dialer Dialer) {
+	countryCode, country, city := dialer.Location()
+	o.statsTracker.SetActiveProxyLocation(
+		city,
+		country,
+		countryCode,
+	)
+	o.statsTracker.SetHasSucceedingProxy(true)
+	if o.opts.OnSuccess != nil {
+		o.opts.OnSuccess(dialer)
+	}
+}
+
+func (o *BanditDialer) onFailure(err error) {
+	hasSucceeding := hasSucceedingDialer(o.dialers)
+	o.statsTracker.SetHasSucceedingProxy(hasSucceeding)
+	if o.opts.OnError != nil {
+		o.opts.OnError(err, hasSucceeding)
+	}
 }
 
 const secondsForSample = 6
