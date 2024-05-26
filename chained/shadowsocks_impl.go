@@ -3,6 +3,7 @@ package chained
 import (
 	"context"
 	crand "crypto/rand"
+	"crypto/x509"
 	"encoding/binary"
 	goerrors "errors"
 	"fmt"
@@ -11,6 +12,8 @@ import (
 	"net"
 	"strconv"
 	"sync"
+
+	tls "github.com/refraction-networking/utls"
 
 	"github.com/Jigsaw-Code/outline-ss-server/client"
 
@@ -31,6 +34,7 @@ type shadowsocksImpl struct {
 	upstream       string
 	rng            *mrand.Rand
 	rngmx          sync.Mutex
+	tlsConfig      *tls.Config
 }
 
 func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
@@ -38,6 +42,11 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 	cipher := ptSetting(pc, "shadowsocks_cipher")
 	upstream := ptSetting(pc, "shadowsocks_upstream")
 	prefixGen := ptSetting(pc, "shadowsocks_prefix_generator")
+	withTLSStr := ptSetting(pc, "shadowsocks_with_tls")
+	withTLS, err := strconv.ParseBool(withTLSStr)
+	if err != nil {
+		withTLS = false
+	}
 
 	if upstream == "" {
 		upstream = defaultShadowsocksUpstreamSuffix
@@ -75,11 +84,29 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 	source := mrand.NewSource(seed)
 	rng := mrand.New(source)
 
+	var tlsConfig *tls.Config = nil
+	if withTLS {
+		certPool := x509.NewCertPool()
+		if ok := certPool.AppendCertsFromPEM([]byte(pc.Cert)); !ok {
+			return nil, errors.New("couldn't add certificate to pool")
+		}
+		ip, _, err := net.SplitHostPort(addr)
+		if err != nil {
+			return nil, errors.New("couldn't split host and port: %v", err)
+		}
+
+		tlsConfig = &tls.Config{
+			RootCAs:    certPool,
+			ServerName: ip,
+		}
+	}
+
 	return &shadowsocksImpl{
 		reportDialCore: reportDialCore,
 		client:         cl,
 		upstream:       upstream,
 		rng:            rng,
+		tlsConfig:      tlsConfig,
 	}, nil
 }
 
@@ -91,6 +118,10 @@ func (impl *shadowsocksImpl) dialServer(op *ops.Op, ctx context.Context) (net.Co
 		conn, err := impl.client.DialTCP(nil, impl.generateUpstream())
 		if err != nil {
 			return nil, err
+		}
+		if impl.tlsConfig != nil {
+			tlsConn := tls.Client(conn, impl.tlsConfig)
+			return &ssWrapConn{tlsConn}, nil
 		}
 		return &ssWrapConn{conn}, nil
 	})
