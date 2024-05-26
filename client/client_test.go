@@ -22,6 +22,7 @@ import (
 	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/domainrouting"
+	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mockconn"
@@ -73,32 +74,35 @@ func newTestUserConfig() *common.UserConfigData {
 }
 
 func resetDialers(client *Client, dialer func(network, addr string) (net.Conn, error)) {
-	d, _ := bandit.New([]bandit.Dialer{&testDialer{
-		name: "test-dialer",
-		dial: dialer,
-	}})
+	d, _ := bandit.New(bandit.Options{
+		Dialers: []bandit.Dialer{&testDialer{
+			name: "test-dialer",
+			dial: dialer,
+		}},
+	})
 	client.dialer = d
 }
 
 func newClient() *Client {
+	userConfig := newTestUserConfig()
+	statsTracker := mockStatsTracker{}
 	TimeoutWaitingForDNSResolutionMap = 1 * time.Millisecond // For testing, don't wait for a code that won't be run anyways
-	return newClientWithLangAndAdSwapTargetURL(testLang, testAdSwapTargetURL)
+	return newClientWithLangAndAdSwapTargetURL(userConfig, statsTracker, testLang, testAdSwapTargetURL)
 }
 
-func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *Client {
+func newClientWithLangAndAdSwapTargetURL(userConfig common.UserConfig, statsTracker stats.Tracker, lang string, adSwapTargetURL string) *Client {
 	client, _ := NewClient(
 		tempConfigDir,
+		ops.Begin("client_started"),
 		func() bool { return false },
-		func() bool { return false }, // proxy all
-		func() bool { return false }, // use shortcut
+		map[string]interface{}{},
 		func(ctx context.Context, addr string) (shortcut.Method, net.IP) {
 			return shortcut.Proxy, nil
 		}, // shortcut method
-		func() bool { return true }, // use detour
-		func() bool { return true }, // allow HTTPS everywhere
-		newTestUserConfig(),
-		mockStatsTracker{},
-		func() bool { return true }, // allow private hosts
+		userConfig,
+		statsTracker,
+		func() bool { return true },  // allow private hosts
+		func() bool { return false }, // is pro
 		func() string { return lang },
 		func(host string) (string, error) { return host, nil },
 		func(category, action, label string) {},
@@ -208,7 +212,7 @@ func TestDialShortcut(t *testing.T) {
 	res, _ := roundTrip(client, req)
 	assert.Zero(t, shortcutVisited, "should not check shortcut list when shortcut is disabled")
 
-	client.useShortcut = func() bool { return true }
+	client.callbacks.useShortcut = func() bool { return true }
 	// used as a sign that the request is sent to proxy
 	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n")
 	// add some delay before sending back data, as response before the request
@@ -239,7 +243,7 @@ func TestDialShortcut(t *testing.T) {
 	}
 	assert.Equal(t, 404, nestedResp.StatusCode, "should dial proxy if the shortcutted site is unreachable")
 
-	client.useShortcut = func() bool { return true }
+	client.callbacks.useShortcut = func() bool { return true }
 	client.shortcutMethod = func(context.Context, string) (shortcut.Method, net.IP) {
 		shortcutVisited++
 		return shortcut.Proxy, nil
@@ -293,7 +297,7 @@ func TestLeakingDomainsRequiringProxy(t *testing.T) {
 	client.shortcutMethod = func(ctx context.Context, addr string) (shortcut.Method, net.IP) {
 		return shortcut.Proxy, nil
 	}
-	client.useShortcut = func() bool { return false }
+	client.callbacks.useShortcut = func() bool { return false }
 
 	detour.AddToWl(addr, true)
 	defer detour.RemoveFromWl(site.URL)
@@ -356,8 +360,8 @@ func TestTimeoutCheckingShortcut(t *testing.T) {
 	requestTimeout := 10 * time.Millisecond
 	client := newClient()
 	client.requestTimeout = requestTimeout
-	client.useDetour = func() bool { return false }
-	client.useShortcut = func() bool { return true }
+	client.callbacks.useDetour = func() bool { return false }
+	client.callbacks.useShortcut = func() bool { return true }
 
 	client.shortcutMethod = func(ctx context.Context, addr string) (shortcut.Method, net.IP) {
 		// force shortcutMethod to wait for cxt to expire
@@ -592,9 +596,8 @@ func (r *response) nested() (*http.Response, error) {
 
 func Test_initDialers(t *testing.T) {
 	proxies := newProxies()
-	stats := stats.NewNoop()
-	uc := common.NullUserConfig{}
-	dialers, banditDialer, err := initDialers(proxies, "", stats, uc)
+	client := newClient()
+	dialers, banditDialer, err := client.initDialers(proxies)
 	assert.NoError(t, err)
 	assert.NotNil(t, dialers)
 	assert.NotNil(t, banditDialer)
