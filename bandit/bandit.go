@@ -15,10 +15,6 @@ import (
 
 var log = golog.LoggerFor("bandit")
 
-var (
-	lastDialConutryCode string
-)
-
 const (
 	// NetworkConnect is a pseudo network name to instruct the dialer to establish
 	// a CONNECT tunnel to the proxy.
@@ -164,11 +160,11 @@ func differentArm(existingArm, numDialers int) int {
 
 func (o *BanditDialer) onSuccess(dialer Dialer) {
 	countryCode, country, city := dialer.Location()
-	if lastDialConutryCode != "" && lastDialConutryCode == countryCode {
-		log.Debugf("Same country code as last returning")
+	previousStats := o.statsTracker.Latest()
+	if previousStats.CountryCode != "" && previousStats.CountryCode == countryCode {
+		log.Debug("Same country code as before, returning")
 		return
 	}
-	lastDialConutryCode = countryCode
 
 	o.statsTracker.SetActiveProxyLocation(
 		city,
