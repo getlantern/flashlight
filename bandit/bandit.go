@@ -17,8 +17,6 @@ var log = golog.LoggerFor("bandit")
 
 var (
 	lastDialConutryCode string
-	lastDialCity        string
-	lastDialCountry     string
 )
 
 const (
@@ -166,13 +164,12 @@ func differentArm(existingArm, numDialers int) int {
 
 func (o *BanditDialer) onSuccess(dialer Dialer) {
 	countryCode, country, city := dialer.Location()
-	if lastDialConutryCode == countryCode && lastDialCountry == country && lastDialCity == city {
-		log.Debugf("Same value as last returning")
+	if lastDialConutryCode != "" && lastDialConutryCode == countryCode {
+		log.Debugf("Same country code as last returning")
 		return
 	}
 	lastDialConutryCode = countryCode
-	lastDialCity = city
-	lastDialCountry = country
+
 	o.statsTracker.SetActiveProxyLocation(
 		city,
 		country,
