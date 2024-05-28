@@ -162,7 +162,6 @@ func (o *BanditDialer) onSuccess(dialer Dialer) {
 	countryCode, country, city := dialer.Location()
 	previousStats := o.statsTracker.Latest()
 	if previousStats.CountryCode != "" && previousStats.CountryCode == countryCode {
-		log.Debug("Same country code as before, returning")
 		return
 	}
 
