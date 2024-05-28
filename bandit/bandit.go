@@ -30,9 +30,6 @@ type BanditDialer struct {
 	dialers      []Dialer
 	bandit       *bandit.EpsilonGreedy
 	statsTracker stats.Tracker
-	// lastDialCountryCode stores the last dialed country code.
-	// This is used to avoid unnecessary calls to the UI thread
-	lastDialCountryCode atomic.Value
 }
 
 // New creates a new bandit given the available dialers.
@@ -163,12 +160,11 @@ func differentArm(existingArm, numDialers int) int {
 
 func (o *BanditDialer) onSuccess(dialer Dialer) {
 	countryCode, country, city := dialer.Location()
-	lastCountryCode, _ := o.lastDialCountryCode.Load().(string)
-	if lastCountryCode != "" && lastCountryCode == countryCode {
-		log.Debugf("Same country code as last returning")
+	previousStats := o.statsTracker.Latest()
+	if previousStats.CountryCode != "" && previousStats.CountryCode == countryCode {
+		log.Debug("Same country code as before, returning")
 		return
 	}
-	o.lastDialCountryCode.Store(countryCode)
 
 	o.statsTracker.SetActiveProxyLocation(
 		city,
