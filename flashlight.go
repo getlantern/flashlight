@@ -51,7 +51,9 @@ var (
 )
 
 func init() {
-	netx.EnableNAT64AutoDiscovery()
+	if common.Platform != "ios" {
+		netx.EnableNAT64AutoDiscovery()
+	}
 }
 
 // HandledErrorType is used to differentiate error types to handlers configured via
