@@ -192,6 +192,11 @@ func differentArm(existingArm, numDialers int) int {
 
 func (o *BanditDialer) onSuccess(dialer Dialer) {
 	countryCode, country, city := dialer.Location()
+	previousStats := o.statsTracker.Latest()
+	if previousStats.CountryCode != "" && previousStats.CountryCode == countryCode {
+		return
+	}
+
 	o.statsTracker.SetActiveProxyLocation(
 		city,
 		country,

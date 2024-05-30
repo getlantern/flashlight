@@ -27,7 +27,9 @@ var (
 )
 
 func init() {
-	netx.EnableNAT64AutoDiscovery()
+	if common.Platform != "ios" {
+		netx.EnableNAT64AutoDiscovery()
+	}
 }
 
 type ProxyListener interface {
