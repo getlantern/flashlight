@@ -130,7 +130,7 @@ func (impl *shadowsocksImpl) close() {
 
 func (impl *shadowsocksImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return impl.reportDialCore(op, func() (net.Conn, error) {
-		conn, err := impl.client.DialStream(nil, impl.generateUpstream())
+		conn, err := impl.client.DialStream(ctx, impl.generateUpstream())
 		if err != nil {
 			return nil, err
 		}
