@@ -80,6 +80,8 @@ func TestGetPlans(t *testing.T) {
 }
 
 func TestPaymentMethodsV4(t *testing.T) {
+	t.Skip("not a self-contained test")
+
 	user := generateUser()
 	res, err := createClient().UserCreate(user)
 	if !assert.NoError(t, err) {
