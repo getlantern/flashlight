@@ -85,10 +85,10 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 		gen, err := prefixgen.New(prefixGen)
 		if err != nil {
 			log.Errorf("failed to parse shadowsocks prefix generator from %v for proxy %v: %v", prefixGen, name, err)
-		} else {
-			prefixFunc := func() ([]byte, error) { return gen(), nil }
-			cl.SaltGenerator = &PrefixSaltGen{prefixFunc}
+			return nil, errors.New("failed to parse shadowsocks prefix generator from %v for proxy %v: %v", prefixGen, name, err)
 		}
+		prefixFunc := func() ([]byte, error) { return gen(), nil }
+		cl.SaltGenerator = &PrefixSaltGen{prefixFunc}
 	}
 
 	var seed int64
