@@ -87,14 +87,21 @@ type Flashlight struct {
 	isPro            func() bool
 	mxGlobal         sync.RWMutex
 	global           *config.Global
-	onProxiesUpdate  func([]bandit.Dialer, config.Source)
-	onConfigUpdate   func(*config.Global, config.Source)
 	autoReport       func() bool
 	client           *client.Client
+	callbacks        clientCallbacks
 	op               *fops.Op
 	errorHandler     func(HandledErrorType, error)
 	mxProxyListeners sync.RWMutex
 	proxyListeners   []func(map[string]*commonconfig.ProxyConfig, config.Source)
+}
+
+// clientCallbacks are callbacks the client is configured with
+type clientCallbacks struct {
+	onInit            func()
+	onProxiesUpdate   func([]bandit.Dialer, config.Source)
+	onConfigUpdate    func(*config.Global, config.Source)
+	onSucceedingProxy func(bool)
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
@@ -105,7 +112,8 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
 	f.applyClientConfig(cfg)
 	f.applyOtel(cfg)
-	f.onConfigUpdate(cfg, src)
+	f.callbacks.onConfigUpdate(cfg, src)
+	f.callbacks.onInit()
 }
 
 // EnabledFeatures gets all features enabled based on current conditions
@@ -281,24 +289,16 @@ func New(
 	allowPrivateHosts func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
-	onConfigUpdate func(*config.Global, config.Source),
-	onProxiesUpdate func([]bandit.Dialer, config.Source),
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	isPro func() bool,
 	lang func() string,
 	reverseDNS func(host string) (string, error),
 	eventWithLabel func(category, action, label string),
+	options ...Option,
 ) (*Flashlight, error) {
 	log.Debugf("Running in app: %v", appName)
 	log.Debugf("Using configdir: %v", configDir)
-
-	if onProxiesUpdate == nil {
-		onProxiesUpdate = func(_ []bandit.Dialer, src config.Source) {}
-	}
-	if onConfigUpdate == nil {
-		onConfigUpdate = func(_ *config.Global, src config.Source) {}
-	}
 	displayVersion(appVersion, revisionDate)
 	common.CompileTimeApplicationVersion = appVersion
 	deviceID := userConfig.GetDeviceID()
@@ -307,15 +307,27 @@ func New(
 	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 
 	f := &Flashlight{
-		configDir:       configDir,
-		flagsAsMap:      flagsAsMap,
-		userConfig:      userConfig,
-		isPro:           isPro,
-		global:          nil,
-		onProxiesUpdate: onProxiesUpdate,
-		onConfigUpdate:  onConfigUpdate,
-		autoReport:      autoReport,
-		op:              fops.Begin("client_started"),
+		callbacks: clientCallbacks{
+			onConfigUpdate: func(*config.Global, config.Source) {
+				log.Debug("[Startup] client config updated")
+			},
+			onInit: func() {
+				log.Debug("[Startup] onInit called")
+			},
+			onProxiesUpdate: func(_ []bandit.Dialer, src config.Source) {
+				log.Debugf("[Startup] onProxiesUpdate called from %v", src)
+			},
+			onSucceedingProxy: func(succeeding bool) {
+				log.Debugf("[Startup] onSucceedingProxy(%t) called", succeeding)
+			},
+		},
+		configDir:  configDir,
+		flagsAsMap: flagsAsMap,
+		userConfig: userConfig,
+		isPro:      isPro,
+		global:     nil,
+		autoReport: autoReport,
+		op:         fops.Begin("client_started"),
 		errorHandler: func(t HandledErrorType, err error) {
 			log.Errorf("%v: %v", t, err)
 		},
@@ -326,7 +338,7 @@ func New(
 		log.Debug("Applying proxy config with proxies")
 		dialers := f.client.Configure(chained.CopyConfigs(proxies))
 		if dialers != nil {
-			f.onProxiesUpdate(dialers, src)
+			f.callbacks.onProxiesUpdate(dialers, src)
 		}
 	})
 
@@ -398,6 +410,7 @@ func New(
 		lang,
 		reverseDNS,
 		eventWithLabel,
+		f.callbacks.onSucceedingProxy,
 	)
 	if err != nil {
 		fatalErr := fmt.Errorf("unable to initialize client: %v", err)
@@ -406,6 +419,11 @@ func New(
 		return nil, fatalErr
 	}
 	f.client = cl
+
+	for _, option := range options {
+		option(f)
+	}
+
 	return f, nil
 }
 
