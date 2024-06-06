@@ -318,6 +318,9 @@ func New(
 			onProxiesUpdate: func(_ []bandit.Dialer, src config.Source) {
 				log.Debugf("[Startup] onProxiesUpdate called from %v", src)
 			},
+			onDialError: func(err error, hasSucceeding bool) {
+
+			},
 			onSucceedingProxy: func() {
 				log.Debug("[Startup] onSucceedingProxy called")
 			},
