@@ -27,9 +27,10 @@ const (
 
 // BanditDialer is responsible for continually choosing the optimized dialer.
 type BanditDialer struct {
-	opts         Options
 	dialers      []Dialer
 	bandit       *bandit.EpsilonGreedy
+	onError      func(error, bool)
+	onSuccess    func(Dialer)
 	statsTracker stats.Tracker
 }
 
@@ -52,6 +53,12 @@ type Options struct {
 // New creates a new bandit given the available dialers and options with
 // callbacks to be called when a dialer is selected, an error occurs, etc.
 func New(opts Options) (*BanditDialer, error) {
+	if opts.OnError == nil {
+		opts.OnError = func(error, bool) {}
+	}
+	if opts.OnSuccess == nil {
+		opts.OnSuccess = func(Dialer) {}
+	}
 	if opts.StatsTracker == nil {
 		opts.StatsTracker = stats.NewNoop()
 	}
@@ -69,7 +76,8 @@ func New(opts Options) (*BanditDialer, error) {
 	dialer := &BanditDialer{
 		dialers:      dialers,
 		bandit:       b,
-		opts:         opts,
+		onError:      opts.OnError,
+		onSuccess:    opts.OnSuccess,
 		statsTracker: opts.StatsTracker,
 	}
 
@@ -121,7 +129,9 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	log.Debugf("bandit::dialer %d: %s at %v", chosenArm, dialer.Label(), dialer.Addr())
 	conn, failedUpstream, err := dialer.DialContext(ctx, network, addr)
 	if err != nil {
-		o.onFailure(err)
+		hasSucceeding := hasSucceedingDialer(o.dialers)
+		o.statsTracker.SetHasSucceedingProxy(hasSucceeding)
+		o.onError(err, hasSucceeding)
 
 		if !failedUpstream {
 			log.Errorf("Dialer %v failed: %v", dialer.Name(), err)
@@ -150,6 +160,17 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 		//log.Debugf("Dialer %v received %v bytes in %v seconds, normalized speed: %v", dialer.Name(), dt.dataRecv, secondsForSample, speed)
 		o.bandit.Update(chosenArm, speed)
 	})
+
+	countryCode, country, city := dialer.Location()
+	previousStats := o.statsTracker.Latest()
+	if previousStats.CountryCode != "" && previousStats.CountryCode != countryCode {
+		o.statsTracker.SetActiveProxyLocation(
+			city,
+			country,
+			countryCode,
+		)
+	}
+	o.statsTracker.SetHasSucceedingProxy(true)
 	o.onSuccess(dialer)
 	return dt, err
 }
@@ -188,32 +209,6 @@ func differentArm(existingArm, numDialers int) int {
 
 	// If random selection doesn't work, just choose the next one.
 	return (existingArm + 1) % numDialers
-}
-
-func (o *BanditDialer) onSuccess(dialer Dialer) {
-	countryCode, country, city := dialer.Location()
-	previousStats := o.statsTracker.Latest()
-	if previousStats.CountryCode != "" && previousStats.CountryCode == countryCode {
-		return
-	}
-
-	o.statsTracker.SetActiveProxyLocation(
-		city,
-		country,
-		countryCode,
-	)
-	o.statsTracker.SetHasSucceedingProxy(true)
-	if o.opts.OnSuccess != nil {
-		o.opts.OnSuccess(dialer)
-	}
-}
-
-func (o *BanditDialer) onFailure(err error) {
-	hasSucceeding := hasSucceedingDialer(o.dialers)
-	o.statsTracker.SetHasSucceedingProxy(hasSucceeding)
-	if o.opts.OnError != nil {
-		o.opts.OnError(err, hasSucceeding)
-	}
 }
 
 const secondsForSample = 6
