@@ -118,6 +118,8 @@ type Client struct {
 	shortcutMethod       func(ctx context.Context, addr string) (shortcut.Method, net.IP)
 	useDetour            func() bool
 	allowHTTPSEverywhere func() bool
+	onDialError          func(error, bool)
+	onSucceedingProxy    func()
 	user                 common.UserConfig
 
 	rewriteToHTTPS httpseverywhere.Rewrite
@@ -163,13 +165,15 @@ func NewClient(
 	lang func() string,
 	reverseDNS func(addr string) (string, error),
 	eventWithLabel func(category, action, label string),
+	onDialError func(error, bool),
+	onSucceedingProxy func(),
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
 	rewriteLRU, err := lru.New(100)
 	if err != nil {
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
-	banditDialer, err := bandit.New([]bandit.Dialer{})
+	banditDialer, err := bandit.New(bandit.Options{})
 	if err != nil {
 		return nil, errors.New("Unable to create bandit: %v", err)
 	}
@@ -182,6 +186,8 @@ func NewClient(
 		useShortcut:                            useShortcut,
 		shortcutMethod:                         shortcutMethod,
 		useDetour:                              useDetour,
+		onDialError:                            onDialError,
+		onSucceedingProxy:                      onSucceedingProxy,
 		allowHTTPSEverywhere:                   allowHTTPSEverywhere,
 		user:                                   userConfig,
 		rewriteToHTTPS:                         httpseverywhere.Default(),
@@ -350,8 +356,7 @@ func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reade
 // no error occurred, then the new dialers are returned.
 func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []bandit.Dialer {
 	log.Debug("Configure() called")
-	dialers, dialer, err :=
-		initDialers(proxies, client.configDir, client.statsTracker, client.user)
+	dialers, dialer, err := client.initDialers(proxies)
 	if err != nil {
 		log.Error(err)
 		return nil
@@ -701,20 +706,22 @@ func errorResponse(_ *filters.ConnectionState, req *http.Request, _ bool, err er
 
 // initDialers takes hosts from cfg.ChainedServers and it uses them to create a
 // new dialer. Returns the new dialers.
-func initDialers(proxies map[string]*commonconfig.ProxyConfig,
-	configDir string, stats stats.Tracker,
-	uc common.UserConfig) ([]bandit.Dialer, *bandit.BanditDialer, error) {
+func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) ([]bandit.Dialer, *bandit.BanditDialer, error) {
 	if len(proxies) == 0 {
 		return nil, nil, fmt.Errorf("no chained servers configured, not initializing dialers")
 	}
-
+	configDir := client.configDir
 	chained.PersistSessionStates(configDir)
-	dialers := chained.CreateDialers(configDir, proxies, uc)
-	dialer, err := bandit.NewWithStats(dialers, stats)
-	if err != nil {
-		return nil, nil, err
-	}
-	return dialers, dialer, nil
+	dialers := chained.CreateDialers(configDir, proxies, client.user)
+	dialer, err := bandit.New(bandit.Options{
+		Dialers: dialers,
+		OnError: client.onDialError,
+		OnSuccess: func(dialer bandit.Dialer) {
+			client.onSucceedingProxy()
+		},
+		StatsTracker: client.statsTracker,
+	})
+	return dialers, dialer, err
 }
 
 // Creates a local server to capture client hello messages from the browser and

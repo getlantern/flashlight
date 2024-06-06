@@ -73,10 +73,12 @@ func newTestUserConfig() *common.UserConfigData {
 }
 
 func resetDialers(client *Client, dialer func(network, addr string) (net.Conn, error)) {
-	d, _ := bandit.New([]bandit.Dialer{&testDialer{
-		name: "test-dialer",
-		dial: dialer,
-	}})
+	d, _ := bandit.New(bandit.Options{
+		Dialers: []bandit.Dialer{&testDialer{
+			name: "test-dialer",
+			dial: dialer,
+		}},
+	})
 	client.dialer = d
 }
 
@@ -102,6 +104,8 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 		func() string { return lang },
 		func(host string) (string, error) { return host, nil },
 		func(category, action, label string) {},
+		func(error, bool) {},
+		func() {},
 	)
 	return client
 }
@@ -592,9 +596,8 @@ func (r *response) nested() (*http.Response, error) {
 
 func Test_initDialers(t *testing.T) {
 	proxies := newProxies()
-	stats := stats.NewNoop()
-	uc := common.NullUserConfig{}
-	dialers, banditDialer, err := initDialers(proxies, "", stats, uc)
+	client := newClient()
+	dialers, banditDialer, err := client.initDialers(proxies)
 	assert.NoError(t, err)
 	assert.NotNil(t, dialers)
 	assert.NotNil(t, banditDialer)
