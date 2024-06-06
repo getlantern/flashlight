@@ -286,6 +286,7 @@ func New(
 	configDir string,
 	enableVPN bool,
 	disconnected func() bool,
+	_proxyAll func() bool,
 	allowPrivateHosts func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
