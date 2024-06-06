@@ -104,7 +104,8 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 		func() string { return lang },
 		func(host string) (string, error) { return host, nil },
 		func(category, action, label string) {},
-		func(hasSucceeding bool) {},
+		func(error, bool) {},
+		func() {},
 	)
 	return client
 }

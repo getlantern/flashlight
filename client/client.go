@@ -114,11 +114,12 @@ type Client struct {
 
 	disconnected         func() bool
 	proxyAll             func() bool
-	onSucceedingProxy    func(bool)
 	useShortcut          func() bool
 	shortcutMethod       func(ctx context.Context, addr string) (shortcut.Method, net.IP)
 	useDetour            func() bool
 	allowHTTPSEverywhere func() bool
+	onDialError          func(error, bool)
+	onSucceedingProxy    func()
 	user                 common.UserConfig
 
 	rewriteToHTTPS httpseverywhere.Rewrite
@@ -164,7 +165,8 @@ func NewClient(
 	lang func() string,
 	reverseDNS func(addr string) (string, error),
 	eventWithLabel func(category, action, label string),
-	onSucceedingProxy func(bool),
+	onDialError func(error, bool),
+	onSucceedingProxy func(),
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
 	rewriteLRU, err := lru.New(100)
@@ -184,6 +186,7 @@ func NewClient(
 		useShortcut:                            useShortcut,
 		shortcutMethod:                         shortcutMethod,
 		useDetour:                              useDetour,
+		onDialError:                            onDialError,
 		onSucceedingProxy:                      onSucceedingProxy,
 		allowHTTPSEverywhere:                   allowHTTPSEverywhere,
 		user:                                   userConfig,
@@ -712,13 +715,9 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 	dialers := chained.CreateDialers(configDir, proxies, client.user)
 	dialer, err := bandit.New(bandit.Options{
 		Dialers: dialers,
-		OnError: func(err error, hasSucceedingDialer bool) {
-			if err != nil && !hasSucceedingDialer {
-				client.onSucceedingProxy(false)
-			}
-		},
+		OnError: client.onDialError,
 		OnSuccess: func(dialer bandit.Dialer) {
-			client.onSucceedingProxy(true)
+			client.onSucceedingProxy()
 		},
 		StatsTracker: client.statsTracker,
 	})

@@ -101,7 +101,8 @@ type clientCallbacks struct {
 	onInit            func()
 	onProxiesUpdate   func([]bandit.Dialer, config.Source)
 	onConfigUpdate    func(*config.Global, config.Source)
-	onSucceedingProxy func(bool)
+	onDialError       func(error, bool)
+	onSucceedingProxy func()
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
@@ -317,8 +318,8 @@ func New(
 			onProxiesUpdate: func(_ []bandit.Dialer, src config.Source) {
 				log.Debugf("[Startup] onProxiesUpdate called from %v", src)
 			},
-			onSucceedingProxy: func(succeeding bool) {
-				log.Debugf("[Startup] onSucceedingProxy(%t) called", succeeding)
+			onSucceedingProxy: func() {
+				log.Debug("[Startup] onSucceedingProxy called")
 			},
 		},
 		configDir:  configDir,
@@ -394,6 +395,10 @@ func New(
 		return !useShortcutOrDetour && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
+	for _, option := range options {
+		option(f)
+	}
+
 	cl, err := client.NewClient(
 		f.configDir,
 		disconnected,
@@ -410,6 +415,7 @@ func New(
 		lang,
 		reverseDNS,
 		eventWithLabel,
+		f.callbacks.onDialError,
 		f.callbacks.onSucceedingProxy,
 	)
 	if err != nil {
@@ -419,11 +425,6 @@ func New(
 		return nil, fatalErr
 	}
 	f.client = cl
-
-	for _, option := range options {
-		option(f)
-	}
-
 	return f, nil
 }
 
