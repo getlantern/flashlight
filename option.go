@@ -21,8 +21,15 @@ func WithOnConfig(onConfigUpdate func(*config.Global, config.Source)) Option {
 	}
 }
 
-// WithInit sets the callback that is called when flashlight is ready and has a config
-// or needs to be initialized
+// WithOnDialError sets the callback that is called when an error occurs dialing a proxy. It includes the error itself and whether or not we
+// have any successful dialers
+func WithOnDialError(onDialError func(error, bool)) Option {
+	return func(client *Flashlight) {
+		client.callbacks.onDialError = onDialError
+	}
+}
+
+// WithInit sets the callback that is called when flashlight is ready and has a config or needs to be initialized
 func WithInit(onInit func()) Option {
 	return func(client *Flashlight) {
 		client.callbacks.onInit = onInit
