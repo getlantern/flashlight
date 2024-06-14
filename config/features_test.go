@@ -168,7 +168,7 @@ func TestReplicaByCountry(t *testing.T) {
 func TestChatEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
 	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "ae"), "Chat is disabled in UAE when running 7.0.0")
-	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "ir"), "Chat is disabled in Iran when running 7.0.0")
+	assert.True(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "ir"), "Chat is enabled in Iran when running 7.0.0")
 	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.0.0", 1, false, "cn"), "Chat is disabled in CN when running 7.0.0")
 	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "6.9.7", 1, false, "ae"), "Chat is disabled in Iran when running 6.9.7")
 	assert.False(t, gl.FeatureEnabled(FeatureChat, "android", common.DefaultAppName, "7.1.0", 1, false, "ae"), "Chat is disabled in China when running 7.1")
