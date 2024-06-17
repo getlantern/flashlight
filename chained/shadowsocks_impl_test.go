@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Jigsaw-Code/outline-sdk/transport/shadowsocks"
 	"github.com/getlantern/common/config"
 	"github.com/shadowsocks/go-shadowsocks2/socks"
 	"github.com/stretchr/testify/assert"
@@ -17,7 +18,7 @@ func TestGenerateUpstream(t *testing.T) {
 	info := &config.ProxyConfig{
 		PluggableTransportSettings: map[string]string{
 			"shadowsocks_secret":   "foo",
-			"shadowsocks_cipher":   "chacha20-ietf-poly1305",
+			"shadowsocks_cipher":   shadowsocks.CHACHA20IETFPOLY1305,
 			"shadowsocks_upstream": "test",
 		},
 	}
