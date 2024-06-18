@@ -3,7 +3,6 @@ package chained
 import (
 	"context"
 	"net"
-	"os"
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
@@ -20,12 +19,7 @@ type waterImpl struct {
 }
 
 func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (*waterImpl, error) {
-	wasmPath := ptSetting(pc, "water_wasm_path")
-	wasm, err := os.ReadFile(wasmPath)
-	if err != nil {
-		return nil, errors.New("failed to read wasm file: %v", err)
-	}
-
+	wasm := ptSettingBytes(pc, "water_wasm")
 	return &waterImpl{
 		raddr: addr,
 		config: &water.Config{
