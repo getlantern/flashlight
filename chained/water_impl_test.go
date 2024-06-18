@@ -3,6 +3,7 @@ package chained
 import (
 	"context"
 	"net"
+	"os"
 	"testing"
 
 	"github.com/getlantern/common/config"
@@ -20,37 +21,21 @@ func TestNewWaterImpl(t *testing.T) {
 		reportDialCore reportDialCoreFn
 	}
 
+	f, err := os.ReadFile("../wasm/reverse.go.wasm")
+	require.Nil(t, err)
+
 	var tests = []struct {
 		name        string
 		givenParams params
 		assert      func(t *testing.T, actual *waterImpl, err error)
 	}{
 		{
-			name: "should fail if provided wasm file path is invalid",
-			givenParams: params{
-				raddr: "127.0.0.1",
-				pc: &config.ProxyConfig{
-					PluggableTransportSettings: map[string]string{
-						"water_wasm_path": "invalid_path",
-					},
-				},
-				reportDialCore: func(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error) {
-					return nil, nil
-				},
-			},
-			assert: func(t *testing.T, actual *waterImpl, err error) {
-				assert.Nil(t, actual)
-				assert.NotNil(t, err)
-				assert.ErrorContains(t, err, "failed to read wasm file")
-			},
-		},
-		{
 			name: "create new waterImpl with success",
 			givenParams: params{
 				raddr: "127.0.0.1",
 				pc: &config.ProxyConfig{
 					PluggableTransportSettings: map[string]string{
-						"water_wasm_path": "../wasm/plain.go.wasm",
+						"water_wasm": string(f),
 					},
 				},
 				reportDialCore: func(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error) {
@@ -74,7 +59,10 @@ func TestNewWaterImpl(t *testing.T) {
 }
 
 func TestWaterDialServer(t *testing.T) {
-	pc := &config.ProxyConfig{PluggableTransportSettings: map[string]string{"water_wasm_path": "../wasm/plain.go.wasm"}}
+	f, err := os.ReadFile("../wasm/reverse.go.wasm")
+	require.Nil(t, err)
+
+	pc := &config.ProxyConfig{PluggableTransportSettings: map[string]string{"water_wasm": string(f)}}
 	testOp := ops.Begin("test")
 
 	var tests = []struct {
