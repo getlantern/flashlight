@@ -2,10 +2,10 @@ package chained
 
 import (
 	"context"
+	"fmt"
 	"net"
 
 	"github.com/getlantern/common/config"
-	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/refraction-networking/water"
 	_ "github.com/refraction-networking/water/transport/v0"
@@ -32,7 +32,7 @@ func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDial
 func (d *waterImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	dialer, err := water.NewDialerWithContext(ctx, d.config)
 	if err != nil {
-		return nil, errors.New("failed to create dialer: %v", err)
+		return nil, fmt.Errorf("failed to create dialer: %w", err)
 	}
 
 	return d.reportDialCore(op, func() (net.Conn, error) {

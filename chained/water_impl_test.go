@@ -2,6 +2,7 @@ package chained
 
 import (
 	"context"
+	crand "crypto/rand"
 	"net"
 	"os"
 	"testing"
@@ -21,8 +22,13 @@ func TestNewWaterImpl(t *testing.T) {
 		reportDialCore reportDialCoreFn
 	}
 
-	f, err := os.ReadFile("../wasm/reverse.go.wasm")
-	require.Nil(t, err)
+	randomWASM := make([]byte, 1024)
+	_, err := crand.Read(randomWASM)
+	require.Nil(t, err, "Failed to generate random WASM content")
+
+	wantConfig := &water.Config{
+		TransportModuleBin: randomWASM,
+	}
 
 	var tests = []struct {
 		name        string
@@ -35,7 +41,7 @@ func TestNewWaterImpl(t *testing.T) {
 				raddr: "127.0.0.1",
 				pc: &config.ProxyConfig{
 					PluggableTransportSettings: map[string]string{
-						"water_wasm": string(f),
+						"water_wasm": string(randomWASM),
 					},
 				},
 				reportDialCore: func(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error) {
@@ -43,9 +49,9 @@ func TestNewWaterImpl(t *testing.T) {
 				},
 			},
 			assert: func(t *testing.T, actual *waterImpl, err error) {
-				assert.Nil(t, err)
-				assert.NotNil(t, actual)
-				assert.NotNil(t, actual.config)
+				require.NoError(t, err)
+				require.NotNil(t, actual)
+				assert.Equal(t, wantConfig, actual.config)
 				assert.NotNil(t, actual.reportDialCore)
 			},
 		},
@@ -60,7 +66,7 @@ func TestNewWaterImpl(t *testing.T) {
 
 func TestWaterDialServer(t *testing.T) {
 	f, err := os.ReadFile("../wasm/reverse.go.wasm")
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	pc := &config.ProxyConfig{PluggableTransportSettings: map[string]string{"water_wasm": string(f)}}
 	testOp := ops.Begin("test")
@@ -83,7 +89,6 @@ func TestWaterDialServer(t *testing.T) {
 				return dialCore()
 			},
 			assert: func(t *testing.T, actual net.Conn, err error) {
-				assert.NotNil(t, err)
 				assert.ErrorContains(t, err, "transport endpoint is not connected")
 				assert.Nil(t, actual)
 			},
@@ -92,7 +97,7 @@ func TestWaterDialServer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			waterImpl, err := newWaterImpl("127.0.0.1:8080", pc, tt.givenReportDialCore)
-			require.Nil(t, err)
+			require.NoError(t, err)
 			conn, err := waterImpl.dialServer(tt.givenOp, tt.givenCtx)
 			tt.assert(t, conn, err)
 		})
