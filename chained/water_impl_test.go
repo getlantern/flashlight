@@ -24,7 +24,7 @@ func TestNewWaterImpl(t *testing.T) {
 
 	randomWASM := make([]byte, 1024)
 	_, err := crand.Read(randomWASM)
-	require.Nil(t, err, "Failed to generate random WASM content")
+	require.NoError(t, err, "failed to generate random WASM content")
 
 	wantConfig := &water.Config{
 		TransportModuleBin: randomWASM,
