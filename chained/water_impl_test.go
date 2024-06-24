@@ -3,6 +3,7 @@ package chained
 import (
 	"context"
 	crand "crypto/rand"
+	"encoding/base64"
 	"net"
 	"os"
 	"testing"
@@ -25,6 +26,7 @@ func TestNewWaterImpl(t *testing.T) {
 	randomWASM := make([]byte, 1024)
 	_, err := crand.Read(randomWASM)
 	require.NoError(t, err, "failed to generate random WASM content")
+	b64RandomWASM := base64.StdEncoding.EncodeToString(randomWASM)
 
 	wantConfig := &water.Config{
 		TransportModuleBin: randomWASM,
@@ -41,7 +43,7 @@ func TestNewWaterImpl(t *testing.T) {
 				raddr: "127.0.0.1",
 				pc: &config.ProxyConfig{
 					PluggableTransportSettings: map[string]string{
-						"water_wasm": string(randomWASM),
+						"water_wasm": b64RandomWASM,
 					},
 				},
 				reportDialCore: func(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error) {
@@ -67,8 +69,9 @@ func TestNewWaterImpl(t *testing.T) {
 func TestWaterDialServer(t *testing.T) {
 	f, err := os.ReadFile("../wasm/reverse.go.wasm")
 	require.NoError(t, err)
+	b64WASM := base64.StdEncoding.EncodeToString(f)
 
-	pc := &config.ProxyConfig{PluggableTransportSettings: map[string]string{"water_wasm": string(f)}}
+	pc := &config.ProxyConfig{PluggableTransportSettings: map[string]string{"water_wasm": b64WASM}}
 	testOp := ops.Begin("test")
 
 	var tests = []struct {

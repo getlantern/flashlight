@@ -2,6 +2,7 @@ package chained
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net"
 
@@ -19,7 +20,12 @@ type waterImpl struct {
 }
 
 func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (*waterImpl, error) {
-	wasm := ptSettingBytes(pc, "water_wasm")
+	b64WASM := ptSetting(pc, "water_wasm")
+	wasm, err := base64.StdEncoding.DecodeString(b64WASM)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode water wasm: %w", err)
+	}
+
 	return &waterImpl{
 		raddr: addr,
 		config: &water.Config{
