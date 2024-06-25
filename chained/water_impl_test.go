@@ -24,14 +24,10 @@ func TestNewWaterImpl(t *testing.T) {
 		reportDialCore reportDialCoreFn
 	}
 
-	randomWASM := make([]byte, 1024)
-	_, err := crand.Read(randomWASM)
+	wantWASM := make([]byte, 1024)
+	_, err := crand.Read(wantWASM)
 	require.NoError(t, err, "failed to generate random WASM content")
-	b64RandomWASM := base64.StdEncoding.EncodeToString(randomWASM)
-
-	wantConfig := &water.Config{
-		TransportModuleBin: randomWASM,
-	}
+	b64RandomWASM := base64.StdEncoding.EncodeToString(wantWASM)
 
 	var tests = []struct {
 		name        string
@@ -54,7 +50,8 @@ func TestNewWaterImpl(t *testing.T) {
 			assert: func(t *testing.T, actual *waterImpl, err error) {
 				require.NoError(t, err)
 				require.NotNil(t, actual)
-				assert.Equal(t, wantConfig, actual.config)
+				require.NotNil(t, actual.config)
+				assert.Equal(t, wantWASM, actual.config.TransportModuleBin)
 				assert.NotNil(t, actual.reportDialCore)
 			},
 		},
