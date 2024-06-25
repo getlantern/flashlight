@@ -73,6 +73,7 @@ func TestWaterDialServer(t *testing.T) {
 
 	pc := &config.ProxyConfig{PluggableTransportSettings: map[string]string{"water_wasm": b64WASM}}
 	testOp := ops.Begin("test")
+	defer testOp.End()
 
 	var tests = []struct {
 		name                string
