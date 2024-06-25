@@ -3,9 +3,10 @@ package chained
 import (
 	"context"
 	crand "crypto/rand"
+	"embed"
 	"encoding/base64"
+	"io"
 	"net"
-	"os"
 	"testing"
 
 	"github.com/getlantern/common/config"
@@ -66,10 +67,17 @@ func TestNewWaterImpl(t *testing.T) {
 	}
 }
 
+//go:embed testdata/*
+var testData embed.FS
+
 func TestWaterDialServer(t *testing.T) {
-	f, err := os.ReadFile("../wasm/reverse.go.wasm")
+	f, err := testData.Open("testdata/reverse.go.wasm")
 	require.NoError(t, err)
-	b64WASM := base64.StdEncoding.EncodeToString(f)
+
+	wasm, err := io.ReadAll(f)
+	require.NoError(t, err)
+
+	b64WASM := base64.StdEncoding.EncodeToString(wasm)
 
 	pc := &config.ProxyConfig{PluggableTransportSettings: map[string]string{"water_wasm": b64WASM}}
 	testOp := ops.Begin("test")
