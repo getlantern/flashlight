@@ -78,14 +78,6 @@ func _settingBool(settings map[string]string, name string) bool {
 	return val
 }
 
-func _settingBytes(settings map[string]string, name string) []byte {
-	_val := _setting(settings, name)
-	if _val == "" {
-		return nil
-	}
-	return []byte(_val)
-}
-
 func ptSetting(pc *config.ProxyConfig, name string) string {
 	return _setting(pc.PluggableTransportSettings, name)
 }
@@ -100,10 +92,6 @@ func ptSettingBool(pc *config.ProxyConfig, name string) bool {
 
 func ptSettingFloat(pc *config.ProxyConfig, name string) float64 {
 	return _settingFloat(pc.PluggableTransportSettings, name)
-}
-
-func ptSettingBytes(pc *config.ProxyConfig, name string) []byte {
-	return _settingBytes(pc.PluggableTransportSettings, name)
 }
 
 func muxSetting(pc *config.ProxyConfig, name string) string {
