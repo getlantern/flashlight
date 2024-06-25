@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"log/slog"
 	"net"
 
 	"github.com/getlantern/common/config"
@@ -30,6 +31,7 @@ func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDial
 		raddr: addr,
 		config: &water.Config{
 			TransportModuleBin: wasm,
+			OverrideLogger:     slog.New(slog.NewTextHandler(log.TraceOut(), nil)),
 		},
 		reportDialCore: reportDialCore,
 	}, nil
