@@ -6,6 +6,7 @@ cloudfront:
   rejectStatus: 403
   mapping:
     iantem.io: d1a8iiu5dqt0h3.cloudfront.net
+    df.iantem.io: d1a8iiu5dqt0h3.cloudfront.net
     api.getiantem.org: d2n32kma9hyo9f.cloudfront.net
     api-staging.getiantem.org: d16igwq64x5e11.cloudfront.net
     borda.lantern.io: d157vud77ygy87.cloudfront.net
@@ -28,6 +29,7 @@ akamai:
   rejectStatus: 403
   mapping:
     iantem.io: nonexistent.iantem.io
+    df.iantem.io: nonexistent.iantem.io
     api.getiantem.org: api.dsa.akamai.getiantem.org
     api-staging.getiantem.org: api-staging.dsa.akamai.getiantem.org
     borda.lantern.io: borda.dsa.akamai.getiantem.org

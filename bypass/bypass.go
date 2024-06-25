@@ -40,8 +40,7 @@ var (
 
 // The way lantern-cloud is configured, we need separate URLs for domain fronted vs proxied traffic.
 const (
-	dfEndpoint    = "https://iantem.io/api/v1/bypass"
-	proxyEndpoint = "https://api.iantem.io/v1/bypass"
+	bypassEndpoint = "https://df.iantem.io/api/v1/bypass"
 
 	// version is the bypass client version. It is not necessary to update this value on every
 	// change to bypass; this should only be updated when the backend needs to make decisions unique
@@ -144,22 +143,19 @@ func (p *proxy) sendToBypass() int64 {
 	// send both equally. We avoid sending both a domain fronted and a proxied request
 	// in rapid succession to avoid the blocking detection itself being a signal.
 	var rt http.RoundTripper
-	var endpoint string
 	var fronted bool
 	if p.toggle.Toggle() {
 		log.Debug("Using proxy directly")
 		rt = p.proxyRoundTripper
-		endpoint = proxyEndpoint
 		fronted = false
 	} else {
 		rt = p.dfRoundTripper
 		log.Debug("Using domain fronting")
-		endpoint = dfEndpoint
 		fronted = true
 	}
 	op.Set("fronted", fronted)
 
-	req, err := p.newRequest(p.userConfig, endpoint)
+	req, err := p.newRequest(p.userConfig)
 	if err != nil {
 		op.FailIf(log.Errorf("Unable to create request: %v", err))
 		return 0
@@ -214,7 +210,7 @@ func proxyRoundTripper(name string, info *commonconfig.ProxyConfig, configDir st
 	return transport
 }
 
-func (p *proxy) newRequest(userConfig common.UserConfig, endpoint string) (*http.Request, error) {
+func (p *proxy) newRequest(userConfig common.UserConfig) (*http.Request, error) {
 	// Just posting all the info about the server allows us to control these fields fully on the server
 	// side.
 	bypassRequest := &apipb.BypassRequest{
@@ -248,8 +244,8 @@ func (p *proxy) newRequest(userConfig common.UserConfig, endpoint string) (*http
 		return nil, err
 	}
 
-	log.Debugf("Creating request for endpoint: %v", endpoint)
-	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(infopb))
+	log.Debug("Creating request")
+	req, err := http.NewRequest("POST", bypassEndpoint, bytes.NewBuffer(infopb))
 	if err != nil {
 		log.Errorf("Unable to create request: %v", err)
 		return nil, err

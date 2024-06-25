@@ -82,7 +82,7 @@ func NewClient(httpClient *http.Client, preparePro func(r *http.Request, uc comm
 // UserCreate creates an user without asking for any payment.
 func (c *Client) UserCreate(user common.UserConfig) (res *UserDataResponse, err error) {
 	body := strings.NewReader(url.Values{"locale": {user.GetLanguage()}}.Encode())
-	req, err := http.NewRequest(http.MethodPost, "https://"+common.ProAPIHost+"/user-create", body)
+	req, err := http.NewRequest(http.MethodPost, "https://"+common.ProAPIPath+"/user-create", body)
 	if err != nil {
 		return nil, err
 	}
@@ -381,7 +381,7 @@ func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 }
 
 func (c *Client) execute(user common.UserConfig, method, path string, query url.Values, resp baseResponse) error {
-	req, err := http.NewRequest(method, "https://"+common.ProAPIHost+"/"+path, nil)
+	req, err := http.NewRequest(method, "https://"+common.ProAPIPath+"/"+path, nil)
 	if err != nil {
 		return err
 	}

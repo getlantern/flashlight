@@ -17,9 +17,6 @@ func TestHTTPRequest(t *testing.T) {
 	}
 	uc := &common.NullUserConfig{}
 
-	r, err := p.newRequest(uc, "https://iantem.io/v1/bypass")
+	_, err := p.newRequest(uc)
 	assert.NoError(t, err)
-
-	assert.Equal(t, "https://iantem.io/v1/bypass", r.URL.String())
-
 }
