@@ -16,8 +16,6 @@ replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-2022
 
 replace github.com/eycorsican/go-tun2socks => github.com/getlantern/go-tun2socks v1.16.12-0.20201218023150-b68f09e5ae93
 
-replace github.com/getlantern/http-proxy-lantern/v2 => ../http-proxy-2
-
 // We use a fork of gomobile that allows reusing the cache directory for faster builds, based
 // on this unmerged PR against gomobile - https://github.com/golang/mobile/pull/58.
 replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336-0bdf708b6d0f
