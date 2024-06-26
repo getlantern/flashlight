@@ -72,6 +72,8 @@ func (h *slogHandler) Handle(ctx context.Context, record slog.Record) error {
 		messageBuilder.WriteString(" ")
 		return true
 	})
+
+	messageBuilder.WriteString(h.attrs)
 	message := messageBuilder.String()
 
 	switch record.Level {
@@ -92,16 +94,40 @@ func (h *slogHandler) Handle(ctx context.Context, record slog.Record) error {
 // both the receiver's attributes and the arguments.
 // The Handler owns the slice: it may retain, modify or discard it.
 func (h *slogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	// TODO: Implement WithAttrs with support to groups
+	h.attrs = parseAttrs(attrs)
+	return h
+}
+
+func parseAttrs(attrs []slog.Attr) string {
 	attrsBuilder := new(strings.Builder)
 	for _, attr := range attrs {
 		attrsBuilder.WriteString(attr.Key)
 		attrsBuilder.WriteString(":")
-		attrsBuilder.WriteString(attr.Value.String())
+		switch attr.Value.Kind() {
+		case slog.KindString, slog.KindAny:
+			attrsBuilder.WriteString(attr.Value.String())
+		case slog.KindInt64:
+			fmt.Fprintf(attrsBuilder, "%d", attr.Value.Int64())
+		case slog.KindUint64:
+			fmt.Fprintf(attrsBuilder, "%d", attr.Value.Uint64())
+		case slog.KindFloat64:
+			fmt.Fprintf(attrsBuilder, "%f", attr.Value.Float64())
+		case slog.KindBool:
+			fmt.Fprintf(attrsBuilder, "%t", attr.Value.Bool())
+		case slog.KindTime:
+			attrsBuilder.WriteString(attr.Value.Time().String())
+		case slog.KindDuration:
+			attrsBuilder.WriteString(attr.Value.Duration().String())
+		case slog.KindLogValuer:
+			attrsBuilder.WriteString(attr.Value.LogValuer().LogValue().String())
+		case slog.KindGroup:
+			attrsBuilder.WriteString("{")
+			attrsBuilder.WriteString(parseAttrs(attr.Value.Group()))
+			attrsBuilder.WriteString("}")
+		}
 		attrsBuilder.WriteString(" ")
 	}
-	h.attrs = attrsBuilder.String()
-	return h
+	return attrsBuilder.String()
 }
 
 // WithGroup returns a new Handler with the given group appended to
