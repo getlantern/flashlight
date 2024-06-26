@@ -68,7 +68,7 @@ func TestNewWaterImpl(t *testing.T) {
 var testData embed.FS
 
 func TestWaterDialServer(t *testing.T) {
-	f, err := testData.Open("testdata/reverse.go.wasm")
+	f, err := testData.Open("testdata/reverse.wasm")
 	require.NoError(t, err)
 
 	wasm, err := io.ReadAll(f)
