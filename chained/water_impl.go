@@ -10,7 +10,7 @@ import (
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/refraction-networking/water"
-	_ "github.com/refraction-networking/water/transport/v0"
+	_ "github.com/refraction-networking/water/transport/v1"
 )
 
 type waterImpl struct {
