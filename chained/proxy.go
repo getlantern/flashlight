@@ -225,7 +225,7 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 		allowPreconnecting = true
 	}
 
-	if s.MultiplexedAddr != "" || transport == "tlsmasq" || transport == "starbridge" || transport == "algeneva" {
+	if s.MultiplexedAddr != "" || isAMultiplexedTransport(transport) {
 		impl, err = multiplexed(impl, name, s)
 		if err != nil {
 			return nil, err
@@ -238,6 +238,13 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 	}
 
 	return impl, err
+}
+
+func isAMultiplexedTransport(transport string) bool {
+	return transport == "tlsmasq" ||
+		transport == "starbridge" ||
+		transport == "algeneva" ||
+		transport == "water"
 }
 
 // ForceProxy forces everything through the HTTP proxy at forceAddr using
