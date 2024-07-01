@@ -20,6 +20,8 @@ replace github.com/eycorsican/go-tun2socks => github.com/getlantern/go-tun2socks
 // on this unmerged PR against gomobile - https://github.com/golang/mobile/pull/58.
 replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336-0bdf708b6d0f
 
+replace github.com/tetratelabs/wazero => github.com/refraction-networking/wazero v1.7.1-w
+
 require (
 	github.com/Jigsaw-Code/outline-sdk v0.0.16
 	github.com/OperatorFoundation/Replicant-go/Replicant/v3 v3.0.23
@@ -86,6 +88,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pborman/uuid v1.2.1
 	github.com/refraction-networking/utls v1.3.3
+	github.com/refraction-networking/water v0.7.0-alpha
 	github.com/samber/lo v1.38.1
 	github.com/shadowsocks/go-shadowsocks2 v0.1.5
 	github.com/stretchr/testify v1.8.4
@@ -108,10 +111,13 @@ require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.2.0 // indirect
 	github.com/Jigsaw-Code/outline-ss-server v1.5.0 // indirect
 	github.com/anacrolix/dht/v2 v2.20.0 // indirect
+	github.com/blang/vfs v1.0.0 // indirect
 	github.com/dchest/siphash v1.2.3 // indirect
+	github.com/gaukas/wazerofs v0.1.0 // indirect
 	github.com/getlantern/algeneva v0.0.0-20240222191137-2b4e88234f59 // indirect
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a // indirect
 	github.com/getlantern/withtimeout v0.0.0-20160829163843-511f017cd913 // indirect
+	github.com/tetratelabs/wazero v1.7.1 // indirect
 	gitlab.com/yawning/edwards25519-extra.git v0.0.0-20211229043746-2f91fcc9fbdb // indirect
 	gitlab.com/yawning/obfs4.git v0.0.0-20220204003609-77af0cba934d // indirect
 )
@@ -286,13 +292,13 @@ require (
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
 	golang.org/x/crypto v0.18.0 // indirect
-	golang.org/x/exp v0.0.0-20240110193028-0dcbfd608b1e // indirect
+	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.16.0 // indirect
+	golang.org/x/tools v0.17.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231002182017-d307bd883b97 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231012201019-e917dd12ba7a // indirect
 	google.golang.org/grpc v1.58.3 // indirect
