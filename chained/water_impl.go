@@ -10,7 +10,7 @@ import (
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/refraction-networking/water"
-	_ "github.com/refraction-networking/water/transport/v1"
+	_ "github.com/refraction-networking/water/transport/v0"
 )
 
 type waterImpl struct {
@@ -31,7 +31,7 @@ func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDial
 		raddr: addr,
 		config: &water.Config{
 			TransportModuleBin: wasm,
-			OverrideLogger:     slog.New(newLogHandler(log)),
+			OverrideLogger:     slog.New(newLogHandler(log, ptSetting(pc, "water_transport"))),
 		},
 		reportDialCore: reportDialCore,
 	}, nil

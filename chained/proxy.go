@@ -137,6 +137,7 @@ func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserC
 	if err != nil {
 		return nil, err
 	}
+	log.Debugf("AuthToken: %s", p.authToken)
 	p.impl, err = createImpl(configDir, name, addr, transport, s, uc, p.reportDialCore)
 	if err != nil {
 		log.Debugf("Unable to create proxy implementation for %v: %v", name, err)
@@ -243,8 +244,7 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 func isAMultiplexedTransport(transport string) bool {
 	return transport == "tlsmasq" ||
 		transport == "starbridge" ||
-		transport == "algeneva" ||
-		transport == "water"
+		transport == "algeneva"
 }
 
 // ForceProxy forces everything through the HTTP proxy at forceAddr using
