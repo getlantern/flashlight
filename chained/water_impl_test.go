@@ -2,7 +2,6 @@ package chained
 
 import (
 	"context"
-	crand "crypto/rand"
 	"embed"
 	"encoding/base64"
 	"io"
@@ -12,7 +11,7 @@ import (
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/refraction-networking/water"
-	_ "github.com/refraction-networking/water/transport/v0"
+	_ "github.com/refraction-networking/water/transport/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,11 +22,13 @@ func TestNewWaterImpl(t *testing.T) {
 		pc             *config.ProxyConfig
 		reportDialCore reportDialCoreFn
 	}
+	f, err := testData.Open("testdata/reverse_tinygo_v1.wasm")
+	require.NoError(t, err)
 
-	wantWASM := make([]byte, 1024)
-	_, err := crand.Read(wantWASM)
-	require.NoError(t, err, "failed to generate random WASM content")
-	b64RandomWASM := base64.StdEncoding.EncodeToString(wantWASM)
+	wantWASM, err := io.ReadAll(f)
+	require.NoError(t, err)
+
+	b64WASM := base64.StdEncoding.EncodeToString(wantWASM)
 
 	var tests = []struct {
 		name        string
@@ -40,7 +41,7 @@ func TestNewWaterImpl(t *testing.T) {
 				raddr: "127.0.0.1",
 				pc: &config.ProxyConfig{
 					PluggableTransportSettings: map[string]string{
-						"water_wasm": b64RandomWASM,
+						"water_wasm": b64WASM,
 					},
 				},
 				reportDialCore: func(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error) {
@@ -50,8 +51,7 @@ func TestNewWaterImpl(t *testing.T) {
 			assert: func(t *testing.T, actual *waterImpl, err error) {
 				require.NoError(t, err)
 				require.NotNil(t, actual)
-				require.NotNil(t, actual.config)
-				assert.Equal(t, wantWASM, actual.config.TransportModuleBin)
+				require.NotNil(t, actual.dialer)
 				assert.NotNil(t, actual.reportDialCore)
 			},
 		},
@@ -68,7 +68,9 @@ func TestNewWaterImpl(t *testing.T) {
 var testData embed.FS
 
 func TestWaterDialServer(t *testing.T) {
-	f, err := testData.Open("testdata/reverse.wasm")
+	ctx := context.Background()
+
+	f, err := testData.Open("testdata/reverse_tinygo_v1.wasm")
 	require.NoError(t, err)
 
 	wasm, err := io.ReadAll(f)
@@ -86,12 +88,13 @@ func TestWaterDialServer(t *testing.T) {
 		givenCtx            context.Context
 		givenReportDialCore reportDialCoreFn
 		givenDialer         water.Dialer
+		givenAddr           string
 		assert              func(t *testing.T, actual net.Conn, err error)
 	}{
 		{
 			name:     "should fail to dial when endpoint is not available",
 			givenOp:  testOp,
-			givenCtx: context.Background(),
+			givenCtx: ctx,
 			givenReportDialCore: func(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error) {
 				assert.Equal(t, testOp, op)
 				assert.NotNil(t, dialCore)
@@ -101,11 +104,12 @@ func TestWaterDialServer(t *testing.T) {
 				assert.ErrorContains(t, err, "transport endpoint is not connected")
 				assert.Nil(t, actual)
 			},
+			givenAddr: "127.0.0.1:8080",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			waterImpl, err := newWaterImpl("127.0.0.1:8080", pc, tt.givenReportDialCore)
+			waterImpl, err := newWaterImpl(tt.givenAddr, pc, tt.givenReportDialCore)
 			require.NoError(t, err)
 			conn, err := waterImpl.dialServer(tt.givenOp, tt.givenCtx)
 			tt.assert(t, conn, err)

@@ -10,13 +10,13 @@ import (
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/refraction-networking/water"
-	_ "github.com/refraction-networking/water/transport/v0"
+	_ "github.com/refraction-networking/water/transport/v1"
 )
 
 type waterImpl struct {
-	config         *water.Config
 	raddr          string
 	reportDialCore reportDialCoreFn
+	dialer         water.Dialer
 	nopCloser
 }
 
@@ -27,23 +27,31 @@ func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDial
 		return nil, fmt.Errorf("failed to decode water wasm: %w", err)
 	}
 
+	cfg := &water.Config{
+		TransportModuleBin: wasm,
+		OverrideLogger:     slog.New(newLogHandler(log, ptSetting(pc, "water_transport"))),
+	}
+
+	dialer, err := water.NewDialerWithContext(context.Background(), cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create dialer: %w", err)
+	}
+
 	return &waterImpl{
-		raddr: addr,
-		config: &water.Config{
-			TransportModuleBin: wasm,
-			OverrideLogger:     slog.New(newLogHandler(log, ptSetting(pc, "water_transport"))),
-		},
+		raddr:          addr,
+		dialer:         dialer,
 		reportDialCore: reportDialCore,
 	}, nil
 }
 
 func (d *waterImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
-	dialer, err := water.NewDialerWithContext(ctx, d.config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create dialer: %w", err)
-	}
-
 	return d.reportDialCore(op, func() (net.Conn, error) {
-		return dialer.DialContext(ctx, "tcp", d.raddr)
+		conn, err := d.dialer.DialContext(context.Background(), "tcp", d.raddr)
+		if err != nil {
+			log.Errorf("failed to dial with water: %v", err)
+			return nil, fmt.Errorf("failed to dial with water: %v", err)
+		}
+
+		return conn, nil
 	})
 }
