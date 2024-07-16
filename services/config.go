@@ -83,7 +83,7 @@ type ConfigService struct {
 }
 
 // StartConfigService starts a new config service with the given options. It will return an error
-// if opts.Rt, opts.Fetcher, or opts.OnConfig are nil.
+// if opts.OriginURL, opts.Rt, opts.Fetcher, or opts.OnConfig are nil.
 func StartConfigService(opts *Options) (*ConfigService, error) {
 	switch {
 	case opts.Rt == nil:

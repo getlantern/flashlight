@@ -28,14 +28,6 @@ import (
 	"github.com/getlantern/flashlight/v7/proxied"
 )
 
-var (
-
-	// some pluggable transports don't work with bypass
-	unsupportedTransports = map[string]bool{
-		"broflake": true,
-	}
-)
-
 // The way lantern-cloud is configured, we need separate URLs for domain fronted vs proxied traffic.
 const (
 	dfEndpoint    = "https://iantem.io/api/v1/bypass"
@@ -50,6 +42,13 @@ const (
 	// change to bypass; this should only be updated when the backend needs to make decisions unique
 	// to a new version of bypass.
 	version int32 = 1
+)
+
+var (
+	// some pluggable transports don't work with bypass
+	unsupportedTransports = map[string]bool{
+		"broflake": true,
+	}
 )
 
 type bypassService struct {
