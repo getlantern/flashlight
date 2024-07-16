@@ -40,6 +40,12 @@ type ProviderConfig struct {
 	Masquerades         []*fronted.Masquerade
 	Validator           *ValidatorConfig
 	PassthroughPatterns []string
+	FrontingSNIs        map[string]*FrontingSNIConfig
+}
+
+type FrontingSNIConfig struct {
+	UseArbitrarySNIs bool
+	ArbitrarySNIs    []string
 }
 
 // returns a fronted.ResponseValidator specified by the

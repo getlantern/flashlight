@@ -255,6 +255,12 @@ client:
         testurl: https://fronted-ping.dsa.akamai.getiantem.org/ping
         validator:
           rejectstatus: [403]
+        frontingsnis:
+          default:
+            usearbitrarysnis: true
+            arbitrarysnis:
+            - example1.com
+            - example2.com
         masquerades: 
         - domain: a248.e.akamai.net
           ipaddress: 23.45.112.56

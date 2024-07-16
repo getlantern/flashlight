@@ -246,6 +246,10 @@ client:
         testurl: {{$p.TestURL}}{{if $p.Validator}}
         validator:{{if $p.Validator.RejectStatus}}
           rejectstatus: [{{range $i, $e := $p.Validator.RejectStatus}}{{if $i}}, {{end}}{{$e}}{{end}}]{{end}}{{end}}
+        frontingsnis: {{range $key, $cfg := $p.FrontingSNIs}}
+          {{$key}}:
+            usearbitrarysnis: {{$cfg.UseArbitrarySNIs}}
+            arbitrarysnis: [{{range $i, $sni := $cfg.ArbitrarySNIs}}{{if $i}}, {{end}}{{$sni}}{{end}}]{{end}}
         masquerades: {{if eq $pid "cloudfront"}}&cfmasq{{end}}{{range $p.Masquerades}}
         - domain: {{.Domain}}
           ipaddress: {{.IpAddress}}{{end}}{{else}}{}{{end}}
