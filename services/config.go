@@ -26,15 +26,14 @@ import (
 
 const (
 	defaultSaveDir  = ""
-	defaultFilename = "proxies.yaml"
+	defaultFilename = "proxies.conf"
 
-	configMinWaitSeconds = 60
-	configMaxWaitSeconds = 300
+	defaultConfigPollInterval = 3 * time.Minute
+	defaultConfigPollJitter   = 2 * time.Minute
 )
 
-// Options specifies the options to use for piping config data back to the
-// dispatch processor function.
-type Options struct {
+// ConfigOptions specifies the options to use for ConfigService.
+type ConfigOptions struct {
 	// SaveDir is the directory where we should save new configs and also look
 	// for existing saved configs.
 	SaveDir  string
@@ -64,6 +63,11 @@ type Options struct {
 	// chained URLs) or not.
 	Rt http.RoundTripper
 
+	// PollInterval specifies how frequently to poll for new config.
+	PollInterval time.Duration
+	// PollJitter specifies the max amount of jitter to add to the poll interval.
+	PollJitter time.Duration
+
 	// OnConfig is a callback that is called when a new config is received.
 	OnConfig func(conf *ClientConfig)
 }
@@ -72,7 +76,7 @@ type Options struct {
 type ClientInfo = ClientConfigRequest_ClientInfo
 
 type ConfigService struct {
-	opts         *Options
+	opts         *ConfigOptions
 	clientInfo   *ClientInfo
 	clientConfig atomic.Value
 	lastFetched  time.Time
@@ -84,7 +88,7 @@ type ConfigService struct {
 
 // StartConfigService starts a new config service with the given options. It will return an error
 // if opts.OriginURL, opts.Rt, opts.Fetcher, or opts.OnConfig are nil.
-func StartConfigService(opts *Options) (*ConfigService, error) {
+func StartConfigService(opts *ConfigOptions) (*ConfigService, error) {
 	switch {
 	case opts.Rt == nil:
 		return nil, errors.New("RoundTripper is required")
@@ -92,9 +96,19 @@ func StartConfigService(opts *Options) (*ConfigService, error) {
 		return nil, errors.New("OnConfig is required")
 	case opts.OriginURL == "":
 		return nil, errors.New("OriginURL is required")
-	case opts.SaveDir == "":
+	}
+
+	if opts.SaveDir == "" {
 		opts.SaveDir = defaultSaveDir
 		opts.filePath = filepath.Join(opts.SaveDir, defaultFilename)
+	}
+
+	if opts.PollInterval <= 0 {
+		opts.PollInterval = defaultConfigPollInterval
+	}
+
+	if opts.PollJitter <= 0 {
+		opts.PollJitter = defaultConfigPollJitter
 	}
 
 	logger := golog.LoggerFor("configservice")
@@ -124,20 +138,21 @@ func StartConfigService(opts *Options) (*ConfigService, error) {
 		return nil, err
 	}
 
+	ch.logger.Debug("Starting config service")
 	if opts.Sticky {
 		return ch, nil
 	}
 
-	ch.logger.Debug("Starting config service")
 	fn := func() int64 {
 		sleep, _ := ch.fetchConfig()
 		return sleep
 	}
-	go callRandomly(fn, configMinWaitSeconds, configMaxWaitSeconds, ch.done, ch.logger)
+	go callRandomly(fn, ch.opts.PollInterval, ch.opts.PollJitter, ch.done, ch.logger)
 	return ch, nil
 }
 
 func (ch *ConfigService) init() error {
+	ch.logger.Debug("Initializing config service")
 	conf, err := readExistingClientConfig(ch.opts.filePath, ch.opts.Obfuscate)
 	if conf == nil {
 		if err != nil {
@@ -291,7 +306,7 @@ func readExistingClientConfig(filePath string, obfuscate bool) (*ClientConfig, e
 func saveClientConfig(filePath string, conf *ClientConfig, obfuscate bool) error {
 	in, err := proto.Marshal(conf)
 	if err != nil {
-		return fmt.Errorf("unable to marshal config to yaml: %w", err)
+		return fmt.Errorf("unable to marshal config: %w", err)
 	}
 
 	outfile, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
