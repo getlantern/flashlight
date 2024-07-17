@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"sync"
+	"time"
 
 	mrand "math/rand"
 
@@ -33,10 +34,10 @@ const (
 	dfEndpoint    = "https://iantem.io/api/v1/bypass"
 	proxyEndpoint = "https://api.iantem.io/v1/bypass"
 
-	// bypassMinWaitSeconds and maxRequestWaitSec are the minimum and maximum number of seconds to wait
-	// between sending bypass requests. The wait time can be extended by the server.
-	bypassMinWaitSeconds = 80
-	bypassMaxWaitSeconds = 200
+	// bypassSendInterval is the interval between sending traffic to the bypass server.
+	bypassSendInterval = 4 * time.Minute
+	// bypassSendJitter is the jitter to add to the interval between sending traffic.
+	bypassSendJitter = 2 * time.Minute
 
 	// version is the bypass client version. It is not necessary to update this value on every
 	// change to bypass; this should only be updated when the backend needs to make decisions unique
@@ -61,21 +62,24 @@ type bypassService struct {
 
 // StartBypassService sends periodic traffic to the bypass server. The client periodically sends
 // traffic to the server both via domain fronting and proxying to determine if proxies are blocked.
+// StartBypassService returns a function to stop the service.
 func StartBypassService(
 	listen func(func(map[string]*commonconfig.ProxyConfig, config.Source)),
 	configDir string,
 	userConfig common.UserConfig,
-) *bypassService {
+) func() {
 	b := &bypassService{
 		infos:   make(map[string]*commonconfig.ProxyConfig),
 		proxies: make([]*proxy, 0),
 		done:    make(chan struct{}),
 		logger:  golog.LoggerFor("bypassService"),
 	}
+
+	b.logger.Debug("Starting bypass service")
 	listen(func(infos map[string]*commonconfig.ProxyConfig, src config.Source) {
 		b.onProxies(infos, configDir, userConfig)
 	})
-	return b
+	return b.Stop
 }
 
 func (b *bypassService) onProxies(
@@ -116,11 +120,19 @@ func (b *bypassService) onProxies(
 }
 
 func (b *bypassService) Reset() {
+	b.Stop()
+
 	b.mxProxies.Lock()
-	close(b.done)
 	b.proxies = make([]*proxy, 0)
 	b.done = make(chan struct{})
 	b.mxProxies.Unlock()
+}
+
+func (b *bypassService) Stop() {
+	select {
+	case b.done <- struct{}{}:
+		close(b.done)
+	}
 }
 
 type proxy struct {
@@ -157,7 +169,7 @@ func (p *proxy) start(done <-chan struct{}) {
 		wait, _ := p.sendToBypass()
 		return wait
 	}
-	callRandomly(fn, bypassMinWaitSeconds, bypassMaxWaitSeconds, done, p.logger)
+	callRandomly(fn, bypassSendInterval, bypassSendJitter, done, p.logger)
 }
 
 func (p *proxy) sendToBypass() (int64, error) {
