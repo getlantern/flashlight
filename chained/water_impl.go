@@ -46,6 +46,12 @@ func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDial
 
 func (d *waterImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return d.reportDialCore(op, func() (net.Conn, error) {
+		// TODO: At water 0.7.0 (currently), the library is	hanging onto the dial context
+		// beyond it's scope. If you cancel this context, all dialed connections with the context
+		// will be closed. This should not happen (only dials in progress should be affected).
+		// The refraction-networking team is working on that issue and it can be tracked here:
+		// https://github.com/refraction-networking/water/issues/75
+		// After the issue is resolved, we can remove the context.Background() and use the passed ctx.
 		conn, err := d.dialer.DialContext(context.Background(), "tcp", d.raddr)
 		if err != nil {
 			log.Errorf("failed to dial with water: %v", err)
