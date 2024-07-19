@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -22,6 +23,8 @@ import (
 
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/ops"
+
+	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 )
 
 const (
@@ -30,6 +33,15 @@ const (
 
 	defaultConfigPollInterval = 3 * time.Minute
 	defaultConfigPollJitter   = 2 * time.Minute
+)
+
+// aliases
+type (
+	ConfigRequest      = apipb.ConfigRequest
+	ClientInfo         = apipb.ConfigRequest_ClientInfo
+	ConfigProxies      = apipb.ConfigRequest_Proxy
+	ClientConfig       = apipb.ConfigResponse
+	ProxyConnectConfig = apipb.ProxyConnectConfig
 )
 
 // ConfigOptions specifies the options to use for ConfigService.
@@ -71,9 +83,6 @@ type ConfigOptions struct {
 	// OnConfig is a callback that is called when a new config is received.
 	OnConfig func(conf *ClientConfig)
 }
-
-// alias for ClientConfigRequest.ClientInfo
-type ClientInfo = ClientConfigRequest_ClientInfo
 
 type ConfigService struct {
 	opts         *ConfigOptions
@@ -120,12 +129,13 @@ func StartConfigService(opts *ConfigOptions) (*ConfigService, error) {
 
 	detour.ForceWhitelist(u.Host)
 
+	userId := strconv.Itoa(int(opts.UserConfig.GetUserID()))
 	ch := &ConfigService{
 		opts: opts,
 		clientInfo: &ClientInfo{
 			FlashlightVersion: common.LibraryVersion,
 			ClientVersion:     common.CompileTimeApplicationVersion,
-			UserId:            opts.UserConfig.GetUserID(),
+			UserId:            userId,
 			ProToken:          opts.UserConfig.GetToken(),
 		},
 		clientConfig: atomic.Value{},
@@ -255,16 +265,16 @@ func (ch *ConfigService) fetch() (*ClientConfig, int64, error) {
 	return newConf, sleep, err
 }
 
-func (ch *ConfigService) newRequest() *ClientConfigRequest {
+func (ch *ConfigService) newRequest() *ConfigRequest {
 	proxies := ch.Proxies()
 	ids := make([]string, len(proxies))
 	for _, proxy := range proxies {
 		ids = append(ids, proxy.GetTrack())
 	}
 
-	confReq := &ClientConfigRequest{
+	confReq := &ConfigRequest{
 		ClientInfo: ch.clientInfo,
-		Proxies: &ClientConfigRequest_Proxies{
+		Proxy: &ConfigProxies{
 			Ids:         ids,
 			LastRequest: timestamppb.New(ch.lastFetched),
 		},
@@ -333,7 +343,7 @@ func configIsNew(currInfo *ClientInfo, new *ClientConfig) bool {
 	return currInfo.GetCountry() != new.GetCountry() ||
 		currInfo.GetProToken() != new.GetProToken() ||
 		currInfo.GetIp() != new.GetIp() ||
-		len(new.GetProxies()) > 0
+		len(new.GetProxy().GetProxies()) > 0
 }
 
 func (ch *ConfigService) Country() string {
@@ -345,5 +355,5 @@ func (ch *ConfigService) ProToken() string {
 }
 
 func (ch *ConfigService) Proxies() []*ProxyConnectConfig {
-	return ch.clientConfig.Load().(*ClientConfig).GetProxies()
+	return ch.clientConfig.Load().(*ClientConfig).GetProxy().GetProxies()
 }
