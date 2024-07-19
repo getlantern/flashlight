@@ -12,16 +12,16 @@ import (
 // slogHandler is a Handler that implements the slog.Handler interface
 // and writes log records to a golog.Logger.
 type slogHandler struct {
-	logger    golog.Logger
-	transport string
-	minLevel  slog.Level
-	opts      slog.HandlerOptions
-	attrs     string
-	groups    []string
+	logger   golog.Logger
+	prefix   string
+	minLevel slog.Level
+	opts     slog.HandlerOptions
+	attrs    string
+	groups   []string
 }
 
-func newLogHandler(logger golog.Logger, transport string) *slogHandler {
-	return &slogHandler{logger: logger, transport: transport}
+func newLogHandler(logger golog.Logger, prefix string) *slogHandler {
+	return &slogHandler{logger: logger, prefix: prefix}
 }
 
 // Enabled reports whether the handler handles records at the given level.
@@ -64,11 +64,9 @@ func (h *slogHandler) Handle(ctx context.Context, record slog.Record) error {
 	}
 
 	messageBuilder := new(strings.Builder)
-	messageBuilder.WriteString(record.Time.String())
-	messageBuilder.WriteString("-")
 	messageBuilder.WriteString(record.Level.String())
 	messageBuilder.WriteString(" ")
-	messageBuilder.WriteString(h.transport)
+	messageBuilder.WriteString(h.prefix)
 	messageBuilder.WriteString(": ")
 	messageBuilder.WriteString(record.Message)
 	messageBuilder.WriteString(" ")
