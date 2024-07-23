@@ -257,10 +257,16 @@ client:
           rejectstatus: [403]
         frontingsnis:
           default:
+            usearbitrarysnis: false
+            arbitrarysnis:
+            - amazon.com
+            - mercadopago.com
+            - facebook.com
+            - instagram.com
+            - twitter.com
+          ir:
             usearbitrarysnis: true
             arbitrarysnis:
-            - example1.com
-            - example2.com
         masquerades: 
         - domain: a248.e.akamai.net
           ipaddress: 23.45.112.56
