@@ -56,8 +56,12 @@ type bypassService struct {
 	infos     map[string]*commonconfig.ProxyConfig
 	proxies   []*proxy
 	mxProxies sync.Mutex
-	done      chan struct{}
-	logger    golog.Logger
+	// done is closed to notify the proxy bypass goroutines to stop.
+	done chan struct{}
+	// stopped is used to signal that the bypass service has been stopped. Once stopped, the service
+	// will not start any new proxy bypass goroutines.
+	stopped *atomic.Bool
+	logger  golog.Logger
 }
 
 // StartBypassService sends periodic traffic to the bypass server. The client periodically sends
@@ -72,6 +76,7 @@ func StartBypassService(
 		infos:   make(map[string]*commonconfig.ProxyConfig),
 		proxies: make([]*proxy, 0),
 		done:    make(chan struct{}),
+		stopped: atomic.NewBool(false),
 		logger:  golog.LoggerFor("bypassService"),
 	}
 
@@ -87,9 +92,12 @@ func (b *bypassService) onProxies(
 	configDir string,
 	userConfig common.UserConfig,
 ) {
+	if !b.Reset() {
+		return // bypassService was stopped
+	}
+
 	b.mxProxies.Lock()
 	defer b.mxProxies.Unlock()
-	b.Reset()
 
 	// Some pluggable transports don't support bypass, filter these out here.
 	supportedInfos := make(map[string]*commonconfig.ProxyConfig, len(infos))
@@ -119,18 +127,25 @@ func (b *bypassService) onProxies(
 	}
 }
 
-func (b *bypassService) Reset() {
-	b.Stop()
+// Reset resets the bypass service by stopping all existing bypass proxy goroutines if
+// bypassService is still running. It returns true if bypassService was reset successfully.
+func (b *bypassService) Reset() bool {
+	if b.stopped.Load() {
+		return false
+	}
+
+	close(b.done)
 
 	b.mxProxies.Lock()
 	b.proxies = make([]*proxy, 0)
 	b.done = make(chan struct{})
 	b.mxProxies.Unlock()
+
+	return true
 }
 
 func (b *bypassService) Stop() {
-	select {
-	case b.done <- struct{}{}:
+	if b.stopped.CompareAndSwap(false, true) {
 		close(b.done)
 	}
 }

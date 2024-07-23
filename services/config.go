@@ -35,7 +35,7 @@ const (
 	defaultConfigPollJitter   = 2 * time.Minute
 )
 
-// aliases
+// aliases for better readability
 type (
 	ConfigRequest      = apipb.ConfigRequest
 	ClientInfo         = apipb.ConfigRequest_ClientInfo
@@ -175,16 +175,16 @@ func (ch *ConfigService) init() error {
 
 	ch.logger.Debugf("loaded saved config at %v", ch.opts.filePath)
 
-	ch.clientInfo.Country = conf.GetCountry()
+	ch.clientInfo.Country = conf.Country
 	ch.clientConfig.Store(conf)
 	ch.opts.OnConfig(conf)
 	return nil
 }
 
 func (ch *ConfigService) updateClientInfo(conf *ClientConfig) {
-	ch.clientInfo.ProToken = conf.GetProToken()
-	ch.clientInfo.Country = conf.GetCountry()
-	ch.clientInfo.Ip = conf.GetIp()
+	ch.clientInfo.ProToken = conf.ProToken
+	ch.clientInfo.Country = conf.Country
+	ch.clientInfo.Ip = conf.Ip
 }
 
 func (ch *ConfigService) Stop() {
@@ -348,6 +348,10 @@ func configIsNew(currInfo *ClientInfo, new *ClientConfig) bool {
 
 func (ch *ConfigService) Country() string {
 	return ch.clientConfig.Load().(*ClientConfig).GetCountry()
+}
+
+func (ch *ConfigService) Ip() string {
+	return ch.clientConfig.Load().(*ClientConfig).GetIp()
 }
 
 func (ch *ConfigService) ProToken() string {
