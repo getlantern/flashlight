@@ -11,14 +11,12 @@ import (
 	"github.com/getlantern/detour"
 	"github.com/getlantern/dnsgrab"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/netx"
-	"github.com/getlantern/ops"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/getlantern/flashlight/v7/bandit"
-	"github.com/getlantern/flashlight/v7/bypass"
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/client"
 	"github.com/getlantern/flashlight/v7/common"
@@ -30,8 +28,11 @@ import (
 	fops "github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/otel"
 	"github.com/getlantern/flashlight/v7/proxied"
+	"github.com/getlantern/flashlight/v7/services"
 	"github.com/getlantern/flashlight/v7/shortcut"
 	"github.com/getlantern/flashlight/v7/stats"
+
+	"github.com/getlantern/lantern-cloud/cmd/api/pcfg"
 )
 
 var (
@@ -94,6 +95,8 @@ type Flashlight struct {
 	errorHandler     func(HandledErrorType, error)
 	mxProxyListeners sync.RWMutex
 	proxyListeners   []func(map[string]*commonconfig.ProxyConfig, config.Source)
+
+	configService *services.ConfigService
 }
 
 // clientCallbacks are callbacks the client is configured with
@@ -127,7 +130,7 @@ func (f *Flashlight) EnabledFeatures() map[string]bool {
 	}
 	global := f.global
 	f.mxGlobal.RUnlock()
-	country := geolookup.GetCountry(0)
+	country := f.configService.Country()
 	for feature := range global.FeaturesEnabled {
 		if f.calcFeature(global, country, "0.0.1", feature) {
 			featuresEnabled[feature] = true
@@ -185,7 +188,7 @@ func (f *Flashlight) FeatureEnabled(feature, applicationVersion string) bool {
 	f.mxGlobal.RLock()
 	global := f.global
 	f.mxGlobal.RUnlock()
-	return f.calcFeature(global, geolookup.GetCountry(0), applicationVersion, feature)
+	return f.calcFeature(global, f.configService.Country(), applicationVersion, feature)
 }
 
 func (f *Flashlight) calcFeature(global *config.Global, country, applicationVersion, feature string) bool {
@@ -246,11 +249,8 @@ func (f *Flashlight) notifyProxyListeners(proxies map[string]*commonconfig.Proxy
 	}
 }
 
-func (f *Flashlight) startConfigFetch() func() {
-	proxiesDispatch := func(conf interface{}, src config.Source) {
-		proxyMap := conf.(map[string]*commonconfig.ProxyConfig)
-		f.notifyProxyListeners(proxyMap, src)
-	}
+func (f *Flashlight) startGlobalConfigFetch() func() {
+	// TODO: update global config fetching to use new config service
 	globalDispatch := func(conf interface{}, src config.Source) {
 		cfg := conf.(*config.Global)
 		log.Debugf("Applying global config")
@@ -258,16 +258,12 @@ func (f *Flashlight) startConfigFetch() func() {
 	}
 	rt := proxied.ParallelPreferChained()
 
-	onProxiesSaveError := func(err error) {
-		f.errorHandler(ErrorTypeProxySaveFailure, err)
-	}
 	onConfigSaveError := func(err error) {
 		f.errorHandler(ErrorTypeConfigSaveFailure, err)
 	}
 
 	stopConfig := config.Init(
 		f.configDir, f.flagsAsMap, f.userConfig,
-		proxiesDispatch, onProxiesSaveError,
 		globalDispatch, onConfigSaveError, rt)
 	return stopConfig
 }
@@ -304,7 +300,6 @@ func New(
 	common.CompileTimeApplicationVersion = appVersion
 	deviceID := userConfig.GetDeviceID()
 	log.Debugf("You can query for this device's activity under device id: %v", deviceID)
-	fops.InitGlobalContext(appName, appVersion, revisionDate, deviceID, isPro, func() string { return geolookup.GetCountry(0) })
 	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 
 	f := &Flashlight{
@@ -337,6 +332,17 @@ func New(
 		},
 		proxyListeners: make([]func(map[string]*commonconfig.ProxyConfig, config.Source), 0),
 	}
+
+	fops.InitGlobalContext(
+		appName, appVersion, revisionDate, deviceID, isPro,
+		func() string {
+			if f.configService != nil {
+				return f.configService.Country()
+			}
+
+			return ""
+		},
+	)
 
 	f.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
 		log.Debug("Applying proxy config with proxies")
@@ -421,12 +427,14 @@ func New(
 		f.callbacks.onDialError,
 		f.callbacks.onSucceedingProxy,
 	)
+
 	if err != nil {
 		fatalErr := fmt.Errorf("unable to initialize client: %v", err)
 		f.op.FailIf(fatalErr)
 		f.op.End()
 		return nil, fatalErr
 	}
+
 	f.client = cl
 	return f, nil
 }
@@ -437,30 +445,121 @@ func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 	afterStart func(cl *client.Client),
 	onError func(err error),
 ) {
-	stop := f.StartBackgroundServices()
+	// Until we know our country, default to IR which has all detection rules
+	log.Debug("Defaulting detour country to IR until real country is known")
+	detour.SetCountry("IR")
+
+	stop, err := f.StartBackgroundServices()
+	if err != nil {
+		log.Errorf("Unable to start background services: %v", err)
+	}
 	defer stop()
 
 	f.RunClientListeners(httpProxyAddr, socksProxyAddr, afterStart, onError)
 }
 
-// Starts background services like config fetching
-func (f *Flashlight) StartBackgroundServices() func() {
-	log.Debug("Starting client proxy background services")
+// StartBackgroundServices starts the goroutine monitoring, bypass, and config fetching background
+// services and returns a function that can be called to stop them.
+func (f *Flashlight) StartBackgroundServices() (func(), error) {
+	log.Debug("Starting background services")
 	// check # of goroutines every minute, print the top 5 stacks with most
 	// goroutines if the # exceeds 800 and is increasing.
 	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
+	stopGlobalConfigFetch := f.startGlobalConfigFetch()
 
-	stopBypass := bypass.Start(f.addProxyListener, f.configDir, f.userConfig)
+	bypassStopFn := services.StartBypassService(f.addProxyListener, f.configDir, f.userConfig)
 
-	stopConfigFetch := f.startConfigFetch()
+	onConfig := func(conf *services.ClientConfig) {
+		country := f.configService.Country()
+		if nc := conf.GetCountry(); nc != country {
+			// Update the country if it has changed
+			log.Debugf("Setting detour country to %v", nc)
+			detour.SetCountry(nc)
+		}
+
+		proxyMap := f.convertNewProxyConfToOld(conf.GetProxy().GetProxies())
+		f.notifyProxyListeners(proxyMap, config.Fetched)
+	}
+	configOpts := &services.ConfigOptions{
+		SaveDir:    f.configDir,
+		Obfuscate:  true,
+		OriginURL:  "",
+		UserConfig: f.userConfig,
+		Sticky:     false,
+		Rt:         proxied.ParallelPreferChained(),
+		OnConfig:   onConfig,
+	}
+
+	setConfigFlagOpts(configOpts, f.flagsAsMap)
+	configService, err := services.StartConfigService(configOpts)
+	if err != nil {
+		return func() {
+			stopMonitor()
+			bypassStopFn()
+			stopGlobalConfigFetch()
+		}, err
+	}
+
+	f.configService = configService
+
+	// TODO: update all code to use the new config format for geolookup
 	geolookup.EnablePersistence(filepath.Join(f.configDir, "latestgeoinfo.json"))
 	geolookup.Refresh()
 
 	return func() {
-		stopConfigFetch()
 		stopMonitor()
-		stopBypass()
+		bypassStopFn()
+		stopGlobalConfigFetch()
+		configService.Stop()
+	}, err
+}
+
+// setConfigFlagOpts sets the OriginURL, Sticky, and Obfuscate config options based on the
+// input flags.
+func setConfigFlagOpts(opts *services.ConfigOptions, flags map[string]interface{}) {
+	toBool := func(v interface{}) bool {
+		b, _ := v.(bool)
+		return b
 	}
+
+	opts.Obfuscate = !toBool(flags["readableconfig"])
+	opts.Sticky = toBool(flags["stickyconfig"])
+	if cloudURL, ok := flags["cloudconfig"].(string); ok && cloudURL != "" {
+		opts.OriginURL = cloudURL
+	} else {
+		if toBool(flags["staging"]) {
+			opts.OriginURL = common.ProxiesStagingURL
+		} else {
+			opts.OriginURL = common.ProxiesURL
+		}
+	}
+}
+
+// convertNewProxyConfToOld converts the new ProxyConnectConfig format to the old ProxyConfig. This
+// is temporary until all code is updated to use the new config format.
+//
+// TODO: Update all code to use the new config format and remove this method.
+func (f *Flashlight) convertNewProxyConfToOld(proxies []*services.ProxyConnectConfig) map[string]*commonconfig.ProxyConfig {
+	proxyMap := make(map[string]*commonconfig.ProxyConfig)
+	for _, p := range proxies {
+		// use lantern-cloud to map to legacy so we don't have to write it ourselves
+		lc, err := pcfg.LegacyConnectConfig(p)
+		if err != nil {
+			log.Errorf("Unable to convert %s proxy config to legacy: %v", p.Name, err)
+			continue
+		}
+
+		// since lantern-cloud defines legacy proxy Location as LegacyConnectConfig_ProxyLocation
+		// and commonconfig defines it as ProxyConfig_Location, we can't just cast it. And since
+		// we know that the protobuf is the same, we can ignore the errors from the marshal/unmarshal
+		var cc *commonconfig.ProxyConfig
+		lcb, _ := proto.Marshal(lc)
+		_ = proto.Unmarshal(lcb, cc)
+
+		proxyMap[p.Name] = cc
+	}
+
+	return proxyMap
 }
 
 // Runs client listeners, blocking as long as the proxy is running.
@@ -468,15 +567,6 @@ func (f *Flashlight) RunClientListeners(httpProxyAddr, socksProxyAddr string,
 	afterStart func(cl *client.Client),
 	onError func(err error),
 ) {
-	// Until we know our country, default to IR which has all detection rules
-	log.Debug("Defaulting detour country to IR until real country is known")
-	detour.SetCountry("IR")
-	go func() {
-		country := geolookup.GetCountry(eventual.Forever)
-		log.Debugf("Setting detour country to %v", country)
-		detour.SetCountry(country)
-	}()
-
 	if socksProxyAddr != "" {
 		go func() {
 			log.Debug("Starting client SOCKS5 proxy")
@@ -490,24 +580,12 @@ func (f *Flashlight) RunClientListeners(httpProxyAddr, socksProxyAddr string,
 	if onError == nil {
 		onError = func(_ error) {}
 	}
-	onGeo := geolookup.OnRefresh()
 
 	log.Debug("Starting client HTTP proxy")
 	err := f.client.ListenAndServeHTTP(httpProxyAddr, func() {
 		log.Debug("Started client HTTP proxy")
 		proxied.SetProxyAddr(f.client.Addr)
 		email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
-
-		ops.Go(func() {
-			// wait for geo info before reporting so that we know the client ip and
-			// country
-			select {
-			case <-onGeo:
-			case <-time.After(5 * time.Minute):
-				log.Debug("failed to get geolocation info within 5 minutes, just record end of startup anyway")
-			}
-			f.op.End()
-		})
 
 		if afterStart != nil {
 			afterStart(f.client)
