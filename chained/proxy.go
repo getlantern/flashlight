@@ -137,6 +137,7 @@ func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserC
 	if err != nil {
 		return nil, err
 	}
+	log.Debugf("AuthToken: %s", p.authToken)
 	p.impl, err = createImpl(configDir, name, addr, transport, s, uc, p.reportDialCore)
 	if err != nil {
 		log.Debugf("Unable to create proxy implementation for %v: %v", name, err)
@@ -210,6 +211,8 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 		impl, err = newBroflakeImpl(s, reportDialCore)
 	case "algeneva":
 		impl, err = newAlgenevaImpl(addr, s, reportDialCore)
+	case "water":
+		impl, err = newWaterImpl(addr, s, reportDialCore)
 	default:
 		err = errors.New("Unknown transport: %v", transport).With("addr", addr).With("plugabble-transport", transport)
 	}
@@ -223,7 +226,7 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 		allowPreconnecting = true
 	}
 
-	if s.MultiplexedAddr != "" || transport == "tlsmasq" || transport == "starbridge" || transport == "algeneva" {
+	if s.MultiplexedAddr != "" || isAMultiplexedTransport(transport) {
 		impl, err = multiplexed(impl, name, s)
 		if err != nil {
 			return nil, err
@@ -236,6 +239,12 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 	}
 
 	return impl, err
+}
+
+func isAMultiplexedTransport(transport string) bool {
+	return transport == "tlsmasq" ||
+		transport == "starbridge" ||
+		transport == "algeneva"
 }
 
 // ForceProxy forces everything through the HTTP proxy at forceAddr using
