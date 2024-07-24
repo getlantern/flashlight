@@ -62,6 +62,9 @@ func New(opts Options) (*BanditDialer, error) {
 	if opts.StatsTracker == nil {
 		opts.StatsTracker = stats.NewNoop()
 	}
+	if opts.Dialers == nil {
+		opts.Dialers = []Dialer{}
+	}
 
 	dialers := opts.Dialers
 	log.Debugf("Creating bandit with %d dialers", len(dialers))
