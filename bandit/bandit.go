@@ -125,6 +125,9 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 
 	start := time.Now()
 	dialer, chosenArm := o.chooseDialerForDomain(o.dialers, network, addr)
+	if dialer == nil {
+		return nil, log.Error("No dialers available")
+	}
 
 	// We have to be careful here about virtual, multiplexed connections, as the
 	// initial TCP dial will have different performance characteristics than the

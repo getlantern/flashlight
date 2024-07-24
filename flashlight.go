@@ -18,7 +18,6 @@ import (
 	"github.com/getlantern/ops"
 
 	"github.com/getlantern/flashlight/v7/bandit"
-	"github.com/getlantern/flashlight/v7/bypass"
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/client"
 	"github.com/getlantern/flashlight/v7/common"
@@ -433,10 +432,7 @@ func New(
 
 // Run starts background services and runs the client proxy. It blocks as long as
 // the proxy is running.
-func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
-	afterStart func(cl *client.Client),
-	onError func(err error),
-) {
+func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string, afterStart func(cl *client.Client), onError func(err error)) {
 	stop := f.StartBackgroundServices()
 	defer stop()
 
@@ -450,7 +446,7 @@ func (f *Flashlight) StartBackgroundServices() func() {
 	// goroutines if the # exceeds 800 and is increasing.
 	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
 
-	stopBypass := bypass.Start(f.addProxyListener, f.configDir, f.userConfig)
+	//stopBypass := bypass.Start(f.addProxyListener, f.configDir, f.userConfig)
 
 	stopConfigFetch := f.startConfigFetch()
 	geolookup.EnablePersistence(filepath.Join(f.configDir, "latestgeoinfo.json"))
@@ -459,7 +455,7 @@ func (f *Flashlight) StartBackgroundServices() func() {
 	return func() {
 		stopConfigFetch()
 		stopMonitor()
-		stopBypass()
+		//stopBypass()
 	}
 }
 

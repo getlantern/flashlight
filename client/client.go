@@ -173,7 +173,10 @@ func NewClient(
 	if err != nil {
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
-	banditDialer, err := bandit.New(bandit.Options{})
+	banditDialer, err := bandit.New(bandit.Options{
+		Dialers:      []bandit.Dialer{},
+		StatsTracker: statsTracker,
+	})
 	if err != nil {
 		return nil, errors.New("Unable to create bandit: %v", err)
 	}
@@ -714,7 +717,8 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 	chained.PersistSessionStates(configDir)
 	dialers := chained.CreateDialers(configDir, proxies, client.user)
 	dialer, err := bandit.New(bandit.Options{
-		Dialers: dialers,
+		//Dialers: dialers,
+		Dialers: []bandit.Dialer{},
 		OnError: client.onDialError,
 		OnSuccess: func(dialer bandit.Dialer) {
 			client.onSucceedingProxy()
