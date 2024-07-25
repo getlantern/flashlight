@@ -71,7 +71,7 @@ func StartBypassService(
 	listen func(func(map[string]*commonconfig.ProxyConfig, config.Source)),
 	configDir string,
 	userConfig common.UserConfig,
-) func() {
+) StopFn {
 	b := &bypassService{
 		infos:   make(map[string]*commonconfig.ProxyConfig),
 		proxies: make([]*proxy, 0),
