@@ -717,8 +717,7 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 	chained.PersistSessionStates(configDir)
 	dialers := chained.CreateDialers(configDir, proxies, client.user)
 	dialer, err := bandit.New(bandit.Options{
-		//Dialers: dialers,
-		Dialers: []bandit.Dialer{},
+		Dialers: dialers,
 		OnError: client.onDialError,
 		OnSuccess: func(dialer bandit.Dialer) {
 			client.onSucceedingProxy()
