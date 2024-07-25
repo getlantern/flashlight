@@ -78,9 +78,6 @@ type ConfigOptions struct {
 	PollInterval time.Duration
 	// PollJitter specifies the max amount of jitter to add to the poll interval.
 	PollJitter time.Duration
-
-	// OnConfig is a callback that is called when a new config is received.
-	OnConfig func(old, new *ClientConfig)
 }
 
 type configService struct {
@@ -92,6 +89,9 @@ type configService struct {
 	done    chan struct{}
 	running bool
 	logger  golog.Logger
+
+	// listeners is a list of functions to call when the config changes.
+	listeners []func(old, new *ClientConfig)
 }
 
 var (
@@ -114,8 +114,6 @@ func StartConfigService(opts *ConfigOptions) (StopFn, error) {
 	switch {
 	case opts.RoundTripper == nil:
 		return nil, errors.New("RoundTripper is required")
-	case opts.OnConfig == nil:
-		return nil, errors.New("OnConfig is required")
 	case opts.OriginURL == "":
 		return nil, errors.New("OriginURL is required")
 	}
@@ -188,7 +186,7 @@ func (cs *configService) init() error {
 
 	cs.clientInfo.Country = conf.Country
 	cs.clientConfig.Store(conf)
-	cs.opts.OnConfig(nil, conf)
+	cs.notifyListeners(nil, conf)
 
 	return nil
 }
@@ -244,7 +242,7 @@ func (cs *configService) fetchConfig() (int64, error) {
 
 	cs.updateClientInfo(newConf)
 	old := cs.clientConfig.Swap(newConf)
-	cs.opts.OnConfig(old.(*ClientConfig), newConf)
+	cs.notifyListeners(old.(*ClientConfig), newConf)
 
 	return sleep, nil
 }
@@ -384,4 +382,27 @@ func GetCountry() string {
 	}
 
 	return conf.GetCountry()
+}
+
+// OnConfigChange registers a function to be called when the config changes. This allows callers to
+// respond to changes in the config without having to poll for changes.
+func OnConfigChange(fn func(old, new *ClientConfig)) {
+	configServiceMu.Lock()
+	if _configService.listeners == nil {
+		_configService.listeners = make([]func(old, new *ClientConfig), 0, 1)
+	}
+
+	_configService.listeners = append(_configService.listeners, fn)
+	configServiceMu.Unlock()
+}
+
+func (cs *configService) notifyListeners(old, new *ClientConfig) {
+	configServiceMu.Lock()
+	listeners := cs.listeners
+	configServiceMu.Unlock()
+	// TODO: should we clone the configs before passing them to the listeners?
+	for _, fn := range listeners {
+		// don't block the config service
+		go fn(old, new)
+	}
 }

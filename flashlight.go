@@ -458,7 +458,7 @@ func (f *Flashlight) StartBackgroundServices() (func(), error) {
 
 	stopBypass := services.StartBypassService(f.addProxyListener, f.configDir, f.userConfig)
 
-	onConfig := func(old, new *services.ClientConfig) {
+	services.OnConfigChange(func(old, new *services.ClientConfig) {
 		var country string
 		if old != nil {
 			country = old.GetCountry()
@@ -472,7 +472,7 @@ func (f *Flashlight) StartBackgroundServices() (func(), error) {
 
 		proxyMap := f.convertNewProxyConfToOld(new.GetProxy().GetProxies())
 		f.notifyProxyListeners(proxyMap, config.Fetched)
-	}
+	})
 
 	configOpts := &services.ConfigOptions{
 		SaveDir:      f.configDir,
@@ -481,7 +481,6 @@ func (f *Flashlight) StartBackgroundServices() (func(), error) {
 		UserConfig:   f.userConfig,
 		Sticky:       false,
 		RoundTripper: proxied.ParallelPreferChained(),
-		OnConfig:     onConfig,
 	}
 
 	setConfigFlagOpts(configOpts, f.flagsAsMap)
