@@ -8,6 +8,8 @@ import (
 	"github.com/getlantern/golog"
 )
 
+type StopFn func()
+
 // callRandomly continuously calls fn randomly between interval-jitter and interval+jitter, with
 // the initial call being made immediately. fn can return a positive value to extend the wait time.
 func callRandomly(

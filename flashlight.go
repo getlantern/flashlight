@@ -95,8 +95,6 @@ type Flashlight struct {
 	errorHandler     func(HandledErrorType, error)
 	mxProxyListeners sync.RWMutex
 	proxyListeners   []func(map[string]*commonconfig.ProxyConfig, config.Source)
-
-	configService *services.ConfigService
 }
 
 // clientCallbacks are callbacks the client is configured with
@@ -130,7 +128,7 @@ func (f *Flashlight) EnabledFeatures() map[string]bool {
 	}
 	global := f.global
 	f.mxGlobal.RUnlock()
-	country := f.configService.Country()
+	country := services.GetCountry()
 	for feature := range global.FeaturesEnabled {
 		if f.calcFeature(global, country, "0.0.1", feature) {
 			featuresEnabled[feature] = true
@@ -188,7 +186,7 @@ func (f *Flashlight) FeatureEnabled(feature, applicationVersion string) bool {
 	f.mxGlobal.RLock()
 	global := f.global
 	f.mxGlobal.RUnlock()
-	return f.calcFeature(global, f.configService.Country(), applicationVersion, feature)
+	return f.calcFeature(global, services.GetCountry(), applicationVersion, feature)
 }
 
 func (f *Flashlight) calcFeature(global *config.Global, country, applicationVersion, feature string) bool {
@@ -333,16 +331,7 @@ func New(
 		proxyListeners: make([]func(map[string]*commonconfig.ProxyConfig, config.Source), 0),
 	}
 
-	fops.InitGlobalContext(
-		appName, appVersion, revisionDate, deviceID, isPro,
-		func() string {
-			if f.configService != nil {
-				return f.configService.Country()
-			}
-
-			return ""
-		},
-	)
+	fops.InitGlobalContext(appName, appVersion, revisionDate, deviceID, isPro, services.GetCountry)
 
 	f.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
 		log.Debug("Applying proxy config with proxies")
@@ -467,40 +456,43 @@ func (f *Flashlight) StartBackgroundServices() (func(), error) {
 	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
 	stopGlobalConfigFetch := f.startGlobalConfigFetch()
 
-	bypassStopFn := services.StartBypassService(f.addProxyListener, f.configDir, f.userConfig)
+	stopBypass := services.StartBypassService(f.addProxyListener, f.configDir, f.userConfig)
 
-	onConfig := func(conf *services.ClientConfig) {
-		country := f.configService.Country()
-		if nc := conf.GetCountry(); nc != country {
+	onConfig := func(old, new *services.ClientConfig) {
+		var country string
+		if old != nil {
+			country = old.GetCountry()
+		}
+
+		if nc := new.GetCountry(); nc != country {
 			// Update the country if it has changed
 			log.Debugf("Setting detour country to %v", nc)
 			detour.SetCountry(nc)
 		}
 
-		proxyMap := f.convertNewProxyConfToOld(conf.GetProxy().GetProxies())
+		proxyMap := f.convertNewProxyConfToOld(new.GetProxy().GetProxies())
 		f.notifyProxyListeners(proxyMap, config.Fetched)
 	}
+
 	configOpts := &services.ConfigOptions{
-		SaveDir:    f.configDir,
-		Obfuscate:  true,
-		OriginURL:  "",
-		UserConfig: f.userConfig,
-		Sticky:     false,
-		Rt:         proxied.ParallelPreferChained(),
-		OnConfig:   onConfig,
+		SaveDir:      f.configDir,
+		Obfuscate:    true,
+		OriginURL:    "",
+		UserConfig:   f.userConfig,
+		Sticky:       false,
+		RoundTripper: proxied.ParallelPreferChained(),
+		OnConfig:     onConfig,
 	}
 
 	setConfigFlagOpts(configOpts, f.flagsAsMap)
-	configService, err := services.StartConfigService(configOpts)
+	stopConfigService, err := services.StartConfigService(configOpts)
 	if err != nil {
 		return func() {
 			stopMonitor()
-			bypassStopFn()
+			stopBypass()
 			stopGlobalConfigFetch()
 		}, err
 	}
-
-	f.configService = configService
 
 	// TODO: update all code to use the new config format for geolookup
 	geolookup.EnablePersistence(filepath.Join(f.configDir, "latestgeoinfo.json"))
@@ -508,9 +500,9 @@ func (f *Flashlight) StartBackgroundServices() (func(), error) {
 
 	return func() {
 		stopMonitor()
-		bypassStopFn()
+		stopBypass()
 		stopGlobalConfigFetch()
-		configService.Stop()
+		stopConfigService()
 	}, err
 }
 
