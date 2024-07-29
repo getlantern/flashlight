@@ -30,7 +30,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/getlantern/broflake v0.0.0-20231117182649-7d46643a6f87
 	github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493
-	github.com/getlantern/cmux/v2 v2.0.0-20230301223233-dac79088a4c0
+	github.com/getlantern/cmux/v2 v2.0.0-20240729004824-f2eb5ad34b6a
 	github.com/getlantern/cmuxprivate v0.0.0-20211216020409-d29d0d38be54
 	github.com/getlantern/common v1.2.1-0.20230427204521-6ac18c21db39
 	github.com/getlantern/detour v0.0.0-20230503144615-d3106a68f79e
@@ -58,8 +58,8 @@ require (
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20230510135141-717ed305ef50
-	github.com/getlantern/netx v0.0.0-20211206143627-7ccfeb739cbd
-	github.com/getlantern/ops v0.0.0-20230519221840-1283e026181c
+	github.com/getlantern/netx v0.0.0-20240124040039-163b1628a66b
+	github.com/getlantern/ops v0.0.0-20231025133620-f368ab734534
 	github.com/getlantern/osversion v0.0.0-20230401075644-c2a30e73c451
 	github.com/getlantern/proxy/v3 v3.0.0-20240328103708-9185589b6a99
 	github.com/getlantern/psmux v1.5.15
@@ -91,14 +91,14 @@ require (
 	github.com/refraction-networking/water v0.7.0-alpha
 	github.com/samber/lo v1.38.1
 	github.com/shadowsocks/go-shadowsocks2 v0.1.5
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/vulcand/oxy v1.4.2
-	github.com/xtaci/smux v1.5.24
-	go.opentelemetry.io/otel v1.19.0
+	github.com/xtaci/smux v1.5.26
+	go.opentelemetry.io/otel v1.28.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.19.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.19.0
 	go.opentelemetry.io/otel/sdk v1.19.0
-	go.opentelemetry.io/otel/trace v1.19.0
+	go.opentelemetry.io/otel/trace v1.28.0
 	go.uber.org/atomic v1.10.0
 	golang.org/x/sys v0.17.0
 	google.golang.org/protobuf v1.33.0
@@ -199,7 +199,7 @@ require (
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-llsqlite/adapter v0.0.0-20230927005056-7f5ce7f0c916 // indirect
 	github.com/go-llsqlite/crawshaw v0.5.1 // indirect
-	github.com/go-logr/logr v1.2.4 // indirect
+	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
@@ -285,12 +285,12 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.42.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric v0.42.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v0.42.0 // indirect
-	go.opentelemetry.io/otel/metric v1.19.0 // indirect
+	go.opentelemetry.io/otel/metric v1.28.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.19.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
 	go.uber.org/mock v0.3.0 // indirect
-	go.uber.org/multierr v1.8.0 // indirect
-	go.uber.org/zap v1.21.0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
+	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a // indirect
 	golang.org/x/mod v0.14.0 // indirect
