@@ -21,6 +21,7 @@ import (
 	"github.com/getlantern/flashlight/v7/client"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/config"
+	proxyconfig "github.com/getlantern/flashlight/v7/config/proxy"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/email"
 	"github.com/getlantern/flashlight/v7/geolookup"
@@ -128,7 +129,7 @@ func (f *Flashlight) EnabledFeatures() map[string]bool {
 	}
 	global := f.global
 	f.mxGlobal.RUnlock()
-	country := services.GetCountry()
+	country := geolookup.GetCountry(0)
 	for feature := range global.FeaturesEnabled {
 		if f.calcFeature(global, country, "0.0.1", feature) {
 			featuresEnabled[feature] = true
@@ -186,7 +187,7 @@ func (f *Flashlight) FeatureEnabled(feature, applicationVersion string) bool {
 	f.mxGlobal.RLock()
 	global := f.global
 	f.mxGlobal.RUnlock()
-	return f.calcFeature(global, services.GetCountry(), applicationVersion, feature)
+	return f.calcFeature(global, geolookup.GetCountry(0), applicationVersion, feature)
 }
 
 func (f *Flashlight) calcFeature(global *config.Global, country, applicationVersion, feature string) bool {
@@ -331,7 +332,10 @@ func New(
 		proxyListeners: make([]func(map[string]*commonconfig.ProxyConfig, config.Source), 0),
 	}
 
-	fops.InitGlobalContext(appName, appVersion, revisionDate, deviceID, isPro, services.GetCountry)
+	fops.InitGlobalContext(
+		appName, appVersion, revisionDate, deviceID, isPro, func() string {
+			return geolookup.GetCountry(0)
+		})
 
 	f.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
 		log.Debug("Applying proxy config with proxies")
@@ -457,34 +461,7 @@ func (f *Flashlight) StartBackgroundServices() (func(), error) {
 	stopGlobalConfigFetch := f.startGlobalConfigFetch()
 
 	stopBypass := services.StartBypassService(f.addProxyListener, f.configDir, f.userConfig)
-
-	services.OnConfigChange(func(old, new *services.ClientConfig) {
-		var country string
-		if old != nil {
-			country = old.GetCountry()
-		}
-
-		if nc := new.GetCountry(); nc != country {
-			// Update the country if it has changed
-			log.Debugf("Setting detour country to %v", nc)
-			detour.SetCountry(nc)
-		}
-
-		proxyMap := f.convertNewProxyConfToOld(new.GetProxy().GetProxies())
-		f.notifyProxyListeners(proxyMap, config.Fetched)
-	})
-
-	configOpts := &services.ConfigOptions{
-		SaveDir:      f.configDir,
-		Obfuscate:    true,
-		OriginURL:    "",
-		UserConfig:   f.userConfig,
-		Sticky:       false,
-		RoundTripper: proxied.ParallelPreferChained(),
-	}
-
-	setConfigFlagOpts(configOpts, f.flagsAsMap)
-	stopConfigService, err := services.StartConfigService(configOpts)
+	stopConfigService, err := f.startConfigService()
 	if err != nil {
 		return func() {
 			stopMonitor()
@@ -493,27 +470,59 @@ func (f *Flashlight) StartBackgroundServices() (func(), error) {
 		}, err
 	}
 
-	// TODO: update all code to use the new config format for geolookup
-	geolookup.EnablePersistence(filepath.Join(f.configDir, "latestgeoinfo.json"))
-	geolookup.Refresh()
-
 	return func() {
 		stopMonitor()
 		stopBypass()
 		stopGlobalConfigFetch()
 		stopConfigService()
-	}, err
+	}, nil
 }
 
-// setConfigFlagOpts sets the OriginURL, Sticky, and Obfuscate config options based on the
-// input flags.
+func (f *Flashlight) startConfigService() (services.StopFn, error) {
+	obfuscate, _ := f.flagsAsMap["readableconfig"].(bool)
+	handler, err := proxyconfig.Init(f.configDir, obfuscate)
+	if err != nil {
+		return nil, err
+	}
+
+	fn := func(old, new *proxyconfig.ProxyConfig) {
+		var country string
+		if old != nil {
+			country = old.GetCountry()
+		}
+
+		// update the country if it has changed
+		if nc := new.GetCountry(); nc != country {
+			log.Debugf("Setting detour country to %v", nc)
+			detour.SetCountry(nc)
+		}
+
+		proxyMap := f.convertNewProxyConfToOld(new.GetProxy().GetProxies())
+		f.notifyProxyListeners(proxyMap, config.Fetched)
+	}
+	conf, _ := proxyconfig.GetConfig(0)
+	fn(nil, conf)
+
+	proxyconfig.OnConfigChange(fn)
+
+	configOpts := &services.ConfigOptions{
+		OriginURL:    "",
+		UserConfig:   f.userConfig,
+		Sticky:       false,
+		RoundTripper: proxied.ParallelPreferChained(),
+	}
+
+	setConfigFlagOpts(configOpts, f.flagsAsMap)
+	return services.StartConfigService(handler, configOpts)
+}
+
+// setConfigFlagOpts sets the OriginURL, Sticky, and Obfuscate config options based on the input flags.
 func setConfigFlagOpts(opts *services.ConfigOptions, flags map[string]interface{}) {
 	toBool := func(v interface{}) bool {
 		b, _ := v.(bool)
 		return b
 	}
 
-	opts.Obfuscate = !toBool(flags["readableconfig"])
 	opts.Sticky = toBool(flags["stickyconfig"])
 	if cloudURL, ok := flags["cloudconfig"].(string); ok && cloudURL != "" {
 		opts.OriginURL = cloudURL
