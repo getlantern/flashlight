@@ -85,10 +85,14 @@ func (c *ClientConfig) FrontedProviders() map[string]*fronted.Provider {
 	sniRegion := geolookup.GetCountry(0)
 	providers := make(map[string]*fronted.Provider)
 	for pid, p := range c.Fronted.Providers {
-		sniConfig, ok := p.FrontingSNIs[sniRegion]
-		if !ok {
-			sniConfig = p.FrontingSNIs["default"]
+		var sniConfig *fronted.SNIConfig
+		if p.FrontingSNIs != nil {
+			sniConfig, ok := p.FrontingSNIs[sniRegion]
+			if !ok || sniConfig != nil && sniConfig.UseArbitrarySNIs && len(sniConfig.ArbitrarySNIs) == 0 {
+				sniConfig = p.FrontingSNIs["default"]
+			}
 		}
+
 		providers[pid] = fronted.NewProvider(
 			p.HostAliases,
 			p.TestURL,
