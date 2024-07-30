@@ -2,7 +2,6 @@ package config
 
 import (
 	"errors"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
@@ -10,12 +9,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 
 	"github.com/getlantern/flashlight/v7/common"
-	"github.com/getlantern/flashlight/v7/embeddedconfig"
 )
 
 func TestEmptyEmbedded(t *testing.T) {
@@ -58,7 +55,7 @@ func TestEmbeddedIsNewer(t *testing.T) {
 func TestInvalidFile(t *testing.T) {
 	logger := golog.LoggerFor("config-test")
 
-	tmpfile, err := ioutil.TempFile("", "invalid-test-file")
+	tmpfile, err := os.CreateTemp("", "invalid-test-file")
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -106,105 +103,108 @@ func TestObfuscated(t *testing.T) {
 	})
 }
 
-// TestSaved tests reading stored proxies from disk
-func TestSaved(t *testing.T) {
-	withTempDir(t, func(inTempDir func(string) string) {
-		file := inTempDir("proxies.yaml")
-		proxiesConfig := newProxiesConfig(t)
-		writeObfuscatedConfig(t, proxiesConfig, file)
+/*
+	commented out for now because this is for the old proxy config stuff
+*/
 
-		cfg := newConfig(file, &options{
-			obfuscate:   true,
-			unmarshaler: newProxiesUnmarshaler(),
-		})
+// // TestSaved tests reading stored proxies from disk
+// func TestSaved(t *testing.T) {
+// 	withTempDir(t, func(inTempDir func(string) string) {
+// 		file := inTempDir("proxies.yaml")
+// 		proxiesConfig := newProxiesConfig(t)
+// 		writeObfuscatedConfig(t, proxiesConfig, file)
+//
+// 		cfg := newConfig(file, &options{
+// 			obfuscate:   true,
+// 			unmarshaler: newProxiesUnmarshaler(),
+// 		})
+//
+// 		pr, err := cfg.saved()
+// 		assert.Nil(t, err)
+//
+// 		proxies := pr.(map[string]*commonconfig.ProxyConfig)
+// 		chained := proxies["fallback-104.236.192.114"]
+// 		assert.True(t, chained != nil)
+// 		assert.Equal(t, "104.236.192.114:443", chained.Addr)
+// 	})
+// }
 
-		pr, err := cfg.saved()
-		assert.Nil(t, err)
+// // TestEmbedded tests reading stored proxies from disk
+// func TestEmbedded(t *testing.T) {
+// 	withTempDir(t, func(inTempDir func(string) string) {
+// 		file := inTempDir("proxies.yaml")
+//
+// 		cfg := newConfig(file, &options{
+// 			unmarshaler: newProxiesUnmarshaler(),
+// 		})
+//
+// 		_, err := cfg.embedded(embeddedconfig.Proxies)
+// 		assert.NotNil(t, err)
+// 	})
+// }
 
-		proxies := pr.(map[string]*commonconfig.ProxyConfig)
-		chained := proxies["fallback-104.236.192.114"]
-		assert.True(t, chained != nil)
-		assert.Equal(t, "104.236.192.114:443", chained.Addr)
-	})
-}
-
-// TestEmbedded tests reading stored proxies from disk
-func TestEmbedded(t *testing.T) {
-	withTempDir(t, func(inTempDir func(string) string) {
-		file := inTempDir("proxies.yaml")
-
-		cfg := newConfig(file, &options{
-			unmarshaler: newProxiesUnmarshaler(),
-		})
-
-		_, err := cfg.embedded(embeddedconfig.Proxies)
-		assert.NotNil(t, err)
-	})
-}
-
-func TestPollProxies(t *testing.T) {
-	withTempDir(t, func(inTempDir func(string) string) {
-		fronted.ConfigureForTest(t)
-
-		file := inTempDir("proxies.yaml")
-		proxyConfig := newProxiesConfig(t)
-		writeObfuscatedConfig(t, proxyConfig, file)
-
-		proxyChan := make(chan interface{})
-		cfg := newConfig(file, &options{
-			unmarshaler: newProxiesUnmarshaler(),
-		})
-		var fi os.FileInfo
-		var err error
-		for i := 1; i <= 400; i++ {
-			fi, err = os.Stat(file)
-			if err == nil {
-				break
-			}
-			time.Sleep(200 * time.Millisecond)
-		}
-		if !assert.Nil(t, err) {
-			return
-		}
-
-		mtime := fi.ModTime()
-		os.Remove(file)
-
-		proxyConfigURLs, _ := startConfigServer(t, proxyConfig)
-		fetcher := newHttpFetcher(newTestUserConfig(), &http.Transport{}, proxyConfigURLs)
-		dispatch := func(cfg interface{}) {
-			proxyChan <- cfg
-		}
-		go cfg.configFetcher(nil, dispatch, fetcher, func() time.Duration { return 1 * time.Hour }, log)
-		proxies := (<-proxyChan).(map[string]*commonconfig.ProxyConfig)
-
-		assert.True(t, len(proxies) > 0)
-		for _, val := range proxies {
-			assert.True(t, val != nil)
-			assert.True(t, len(val.Addr) > 6)
-		}
-
-		for i := 1; i <= 400; i++ {
-			fi, err = os.Stat(file)
-			if err == nil && fi != nil && fi.ModTime().After(mtime) {
-				//log.Debugf("Got newer mod time?")
-				break
-			}
-			time.Sleep(50 * time.Millisecond)
-		}
-
-		fi, err = os.Stat(file)
-
-		assert.NotNil(t, fi)
-		assert.Nil(t, err, "Got error: %v", err)
-
-		assert.True(t, fi.ModTime().After(mtime))
-	})
-}
+// func TestPollProxies(t *testing.T) {
+// 	withTempDir(t, func(inTempDir func(string) string) {
+// 		fronted.ConfigureForTest(t)
+//
+// 		file := inTempDir("proxies.yaml")
+// 		proxyConfig := newProxiesConfig(t)
+// 		writeObfuscatedConfig(t, proxyConfig, file)
+//
+// 		proxyChan := make(chan interface{})
+// 		cfg := newConfig(file, &options{
+// 			unmarshaler: newProxiesUnmarshaler(),
+// 		})
+// 		var fi os.FileInfo
+// 		var err error
+// 		for i := 1; i <= 400; i++ {
+// 			fi, err = os.Stat(file)
+// 			if err == nil {
+// 				break
+// 			}
+// 			time.Sleep(200 * time.Millisecond)
+// 		}
+// 		if !assert.Nil(t, err) {
+// 			return
+// 		}
+//
+// 		mtime := fi.ModTime()
+// 		os.Remove(file)
+//
+// 		proxyConfigURLs, _ := startConfigServer(t, proxyConfig)
+// 		fetcher := newHttpFetcher(newTestUserConfig(), &http.Transport{}, proxyConfigURLs)
+// 		dispatch := func(cfg interface{}) {
+// 			proxyChan <- cfg
+// 		}
+// 		go cfg.configFetcher(nil, dispatch, fetcher, func() time.Duration { return 1 * time.Hour }, log)
+// 		proxies := (<-proxyChan).(map[string]*commonconfig.ProxyConfig)
+//
+// 		assert.True(t, len(proxies) > 0)
+// 		for _, val := range proxies {
+// 			assert.True(t, val != nil)
+// 			assert.True(t, len(val.Addr) > 6)
+// 		}
+//
+// 		for i := 1; i <= 400; i++ {
+// 			fi, err = os.Stat(file)
+// 			if err == nil && fi != nil && fi.ModTime().After(mtime) {
+// 				//log.Debugf("Got newer mod time?")
+// 				break
+// 			}
+// 			time.Sleep(50 * time.Millisecond)
+// 		}
+//
+// 		fi, err = os.Stat(file)
+//
+// 		assert.NotNil(t, fi)
+// 		assert.Nil(t, err, "Got error: %v", err)
+//
+// 		assert.True(t, fi.ModTime().After(mtime))
+// 	})
+// }
 
 // TestProductionGlobal validates certain properties of the live production global config
 func TestProductionGlobal(t *testing.T) {
-
 	testURL := common.GlobalURL // this should always point to the live production configuration (not staging etc)
 
 	expectedProviders := map[string]bool{

@@ -109,22 +109,65 @@ require (
 )
 
 require (
+	cloud.google.com/go v0.110.10 // indirect
+	cloud.google.com/go/cloudsqlconn v0.5.2 // indirect
+	cloud.google.com/go/compute v1.23.3 // indirect
+	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	cloud.google.com/go/errorreporting v0.3.0 // indirect
+	cloud.google.com/go/logging v1.8.1 // indirect
+	cloud.google.com/go/longrunning v0.5.4 // indirect
 	git.torproject.org/pluggable-transports/goptlib.git v1.2.0 // indirect
+	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/Jigsaw-Code/outline-ss-server v1.5.0 // indirect
+	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/anacrolix/dht/v2 v2.20.0 // indirect
 	github.com/blang/vfs v1.0.0 // indirect
 	github.com/dchest/siphash v1.2.3 // indirect
+	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
+	github.com/didip/tollbooth/v7 v7.0.1 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gaukas/wazerofs v0.1.0 // indirect
 	github.com/getlantern/algeneva v0.0.0-20240222191137-2b4e88234f59 // indirect
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a // indirect
 	github.com/getlantern/withtimeout v0.0.0-20160829163843-511f017cd913 // indirect
+	github.com/getlantern/words v0.1.1 // indirect
+	github.com/go-pkgz/expirable-cache v0.1.0 // indirect
+	github.com/go-playground/locales v0.14.1 // indirect
+	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/go-playground/validator/v10 v10.14.1 // indirect
+	github.com/go-redis/redis/extra/rediscmd/v8 v8.11.5 // indirect
 	github.com/go-redsync/redsync/v4 v4.13.0 // indirect
+	github.com/google/s2a-go v0.1.7 // indirect
+	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
+	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.2 // indirect
+	github.com/iangudger/memnet v0.0.0-20220731214234-823edbed1e9d // indirect
+	github.com/improbable-eng/grpc-web v0.15.0 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
+	github.com/jackc/pgx/v5 v5.6.0 // indirect
+	github.com/jackc/puddle/v2 v2.2.1 // indirect
+	github.com/jellydator/ttlcache/v3 v3.1.0 // indirect
+	github.com/jmoiron/sqlx v1.3.5 // indirect
+	github.com/julienschmidt/httprouter v1.3.0 // indirect
+	github.com/leodido/go-urn v1.2.4 // indirect
+	github.com/lib/pq v1.10.9 // indirect
+	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.13 // indirect
+	github.com/rs/cors v1.7.0 // indirect
+	github.com/rs/zerolog v1.26.1 // indirect
+	github.com/sqlc-dev/pqtype v0.3.0 // indirect
 	github.com/tetratelabs/wazero v1.7.1 // indirect
+	github.com/uptrace/opentelemetry-go-extra/otelutil v0.1.14 // indirect
 	gitlab.com/yawning/edwards25519-extra.git v0.0.0-20211229043746-2f91fcc9fbdb // indirect
 	gitlab.com/yawning/obfs4.git v0.0.0-20220204003609-77af0cba934d // indirect
-	go.uber.org/goleak v1.2.1 // indirect
+	go.opencensus.io v0.24.0 // indirect
+	golang.org/x/oauth2 v0.16.0 // indirect
+	google.golang.org/api v0.150.0 // indirect
+	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/genproto v0.0.0-20231016165738-49dd2c1f3d0b // indirect
 )
 
 require (

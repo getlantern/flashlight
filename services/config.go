@@ -8,16 +8,12 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strconv"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/detour"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/rot13"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -46,19 +42,6 @@ type (
 
 // ConfigOptions specifies the options to use for ConfigService.
 type ConfigOptions struct {
-	// SaveDir is the directory where we should save new configs and also look
-	// for existing saved configs.
-	SaveDir  string
-	filePath string
-
-	// obfuscate specifies whether or not to obfuscate the config on disk.
-	Obfuscate bool
-
-	// Name specifies the name of the config file both on disk and in the
-	// embedded config that uses tarfs (the same in the interest of using
-	// configuration by convention).
-	Name string
-
 	// URL to use for fetching this config.
 	OriginURL string
 
@@ -81,46 +64,51 @@ type ConfigOptions struct {
 }
 
 type configService struct {
-	opts         *ConfigOptions
-	clientInfo   *ClientInfo
-	clientConfig atomic.Value
-	lastFetched  time.Time
+	opts          *ConfigOptions
+	clientInfo    *ClientInfo
+	configHandler ConfigHandler
+	lastFetched   time.Time
+
+	logger golog.Logger
 
 	done    chan struct{}
 	running bool
-	logger  golog.Logger
+	mu      sync.Mutex
+}
 
-	// listeners is a list of functions to call when the config changes.
-	listeners []func(old, new *ClientConfig)
+// ConfigHandler handles updating and retrieving the client config.
+type ConfigHandler interface {
+	// GetConfig returns the current client config.
+	GetConfig() *ClientConfig
+	// SetConfig sets the client config to the given config.
+	SetConfig(new *ClientConfig)
 }
 
 var (
 	// initialize variable so we don't have to lock mutex and check if it's nil every time someone
 	// calls GetClientConfig
-	_configService  = &configService{clientConfig: atomic.Value{}}
-	configServiceMu sync.Mutex
+	_configService = &configService{}
 )
 
 // StartConfigService starts a new config service with the given options and returns a func to stop
 // it. It will return an error if opts.OriginURL, opts.Rt, opts.Fetcher, or opts.OnConfig are nil.
-func StartConfigService(opts *ConfigOptions) (StopFn, error) {
-	configServiceMu.Lock()
-	defer configServiceMu.Unlock()
+func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, error) {
+	_configService.mu.Lock()
+	defer _configService.mu.Unlock()
 
-	if _configService != nil && _configService.running {
+	if _configService.running {
 		return _configService.Stop, nil
 	}
 
 	switch {
+	case handler == nil:
+		return nil, errors.New("ConfigHandler is required")
+	case opts == nil:
+		return nil, errors.New("ConfigOptions is required")
 	case opts.RoundTripper == nil:
 		return nil, errors.New("RoundTripper is required")
 	case opts.OriginURL == "":
 		return nil, errors.New("OriginURL is required")
-	}
-
-	if opts.SaveDir == "" {
-		opts.SaveDir = defaultConfigSaveDir
-		opts.filePath = filepath.Join(opts.SaveDir, defaultConfigFilename)
 	}
 
 	if opts.PollInterval <= 0 {
@@ -151,9 +139,8 @@ func StartConfigService(opts *ConfigOptions) (StopFn, error) {
 	_configService.done = make(chan struct{})
 	_configService.logger = logger
 
-	if err := _configService.init(); err != nil {
-		return nil, err
-	}
+	config := handler.GetConfig()
+	_configService.clientInfo.Country = config.GetCountry()
 
 	_configService.logger.Debug("Starting config service")
 	_configService.running = true
@@ -170,27 +157,6 @@ func StartConfigService(opts *ConfigOptions) (StopFn, error) {
 	return _configService.Stop, nil
 }
 
-func (cs *configService) init() error {
-	cs.logger.Debug("Initializing config service")
-	conf, err := readExistingClientConfig(cs.opts.filePath, cs.opts.Obfuscate)
-	if conf == nil {
-		if err != nil {
-			cs.logger.Errorf("could not read existing config: %v", err)
-		}
-
-		cs.clientConfig.Store(&ClientConfig{})
-		return err
-	}
-
-	cs.logger.Debugf("loaded saved config at %v", cs.opts.filePath)
-
-	cs.clientInfo.Country = conf.Country
-	cs.clientConfig.Store(conf)
-	cs.notifyListeners(nil, conf)
-
-	return nil
-}
-
 func (cs *configService) updateClientInfo(conf *ClientConfig) {
 	cs.clientInfo.ProToken = conf.ProToken
 	cs.clientInfo.Country = conf.Country
@@ -198,8 +164,8 @@ func (cs *configService) updateClientInfo(conf *ClientConfig) {
 }
 
 func (cs *configService) Stop() {
-	configServiceMu.Lock()
-	defer configServiceMu.Unlock()
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
 
 	if !cs.running {
 		return
@@ -224,7 +190,7 @@ func (cs *configService) fetchConfig() (int64, error) {
 	cs.lastFetched = time.Now()
 
 	cs.logger.Debug("Received config")
-	curConf := GetClientConfig()
+	curConf := cs.configHandler.GetConfig()
 	if curConf != nil && !configIsNew(curConf, newConf) {
 		op.Set("config_changed", false)
 		cs.logger.Debug("Config is unchanged")
@@ -233,16 +199,8 @@ func (cs *configService) fetchConfig() (int64, error) {
 
 	op.Set("config_changed", true)
 
-	err = saveClientConfig(cs.opts.filePath, newConf, cs.opts.Obfuscate)
-	if err != nil {
-		cs.logger.Error(err)
-	} else {
-		cs.logger.Debugf("Wrote config to %v", cs.opts.filePath)
-	}
-
 	cs.updateClientInfo(newConf)
-	old := cs.clientConfig.Swap(newConf)
-	cs.notifyListeners(old.(*ClientConfig), newConf)
+	cs.configHandler.SetConfig(newConf)
 
 	return sleep, nil
 }
@@ -282,8 +240,10 @@ func (cs *configService) fetch() (*ClientConfig, int64, error) {
 	return newConf, sleep, err
 }
 
+// newRequest returns a new ConfigRequest with the current client info, proxy ids, and the last
+// time the config
 func (cs *configService) newRequest() *ConfigRequest {
-	conf := GetClientConfig()
+	conf := cs.configHandler.GetConfig()
 	proxies := []*ProxyConnectConfig{}
 	if conf != nil { // not the first request
 		proxies = conf.GetProxy().GetProxies()
@@ -305,104 +265,10 @@ func (cs *configService) newRequest() *ConfigRequest {
 	return confReq
 }
 
-// readExistingClientConfig reads a config from a file at the specified path, filePath,
-// deobfuscating it if obfuscate is true.
-func readExistingClientConfig(filePath string, obfuscate bool) (*ClientConfig, error) {
-	infile, err := os.Open(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("unable to open config file %v for reading: %w", filePath, err)
-	}
-	defer infile.Close()
-
-	var in io.Reader = infile
-	if obfuscate {
-		in = rot13.NewReader(infile)
-	}
-
-	bytes, err := io.ReadAll(in)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read config from %v: %w", filePath, err)
-	}
-
-	if len(bytes) == 0 {
-		return nil, nil // file is empty
-	}
-
-	conf := &ClientConfig{}
-	err = proto.Unmarshal(bytes, conf)
-	return conf, err
-}
-
-// saveClientConfig writes conf to a file at the specified path, filePath, obfuscating it if
-// obfuscate is true. If the file already exists, it will be overwritten.
-func saveClientConfig(filePath string, conf *ClientConfig, obfuscate bool) error {
-	in, err := proto.Marshal(conf)
-	if err != nil {
-		return fmt.Errorf("unable to marshal config: %w", err)
-	}
-
-	outfile, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		return fmt.Errorf("unable to open file %v for writing: %w", filePath, err)
-	}
-	defer outfile.Close()
-
-	var out io.Writer = outfile
-	if obfuscate {
-		out = rot13.NewWriter(outfile)
-	}
-
-	if _, err = out.Write(in); err != nil {
-		return fmt.Errorf("unable to write config to file %v: %w", filePath, err)
-	}
-
-	return nil
-}
-
 // configIsNew returns true if country, proToken, or ip in currInfo differ from new or if new has
 // proxy configs.
 func configIsNew(cur, new *ClientConfig) bool {
 	return cur.GetCountry() != new.GetCountry() ||
 		cur.GetProToken() != new.GetProToken() ||
 		len(new.GetProxy().GetProxies()) > 0
-}
-
-// GetClientConfig returns the current client config.
-func GetClientConfig() *ClientConfig {
-	// We don't need to lock the mutex here because we know that the configService var is not nil
-	return _configService.clientConfig.Load().(*ClientConfig)
-}
-
-// GetCountry returns the country from the current client config. If there is no config, it returns
-// the default country.
-func GetCountry() string {
-	conf := GetClientConfig()
-	if conf == nil { // no config yet
-		return ""
-	}
-
-	return conf.GetCountry()
-}
-
-// OnConfigChange registers a function to be called when the config changes. This allows callers to
-// respond to changes in the config without having to poll for changes.
-func OnConfigChange(fn func(old, new *ClientConfig)) {
-	configServiceMu.Lock()
-	if _configService.listeners == nil {
-		_configService.listeners = make([]func(old, new *ClientConfig), 0, 1)
-	}
-
-	_configService.listeners = append(_configService.listeners, fn)
-	configServiceMu.Unlock()
-}
-
-func (cs *configService) notifyListeners(old, new *ClientConfig) {
-	configServiceMu.Lock()
-	listeners := cs.listeners
-	configServiceMu.Unlock()
-	// TODO: should we clone the configs before passing them to the listeners?
-	for _, fn := range listeners {
-		// don't block the config service
-		go fn(old, new)
-	}
 }
