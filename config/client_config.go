@@ -88,8 +88,12 @@ func (c *ClientConfig) FrontedProviders() map[string]*fronted.Provider {
 		var sniConfig *fronted.SNIConfig
 		if p.FrontingSNIs != nil {
 			sniConfig, ok := p.FrontingSNIs[sniRegion]
-			if !ok || sniConfig != nil && sniConfig.UseArbitrarySNIs && len(sniConfig.ArbitrarySNIs) == 0 {
+			if !ok {
 				sniConfig = p.FrontingSNIs["default"]
+			}
+
+			if sniConfig != nil && sniConfig.UseArbitrarySNIs && len(sniConfig.ArbitrarySNIs) == 0 {
+				sniConfig.ArbitrarySNIs = p.FrontingSNIs["default"].ArbitrarySNIs
 			}
 		}
 

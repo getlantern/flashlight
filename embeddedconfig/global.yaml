@@ -257,7 +257,7 @@ client:
           rejectstatus: [403]
         frontingsnis:
           default:
-            usearbitrarysnis: true
+            usearbitrarysnis: false
             arbitrarysnis:
             - crunchbase.com
             - brightspace.com
