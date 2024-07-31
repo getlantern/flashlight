@@ -17,10 +17,9 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"github.com/getlantern/flashlight/v7/apipb"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/ops"
-
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 )
 
 const (
@@ -29,15 +28,6 @@ const (
 
 	defaultConfigPollInterval = 3 * time.Minute
 	defaultConfigPollJitter   = 2 * time.Minute
-)
-
-// aliases for better readability
-type (
-	ConfigRequest      = apipb.ConfigRequest
-	ClientInfo         = apipb.ConfigRequest_ClientInfo
-	ConfigProxies      = apipb.ConfigRequest_Proxy
-	ClientConfig       = apipb.ConfigResponse
-	ProxyConnectConfig = apipb.ProxyConnectConfig
 )
 
 // ConfigOptions specifies the options to use for ConfigService.
@@ -65,7 +55,7 @@ type ConfigOptions struct {
 
 type configService struct {
 	opts          *ConfigOptions
-	clientInfo    *ClientInfo
+	clientInfo    *apipb.ConfigRequest_ClientInfo
 	configHandler ConfigHandler
 	lastFetched   time.Time
 
@@ -79,9 +69,9 @@ type configService struct {
 // ConfigHandler handles updating and retrieving the client config.
 type ConfigHandler interface {
 	// GetConfig returns the current client config.
-	GetConfig() *ClientConfig
+	GetConfig() *apipb.ConfigResponse
 	// SetConfig sets the client config to the given config.
-	SetConfig(new *ClientConfig)
+	SetConfig(new *apipb.ConfigResponse)
 }
 
 var (
@@ -130,7 +120,7 @@ func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, err
 
 	userId := strconv.Itoa(int(opts.UserConfig.GetUserID()))
 	_configService.opts = opts
-	_configService.clientInfo = &ClientInfo{
+	_configService.clientInfo = &apipb.ConfigRequest_ClientInfo{
 		FlashlightVersion: common.LibraryVersion,
 		ClientVersion:     common.CompileTimeApplicationVersion,
 		UserId:            userId,
@@ -157,7 +147,7 @@ func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, err
 	return _configService.Stop, nil
 }
 
-func (cs *configService) updateClientInfo(conf *ClientConfig) {
+func (cs *configService) updateClientInfo(conf *apipb.ConfigResponse) {
 	cs.clientInfo.ProToken = conf.ProToken
 	cs.clientInfo.Country = conf.Country
 	cs.clientInfo.Ip = conf.Ip
@@ -205,7 +195,7 @@ func (cs *configService) fetchConfig() (int64, error) {
 	return sleep, nil
 }
 
-func (cs *configService) fetch() (*ClientConfig, int64, error) {
+func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
 	confReq := cs.newRequest()
 	buf, err := proto.Marshal(confReq)
 	if err != nil {
@@ -232,7 +222,7 @@ func (cs *configService) fetch() (*ClientConfig, int64, error) {
 	configBytes, err := io.ReadAll(gzReader)
 	gzReader.Close()
 
-	newConf := &ClientConfig{}
+	newConf := &apipb.ConfigResponse{}
 	if err = proto.Unmarshal(configBytes, newConf); err != nil {
 		return nil, 0, fmt.Errorf("unable to unmarshal config: %w", err)
 	}
@@ -242,9 +232,9 @@ func (cs *configService) fetch() (*ClientConfig, int64, error) {
 
 // newRequest returns a new ConfigRequest with the current client info, proxy ids, and the last
 // time the config
-func (cs *configService) newRequest() *ConfigRequest {
+func (cs *configService) newRequest() *apipb.ConfigRequest {
 	conf := cs.configHandler.GetConfig()
-	proxies := []*ProxyConnectConfig{}
+	proxies := []*apipb.ProxyConnectConfig{}
 	if conf != nil { // not the first request
 		proxies = conf.GetProxy().GetProxies()
 	}
@@ -254,9 +244,9 @@ func (cs *configService) newRequest() *ConfigRequest {
 		ids = append(ids, proxy.GetTrack())
 	}
 
-	confReq := &ConfigRequest{
+	confReq := &apipb.ConfigRequest{
 		ClientInfo: cs.clientInfo,
-		Proxy: &ConfigProxies{
+		Proxy: &apipb.ConfigRequest_Proxy{
 			Ids:         ids,
 			LastRequest: timestamppb.New(cs.lastFetched),
 		},
@@ -267,7 +257,7 @@ func (cs *configService) newRequest() *ConfigRequest {
 
 // configIsNew returns true if country, proToken, or ip in currInfo differ from new or if new has
 // proxy configs.
-func configIsNew(cur, new *ClientConfig) bool {
+func configIsNew(cur, new *apipb.ConfigResponse) bool {
 	return cur.GetCountry() != new.GetCountry() ||
 		cur.GetProToken() != new.GetProToken() ||
 		len(new.GetProxy().GetProxies()) > 0
