@@ -13,9 +13,10 @@ import (
 
 	"github.com/getlantern/eventual/v2"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/lantern-cloud/cmd/api/apipb"
 	"github.com/getlantern/rot13"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/getlantern/flashlight/v7/apipb"
 )
 
 const (
@@ -23,11 +24,8 @@ const (
 	defaultConfigFilename = "proxies.conf"
 )
 
-// aliases for better readability
-type (
-	ProxyConfig        = apipb.ConfigResponse
-	ProxyConnectConfig = apipb.ProxyConnectConfig
-)
+// alias for better readability
+type ProxyConfig = apipb.ConfigResponse
 
 var (
 	_config = &config{
@@ -112,7 +110,7 @@ func GetProToken(timeout time.Duration) (string, error) {
 
 // GetProxyConfigs returns the list of proxy configs from the current client config. An error is
 // returned if the config is not available within the given timeout.
-func GetProxyConfigs(timeout time.Duration) ([]*ProxyConnectConfig, error) {
+func GetProxyConfigs(timeout time.Duration) ([]*apipb.ProxyConnectConfig, error) {
 	config, err := GetConfig(timeout)
 	if err != nil || config == nil {
 		return nil, err

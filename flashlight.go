@@ -16,6 +16,7 @@ import (
 	"github.com/getlantern/netx"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/getlantern/flashlight/v7/apipb"
 	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/client"
@@ -32,8 +33,6 @@ import (
 	"github.com/getlantern/flashlight/v7/services"
 	"github.com/getlantern/flashlight/v7/shortcut"
 	"github.com/getlantern/flashlight/v7/stats"
-
-	"github.com/getlantern/lantern-cloud/cmd/api/pcfg"
 )
 
 var (
@@ -539,19 +538,21 @@ func setConfigFlagOpts(opts *services.ConfigOptions, flags map[string]interface{
 // is temporary until all code is updated to use the new config format.
 //
 // TODO: Update all code to use the new config format and remove this method.
-func (f *Flashlight) convertNewProxyConfToOld(proxies []*services.ProxyConnectConfig) map[string]*commonconfig.ProxyConfig {
+func (f *Flashlight) convertNewProxyConfToOld(proxies []*apipb.ProxyConnectConfig) map[string]*commonconfig.ProxyConfig {
 	proxyMap := make(map[string]*commonconfig.ProxyConfig)
 	for _, p := range proxies {
 		// use lantern-cloud to map to legacy so we don't have to write it ourselves
-		lc, err := pcfg.LegacyConnectConfig(p)
+		lc, err := apipb.ProxyToLegacyConfig(p)
 		if err != nil {
 			log.Errorf("Unable to convert %s proxy config to legacy: %v", p.Name, err)
 			continue
 		}
 
 		// since lantern-cloud defines legacy proxy Location as LegacyConnectConfig_ProxyLocation
-		// and commonconfig defines it as ProxyConfig_Location, we can't just cast it. And since
-		// we know that the protobuf is the same, we can ignore the errors from the marshal/unmarshal
+		// and commonconfig defines it as ProxyConfig_Location, we can't just cast it, but we can
+		// marshal/unmarshal it to get the same protobuf. This is a temporary workaround until all
+		// code is updated to use the new config format. And since we know that the protobuf is the
+		// same, we can ignore the errors from the marshal/unmarshal
 		var cc *commonconfig.ProxyConfig
 		lcb, _ := proto.Marshal(lc)
 		_ = proto.Unmarshal(lcb, cc)
