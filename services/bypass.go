@@ -1,8 +1,5 @@
 package services
 
-// bypass periodically sends traffic to the bypass blocking detection server. The server uses the ratio
-// between domain fronted and proxied traffic to determine if proxies are blocked. The client randomizes
-// the intervals between calls to the server and also randomizes the length of requests.
 import (
 	"bytes"
 	"context"
@@ -18,7 +15,6 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	commonconfig "github.com/getlantern/common/config"
-	"github.com/getlantern/golog"
 
 	"github.com/getlantern/flashlight/v7/apipb"
 	"github.com/getlantern/flashlight/v7/bandit"
@@ -28,6 +24,10 @@ import (
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/proxied"
 )
+
+// bypass periodically sends traffic to the bypass blocking detection server. The server uses the ratio
+// between domain fronted and proxied traffic to determine if proxies are blocked. The client randomizes
+// the intervals between calls to the server and also randomizes the length of requests.
 
 // The way lantern-cloud is configured, we need separate URLs for domain fronted vs proxied traffic.
 const (
@@ -61,7 +61,6 @@ type bypassService struct {
 	// stopped is used to signal that the bypass service has been stopped. Once stopped, the service
 	// will not start any new proxy bypass goroutines.
 	stopped *atomic.Bool
-	logger  golog.Logger
 }
 
 // StartBypassService sends periodic traffic to the bypass server. The client periodically sends
@@ -77,10 +76,9 @@ func StartBypassService(
 		proxies: make([]*proxy, 0),
 		done:    make(chan struct{}),
 		stopped: atomic.NewBool(false),
-		logger:  golog.LoggerFor("bypassService"),
 	}
 
-	b.logger.Debug("Starting bypass service")
+	logger.Debug("Starting bypass service")
 	listen(func(infos map[string]*commonconfig.ProxyConfig, src config.Source) {
 		b.onProxies(infos, configDir, userConfig)
 	})
@@ -112,7 +110,7 @@ func (b *bypassService) onProxies(
 	for k, v := range supportedInfos {
 		dialer := dialers[k]
 		if dialer == nil {
-			b.logger.Errorf("No dialer for %v", k)
+			logger.Errorf("bypass: no dialer for %v", k)
 			continue
 		}
 
@@ -121,7 +119,7 @@ func (b *bypassService) onProxies(
 		pc.Name = k
 		// Kill the cert to avoid it taking up unnecessary space.
 		pc.Cert = ""
-		p := newProxy(k, pc, configDir, userConfig, dialer, b.logger)
+		p := newProxy(k, pc, configDir, userConfig, dialer)
 		b.proxies = append(b.proxies, p)
 		go p.start(b.done)
 	}
@@ -157,7 +155,6 @@ type proxy struct {
 	proxyRoundTripper http.RoundTripper
 	toggle            *atomic.Bool
 	userConfig        common.UserConfig
-	logger            golog.Logger
 }
 
 func newProxy(
@@ -166,7 +163,6 @@ func newProxy(
 	configDir string,
 	userConfig common.UserConfig,
 	dialer bandit.Dialer,
-	logger golog.Logger,
 ) *proxy {
 	return &proxy{
 		ProxyConfig:       pc,
@@ -174,17 +170,17 @@ func newProxy(
 		toggle:            atomic.NewBool(mrand.Float32() < 0.5),
 		dfRoundTripper:    proxied.Fronted(0),
 		userConfig:        userConfig,
-		proxyRoundTripper: newProxyRoundTripper(name, pc, userConfig, dialer, logger),
+		proxyRoundTripper: newProxyRoundTripper(name, pc, userConfig, dialer),
 	}
 }
 
 func (p *proxy) start(done <-chan struct{}) {
-	p.logger.Debugf("Starting bypass for proxy %v", p.name)
+	logger.Debugf("Starting bypass for proxy %v", p.name)
 	fn := func() int64 {
 		wait, _ := p.sendToBypass()
 		return wait
 	}
-	callRandomly(fn, bypassSendInterval, bypassSendJitter, done, p.logger)
+	callRandomly(fn, bypassSendInterval, bypassSendJitter, done)
 }
 
 func (p *proxy) sendToBypass() (int64, error) {
@@ -200,11 +196,11 @@ func (p *proxy) sendToBypass() (int64, error) {
 		fronted  = p.toggle.Toggle()
 	)
 	if fronted {
-		p.logger.Debug("Using domain fronting")
+		logger.Debug("bypass: Using domain fronting")
 		rt = p.dfRoundTripper
 		endpoint = dfEndpoint
 	} else {
-		p.logger.Debug("Using proxy directly")
+		logger.Debug("bypass: Using proxy directly")
 		rt = p.proxyRoundTripper
 		endpoint = proxyEndpoint
 	}
@@ -235,21 +231,20 @@ func (p *proxy) sendToBypass() (int64, error) {
 
 	bypassBuf, err := proto.Marshal(bypassRequest)
 	if err != nil {
-		p.logger.Errorf("Unable to marshal chained server info: %v", err)
+		logger.Errorf("bypass: Unable to marshal chained server info: %v", err)
 		op.FailIf(err)
 		return 0, err
 	}
 
-	p.logger.Debugf("Sending traffic for bypass server: %v", p.name)
+	logger.Debugf("bypass: Sending traffic for bypass server: %v", p.name)
 	resp, sleep, err := post(
 		endpoint,
 		bytes.NewReader(bypassBuf),
 		rt,
 		p.userConfig,
-		p.logger,
 	)
 	if err != nil || resp == nil {
-		err = p.logger.Errorf("Unable to post chained server info: %v", err)
+		err = logger.Errorf("bypass: Unable to post chained server info: %v", err)
 		op.FailIf(err)
 		return 0, err
 	}
@@ -263,17 +258,16 @@ func newProxyRoundTripper(
 	info *commonconfig.ProxyConfig,
 	userConfig common.UserConfig,
 	dialer bandit.Dialer,
-	logger golog.Logger,
 ) http.RoundTripper {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.Proxy = nil
 	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-		logger.Debugf("Dialing chained server at: %s", addr)
+		logger.Debugf("bypass: Dialing chained server at: %s", addr)
 		pc, _, err := dialer.DialContext(ctx, bandit.NetworkConnect, addr)
 		if err != nil {
-			logger.Errorf("Unable to dial chained server: %v", err)
+			logger.Errorf("bypass: Unable to dial chained server: %v", err)
 		} else {
-			logger.Debug("Successfully dialed chained server")
+			logger.Debug("bypass: Successfully dialed chained server")
 		}
 
 		return pc, err

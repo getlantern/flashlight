@@ -14,6 +14,7 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.geolookup")
 
+	// _country and _ip are eventual values that hold the current country and IP as strings.
 	_country = eventual.NewValue()
 	_ip      = eventual.NewValue()
 
@@ -23,20 +24,22 @@ var (
 
 func init() {
 	proxyconfig.OnConfigChange(func(old, new *proxyconfig.ProxyConfig) {
-		oldCCountry, _ := _country.Get(eventual.DontWait)
+		oldCountry, _ := _country.Get(eventual.DontWait)
 		oldIP, _ := _ip.Get(eventual.DontWait)
 
 		_country.Set(new.Country)
 		_ip.Set(new.Ip)
 
 		// if the country or IP has changed, notify watchers
-		if oldCCountry != new.Country || oldIP != new.Ip {
+		if oldCountry != new.Country || oldIP != new.Ip {
+			mx.Lock()
 			for _, ch := range watchers {
 				select {
 				case ch <- true:
 				default:
 				}
 			}
+			mx.Unlock()
 		}
 	})
 }

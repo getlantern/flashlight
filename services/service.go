@@ -3,10 +3,12 @@ package services
 import (
 	"time"
 
-	mrand "math/rand"
+	mrand "math/rand/v2"
 
 	"github.com/getlantern/golog"
 )
+
+var logger = golog.LoggerFor("flashlight.services")
 
 type StopFn func()
 
@@ -17,14 +19,13 @@ func callRandomly(
 	interval time.Duration,
 	jitter time.Duration,
 	done <-chan struct{},
-	logger golog.Logger,
 ) {
-	intervalMin := int64(interval - jitter)
-	intervalMax := int64(interval + jitter)
+	jitterInt := jitter.Nanoseconds()
+	intervalInt := interval.Nanoseconds()
 
 	// calculate sleep time
 	sleep := func(extraDelay time.Duration) <-chan time.Time {
-		delay := mrand.Int63n(intervalMax) + intervalMin
+		delay := mrand.Int64N(2*jitterInt) + intervalInt - jitterInt
 		delayDuration := time.Duration(delay) + extraDelay
 		logger.Debugf("Next run in %v", delayDuration)
 		return time.After(delayDuration)
@@ -42,8 +43,8 @@ func callRandomly(
 			start := time.Now()
 			extraSeconds = fn()
 			elapsed := time.Since(start)
-			// aren't we supposed to subtract elapsed from extraDelay instead of adding?
-			extraDelay = time.Duration(extraSeconds)*time.Second + elapsed
+			extraDelay = time.Duration(extraSeconds)*time.Second - elapsed
+			extraDelay = max(extraDelay, 0)
 		}
 	}
 }

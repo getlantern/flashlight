@@ -17,12 +17,6 @@ const packageLogPrefix = "flashlight.config"
 var (
 	log = golog.LoggerFor(packageLogPrefix)
 
-	// // DefaultProxyConfigPollInterval determines how frequently to fetch proxies.yaml
-	// DefaultProxyConfigPollInterval = 1 * time.Minute
-	//
-	// // ForceProxyConfigPollInterval overrides how frequently to fetch proxies.yaml if set (does not honor values from global.yaml)
-	// ForceProxyConfigPollInterval = 0 * time.Second
-
 	// DefaultGlobalConfigPollInterval determines how frequently to fetch global.yaml
 	DefaultGlobalConfigPollInterval = 1 * time.Hour
 )
@@ -73,9 +67,7 @@ func InitWithURLs(
 			if globalConfig.GlobalConfigPollInterval > 0 {
 				globalConfigPollInterval = globalConfig.GlobalConfigPollInterval
 			}
-			// if ForceProxyConfigPollInterval == 0 && globalConfig.ProxyConfigPollInterval > 0 {
-			// 	proxyConfigPollInterval = globalConfig.ProxyConfigPollInterval
-			// }
+
 			mx.Unlock()
 		}
 		// Rather than call `origGlobalDispatch` here, we are calling it in a

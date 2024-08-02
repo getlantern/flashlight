@@ -59,8 +59,6 @@ type configService struct {
 	configHandler ConfigHandler
 	lastFetched   time.Time
 
-	logger golog.Logger
-
 	done    chan struct{}
 	running bool
 	mu      sync.Mutex
@@ -127,12 +125,11 @@ func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, err
 		ProToken:          opts.UserConfig.GetToken(),
 	}
 	_configService.done = make(chan struct{})
-	_configService.logger = logger
 
 	config := handler.GetConfig()
 	_configService.clientInfo.Country = config.GetCountry()
 
-	_configService.logger.Debug("Starting config service")
+	logger.Debug("Starting config service")
 	_configService.running = true
 	if opts.Sticky {
 		return _configService.Stop, nil
@@ -142,15 +139,9 @@ func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, err
 		sleep, _ := _configService.fetchConfig()
 		return sleep
 	}
-	go callRandomly(fn, opts.PollInterval, opts.PollJitter, _configService.done, _configService.logger)
+	go callRandomly(fn, opts.PollInterval, opts.PollJitter, _configService.done)
 
 	return _configService.Stop, nil
-}
-
-func (cs *configService) updateClientInfo(conf *apipb.ConfigResponse) {
-	cs.clientInfo.ProToken = conf.ProToken
-	cs.clientInfo.Country = conf.Country
-	cs.clientInfo.Ip = conf.Ip
 }
 
 func (cs *configService) Stop() {
@@ -174,22 +165,26 @@ func (cs *configService) fetchConfig() (int64, error) {
 
 	newConf, sleep, err := cs.fetch()
 	if err != nil {
+		logger.Errorf("configservice: Failed to fetch config: %w", err)
 		return 0, op.FailIf(err)
 	}
 
 	cs.lastFetched = time.Now()
 
-	cs.logger.Debug("Received config")
+	logger.Debug("configservice: Received config")
 	curConf := cs.configHandler.GetConfig()
 	if curConf != nil && !configIsNew(curConf, newConf) {
 		op.Set("config_changed", false)
-		cs.logger.Debug("Config is unchanged")
+		logger.Debug("configservice: Config is unchanged")
 		return sleep, nil
 	}
 
 	op.Set("config_changed", true)
 
-	cs.updateClientInfo(newConf)
+	cs.clientInfo.ProToken = newConf.ProToken
+	cs.clientInfo.Country = newConf.Country
+	cs.clientInfo.Ip = newConf.Ip
+
 	cs.configHandler.SetConfig(newConf)
 
 	return sleep, nil
@@ -207,7 +202,6 @@ func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
 		bytes.NewReader(buf),
 		cs.opts.RoundTripper,
 		cs.opts.UserConfig,
-		cs.logger,
 	)
 	if err != nil {
 		return nil, 0, fmt.Errorf("config request failed: %w", err)
@@ -220,6 +214,10 @@ func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
 	}
 
 	configBytes, err := io.ReadAll(gzReader)
+	if err != nil {
+		return nil, 0, fmt.Errorf("unable to read config response: %w", err)
+	}
+
 	gzReader.Close()
 
 	newConf := &apipb.ConfigResponse{}
@@ -231,7 +229,7 @@ func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
 }
 
 // newRequest returns a new ConfigRequest with the current client info, proxy ids, and the last
-// time the config
+// time the config was fetched.
 func (cs *configService) newRequest() *apipb.ConfigRequest {
 	conf := cs.configHandler.GetConfig()
 	proxies := []*apipb.ProxyConnectConfig{}
@@ -241,7 +239,7 @@ func (cs *configService) newRequest() *apipb.ConfigRequest {
 
 	ids := make([]string, len(proxies))
 	for _, proxy := range proxies {
-		ids = append(ids, proxy.GetTrack())
+		ids = append(ids, proxy.Name)
 	}
 
 	confReq := &apipb.ConfigRequest{
