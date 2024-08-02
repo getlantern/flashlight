@@ -36,6 +36,7 @@ var (
 )
 
 type config struct {
+	// config is the current client config as a *ProxyConfig.
 	config eventual.Value
 
 	// filePath is where we should save new configs and look for existing saved configs.
@@ -61,6 +62,10 @@ func Init(saveDir string, obfuscate bool) (*config, error) {
 		log.Errorf("Failed to read existing client config: %w", err)
 	}
 
+	if saved == nil {
+		return _config, nil // no saved config
+	}
+
 	_config.config.Set(saved)
 	notifyListeners(nil, saved)
 	return _config, nil
@@ -75,12 +80,25 @@ func (c *config) GetConfig() *ProxyConfig {
 // SetConfig implements services.ConfigHandler
 func (c *config) SetConfig(new *ProxyConfig) {
 	old := c.GetConfig()
-	c.config.Set(new)
-	if err := saveConfig(c.filePath, new, c.obfuscate); err != nil {
+	updated := new
+	if old != nil {
+		updated = proto.Clone(old).(*ProxyConfig)
+		if new.Proxy != nil && len(new.Proxy.Proxies) > 0 {
+			// We will always recieve the full list of proxy configs from the server if there are any
+			// changes since we don't currently have a way to inform clients to delete an individual
+			// proxy config. So we want to overwrite the existing proxy configs with the new ones.
+			updated.Proxy = nil
+		}
+
+		proto.Merge(updated, new)
+	}
+
+	c.config.Set(updated)
+	if err := saveConfig(c.filePath, updated, c.obfuscate); err != nil {
 		log.Errorf("Failed to save client config: %w", err)
 	}
 
-	notifyListeners(old, new)
+	notifyListeners(old, updated)
 }
 
 // GetConfig returns the current client config. An error is returned if the config is not available
@@ -94,29 +112,12 @@ func GetConfig(timeout time.Duration) (*ProxyConfig, error) {
 		return nil, fmt.Errorf("failed to get config: %w", err)
 	}
 
+	if conf == nil {
+		// This can only be due to a combination of unset config and expired context.
+		return nil, fmt.Errorf("config not yet set: %w", ctx.Err())
+	}
+
 	return conf.(*ProxyConfig), nil
-}
-
-// GetProToken returns the pro token from the current client config. An error is returned if the
-// config is not available within the given timeout.
-func GetProToken(timeout time.Duration) (string, error) {
-	config, err := GetConfig(timeout)
-	if err != nil || config == nil {
-		return "", err
-	}
-
-	return config.GetProToken(), nil
-}
-
-// GetProxyConfigs returns the list of proxy configs from the current client config. An error is
-// returned if the config is not available within the given timeout.
-func GetProxyConfigs(timeout time.Duration) ([]*apipb.ProxyConnectConfig, error) {
-	config, err := GetConfig(timeout)
-	if err != nil || config == nil {
-		return nil, err
-	}
-
-	return config.GetProxy().GetProxies(), nil
 }
 
 // readExistingConfig reads a config from a file at the specified path, filePath,
@@ -124,6 +125,10 @@ func GetProxyConfigs(timeout time.Duration) ([]*apipb.ProxyConnectConfig, error)
 func readExistingConfig(filePath string, obfuscate bool) (*ProxyConfig, error) {
 	infile, err := os.Open(filePath)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil // file does not exist
+		}
+
 		return nil, fmt.Errorf("unable to open config file %v for reading: %w", filePath, err)
 	}
 	defer infile.Close()
@@ -187,11 +192,15 @@ func OnConfigChange(fn func(old, new *ProxyConfig)) {
 
 func notifyListeners(old, new *ProxyConfig) {
 	_config.mu.Lock()
-	listeners := _config.listeners
-	_config.mu.Unlock()
-	// TODO: should we clone the configs before passing them to the listeners?
-	for _, fn := range listeners {
+	new = proto.Clone(new).(*ProxyConfig)
+	if old != nil {
+		old = proto.Clone(old).(*ProxyConfig)
+	}
+
+	for _, fn := range _config.listeners {
 		// don't block the config service
 		go fn(old, new)
 	}
+
+	_config.mu.Unlock()
 }

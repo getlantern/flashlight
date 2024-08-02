@@ -499,8 +499,13 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 		proxyMap := f.convertNewProxyConfToOld(new.GetProxy().GetProxies())
 		f.notifyProxyListeners(proxyMap, config.Fetched)
 	}
+
+	// there might have been an existing config that was loaded before we start listening so we need
+	// to check for that and call the listener if there was
 	conf, _ := proxyconfig.GetConfig(0)
-	fn(nil, conf)
+	if conf != nil {
+		fn(nil, conf)
+	}
 
 	proxyconfig.OnConfigChange(fn)
 

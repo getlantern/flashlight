@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/getlantern/golog"
-
 	"github.com/getlantern/flashlight/v7/common"
 )
 
@@ -17,7 +15,6 @@ func post(
 	buf io.Reader,
 	rt http.RoundTripper,
 	user common.UserConfig,
-	logger golog.Logger,
 ) (io.ReadCloser, int64, error) {
 	req, err := http.NewRequest("POST", originURL, buf)
 	if err != nil {
@@ -43,7 +40,6 @@ func post(
 		return nil, 0, fmt.Errorf("bad response code: %v", resp.StatusCode)
 	}
 
-	// TODO: do we need to log all the response headers?
 	logger.Debugf("Response headers from %v:\n%v", originURL, resp.Header)
 
 	var sleepTime int64
