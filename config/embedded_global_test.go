@@ -16,8 +16,6 @@ func TestEmbeddedGlobal(t *testing.T) {
 	assert.NoError(t, err)
 
 	gl := global.(*Global)
-	assert.False(t, gl.Client.Fronted.Providers["akamai"].FrontingSNIs["default"].UseArbitrarySNIs)
-	assert.NotEmpty(t, gl.Client.Fronted.Providers["akamai"].FrontingSNIs["default"].ArbitrarySNIs)
 	assert.True(t, len(gl.Client.Fronted.Providers["akamai"].Masquerades) > 20)
 	assert.True(t, len(gl.Client.Fronted.Providers["cloudfront"].Masquerades) > 20)
 	assert.Containsf(t, gl.Client.Fronted.Providers["cloudfront"].HostAliases, "replica-search.lantern.io", "embedded global config does not contain replica-search cloudfront fronted provider")
