@@ -507,36 +507,28 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 		fn(nil, conf)
 	}
 
+	// we don't need to start the config service if sticky is set so just return
+	if sticky, _ := f.flagsAsMap["stickyconfig"].(bool); sticky {
+		return func() {}, nil
+	}
+
 	proxyconfig.OnConfigChange(fn)
 
+	var url string
+	if cloudURL, _ := f.flagsAsMap["cloudconfig"].(string); cloudURL != "" {
+		url = cloudURL
+	} else if staging, _ := f.flagsAsMap["staging"].(bool); staging {
+		url = common.ProxiesStagingURL
+	} else {
+		url = common.ProxiesURL
+	}
+
 	configOpts := &services.ConfigOptions{
-		OriginURL:    "",
+		OriginURL:    url,
 		UserConfig:   f.userConfig,
-		Sticky:       false,
 		RoundTripper: proxied.ParallelPreferChained(),
 	}
-
-	setConfigFlagOpts(configOpts, f.flagsAsMap)
 	return services.StartConfigService(handler, configOpts)
-}
-
-// setConfigFlagOpts sets the OriginURL, Sticky, and Obfuscate config options based on the input flags.
-func setConfigFlagOpts(opts *services.ConfigOptions, flags map[string]interface{}) {
-	toBool := func(v interface{}) bool {
-		b, _ := v.(bool)
-		return b
-	}
-
-	opts.Sticky = toBool(flags["stickyconfig"])
-	if cloudURL, ok := flags["cloudconfig"].(string); ok && cloudURL != "" {
-		opts.OriginURL = cloudURL
-	} else {
-		if toBool(flags["staging"]) {
-			opts.OriginURL = common.ProxiesStagingURL
-		} else {
-			opts.OriginURL = common.ProxiesURL
-		}
-	}
 }
 
 // convertNewProxyConfToOld converts the new ProxyConnectConfig format to the old ProxyConfig. This

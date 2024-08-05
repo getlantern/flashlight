@@ -39,10 +39,6 @@ type ConfigOptions struct {
 	// servers in HTTP headers, such as the pro token and other options.
 	UserConfig common.UserConfig
 
-	// Sticky specifies whether or not to only use the local config and not
-	// update it with remote data.
-	Sticky bool
-
 	// RoundTripper provides the http.RoundTripper the fetcher should use, which allows us to
 	// dictate whether the fetcher will use dual fetching (from fronted and chained URLs) or not.
 	RoundTripper http.RoundTripper
@@ -131,9 +127,6 @@ func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, err
 
 	logger.Debug("Starting config service")
 	_configService.running = true
-	if opts.Sticky {
-		return _configService.Stop, nil
-	}
 
 	fn := func() int64 {
 		sleep, _ := _configService.fetchConfig()
