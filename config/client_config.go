@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 
+	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/fronted"
 )
 
@@ -40,6 +41,7 @@ type ProviderConfig struct {
 	Masquerades         []*fronted.Masquerade
 	Validator           *ValidatorConfig
 	PassthroughPatterns []string
+	FrontingSNIs        map[string]*fronted.SNIConfig
 }
 
 // returns a fronted.ResponseValidator specified by the
@@ -80,15 +82,28 @@ func NewClientConfig() *ClientConfig {
 
 // Builds a list of fronted.Providers to use based on the configuration
 func (c *ClientConfig) FrontedProviders() map[string]*fronted.Provider {
-
+	sniRegion := geolookup.GetCountry(0)
 	providers := make(map[string]*fronted.Provider)
 	for pid, p := range c.Fronted.Providers {
+		var sniConfig *fronted.SNIConfig
+		if p.FrontingSNIs != nil {
+			sniConfig, ok := p.FrontingSNIs[sniRegion]
+			if !ok {
+				sniConfig = p.FrontingSNIs["default"]
+			}
+
+			if sniConfig != nil && sniConfig.UseArbitrarySNIs && len(sniConfig.ArbitrarySNIs) == 0 {
+				sniConfig.ArbitrarySNIs = p.FrontingSNIs["default"].ArbitrarySNIs
+			}
+		}
+
 		providers[pid] = fronted.NewProvider(
 			p.HostAliases,
 			p.TestURL,
 			p.Masquerades,
 			p.GetResponseValidator(pid),
 			p.PassthroughPatterns,
+			sniConfig,
 		)
 	}
 	return providers
