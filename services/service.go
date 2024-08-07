@@ -1,3 +1,7 @@
+// Package services provides the background services of the flashlight application. These services
+// are responsible for fetching and updating the proxy configuration, and for reporting to the
+// bypass server to detect if proxies are blocked. Requests to the servers are made at random
+// intervals to prevent the thundering herd problem and help avoid detection.
 package services
 
 import (

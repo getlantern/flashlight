@@ -1,5 +1,5 @@
-// Description: This file contains the implementation of the new consolidated proxy/geolocation config.
-
+// Package proxyconfig provides a simple way to manage client configuration. It reads and writes
+// configuration to disk and provides a way to listen for changes.
 package proxyconfig
 
 import (
