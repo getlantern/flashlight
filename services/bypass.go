@@ -153,6 +153,7 @@ type proxy struct {
 	name              string
 	dfRoundTripper    http.RoundTripper
 	proxyRoundTripper http.RoundTripper
+	sender            *sender
 	toggle            *atomic.Bool
 	userConfig        common.UserConfig
 }
@@ -167,10 +168,11 @@ func newProxy(
 	return &proxy{
 		ProxyConfig:       pc,
 		name:              name,
-		toggle:            atomic.NewBool(mrand.Float32() < 0.5),
-		dfRoundTripper:    proxied.Fronted(0),
-		userConfig:        userConfig,
 		proxyRoundTripper: newProxyRoundTripper(name, pc, userConfig, dialer),
+		dfRoundTripper:    proxied.Fronted(0),
+		sender:            &sender{},
+		toggle:            atomic.NewBool(mrand.Float32() < 0.5),
+		userConfig:        userConfig,
 	}
 }
 
@@ -237,7 +239,7 @@ func (p *proxy) sendToBypass() (int64, error) {
 	}
 
 	logger.Debugf("bypass: Sending traffic for bypass server: %v", p.name)
-	resp, sleep, err := post(
+	resp, sleep, err := p.sender.post(
 		endpoint,
 		bytes.NewReader(bypassBuf),
 		rt,

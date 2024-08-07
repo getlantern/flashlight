@@ -55,6 +55,8 @@ type configService struct {
 	configHandler ConfigHandler
 	lastFetched   time.Time
 
+	sender *sender
+
 	done    chan struct{}
 	running bool
 	mu      sync.Mutex
@@ -69,13 +71,11 @@ type ConfigHandler interface {
 }
 
 var (
-	// initialize variable so we don't have to lock mutex and check if it's nil every time someone
-	// calls GetClientConfig
-	_configService = &configService{}
+	_configService = &configService{sender: &sender{}}
 )
 
 // StartConfigService starts a new config service with the given options and returns a func to stop
-// it. It will return an error if opts.OriginURL, opts.Rt, opts.Fetcher, or opts.OnConfig are nil.
+// it. It will return an error if opts.OriginURL, opts.Rt, or opts.OnConfig are nil.
 func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, error) {
 	_configService.mu.Lock()
 	defer _configService.mu.Unlock()
@@ -166,7 +166,7 @@ func (cs *configService) fetchConfig() (int64, error) {
 
 	logger.Debug("configservice: Received config")
 	curConf := cs.configHandler.GetConfig()
-	if curConf != nil && !configIsNew(curConf, newConf) {
+	if curConf != nil && !configIsNew(newConf) {
 		op.Set("config_changed", false)
 		logger.Debug("configservice: Config is unchanged")
 		return sleep, nil
@@ -190,7 +190,7 @@ func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
 		return nil, 0, fmt.Errorf("unable to marshal config request: %w", err)
 	}
 
-	resp, sleep, err := post(
+	resp, sleep, err := cs.sender.post(
 		cs.opts.OriginURL,
 		bytes.NewReader(buf),
 		cs.opts.RoundTripper,
@@ -246,10 +246,9 @@ func (cs *configService) newRequest() *apipb.ConfigRequest {
 	return confReq
 }
 
-// configIsNew returns true if country, proToken, or ip in currInfo differ from new or if new has
-// proxy configs.
-func configIsNew(cur, new *apipb.ConfigResponse) bool {
-	return cur.GetCountry() != new.GetCountry() ||
-		cur.GetProToken() != new.GetProToken() ||
-		len(new.GetProxy().GetProxies()) > 0
+// configIsNew returns true if any fields contain values.
+func configIsNew(new *apipb.ConfigResponse) bool {
+	// We only need to check if the fields we're interested in contain values because the server
+	// will only send us new values if they have changed.
+	return new.Country != "" || new.ProToken != "" || len(new.Proxy.Proxies) > 0
 }

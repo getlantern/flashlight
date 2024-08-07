@@ -496,7 +496,13 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 			detour.SetCountry(nc)
 		}
 
-		proxyMap := f.convertNewProxyConfToOld(new.GetProxy().GetProxies())
+		pconfig := new.GetProxy()
+		if pconfig == nil || len(pconfig.GetProxies()) == 0 {
+			return // return early since there are no new proxy configs
+		}
+
+		log.Debug("Received new proxy configs")
+		proxyMap := f.convertNewProxyConfToOld(pconfig.GetProxies())
 		f.notifyProxyListeners(proxyMap, config.Fetched)
 	}
 
