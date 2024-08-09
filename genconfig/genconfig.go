@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net"
 	"net/http"
@@ -78,14 +78,15 @@ func populateProviders() {
 	}
 	providers = make(map[string]*provider)
 	for name, p := range mapping {
-		providers[name] = newProvider(p.Ping, p.Mapping, &config.ValidatorConfig{RejectStatus: []int{p.RejectStatus}})
+		providers[name] = newProvider(p.Ping, p.Mapping, p.FrontingSNIs, &config.ValidatorConfig{RejectStatus: []int{p.RejectStatus}})
 	}
 }
 
 type ProviderConfig struct {
-	Ping         string            `yaml:"ping"`
-	RejectStatus int               `yaml:"rejectStatus"`
-	Mapping      map[string]string `yaml:"mapping"`
+	Ping         string                        `yaml:"ping"`
+	RejectStatus int                           `yaml:"rejectStatus"`
+	Mapping      map[string]string             `yaml:"mapping"`
+	FrontingSNIs map[string]*fronted.SNIConfig `yaml:"frontingsnis"`
 }
 
 type filter map[string]bool
@@ -105,19 +106,21 @@ type castat struct {
 }
 
 type provider struct {
-	HostAliases map[string]string
-	TestURL     string
-	Masquerades []*masquerade
-	Validator   *config.ValidatorConfig
-	Enabled     bool
+	HostAliases  map[string]string
+	TestURL      string
+	Masquerades  []*masquerade
+	Validator    *config.ValidatorConfig
+	Enabled      bool
+	FrontingSNIs map[string]*fronted.SNIConfig
 }
 
-func newProvider(testURL string, hosts map[string]string, validator *config.ValidatorConfig) *provider {
+func newProvider(testURL string, hosts map[string]string, frontingSNIs map[string]*fronted.SNIConfig, validator *config.ValidatorConfig) *provider {
 	return &provider{
-		HostAliases: hosts,
-		TestURL:     testURL,
-		Masquerades: make([]*masquerade, 0),
-		Validator:   validator,
+		HostAliases:  hosts,
+		TestURL:      testURL,
+		Masquerades:  make([]*masquerade, 0),
+		Validator:    validator,
+		FrontingSNIs: frontingSNIs,
 	}
 }
 
@@ -167,7 +170,7 @@ func main() {
 	cas, masqs := coalesceMasquerades()
 	vetAndAssignMasquerades(cas, masqs)
 
-	tempConfigDir, err := ioutil.TempDir("", "genconfig")
+	tempConfigDir, err := os.MkdirTemp("", "genconfig")
 	if err != nil {
 		log.Fatalf("Unable to create temp configdir: %v", tempConfigDir)
 	}
@@ -187,7 +190,7 @@ func loadMasquerades() {
 		os.Exit(2)
 	}
 	for _, filename := range masqueradesInFiles {
-		bytes, err := ioutil.ReadFile(filename)
+		bytes, err := os.ReadFile(filename)
 		if err != nil {
 			log.Fatalf("Unable to read masquerades file at %s: %s", filename, err)
 		}
@@ -205,7 +208,7 @@ func loadProxiedSites(path string, info os.FileInfo, err error) error {
 		// skip root directory
 		return nil
 	}
-	proxiedSiteBytes, err := ioutil.ReadFile(path)
+	proxiedSiteBytes, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatalf("Unable to read blacklist file at %s: %s", path, err)
 	}
@@ -247,7 +250,7 @@ func loadFtVersion() {
 			log.Debugf("Error closing response body: %v", err)
 		}
 	}()
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		log.Fatalf("Could not read FT version file: %s", err)
 	}
@@ -260,7 +263,7 @@ func loadBlacklist() {
 		flag.Usage()
 		os.Exit(3)
 	}
-	blacklistBytes, err := ioutil.ReadFile(*blacklistFile)
+	blacklistBytes, err := os.ReadFile(*blacklistFile)
 	if err != nil {
 		log.Fatalf("Unable to read blacklist file at %s: %s", *blacklistFile, err)
 	}
@@ -270,7 +273,7 @@ func loadBlacklist() {
 }
 
 func loadTemplate(name string) string {
-	bytes, err := ioutil.ReadFile(name)
+	bytes, err := os.ReadFile(name)
 	if err != nil {
 		log.Fatalf("Unable to load template %s: %s", name, err)
 	}
