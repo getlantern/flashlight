@@ -4691,7 +4691,7 @@ akamai:
       usearbitrarysnis: true
       arbitrarysnis:
     cn:
-      usearbitrarysnis: true
+      usearbitrarysnis: false
       arbitrarysnis:
       - 01ny.cn
       - 010teacher.com
