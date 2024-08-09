@@ -1,8 +1,13 @@
 package pro
 
 import (
+	"encoding/json"
+	"io"
+	"net/http"
+	"strings"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/flashlight/v7/common"
@@ -13,45 +18,82 @@ func TestUsers(t *testing.T) {
 	common.ForceStaging()
 
 	deviceID := "77777777"
-	u, err := newUserWithClient(common.NewUserConfigData(common.DefaultAppName, deviceID, 0, "", nil, "en-US"), nil)
+	userID := int64(1000)
+	token := uuid.NewString()
 
-	assert.NoError(t, err, "Unexpected error")
-	assert.NotNil(t, u, "Should have gotten a user")
-	t.Logf("user: %+v", u)
-
-	uc := common.NewUserConfigData(common.DefaultAppName, deviceID, u.Auth.ID, u.Auth.Token, nil, "en-US")
-	u, err = fetchUserDataWithClient(uc, nil)
-	assert.NoError(t, err, "Unexpected error")
-	assert.NotNil(t, u, "Should have gotten a user")
-
-	delete(userData.data, u.ID)
-
-	u, err = fetchUserDataWithClient(uc, nil)
-	assert.NoError(t, err, "Unexpected error")
-	assert.NotNil(t, u, "Should have gotten a user")
-
-	pro, _ := IsProUser(uc)
-	assert.False(t, pro)
-	pro, _ = IsProUserFast(uc)
-	assert.False(t, pro)
-
-	var waitUser int64 = 88888
-	var changed int
-	var userDataSaved int
-	OnUserData(func(*client.User, *client.User) {
-		userDataSaved += 1
+	t.Run("newUserWithClient should create a user with success", func(t *testing.T) {
+		mockedHTTPClient := createMockClient(newUserDataResponse(), nil)
+		u, err := newUserWithClient(common.NewUserConfigData(common.DefaultAppName, deviceID, 0, "", nil, "en-US"), mockedHTTPClient)
+		assert.NoError(t, err, "Unexpected error")
+		assert.NotNil(t, u, "Should have gotten a user")
+		t.Logf("user: %+v", u)
 	})
 
-	OnProStatusChange(func(bool, bool) {
-		changed += 1
+	uc := common.NewUserConfigData(common.DefaultAppName, deviceID, userID, token, nil, "en-US")
+	t.Run("fetchUserDataWithClient should fetch a user with success", func(t *testing.T) {
+		mockedHTTPClient := createMockClient(newUserDataResponse(), nil)
+		u, err := fetchUserDataWithClient(uc, mockedHTTPClient)
+		assert.NoError(t, err, "Unexpected error")
+		assert.NotNil(t, u, "Should have gotten a user")
+
+		delete(userData.data, u.ID)
 	})
 
-	userData.save(waitUser, u)
-	assert.Equal(t, 1, userDataSaved, "OnUserData should be called")
-	assert.Equal(t, 1, changed, "OnProStatusChange should be called")
+	t.Run("status change should update when user data updated", func(t *testing.T) {
+		mockedHTTPClient := createMockClient(newUserDataResponse(), nil)
+		u, err := fetchUserDataWithClient(uc, mockedHTTPClient)
+		assert.NoError(t, err, "Unexpected error")
+		assert.NotNil(t, u, "Should have gotten a user")
 
-	userData.save(waitUser, u)
-	assert.Equal(t, 2, userDataSaved, "OnUserData should be called after each saving")
-	assert.Equal(t, 1, changed, "OnProStatusChange should not be called again if nothing changes")
+		pro, _ := IsProUser(uc)
+		assert.False(t, pro)
+		pro, _ = IsProUserFast(uc)
+		assert.False(t, pro)
 
+		var waitUser int64 = 88888
+		var changed int
+		var userDataSaved int
+		OnUserData(func(*client.User, *client.User) {
+			userDataSaved += 1
+		})
+
+		OnProStatusChange(func(bool, bool) {
+			changed += 1
+		})
+
+		userData.save(waitUser, u)
+		assert.Equal(t, 1, userDataSaved, "OnUserData should be called")
+		assert.Equal(t, 1, changed, "OnProStatusChange should be called")
+
+		userData.save(waitUser, u)
+		assert.Equal(t, 2, userDataSaved, "OnUserData should be called after each saving")
+		assert.Equal(t, 1, changed, "OnProStatusChange should not be called again if nothing changes")
+	})
+}
+
+type mockTransport struct {
+	Resp *http.Response
+	Err  error
+}
+
+func (t *mockTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	return t.Resp, t.Err
+}
+
+func createMockClient(resp *http.Response, err error) *http.Client {
+	return &http.Client{
+		Transport: &mockTransport{
+			Resp: resp,
+			Err:  err,
+		},
+	}
+}
+
+func newUserDataResponse() *http.Response {
+	response := client.UserDataResponse{}
+	jsonResponse, _ := json.Marshal(response)
+	return &http.Response{
+		StatusCode: 200,
+		Body:       io.NopCloser(strings.NewReader(string(jsonResponse))),
+	}
 }
