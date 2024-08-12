@@ -2,7 +2,6 @@ package services
 
 import (
 	"bytes"
-	"compress/gzip"
 	"errors"
 	"fmt"
 	"io"
@@ -59,7 +58,8 @@ type configService struct {
 
 	done    chan struct{}
 	running bool
-	mu      sync.Mutex
+	// runningMu is used to protect the running field.
+	runningMu sync.Mutex
 }
 
 // ConfigHandler handles updating and retrieving the client config.
@@ -77,8 +77,8 @@ var (
 // StartConfigService starts a new config service with the given options and returns a func to stop
 // it. It will return an error if opts.OriginURL, opts.Rt, or opts.OnConfig are nil.
 func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, error) {
-	_configService.mu.Lock()
-	defer _configService.mu.Unlock()
+	_configService.runningMu.Lock()
+	defer _configService.runningMu.Unlock()
 
 	if _configService.running {
 		return _configService.Stop, nil
@@ -138,8 +138,8 @@ func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, err
 }
 
 func (cs *configService) Stop() {
-	cs.mu.Lock()
-	defer cs.mu.Unlock()
+	cs.runningMu.Lock()
+	defer cs.runningMu.Unlock()
 
 	if !cs.running {
 		return
@@ -158,7 +158,7 @@ func (cs *configService) fetchConfig() (int64, error) {
 
 	newConf, sleep, err := cs.fetch()
 	if err != nil {
-		logger.Errorf("configservice: Failed to fetch config: %w", err)
+		logger.Errorf("configservice: Failed to fetch config: %v", err)
 		return 0, op.FailIf(err)
 	}
 
@@ -201,17 +201,10 @@ func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
 	}
 	defer resp.Close()
 
-	gzReader, err := gzip.NewReader(resp)
-	if err != nil {
-		return nil, sleep, fmt.Errorf("unable to open gzip reader: %w", err)
-	}
-
-	configBytes, err := io.ReadAll(gzReader)
+	configBytes, err := io.ReadAll(resp)
 	if err != nil {
 		return nil, 0, fmt.Errorf("unable to read config response: %w", err)
 	}
-
-	gzReader.Close()
 
 	newConf := &apipb.ConfigResponse{}
 	if err = proto.Unmarshal(configBytes, newConf); err != nil {

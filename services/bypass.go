@@ -58,9 +58,8 @@ type bypassService struct {
 	mxProxies sync.Mutex
 	// done is closed to notify the proxy bypass goroutines to stop.
 	done chan struct{}
-	// stopped is used to signal that the bypass service has been stopped. Once stopped, the service
-	// will not start any new proxy bypass goroutines.
-	stopped *atomic.Bool
+	// running is used to signal that the bypass service is running.
+	running *atomic.Bool
 }
 
 // StartBypassService sends periodic traffic to the bypass server. The client periodically sends
@@ -75,7 +74,7 @@ func StartBypassService(
 		infos:   make(map[string]*commonconfig.ProxyConfig),
 		proxies: make([]*proxy, 0),
 		done:    make(chan struct{}),
-		stopped: atomic.NewBool(false),
+		running: atomic.NewBool(true),
 	}
 
 	logger.Debug("Starting bypass service")
@@ -128,7 +127,7 @@ func (b *bypassService) onProxies(
 // Reset resets the bypass service by stopping all existing bypass proxy goroutines if
 // bypassService is still running. It returns true if bypassService was reset successfully.
 func (b *bypassService) Reset() bool {
-	if b.stopped.Load() {
+	if !b.running.Load() {
 		return false
 	}
 
@@ -143,7 +142,7 @@ func (b *bypassService) Reset() bool {
 }
 
 func (b *bypassService) Stop() {
-	if b.stopped.CompareAndSwap(false, true) {
+	if b.running.CompareAndSwap(true, false) {
 		close(b.done)
 	}
 }

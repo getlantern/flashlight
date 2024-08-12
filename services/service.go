@@ -24,13 +24,17 @@ func callRandomly(
 	jitter time.Duration,
 	done <-chan struct{},
 ) {
-	jitterInt := jitter.Nanoseconds()
-	intervalInt := interval.Nanoseconds()
+	jitterInt := jitter.Milliseconds()
+	intervalInt := interval.Milliseconds()
 
 	// calculate sleep time
 	sleep := func(extraDelay time.Duration) <-chan time.Time {
-		delay := mrand.Int64N(2*jitterInt) + intervalInt - jitterInt
-		delayDuration := time.Duration(delay) + extraDelay
+		delay := intervalInt
+		if jitterInt > 0 {
+			delay += mrand.Int64N(2*jitterInt) - jitterInt
+		}
+
+		delayDuration := time.Duration(delay)*time.Millisecond + extraDelay
 		logger.Debugf("Next run in %v", delayDuration)
 		return time.After(delayDuration)
 	}

@@ -52,14 +52,16 @@ type config struct {
 func Init(saveDir string, obfuscate bool) (*config, error) {
 	if saveDir == "" {
 		saveDir = defaultConfigSaveDir
-		_config.filePath = filepath.Join(saveDir, defaultConfigFilename)
 	}
 
+	_config.mu.Lock()
+	_config.filePath = filepath.Join(saveDir, defaultConfigFilename)
 	_config.obfuscate = obfuscate
+	_config.mu.Unlock()
 
 	saved, err := readExistingConfig(_config.filePath, obfuscate)
 	if err != nil {
-		log.Errorf("Failed to read existing client config: %w", err)
+		log.Error(err)
 	}
 
 	if saved == nil {
@@ -73,8 +75,9 @@ func Init(saveDir string, obfuscate bool) (*config, error) {
 
 // GetConfig implements services.ConfigHandler
 func (c *config) GetConfig() *ProxyConfig {
-	conf, _ := c.config.Get(eventual.DontWait)
-	return conf.(*ProxyConfig)
+	v, _ := c.config.Get(eventual.DontWait)
+	conf, _ := v.(*ProxyConfig)
+	return conf
 }
 
 // SetConfig implements services.ConfigHandler
@@ -95,7 +98,7 @@ func (c *config) SetConfig(new *ProxyConfig) {
 
 	c.config.Set(updated)
 	if err := saveConfig(c.filePath, updated, c.obfuscate); err != nil {
-		log.Errorf("Failed to save client config: %w", err)
+		log.Errorf("Failed to save client config: %v", err)
 	}
 
 	notifyListeners(old, updated)
@@ -143,8 +146,9 @@ func readExistingConfig(filePath string, obfuscate bool) (*ProxyConfig, error) {
 		return nil, fmt.Errorf("failed to read config from %v: %w", filePath, err)
 	}
 
-	if len(bytes) == 0 {
-		return nil, nil // file is empty
+	if len(bytes) == 0 { // file is empty
+		// we treat an empty file as if it doesn't
+		return nil, nil
 	}
 
 	conf := &ProxyConfig{}
