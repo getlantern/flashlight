@@ -268,6 +268,8 @@ github.com/getlantern/fronted v0.0.0-20230601004823-7fec719639d8 h1:r/Z/SPPIfLXD
 github.com/getlantern/fronted v0.0.0-20230601004823-7fec719639d8/go.mod h1:HGe2a5LAanMKLb5BZHwDntWt5sme18AqEmJnfBgsDqc=
 github.com/getlantern/fronted v0.0.0-20240730140724-9369ca3c94f0 h1:DyKTfpBRdD4Qc2S7zzQOJ8EmbJfnakjIacViCTwo2DE=
 github.com/getlantern/fronted v0.0.0-20240730140724-9369ca3c94f0/go.mod h1:WByj7b55hNRpeuIaES521Poebt0ABOdzG/9g+bS4BiQ=
+github.com/getlantern/fronted v0.0.0-20240812203643-d549c3798f04 h1:mT4CXl+fd5DcnDqgnr1sac7lbsKmgSEUYqxn3fe0seQ=
+github.com/getlantern/fronted v0.0.0-20240812203643-d549c3798f04/go.mod h1:WByj7b55hNRpeuIaES521Poebt0ABOdzG/9g+bS4BiQ=
 github.com/getlantern/geo v0.0.0-20230612145351-d1374c8f8dec h1:0cxqVKmEqcGuKXdaEBc03uearUTNvV4hH7Irfjz4evQ=
 github.com/getlantern/geo v0.0.0-20230612145351-d1374c8f8dec/go.mod h1:Xw0BLEMmlFOQ1FCBqqWfYEhc2Ss6V4S/56U0oKH/QFU=
 github.com/getlantern/geolookup v0.0.0-20230327091034-aebe73c6eef4 h1:Ju9l1RretVWJTNo2vpl/xAW8Dcuiyg5kJC6LRBpCigw=
