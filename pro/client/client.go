@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"math"
 	"net/http"
 	"net/url"
@@ -336,7 +336,7 @@ func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 	var buf []byte
 	if req.Body != nil {
 		var err error
-		buf, err = ioutil.ReadAll(req.Body)
+		buf, err = io.ReadAll(req.Body)
 		if err != nil {
 			return nil, err
 		}
@@ -348,7 +348,7 @@ func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 		client := c.httpClient
 		log.Debugf("%s %s", req.Method, req.URL)
 		if len(buf) > 0 {
-			req.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
+			req.Body = io.NopCloser(bytes.NewBuffer(buf))
 		}
 
 		res, err := client.Do(req)
@@ -356,13 +356,13 @@ func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 			defer res.Body.Close()
 			switch res.StatusCode {
 			case 200:
-				body, err := ioutil.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
 				return body, err
 			case 202:
 				log.Debugf("Received 202, retrying idempotent operation immediately.")
 				continue
 			default:
-				body, err := ioutil.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
 				if err == nil {
 					log.Debugf("Expecting 200, got: %d, body: %v", res.StatusCode, string(body))
 				} else {
