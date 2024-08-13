@@ -12,13 +12,13 @@ import (
 )
 
 const (
-	// retryWaitMillis is the base wait time in milliseconds between retries
-	retryWaitMillis = 100
-	maxRetryWait    = 10 * time.Minute
+	// retryWaitSeconds is the base wait time in seconds between retries
+	retryWaitSeconds = 5 * time.Second
+	maxRetryWait     = 10 * time.Minute
 )
 
 // sender is a helper for sending post requests. If the request fails, sender calulates an
-// exponential backoff time using retryWaitMillis and return it as the sleep time.
+// exponential backoff time using retryWaitSeconds and return it as the sleep time.
 type sender struct {
 	failCount      int
 	atMaxRetryWait bool
@@ -37,12 +37,13 @@ func (s *sender) post(
 ) (*http.Response, int64, error) {
 	resp, err := s.doPost(originURL, buf, rt, user)
 	if err == nil {
+		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+			err = fmt.Errorf("bad response code: %v", resp.StatusCode)
+			goto backoff
+		}
+
 		s.failCount = 0
 		s.atMaxRetryWait = false
-
-		if resp.StatusCode != http.StatusOK || resp.StatusCode != http.StatusNoContent {
-			return nil, 0, fmt.Errorf("bad response code: %v", resp.StatusCode)
-		}
 
 		var sleepTime int64
 		if sleepVal := resp.Header.Get(common.SleepHeader); sleepVal != "" {
@@ -54,6 +55,7 @@ func (s *sender) post(
 		return resp, sleepTime, nil
 	}
 
+backoff:
 	if s.atMaxRetryWait {
 		// we've already reached the max wait time, so we don't need to perform the calculation again.
 		// we'll still increment the fail count to keep track of the number of failures
@@ -61,8 +63,7 @@ func (s *sender) post(
 		return nil, int64(maxRetryWait.Seconds()), err
 	}
 
-	wait := time.Duration(math.Pow(2, float64(s.failCount)) * float64(retryWaitMillis))
-	wait *= time.Millisecond
+	wait := time.Duration(math.Pow(2, float64(s.failCount))) * retryWaitSeconds
 	s.failCount++
 
 	if wait > maxRetryWait {
@@ -95,7 +96,6 @@ func (s *sender) doPost(
 	req.Close = true
 	resp, err := rt.RoundTrip(req)
 	if err != nil {
-		resp.Body.Close()
 		return nil, fmt.Errorf("request to %s failed: %w", originURL, err)
 	}
 
