@@ -250,7 +250,8 @@ func (p *proxy) sendToBypass() (int64, error) {
 		return 0, err
 	}
 
-	io.Copy(io.Discard, resp)
+	io.Copy(io.Discard, resp.Body)
+	resp.Body.Close()
 	return sleep, nil
 }
 

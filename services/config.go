@@ -165,8 +165,7 @@ func (cs *configService) fetchConfig() (int64, error) {
 	cs.lastFetched = time.Now()
 
 	logger.Debug("configservice: Received config")
-	curConf := cs.configHandler.GetConfig()
-	if curConf != nil && !configIsNew(newConf) {
+	if newConf == nil {
 		op.Set("config_changed", false)
 		logger.Debug("configservice: Config is unchanged")
 		return sleep, nil
@@ -199,9 +198,13 @@ func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
 	if err != nil {
 		return nil, 0, fmt.Errorf("config request failed: %w", err)
 	}
-	defer resp.Close()
 
-	configBytes, err := io.ReadAll(resp)
+	if resp.StatusCode != http.StatusNoContent {
+		return nil, 0, nil // no config changes
+	}
+
+	configBytes, err := io.ReadAll(resp.Body)
+	resp.Body.Close()
 	if err != nil {
 		return nil, 0, fmt.Errorf("unable to read config response: %w", err)
 	}
@@ -237,11 +240,4 @@ func (cs *configService) newRequest() *apipb.ConfigRequest {
 	}
 
 	return confReq
-}
-
-// configIsNew returns true if any fields contain values.
-func configIsNew(new *apipb.ConfigResponse) bool {
-	// We only need to check if the fields we're interested in contain values because the server
-	// will only send us new values if they have changed.
-	return new.Country != "" || new.ProToken != "" || len(new.Proxy.Proxies) > 0
 }
