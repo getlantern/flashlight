@@ -89,9 +89,10 @@ func (c *ClientConfig) FrontedProviders() map[string]*fronted.Provider {
 		var sniConfig *fronted.SNIConfig
 		if p.FrontingSNIs != nil {
 			// Sometimes geolookup can't find the country and returns an empty string.
-			// In that case, I'm defaulting to ir
+			// In that case, we're using the default configuration but in the future we will add
+			// support for unknown regions.
 			if region == "" {
-				region = "ir"
+				region = "default"
 			}
 			var ok bool
 			sniConfig, ok = p.FrontingSNIs[region]
