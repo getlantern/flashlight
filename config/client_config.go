@@ -90,6 +90,7 @@ func (c *ClientConfig) FrontedProviders() map[string]*fronted.Provider {
 		if p.FrontingSNIs != nil {
 			var ok bool
 			sniConfig, ok = p.FrontingSNIs[region]
+			// If the region is unknown, use the default SNI config and enable it
 			if !ok || region == "" {
 				sniConfig = p.FrontingSNIs["default"]
 				sniConfig.UseArbitrarySNIs = true
