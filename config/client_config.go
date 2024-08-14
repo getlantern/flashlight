@@ -83,17 +83,18 @@ func NewClientConfig() *ClientConfig {
 
 // Builds a list of fronted.Providers to use based on the configuration
 func (c *ClientConfig) FrontedProviders() map[string]*fronted.Provider {
-	sniRegion := strings.ToLower(geolookup.GetCountry(0))
+	region := strings.ToLower(geolookup.GetCountry(0))
 	providers := make(map[string]*fronted.Provider)
 	for pid, p := range c.Fronted.Providers {
 		var sniConfig *fronted.SNIConfig
 		if p.FrontingSNIs != nil {
-			// setting ir by default
-			if sniRegion == "" {
-				sniRegion = "ir"
+			// Sometimes geolookup can't find the country and returns an empty string.
+			// In that case, I'm defaulting to ir
+			if region == "" {
+				region = "ir"
 			}
 			var ok bool
-			sniConfig, ok = p.FrontingSNIs[sniRegion]
+			sniConfig, ok = p.FrontingSNIs[region]
 			if !ok {
 				sniConfig = p.FrontingSNIs["default"]
 			}
