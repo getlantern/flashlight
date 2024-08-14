@@ -70,9 +70,7 @@ type ConfigHandler interface {
 	SetConfig(new *apipb.ConfigResponse)
 }
 
-var (
-	_configService = &configService{sender: &sender{}}
-)
+var _configService = &configService{sender: &sender{}}
 
 // StartConfigService starts a new config service with the given options and returns a func to stop
 // it. It will return an error if opts.OriginURL, opts.Rt, or opts.OnConfig are nil.
@@ -199,7 +197,7 @@ func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
 		return nil, 0, fmt.Errorf("config request failed: %w", err)
 	}
 
-	if resp.StatusCode != http.StatusNoContent {
+	if resp.StatusCode == http.StatusNoContent {
 		return nil, 0, nil // no config changes
 	}
 
@@ -214,7 +212,7 @@ func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
 		return nil, 0, fmt.Errorf("unable to unmarshal config: %w", err)
 	}
 
-	return newConf, sleep, err
+	return newConf, sleep, nil
 }
 
 // newRequest returns a new ConfigRequest with the current client info, proxy ids, and the last

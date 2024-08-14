@@ -1,6 +1,8 @@
 package services
 
 import (
+	"bytes"
+	"io"
 	"math"
 	mrand "math/rand/v2"
 	"net/http"
@@ -10,6 +12,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
+
+	"github.com/getlantern/flashlight/v7/apipb"
 
 	"github.com/getlantern/flashlight/v7/common"
 )
@@ -49,7 +54,7 @@ func TestPost(t *testing.T) {
 
 func TestDoPost(t *testing.T) {
 	sdr := &sender{}
-	rt := &mockRoundTripper{status: http.StatusOK}
+	rt := &mockRoundTripper{}
 	_, err := sdr.doPost("http://example.com", nil, rt, common.NullUserConfig{})
 	assert.NoError(t, err)
 	assert.True(t, rt.req.Close, "request.Close should be set to true before calling RoundTrip")
@@ -59,6 +64,7 @@ type mockRoundTripper struct {
 	req       *http.Request
 	status    int
 	sleep     int
+	config    *apipb.ConfigResponse
 	shouldErr bool
 }
 
@@ -68,10 +74,18 @@ func (m *mockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) 
 		return nil, assert.AnError
 	}
 
+	buf, _ := proto.Marshal(m.config)
+	body := io.NopCloser(bytes.NewReader(buf))
+
 	header := http.Header{}
 	header.Add(common.SleepHeader, strconv.Itoa(m.sleep))
+	if m.status == 0 {
+		m.status = http.StatusOK
+	}
+
 	return &http.Response{
 		StatusCode: m.status,
 		Header:     header,
+		Body:       body,
 	}, nil
 }
