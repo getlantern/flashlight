@@ -37,11 +37,11 @@ const (
 // was successful, it also tests to make sure that the outbound request didn't
 // leak any Lantern or CloudFlare headers.
 func testRequest(testCase string, t *testing.T, requests chan *http.Request, https bool, certPool *x509.CertPool, expectedStatus int, expectedErr error) {
-	err := os.Mkdir("direct_test", 0700)
+	tempDir, err := os.MkdirTemp("", "direct_test")
 	if !assert.NoError(t, err, "Unable to create temp dir") {
 		return
 	}
-	defer os.RemoveAll("direct_test")
+	defer os.RemoveAll(tempDir)
 	fronted.ConfigureForTest(t)
 
 	log.Debug("Making request")
