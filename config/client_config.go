@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/fronted"
@@ -82,12 +83,13 @@ func NewClientConfig() *ClientConfig {
 
 // Builds a list of fronted.Providers to use based on the configuration
 func (c *ClientConfig) FrontedProviders() map[string]*fronted.Provider {
-	sniRegion := geolookup.GetCountry(0)
+	sniRegion := strings.ToLower(geolookup.GetCountry(0))
 	providers := make(map[string]*fronted.Provider)
 	for pid, p := range c.Fronted.Providers {
 		var sniConfig *fronted.SNIConfig
 		if p.FrontingSNIs != nil {
 			// setting ir by default
+			log.Tracef("SNI region is [%s]", sniRegion)
 			if sniRegion == "" {
 				sniRegion = "ir"
 			}
@@ -101,6 +103,8 @@ func (c *ClientConfig) FrontedProviders() map[string]*fronted.Provider {
 				sniConfig.ArbitrarySNIs = p.FrontingSNIs["default"].ArbitrarySNIs
 			}
 		}
+
+		log.Tracef("Using SNI config for region %s and provider %s: %+v", sniRegion, pid, sniConfig)
 
 		providers[pid] = fronted.NewProvider(
 			p.HostAliases,
