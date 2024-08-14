@@ -87,22 +87,19 @@ func (c *ClientConfig) FrontedProviders() map[string]*fronted.Provider {
 	for pid, p := range c.Fronted.Providers {
 		var sniConfig *fronted.SNIConfig
 		if p.FrontingSNIs != nil {
-			log.Tracef("using SNI config for provider %s and region %s", pid, sniRegion)
 			// setting ir by default
 			if sniRegion == "" {
 				sniRegion = "ir"
 			}
-			sniConfig, ok := p.FrontingSNIs[sniRegion]
+			var ok bool
+			sniConfig, ok = p.FrontingSNIs[sniRegion]
 			if !ok {
-				log.Tracef("no SNI config for provider %s and region %s, using default", pid, sniRegion)
 				sniConfig = p.FrontingSNIs["default"]
 			}
 
 			if sniConfig != nil && sniConfig.UseArbitrarySNIs && len(sniConfig.ArbitrarySNIs) == 0 {
 				sniConfig.ArbitrarySNIs = p.FrontingSNIs["default"].ArbitrarySNIs
 			}
-
-			log.Tracef("%v using SNI config for provider %s and region %s with %d arbitrary SNIs", sniConfig.UseArbitrarySNIs, pid, sniRegion, len(sniConfig.ArbitrarySNIs))
 		}
 
 		providers[pid] = fronted.NewProvider(
