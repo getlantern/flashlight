@@ -39,7 +39,7 @@ func (s *sender) post(
 	if err == nil {
 		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 			err = fmt.Errorf("bad response code: %v", resp.StatusCode)
-			goto backoff
+			return nil, s.backoff(), err
 		}
 
 		s.failCount = 0
@@ -55,23 +55,7 @@ func (s *sender) post(
 		return resp, sleepTime, nil
 	}
 
-backoff:
-	if s.atMaxRetryWait {
-		// we've already reached the max wait time, so we don't need to perform the calculation again.
-		// we'll still increment the fail count to keep track of the number of failures
-		s.failCount++
-		return nil, int64(maxRetryWait.Seconds()), err
-	}
-
-	wait := time.Duration(math.Pow(2, float64(s.failCount))) * retryWaitSeconds
-	s.failCount++
-
-	if wait > maxRetryWait {
-		s.atMaxRetryWait = true
-		return nil, int64(maxRetryWait.Seconds()), err
-	}
-
-	return nil, int64(wait.Seconds()), err
+	return nil, s.backoff(), err
 }
 
 func (s *sender) doPost(
@@ -101,4 +85,24 @@ func (s *sender) doPost(
 
 	logger.Debugf("Response headers from %v:\n%v", originURL, resp.Header)
 	return resp, nil
+}
+
+// backoff calculates the backoff time in seconds for the next retry.
+func (s *sender) backoff() int64 {
+	if s.atMaxRetryWait {
+		// we've already reached the max wait time, so we don't need to perform the calculation again.
+		// we'll still increment the fail count to keep track of the number of failures
+		s.failCount++
+		return int64(maxRetryWait.Seconds())
+	}
+
+	wait := time.Duration(math.Pow(2, float64(s.failCount))) * retryWaitSeconds
+	s.failCount++
+
+	if wait > maxRetryWait {
+		s.atMaxRetryWait = true
+		return int64(maxRetryWait.Seconds())
+	}
+
+	return int64(wait.Seconds())
 }

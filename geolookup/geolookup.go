@@ -14,9 +14,9 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.geolookup")
 
-	// _country and _ip are eventual values that hold the current country and IP as strings.
-	_country = eventual.NewValue()
-	_ip      = eventual.NewValue()
+	// country and ip are eventual values that hold the current country and IP as strings.
+	country = eventual.NewValue()
+	ip      = eventual.NewValue()
 
 	watchers []chan bool
 	mx       sync.Mutex
@@ -24,11 +24,11 @@ var (
 
 func init() {
 	proxyconfig.OnConfigChange(func(old, new *proxyconfig.ProxyConfig) {
-		oldCountry, _ := _country.Get(eventual.DontWait)
-		oldIP, _ := _ip.Get(eventual.DontWait)
+		oldCountry, _ := country.Get(eventual.DontWait)
+		oldIP, _ := ip.Get(eventual.DontWait)
 
-		_country.Set(new.Country)
-		_ip.Set(new.Ip)
+		country.Set(new.Country)
+		ip.Set(new.Ip)
 
 		// if the country or IP has changed, notify watchers
 		if oldCountry != new.Country || oldIP != new.Ip {
@@ -50,13 +50,13 @@ func GetIP(timeout time.Duration) string {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	ip, err := _ip.Get(ctx)
+	i, err := ip.Get(ctx)
 	if err != nil {
-		log.Errorf("Failed to get IP: %w", err)
+		log.Errorf("Failed to get IP: %v", err)
 		return ""
 	}
 
-	return ip.(string)
+	return i.(string)
 }
 
 // GetCountry gets the country. If the country hasn't been determined yet, waits up to the given
@@ -65,13 +65,13 @@ func GetCountry(timeout time.Duration) string {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	country, err := _country.Get(ctx)
+	c, err := country.Get(ctx)
 	if err != nil {
-		log.Errorf("Failed to get country: %w", err)
+		log.Errorf("Failed to get country: %v", err)
 		return ""
 	}
 
-	return country.(string)
+	return c.(string)
 }
 
 // OnRefresh returns a chan that will signal when the goelocation has changed.
