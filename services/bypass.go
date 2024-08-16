@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -208,6 +209,26 @@ func (p *proxy) sendToBypass() (int64, error) {
 
 	op.Set("fronted", fronted)
 
+	logger.Debugf("bypass: Sending traffic for bypass server: %v", p.name)
+	req, err := p.newRequest(endpoint)
+	if err != nil {
+		op.FailIf(err)
+		return 0, err
+	}
+
+	resp, sleep, err := p.sender.post(req, rt)
+	if err != nil || resp == nil {
+		err = logger.Errorf("bypass: Unable to post chained server info: %v", err)
+		op.FailIf(err)
+		return 0, err
+	}
+
+	io.Copy(io.Discard, resp.Body)
+	resp.Body.Close()
+	return sleep, nil
+}
+
+func (p *proxy) newRequest(endpoint string) (*http.Request, error) {
 	// Just posting all the info about the server allows us to control these fields fully on the server
 	// side.
 	bypassRequest := &apipb.BypassRequest{
@@ -233,26 +254,19 @@ func (p *proxy) sendToBypass() (int64, error) {
 	bypassBuf, err := proto.Marshal(bypassRequest)
 	if err != nil {
 		logger.Errorf("bypass: Unable to marshal chained server info: %v", err)
-		op.FailIf(err)
-		return 0, err
+		return nil, err
 	}
 
-	logger.Debugf("bypass: Sending traffic for bypass server: %v", p.name)
-	resp, sleep, err := p.sender.post(
-		endpoint,
-		bytes.NewReader(bypassBuf),
-		rt,
-		p.userConfig,
-	)
-	if err != nil || resp == nil {
-		err = logger.Errorf("bypass: Unable to post chained server info: %v", err)
-		op.FailIf(err)
-		return 0, err
+	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewReader(bypassBuf))
+	if err != nil {
+		return nil, fmt.Errorf("unable to create request for %s: %w", endpoint, err)
 	}
 
-	io.Copy(io.Discard, resp.Body)
-	resp.Body.Close()
-	return sleep, nil
+	common.AddCommonHeaders(p.userConfig, req)
+	req.Header.Set("Content-Type", "application/x-protobuf")
+	// Prevents intermediate nodes (domain-fronters) from caching the content
+	req.Header.Set("Cache-Control", "no-cache")
+	return req, nil
 }
 
 func newProxyRoundTripper(

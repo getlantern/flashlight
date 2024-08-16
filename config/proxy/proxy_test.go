@@ -17,6 +17,8 @@ import (
 
 func TestInitWithSavedConfig(t *testing.T) {
 	conf := newTestConfig()
+	defer resetConfig()
+
 	withTempConfigFile(t, conf, false, func(tmpfile *os.File) {
 		Init("", false)
 		existing, _ := GetConfig(0)
@@ -25,12 +27,12 @@ func TestInitWithSavedConfig(t *testing.T) {
 		got := fmt.Sprintf("%+v", existing)
 		assert.Equal(t, want, got, "failed to read existing config file")
 	})
-
-	resetConfig()
 }
 
 func TestNotifyOnConfig(t *testing.T) {
 	conf := newTestConfig()
+	defer resetConfig()
+
 	withTempConfigFile(t, conf, false, func(tmpfile *os.File) {
 		called := make(chan struct{}, 1)
 		OnConfigChange(func(old, new *ProxyConfig) {
@@ -54,8 +56,6 @@ func TestNotifyOnConfig(t *testing.T) {
 			assert.Fail(t, "timeout waiting for config change notification")
 		}
 	})
-
-	resetConfig()
 }
 
 func TestInvalidFile(t *testing.T) {

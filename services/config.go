@@ -105,7 +105,7 @@ func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, err
 
 	u, err := url.Parse(opts.OriginURL)
 	if err != nil {
-		logger.Fatalf("Unable to parse chained cloud config URL: %v", err)
+		logger.Errorf("Unable to parse chained cloud config URL: %v", err)
 	}
 
 	detour.ForceWhitelist(u.Host)
@@ -181,18 +181,12 @@ func (cs *configService) fetchConfig() (int64, error) {
 }
 
 func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
-	confReq := cs.newRequest()
-	buf, err := proto.Marshal(confReq)
+	req, err := cs.newRequest()
 	if err != nil {
-		return nil, 0, fmt.Errorf("unable to marshal config request: %w", err)
+		return nil, 0, err
 	}
 
-	resp, sleep, err := cs.sender.post(
-		cs.opts.OriginURL,
-		bytes.NewReader(buf),
-		cs.opts.RoundTripper,
-		cs.opts.UserConfig,
-	)
+	resp, sleep, err := cs.sender.post(req, cs.opts.RoundTripper)
 	if err != nil {
 		return nil, 0, fmt.Errorf("config request failed: %w", err)
 	}
@@ -217,7 +211,7 @@ func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
 
 // newRequest returns a new ConfigRequest with the current client info, proxy ids, and the last
 // time the config was fetched.
-func (cs *configService) newRequest() *apipb.ConfigRequest {
+func (cs *configService) newRequest() (*http.Request, error) {
 	conf := cs.configHandler.GetConfig()
 	proxies := []*apipb.ProxyConnectConfig{}
 	if conf != nil { // not the first request
@@ -237,5 +231,19 @@ func (cs *configService) newRequest() *apipb.ConfigRequest {
 		},
 	}
 
-	return confReq
+	buf, err := proto.Marshal(confReq)
+	if err != nil {
+		return nil, fmt.Errorf("unable to marshal config request: %w", err)
+	}
+
+	req, err := http.NewRequest(http.MethodPost, cs.opts.OriginURL, bytes.NewReader(buf))
+	if err != nil {
+		return nil, fmt.Errorf("unable to create request")
+	}
+
+	common.AddCommonHeaders(cs.opts.UserConfig, req)
+	req.Header.Set("Content-Type", "application/x-protobuf")
+	// Prevents intermediate nodes (domain-fronters) from caching the content
+	req.Header.Set("Cache-Control", "no-cache")
+	return req, nil
 }

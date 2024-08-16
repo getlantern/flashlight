@@ -2,7 +2,6 @@ package services
 
 import (
 	"fmt"
-	"io"
 	"math"
 	"net/http"
 	"strconv"
@@ -29,13 +28,8 @@ type sender struct {
 //
 // Note: if the request is successful, it is the responsibility of the caller to read the response
 // body to completion and close it.
-func (s *sender) post(
-	originURL string,
-	buf io.Reader,
-	rt http.RoundTripper,
-	user common.UserConfig,
-) (*http.Response, int64, error) {
-	resp, err := s.doPost(originURL, buf, rt, user)
+func (s *sender) post(req *http.Request, rt http.RoundTripper) (*http.Response, int64, error) {
+	resp, err := s.doPost(req, rt)
 	if err == nil {
 		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 			err = fmt.Errorf("bad response code: %v", resp.StatusCode)
@@ -58,32 +52,17 @@ func (s *sender) post(
 	return nil, s.backoff(), err
 }
 
-func (s *sender) doPost(
-	originURL string,
-	buf io.Reader,
-	rt http.RoundTripper,
-	user common.UserConfig,
-) (*http.Response, error) {
-	req, err := http.NewRequest("POST", originURL, buf)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create request for %s: %w", originURL, err)
-	}
-
-	common.AddCommonHeaders(user, req)
-	req.Header.Set("Content-Type", "application/x-protobuf")
-	// Prevents intermediate nodes (domain-fronters) from caching the content
-	req.Header.Set("Cache-Control", "no-cache")
-
+func (s *sender) doPost(req *http.Request, rt http.RoundTripper) (*http.Response, error) {
 	// make sure to close the connection after reading the Body
 	// this prevents the occasional EOFs errors we're seeing with
 	// successive requests
 	req.Close = true
 	resp, err := rt.RoundTrip(req)
 	if err != nil {
-		return nil, fmt.Errorf("request to %s failed: %w", originURL, err)
+		return nil, fmt.Errorf("request to failed: %w", err)
 	}
 
-	logger.Debugf("Response headers from %v:\n%v", originURL, resp.Header)
+	logger.Debugf("Response headers:\n%v", resp.Header)
 	return resp, nil
 }
 

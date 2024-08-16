@@ -248,7 +248,6 @@ func (f *Flashlight) notifyProxyListeners(proxies map[string]*commonconfig.Proxy
 }
 
 func (f *Flashlight) startGlobalConfigFetch() func() {
-	// TODO: update global config fetching to use new config service
 	globalDispatch := func(conf interface{}, src config.Source) {
 		cfg := conf.(*config.Global)
 		log.Debugf("Applying global config")
