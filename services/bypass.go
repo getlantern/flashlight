@@ -37,8 +37,6 @@ const (
 
 	// bypassSendInterval is the interval between sending traffic to the bypass server.
 	bypassSendInterval = 4 * time.Minute
-	// bypassSendJitter is the jitter to add to the interval between sending traffic.
-	bypassSendJitter = 2 * time.Minute
 
 	// version is the bypass client version. It is not necessary to update this value on every
 	// change to bypass; this should only be updated when the backend needs to make decisions unique
@@ -182,7 +180,7 @@ func (p *proxy) start(done <-chan struct{}) {
 		wait, _ := p.sendToBypass()
 		return wait
 	}
-	callRandomly(fn, bypassSendInterval, bypassSendJitter, done)
+	callRandomly(fn, bypassSendInterval, done)
 }
 
 func (p *proxy) sendToBypass() (int64, error) {

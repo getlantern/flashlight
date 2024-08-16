@@ -19,8 +19,7 @@ const (
 // sender is a helper for sending post requests. If the request fails, sender calulates an
 // exponential backoff time using retryWaitSeconds and return it as the sleep time.
 type sender struct {
-	failCount      int
-	atMaxRetryWait bool
+	failCount int
 }
 
 // post posts data to the specified URL and returns the response, the sleep time in seconds, and any
@@ -37,7 +36,6 @@ func (s *sender) post(req *http.Request, rt http.RoundTripper) (*http.Response, 
 		}
 
 		s.failCount = 0
-		s.atMaxRetryWait = false
 
 		var sleepTime int64
 		if sleepVal := resp.Header.Get(common.SleepHeader); sleepVal != "" {
@@ -68,18 +66,10 @@ func (s *sender) doPost(req *http.Request, rt http.RoundTripper) (*http.Response
 
 // backoff calculates the backoff time in seconds for the next retry.
 func (s *sender) backoff() int64 {
-	if s.atMaxRetryWait {
-		// we've already reached the max wait time, so we don't need to perform the calculation again.
-		// we'll still increment the fail count to keep track of the number of failures
-		s.failCount++
-		return int64(maxRetryWait.Seconds())
-	}
-
 	wait := time.Duration(math.Pow(2, float64(s.failCount))) * retryWaitSeconds
 	s.failCount++
 
 	if wait > maxRetryWait {
-		s.atMaxRetryWait = true
 		return int64(maxRetryWait.Seconds())
 	}
 

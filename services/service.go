@@ -12,13 +12,19 @@ import (
 	"github.com/getlantern/golog"
 )
 
+const jitter = 2 * time.Minute
+
 var logger = golog.LoggerFor("flashlight.services")
 
 type StopFn func()
 
 // callRandomly continuously calls fn randomly between interval-jitter and interval+jitter, with
 // the initial call being made immediately. fn can return a positive value to extend the wait time.
-func callRandomly(
+func callRandomly(fn func() int64, interval time.Duration, done <-chan struct{}) {
+	callRandomlyWithJitter(fn, interval, jitter, done)
+}
+
+func callRandomlyWithJitter(
 	fn func() int64,
 	interval time.Duration,
 	jitter time.Duration,

@@ -26,7 +26,6 @@ const (
 	defaultConfigFilename = "proxies.conf"
 
 	defaultConfigPollInterval = 3 * time.Minute
-	defaultConfigPollJitter   = 2 * time.Minute
 )
 
 // ConfigOptions specifies the options to use for ConfigService.
@@ -44,8 +43,6 @@ type ConfigOptions struct {
 
 	// PollInterval specifies how frequently to poll for new config.
 	PollInterval time.Duration
-	// PollJitter specifies the max amount of jitter to add to the poll interval.
-	PollJitter time.Duration
 }
 
 type configService struct {
@@ -97,10 +94,6 @@ func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, err
 		opts.PollInterval = defaultConfigPollInterval
 	}
 
-	if opts.PollJitter <= 0 {
-		opts.PollJitter = defaultConfigPollJitter
-	}
-
 	logger := golog.LoggerFor("configservice")
 
 	u, err := url.Parse(opts.OriginURL)
@@ -130,7 +123,7 @@ func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, err
 		sleep, _ := _configService.fetchConfig()
 		return sleep
 	}
-	go callRandomly(fn, opts.PollInterval, opts.PollJitter, _configService.done)
+	go callRandomly(fn, opts.PollInterval, _configService.done)
 
 	return _configService.Stop, nil
 }
