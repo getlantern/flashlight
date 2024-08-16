@@ -1,6 +1,7 @@
 package proxyconfig
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -21,7 +22,7 @@ func TestInitWithSavedConfig(t *testing.T) {
 
 	withTempConfigFile(t, conf, false, func(tmpfile *os.File) {
 		Init("", false)
-		existing, _ := GetConfig(0)
+		existing, _ := GetConfig(context.Background())
 
 		want := fmt.Sprintf("%+v", conf)
 		got := fmt.Sprintf("%+v", existing)

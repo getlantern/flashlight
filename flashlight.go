@@ -1,6 +1,7 @@
 package flashlight
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"path/filepath"
@@ -507,7 +508,7 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 
 	// there might have been an existing config that was loaded before we start listening so we need
 	// to check for that and call the listener if there was
-	conf, _ := proxyconfig.GetConfig(0)
+	conf, _ := proxyconfig.GetConfig(context.Background())
 	if conf != nil {
 		fn(nil, conf)
 	}

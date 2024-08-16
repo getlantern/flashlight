@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
 
 	"github.com/getlantern/eventual/v2"
 	"github.com/getlantern/golog"
@@ -106,10 +105,7 @@ func (c *config) SetConfig(new *ProxyConfig) {
 
 // GetConfig returns the current client config. An error is returned if the config is not available
 // within the given timeout.
-func GetConfig(timeout time.Duration) (*ProxyConfig, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
+func GetConfig(ctx context.Context) (*ProxyConfig, error) {
 	conf, err := _config.config.Get(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get config: %w", err)
