@@ -20,7 +20,7 @@ import (
 
 const (
 	defaultConfigSaveDir  = ""
-	defaultConfigFilename = "proxies.conf"
+	defaultConfigFilename = "user.conf"
 )
 
 // alias for better readability.
@@ -33,7 +33,7 @@ var (
 		config: eventual.NewValue(),
 	}
 
-	log = golog.LoggerFor("proxyconfig")
+	log = golog.LoggerFor("userconfig")
 )
 
 type config struct {
