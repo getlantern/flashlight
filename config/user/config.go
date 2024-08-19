@@ -1,6 +1,6 @@
-// Package proxyconfig provides a simple way to manage client configuration. It reads and writes
+// Package userconfig provides a simple way to manage client configuration. It reads and writes
 // configuration to disk and provides a way to listen for changes.
-package proxyconfig
+package userconfig
 
 import (
 	"context"
@@ -23,8 +23,10 @@ const (
 	defaultConfigFilename = "proxies.conf"
 )
 
-// alias for better readability
-type ProxyConfig = apipb.ConfigResponse
+// alias for better readability.
+// Using "UserConfig" since "Config" and "ClientConfig" is already taken. This may change in the
+// future if they become available.
+type UserConfig = apipb.ConfigResponse
 
 var (
 	_config = &config{
@@ -35,7 +37,7 @@ var (
 )
 
 type config struct {
-	// config is the current client config as a *ProxyConfig.
+	// config is the current client config as a *UserConfig.
 	config eventual.Value
 
 	// filePath is where we should save new configs and look for existing saved configs.
@@ -44,7 +46,7 @@ type config struct {
 	obfuscate bool
 
 	// listeners is a list of functions to call when the config changes.
-	listeners []func(old, new *ProxyConfig)
+	listeners []func(old, new *UserConfig)
 	mu        sync.Mutex
 }
 
@@ -73,18 +75,18 @@ func Init(saveDir string, obfuscate bool) (*config, error) {
 }
 
 // GetConfig implements services.ConfigHandler
-func (c *config) GetConfig() *ProxyConfig {
+func (c *config) GetConfig() *UserConfig {
 	v, _ := c.config.Get(eventual.DontWait)
-	conf, _ := v.(*ProxyConfig)
+	conf, _ := v.(*UserConfig)
 	return conf
 }
 
 // SetConfig implements services.ConfigHandler
-func (c *config) SetConfig(new *ProxyConfig) {
+func (c *config) SetConfig(new *UserConfig) {
 	old := c.GetConfig()
 	updated := new
 	if old != nil {
-		updated = proto.Clone(old).(*ProxyConfig)
+		updated = proto.Clone(old).(*UserConfig)
 		if new.Proxy != nil && len(new.Proxy.Proxies) > 0 {
 			// We will always recieve the full list of proxy configs from the server if there are any
 			// changes since we don't currently have a way to inform clients to delete an individual
@@ -105,7 +107,7 @@ func (c *config) SetConfig(new *ProxyConfig) {
 
 // GetConfig returns the current client config. An error is returned if the config is not available
 // within the given timeout.
-func GetConfig(ctx context.Context) (*ProxyConfig, error) {
+func GetConfig(ctx context.Context) (*UserConfig, error) {
 	conf, err := _config.config.Get(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get config: %w", err)
@@ -116,12 +118,12 @@ func GetConfig(ctx context.Context) (*ProxyConfig, error) {
 		return nil, fmt.Errorf("config not yet set: %w", ctx.Err())
 	}
 
-	return conf.(*ProxyConfig), nil
+	return conf.(*UserConfig), nil
 }
 
 // readExistingConfig reads a config from a file at the specified path, filePath,
 // deobfuscating it if obfuscate is true.
-func readExistingConfig(filePath string, obfuscate bool) (*ProxyConfig, error) {
+func readExistingConfig(filePath string, obfuscate bool) (*UserConfig, error) {
 	infile, err := os.Open(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -147,14 +149,14 @@ func readExistingConfig(filePath string, obfuscate bool) (*ProxyConfig, error) {
 		return nil, nil
 	}
 
-	conf := &ProxyConfig{}
+	conf := &UserConfig{}
 	err = proto.Unmarshal(bytes, conf)
 	return conf, err
 }
 
 // saveConfig writes conf to a file at the specified path, filePath, obfuscating it if
 // obfuscate is true. If the file already exists, it will be overwritten.
-func saveConfig(filePath string, conf *ProxyConfig, obfuscate bool) error {
+func saveConfig(filePath string, conf *UserConfig, obfuscate bool) error {
 	in, err := proto.Marshal(conf)
 	if err != nil {
 		return fmt.Errorf("unable to marshal config: %w", err)
@@ -180,21 +182,21 @@ func saveConfig(filePath string, conf *ProxyConfig, obfuscate bool) error {
 
 // OnConfigChange registers a function to be called on config change. This allows callers to
 // respond to each change without having to constantly poll for changes.
-func OnConfigChange(fn func(old, new *ProxyConfig)) {
+func OnConfigChange(fn func(old, new *UserConfig)) {
 	_config.mu.Lock()
 	if _config.listeners == nil {
-		_config.listeners = make([]func(old, new *ProxyConfig), 0, 1)
+		_config.listeners = make([]func(old, new *UserConfig), 0, 1)
 	}
 
 	_config.listeners = append(_config.listeners, fn)
 	_config.mu.Unlock()
 }
 
-func notifyListeners(old, new *ProxyConfig) {
+func notifyListeners(old, new *UserConfig) {
 	_config.mu.Lock()
-	new = proto.Clone(new).(*ProxyConfig)
+	new = proto.Clone(new).(*UserConfig)
 	if old != nil {
-		old = proto.Clone(old).(*ProxyConfig)
+		old = proto.Clone(old).(*UserConfig)
 	}
 
 	for _, fn := range _config.listeners {

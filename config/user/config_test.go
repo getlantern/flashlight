@@ -1,4 +1,4 @@
-package proxyconfig
+package userconfig
 
 import (
 	"context"
@@ -36,7 +36,7 @@ func TestNotifyOnConfig(t *testing.T) {
 
 	withTempConfigFile(t, conf, false, func(tmpfile *os.File) {
 		called := make(chan struct{}, 1)
-		OnConfigChange(func(old, new *ProxyConfig) {
+		OnConfigChange(func(old, new *UserConfig) {
 			called <- struct{}{}
 		})
 
@@ -97,7 +97,7 @@ func TestSaveObfuscatedConfig(t *testing.T) {
 		buf, err := io.ReadAll(reader)
 		require.NoError(t, err, "unable to read obfuscated config file")
 
-		fileConf := &ProxyConfig{}
+		fileConf := &UserConfig{}
 		assert.NoError(t, proto.Unmarshal(buf, fileConf), "unable to unmarshal obfuscated config file")
 
 		want := fmt.Sprintf("%+v", conf)
@@ -106,15 +106,15 @@ func TestSaveObfuscatedConfig(t *testing.T) {
 	})
 }
 
-func newTestConfig() *ProxyConfig {
-	return &ProxyConfig{
+func newTestConfig() *UserConfig {
+	return &UserConfig{
 		Country: "Mars",
 		Ip:      "109.117.115.107",
 		Proxy:   &apipb.ConfigResponse_Proxy{},
 	}
 }
 
-func withTempConfigFile(t *testing.T, conf *ProxyConfig, obfuscate bool, f func(*os.File)) {
+func withTempConfigFile(t *testing.T, conf *UserConfig, obfuscate bool, f func(*os.File)) {
 	tmpfile, err := os.OpenFile(defaultConfigFilename, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0644)
 	require.NoError(t, err, "couldn't create temp file")
 	defer func() { // clean up

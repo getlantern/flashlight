@@ -23,7 +23,7 @@ import (
 	"github.com/getlantern/flashlight/v7/client"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/config"
-	proxyconfig "github.com/getlantern/flashlight/v7/config/proxy"
+	userconfig "github.com/getlantern/flashlight/v7/config/user"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/email"
 	"github.com/getlantern/flashlight/v7/geolookup"
@@ -479,12 +479,12 @@ func (f *Flashlight) StartBackgroundServices() (func(), error) {
 
 func (f *Flashlight) startConfigService() (services.StopFn, error) {
 	obfuscate, _ := f.flagsAsMap["readableconfig"].(bool)
-	handler, err := proxyconfig.Init(f.configDir, obfuscate)
+	handler, err := userconfig.Init(f.configDir, obfuscate)
 	if err != nil {
 		return nil, err
 	}
 
-	fn := func(old, new *proxyconfig.ProxyConfig) {
+	fn := func(old, new *userconfig.UserConfig) {
 		var country string
 		if old != nil {
 			country = old.GetCountry()
@@ -508,7 +508,7 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 
 	// there might have been an existing config that was loaded before we start listening so we need
 	// to check for that and call the listener if there was
-	conf, _ := proxyconfig.GetConfig(context.Background())
+	conf, _ := userconfig.GetConfig(context.Background())
 	if conf != nil {
 		fn(nil, conf)
 	}
@@ -518,7 +518,7 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 		return func() {}, nil
 	}
 
-	proxyconfig.OnConfigChange(fn)
+	userconfig.OnConfigChange(fn)
 
 	var url string
 	if cloudURL, _ := f.flagsAsMap["cloudconfig"].(string); cloudURL != "" {

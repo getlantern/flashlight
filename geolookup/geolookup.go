@@ -8,7 +8,7 @@ import (
 	"github.com/getlantern/eventual/v2"
 	"github.com/getlantern/golog"
 
-	proxyconfig "github.com/getlantern/flashlight/v7/config/proxy"
+	userconfig "github.com/getlantern/flashlight/v7/config/user"
 )
 
 var (
@@ -23,7 +23,7 @@ var (
 )
 
 func init() {
-	proxyconfig.OnConfigChange(func(old, new *proxyconfig.ProxyConfig) {
+	userconfig.OnConfigChange(func(old, new *userconfig.UserConfig) {
 		oldCountry, _ := country.Get(eventual.DontWait)
 		oldIP, _ := ip.Get(eventual.DontWait)
 
