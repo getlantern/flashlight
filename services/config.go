@@ -211,15 +211,15 @@ func (cs *configService) newRequest() (*http.Request, error) {
 		proxies = conf.GetProxy().GetProxies()
 	}
 
-	ids := make([]string, len(proxies))
+	names := make([]string, len(proxies))
 	for _, proxy := range proxies {
-		ids = append(ids, proxy.Name)
+		names = append(names, proxy.Name)
 	}
 
 	confReq := &apipb.ConfigRequest{
 		ClientInfo: cs.clientInfo,
 		Proxy: &apipb.ConfigRequest_Proxy{
-			Ids:         ids,
+			Names:       names,
 			LastRequest: timestamppb.New(cs.lastFetched),
 		},
 	}

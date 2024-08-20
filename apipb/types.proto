@@ -23,7 +23,7 @@ message ConfigRequest {
     string ip  = 6; // clients ip address
   }
   message Proxy {
-    repeated string ids = 1; // list of proxy ids
+    repeated string names = 1; // list of proxy ids
     google.protobuf.Timestamp last_request = 2; // last time client requested proxy config
   }
 }
