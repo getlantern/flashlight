@@ -43,6 +43,7 @@ type ProviderConfig struct {
 	Validator           *ValidatorConfig
 	PassthroughPatterns []string
 	FrontingSNIs        map[string]*fronted.SNIConfig
+	VerifyHostname      *string
 }
 
 // returns a fronted.ResponseValidator specified by the
@@ -111,6 +112,7 @@ func (c *ClientConfig) FrontedProviders() map[string]*fronted.Provider {
 			p.GetResponseValidator(pid),
 			p.PassthroughPatterns,
 			sniConfig,
+			p.VerifyHostname,
 		)
 	}
 	return providers
