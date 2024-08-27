@@ -87,7 +87,7 @@ func TestGenerateConfig(t *testing.T) {
 			name: "should generate config with success even with cloudfront disabled",
 			setup: func() *ConfigGenerator {
 				configGenerator := NewConfigGenerator()
-				configGenerator.Providers["cloudfronte"].Enabled = false
+				configGenerator.Providers["cloudfront"].Enabled = false
 				configGenerator.Providers["akamai"].Enabled = true
 				return configGenerator
 			},
