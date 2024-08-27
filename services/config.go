@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/getlantern/detour"
-	"github.com/getlantern/golog"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -93,8 +92,6 @@ func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, err
 	if opts.PollInterval <= 0 {
 		opts.PollInterval = defaultConfigPollInterval
 	}
-
-	logger := golog.LoggerFor("configservice")
 
 	u, err := url.Parse(opts.OriginURL)
 	if err != nil {

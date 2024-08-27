@@ -1,7 +1,6 @@
 package flashlight
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"path/filepath"
@@ -12,6 +11,7 @@ import (
 	"github.com/getlantern/detour"
 	"github.com/getlantern/dnsgrab"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/eventual/v2"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/netx"
@@ -508,7 +508,7 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 
 	// there might have been an existing config that was loaded before we start listening so we need
 	// to check for that and call the listener if there was
-	conf, _ := userconfig.GetConfig(context.Background())
+	conf, _ := userconfig.GetConfig(eventual.DontWait)
 	if conf != nil {
 		fn(nil, conf)
 	}
