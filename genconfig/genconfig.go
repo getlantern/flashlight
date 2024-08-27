@@ -38,7 +38,7 @@ import (
 const (
 	ftVersionFile     = `https://raw.githubusercontent.com/firetweet/downloads/master/version.txt`
 	defaultDeviceID   = "555"
-	defaultProviderID = "akamai"
+	defaultProviderID = "cloudfront"
 )
 
 var (
@@ -529,7 +529,7 @@ func (c *ConfigGenerator) buildModel(configName string, cas map[string]*castat) 
 	}
 	sort.Sort(ByTotal(casList))
 
-	cfMasquerades := c.Providers[defaultProviderID].Masquerades
+	cfMasquerades := c.Providers[defaultDeviceID].Masquerades
 	if len(cfMasquerades) == 0 {
 		return nil, fmt.Errorf("%s: configuration contains no cloudfront masquerades for older clients.", configName)
 	}
