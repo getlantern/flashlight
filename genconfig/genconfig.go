@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"crypto/x509"
 	_ "embed"
 	"encoding/base64"
@@ -36,7 +38,7 @@ import (
 const (
 	ftVersionFile     = `https://raw.githubusercontent.com/firetweet/downloads/master/version.txt`
 	defaultDeviceID   = "555"
-	defaultProviderID = "cloudfront"
+	defaultProviderID = "akamai"
 )
 
 var (
@@ -59,34 +61,48 @@ var (
 
 	blacklist    = make(filter)
 	proxiedSites = make(filter)
-	ftVersion    string
-
-	inputCh       = make(chan string)
-	masqueradesCh = make(chan *masquerade)
-	wg            sync.WaitGroup
-	providers     map[string]*provider // supported fronting providers
 )
+
+type ConfigGenerator struct {
+	ftVersion string
+
+	inputCh       chan string
+	masqueradesCh chan *masquerade
+	wg            sync.WaitGroup
+	Providers     map[string]*provider // supported fronting providers
+}
+
+func NewConfigGenerator() *ConfigGenerator {
+	return &ConfigGenerator{
+		inputCh:       make(chan string),
+		masqueradesCh: make(chan *masquerade),
+		Providers:     loadMapping(),
+		wg:            sync.WaitGroup{},
+	}
+}
 
 //go:embed provider_map.yaml
 var mappingData []byte
 
-func populateProviders() {
+func loadMapping() map[string]*provider {
 	var mapping map[string]ProviderConfig
 	err := yaml.Unmarshal(mappingData, &mapping)
 	if err != nil {
-		panic(fmt.Sprintf("Mapping file is invalid: %v", err))
+		panic(fmt.Errorf("mapping file is invalid: %w", err))
 	}
-	providers = make(map[string]*provider)
+	providers := make(map[string]*provider)
 	for name, p := range mapping {
-		providers[name] = newProvider(p.Ping, p.Mapping, p.FrontingSNIs, &config.ValidatorConfig{RejectStatus: []int{p.RejectStatus}})
+		providers[name] = newProvider(p.Ping, p.Mapping, p.FrontingSNIs, &config.ValidatorConfig{RejectStatus: []int{p.RejectStatus}}, p.VerifyHostname)
 	}
+	return providers
 }
 
 type ProviderConfig struct {
-	Ping         string                        `yaml:"ping"`
-	RejectStatus int                           `yaml:"rejectStatus"`
-	Mapping      map[string]string             `yaml:"mapping"`
-	FrontingSNIs map[string]*fronted.SNIConfig `yaml:"frontingsnis"`
+	Ping           string                        `yaml:"ping"`
+	RejectStatus   int                           `yaml:"rejectStatus"`
+	Mapping        map[string]string             `yaml:"mapping"`
+	FrontingSNIs   map[string]*fronted.SNIConfig `yaml:"frontingsnis"`
+	VerifyHostname *string                       `yaml:"verifyHostname"`
 }
 
 type filter map[string]bool
@@ -106,21 +122,23 @@ type castat struct {
 }
 
 type provider struct {
-	HostAliases  map[string]string
-	TestURL      string
-	Masquerades  []*masquerade
-	Validator    *config.ValidatorConfig
-	Enabled      bool
-	FrontingSNIs map[string]*fronted.SNIConfig
+	HostAliases    map[string]string
+	TestURL        string
+	Masquerades    []*masquerade
+	Validator      *config.ValidatorConfig
+	Enabled        bool
+	FrontingSNIs   map[string]*fronted.SNIConfig
+	VerifyHostname *string
 }
 
-func newProvider(testURL string, hosts map[string]string, frontingSNIs map[string]*fronted.SNIConfig, validator *config.ValidatorConfig) *provider {
+func newProvider(testURL string, hosts map[string]string, frontingSNIs map[string]*fronted.SNIConfig, validator *config.ValidatorConfig, verifyHostname *string) *provider {
 	return &provider{
-		HostAliases:  hosts,
-		TestURL:      testURL,
-		Masquerades:  make([]*masquerade, 0),
-		Validator:    validator,
-		FrontingSNIs: frontingSNIs,
+		HostAliases:    hosts,
+		TestURL:        testURL,
+		Masquerades:    make([]*masquerade, 0),
+		Validator:      validator,
+		FrontingSNIs:   frontingSNIs,
+		VerifyHostname: verifyHostname,
 	}
 }
 
@@ -135,6 +153,24 @@ func (ss *stringsFlag) Set(value string) error {
 	return nil
 }
 
+func (c *ConfigGenerator) GenerateConfig(ctx context.Context, yamlTmpl string, masquerades []string, proxiedSites, blacklist filter, numberOfWorkers int, minFreq float64, minMasquerades, maxMasquerades int) ([]byte, error) {
+	if err := c.loadFtVersion(); err != nil {
+		return nil, err
+	}
+
+	go c.feedMasquerades()
+	cas, masqs := c.coalesceMasquerades()
+	if err := c.vetAndAssignMasquerades(cas, masqs, minMasquerades, maxMasquerades, numberOfWorkers); err != nil {
+		return nil, err
+	}
+
+	model, err := c.buildModel("cloud.yaml", cas)
+	if err != nil {
+		return nil, fmt.Errorf("invalid configuration: %w", err)
+	}
+	return generateTemplate(model, yamlTmpl)
+}
+
 func main() {
 	flag.Var(&masqueradesInFiles, "masquerades", "Path to file containing list of masquerades to use, with one space-separated 'ip domain provider' set per line (e.g. masquerades.txt)")
 	flag.Var(&enabledProviders, "enable-provider", "Enable fronting provider")
@@ -146,13 +182,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	populateProviders()
+	generator := NewConfigGenerator()
 	numcores := runtime.NumCPU()
 	log.Debugf("Using all %d cores on machine", numcores)
 	runtime.GOMAXPROCS(numcores)
 
 	for _, pid := range enabledProviders {
-		p, ok := providers[pid]
+		p, ok := generator.Providers[pid]
 		if !ok {
 			log.Fatalf("Invalid/Unknown fronting provider: %s", pid)
 		}
@@ -162,25 +198,16 @@ func main() {
 	loadMasquerades()
 	loadProxiedSitesList()
 	loadBlacklist()
-	loadFtVersion()
 
 	yamlTmpl := string(embeddedconfig.GlobalTemplate)
-
-	go feedMasquerades()
-	cas, masqs := coalesceMasquerades()
-	vetAndAssignMasquerades(cas, masqs)
-
-	tempConfigDir, err := os.MkdirTemp("", "genconfig")
+	template, err := generator.GenerateConfig(context.Background(), yamlTmpl, masquerades, proxiedSites, blacklist, *numberOfWorkers, *minFreq, *minMasquerades, *maxMasquerades)
 	if err != nil {
-		log.Fatalf("Unable to create temp configdir: %v", tempConfigDir)
+		log.Fatalf("Error generating configuration: %s", err)
 	}
-	defer os.RemoveAll(tempConfigDir)
 
-	model, err := buildModel(tempConfigDir, "cloud.yaml", cas)
-	if err != nil {
-		log.Fatalf("Invalid configuration: %s", err)
+	if err := os.WriteFile("cloud.yaml", template, 0644); err != nil {
+		log.Fatalf("Error writing configuration: %s", err)
 	}
-	generateTemplate(model, yamlTmpl, "cloud.yaml")
 }
 
 func loadMasquerades() {
@@ -239,22 +266,21 @@ func loadProxiedSitesList() {
 	}
 }
 
-func loadFtVersion() {
+func (c *ConfigGenerator) loadFtVersion() error {
 	res, err := http.Get(ftVersionFile)
 	if err != nil {
-		log.Fatalf("Error fetching FireTweet version file: %s", err)
+		return fmt.Errorf("error fetching FireTweet version file: %w", err)
 	}
 
 	defer func() {
-		if err := res.Body.Close(); err != nil {
-			log.Debugf("Error closing response body: %v", err)
-		}
+		_ = res.Body.Close()
 	}()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatalf("Could not read FT version file: %s", err)
+		return fmt.Errorf("could not read FT version file: %w", err)
 	}
-	ftVersion = strings.TrimSpace(string(body))
+	c.ftVersion = strings.TrimSpace(string(body))
+	return nil
 }
 
 func loadBlacklist() {
@@ -280,10 +306,10 @@ func loadTemplate(name string) string {
 	return string(bytes)
 }
 
-func feedMasquerades() {
-	wg.Add(*numberOfWorkers)
+func (c *ConfigGenerator) feedMasquerades() {
+	c.wg.Add(*numberOfWorkers)
 	for i := 0; i < *numberOfWorkers; i++ {
-		go grabCerts()
+		go c.grabCerts()
 	}
 
 	// feed masquerades in random order to get different order each time we run
@@ -291,20 +317,20 @@ func feedMasquerades() {
 	for _, i := range randomOrder {
 		masq := masquerades[i]
 		if masq != "" {
-			inputCh <- masq
+			c.inputCh <- masq
 		}
 	}
-	close(inputCh)
-	wg.Wait()
-	close(masqueradesCh)
+	close(c.inputCh)
+	c.wg.Wait()
+	close(c.masqueradesCh)
 }
 
 // grabCerts grabs certificates for the masquerades received on masqueradesCh and sends
 // *masquerades to masqueradesCh.
-func grabCerts() {
-	defer wg.Done()
+func (c *ConfigGenerator) grabCerts() {
+	defer c.wg.Done()
 
-	for masq := range inputCh {
+	for masq := range c.inputCh {
 		parts := strings.Split(masq, " ")
 		var providerID string
 		if len(parts) == 2 {
@@ -316,7 +342,7 @@ func grabCerts() {
 			continue
 		}
 
-		provider, ok := providers[providerID]
+		provider, ok := c.Providers[providerID]
 		if !ok {
 			log.Debugf("Skipping masquerade for unknown provider %s", providerID)
 			continue
@@ -356,7 +382,7 @@ func grabCerts() {
 		}
 
 		log.Debugf("Successfully grabbed certs for: %v", domain)
-		masqueradesCh <- &masquerade{
+		c.masqueradesCh <- &masquerade{
 			Domain:     domain,
 			IpAddress:  ip,
 			ProviderID: providerID,
@@ -365,11 +391,11 @@ func grabCerts() {
 	}
 }
 
-func coalesceMasquerades() (map[string]*castat, []*masquerade) {
+func (c *ConfigGenerator) coalesceMasquerades() (map[string]*castat, []*masquerade) {
 	count := make(map[string]int) // by provider
 	allCAs := make(map[string]*castat)
 	allMasquerades := make([]*masquerade, 0)
-	for m := range masqueradesCh {
+	for m := range c.masqueradesCh {
 		ca := allCAs[m.RootCA.Cert]
 		if ca == nil {
 			ca = m.RootCA
@@ -408,13 +434,13 @@ func coalesceMasquerades() (map[string]*castat, []*masquerade) {
 	return trustedCAs, trustedMasquerades
 }
 
-func vetAndAssignMasquerades(cas map[string]*castat, masquerades []*masquerade) {
+func (c *ConfigGenerator) vetAndAssignMasquerades(cas map[string]*castat, masquerades []*masquerade, minMasquerades, maxMasquerades, numOfWorkers int) error {
 	byProvider := make(map[string][]*masquerade, 0)
 	for _, m := range masquerades {
 		byProvider[m.ProviderID] = append(byProvider[m.ProviderID], m)
 	}
 	for pid, candidates := range byProvider {
-		provider, ok := providers[pid]
+		provider, ok := c.Providers[pid]
 		if !ok {
 			log.Debugf("Not vetting masquerades for unknown provider %s", pid)
 			continue
@@ -422,15 +448,17 @@ func vetAndAssignMasquerades(cas map[string]*castat, masquerades []*masquerade) 
 		if !provider.Enabled {
 			log.Debugf("Not vetting masquerades for disabled provider %s", pid)
 		}
-		vetted := vetMasquerades(cas, candidates)
-		if len(vetted) < *minMasquerades {
-			log.Fatalf("%s: %d masquerades was fewer than minimum of %d", pid, len(vetted), *minMasquerades)
+		vetted := c.vetMasquerades(cas, candidates, numOfWorkers, maxMasquerades)
+		if len(vetted) < minMasquerades {
+			log.Fatalf("%s: %d masquerades was fewer than minimum of %d", pid, len(vetted), minMasquerades)
+			return fmt.Errorf("%s: %d masquerades was fewer than minimum of %d", pid, len(vetted), minMasquerades)
 		}
 		provider.Masquerades = vetted
 	}
+	return nil
 }
 
-func vetMasquerades(cas map[string]*castat, masquerades []*masquerade) []*masquerade {
+func (c *ConfigGenerator) vetMasquerades(cas map[string]*castat, masquerades []*masquerade, numberOfWorkers int, maxMasquerades int) []*masquerade {
 	certPool := x509.NewCertPool()
 	for _, ca := range cas {
 		cert, err := keyman.LoadCertificateFromPEMBytes([]byte(strings.Replace(ca.Cert, `\n`, "\n", -1)))
@@ -442,7 +470,7 @@ func vetMasquerades(cas map[string]*castat, masquerades []*masquerade) []*masque
 		log.Debug("Added cert to pool")
 	}
 
-	wg.Add(*numberOfWorkers)
+	c.wg.Add(numberOfWorkers)
 	inCh := make(chan *masquerade, len(masquerades))
 	outCh := make(chan *masquerade, len(masquerades))
 	for _, masquerade := range masquerades {
@@ -450,26 +478,26 @@ func vetMasquerades(cas map[string]*castat, masquerades []*masquerade) []*masque
 	}
 	close(inCh)
 
-	for i := 0; i < *numberOfWorkers; i++ {
-		go doVetMasquerades(certPool, inCh, outCh)
+	for i := 0; i < numberOfWorkers; i++ {
+		go c.doVetMasquerades(certPool, inCh, outCh)
 	}
 
-	wg.Wait()
+	c.wg.Wait()
 	close(outCh)
 
-	result := make([]*masquerade, 0, *maxMasquerades)
+	result := make([]*masquerade, 0, maxMasquerades)
 	count := 0
 	for masquerade := range outCh {
 		result = append(result, masquerade)
 		count++
-		if count == *maxMasquerades {
+		if count == maxMasquerades {
 			break
 		}
 	}
 	return result
 }
 
-func doVetMasquerades(certPool *x509.CertPool, inCh chan *masquerade, outCh chan *masquerade) {
+func (c *ConfigGenerator) doVetMasquerades(certPool *x509.CertPool, inCh chan *masquerade, outCh chan *masquerade) {
 	log.Debug("Starting to vet masquerades")
 	for _m := range inCh {
 		m := &fronted.Masquerade{
@@ -477,7 +505,7 @@ func doVetMasquerades(certPool *x509.CertPool, inCh chan *masquerade, outCh chan
 			IpAddress: _m.IpAddress,
 		}
 
-		provider, ok := providers[_m.ProviderID]
+		provider, ok := c.Providers[_m.ProviderID]
 		if !ok {
 			log.Debugf("%v (%v) failed to vet: unknown provider %v", m.Domain, m.IpAddress, _m.ProviderID)
 			continue
@@ -491,17 +519,17 @@ func doVetMasquerades(certPool *x509.CertPool, inCh chan *masquerade, outCh chan
 		}
 	}
 	log.Debug("Done vetting masquerades")
-	wg.Done()
+	c.wg.Done()
 }
 
-func buildModel(configDir string, configName string, cas map[string]*castat) (map[string]interface{}, error) {
+func (c *ConfigGenerator) buildModel(configName string, cas map[string]*castat) (map[string]interface{}, error) {
 	casList := make([]*castat, 0, len(cas))
 	for _, ca := range cas {
 		casList = append(casList, ca)
 	}
 	sort.Sort(ByTotal(casList))
 
-	cfMasquerades := providers[defaultProviderID].Masquerades
+	cfMasquerades := c.Providers[defaultProviderID].Masquerades
 	if len(cfMasquerades) == 0 {
 		return nil, fmt.Errorf("%s: configuration contains no cloudfront masquerades for older clients.", configName)
 	}
@@ -509,7 +537,7 @@ func buildModel(configDir string, configName string, cas map[string]*castat) (ma
 	aliased := make(map[string]bool)
 
 	enabledProviders := make(map[string]*provider)
-	for k, v := range providers {
+	for k, v := range c.Providers {
 		if v.Enabled {
 			if len(v.Masquerades) > 0 {
 				sort.Sort(ByDomain(v.Masquerades))
@@ -542,30 +570,22 @@ func buildModel(configDir string, configName string, cas map[string]*castat) (ma
 		"cloudfrontMasquerades": cfMasquerades,
 		"providers":             enabledProviders,
 		"proxiedsites":          ps,
-		"ftVersion":             ftVersion,
+		"ftVersion":             c.ftVersion,
 	}, nil
 }
 
-func generateTemplate(model map[string]interface{}, tmplString string, filename string) {
-	tmpl, err := template.New(filename).Funcs(funcMap).Parse(tmplString)
+func generateTemplate(model map[string]interface{}, tmplString string) ([]byte, error) {
+	tmpl, err := template.New("").Funcs(funcMap).Parse(tmplString)
 	if err != nil {
 		log.Errorf("Unable to parse template: %s", err)
-		return
+		return []byte{}, err
 	}
-	out, err := os.Create(filename)
+	var out bytes.Buffer
+	err = tmpl.Execute(&out, model)
 	if err != nil {
-		log.Errorf("Unable to create %s: %s", filename, err)
-		return
+		log.Errorf("Unable to generate: %s", err)
 	}
-	defer func() {
-		if err := out.Close(); err != nil {
-			log.Debugf("Error closing file: %v", err)
-		}
-	}()
-	err = tmpl.Execute(out, model)
-	if err != nil {
-		log.Errorf("Unable to generate %s: %s", filename, err)
-	}
+	return out.Bytes(), nil
 }
 
 func run(prg string, args ...string) (string, error) {
