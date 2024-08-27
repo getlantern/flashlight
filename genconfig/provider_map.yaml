@@ -26,6 +26,7 @@ cloudfront:
 akamai:
   ping: 'https://fronted-ping.dsa.akamai.getiantem.org/ping'
   rejectStatus: 403
+  verifyHostname: "akamai.com"
   mapping:
     iantem.io: nonexistent.iantem.io
     api.getiantem.org: api.dsa.akamai.getiantem.org

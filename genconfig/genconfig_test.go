@@ -33,8 +33,6 @@ func TestGenerateConfig(t *testing.T) {
 	blacklist := make(filter)
 
 	loadFilterList(blacklistTest, &blacklist)
-	//loadProxiedSitesList()
-	//loadBlacklist()
 
 	var tests = []struct {
 		name                 string
@@ -73,6 +71,8 @@ func TestGenerateConfig(t *testing.T) {
 				assert.Contains(t, globalConfig.Client.Fronted.Providers, "cloudfront")
 				assert.Contains(t, globalConfig.Client.Fronted.Providers, "akamai")
 				assert.Contains(t, globalConfig.Client.MasqueradeSets, "cloudfront")
+				assert.NotNil(t, globalConfig.Client.Fronted.Providers["akamai"].VerifyHostname)
+				assert.Equal(t, *globalConfig.Client.Fronted.Providers["akamai"].VerifyHostname, "akamai.com")
 			},
 			setup: func() *ConfigGenerator {
 				generator := NewConfigGenerator()
@@ -115,6 +115,7 @@ func TestGenerateConfig(t *testing.T) {
 				assert.Len(t, globalConfig.Client.MasqueradeSets["cloudfront"], 2)
 				assert.NotContains(t, globalConfig.Client.Fronted.Providers, "cloudfront")
 				assert.Contains(t, globalConfig.Client.Fronted.Providers, "akamai")
+				assert.NotNil(t, globalConfig.Client.Fronted.Providers["akamai"].VerifyHostname)
 			},
 		},
 	}

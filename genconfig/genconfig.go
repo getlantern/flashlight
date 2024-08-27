@@ -102,7 +102,7 @@ type ProviderConfig struct {
 	RejectStatus   int                           `yaml:"rejectStatus"`
 	Mapping        map[string]string             `yaml:"mapping"`
 	FrontingSNIs   map[string]*fronted.SNIConfig `yaml:"frontingsnis"`
-	VerifyHostname *string                       `yaml:"verifyHostname"`
+	VerifyHostname *string                       `yaml:"verifyHostname,omitempty"`
 }
 
 type filter map[string]bool
