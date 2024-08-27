@@ -529,7 +529,7 @@ func (c *ConfigGenerator) buildModel(configName string, cas map[string]*castat) 
 	}
 	sort.Sort(ByTotal(casList))
 
-	cfMasquerades := c.Providers[defaultDeviceID].Masquerades
+	cfMasquerades := c.Providers[defaultProviderID].Masquerades
 	if len(cfMasquerades) == 0 {
 		return nil, fmt.Errorf("%s: configuration contains no cloudfront masquerades for older clients.", configName)
 	}
