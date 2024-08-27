@@ -9,9 +9,7 @@ import (
 )
 
 const (
-	// for historical reasons, if a provider is unspecified in a masquerade, it
-	// is treated as a cloudfront masquerade (which was once the only provider)
-	DefaultFrontedProviderID = "cloudfront"
+	DefaultFrontedProviderID = "akamai"
 )
 
 // ClientConfig captures configuration information for a Client
