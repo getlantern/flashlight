@@ -19,8 +19,9 @@ import (
 )
 
 const (
-	defaultConfigSaveDir  = ""
-	defaultConfigFilename = "user.conf"
+	defaultConfigSaveDir = ""
+	// TODO: change to "user.conf". Temporarily using proxy.conf to match github actions build tests
+	defaultConfigFilename = "proxy.conf"
 )
 
 // alias for better readability.
@@ -69,6 +70,7 @@ func Init(saveDir string, obfuscate bool) (*config, error) {
 		return _config, nil // no saved config
 	}
 
+	log.Debugf("Loaded saved config: %v", saved)
 	_config.config.Set(saved)
 	notifyListeners(nil, saved)
 	return _config, nil

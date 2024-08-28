@@ -20,12 +20,7 @@ import (
 	"github.com/getlantern/flashlight/v7/ops"
 )
 
-const (
-	defaultConfigSaveDir  = ""
-	defaultConfigFilename = "proxies.conf"
-
-	defaultConfigPollInterval = 3 * time.Minute
-)
+const defaultConfigPollInterval = 3 * time.Minute
 
 // ConfigOptions specifies the options to use for ConfigService.
 type ConfigOptions struct {

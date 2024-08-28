@@ -515,6 +515,7 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 
 	// we don't need to start the config service if sticky is set so just return
 	if sticky, _ := f.flagsAsMap["stickyconfig"].(bool); sticky {
+		log.Debug("Sticky config set, not starting config service")
 		return func() {}, nil
 	}
 
