@@ -21,7 +21,7 @@ import (
 const (
 	defaultConfigSaveDir = ""
 	// TODO: change to "user.conf". Temporarily using proxy.conf to match github actions build tests
-	defaultConfigFilename = "proxy.conf"
+	defaultConfigFilename = "user.conf"
 )
 
 // alias for better readability.
