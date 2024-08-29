@@ -43,7 +43,7 @@ type ProviderConfig struct {
 	Validator           *ValidatorConfig
 	PassthroughPatterns []string
 	FrontingSNIs        map[string]*fronted.SNIConfig
-	VerifyHostname      *string
+	VerifyHostname      *string `yaml:"verifyHostname,omitempty"`
 }
 
 // returns a fronted.ResponseValidator specified by the
