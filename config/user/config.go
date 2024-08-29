@@ -64,9 +64,11 @@ func Init(saveDir string, obfuscate bool) (*config, error) {
 	saved, err := readExistingConfig(_config.filePath, obfuscate)
 	if err != nil {
 		log.Error(err)
+		return nil, err
 	}
 
 	if saved == nil {
+		log.Debug("No existing userconfig found")
 		return _config, nil // no saved config
 	}
 
@@ -152,8 +154,11 @@ func readExistingConfig(filePath string, obfuscate bool) (*UserConfig, error) {
 	}
 
 	conf := &UserConfig{}
-	err = proto.Unmarshal(bytes, conf)
-	return conf, err
+	if err = proto.Unmarshal(bytes, conf); err != nil {
+		return nil, err
+	}
+
+	return conf, nil
 }
 
 // saveConfig writes conf to a file at the specified path, filePath, obfuscating it if
