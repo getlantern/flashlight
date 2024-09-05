@@ -115,7 +115,7 @@ func newTestConfig() *UserConfig {
 }
 
 func withTempConfigFile(t *testing.T, conf *UserConfig, obfuscate bool, f func(*os.File)) {
-	tmpfile, err := os.OpenFile(defaultConfigFilename, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0644)
+	tmpfile, err := os.OpenFile(DefaultConfigFilename, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0644)
 	require.NoError(t, err, "couldn't create temp file")
 	defer func() { // clean up
 		tmpfile.Close()

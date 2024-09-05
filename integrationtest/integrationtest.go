@@ -5,7 +5,6 @@ package integrationtest
 import (
 	"compress/gzip"
 	"context"
-	"crypto/sha256"
 	"crypto/tls"
 	_ "embed"
 	"encoding/binary"
@@ -13,7 +12,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -23,14 +22,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/common/config"
 	"github.com/getlantern/golog"
 	hproxy "github.com/getlantern/http-proxy-lantern/v2"
 	"github.com/getlantern/tlsdefaults"
 	"github.com/getlantern/waitforserver"
-	"github.com/getlantern/yaml"
+	"google.golang.org/protobuf/proto"
 
+	"github.com/getlantern/flashlight/v7/apipb"
 	"github.com/getlantern/flashlight/v7/client"
+	userconfig "github.com/getlantern/flashlight/v7/config/user"
 )
 
 const (
@@ -89,7 +89,8 @@ type Helper struct {
 // origins are served through the proxy. Make sure to close the Helper with
 // Close() when finished with the test.
 func NewHelper(t *testing.T, basePort int) (*Helper, error) {
-	ConfigDir, err := ioutil.TempDir("", "integrationtest_helper")
+	tempFile, err := os.CreateTemp("", "integrationtest_helper")
+	ConfigDir := tempFile.Name()
 	log.Debugf("ConfigDir is %v", ConfigDir)
 	if err != nil {
 		return nil, err
@@ -150,7 +151,7 @@ func NewHelper(t *testing.T, basePort int) (*Helper, error) {
 	// We have to write out a config file so that Lantern doesn't try to use the
 	// default config, which would go to some remote proxies that can't talk to
 	// our fake config server.
-	err = helper.writeConfig()
+	err = helper.writeUserConfigFile()
 	if err != nil {
 		helper.Close()
 		return nil, err
@@ -200,7 +201,7 @@ func serveContent(resp http.ResponseWriter, req *http.Request) {
 }
 
 func (helper *Helper) startProxyServer() error {
-	kcpConfFile, err := ioutil.TempFile("", "")
+	kcpConfFile, err := os.CreateTemp("", "")
 	if err != nil {
 		return err
 	}
@@ -305,7 +306,7 @@ func (helper *Helper) serveConfig() func(http.ResponseWriter, *http.Request) {
 		if strings.Contains(req.URL.String(), "global") {
 			helper.writeGlobalConfig(resp, req)
 		} else if strings.Contains(req.URL.String(), "prox") {
-			helper.writeProxyConfig(resp, req)
+			helper.writeUserConfigResponse(resp, req)
 		} else {
 			log.Errorf("Not requesting global or proxies in %v", req.URL.String())
 			resp.WriteHeader(http.StatusBadRequest)
@@ -333,134 +334,152 @@ func (helper *Helper) writeGlobalConfig(resp http.ResponseWriter, req *http.Requ
 	w.Close()
 }
 
-func (helper *Helper) writeProxyConfig(resp http.ResponseWriter, req *http.Request) {
-	log.Debug("Writing proxy config")
-	proto := helper.protocol.Load().(string)
-	cfg, err := helper.buildProxies(proto)
+func (helper *Helper) writeUserConfigResponse(resp http.ResponseWriter, req *http.Request) {
+	log.Debug("Writing config to response")
+
+	protocol := helper.protocol.Load().(string)
+	userCfg, err := helper.buildUserConfig([]string{protocol})
 	if err != nil {
 		helper.t.Error(err)
 		resp.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	out, err := yaml.Marshal(cfg)
+
+	out, err := proto.Marshal(userCfg)
 	if err != nil {
 		helper.t.Error(err)
 		resp.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	etag := fmt.Sprintf("%x", sha256.Sum256(out))
-	if req.Header.Get(IfNoneMatch) == etag {
-		resp.WriteHeader(http.StatusNotModified)
+	cfg, err := readConfigRequest(req)
+	if err != nil {
+		helper.t.Error(err)
+		resp.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	resp.Header().Set(Etag, etag)
-	resp.WriteHeader(http.StatusOK)
+	// check if proxy config sent by the client is different than the one we want to send
+	newProxies := userCfg.GetProxy().GetProxies()
+	oldProxyNames := cfg.GetProxy().Names
+	if len(newProxies) != len(oldProxyNames) {
+		resp.WriteHeader(http.StatusOK)
+		if _, err = resp.Write(out); err != nil {
+			helper.t.Error(err)
+		}
 
-	w := gzip.NewWriter(resp)
-	_, err = w.Write(out)
-	if err != nil {
+		return
+	}
+
+	for i, p := range newProxies {
+		if p.Name != oldProxyNames[i] {
+			resp.WriteHeader(http.StatusOK)
+			if _, err = resp.Write(out); err != nil {
+				helper.t.Error(err)
+			}
+
+			return
+		}
+	}
+
+	// if we got here, the proxies are the same
+	resp.WriteHeader(http.StatusNoContent)
+	if _, err = resp.Write(out); err != nil {
 		helper.t.Error(err)
 	}
-	w.Close()
 }
 
-func (helper *Helper) writeConfig() error {
-	filename := filepath.Join(helper.ConfigDir, "proxies.yaml")
-	proto := helper.protocol.Load().(string)
-	cfg, err := helper.buildProxies(proto)
+func readConfigRequest(req *http.Request) (*apipb.ConfigRequest, error) {
+	buf, err := io.ReadAll(req.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var cfg apipb.ConfigRequest
+	if err = proto.Unmarshal(buf, &cfg); err != nil {
+		return nil, err
+	}
+
+	return &cfg, nil
+}
+
+func (helper *Helper) writeUserConfigFile() error {
+	log.Debug("Writing config to file")
+	protocol := helper.protocol.Load().(string)
+	cfg, err := helper.buildUserConfig([]string{protocol})
 	if err != nil {
 		return err
 	}
-	out, err := yaml.Marshal(cfg)
+
+	out, err := proto.Marshal(cfg)
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(filename, out, 0644)
+
+	filename := filepath.Join(helper.ConfigDir, userconfig.DefaultConfigFilename)
+	return os.WriteFile(filename, out, 0644)
 }
 
-func (helper *Helper) buildProxies(proto string) (map[string]*config.ProxyConfig, error) {
-	protos := strings.Split(proto, ",")
-	// multipath
-	if len(protos) > 1 {
-		proxies := make(map[string]*config.ProxyConfig)
-		for _, p := range protos {
-			cfgs, err := helper.buildProxies(p)
-			if err != nil {
-				return nil, err
-			}
-			for name, cfg := range cfgs {
-				cfg.MultipathEndpoint = "multipath-endpoint"
-				proxies[name] = cfg
-			}
+func (helper *Helper) buildUserConfig(protos []string) (*apipb.ConfigResponse, error) {
+	protoCfg := make([]*apipb.ProxyConnectConfig, 0, len(protos))
+	for _, proto := range protos {
+		p, err := helper.buildProxy(proto)
+		if err != nil {
+			return nil, err
 		}
-		return proxies, nil
+
+		protoCfg = append(protoCfg, p)
 	}
-	var srv config.ProxyConfig
-	err := yaml.Unmarshal(proxiesTemplate, &srv)
+
+	return &apipb.ConfigResponse{
+		ProToken: Token,
+		Country:  "CN",
+		Ip:       "1.1.1.1",
+		Proxy: &apipb.ConfigResponse_Proxy{
+			Proxies: protoCfg,
+		},
+	}, nil
+}
+
+func (helper *Helper) buildProxy(proto string) (*apipb.ProxyConnectConfig, error) {
+	cert, err := os.ReadFile(CertFile)
 	if err != nil {
-		return nil, fmt.Errorf("could not unmarshal config %v", err)
+		return nil, fmt.Errorf("could not read cert %v", err)
 	}
 
-	srv.AuthToken = Token
+	conf := &apipb.ProxyConnectConfig{
+		Name:      "AshKetchumAll",
+		AuthToken: Token,
+		CertPem:   cert,
+	}
 
-	cert, err2 := ioutil.ReadFile(CertFile)
-	if err2 != nil {
-		return nil, fmt.Errorf("could not read cert %v", err2)
+	switch proto {
+	case "tlsmasq":
+		conf.Addr = helper.TLSMasqProxyServerAddr
+		conf.ProtocolConfig = &apipb.ProxyConnectConfig_ConnectCfgTlsmasq{
+			ConnectCfgTlsmasq: &apipb.ProxyConnectConfig_TLSMasqConfig{
+				OriginAddr:               tlsmasqOriginAddr,
+				Secret:                   []byte(tlsmasqServerSecret),
+				TlsMinVersion:            tlsmasqMinVersion,
+				TlsSupportedCipherSuites: strings.Split(tlsmasqSuites, ","),
+			},
+		}
+		// conf.PluggableTransportSettings = map[string]string{
+		// 	"tlsmasq_sni":           tlsmasqSNI,
+		// }
+	case "shadowsocks":
+		conf.Addr = helper.ShadowsocksProxyServerAddr
+		conf.ProtocolConfig = &apipb.ProxyConnectConfig_ConnectCfgShadowsocks{
+			ConnectCfgShadowsocks: &apipb.ProxyConnectConfig_ShadowsocksConfig{
+				Secret: shadowsocksSecret,
+				Cipher: shadowsocksCipher,
+			},
+		}
+	default:
+		conf.Addr = helper.HTTPSProxyServerAddr
 	}
-	srv.Cert = string(cert)
-	if proto == "lampshade" {
-		srv.Addr = helper.LampshadeProxyServerAddr
-		srv.PluggableTransport = "lampshade"
-	} else if proto == "quic_ietf" {
-		srv.Addr = helper.QUICIETFProxyServerAddr
-		srv.PluggableTransport = "quic_ietf"
-	} else if proto == "wss" {
-		srv.Addr = helper.WSSProxyServerAddr
-		srv.PluggableTransport = "wss"
-		srv.PluggableTransportSettings = map[string]string{
-			"url":         fmt.Sprintf("https://%s", helper.WSSProxyServerAddr),
-			"multiplexed": "true",
-		}
-	} else if proto == "tlsmasq" {
-		srv.Addr = helper.TLSMasqProxyServerAddr
-		srv.PluggableTransport = "tlsmasq"
-		srv.PluggableTransportSettings = map[string]string{
-			"tlsmasq_sni":           tlsmasqSNI,
-			"tlsmasq_suites":        tlsmasqSuites,
-			"tlsmasq_tlsminversion": tlsmasqMinVersion,
-			"tlsmasq_secret":        tlsmasqServerSecret,
-		}
-	} else if proto == "shadowsocks" {
-		srv.Addr = helper.ShadowsocksProxyServerAddr
-		srv.PluggableTransport = "shadowsocks"
-		srv.PluggableTransportSettings = map[string]string{
-			"shadowsocks_secret":   shadowsocksSecret,
-			"shadowsocks_upstream": shadowsocksUpstream,
-			"shadowsocks_cipher":   shadowsocksCipher,
-		}
-	} else if proto == "shadowsocks-mux" {
-		srv.Addr = "multiplexed"
-		srv.MultiplexedAddr = helper.ShadowsocksmuxProxyServerAddr
-		srv.PluggableTransport = "shadowsocks"
-		srv.PluggableTransportSettings = map[string]string{
-			"shadowsocks_secret":   shadowsocksSecret,
-			"shadowsocks_upstream": shadowsocksUpstream,
-			"shadowsocks_cipher":   shadowsocksCipher,
-		}
-	} else if proto == "https+smux" {
-		srv.Addr = "multiplexed"
-		srv.MultiplexedAddr = helper.HTTPSSmuxProxyServerAddr
-		// the default is smux, so srv.MultiplexedProtocol is unset
-	} else if proto == "https+psmux" {
-		srv.Addr = "multiplexed"
-		srv.MultiplexedAddr = helper.HTTPSPsmuxProxyServerAddr
-		srv.MultiplexedProtocol = "psmux"
-	} else {
-		srv.Addr = helper.HTTPSProxyServerAddr
-	}
-	return map[string]*config.ProxyConfig{"proxy-" + proto: &srv}, nil
+
+	return conf, nil
 }
 
 func (helper *Helper) startTLSMasqOrigin() error {

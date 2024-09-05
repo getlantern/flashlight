@@ -19,9 +19,8 @@ import (
 )
 
 const (
-	defaultConfigSaveDir = ""
-	// TODO: change to "user.conf". Temporarily using proxy.conf to match github actions build tests
-	defaultConfigFilename = "user.conf"
+	DefaultConfigSaveDir  = ""
+	DefaultConfigFilename = "user.conf"
 )
 
 // alias for better readability.
@@ -53,11 +52,11 @@ type config struct {
 
 func Init(saveDir string, obfuscate bool) (*config, error) {
 	if saveDir == "" {
-		saveDir = defaultConfigSaveDir
+		saveDir = DefaultConfigSaveDir
 	}
 
 	_config.mu.Lock()
-	_config.filePath = filepath.Join(saveDir, defaultConfigFilename)
+	_config.filePath = filepath.Join(saveDir, DefaultConfigFilename)
 	_config.obfuscate = obfuscate
 	_config.mu.Unlock()
 
