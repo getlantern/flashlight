@@ -89,8 +89,7 @@ type Helper struct {
 // origins are served through the proxy. Make sure to close the Helper with
 // Close() when finished with the test.
 func NewHelper(t *testing.T, basePort int) (*Helper, error) {
-	tempFile, err := os.CreateTemp("", "integrationtest_helper")
-	ConfigDir := tempFile.Name()
+	ConfigDir, err := os.MkdirTemp("", "integrationtest_helper")
 	log.Debugf("ConfigDir is %v", ConfigDir)
 	if err != nil {
 		return nil, err
