@@ -443,7 +443,7 @@ func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 
 	stop, err := f.StartBackgroundServices()
 	if err != nil {
-		log.Errorf("Unable to start background services: %v", err)
+		log.Error(err)
 	}
 	defer stop()
 
@@ -466,7 +466,7 @@ func (f *Flashlight) StartBackgroundServices() (func(), error) {
 			stopMonitor()
 			stopBypass()
 			stopGlobalConfigFetch()
-		}, err
+		}, fmt.Errorf("Unable to start config service: %w", err)
 	}
 
 	return func() {
@@ -478,8 +478,8 @@ func (f *Flashlight) StartBackgroundServices() (func(), error) {
 }
 
 func (f *Flashlight) startConfigService() (services.StopFn, error) {
-	obfuscate, _ := f.flagsAsMap["readableconfig"].(bool)
-	handler, err := userconfig.Init(f.configDir, obfuscate)
+	readable, _ := f.flagsAsMap["readableconfig"].(bool)
+	handler, err := userconfig.Init(f.configDir, !readable)
 	if err != nil {
 		return nil, err
 	}
@@ -557,7 +557,7 @@ func (f *Flashlight) convertNewProxyConfToOld(proxies []*apipb.ProxyConnectConfi
 		// marshal/unmarshal it to get the same protobuf. This is a temporary workaround until all
 		// code is updated to use the new config format. And since we know that the protobuf is the
 		// same, we can ignore the errors from the marshal/unmarshal
-		var cc *commonconfig.ProxyConfig
+		cc := &commonconfig.ProxyConfig{}
 		lcb, _ := proto.Marshal(lc)
 		_ = proto.Unmarshal(lcb, cc)
 

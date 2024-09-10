@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -67,20 +68,44 @@ type Helper struct {
 	protocol                      atomic.Value
 	t                             *testing.T
 	ConfigDir                     string
-	HTTPSProxyServerAddr          string
-	LampshadeProxyServerAddr      string
-	QUICIETFProxyServerAddr       string
-	WSSProxyServerAddr            string
-	ShadowsocksProxyServerAddr    string
+	BaseServerAddr                string
+	HTTPSProxyServerPort          int32
+	LampshadeProxyServerPort      int32
+	QUICIETFProxyServerPort       int32
+	WSSProxyServerPort            int32
+	ShadowsocksProxyServerPort    int32
+	ShadowsocksmuxProxyServerPort int32
+	TLSMasqProxyServerPort        int32
+	HTTPSSmuxProxyServerPort      int32
+	HTTPSPsmuxProxyServerPort     int32
+	HTTPServerPort                int32
+	HTTPSServerPort               int32
+
+	// Deprecated: Use BaseServerAddr and HTTPSProxyServerPort instead.
+	HTTPSProxyServerAddr string
+	// Deprecated: Use BaseServerAddr and LampshadeProxyServerPort instead.
+	LampshadeProxyServerAddr string
+	// Deprecated: Use BaseServerAddr and QUICIETFProxyServerPort instead.
+	QUICIETFProxyServerAddr string
+	// Deprecated: Use BaseServerAddr and WSSProxyServerPort instead.
+	WSSProxyServerAddr string
+	// Deprecated: Use BaseServerAddr and ShadowsocksProxyServerPort instead.
+	ShadowsocksProxyServerAddr string
+	// Deprecated: Use BaseServerAddr and ShadowsocksmuxProxyServerPort instead.
 	ShadowsocksmuxProxyServerAddr string
-	TLSMasqProxyServerAddr        string
-	HTTPSSmuxProxyServerAddr      string
-	HTTPSPsmuxProxyServerAddr     string
-	HTTPServerAddr                string
-	HTTPSServerAddr               string
-	ConfigServerAddr              string
-	tlsMasqOriginAddr             string
-	listeners                     []net.Listener
+	// Deprecated: Use BaseServerAddr and TLSMasqProxyServerPort instead.
+	TLSMasqProxyServerAddr string
+	// Deprecated: Use BaseServerAddr and HTTPSSmuxProxyServerPort instead.
+	HTTPSSmuxProxyServerAddr string
+	// Deprecated: Use BaseServerAddr and HTTPSPsmuxProxyServerPort instead.
+	HTTPSPsmuxProxyServerAddr string
+	// Deprecated: Use BaseServerAddr and HTTPServerPort instead.
+	HTTPServerAddr string
+	// Deprecated: Use BaseServerAddr and HTTPSServerPort instead.
+	HTTPSServerAddr   string
+	ConfigServerAddr  string
+	tlsMasqOriginAddr string
+	listeners         []net.Listener
 }
 
 // NewHelper prepares a new integration test helper including a web server for
@@ -95,26 +120,28 @@ func NewHelper(t *testing.T, basePort int) (*Helper, error) {
 		return nil, err
 	}
 
-	nextPort := basePort
-	nextListenAddr := func() string {
-		addr := fmt.Sprintf("localhost:%d", nextPort)
+	nextPort := int32(basePort)
+	nextListenPort := func() int32 {
 		nextPort++
-		return addr
+		return nextPort
 	}
 
 	helper := &Helper{
 		t:                             t,
 		ConfigDir:                     ConfigDir,
-		HTTPSProxyServerAddr:          nextListenAddr(),
-		LampshadeProxyServerAddr:      nextListenAddr(),
-		QUICIETFProxyServerAddr:       nextListenAddr(),
-		WSSProxyServerAddr:            nextListenAddr(),
-		ShadowsocksProxyServerAddr:    nextListenAddr(),
-		ShadowsocksmuxProxyServerAddr: nextListenAddr(),
-		TLSMasqProxyServerAddr:        nextListenAddr(),
-		HTTPSSmuxProxyServerAddr:      nextListenAddr(),
-		HTTPSPsmuxProxyServerAddr:     nextListenAddr(),
+		BaseServerAddr:                "localhost",
+		HTTPSProxyServerPort:          nextPort,
+		LampshadeProxyServerPort:      nextListenPort(),
+		QUICIETFProxyServerPort:       nextListenPort(),
+		WSSProxyServerPort:            nextListenPort(),
+		ShadowsocksProxyServerPort:    nextListenPort(),
+		ShadowsocksmuxProxyServerPort: nextListenPort(),
+		TLSMasqProxyServerPort:        nextListenPort(),
+		HTTPSSmuxProxyServerPort:      nextListenPort(),
+		HTTPSPsmuxProxyServerPort:     nextListenPort(),
 	}
+	addDeprecatedFields(helper)
+
 	helper.SetProtocol("https")
 	client.ForceProxying()
 
@@ -157,6 +184,25 @@ func NewHelper(t *testing.T, basePort int) (*Helper, error) {
 	}
 
 	return helper, nil
+}
+
+func addDeprecatedFields(helper *Helper) {
+	toListenAddr := func(port int32) string {
+		p := strconv.Itoa(int(port))
+		return helper.BaseServerAddr + ":" + p
+	}
+
+	helper.HTTPSProxyServerAddr = toListenAddr(helper.HTTPSProxyServerPort)
+	helper.HTTPServerAddr = toListenAddr(helper.HTTPServerPort)
+	helper.HTTPSServerAddr = toListenAddr(helper.HTTPSServerPort)
+	helper.LampshadeProxyServerAddr = toListenAddr(helper.LampshadeProxyServerPort)
+	helper.QUICIETFProxyServerAddr = toListenAddr(helper.QUICIETFProxyServerPort)
+	helper.WSSProxyServerAddr = toListenAddr(helper.WSSProxyServerPort)
+	helper.ShadowsocksProxyServerAddr = toListenAddr(helper.ShadowsocksProxyServerPort)
+	helper.ShadowsocksmuxProxyServerAddr = toListenAddr(helper.ShadowsocksmuxProxyServerPort)
+	helper.TLSMasqProxyServerAddr = toListenAddr(helper.TLSMasqProxyServerPort)
+	helper.HTTPSSmuxProxyServerAddr = toListenAddr(helper.HTTPSSmuxProxyServerPort)
+	helper.HTTPSPsmuxProxyServerAddr = toListenAddr(helper.HTTPSPsmuxProxyServerPort)
 }
 
 func (helper *Helper) SetProtocol(protocol string) {
@@ -450,11 +496,19 @@ func (helper *Helper) buildProxy(proto string) (*apipb.ProxyConnectConfig, error
 		Name:      "AshKetchumAll",
 		AuthToken: Token,
 		CertPem:   cert,
+		Addr:      helper.BaseServerAddr,
 	}
 
 	switch proto {
+	case "https":
+		conf.Port = helper.HTTPSProxyServerPort
+		conf.ProtocolConfig = &apipb.ProxyConnectConfig_ConnectCfgTls{
+			ConnectCfgTls: &apipb.ProxyConnectConfig_TLSConfig{
+				SessionState: &apipb.ProxyConnectConfig_TLSConfig_SessionState{},
+			},
+		}
 	case "tlsmasq":
-		conf.Addr = helper.TLSMasqProxyServerAddr
+		conf.Port = helper.TLSMasqProxyServerPort
 		conf.ProtocolConfig = &apipb.ProxyConnectConfig_ConnectCfgTlsmasq{
 			ConnectCfgTlsmasq: &apipb.ProxyConnectConfig_TLSMasqConfig{
 				OriginAddr:               tlsmasqOriginAddr,
@@ -467,7 +521,7 @@ func (helper *Helper) buildProxy(proto string) (*apipb.ProxyConnectConfig, error
 		// 	"tlsmasq_sni":           tlsmasqSNI,
 		// }
 	case "shadowsocks":
-		conf.Addr = helper.ShadowsocksProxyServerAddr
+		conf.Port = helper.ShadowsocksProxyServerPort
 		conf.ProtocolConfig = &apipb.ProxyConnectConfig_ConnectCfgShadowsocks{
 			ConnectCfgShadowsocks: &apipb.ProxyConnectConfig_ShadowsocksConfig{
 				Secret: shadowsocksSecret,
@@ -475,7 +529,7 @@ func (helper *Helper) buildProxy(proto string) (*apipb.ProxyConnectConfig, error
 			},
 		}
 	default:
-		conf.Addr = helper.HTTPSProxyServerAddr
+		return nil, fmt.Errorf("unsupported protocol %v", proto)
 	}
 
 	return conf, nil

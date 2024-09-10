@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -106,14 +107,6 @@ func TestSaveObfuscatedConfig(t *testing.T) {
 	})
 }
 
-func newTestConfig() *UserConfig {
-	return &UserConfig{
-		Country: "Mars",
-		Ip:      "109.117.115.107",
-		Proxy:   &apipb.ConfigResponse_Proxy{},
-	}
-}
-
 func withTempConfigFile(t *testing.T, conf *UserConfig, obfuscate bool, f func(*os.File)) {
 	tmpfile, err := os.OpenFile(DefaultConfigFilename, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0644)
 	require.NoError(t, err, "couldn't create temp file")
@@ -137,6 +130,64 @@ func withTempConfigFile(t *testing.T, conf *UserConfig, obfuscate bool, f func(*
 	}
 
 	f(tmpfile)
+}
+
+const (
+	token = "AF325DF3432FDS"
+
+	shadowsocksSecret   = "foobarbaz"
+	shadowsocksUpstream = "local"
+	shadowsocksCipher   = "AEAD_CHACHA20_POLY1305"
+
+	tlsmasqOriginAddr   = "orgin.com"
+	tlsmasqSNI          = "test.com"
+	tlsmasqSuites       = "0xcca9,0x1301" // TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_AES_128_GCM_SHA256
+	tlsmasqMinVersion   = "0x0303"        // TLS 1.2
+	tlsmasqServerSecret = "d0cd0e2e50eb2ac7cb1dc2c94d1bc8871e48369970052ff866d1e7e876e77a13246980057f70d64a2bdffb545330279f69bce5fd"
+)
+
+func newTestConfig() *UserConfig {
+	p0 := buildProxy("shadowsocks")
+	p1 := buildProxy("tlsmasq")
+	pCfg := []*apipb.ProxyConnectConfig{p0, p1}
+	return &UserConfig{
+		ProToken: token,
+		Country:  "Mars",
+		Ip:       "109.117.115.107",
+		Proxy:    &apipb.ConfigResponse_Proxy{Proxies: pCfg},
+	}
+}
+
+func buildProxy(proto string) *apipb.ProxyConnectConfig {
+	conf := &apipb.ProxyConnectConfig{
+		Name:      "AshKetchumAll",
+		AuthToken: token,
+		CertPem:   []byte("cert"),
+		Addr:      "localhost",
+		Port:      8080,
+	}
+
+	switch proto {
+	case "tlsmasq":
+		conf.ProtocolConfig = &apipb.ProxyConnectConfig_ConnectCfgTlsmasq{
+			ConnectCfgTlsmasq: &apipb.ProxyConnectConfig_TLSMasqConfig{
+				OriginAddr:               tlsmasqOriginAddr,
+				Secret:                   []byte(tlsmasqServerSecret),
+				TlsMinVersion:            tlsmasqMinVersion,
+				TlsSupportedCipherSuites: strings.Split(tlsmasqSuites, ","),
+			},
+		}
+	case "shadowsocks":
+		conf.ProtocolConfig = &apipb.ProxyConnectConfig_ConnectCfgShadowsocks{
+			ConnectCfgShadowsocks: &apipb.ProxyConnectConfig_ShadowsocksConfig{
+				Secret: shadowsocksSecret,
+				Cipher: shadowsocksCipher,
+			},
+		}
+	default:
+	}
+
+	return conf
 }
 
 func resetConfig() {

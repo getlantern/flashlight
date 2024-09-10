@@ -73,6 +73,7 @@ func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, err
 		return _configService.Stop, nil
 	}
 
+	logger.Debug("Starting config service")
 	switch {
 	case handler == nil:
 		return nil, errors.New("ConfigHandler is required")
@@ -108,7 +109,6 @@ func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, err
 	config := handler.GetConfig()
 	_configService.clientInfo.Country = config.GetCountry()
 
-	logger.Debug("Starting config service")
 	_configService.running = true
 
 	fn := func() int64 {
