@@ -259,11 +259,7 @@ func (helper *Helper) startProxyServer() error {
 
 	s1 := &hproxy.Proxy{
 		TestingLocal:             true,
-		HTTPAddr:                 helper.HTTPSProxyServerAddr,
-		HTTPMultiplexAddr:        helper.HTTPSSmuxProxyServerAddr,
-		LampshadeAddr:            helper.LampshadeProxyServerAddr,
-		QUICIETFAddr:             helper.QUICIETFProxyServerAddr,
-		WSSAddr:                  helper.WSSProxyServerAddr,
+		HTTPMultiplexAddr:        helper.HTTPSProxyServerAddr,
 		TLSMasqAddr:              helper.TLSMasqProxyServerAddr,
 		ShadowsocksAddr:          helper.ShadowsocksProxyServerAddr,
 		ShadowsocksMultiplexAddr: helper.ShadowsocksmuxProxyServerAddr,
@@ -291,19 +287,6 @@ func (helper *Helper) startProxyServer() error {
 		HTTPS:        false,
 	}
 
-	// psmux multiplexed http
-	// smux multiplexed http
-	s3 := &hproxy.Proxy{
-		TestingLocal:      true,
-		HTTPS:             true,
-		HTTPMultiplexAddr: helper.HTTPSPsmuxProxyServerAddr,
-		MultiplexProtocol: "psmux",
-		Token:             Token,
-		KeyFile:           KeyFile,
-		CertFile:          CertFile,
-		IdleTimeout:       30 * time.Second,
-	}
-
 	go s1.ListenAndServe(context.Background())
 	go s2.ListenAndServe(context.Background())
 
@@ -324,11 +307,7 @@ func (helper *Helper) startProxyServer() error {
 		return statErr
 	}
 
-	// only launch / wait for this one after the cert is in place (can race otherwise.)
-	go s3.ListenAndServe(context.Background())
-	err = waitforserver.WaitForServer("tcp", helper.HTTPSPsmuxProxyServerAddr, 10*time.Second)
-
-	return err
+	return nil
 }
 
 func (helper *Helper) startConfigServer() error {
@@ -529,7 +508,7 @@ func (helper *Helper) buildProxy(proto string) (*apipb.ProxyConnectConfig, error
 			},
 		}
 	default:
-		return nil, fmt.Errorf("unsupported protocol %v", proto)
+		return nil, fmt.Errorf("unsupported proxy protocol %v", proto)
 	}
 
 	return conf, nil

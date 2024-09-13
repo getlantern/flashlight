@@ -1,7 +1,6 @@
 package userconfig
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"os"
@@ -9,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/getlantern/eventual/v2"
 	"github.com/getlantern/rot13"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,7 +23,7 @@ func TestInitWithSavedConfig(t *testing.T) {
 
 	withTempConfigFile(t, conf, false, func(tmpfile *os.File) {
 		Init("", false)
-		existing, _ := GetConfig(context.Background())
+		existing, _ := GetConfig(eventual.DontWait)
 
 		want := fmt.Sprintf("%+v", conf)
 		got := fmt.Sprintf("%+v", existing)

@@ -64,6 +64,8 @@ func ProxyToLegacyConfig(cfg *ProxyConnectConfig) (*commonconfig.ProxyConfig, er
 	switch pCfg := cfg.ProtocolConfig.(type) {
 	case *ProxyConnectConfig_ConnectCfgTls:
 		legacy.PluggableTransport = "https"
+		// currently, lantern-cloud uses multiplexing for all https connections so we set the
+		// multiplexed addr to the same as the addr
 		legacy.MultiplexedAddr = legacy.Addr
 
 		// TLS-level config
