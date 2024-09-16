@@ -78,8 +78,8 @@ type Helper struct {
 	TLSMasqProxyServerPort        int32
 	HTTPSSmuxProxyServerPort      int32
 	HTTPSPsmuxProxyServerPort     int32
-	HTTPServerPort                int32
-	HTTPSServerPort               int32
+	HTTPServerAddr                string
+	HTTPSServerAddr               string
 
 	// Deprecated: Use BaseServerAddr and HTTPSProxyServerPort instead.
 	HTTPSProxyServerAddr string
@@ -99,13 +99,9 @@ type Helper struct {
 	HTTPSSmuxProxyServerAddr string
 	// Deprecated: Use BaseServerAddr and HTTPSPsmuxProxyServerPort instead.
 	HTTPSPsmuxProxyServerAddr string
-	// Deprecated: Use BaseServerAddr and HTTPServerPort instead.
-	HTTPServerAddr string
-	// Deprecated: Use BaseServerAddr and HTTPSServerPort instead.
-	HTTPSServerAddr   string
-	ConfigServerAddr  string
-	tlsMasqOriginAddr string
-	listeners         []net.Listener
+	ConfigServerAddr          string
+	tlsMasqOriginAddr         string
+	listeners                 []net.Listener
 }
 
 // NewHelper prepares a new integration test helper including a web server for
@@ -193,8 +189,6 @@ func addDeprecatedFields(helper *Helper) {
 	}
 
 	helper.HTTPSProxyServerAddr = toListenAddr(helper.HTTPSProxyServerPort)
-	helper.HTTPServerAddr = toListenAddr(helper.HTTPServerPort)
-	helper.HTTPSServerAddr = toListenAddr(helper.HTTPSServerPort)
 	helper.LampshadeProxyServerAddr = toListenAddr(helper.LampshadeProxyServerPort)
 	helper.QUICIETFProxyServerAddr = toListenAddr(helper.QUICIETFProxyServerPort)
 	helper.WSSProxyServerAddr = toListenAddr(helper.WSSProxyServerPort)

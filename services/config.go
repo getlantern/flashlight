@@ -106,6 +106,7 @@ func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, err
 	}
 	_configService.done = make(chan struct{})
 
+	_configService.configHandler = handler
 	config := handler.GetConfig()
 	_configService.clientInfo.Country = config.GetCountry()
 
