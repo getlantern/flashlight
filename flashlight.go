@@ -17,7 +17,6 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/ops"
 
-	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/bypass"
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/client"
@@ -99,7 +98,7 @@ type Flashlight struct {
 // clientCallbacks are callbacks the client is configured with
 type clientCallbacks struct {
 	onInit            func()
-	onProxiesUpdate   func([]bandit.Dialer, config.Source)
+	onProxiesUpdate   func([]chained.Dialer, config.Source)
 	onConfigUpdate    func(*config.Global, config.Source)
 	onDialError       func(error, bool)
 	onSucceedingProxy func()
@@ -315,7 +314,7 @@ func New(
 			onInit: func() {
 				log.Debug("[Startup] onInit called")
 			},
-			onProxiesUpdate: func(_ []bandit.Dialer, src config.Source) {
+			onProxiesUpdate: func(_ []chained.Dialer, src config.Source) {
 				log.Debugf("[Startup] onProxiesUpdate called from %v", src)
 			},
 			onDialError: func(err error, hasSucceeding bool) {

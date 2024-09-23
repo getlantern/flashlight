@@ -1,6 +1,6 @@
 module github.com/getlantern/flashlight/v7
 
-go 1.22.3
+go 1.23
 
 replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220805074304-4a43a9ed4ec6
 
@@ -132,7 +132,6 @@ require (
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/ajwerner/btree v0.0.0-20211221152037-f427b3e689c0 // indirect
 	github.com/alecthomas/atomic v0.1.0-alpha2 // indirect
-	github.com/alextanhongpin/go-bandit v0.0.0-20191125130111-30de60d69bae
 	github.com/anacrolix/chansync v0.3.0 // indirect
 	github.com/anacrolix/confluence v1.15.0 // indirect
 	github.com/anacrolix/envpprof v1.3.0 // indirect

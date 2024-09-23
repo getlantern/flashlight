@@ -7,10 +7,10 @@ import (
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/v7/bandit"
+	"github.com/getlantern/multipath"
+
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/ops"
-	"github.com/getlantern/multipath"
 )
 
 type mpDialerAdapter struct {
@@ -49,7 +49,7 @@ func (impl *multipathImpl) FormatStats() []string {
 	return impl.dialer.(multipath.Stats).FormatStats()
 }
 
-func CreateMPDialer(configDir, endpoint string, ss map[string]*config.ProxyConfig, uc common.UserConfig) (bandit.Dialer, error) {
+func CreateMPDialer(configDir, endpoint string, ss map[string]*config.ProxyConfig, uc common.UserConfig) (Dialer, error) {
 	if len(ss) < 1 {
 		return nil, errors.New("no dialers")
 	}

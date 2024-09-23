@@ -1,7 +1,7 @@
 package flashlight
 
 import (
-	"github.com/getlantern/flashlight/v7/bandit"
+	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/config"
 )
 
@@ -37,7 +37,7 @@ func WithInit(onInit func()) Option {
 }
 
 // WithOnProxies sets the callback when new proxies are received
-func WithOnProxies(onProxiesUpdate func([]bandit.Dialer, config.Source)) Option {
+func WithOnProxies(onProxiesUpdate func([]chained.Dialer, config.Source)) Option {
 	return func(client *Flashlight) {
 		client.callbacks.onProxiesUpdate = onProxiesUpdate
 	}

@@ -19,14 +19,14 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	commonconfig "github.com/getlantern/common/config"
+	"github.com/getlantern/golog"
+
 	"github.com/getlantern/flashlight/v7/apipb"
-	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/config"
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/proxied"
-	"github.com/getlantern/golog"
 )
 
 var (
@@ -102,7 +102,7 @@ func (b *bypass) OnProxies(infos map[string]*commonconfig.ProxyConfig, configDir
 	}
 }
 
-func (b *bypass) newProxy(name string, pc *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer bandit.Dialer) *proxy {
+func (b *bypass) newProxy(name string, pc *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer chained.Dialer) *proxy {
 	return &proxy{
 		ProxyConfig:       pc,
 		name:              name,
@@ -198,12 +198,12 @@ func (p *proxy) sendToBypass() int64 {
 	return sleepTime
 }
 
-func proxyRoundTripper(name string, info *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer bandit.Dialer) http.RoundTripper {
+func proxyRoundTripper(name string, info *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer chained.Dialer) http.RoundTripper {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.Proxy = nil
 	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 		log.Debugf("Dialing chained server at: %s", addr)
-		pc, _, err := dialer.DialContext(ctx, bandit.NetworkConnect, addr)
+		pc, _, err := dialer.DialContext(ctx, chained.NetworkConnect, addr)
 		if err != nil {
 			log.Errorf("Unable to dial chained server: %v", err)
 		} else {

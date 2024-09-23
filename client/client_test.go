@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -19,15 +18,16 @@ import (
 
 	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/detour"
-	"github.com/getlantern/flashlight/v7/bandit"
-	"github.com/getlantern/flashlight/v7/common"
-	"github.com/getlantern/flashlight/v7/domainrouting"
-	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mockconn"
 	"github.com/getlantern/shortcut"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/getlantern/flashlight/v7/chained"
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/domainrouting"
+	"github.com/getlantern/flashlight/v7/stats"
 )
 
 var logger = golog.LoggerFor("client-test")
@@ -73,12 +73,12 @@ func newTestUserConfig() *common.UserConfigData {
 }
 
 func resetDialers(client *Client, dialer func(network, addr string) (net.Conn, error)) {
-	d, _ := bandit.New(bandit.Options{
-		Dialers: []bandit.Dialer{&testDialer{
+	d := chained.NewSelector(
+		[]chained.Dialer{&testDialer{
 			name: "test-dialer",
 			dial: dialer,
 		}},
-	})
+	)
 	client.dialer = d
 }
 
@@ -129,7 +129,7 @@ func TestServeHTTPTimeout(t *testing.T) {
 	client := newClient()
 	client.requestTimeout = 500 * time.Millisecond
 
-	// Set the bandit to a new Dial() func that waits "client.requestTimeout" * 2
+	// Set the selector to a new Dial() func that waits "client.requestTimeout" * 2
 	// before running
 	resetDialers(
 		client, // Client
@@ -329,7 +329,7 @@ func TestLeakingDomainsRequiringProxy(t *testing.T) {
 
 	req, _ = http.NewRequest("GET", site.URL, nil)
 	res, _ = roundTrip(client, req)
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode, "should dial directly for random site if client is disconnected")
 	assert.Equal(t, "abc", string(body), "should dial directly for random site if client is disconnected")
@@ -348,7 +348,7 @@ func TestLeakingDomainsRequiringProxy(t *testing.T) {
 
 	req, _ = http.NewRequest("GET", site.URL, nil)
 	res, _ = roundTrip(client, req)
-	body, err = ioutil.ReadAll(res.Body)
+	body, err = io.ReadAll(res.Body)
 	require.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode, "should dial directly for domain with proxy domainrouting rule when client is disconnected")
 	assert.Equal(t, "abc", string(body), "should dial directly for domain with proxy domainrouting rule when client is disconnected")
@@ -414,8 +414,8 @@ func TestAccessingProxyPort(t *testing.T) {
 	assert.Equal(t, "0", resp.Header.Get("Content-Length"))
 }
 
-// Assert that a testDialer is a bandit.Dialer
-var _ bandit.Dialer = &testDialer{}
+// Assert that a testDialer is a chained.Dialer
+var _ chained.Dialer = &testDialer{}
 
 type testDialer struct {
 	name      string
@@ -597,10 +597,10 @@ func (r *response) nested() (*http.Response, error) {
 func Test_initDialers(t *testing.T) {
 	proxies := newProxies()
 	client := newClient()
-	dialers, banditDialer, err := client.initDialers(proxies)
+	dialers, dialerSelector, err := client.initDialers(proxies)
 	assert.NoError(t, err)
 	assert.NotNil(t, dialers)
-	assert.NotNil(t, banditDialer)
+	assert.NotNil(t, dialerSelector)
 }
 
 func newProxies() map[string]*commonconfig.ProxyConfig {
