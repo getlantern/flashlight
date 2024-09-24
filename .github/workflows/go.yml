@@ -26,7 +26,7 @@ jobs:
     - name: Run tests
       run: |
         set -euo pipefail
-        go test -race -failfast -tags="headless" -coverprofile=profile.cov -v ./... 2>&1 | tee /tmp/gotest.log #| gotestfmt -nofail
+        go test -json -race -failfast -tags="headless" -coverprofile=profile.cov -v ./... 2>&1 | tee /tmp/gotest.log | gotestfmt -nofail
 
       # Upload the original go test log as an artifact for later review.
     - name: Upload test log
