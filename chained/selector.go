@@ -6,7 +6,6 @@ import (
 	"io"
 	"iter"
 	"net"
-	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -115,8 +114,7 @@ type Dialer interface {
 type Selector struct {
 	dialers []Dialer
 	// active is the index of the currently active dialer
-	active    atomic.Int64
-	advanceMu sync.Mutex
+	active atomic.Int64
 }
 
 func NewSelector(dialers []Dialer) *Selector {
@@ -135,14 +133,6 @@ func (s *Selector) DialContext(ctx context.Context, network, addr string) (net.C
 	}
 
 	for i, dlr := range s.iter() {
-		select {
-		case <-ctx.Done():
-			err := fmt.Errorf("dialing %s %s: %v", network, addr, ctx.Err())
-			log.Error(err)
-			return nil, err
-		default:
-		}
-
 		if !dlr.SupportsAddr(network, addr) {
 			log.Debugf("dialer %s does not support %s %s", dlr.Label(), network, addr)
 			continue
@@ -156,6 +146,14 @@ func (s *Selector) DialContext(ctx context.Context, network, addr string) (net.C
 			return conn, nil
 		}
 
+		select {
+		case <-ctx.Done():
+			err := fmt.Errorf("dialing %s %s: %v", network, addr, ctx.Err())
+			log.Error(err)
+			return nil, err
+		default:
+		}
+
 		log.Errorf("dialer %s failed to dial %s %s: %v", dlr.Label(), network, addr, err)
 	}
 
@@ -167,6 +165,13 @@ func (s *Selector) dialWithDialer(ctx context.Context, dlr Dialer, network, addr
 		conn, failedUpstream, err := dlr.DialContext(ctx, network, addr)
 		if err == nil {
 			return conn, nil
+		}
+
+		select {
+		case <-ctx.Done():
+			log.Debugf("dialWithDialer: %v", ctx.Err())
+			return nil, err
+		default:
 		}
 
 		dlr.MarkFailure()
