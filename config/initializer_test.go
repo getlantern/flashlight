@@ -20,7 +20,6 @@ func TestInit(t *testing.T) {
 	defer deleteGlobalConfig()
 
 	flags := make(map[string]interface{})
-	flags["staging"] = true
 
 	gotProxies := eventual.NewValue()
 	gotGlobal := eventual.NewValue()
@@ -102,17 +101,6 @@ func TestInitWithURLs(t *testing.T) {
 		assert.GreaterOrEqual(t, 3, int(globalReqCount()), "should have fetched global config every %v", globalConfig.GlobalConfigPollInterval)
 		assert.GreaterOrEqual(t, 7, int(proxyReqCount()), "should have fetched proxy config every %v", globalConfig.ProxyConfigPollInterval)
 	})
-}
-
-func TestStaging(t *testing.T) {
-	flags := make(map[string]interface{})
-	flags["staging"] = true
-
-	assert.True(t, isStaging(flags))
-
-	flags["staging"] = false
-
-	assert.False(t, isStaging(flags))
 }
 
 // TestOverrides tests url override flags
