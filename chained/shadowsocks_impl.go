@@ -15,7 +15,8 @@ import (
 
 	tls "github.com/refraction-networking/utls"
 
-	"github.com/Jigsaw-Code/outline-ss-server/client"
+	"github.com/Jigsaw-Code/outline-sdk/transport"
+	"github.com/Jigsaw-Code/outline-sdk/transport/shadowsocks"
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
@@ -30,11 +31,28 @@ const (
 
 type shadowsocksImpl struct {
 	reportDialCore reportDialCoreFn
-	client         client.Client
+	client         *shadowsocks.StreamDialer
 	upstream       string
 	rng            *mrand.Rand
 	rngmx          sync.Mutex
 	tlsConfig      *tls.Config
+}
+
+type PrefixSaltGen struct {
+	prefixFunc func() ([]byte, error)
+}
+
+func (p *PrefixSaltGen) GetSalt(salt []byte) error {
+	prefix, err := p.prefixFunc()
+	if err != nil {
+		return fmt.Errorf("failed to generate prefix: %v", err)
+	}
+	n := copy(salt, prefix)
+	if n != len(prefix) {
+		return errors.New("prefix is too long")
+	}
+	_, err = crand.Read(salt[n:])
+	return err
 }
 
 func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
@@ -52,15 +70,12 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 		upstream = defaultShadowsocksUpstreamSuffix
 	}
 
-	host, portStr, err := net.SplitHostPort(addr)
+	key, err := shadowsocks.NewEncryptionKey(cipher, secret)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("failed to create shadowsocks key: %v", err)
 	}
-	port, err := strconv.Atoi(portStr)
-	if err != nil {
-		return nil, errors.New("unable to parse port in address %v: %v", addr, err)
-	}
-	cl, err := client.NewClient(host, port, secret, cipher)
+
+	cl, err := shadowsocks.NewStreamDialer(&transport.TCPEndpoint{Address: addr}, key)
 	if err != nil {
 		return nil, errors.New("failed to create shadowsocks client: %v", err)
 	}
@@ -70,10 +85,10 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 		gen, err := prefixgen.New(prefixGen)
 		if err != nil {
 			log.Errorf("failed to parse shadowsocks prefix generator from %v for proxy %v: %v", prefixGen, name, err)
-		} else {
-			prefixFunc := func() ([]byte, error) { return gen(), nil }
-			cl.SetTCPSaltGenerator(client.NewPrefixSaltGenerator(prefixFunc))
+			return nil, errors.New("failed to parse shadowsocks prefix generator from %v for proxy %v: %v", prefixGen, name, err)
 		}
+		prefixFunc := func() ([]byte, error) { return gen(), nil }
+		cl.SaltGenerator = &PrefixSaltGen{prefixFunc}
 	}
 
 	var seed int64
@@ -115,7 +130,7 @@ func (impl *shadowsocksImpl) close() {
 
 func (impl *shadowsocksImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return impl.reportDialCore(op, func() (net.Conn, error) {
-		conn, err := impl.client.DialTCP(nil, impl.generateUpstream())
+		conn, err := impl.client.DialStream(ctx, impl.generateUpstream())
 		if err != nil {
 			return nil, err
 		}

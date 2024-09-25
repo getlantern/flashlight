@@ -2,7 +2,9 @@ package config
 
 import (
 	"errors"
+	"strings"
 
+	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/fronted"
 )
 
@@ -40,6 +42,8 @@ type ProviderConfig struct {
 	Masquerades         []*fronted.Masquerade
 	Validator           *ValidatorConfig
 	PassthroughPatterns []string
+	FrontingSNIs        map[string]*fronted.SNIConfig
+	VerifyHostname      *string `yaml:"verifyHostname,omitempty"`
 }
 
 // returns a fronted.ResponseValidator specified by the
@@ -80,15 +84,35 @@ func NewClientConfig() *ClientConfig {
 
 // Builds a list of fronted.Providers to use based on the configuration
 func (c *ClientConfig) FrontedProviders() map[string]*fronted.Provider {
-
+	region := strings.ToLower(geolookup.GetCountry(0))
 	providers := make(map[string]*fronted.Provider)
 	for pid, p := range c.Fronted.Providers {
+		var sniConfig *fronted.SNIConfig
+		if p.FrontingSNIs != nil {
+			var ok bool
+			sniConfig, ok = p.FrontingSNIs[region]
+			if !ok {
+				sniConfig = p.FrontingSNIs["default"]
+			}
+
+			// If the region is unknown, use the default SNI config and enable it
+			if region == "" {
+				sniConfig.UseArbitrarySNIs = true
+			}
+
+			if sniConfig != nil && sniConfig.UseArbitrarySNIs && len(sniConfig.ArbitrarySNIs) == 0 {
+				sniConfig.ArbitrarySNIs = p.FrontingSNIs["default"].ArbitrarySNIs
+			}
+		}
+
 		providers[pid] = fronted.NewProvider(
 			p.HostAliases,
 			p.TestURL,
 			p.Masquerades,
 			p.GetResponseValidator(pid),
 			p.PassthroughPatterns,
+			sniConfig,
+			p.VerifyHostname,
 		)
 	}
 	return providers

@@ -5,7 +5,7 @@
 
 This repo contains the core Lantern library as well as the Android and iOS bindings.
 
-The Lantern desktop application can be found at [getlantern/lantern-desktop](lantern-desktop).
+The Lantern client application can be found at [lantern-client](https://github.com/getlantern/lantern-client).
 
 ## Process for making changes to [config](config)
 flashlight is configured with per-proxy configuration loaded from the config-server, and global configuration loaded from S3 at runtime.

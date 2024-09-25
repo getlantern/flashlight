@@ -43,3 +43,8 @@ clean:
 .PHONY: install-githooks
 install-githooks:
 	cp githooks/* .git/hooks/
+
+
+.PHONY: build-genconfig
+build-genconfig:
+	go build -o ./genconfig/genconfig ./genconfig/genconfig.go

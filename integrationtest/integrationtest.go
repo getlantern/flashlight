@@ -44,7 +44,7 @@ const (
 
 	shadowsocksSecret   = "foobarbaz"
 	shadowsocksUpstream = "local"
-	shadowsocksCipher   = "chacha20-ietf-poly1305"
+	shadowsocksCipher   = "AEAD_CHACHA20_POLY1305"
 
 	tlsmasqSNI          = "test.com"
 	tlsmasqSuites       = "0xcca9,0x1301" // TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_AES_128_GCM_SHA256

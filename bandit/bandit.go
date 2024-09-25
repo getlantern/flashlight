@@ -163,7 +163,7 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 
 	countryCode, country, city := dialer.Location()
 	previousStats := o.statsTracker.Latest()
-	if previousStats.CountryCode != "" && previousStats.CountryCode != countryCode {
+	if previousStats.CountryCode == "" || previousStats.CountryCode != countryCode {
 		o.statsTracker.SetActiveProxyLocation(
 			city,
 			country,
