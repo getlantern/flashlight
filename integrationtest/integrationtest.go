@@ -81,27 +81,9 @@ type Helper struct {
 	HTTPServerAddr                string
 	HTTPSServerAddr               string
 
-	// Deprecated: Use BaseServerAddr and HTTPSProxyServerPort instead.
-	HTTPSProxyServerAddr string
-	// Deprecated: Use BaseServerAddr and LampshadeProxyServerPort instead.
-	LampshadeProxyServerAddr string
-	// Deprecated: Use BaseServerAddr and QUICIETFProxyServerPort instead.
-	QUICIETFProxyServerAddr string
-	// Deprecated: Use BaseServerAddr and WSSProxyServerPort instead.
-	WSSProxyServerAddr string
-	// Deprecated: Use BaseServerAddr and ShadowsocksProxyServerPort instead.
-	ShadowsocksProxyServerAddr string
-	// Deprecated: Use BaseServerAddr and ShadowsocksmuxProxyServerPort instead.
-	ShadowsocksmuxProxyServerAddr string
-	// Deprecated: Use BaseServerAddr and TLSMasqProxyServerPort instead.
-	TLSMasqProxyServerAddr string
-	// Deprecated: Use BaseServerAddr and HTTPSSmuxProxyServerPort instead.
-	HTTPSSmuxProxyServerAddr string
-	// Deprecated: Use BaseServerAddr and HTTPSPsmuxProxyServerPort instead.
-	HTTPSPsmuxProxyServerAddr string
-	ConfigServerAddr          string
-	tlsMasqOriginAddr         string
-	listeners                 []net.Listener
+	ConfigServerAddr  string
+	tlsMasqOriginAddr string
+	listeners         []net.Listener
 }
 
 // NewHelper prepares a new integration test helper including a web server for
@@ -136,7 +118,6 @@ func NewHelper(t *testing.T, basePort int) (*Helper, error) {
 		HTTPSSmuxProxyServerPort:      nextListenPort(),
 		HTTPSPsmuxProxyServerPort:     nextListenPort(),
 	}
-	addDeprecatedFields(helper)
 
 	helper.SetProtocol("https")
 	client.ForceProxying()
@@ -183,20 +164,6 @@ func NewHelper(t *testing.T, basePort int) (*Helper, error) {
 }
 
 func addDeprecatedFields(helper *Helper) {
-	toListenAddr := func(port int32) string {
-		p := strconv.Itoa(int(port))
-		return helper.BaseServerAddr + ":" + p
-	}
-
-	helper.HTTPSProxyServerAddr = toListenAddr(helper.HTTPSProxyServerPort)
-	helper.LampshadeProxyServerAddr = toListenAddr(helper.LampshadeProxyServerPort)
-	helper.QUICIETFProxyServerAddr = toListenAddr(helper.QUICIETFProxyServerPort)
-	helper.WSSProxyServerAddr = toListenAddr(helper.WSSProxyServerPort)
-	helper.ShadowsocksProxyServerAddr = toListenAddr(helper.ShadowsocksProxyServerPort)
-	helper.ShadowsocksmuxProxyServerAddr = toListenAddr(helper.ShadowsocksmuxProxyServerPort)
-	helper.TLSMasqProxyServerAddr = toListenAddr(helper.TLSMasqProxyServerPort)
-	helper.HTTPSSmuxProxyServerAddr = toListenAddr(helper.HTTPSSmuxProxyServerPort)
-	helper.HTTPSPsmuxProxyServerAddr = toListenAddr(helper.HTTPSPsmuxProxyServerPort)
 }
 
 func (helper *Helper) SetProtocol(protocol string) {
@@ -251,12 +218,17 @@ func (helper *Helper) startProxyServer() error {
 		return err
 	}
 
+	toListenAddr := func(port int32) string {
+		p := strconv.Itoa(int(port))
+		return helper.BaseServerAddr + ":" + p
+	}
+
 	s1 := &hproxy.Proxy{
 		TestingLocal:             true,
-		HTTPMultiplexAddr:        helper.HTTPSProxyServerAddr,
-		TLSMasqAddr:              helper.TLSMasqProxyServerAddr,
-		ShadowsocksAddr:          helper.ShadowsocksProxyServerAddr,
-		ShadowsocksMultiplexAddr: helper.ShadowsocksmuxProxyServerAddr,
+		HTTPMultiplexAddr:        toListenAddr(helper.HTTPSProxyServerPort),
+		TLSMasqAddr:              toListenAddr(helper.TLSMasqProxyServerPort),
+		ShadowsocksAddr:          toListenAddr(helper.ShadowsocksProxyServerPort),
+		ShadowsocksMultiplexAddr: toListenAddr(helper.ShadowsocksProxyServerPort),
 		ShadowsocksSecret:        shadowsocksSecret,
 
 		TLSMasqSecret:     tlsmasqServerSecret,
@@ -284,7 +256,7 @@ func (helper *Helper) startProxyServer() error {
 	go s1.ListenAndServe(context.Background())
 	go s2.ListenAndServe(context.Background())
 
-	err = waitforserver.WaitForServer("tcp", helper.HTTPSProxyServerAddr, 10*time.Second)
+	err = waitforserver.WaitForServer("tcp", toListenAddr(helper.HTTPSProxyServerPort), 10*time.Second)
 	if err != nil {
 		return err
 	}
