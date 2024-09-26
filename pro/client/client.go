@@ -381,7 +381,7 @@ func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 }
 
 func (c *Client) execute(user common.UserConfig, method, path string, query url.Values, resp baseResponse) error {
-	req, err := http.NewRequest(method, "https://"+common.ProAPIPath+"/"+path, nil)
+	req, err := http.NewRequest(method, "https://"+common.ProAPIPath+"/"+path, http.NoBody)
 	if err != nil {
 		return err
 	}
