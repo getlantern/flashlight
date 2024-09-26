@@ -2,7 +2,9 @@ package geolookup
 
 import (
 	"context"
+	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/eventual/v2"
@@ -20,6 +22,9 @@ var (
 
 	watchers []chan bool
 	mx       sync.Mutex
+
+	setInitialValues   = atomic.Bool{}
+	ErrNotAvailableYet = errors.New("Not available yet")
 )
 
 func init() {
@@ -30,8 +35,11 @@ func init() {
 		country.Set(new.Country)
 		ip.Set(new.Ip)
 
+		setInitialValues.CompareAndSwap(false, true)
+
 		// if the country or IP has changed, notify watchers
 		if oldCountry != new.Country || oldIP != new.Ip {
+			log.Debugf("Country or IP changed, %v, %v. Notifying watchers", new.Country, new.Ip)
 			mx.Lock()
 			for _, ch := range watchers {
 				select {
@@ -50,6 +58,11 @@ func GetIP(timeout time.Duration) string {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
+	if !setInitialValues.Load() {
+		log.Debugf("IP not available yet")
+		return ""
+	}
+
 	i, err := ip.Get(ctx)
 	if err != nil {
 		log.Errorf("Failed to get IP: %v", err)
@@ -64,6 +77,11 @@ func GetIP(timeout time.Duration) string {
 func GetCountry(timeout time.Duration) string {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+
+	if !setInitialValues.Load() {
+		log.Debugf("Country not available yet")
+		return ""
+	}
 
 	c, err := country.Get(ctx)
 	if err != nil {
