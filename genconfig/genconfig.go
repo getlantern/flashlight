@@ -70,6 +70,19 @@ type ConfigGenerator struct {
 	masqueradesCh chan *masquerade
 	wg            sync.WaitGroup
 	Providers     map[string]*provider // supported fronting providers
+
+	verifier verifier
+}
+
+//go:generate mockgen -destination ./mock_genconfig.go -source ./genconfig.go -package main verifier, tlsDialer
+type verifier interface {
+	Vet(m *fronted.Masquerade, pool *x509.CertPool, testURL string) bool
+}
+
+type frontedVerifier struct{}
+
+func (frontedVerifier) Vet(m *fronted.Masquerade, pool *x509.CertPool, testURL string) bool {
+	return fronted.Vet(m, pool, testURL)
 }
 
 func NewConfigGenerator() *ConfigGenerator {
@@ -78,6 +91,7 @@ func NewConfigGenerator() *ConfigGenerator {
 		masqueradesCh: make(chan *masquerade),
 		Providers:     loadMapping(),
 		wg:            sync.WaitGroup{},
+		verifier:      frontedVerifier{},
 	}
 }
 
@@ -360,7 +374,10 @@ func (c *ConfigGenerator) grabCerts() {
 			continue
 		}
 		log.Tracef("Grabbing certs for IP %s, domain %s", ip, domain)
-		cwt, err := tlsdialer.DialForTimings(net.DialTimeout, 10*time.Second, "tcp", ip+":443", false, &tls.Config{ServerName: domain})
+		if !strings.Contains(ip, ":") {
+			ip = net.JoinHostPort(ip, "443")
+		}
+		cwt, err := tlsdialer.DialForTimings(net.DialTimeout, 10*time.Second, "tcp", ip, false, &tls.Config{ServerName: domain})
 		if err != nil {
 			log.Errorf("Unable to dial IP %s, domain %s: %s", ip, domain, err)
 			continue
@@ -499,21 +516,21 @@ func (c *ConfigGenerator) vetMasquerades(cas map[string]*castat, masquerades []*
 
 func (c *ConfigGenerator) doVetMasquerades(certPool *x509.CertPool, inCh chan *masquerade, outCh chan *masquerade) {
 	log.Debug("Starting to vet masquerades")
-	for _m := range inCh {
+	for masquerade := range inCh {
 		m := &fronted.Masquerade{
-			Domain:    _m.Domain,
-			IpAddress: _m.IpAddress,
+			Domain:    masquerade.Domain,
+			IpAddress: masquerade.IpAddress,
 		}
 
-		provider, ok := c.Providers[_m.ProviderID]
+		provider, ok := c.Providers[masquerade.ProviderID]
 		if !ok {
-			log.Debugf("%v (%v) failed to vet: unknown provider %v", m.Domain, m.IpAddress, _m.ProviderID)
+			log.Debugf("%v (%v) failed to vet: unknown provider %v", m.Domain, m.IpAddress, masquerade.ProviderID)
 			continue
 		}
 
-		if fronted.Vet(m, certPool, provider.TestURL) {
+		if c.verifier.Vet(m, certPool, provider.TestURL) {
 			log.Debugf("Successfully vetted %v (%v)", m.Domain, m.IpAddress)
-			outCh <- _m
+			outCh <- masquerade
 		} else {
 			log.Debugf("%v (%v) failed to vet", m.Domain, m.IpAddress)
 		}
