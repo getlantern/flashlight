@@ -104,10 +104,6 @@ func generateUser() *common.UserConfigData {
 	return common.NewUserConfigData(common.DefaultAppName, generateDeviceId(), int64(rand.Uint64()), fmt.Sprintf("aasfge%d", rand.Uint64()), nil, "en-US")
 }
 
-func init() {
-	common.ForceStaging()
-}
-
 func createClient(resp *http.Response) *Client {
 	mockedHTTPClient := createMockClient(resp)
 	return NewClient(mockedHTTPClient, func(req *http.Request, uc common.UserConfig) {

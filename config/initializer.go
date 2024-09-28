@@ -39,9 +39,8 @@ func Init(
 	origGlobalDispatch func(interface{}, Source), onGlobalSaveError func(error),
 	rt http.RoundTripper) (stop func()) {
 
-	staging := isStaging(flags)
-	proxyConfigURL := checkOverrides(flags, getProxyURL(staging), "proxies.yaml.gz")
-	globalConfigURL := checkOverrides(flags, getGlobalURL(staging), "global.yaml.gz")
+	proxyConfigURL := checkOverrides(flags, common.ProxiesURL, "proxies.yaml.gz")
+	globalConfigURL := checkOverrides(flags, common.GlobalURL, "global.yaml.gz")
 
 	return InitWithURLs(
 		configDir, flags, userConfig, proxiesDispatch, onProxiesSaveError,
@@ -192,10 +191,6 @@ func obfuscate(flags map[string]interface{}) bool {
 	return flags["readableconfig"] == nil || !flags["readableconfig"].(bool)
 }
 
-func isStaging(flags map[string]interface{}) bool {
-	return checkBool(flags, "staging")
-}
-
 func isSticky(flags map[string]interface{}) bool {
 	return checkBool(flags, "stickyconfig")
 }
@@ -216,26 +211,4 @@ func checkOverrides(flags map[string]interface{},
 		}
 	}
 	return url
-}
-
-// getProxyURL returns the proxy URL to use depending on whether or not
-// we're in staging.
-func getProxyURL(staging bool) string {
-	if staging {
-		log.Debug("Will obtain proxies.yaml from staging service")
-		return common.ProxiesStagingURL
-	}
-	log.Debug("Will obtain proxies.yaml from production service")
-	return common.ProxiesURL
-}
-
-// getGlobalURL returns the global URL to use depending on whether or not
-// we're in staging.
-func getGlobalURL(staging bool) string {
-	if staging {
-		log.Debug("Will obtain global.yaml from staging service")
-		return common.GlobalStagingURL
-	}
-	log.Debugf("Will obtain global.yaml from production service at %v", common.GlobalURL)
-	return common.GlobalURL
 }
