@@ -32,7 +32,7 @@ const (
 	FeatureChat                 = "chat"
 	FeatureOtel                 = "otel"
 	FeatureInterstitialAds      = "interstitialads"
-	FeatureCASInterstitialAds   = "casinterstitialads"
+	FeatureTapsellAds           = "tapsellads"
 )
 
 var (
