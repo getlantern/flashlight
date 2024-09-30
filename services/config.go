@@ -172,6 +172,8 @@ func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
 		return nil, 0, err
 	}
 
+	logger.Debugf("configservice: fetching config from %v", req.URL)
+
 	resp, sleep, err := cs.sender.post(req, cs.opts.RoundTripper)
 	if err != nil {
 		return nil, 0, fmt.Errorf("config request failed: %w", err)

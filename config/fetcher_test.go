@@ -35,11 +35,11 @@ func TestStagingSetup(t *testing.T) {
 	rt := &http.Transport{}
 
 	var fetch *fetcher
-	fetch = newHttpFetcher(newTestUserConfig(), rt, common.ProxiesURL).(*fetcher)
+	fetch = newHttpFetcher(newTestUserConfig(), rt, common.UserConfigURL).(*fetcher)
 
 	assert.Equal(t, "http://config.getiantem.org/proxies.yaml.gz", fetch.originURL)
 
-	url := common.ProxiesURL
+	url := common.UserConfigURL
 
 	// Blank flags should mean we use the default
 	flags["cloudconfig"] = ""
@@ -47,7 +47,7 @@ func TestStagingSetup(t *testing.T) {
 
 	assert.Equal(t, "http://config.getiantem.org/proxies.yaml.gz", fetch.originURL)
 
-	stagingURL := common.ProxiesStagingURL
+	stagingURL := common.UserConfigStagingURL
 	flags["staging"] = true
 	fetch = newHttpFetcher(newTestUserConfig(), rt, stagingURL).(*fetcher)
 	assert.Equal(t, "http://config-staging.getiantem.org/proxies.yaml.gz", fetch.originURL)

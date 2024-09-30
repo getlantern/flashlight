@@ -9,15 +9,11 @@ import (
 )
 
 const (
-	// The following are over HTTP because proxies do not forward X-Forwarded-For
-	// with HTTPS and because we only support falling back to direct domain
-	// fronting through the local proxy for HTTP.
+	// UserConfigURL is the URL for fetching the per user proxy config.
+	UserConfigURL = "https://api.iantem.io/v1/config"
 
-	// ProxiesURL is the URL for fetching the per user proxy config.
-	ProxiesURL = "http://config.getiantem.org/proxies.yaml.gz"
-
-	// ProxiesStagingURL is the URL for fetching the per user proxy config in a staging environment.
-	ProxiesStagingURL = "http://config-staging.getiantem.org/proxies.yaml.gz"
+	// UserConfigStagingURL is the URL for fetching the per user proxy config in a staging environment.
+	UserConfigStagingURL = "https://api-staging.iantem.io/config"
 
 	// Sentry Configurations
 	SentryTimeout         = time.Second * 30

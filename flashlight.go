@@ -525,15 +525,15 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 	if cloudURL, _ := f.flagsAsMap["cloudconfig"].(string); cloudURL != "" {
 		url = cloudURL
 	} else if staging, _ := f.flagsAsMap["staging"].(bool); staging {
-		url = common.ProxiesStagingURL
+		url = common.UserConfigStagingURL
 	} else {
-		url = common.ProxiesURL
+		url = common.UserConfigURL
 	}
 
 	configOpts := &services.ConfigOptions{
 		OriginURL:    url,
 		UserConfig:   f.userConfig,
-		RoundTripper: proxied.ParallelPreferChained(),
+		RoundTripper: proxied.ChainedThenFronted(),
 	}
 	return services.StartConfigService(handler, configOpts)
 }
