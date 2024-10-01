@@ -1,6 +1,6 @@
 module github.com/getlantern/flashlight/v7
 
-go 1.22.3
+go 1.23
 
 replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220805074304-4a43a9ed4ec6
 
