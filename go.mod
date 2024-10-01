@@ -54,7 +54,7 @@ require (
 	github.com/getlantern/jibber_jabber v0.0.0-20210901195950-68955124cc42
 	github.com/getlantern/kcpwrapper v0.0.0-20230327091313-c12d7c17c6de
 	github.com/getlantern/keyman v0.0.0-20230503155501-4e864ca2175b
-	github.com/getlantern/lantern-algeneva v0.0.0-20240418193310-610690afddbc
+	github.com/getlantern/lantern-algeneva v0.0.0-20240930181006-6d3c00db1d5d
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20230510135141-717ed305ef50
@@ -112,6 +112,7 @@ require (
 	github.com/Jigsaw-Code/outline-ss-server v1.5.0 // indirect
 	github.com/anacrolix/dht/v2 v2.20.0 // indirect
 	github.com/blang/vfs v1.0.0 // indirect
+	github.com/coder/websocket v1.8.12 // indirect
 	github.com/dchest/siphash v1.2.3 // indirect
 	github.com/gaukas/wazerofs v0.1.0 // indirect
 	github.com/getlantern/algeneva v0.0.0-20240222191137-2b4e88234f59 // indirect
@@ -120,6 +121,7 @@ require (
 	github.com/tetratelabs/wazero v1.7.1 // indirect
 	gitlab.com/yawning/edwards25519-extra.git v0.0.0-20211229043746-2f91fcc9fbdb // indirect
 	gitlab.com/yawning/obfs4.git v0.0.0-20220204003609-77af0cba934d // indirect
+	nhooyr.io/websocket v1.8.10 // indirect
 )
 
 require (
@@ -306,6 +308,5 @@ require (
 	modernc.org/mathutil v1.5.0 // indirect
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/sqlite v1.21.1 // indirect
-	nhooyr.io/websocket v1.8.10 // indirect
 	zombiezen.com/go/sqlite v0.13.1 // indirect
 )
