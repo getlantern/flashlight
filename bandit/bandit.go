@@ -9,8 +9,9 @@ import (
 	"time"
 
 	bandit "github.com/alextanhongpin/go-bandit"
-	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/golog"
+
+	"github.com/getlantern/flashlight/v7/stats"
 )
 
 var log = golog.LoggerFor("bandit")
@@ -106,7 +107,7 @@ func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy) {
 				bandit.Update(index, 0)
 				return
 			}
-			log.Debugf("Dialer %v succeeded in %v seconds", dialer.Name(), time.Since(start)*time.Second)
+			log.Debugf("Dialer %v succeeded in %v", dialer.Name(), time.Since(start))
 			bandit.Update(index, 1)
 		}(d, index)
 	}
@@ -146,7 +147,7 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 		}
 		return nil, err
 	}
-	log.Debugf("Dialer %v dialed in %v seconds", dialer.Name(), time.Since(start).Seconds())
+	log.Debugf("Dialer %v dialed in %v", dialer.Name(), time.Since(start))
 	// We don't give any special reward for a successful dial here and just rely on
 	// the normalized raw throughput to determine the reward. This is because the
 	// reward system takes into account how many tries there have been for a given

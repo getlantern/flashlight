@@ -1,5 +1,5 @@
 // This package breaks out some global config handling to where it can be used externally without dependence on all flashlight config.
-package globalConfig
+package globalconfig
 
 import (
 	"errors"

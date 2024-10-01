@@ -3,7 +3,7 @@ package flashlight
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -37,11 +37,11 @@ const (
 // was successful, it also tests to make sure that the outbound request didn't
 // leak any Lantern or CloudFlare headers.
 func testRequest(testCase string, t *testing.T, requests chan *http.Request, https bool, certPool *x509.CertPool, expectedStatus int, expectedErr error) {
-	dir, err := ioutil.TempDir("", "direct_test")
+	tempDir, err := os.MkdirTemp("", "direct_test")
 	if !assert.NoError(t, err, "Unable to create temp dir") {
 		return
 	}
-	defer os.RemoveAll(dir)
+	defer os.RemoveAll(tempDir)
 	fronted.ConfigureForTest(t)
 
 	log.Debug("Making request")
@@ -82,7 +82,7 @@ func testRequest(testCase string, t *testing.T, requests chan *http.Request, htt
 			t.Errorf("%s: Wrong response status. Expected %d, got %d", testCase, expectedStatus, resp.StatusCode)
 		} else {
 			// Check body
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			if err != nil {
 				t.Errorf("%s: Unable to read response body: %s", testCase, err)
 			} else if string(body) != expectedBody {
