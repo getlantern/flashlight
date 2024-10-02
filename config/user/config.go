@@ -71,7 +71,7 @@ func Init(saveDir string, obfuscate bool) (*config, error) {
 		return _config, nil // no saved config
 	}
 
-	log.Debugf("Loaded saved config: %v", saved)
+	log.Debug("Loaded saved config")
 	_config.config.Set(saved)
 	notifyListeners(nil, saved)
 	return _config, nil
