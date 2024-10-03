@@ -11,7 +11,6 @@ import (
 	"github.com/getlantern/flashlight/v7/config"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/keyman"
-	tls "github.com/refraction-networking/utls"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -39,21 +38,6 @@ func TestGenerateConfig(t *testing.T) {
 	// Generate self-signed certificate
 	cert, err := pk.TLSCertificateFor(time.Now().Add(1*time.Hour), true, nil, "tlsdialer", "localhost", "127.0.0.1")
 	require.NoError(t, err)
-
-	keypair, err := tls.X509KeyPair(cert.PEMEncoded(), pk.PEMEncoded())
-	require.NoError(t, err)
-
-	l, err := tls.Listen("tcp", "127.0.0.1:9999", &tls.Config{Certificates: []tls.Certificate{keypair}, InsecureSkipVerify: true})
-	require.NoError(t, err)
-	defer l.Close()
-
-	go func() {
-		conn, err := l.Accept()
-		require.NoError(t, err)
-
-		conn.Write([]byte("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n"))
-		conn.Close()
-	}()
 
 	masquerades = []string{"127.0.0.1:9999 127.0.0.1 akamai", "127.0.0.1:9999 127.0.0.1 akamai", "127.0.0.1:9999 127.0.0.1 cloudfront", "127.0.0.1:9999 127.0.0.1 cloudfront"}
 	proxiedSites := filter{"googlevideo.com": true, "googleapis.com": true, "google.com": true}
@@ -108,6 +92,9 @@ func TestGenerateConfig(t *testing.T) {
 				}
 				verifier := NewMockverifier(ctrl)
 				verifier.EXPECT().Vet(gomock.Any(), gomock.Any(), gomock.Any()).Return(true).AnyTimes()
+				certGrabber := NewMockcertGrabber(ctrl)
+				certGrabber.EXPECT().GetCertificate(gomock.Any(), gomock.Any()).Return(cert, nil).AnyTimes()
+				generator.certGrabber = certGrabber
 				generator.verifier = verifier
 				require.NotNil(t, generator.Providers[defaultProviderID])
 				return generator
@@ -123,6 +110,10 @@ func TestGenerateConfig(t *testing.T) {
 				verifier := NewMockverifier(ctrl)
 				verifier.EXPECT().Vet(gomock.Any(), gomock.Any(), gomock.Any()).Return(true).AnyTimes()
 				configGenerator.verifier = verifier
+
+				certGrabber := NewMockcertGrabber(ctrl)
+				certGrabber.EXPECT().GetCertificate(gomock.Any(), gomock.Any()).Return(cert, nil).AnyTimes()
+				configGenerator.certGrabber = certGrabber
 
 				return configGenerator
 			},

@@ -71,18 +71,48 @@ type ConfigGenerator struct {
 	wg            sync.WaitGroup
 	Providers     map[string]*provider // supported fronting providers
 
-	verifier verifier
+	verifier    verifier
+	certGrabber certGrabber
 }
 
-//go:generate mockgen -destination ./mock_genconfig.go -source ./genconfig.go -package main verifier, tlsDialer
+//go:generate mockgen -destination ./mock_genconfig.go -source ./genconfig.go -package main verifier, certGrabber
 type verifier interface {
 	Vet(m *fronted.Masquerade, pool *x509.CertPool, testURL string) bool
+}
+
+type certGrabber interface {
+	GetCertificate(ip, domain string) (*keyman.Certificate, error)
 }
 
 type frontedVerifier struct{}
 
 func (frontedVerifier) Vet(m *fronted.Masquerade, pool *x509.CertPool, testURL string) bool {
 	return fronted.Vet(m, pool, testURL)
+}
+
+type grabCert struct{}
+
+func (g *grabCert) GetCertificate(ip, domain string) (*keyman.Certificate, error) {
+	if !strings.Contains(ip, ":") {
+		ip = net.JoinHostPort(ip, "443")
+	}
+	cwt, err := tlsdialer.DialForTimings(net.DialTimeout, 10*time.Second, "tcp", ip, false, &tls.Config{ServerName: domain})
+	if err != nil {
+		log.Errorf("Unable to dial IP %s, domain %s: %s", ip, domain, err)
+		return nil, err
+	}
+	if err := cwt.Conn.Close(); err != nil {
+		log.Debugf("Error closing connection: %v", err)
+		return nil, err
+	}
+	chain := cwt.VerifiedChains[0]
+	rootCA := chain[len(chain)-1]
+	rootCert, err := keyman.LoadCertificateFromX509(rootCA)
+	if err != nil {
+		log.Errorf("Unable to load keyman certificate: %s", err)
+		return nil, err
+	}
+	return rootCert, nil
 }
 
 func NewConfigGenerator() *ConfigGenerator {
@@ -92,6 +122,7 @@ func NewConfigGenerator() *ConfigGenerator {
 		Providers:     loadMapping(),
 		wg:            sync.WaitGroup{},
 		verifier:      frontedVerifier{},
+		certGrabber:   &grabCert{},
 	}
 }
 
@@ -374,26 +405,14 @@ func (c *ConfigGenerator) grabCerts() {
 			continue
 		}
 		log.Tracef("Grabbing certs for IP %s, domain %s", ip, domain)
-		if !strings.Contains(ip, ":") {
-			ip = net.JoinHostPort(ip, "443")
-		}
-		cwt, err := tlsdialer.DialForTimings(net.DialTimeout, 10*time.Second, "tcp", ip, false, &tls.Config{ServerName: domain})
+
+		rootCert, err := c.certGrabber.GetCertificate(ip, domain)
 		if err != nil {
-			log.Errorf("Unable to dial IP %s, domain %s: %s", ip, domain, err)
 			continue
 		}
-		if err := cwt.Conn.Close(); err != nil {
-			log.Debugf("Error closing connection: %v", err)
-		}
-		chain := cwt.VerifiedChains[0]
-		rootCA := chain[len(chain)-1]
-		rootCert, err := keyman.LoadCertificateFromX509(rootCA)
-		if err != nil {
-			log.Errorf("Unable to load keyman certificate: %s", err)
-			continue
-		}
+
 		ca := &castat{
-			CommonName: rootCA.Subject.CommonName,
+			CommonName: rootCert.X509().Subject.CommonName,
 			Cert:       strings.Replace(string(rootCert.PEMEncoded()), "\n", "\\n", -1),
 			byProvider: make(map[string]int64),
 		}
