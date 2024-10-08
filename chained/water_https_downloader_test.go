@@ -1,4 +1,4 @@
-package water
+package chained
 
 import (
 	"bytes"
@@ -10,14 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-type roundTripFunc struct {
-	f func(req *http.Request) (*http.Response, error)
-}
-
-func (f *roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
-	return f.f(req)
-}
 
 func TestHTTPSDownloadWASM(t *testing.T) {
 	ctx := context.Background()

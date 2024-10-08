@@ -1,4 +1,4 @@
-package water
+package chained
 
 import (
 	"bytes"
