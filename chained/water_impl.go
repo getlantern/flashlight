@@ -1,11 +1,14 @@
 package chained
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"fmt"
 	"log/slog"
 	"net"
+	"net/http"
+	"strings"
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/v7/ops"
@@ -20,11 +23,31 @@ type waterImpl struct {
 	nopCloser
 }
 
-func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (*waterImpl, error) {
+func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn, httpClient *http.Client) (*waterImpl, error) {
+	var wasm []byte
+
 	b64WASM := ptSetting(pc, "water_wasm")
-	wasm, err := base64.StdEncoding.DecodeString(b64WASM)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode water wasm: %w", err)
+	if b64WASM != "" {
+		var err error
+		wasm, err = base64.StdEncoding.DecodeString(b64WASM)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode water wasm: %w", err)
+		}
+	}
+
+	wasmAvailableAt := ptSetting(pc, "water_wasm_available_at")
+	if wasm == nil && wasmAvailableAt != "" {
+		hashsum := ptSetting(pc, "water_wasm_hashsum")
+		urls := strings.Split(wasmAvailableAt, ",")
+		b := new(bytes.Buffer)
+		err := NewWASMDownloader(
+			WithURLs(urls),
+			WithExpectedHashsum(hashsum),
+			WithHTTPClient(httpClient)).DownloadWASM(context.Background(), b)
+		if err != nil {
+			return nil, fmt.Errorf("failed to download wasm: %w", err)
+		}
+		wasm = b.Bytes()
 	}
 
 	cfg := &water.Config{

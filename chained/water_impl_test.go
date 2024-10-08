@@ -1,11 +1,14 @@
 package chained
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
 	"embed"
 	"encoding/base64"
 	"io"
 	"net"
+	"net/http"
 	"testing"
 
 	"github.com/getlantern/common/config"
@@ -16,11 +19,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type roundTripFunc struct {
+	f func(req *http.Request) (*http.Response, error)
+}
+
+func (f *roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f.f(req)
+}
+
 func TestNewWaterImpl(t *testing.T) {
 	type params struct {
 		raddr          string
 		pc             *config.ProxyConfig
 		reportDialCore reportDialCoreFn
+		httpClient     *http.Client
 	}
 	f, err := testData.Open("testdata/reverse_tinygo_v1.wasm")
 	require.NoError(t, err)
@@ -29,6 +41,9 @@ func TestNewWaterImpl(t *testing.T) {
 	require.NoError(t, err)
 
 	b64WASM := base64.StdEncoding.EncodeToString(wantWASM)
+
+	hashsum := sha256.Sum256(wantWASM)
+	contentHashsum := string(hashsum[:])
 
 	var tests = []struct {
 		name        string
@@ -55,10 +70,41 @@ func TestNewWaterImpl(t *testing.T) {
 				assert.NotNil(t, actual.reportDialCore)
 			},
 		},
+		{
+			name: "create new waterImpl by downloading wasm",
+			givenParams: params{
+				raddr: "127.0.0.1",
+				pc: &config.ProxyConfig{
+					PluggableTransportSettings: map[string]string{
+						"water_wasm_available_at": "http://example.com/wasm.wasm,http://example2.com/wasm.wasm",
+						"water_wasm_hashsum":      contentHashsum,
+					},
+				},
+				reportDialCore: func(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error) {
+					return nil, nil
+				},
+				httpClient: &http.Client{
+					Transport: &roundTripFunc{
+						f: func(req *http.Request) (*http.Response, error) {
+							return &http.Response{
+								StatusCode: http.StatusOK,
+								Body:       io.NopCloser(bytes.NewBuffer(wantWASM)),
+							}, nil
+						},
+					},
+				},
+			},
+			assert: func(t *testing.T, actual *waterImpl, err error) {
+				require.NoError(t, err)
+				require.NotNil(t, actual)
+				require.NotNil(t, actual.dialer)
+				assert.NotNil(t, actual.reportDialCore)
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			waterImpl, err := newWaterImpl(tt.givenParams.raddr, tt.givenParams.pc, tt.givenParams.reportDialCore)
+			waterImpl, err := newWaterImpl(tt.givenParams.raddr, tt.givenParams.pc, tt.givenParams.reportDialCore, tt.givenParams.httpClient)
 			tt.assert(t, waterImpl, err)
 		})
 	}
@@ -109,7 +155,7 @@ func TestWaterDialServer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			waterImpl, err := newWaterImpl(tt.givenAddr, pc, tt.givenReportDialCore)
+			waterImpl, err := newWaterImpl(tt.givenAddr, pc, tt.givenReportDialCore, nil)
 			require.NoError(t, err)
 			conn, err := waterImpl.dialServer(tt.givenOp, tt.givenCtx)
 			tt.assert(t, conn, err)
