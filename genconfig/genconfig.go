@@ -70,6 +70,49 @@ type ConfigGenerator struct {
 	masqueradesCh chan *masquerade
 	wg            sync.WaitGroup
 	Providers     map[string]*provider // supported fronting providers
+
+	verifier    verifier
+	certGrabber certGrabber
+}
+
+//go:generate mockgen -destination ./mock_genconfig.go -source ./genconfig.go -package main verifier, certGrabber
+type verifier interface {
+	Vet(m *fronted.Masquerade, pool *x509.CertPool, testURL string) bool
+}
+
+type certGrabber interface {
+	GetCertificate(ip, domain string) (*keyman.Certificate, error)
+}
+
+type frontedVerifier struct{}
+
+func (frontedVerifier) Vet(m *fronted.Masquerade, pool *x509.CertPool, testURL string) bool {
+	return fronted.Vet(m, pool, testURL)
+}
+
+type grabCert struct{}
+
+func (g *grabCert) GetCertificate(ip, domain string) (*keyman.Certificate, error) {
+	if !strings.Contains(ip, ":") {
+		ip = net.JoinHostPort(ip, "443")
+	}
+	cwt, err := tlsdialer.DialForTimings(net.DialTimeout, 10*time.Second, "tcp", ip, false, &tls.Config{ServerName: domain})
+	if err != nil {
+		log.Errorf("Unable to dial IP %s, domain %s: %s", ip, domain, err)
+		return nil, err
+	}
+	if err := cwt.Conn.Close(); err != nil {
+		log.Debugf("Error closing connection: %v", err)
+		return nil, err
+	}
+	chain := cwt.VerifiedChains[0]
+	rootCA := chain[len(chain)-1]
+	rootCert, err := keyman.LoadCertificateFromX509(rootCA)
+	if err != nil {
+		log.Errorf("Unable to load keyman certificate: %s", err)
+		return nil, err
+	}
+	return rootCert, nil
 }
 
 func NewConfigGenerator() *ConfigGenerator {
@@ -78,6 +121,8 @@ func NewConfigGenerator() *ConfigGenerator {
 		masqueradesCh: make(chan *masquerade),
 		Providers:     loadMapping(),
 		wg:            sync.WaitGroup{},
+		verifier:      frontedVerifier{},
+		certGrabber:   &grabCert{},
 	}
 }
 
@@ -360,23 +405,14 @@ func (c *ConfigGenerator) grabCerts() {
 			continue
 		}
 		log.Tracef("Grabbing certs for IP %s, domain %s", ip, domain)
-		cwt, err := tlsdialer.DialForTimings(net.DialTimeout, 10*time.Second, "tcp", ip+":443", false, &tls.Config{ServerName: domain})
+
+		rootCert, err := c.certGrabber.GetCertificate(ip, domain)
 		if err != nil {
-			log.Errorf("Unable to dial IP %s, domain %s: %s", ip, domain, err)
 			continue
 		}
-		if err := cwt.Conn.Close(); err != nil {
-			log.Debugf("Error closing connection: %v", err)
-		}
-		chain := cwt.VerifiedChains[0]
-		rootCA := chain[len(chain)-1]
-		rootCert, err := keyman.LoadCertificateFromX509(rootCA)
-		if err != nil {
-			log.Errorf("Unable to load keyman certificate: %s", err)
-			continue
-		}
+
 		ca := &castat{
-			CommonName: rootCA.Subject.CommonName,
+			CommonName: rootCert.X509().Subject.CommonName,
 			Cert:       strings.Replace(string(rootCert.PEMEncoded()), "\n", "\\n", -1),
 			byProvider: make(map[string]int64),
 		}
@@ -499,21 +535,21 @@ func (c *ConfigGenerator) vetMasquerades(cas map[string]*castat, masquerades []*
 
 func (c *ConfigGenerator) doVetMasquerades(certPool *x509.CertPool, inCh chan *masquerade, outCh chan *masquerade) {
 	log.Debug("Starting to vet masquerades")
-	for _m := range inCh {
+	for masquerade := range inCh {
 		m := &fronted.Masquerade{
-			Domain:    _m.Domain,
-			IpAddress: _m.IpAddress,
+			Domain:    masquerade.Domain,
+			IpAddress: masquerade.IpAddress,
 		}
 
-		provider, ok := c.Providers[_m.ProviderID]
+		provider, ok := c.Providers[masquerade.ProviderID]
 		if !ok {
-			log.Debugf("%v (%v) failed to vet: unknown provider %v", m.Domain, m.IpAddress, _m.ProviderID)
+			log.Debugf("%v (%v) failed to vet: unknown provider %v", m.Domain, m.IpAddress, masquerade.ProviderID)
 			continue
 		}
 
-		if fronted.Vet(m, certPool, provider.TestURL) {
+		if c.verifier.Vet(m, certPool, provider.TestURL) {
 			log.Debugf("Successfully vetted %v (%v)", m.Domain, m.IpAddress)
-			outCh <- _m
+			outCh <- masquerade
 		} else {
 			log.Debugf("%v (%v) failed to vet", m.Domain, m.IpAddress)
 		}
