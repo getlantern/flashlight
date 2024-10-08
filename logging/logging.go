@@ -31,13 +31,11 @@ var (
 	log          = golog.LoggerFor("flashlight.logging")
 	processStart = time.Now()
 
-	logFile        io.WriteCloser
-	tunnnelLogFile io.WriteCloser
-	errorPWC       io.WriteCloser
-	debugPWC       io.WriteCloser
+	logFile  io.WriteCloser
+	errorPWC io.WriteCloser
+	debugPWC io.WriteCloser
 
 	actualLogDir   string
-	tunnelLogDir   string
 	actualLogDirMx sync.RWMutex
 
 	resetLogs atomic.Value
@@ -108,22 +106,10 @@ func EnableFileLoggingWith(werr io.WriteCloser, wout io.WriteCloser, appName, lo
 	if err != nil {
 		return err
 	}
-	logFile = rotator
-	if common.Platform == "ios" {
-		tunnelLogDir = strings.Replace(logdir, "/app/", "/netEx/", 1)
-		log.Debugf("logdir: %v, iosTunnelLogDir: %v", logdir, tunnelLogDir)
-		tunnelRotator, err := RotatedLogsUnder(appName, tunnelLogDir)
-		if err != nil {
-			return err
-		}
-		tunnnelLogFile = tunnelRotator
-		errorPWC = newPipedWriteCloser(NonStopWriteCloser(werr, logFile, tunnnelLogFile), errorBufferDepth)
-		debugPWC = newPipedWriteCloser(NonStopWriteCloser(wout, logFile, tunnnelLogFile), debugBufferDepth)
-	} else {
-		errorPWC = newPipedWriteCloser(NonStopWriteCloser(werr, logFile), errorBufferDepth)
-		debugPWC = newPipedWriteCloser(NonStopWriteCloser(wout, logFile), debugBufferDepth)
-	}
 
+	logFile = rotator
+	errorPWC = newPipedWriteCloser(NonStopWriteCloser(werr, logFile), errorBufferDepth)
+	debugPWC = newPipedWriteCloser(NonStopWriteCloser(wout, logFile), debugBufferDepth)
 	resetLogs.Store(golog.SetOutputs(errorPWC, debugPWC))
 	return nil
 }
@@ -204,6 +190,9 @@ func ZipLogFiles(w io.Writer, underFolder string, maxBytes int64, maxTextBytes i
 	if common.Platform != "ios" {
 		return ZipLogFilesFrom(w, maxBytes, maxTextBytes, map[string]string{"logs": logdir})
 	}
+	// On iOS, for the tunnel process running in a different directory,
+	// we need to zip those logs as well.
+	tunnelLogDir := strings.Replace(logdir, "/app/", "/netEx/", 1)
 	return ZipLogFilesFrom(w, maxBytes, maxTextBytes, map[string]string{"logs": logdir, "tunnelLogs": tunnelLogDir})
 }
 
@@ -298,10 +287,6 @@ func Close() error {
 	if logFile != nil {
 		logFile.Close()
 	}
-	if tunnnelLogFile != nil {
-		tunnnelLogFile.Close()
-	}
-
 	resetLogs.Load().(func())()
 
 	return nil
