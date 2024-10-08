@@ -102,6 +102,8 @@ func (d *downloader) downloadWASM(ctx context.Context, w io.Writer, url string) 
 			d.httpDownloader = NewHTTPSDownloader(d.httpClient, url)
 		}
 		return d.httpDownloader.DownloadWASM(ctx, w)
+	case strings.HasPrefix(url, "magnet:?"):
+		return NewMagnetDownloader(url).DownloadWASM(ctx, w)
 	default:
 		return fmt.Errorf("unsupported protocol: %s", url)
 	}
