@@ -46,7 +46,7 @@ func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDial
 			WithHTTPClient(httpClient)).DownloadWASM(context.Background(), b)
 
 		if err != nil {
-			return nil, log.Errorf("failed to download wasm: %w", err)
+			return nil, log.Errorf("failed to download wasm: %s", err.Error())
 		}
 		wasm = b.Bytes()
 	}

@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"embed"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -43,7 +44,7 @@ func TestNewWaterImpl(t *testing.T) {
 	b64WASM := base64.StdEncoding.EncodeToString(wantWASM)
 
 	hashsum := sha256.Sum256(wantWASM)
-	contentHashsum := string(hashsum[:])
+	contentHashsum := fmt.Sprintf("%x", hashsum[:])
 
 	var tests = []struct {
 		name        string
@@ -76,8 +77,8 @@ func TestNewWaterImpl(t *testing.T) {
 				raddr: "127.0.0.1",
 				pc: &config.ProxyConfig{
 					PluggableTransportSettings: map[string]string{
-						"water_wasm_available_at": "http://example.com/wasm.wasm,http://example2.com/wasm.wasm",
-						"water_wasm_hashsum":      contentHashsum,
+						"water_available_at": "http://example.com/wasm.wasm,http://example2.com/wasm.wasm",
+						"water_hashsum":      contentHashsum,
 					},
 				},
 				reportDialCore: func(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error) {
