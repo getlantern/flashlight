@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"fmt"
 	"io"
 	"net/http"
 	"testing"
@@ -73,7 +74,7 @@ func TestDownloadWASM(t *testing.T) {
 
 	contentMessage := "content"
 	hashsum := sha256.Sum256([]byte(contentMessage))
-	contentHashsum := string(hashsum[:])
+	contentHashsum := fmt.Sprintf("%x", hashsum[:])
 	var tests = []struct {
 		name                 string
 		givenHTTPClient      *http.Client
