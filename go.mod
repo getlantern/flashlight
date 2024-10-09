@@ -159,7 +159,7 @@ require (
 	github.com/anacrolix/squirrel v0.6.4 // indirect
 	github.com/anacrolix/stm v0.4.1-0.20221221005312-96d17df0e496 // indirect
 	github.com/anacrolix/sync v0.5.1 // indirect
-	github.com/anacrolix/torrent v1.57.1
+	github.com/anacrolix/torrent v1.53.3
 	github.com/anacrolix/upnp v0.1.4 // indirect
 	github.com/anacrolix/utp v0.1.0 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect

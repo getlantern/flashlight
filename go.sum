@@ -103,6 +103,8 @@ github.com/anacrolix/sync v0.5.1/go.mod h1:BbecHL6jDSExojhNtgTFSBcdGerzNc64tz3DC
 github.com/anacrolix/tagflag v0.0.0-20180109131632-2146c8d41bf0/go.mod h1:1m2U/K6ZT+JZG0+bdMK6qauP49QT4wE5pmhJXOKKCHw=
 github.com/anacrolix/tagflag v1.0.0/go.mod h1:1m2U/K6ZT+JZG0+bdMK6qauP49QT4wE5pmhJXOKKCHw=
 github.com/anacrolix/tagflag v1.1.0/go.mod h1:Scxs9CV10NQatSmbyjqmqmeQNwGzlNe0CMUMIxqHIG8=
+github.com/anacrolix/torrent v1.53.3 h1:Abb3J8p/JWUjOzHaii8kixuDOGMXz+Oh8+hwc/zA2lA=
+github.com/anacrolix/torrent v1.53.3/go.mod h1:is8GNob5qDeZ5Kq+pKPiE2xqYUi1ms7IgSB+CftZETk=
 github.com/anacrolix/torrent v1.57.1 h1:CS8rYfC2Oe15NPBhwCNs/3WBY6HiBCPDFpY+s9aFHbA=
 github.com/anacrolix/torrent v1.57.1/go.mod h1:NNBg4lP2/us9Hp5+cLNcZRILM69cNoKIkqMGqr9AuR0=
 github.com/anacrolix/upnp v0.1.4 h1:+2t2KA6QOhm/49zeNyeVwDu1ZYS9dB9wfxyVvh/wk7U=
