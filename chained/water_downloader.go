@@ -64,11 +64,6 @@ func NewWASMDownloader(withOpts ...DownloaderOption) WASMDownloader {
 func (d *downloader) DownloadWASM(ctx context.Context, w io.Writer) error {
 	joinedErrs := errors.New("failed to download WASM from all URLs")
 	for _, url := range d.urls {
-		if strings.HasPrefix(url, "magnet:?") {
-			// Skip magnetic links for now
-			joinedErrs = errors.Join(joinedErrs, errors.New("magentic links are not supported"))
-			continue
-		}
 		tempBuffer := &bytes.Buffer{}
 		err := d.downloadWASM(ctx, tempBuffer, url)
 		if err != nil {
@@ -94,7 +89,7 @@ func (d *downloader) DownloadWASM(ctx context.Context, w io.Writer) error {
 }
 
 // downloadWASM checks what kind of URL was given and downloads the WASM file
-// from the URL. It can be a HTTPS URL or a magnetic link.
+// from the URL. It can be a HTTPS URL or a magnet link.
 func (d *downloader) downloadWASM(ctx context.Context, w io.Writer, url string) error {
 	switch {
 	case strings.HasPrefix(url, "http://"), strings.HasPrefix(url, "https://"):

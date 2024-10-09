@@ -94,17 +94,6 @@ func TestDownloadWASM(t *testing.T) {
 			},
 		},
 		{
-			name:      "magnetic links are skipped",
-			givenURLs: []string{"magnet:?"},
-			assert: func(t *testing.T, r io.Reader, err error) {
-				b, berr := io.ReadAll(r)
-				require.NoError(t, berr)
-				assert.Empty(t, b)
-				assert.Error(t, err)
-				assert.ErrorContains(t, err, "magentic links are not supported")
-			},
-		},
-		{
 			name: "udp urls are unsupported",
 			givenURLs: []string{
 				"udp://example.com",
