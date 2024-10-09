@@ -35,17 +35,18 @@ func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDial
 		}
 	}
 
-	wasmAvailableAt := ptSetting(pc, "water_wasm_available_at")
+	wasmAvailableAt := ptSetting(pc, "water_available_at")
 	if wasm == nil && wasmAvailableAt != "" {
-		hashsum := ptSetting(pc, "water_wasm_hashsum")
+		hashsum := ptSetting(pc, "water_hashsum")
 		urls := strings.Split(wasmAvailableAt, ",")
 		b := new(bytes.Buffer)
 		err := NewWASMDownloader(
 			WithURLs(urls),
 			WithExpectedHashsum(hashsum),
 			WithHTTPClient(httpClient)).DownloadWASM(context.Background(), b)
+
 		if err != nil {
-			return nil, fmt.Errorf("failed to download wasm: %w", err)
+			return nil, log.Errorf("failed to download wasm: %w", err)
 		}
 		wasm = b.Bytes()
 	}

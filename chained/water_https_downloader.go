@@ -17,10 +17,6 @@ func NewHTTPSDownloader(client *http.Client, url string) WASMDownloader {
 }
 
 func (d *httpsDownloader) DownloadWASM(ctx context.Context, w io.Writer) error {
-	if d.cli == nil {
-		d.cli = http.DefaultClient
-	}
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, d.url, http.NoBody)
 	if err != nil {
 		return fmt.Errorf("failed to create a new HTTP request: %w", err)
@@ -39,6 +35,5 @@ func (d *httpsDownloader) DownloadWASM(ctx context.Context, w io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("failed to write the WASM file: %w", err)
 	}
-
 	return nil
 }
