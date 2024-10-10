@@ -23,7 +23,7 @@ func NewMagnetDownloader(magnetURL string) WASMDownloader {
 // DownloadWASM downloads the WASM file from the given URL.
 func (d *magnetDownloader) DownloadWASM(ctx context.Context, w io.Writer) error {
 	cfg := torrent.NewDefaultClientConfig()
-	path, err := os.MkdirTemp("/tmp", "torrent")
+	path, err := os.MkdirTemp("", "lantern-water-module")
 	if err != nil {
 		return fmt.Errorf("failed to create temp dir: %w", err)
 	}
