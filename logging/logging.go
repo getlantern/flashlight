@@ -19,6 +19,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/rotator"
 
+	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/util"
 )
 
@@ -186,8 +187,13 @@ func ZipLogFiles(w io.Writer, underFolder string, maxBytes int64, maxTextBytes i
 	actualLogDirMx.RLock()
 	logdir := actualLogDir
 	actualLogDirMx.RUnlock()
-
-	return ZipLogFilesFrom(w, maxBytes, maxTextBytes, map[string]string{"logs": logdir})
+	if common.Platform != "ios" {
+		return ZipLogFilesFrom(w, maxBytes, maxTextBytes, map[string]string{"logs": logdir})
+	}
+	// On iOS, for the tunnel process running in a different directory,
+	// we need to zip those logs as well.
+	tunnelLogDir := strings.Replace(logdir, "/app/", "/netEx/", 1)
+	return ZipLogFilesFrom(w, maxBytes, maxTextBytes, map[string]string{"logs": logdir, "tunnelLogs": tunnelLogDir})
 }
 
 // ZipLogFilesFrom zips the log files from the given dirs to the writer. It will
@@ -281,7 +287,6 @@ func Close() error {
 	if logFile != nil {
 		logFile.Close()
 	}
-
 	resetLogs.Load().(func())()
 
 	return nil
