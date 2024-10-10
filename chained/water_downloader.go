@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-//go:generate mockgen -destination=mocks.go -package=chained . WASMDownloader
+//go:generate mockgen -destination=mocks_test.go -package=chained . WASMDownloader
 
 type WASMDownloader interface {
 	DownloadWASM(context.Context, io.Writer) error
