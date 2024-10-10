@@ -3,10 +3,8 @@ package chained
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"embed"
 	"encoding/base64"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -43,9 +41,6 @@ func TestNewWaterImpl(t *testing.T) {
 
 	b64WASM := base64.StdEncoding.EncodeToString(wantWASM)
 
-	hashsum := sha256.Sum256(wantWASM)
-	contentHashsum := fmt.Sprintf("%x", hashsum[:])
-
 	var tests = []struct {
 		name        string
 		givenParams params
@@ -78,7 +73,6 @@ func TestNewWaterImpl(t *testing.T) {
 				pc: &config.ProxyConfig{
 					PluggableTransportSettings: map[string]string{
 						"water_available_at": "http://example.com/wasm.wasm,http://example2.com/wasm.wasm",
-						"water_hashsum":      contentHashsum,
 					},
 				},
 				reportDialCore: func(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error) {

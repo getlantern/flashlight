@@ -37,12 +37,10 @@ func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDial
 
 	wasmAvailableAt := ptSetting(pc, "water_available_at")
 	if wasm == nil && wasmAvailableAt != "" {
-		hashsum := ptSetting(pc, "water_hashsum")
 		urls := strings.Split(wasmAvailableAt, ",")
 		b := new(bytes.Buffer)
 		err := NewWASMDownloader(
 			WithURLs(urls),
-			WithExpectedHashsum(hashsum),
 			WithHTTPClient(httpClient)).DownloadWASM(context.Background(), b)
 
 		if err != nil {

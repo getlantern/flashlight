@@ -3,7 +3,6 @@ package chained
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io"
@@ -18,10 +17,9 @@ type WASMDownloader interface {
 }
 
 type downloader struct {
-	urls            []string
-	httpClient      *http.Client
-	expectedHashSum string
-	httpDownloader  WASMDownloader
+	urls           []string
+	httpClient     *http.Client
+	httpDownloader WASMDownloader
 }
 
 type DownloaderOption func(*downloader)
@@ -35,12 +33,6 @@ func WithURLs(urls []string) DownloaderOption {
 func WithHTTPClient(httpClient *http.Client) DownloaderOption {
 	return func(d *downloader) {
 		d.httpClient = httpClient
-	}
-}
-
-func WithExpectedHashsum(hashsum string) DownloaderOption {
-	return func(d *downloader) {
-		d.expectedHashSum = hashsum
 	}
 }
 
@@ -71,12 +63,6 @@ func (d *downloader) DownloadWASM(ctx context.Context, w io.Writer) error {
 			continue
 		}
 
-		err = d.verifyHashSum(tempBuffer.Bytes())
-		if err != nil {
-			joinedErrs = errors.Join(joinedErrs, err)
-			continue
-		}
-
 		_, err = tempBuffer.WriteTo(w)
 		if err != nil {
 			joinedErrs = errors.Join(joinedErrs, err)
@@ -102,14 +88,4 @@ func (d *downloader) downloadWASM(ctx context.Context, w io.Writer, url string) 
 	default:
 		return fmt.Errorf("unsupported protocol: %s", url)
 	}
-}
-
-var ErrFailedToVerifyHashSum = errors.New("failed to verify hash sum")
-
-func (d *downloader) verifyHashSum(data []byte) error {
-	sha256Hashsum := sha256.Sum256(data)
-	if d.expectedHashSum == "" || d.expectedHashSum != fmt.Sprintf("%x", sha256Hashsum[:]) {
-		return ErrFailedToVerifyHashSum
-	}
-	return nil
 }

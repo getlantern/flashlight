@@ -3,8 +3,6 @@ package chained
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
-	"fmt"
 	"io"
 	"net/http"
 	"testing"
@@ -25,7 +23,6 @@ func TestDownloaderWithOptions(t *testing.T) {
 			assert: func(t *testing.T, d *downloader) {
 				assert.Empty(t, d.urls)
 				assert.Nil(t, d.httpClient)
-				assert.Empty(t, d.expectedHashSum)
 			},
 		},
 		{
@@ -36,7 +33,6 @@ func TestDownloaderWithOptions(t *testing.T) {
 			assert: func(t *testing.T, d *downloader) {
 				assert.Equal(t, []string{"http://example.com"}, d.urls)
 				assert.Nil(t, d.httpClient)
-				assert.Empty(t, d.expectedHashSum)
 			},
 		},
 		{
@@ -47,18 +43,6 @@ func TestDownloaderWithOptions(t *testing.T) {
 			assert: func(t *testing.T, d *downloader) {
 				assert.Empty(t, d.urls)
 				assert.Equal(t, http.DefaultClient, d.httpClient)
-				assert.Empty(t, d.expectedHashSum)
-			},
-		},
-		{
-			name: "with expected hashsum",
-			givenOptions: []DownloaderOption{
-				WithExpectedHashsum("hashsum"),
-			},
-			assert: func(t *testing.T, d *downloader) {
-				assert.Empty(t, d.urls)
-				assert.Nil(t, d.httpClient)
-				assert.Equal(t, "hashsum", d.expectedHashSum)
 			},
 		},
 	}
@@ -73,16 +57,13 @@ func TestDownloadWASM(t *testing.T) {
 	ctx := context.Background()
 
 	contentMessage := "content"
-	hashsum := sha256.Sum256([]byte(contentMessage))
-	contentHashsum := fmt.Sprintf("%x", hashsum[:])
 	var tests = []struct {
-		name                 string
-		givenHTTPClient      *http.Client
-		givenURLs            []string
-		givenExpectedHashSum string
-		givenWriter          io.Writer
-		setupHTTPDownloader  func(ctrl *gomock.Controller) WASMDownloader
-		assert               func(*testing.T, io.Reader, error)
+		name                string
+		givenHTTPClient     *http.Client
+		givenURLs           []string
+		givenWriter         io.Writer
+		setupHTTPDownloader func(ctrl *gomock.Controller) WASMDownloader
+		assert              func(*testing.T, io.Reader, error)
 	}{
 		{
 			name: "no URLs",
@@ -127,34 +108,10 @@ func TestDownloadWASM(t *testing.T) {
 			},
 		},
 		{
-			name: "hashsum verification error",
-			givenURLs: []string{
-				"http://example.com",
-			},
-			givenExpectedHashSum: "hashsum",
-			setupHTTPDownloader: func(ctrl *gomock.Controller) WASMDownloader {
-				httpDownloader := NewMockWASMDownloader(ctrl)
-				httpDownloader.EXPECT().DownloadWASM(ctx, gomock.Any()).DoAndReturn(
-					func(ctx context.Context, w io.Writer) error {
-						_, err := w.Write([]byte(contentMessage))
-						return err
-					})
-				return httpDownloader
-			},
-			assert: func(t *testing.T, r io.Reader, err error) {
-				b, berr := io.ReadAll(r)
-				require.NoError(t, berr)
-				assert.Empty(t, b)
-				assert.Error(t, err)
-				assert.ErrorContains(t, err, "failed to verify hash sum")
-			},
-		},
-		{
 			name: "success",
 			givenURLs: []string{
 				"http://example.com",
 			},
-			givenExpectedHashSum: contentHashsum,
 			setupHTTPDownloader: func(ctrl *gomock.Controller) WASMDownloader {
 				httpDownloader := NewMockWASMDownloader(ctrl)
 				httpDownloader.EXPECT().DownloadWASM(ctx, gomock.Any()).DoAndReturn(
@@ -183,7 +140,6 @@ func TestDownloadWASM(t *testing.T) {
 
 			b := &bytes.Buffer{}
 			err := NewWASMDownloader(
-				WithExpectedHashsum(tt.givenExpectedHashSum),
 				WithHTTPClient(tt.givenHTTPClient),
 				WithURLs(tt.givenURLs),
 				WithHTTPDownloader(httpDownloader)).
