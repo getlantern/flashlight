@@ -600,6 +600,19 @@ func DirectThenFrontedClient(timeout time.Duration) *http.Client {
 	}
 }
 
+func ChainedThenDirectThenFrontedClient(timeout time.Duration, rootCA string) *http.Client {
+	drt := &http.Transport{
+		TLSHandshakeTimeout:   timeout,
+		ResponseHeaderTimeout: timeout,
+	}
+	frt := &frontedRoundTripper{masqueradeTimeout: timeout}
+	chained := &chainedRoundTripper{rootCA: rootCA}
+	return &http.Client{
+		Timeout:   timeout * 2,
+		Transport: serialTransport{chained, frt, drt},
+	}
+}
+
 type serialTransport []http.RoundTripper
 
 func (tr serialTransport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
