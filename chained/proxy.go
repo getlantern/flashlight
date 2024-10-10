@@ -213,7 +213,7 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 	case "algeneva":
 		impl, err = newAlgenevaImpl(addr, s, reportDialCore)
 	case "water":
-		impl, err = newWaterImpl(addr, s, reportDialCore, proxied.DirectThenFrontedClient(1*time.Minute))
+		impl, err = newWaterImpl(addr, s, reportDialCore, proxied.ChainedThenDirectThenFrontedClient(1*time.Minute))
 	default:
 		err = errors.New("Unknown transport: %v", transport).With("addr", addr).With("plugabble-transport", transport)
 	}
