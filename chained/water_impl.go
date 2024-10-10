@@ -9,9 +9,11 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/v7/ops"
+	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/refraction-networking/water"
 	_ "github.com/refraction-networking/water/transport/v1"
 )
@@ -23,7 +25,9 @@ type waterImpl struct {
 	nopCloser
 }
 
-func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn, httpClient *http.Client) (*waterImpl, error) {
+var httpClient *http.Client
+
+func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (*waterImpl, error) {
 	var wasm []byte
 
 	b64WASM := ptSetting(pc, "water_wasm")
@@ -39,9 +43,13 @@ func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDial
 	if wasm == nil && wasmAvailableAt != "" {
 		urls := strings.Split(wasmAvailableAt, ",")
 		b := new(bytes.Buffer)
+		cli := httpClient
+		if cli == nil {
+			cli = proxied.ChainedThenDirectThenFrontedClient(1*time.Minute, "")
+		}
 		err := NewWASMDownloader(
 			WithURLs(urls),
-			WithHTTPClient(httpClient)).DownloadWASM(context.Background(), b)
+			WithHTTPClient(cli)).DownloadWASM(context.Background(), b)
 
 		if err != nil {
 			return nil, log.Errorf("failed to download wasm: %s", err.Error())
