@@ -17,9 +17,6 @@ const (
 	// signal the proxy to establish a persistent HTTP connection over which
 	// one or more HTTP requests can be sent directly.
 	NetworkPersistent = "persistent"
-
-	// maxDialerFails is the max consecutive failed dials/requests before moving to the next dialer
-	maxDialerFails = 4
 )
 
 // Dialer provides the ability to dial a proxy
@@ -27,26 +24,16 @@ type Dialer interface {
 	// SupportsAddr indicates whether this Dialer supports the given addr. If it does not, the
 	// balancer will not attempt to dial that addr with this Dialer.
 	SupportsAddr(network, addr string) bool
-
 	// DialContext dials out to the given origin. failedUpstream indicates whether
 	// this was an upstream error (as opposed to errors connecting to the proxy).
 	DialContext(ctx context.Context, network, addr string) (conn net.Conn, failedUpstream bool, err error)
-
 	// Label returns a label for this Dialer (includes Name plus more).
 	Label() string
-
 	// MarkFailure marks a dial failure on this dialer.
 	MarkFailure()
-
-	// ConsecFailures returns the number of consecutive dial failures
-	ConsecFailures() int64
-
-	// Succeeding indicates whether or not this dialer is currently good to use
-	Succeeding() bool
-
 	// Stop stops background processing for this Dialer.
 	Stop()
-
+	// WriteStats writes this Dialer's stats to the given writer.
 	WriteStats(w io.Writer)
 }
 
@@ -56,8 +43,19 @@ type LoopDialer struct {
 	active atomic.Int64
 }
 
+// TODO: Add a way for LoopDialer to accept new Dialers. The new Dialers should replace the old ones
+// and if the active dialer exists in the new set, it should remain the active dialer. Otherwise,
+// set the active dialer to the first dialer in the new set.
+
 func NewLoopDialer(dialers []Dialer) *LoopDialer {
 	return &LoopDialer{dialers: dialers}
+}
+
+// Close stops background processing for all Dialers in this LoopDialer.
+func (ld *LoopDialer) Close() {
+	for _, dlr := range ld.dialers {
+		dlr.Stop()
+	}
 }
 
 func (ld *LoopDialer) Dial(network, addr string) (net.Conn, error) {
@@ -72,6 +70,14 @@ func (ld *LoopDialer) DialContext(ctx context.Context, network, addr string) (ne
 	}
 
 	for i, dlr := range ld.iter() {
+		select {
+		case <-ctx.Done():
+			err := fmt.Errorf("dialing %s %s: %w", network, addr, ctx.Err())
+			log.Error(err)
+			return nil, err
+		default:
+		}
+
 		if !dlr.SupportsAddr(network, addr) {
 			log.Debugf("dialer %s does not support %s %s", dlr.Label(), network, addr)
 			continue
@@ -85,14 +91,6 @@ func (ld *LoopDialer) DialContext(ctx context.Context, network, addr string) (ne
 			return conn, nil
 		}
 
-		select {
-		case <-ctx.Done():
-			err := fmt.Errorf("dialing %s %s: %v", network, addr, ctx.Err())
-			log.Error(err)
-			return nil, err
-		default:
-		}
-
 		log.Errorf("dialer %s failed to dial %s %s: %v", dlr.Label(), network, addr, err)
 	}
 
@@ -100,28 +98,18 @@ func (ld *LoopDialer) DialContext(ctx context.Context, network, addr string) (ne
 }
 
 func (ld *LoopDialer) dialWithDialer(ctx context.Context, dlr Dialer, network, addr string) (net.Conn, error) {
-	for {
-		conn, failedUpstream, err := dlr.DialContext(ctx, network, addr)
-		if err == nil {
-			return conn, nil
-		}
-
-		select {
-		case <-ctx.Done():
-			log.Debugf("dialWithDialer: %v", ctx.Err())
-			return nil, err
-		default:
-		}
-
-		dlr.MarkFailure()
-		if dlr.ConsecFailures() >= maxDialerFails {
-			if failedUpstream {
-				err = fmt.Errorf("failed upstream: %w", err)
-			}
-
-			return nil, err
-		}
+	conn, failedUpstream, err := dlr.DialContext(ctx, network, addr)
+	if err == nil {
+		return conn, nil
 	}
+
+	if failedUpstream {
+		err = fmt.Errorf("failed upstream: %w", err)
+		return nil, err
+	}
+
+	dlr.MarkFailure()
+	return nil, err
 }
 
 // iter returns a function that iterates through the dialers starting from the active dialer and
