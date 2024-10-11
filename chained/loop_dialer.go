@@ -7,7 +7,6 @@ import (
 	"iter"
 	"net"
 	"sync/atomic"
-	"time"
 )
 
 const (
@@ -25,10 +24,6 @@ const (
 
 // Dialer provides the ability to dial a proxy
 type Dialer interface {
-
-	// DialProxy dials the proxy but does not yet dial the origin.
-	DialProxy(ctx context.Context) (net.Conn, error)
-
 	// SupportsAddr indicates whether this Dialer supports the given addr. If it does not, the
 	// balancer will not attempt to dial that addr with this Dialer.
 	SupportsAddr(network, addr string) bool
@@ -37,73 +32,17 @@ type Dialer interface {
 	// this was an upstream error (as opposed to errors connecting to the proxy).
 	DialContext(ctx context.Context, network, addr string) (conn net.Conn, failedUpstream bool, err error)
 
-	// Name returns the name for this Dialer
-	Name() string
-
 	// Label returns a label for this Dialer (includes Name plus more).
 	Label() string
 
-	// JustifiedLabel is like Label() but with elements justified for line-by
-	// -line display.
-	JustifiedLabel() string
-
-	// Location returns the country code, country name and city name of the
-	// dialer, in this order.
-	Location() (string, string, string)
-
-	// Protocol returns a string representation of the protocol used by this
-	// Dialer.
-	Protocol() string
-
-	// Addr returns the address for this Dialer
-	Addr() string
-
-	// Trusted indicates whether or not this dialer is trusted
-	Trusted() bool
-
-	// NumPreconnecting returns the number of pending preconnect requests.
-	NumPreconnecting() int
-
-	// NumPreconnected returns the number of preconnected connections.
-	NumPreconnected() int
-
 	// MarkFailure marks a dial failure on this dialer.
 	MarkFailure()
-
-	// EstRTT provides a round trip delay time estimate, similar to how RTT is
-	// estimated in TCP (https://tools.ietf.org/html/rfc6298)
-	EstRTT() time.Duration
-
-	// EstBandwidth provides the estimated bandwidth in Mbps
-	EstBandwidth() float64
-
-	// EstSuccessRate returns the estimated success rate dialing this dialer.
-	EstSuccessRate() float64
-
-	// Attempts returns the total number of dial attempts
-	Attempts() int64
-
-	// Successes returns the total number of dial successes
-	Successes() int64
-
-	// ConsecSuccesses returns the number of consecutive dial successes
-	ConsecSuccesses() int64
-
-	// Failures returns the total number of dial failures
-	Failures() int64
 
 	// ConsecFailures returns the number of consecutive dial failures
 	ConsecFailures() int64
 
 	// Succeeding indicates whether or not this dialer is currently good to use
 	Succeeding() bool
-
-	// DataSent returns total bytes of application data sent to connections
-	// created via this dialer.
-	DataSent() uint64
-	// DataRecv returns total bytes of application data received from
-	// connections created via this dialer.
-	DataRecv() uint64
 
 	// Stop stops background processing for this Dialer.
 	Stop()
@@ -183,17 +122,6 @@ func (ld *LoopDialer) dialWithDialer(ctx context.Context, dlr Dialer, network, a
 			return nil, err
 		}
 	}
-}
-
-// MarkFailure marks the active dialer as failed. This is used to provide feedback to the Selector
-// that requests are failing. This could be due poor proxy performance, or the proxy being blocked.
-func (ld *LoopDialer) MarkFailure() {
-	// BUG: There is an edge case where the active dialer (proxy) was used successfully by 2+
-	// goroutines and before failing. In this case, all goroutines will mark the dialer as failed.
-	// If the dialer advances before the other goroutines mark it as failed, then the new active
-	// dialer will be marked as failed incorrectly.
-	dlr := ld.dialers[ld.active.Load()]
-	dlr.MarkFailure()
 }
 
 // iter returns a function that iterates through the dialers starting from the active dialer and

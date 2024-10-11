@@ -6,7 +6,6 @@ import (
 	"io"
 	"net"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -104,31 +103,6 @@ func (mockdialer *mockDialer) SupportsAddr(network string, addr string) bool {
 	return addr == selectorTestAddr
 }
 
-func (mockdialer *mockDialer) ConsecFailures() int64 { return mockdialer.consecFailures }
-
-func (mockdialer *mockDialer) DialProxy(ctx context.Context) (net.Conn, error) {
-	return nil, errors.New("not implemented")
-}
-
-func (mockdialer *mockDialer) Name() string                       { return mockdialer.name }
-func (mockdialer *mockDialer) Label() string                      { return mockdialer.name }
-func (mockdialer *mockDialer) JustifiedLabel() string             { return mockdialer.name }
-func (mockdialer *mockDialer) Location() (string, string, string) { return "", "", "" }
-func (mockdialer *mockDialer) Protocol() string                   { return "mockdialer" }
-func (mockdialer *mockDialer) Addr() string                       { return "mockdialer" }
-
-func (mockdialer *mockDialer) Attempts() int64         { return 0 }
-func (mockdialer *mockDialer) Successes() int64        { return 0 }
-func (mockdialer *mockDialer) Failures() int64         { return 0 }
-func (mockdialer *mockDialer) Trusted() bool           { return true }
-func (mockdialer *mockDialer) NumPreconnecting() int   { return 0 }
-func (mockdialer *mockDialer) NumPreconnected() int    { return 0 }
-func (mockdialer *mockDialer) EstRTT() time.Duration   { return time.Millisecond }
-func (mockdialer *mockDialer) EstBandwidth() float64   { return 0 }
-func (mockdialer *mockDialer) EstSuccessRate() float64 { return 0 }
-func (mockdialer *mockDialer) ConsecSuccesses() int64  { return 0 }
-func (mockdialer *mockDialer) Succeeding() bool        { return true }
-func (mockdialer *mockDialer) DataSent() uint64        { return 0 }
-func (mockdialer *mockDialer) DataRecv() uint64        { return 0 }
-func (mockdialer *mockDialer) Stop()                   {}
-func (mockdialer *mockDialer) WriteStats(w io.Writer)  {}
+func (mockdialer *mockDialer) Label() string          { return mockdialer.name }
+func (mockdialer *mockDialer) Stop()                  {}
+func (mockdialer *mockDialer) WriteStats(w io.Writer) {}
