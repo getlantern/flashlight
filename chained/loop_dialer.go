@@ -111,38 +111,38 @@ type Dialer interface {
 	WriteStats(w io.Writer)
 }
 
-type Selector struct {
+type LoopDialer struct {
 	dialers []Dialer
 	// active is the index of the currently active dialer
 	active atomic.Int64
 }
 
-func NewSelector(dialers []Dialer) *Selector {
-	return &Selector{dialers: dialers}
+func NewLoopDialer(dialers []Dialer) *LoopDialer {
+	return &LoopDialer{dialers: dialers}
 }
 
-func (s *Selector) Dial(network, addr string) (net.Conn, error) {
-	return s.DialContext(context.Background(), network, addr)
+func (ld *LoopDialer) Dial(network, addr string) (net.Conn, error) {
+	return ld.DialContext(context.Background(), network, addr)
 }
 
 // DialContext dials the given network and address. It will cycle through the available dialers
 // until one is successful, or all have been attempted.
-func (s *Selector) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	if len(s.dialers) == 0 {
+func (ld *LoopDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	if len(ld.dialers) == 0 {
 		return nil, log.Error("no dialers available")
 	}
 
-	for i, dlr := range s.iter() {
+	for i, dlr := range ld.iter() {
 		if !dlr.SupportsAddr(network, addr) {
 			log.Debugf("dialer %s does not support %s %s", dlr.Label(), network, addr)
 			continue
 		}
 
 		log.Debugf("dialing %s %s with dialer %s", network, addr, dlr.Label())
-		conn, err := s.dialWithDialer(ctx, dlr, network, addr)
+		conn, err := ld.dialWithDialer(ctx, dlr, network, addr)
 		if err == nil {
 			log.Debugf("dialer %s successfully dialed %s %s", dlr.Label(), network, addr)
-			s.active.Store(int64(i))
+			ld.active.Store(int64(i))
 			return conn, nil
 		}
 
@@ -160,7 +160,7 @@ func (s *Selector) DialContext(ctx context.Context, network, addr string) (net.C
 	return nil, fmt.Errorf("failed to dial %s %s", network, addr)
 }
 
-func (s *Selector) dialWithDialer(ctx context.Context, dlr Dialer, network, addr string) (net.Conn, error) {
+func (ld *LoopDialer) dialWithDialer(ctx context.Context, dlr Dialer, network, addr string) (net.Conn, error) {
 	for {
 		conn, failedUpstream, err := dlr.DialContext(ctx, network, addr)
 		if err == nil {
@@ -187,28 +187,28 @@ func (s *Selector) dialWithDialer(ctx context.Context, dlr Dialer, network, addr
 
 // MarkFailure marks the active dialer as failed. This is used to provide feedback to the Selector
 // that requests are failing. This could be due poor proxy performance, or the proxy being blocked.
-func (s *Selector) MarkFailure() {
+func (ld *LoopDialer) MarkFailure() {
 	// BUG: There is an edge case where the active dialer (proxy) was used successfully by 2+
 	// goroutines and before failing. In this case, all goroutines will mark the dialer as failed.
 	// If the dialer advances before the other goroutines mark it as failed, then the new active
 	// dialer will be marked as failed incorrectly.
-	dlr := s.dialers[s.active.Load()]
+	dlr := ld.dialers[ld.active.Load()]
 	dlr.MarkFailure()
 }
 
 // iter returns a function that iterates through the dialers starting from the active dialer and
 // wrapping around to the beginning. This for use in a range-over-function loop. It will yield the
 // next dialer in the list and its index in s.dialers.
-func (s *Selector) iter() iter.Seq2[int, Dialer] {
-	i := int(s.active.Load())
+func (ld *LoopDialer) iter() iter.Seq2[int, Dialer] {
+	i := int(ld.active.Load())
 	return func(yield func(int, Dialer) bool) {
-		for j := 0; j < len(s.dialers); j++ {
-			dlr := s.dialers[i]
+		for j := 0; j < len(ld.dialers); j++ {
+			dlr := ld.dialers[i]
 			if !yield(i, dlr) {
 				return
 			}
 
-			i = (i + 1) % len(s.dialers)
+			i = (i + 1) % len(ld.dialers)
 		}
 	}
 }

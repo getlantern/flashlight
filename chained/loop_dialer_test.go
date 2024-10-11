@@ -11,15 +11,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSelectorDial(t *testing.T) {
+func TestLoopDialerDial(t *testing.T) {
 	tests := []struct {
 		name     string
 		assertFn func(t *testing.T)
 	}{
-		{name: "dial success", assertFn: assertSelectorSuccess},
-		{name: "dialer advance", assertFn: assertSelectorAdvance},
-		{name: "fail to dial", assertFn: assertSelectorFailToDial},
-		{name: "unsupported addr", assertFn: assertSelectorUnsupportedAddr},
+		{name: "dial success", assertFn: assertLoopDialerSuccess},
+		{name: "dialer advance", assertFn: assertLoopDialerAdvance},
+		{name: "fail to dial", assertFn: assertLoopDialerFailToDial},
+		{name: "unsupported addr", assertFn: assertLoopDialerUnsupportedAddr},
 	}
 
 	for _, tt := range tests {
@@ -29,50 +29,50 @@ func TestSelectorDial(t *testing.T) {
 	}
 }
 
-func assertSelectorSuccess(t *testing.T) {
-	selector := NewSelector(
+func assertLoopDialerSuccess(t *testing.T) {
+	ld := NewLoopDialer(
 		[]Dialer{
 			&mockDialer{name: "dialer-0"},
 			&mockDialer{name: "dialer-1"},
 		},
 	)
-	_, err := selector.Dial("tcp", selectorTestAddr)
+	_, err := ld.Dial("tcp", selectorTestAddr)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(0), selector.active.Load(), "dialer 0 should still be active dialer")
+	assert.Equal(t, int64(0), ld.active.Load(), "dialer 0 should still be active dialer")
 }
 
-func assertSelectorAdvance(t *testing.T) {
-	selector := NewSelector(
+func assertLoopDialerAdvance(t *testing.T) {
+	ld := NewLoopDialer(
 		[]Dialer{
 			&mockDialer{name: "failingDialer", forceFail: true},
 			&mockDialer{name: "succeedingDialer"},
 		},
 	)
-	_, err := selector.Dial("tcp", selectorTestAddr)
+	_, err := ld.Dial("tcp", selectorTestAddr)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(1), selector.active.Load(), "selector should have advanced to dialer 1")
+	assert.Equal(t, int64(1), ld.active.Load(), "loopDialer should have advanced to dialer 1")
 }
 
-func assertSelectorFailToDial(t *testing.T) {
-	selector := NewSelector(
+func assertLoopDialerFailToDial(t *testing.T) {
+	ld := NewLoopDialer(
 		[]Dialer{
 			&mockDialer{name: "failingDialer-0", forceFail: true},
 			&mockDialer{name: "failingDialer-1", forceFail: true},
 		},
 	)
-	_, err := selector.Dial("tcp", selectorTestAddr)
+	_, err := ld.Dial("tcp", selectorTestAddr)
 	assert.Error(t, err)
 }
 
-func assertSelectorUnsupportedAddr(t *testing.T) {
+func assertLoopDialerUnsupportedAddr(t *testing.T) {
 	// we need to test that Dial fails when no dialer supports the addr to avoid infinite loop
-	selector := NewSelector(
+	ld := NewLoopDialer(
 		[]Dialer{
 			&mockDialer{name: "Microsoft"},
 			&mockDialer{name: "Microsoft still"},
 		},
 	)
-	_, err := selector.Dial("", "updates without breaking windows")
+	_, err := ld.Dial("", "working windows updates")
 	assert.Error(t, err)
 }
 
