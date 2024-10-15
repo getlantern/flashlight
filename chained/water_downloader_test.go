@@ -139,11 +139,14 @@ func TestDownloadWASM(t *testing.T) {
 			}
 
 			b := &bytes.Buffer{}
-			err := NewWASMDownloader(
+			d := NewWASMDownloader(
 				WithHTTPClient(tt.givenHTTPClient),
-				WithURLs(tt.givenURLs),
-				WithHTTPDownloader(httpDownloader)).
-				DownloadWASM(ctx, b)
+				WithURLs(tt.givenURLs))
+
+			if httpDownloader != nil {
+				d.(*downloader).httpDownloader = httpDownloader
+			}
+			err := d.DownloadWASM(ctx, b)
 			tt.assert(t, b, err)
 		})
 	}

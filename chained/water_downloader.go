@@ -39,12 +39,6 @@ func WithHTTPClient(httpClient *http.Client) DownloaderOption {
 	}
 }
 
-func WithHTTPDownloader(httpDownloader WASMDownloader) DownloaderOption {
-	return func(d *downloader) {
-		d.httpDownloader = httpDownloader
-	}
-}
-
 // NewWASMDownloader creates a new WASMDownloader instance.
 func NewWASMDownloader(withOpts ...DownloaderOption) WASMDownloader {
 	downloader := new(downloader)
