@@ -10,16 +10,19 @@ import (
 	"strings"
 )
 
-//go:generate mockgen -destination=mocks_test.go -package=chained . WASMDownloader
+//go:generate mockgen -package=chained -destination=mocks_test.go . WASMDownloader,TorrentClient,TorrentInfo
+//go:generate mockgen -package=chained -destination=torrent_reader_mock_test.go github.com/anacrolix/torrent Reader
 
 type WASMDownloader interface {
 	DownloadWASM(context.Context, io.Writer) error
+	Close() error
 }
 
 type downloader struct {
-	urls           []string
-	httpClient     *http.Client
-	httpDownloader WASMDownloader
+	urls             []string
+	httpClient       *http.Client
+	httpDownloader   WASMDownloader
+	magnetDownloader WASMDownloader
 }
 
 type DownloaderOption func(*downloader)
@@ -49,6 +52,10 @@ func NewWASMDownloader(withOpts ...DownloaderOption) WASMDownloader {
 		opt(downloader)
 	}
 	return downloader
+}
+
+func (d *downloader) Close() error {
+	return d.magnetDownloader.Close()
 }
 
 // DownloadWASM downloads the WASM file from the given URLs, verifies the hash
@@ -84,7 +91,15 @@ func (d *downloader) downloadWASM(ctx context.Context, w io.Writer, url string) 
 		}
 		return d.httpDownloader.DownloadWASM(ctx, w)
 	case strings.HasPrefix(url, "magnet:?"):
-		return NewMagnetDownloader(url).DownloadWASM(ctx, w)
+		if d.magnetDownloader == nil {
+			var err error
+			downloader, err := NewMagnetDownloader(ctx, url)
+			if err != nil {
+				return err
+			}
+			d.magnetDownloader = downloader
+		}
+		return d.magnetDownloader.DownloadWASM(ctx, w)
 	default:
 		return fmt.Errorf("unsupported protocol: %s", url)
 	}
