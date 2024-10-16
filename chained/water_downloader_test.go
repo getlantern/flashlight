@@ -12,43 +12,36 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-func TestDownloaderWithOptions(t *testing.T) {
+func TestNewWASMDownloader(t *testing.T) {
 	var tests = []struct {
-		name         string
-		givenOptions []DownloaderOption
-		assert       func(*testing.T, *downloader)
+		name            string
+		givenURLs       []string
+		givenHTTPClient *http.Client
+		assert          func(*testing.T, WASMDownloader, error)
 	}{
 		{
-			name: "no options",
-			assert: func(t *testing.T, d *downloader) {
-				assert.Empty(t, d.urls)
-				assert.Nil(t, d.httpClient)
+			name: "it should return an error when providing an empty list of URLs",
+			assert: func(t *testing.T, d WASMDownloader, err error) {
+				assert.Error(t, err)
+				assert.Nil(t, d)
 			},
 		},
 		{
-			name: "with URLs",
-			givenOptions: []DownloaderOption{
-				WithURLs([]string{"http://example.com"}),
-			},
-			assert: func(t *testing.T, d *downloader) {
+			name:            "it should successfully return a wasm downloader",
+			givenURLs:       []string{"http://example.com"},
+			givenHTTPClient: http.DefaultClient,
+			assert: func(t *testing.T, wDownloader WASMDownloader, err error) {
+				assert.NoError(t, err)
+				d := wDownloader.(*downloader)
 				assert.Equal(t, []string{"http://example.com"}, d.urls)
-				assert.Nil(t, d.httpClient)
-			},
-		},
-		{
-			name: "with HTTP client",
-			givenOptions: []DownloaderOption{
-				WithHTTPClient(http.DefaultClient),
-			},
-			assert: func(t *testing.T, d *downloader) {
-				assert.Empty(t, d.urls)
 				assert.Equal(t, http.DefaultClient, d.httpClient)
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.assert(t, NewWASMDownloader(tt.givenOptions...).(*downloader))
+			d, err := NewWASMDownloader(tt.givenURLs, tt.givenHTTPClient)
+			tt.assert(t, d, err)
 		})
 	}
 }
@@ -65,16 +58,6 @@ func TestDownloadWASM(t *testing.T) {
 		setupHTTPDownloader func(ctrl *gomock.Controller) WASMDownloader
 		assert              func(*testing.T, io.Reader, error)
 	}{
-		{
-			name: "no URLs",
-			assert: func(t *testing.T, r io.Reader, err error) {
-				b, berr := io.ReadAll(r)
-				require.NoError(t, berr)
-				assert.Empty(t, b)
-				assert.Error(t, err)
-				assert.ErrorContains(t, err, "failed to download WASM from all URLs")
-			},
-		},
 		{
 			name: "udp urls are unsupported",
 			givenURLs: []string{
@@ -139,14 +122,13 @@ func TestDownloadWASM(t *testing.T) {
 			}
 
 			b := &bytes.Buffer{}
-			d := NewWASMDownloader(
-				WithHTTPClient(tt.givenHTTPClient),
-				WithURLs(tt.givenURLs))
+			d, err := NewWASMDownloader(tt.givenURLs, tt.givenHTTPClient)
+			require.NoError(t, err)
 
 			if httpDownloader != nil {
 				d.(*downloader).httpDownloader = httpDownloader
 			}
-			err := d.DownloadWASM(ctx, b)
+			err = d.DownloadWASM(ctx, b)
 			tt.assert(t, b, err)
 		})
 	}

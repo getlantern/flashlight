@@ -47,11 +47,11 @@ func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDial
 		if cli == nil {
 			cli = proxied.ChainedThenDirectThenFrontedClient(1*time.Minute, "")
 		}
-		err := NewWASMDownloader(
-			WithURLs(urls),
-			WithHTTPClient(cli)).DownloadWASM(context.Background(), b)
-
+		d, err := NewWASMDownloader(urls, cli)
 		if err != nil {
+			return nil, log.Errorf("failed to create wasm downloader: %s", err.Error())
+		}
+		if err = d.DownloadWASM(context.Background(), b); err != nil {
 			return nil, log.Errorf("failed to download wasm: %s", err.Error())
 		}
 		wasm = b.Bytes()

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -25,31 +24,22 @@ type downloader struct {
 	magnetDownloader WASMDownloader
 }
 
-type DownloaderOption func(*downloader)
-
-func WithURLs(urls []string) DownloaderOption {
-	return func(d *downloader) {
-		d.urls = urls
-	}
-}
-
-func WithHTTPClient(httpClient *http.Client) DownloaderOption {
-	return func(d *downloader) {
-		d.httpClient = httpClient
-	}
-}
-
 // NewWASMDownloader creates a new WASMDownloader instance.
-func NewWASMDownloader(withOpts ...DownloaderOption) WASMDownloader {
-	downloader := new(downloader)
-	for _, opt := range withOpts {
-		opt(downloader)
+func NewWASMDownloader(urls []string, httpClient *http.Client) (WASMDownloader, error) {
+	if len(urls) == 0 {
+		return nil, log.Error("WASM downloader requires URLs to download but received empty list")
 	}
-	return downloader
+	return &downloader{
+		urls:       urls,
+		httpClient: httpClient,
+	}, nil
 }
 
 func (d *downloader) Close() error {
-	return d.magnetDownloader.Close()
+	if d.magnetDownloader != nil {
+		return d.magnetDownloader.Close()
+	}
+	return nil
 }
 
 // DownloadWASM downloads the WASM file from the given URLs, verifies the hash
@@ -95,6 +85,6 @@ func (d *downloader) downloadWASM(ctx context.Context, w io.Writer, url string) 
 		}
 		return d.magnetDownloader.DownloadWASM(ctx, w)
 	default:
-		return fmt.Errorf("unsupported protocol: %s", url)
+		return log.Errorf("unsupported protocol: %s", url)
 	}
 }
