@@ -1,7 +1,6 @@
 package chained
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -47,19 +46,11 @@ func (d *downloader) Close() error {
 func (d *downloader) DownloadWASM(ctx context.Context, w io.Writer) error {
 	joinedErrs := errors.New("failed to download WASM from all URLs")
 	for _, url := range d.urls {
-		tempBuffer := &bytes.Buffer{}
-		err := d.downloadWASM(ctx, tempBuffer, url)
+		err := d.downloadWASM(ctx, w, url)
 		if err != nil {
 			joinedErrs = errors.Join(joinedErrs, err)
 			continue
 		}
-
-		_, err = tempBuffer.WriteTo(w)
-		if err != nil {
-			joinedErrs = errors.Join(joinedErrs, err)
-			continue
-		}
-
 		return nil
 	}
 	return joinedErrs
