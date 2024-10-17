@@ -6,11 +6,14 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/getlantern/flashlight/v7/config"
 	"github.com/getlantern/flashlight/v7/domainrouting"
+	"github.com/getlantern/keyman"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 	"gopkg.in/yaml.v2"
 )
 
@@ -28,7 +31,15 @@ func TestGenerateConfig(t *testing.T) {
 
 	ctx := context.Background()
 
-	masquerades = []string{"96.16.55.171 a248.e.akamai.net akamai", "104.123.154.46 a248.e.akamai.net akamai", "3.164.129.16 Smentertainment.com cloudfront", "204.246.164.205 Smentertainment.com cloudfront"}
+	// create a tls listener
+	pk, err := keyman.GeneratePK(2048)
+	require.NoError(t, err)
+
+	// Generate self-signed certificate
+	cert, err := pk.TLSCertificateFor(time.Now().Add(1*time.Hour), true, nil, "tlsdialer", "localhost", "127.0.0.1")
+	require.NoError(t, err)
+
+	masquerades = []string{"127.0.0.1:9999 127.0.0.1 akamai", "127.0.0.1:9999 127.0.0.1 akamai", "127.0.0.1:9999 127.0.0.1 cloudfront", "127.0.0.1:9999 127.0.0.1 cloudfront"}
 	proxiedSites := filter{"googlevideo.com": true, "googleapis.com": true, "google.com": true}
 	blacklist := make(filter)
 
@@ -46,7 +57,7 @@ func TestGenerateConfig(t *testing.T) {
 		givenMinMasquerades  int
 		givenMaxMasquerades  int
 		assert               func(*testing.T, string, error)
-		setup                func() *ConfigGenerator
+		setup                func(*gomock.Controller) *ConfigGenerator
 	}{
 		{
 			name:                 "should generate config with success",
@@ -74,21 +85,36 @@ func TestGenerateConfig(t *testing.T) {
 				assert.NotNil(t, globalConfig.Client.Fronted.Providers["akamai"].VerifyHostname)
 				assert.Equal(t, *globalConfig.Client.Fronted.Providers["akamai"].VerifyHostname, "akamai.com")
 			},
-			setup: func() *ConfigGenerator {
+			setup: func(ctrl *gomock.Controller) *ConfigGenerator {
 				generator := NewConfigGenerator()
 				for _, provider := range generator.Providers {
 					provider.Enabled = true
 				}
+				verifier := NewMockverifier(ctrl)
+				verifier.EXPECT().Vet(gomock.Any(), gomock.Any(), gomock.Any()).Return(true).AnyTimes()
+				certGrabber := NewMockcertGrabber(ctrl)
+				certGrabber.EXPECT().GetCertificate(gomock.Any(), gomock.Any()).Return(cert, nil).AnyTimes()
+				generator.certGrabber = certGrabber
+				generator.verifier = verifier
 				require.NotNil(t, generator.Providers[defaultProviderID])
 				return generator
 			},
 		},
 		{
 			name: "should generate config with success even with cloudfront disabled",
-			setup: func() *ConfigGenerator {
+			setup: func(ctrl *gomock.Controller) *ConfigGenerator {
 				configGenerator := NewConfigGenerator()
 				configGenerator.Providers["cloudfront"].Enabled = false
 				configGenerator.Providers["akamai"].Enabled = true
+
+				verifier := NewMockverifier(ctrl)
+				verifier.EXPECT().Vet(gomock.Any(), gomock.Any(), gomock.Any()).Return(true).AnyTimes()
+				configGenerator.verifier = verifier
+
+				certGrabber := NewMockcertGrabber(ctrl)
+				certGrabber.EXPECT().GetCertificate(gomock.Any(), gomock.Any()).Return(cert, nil).AnyTimes()
+				configGenerator.certGrabber = certGrabber
+
 				return configGenerator
 			},
 			givenContext:         ctx,
@@ -122,7 +148,10 @@ func TestGenerateConfig(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			generator := tt.setup()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			generator := tt.setup(ctrl)
 			cfg, err := generator.GenerateConfig(
 				tt.givenContext,
 				tt.givenTemplate,

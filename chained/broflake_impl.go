@@ -21,7 +21,7 @@ func init() {
 
 const (
 	// only wait 10 seconds before failing over to the next masquerade since signaling with Freddie only has a 25 second timeout
-	masqueradeTimeout = 10
+	masqueradeTimeout = 10 * time.Second
 )
 
 type broflakeImpl struct {
