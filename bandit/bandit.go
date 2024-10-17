@@ -106,7 +106,7 @@ func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy) {
 				bandit.Update(index, 0)
 				return
 			}
-			log.Debugf("Dialer %v succeeded in %v seconds", dialer.Name(), time.Since(start)*time.Second)
+			log.Debugf("Dialer %v succeeded in %v seconds", dialer.Name(), time.Since(start).Seconds())
 			bandit.Update(index, 1)
 		}(d, index)
 	}
@@ -121,7 +121,7 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	}
 
 	start := time.Now()
-	dialer, chosenArm := o.chooseDialerForDomain(o.dialers, network, addr)
+	dialer, chosenArm := o.chooseDialerForDomain(network, addr)
 
 	// We have to be careful here about virtual, multiplexed connections, as the
 	// initial TCP dial will have different performance characteristics than the
@@ -134,7 +134,7 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 		o.onError(err, hasSucceeding)
 
 		if !failedUpstream {
-			log.Errorf("Dialer %v failed: %v", dialer.Name(), err)
+			log.Errorf("Dialer %v failed in %v seconds: %v", dialer.Name(), time.Since(start).Seconds(), err)
 			o.bandit.Update(chosenArm, 0)
 		} else {
 			log.Debugf("Dialer %v failed upstream...", dialer.Name())
@@ -178,21 +178,31 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 // hasSucceedingDialer checks whether or not any of the given dialers is able to successfully dial our proxies
 func hasSucceedingDialer(dialers []Dialer) bool {
 	for _, dialer := range dialers {
-		if dialer.Succeeding() {
+		if dialer.ConsecFailures() == 0 && dialer.Successes() > 0 {
 			return true
 		}
 	}
 	return false
 }
 
-func (o *BanditDialer) chooseDialerForDomain(dialers []Dialer, network, addr string) (Dialer, int) {
+func (o *BanditDialer) chooseDialerForDomain(network, addr string) (Dialer, int) {
+	// Loop through the number of dialers we have and select the one that is best
+	// for the given domain.
 	chosenArm := o.bandit.SelectArm(rand.Float64())
-	dialer := dialers[chosenArm]
-	if dialer.SupportsAddr(network, addr) {
-		return dialer, chosenArm
+	for i := 0; i < len(o.dialers); i++ {
+		dialer := o.dialers[chosenArm]
+		if (dialer.ConsecFailures() > 0 && hasSucceedingDialer(o.dialers)) || !dialer.SupportsAddr(network, addr) {
+			// If the chosen dialer has consecutive failures and there are other
+			// dialers that are succeeding, we should choose a different dialer.
+			//
+			// If the chosen dialer does not support the address, we should also
+			// choose a different dialer.
+			chosenArm = differentArm(chosenArm, len(o.dialers))
+		} else {
+			break
+		}
 	}
-	chosenArm = differentArm(chosenArm, len(dialers))
-	return dialers[chosenArm], chosenArm
+	return o.dialers[chosenArm], chosenArm
 }
 
 // Choose a different arm than the one we already have, if possible.
