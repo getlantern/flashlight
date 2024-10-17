@@ -2,7 +2,6 @@ package chained
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -81,7 +80,7 @@ func loadWASMFilesAvailable(dir string) (map[string]wasmInfo, error) {
 			return log.Errorf("invalid filename: %s", filename)
 		}
 
-		files[fmt.Sprintf("%s.%s", splitFilename[0], splitFilename[1])] = wasmInfo{
+		files[filename] = wasmInfo{
 			version:   splitFilename[0],
 			protocol:  splitFilename[1],
 			builtWith: splitFilename[2],
@@ -102,7 +101,8 @@ func loadWASMFilesAvailable(dir string) (map[string]wasmInfo, error) {
 func (vc *versionControl) GetWASM(ctx context.Context, transport string, urls []string) (io.ReadCloser, error) {
 	info, ok := vc.wasmFilesAvailable[transport]
 	if !ok {
-		f, err := os.Create(filepath.Join(vc.dir, transport))
+		outputPath := filepath.Join(vc.dir, transport)
+		f, err := os.Create(outputPath)
 		if err != nil {
 			return nil, log.Errorf("failed to create file %s: %v", transport, err)
 		}
@@ -119,7 +119,21 @@ func (vc *versionControl) GetWASM(ctx context.Context, transport string, urls []
 		if err = d.DownloadWASM(ctx, f); err != nil {
 			return nil, log.Errorf("failed to download wasm: %s", err.Error())
 		}
-		return f, nil
+		f.Close()
+
+		splitFilename := strings.Split(transport, ".")
+		if len(splitFilename) < 3 {
+			return nil, log.Errorf("invalid transport: %s", transport)
+		}
+
+		vc.wasmFilesAvailable[transport] = wasmInfo{
+			version:   splitFilename[0],
+			protocol:  splitFilename[1],
+			builtWith: splitFilename[2],
+			path:      outputPath,
+		}
+
+		info = vc.wasmFilesAvailable[transport]
 	}
 
 	f, err := os.Open(info.path)
