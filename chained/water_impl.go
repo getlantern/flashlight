@@ -4,8 +4,12 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"log/slog"
 	"net"
+	"net/http"
+	"path/filepath"
+	"strings"
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/v7/ops"
@@ -20,19 +24,52 @@ type waterImpl struct {
 	nopCloser
 }
 
-func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (*waterImpl, error) {
+var httpClient *http.Client
+
+func newWaterImpl(configDir, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (*waterImpl, error) {
+	var wasm []byte
+
 	b64WASM := ptSetting(pc, "water_wasm")
-	wasm, err := base64.StdEncoding.DecodeString(b64WASM)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode water wasm: %w", err)
+	if b64WASM != "" {
+		var err error
+		wasm, err = base64.StdEncoding.DecodeString(b64WASM)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode water wasm: %w", err)
+		}
+	}
+
+	ctx := context.Background()
+	wasmAvailableAt := ptSetting(pc, "water_available_at")
+	transport := ptSetting(pc, "water_transport")
+	if wasm == nil && wasmAvailableAt != "" {
+		waterDir := filepath.Join(configDir, "water")
+		vc, err := NewVersionControl(waterDir)
+		if err != nil {
+			return nil, log.Errorf("failed to create version control: %w", err.Error())
+		}
+
+		r, err := vc.GetWASM(ctx, transport, strings.Split(wasmAvailableAt, ","))
+		if err != nil {
+			return nil, log.Errorf("failed to get wasm: %w", err.Error())
+		}
+		defer r.Close()
+
+		b, err := io.ReadAll(r)
+		if err != nil {
+			return nil, log.Errorf("failed to read wasm: %w", err.Error())
+		}
+		if len(b) == 0 {
+			return nil, log.Errorf("received empty wasm")
+		}
+		wasm = b
 	}
 
 	cfg := &water.Config{
 		TransportModuleBin: wasm,
-		OverrideLogger:     slog.New(newLogHandler(log, ptSetting(pc, "water_transport"))),
+		OverrideLogger:     slog.New(newLogHandler(log, transport)),
 	}
 
-	dialer, err := water.NewDialerWithContext(context.Background(), cfg)
+	dialer, err := water.NewDialerWithContext(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create dialer: %w", err)
 	}
