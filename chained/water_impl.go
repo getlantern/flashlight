@@ -50,17 +50,23 @@ func newWaterImpl(configDir, addr string, pc *config.ProxyConfig, reportDialCore
 
 		r, err := vc.GetWASM(ctx, transport, strings.Split(wasmAvailableAt, ","))
 		if err != nil {
-			return nil, log.Errorf("failed to get wasm: %w", err.Error())
+			return nil, log.Errorf("failed to get wasm: %w", err)
 		}
 		defer r.Close()
 
 		b, err := io.ReadAll(r)
 		if err != nil {
-			return nil, log.Errorf("failed to read wasm: %w", err.Error())
+			return nil, log.Errorf("failed to read wasm: %w", err)
 		}
+
 		if len(b) == 0 {
 			return nil, log.Errorf("received empty wasm")
 		}
+
+		if err = vc.Commit(transport); err != nil {
+			return nil, log.Errorf("failed to update WASM history: %w", err)
+		}
+
 		wasm = b
 	}
 
