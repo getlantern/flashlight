@@ -5,10 +5,13 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/getlantern/flashlight/v7/proxied"
+	"github.com/gocarina/gocsv"
 )
 
 type versionControl struct {
@@ -16,6 +19,15 @@ type versionControl struct {
 	// key is something like: protocol.version
 	wasmFilesAvailable map[string]wasmInfo
 	dir                string
+
+	// history of the last time the WASM file was loaded
+	history      []history
+	historyMutex *sync.Mutex
+}
+
+type history struct {
+	Transport      string    `csv:"transport"`
+	LastTimeLoaded time.Time `csv:"last_time_loaded"`
 }
 
 type wasmInfo struct {
@@ -27,6 +39,7 @@ type wasmInfo struct {
 
 type VersionControl interface {
 	GetWASM(ctx context.Context, transport string, urls []string) (io.ReadCloser, error)
+	Commit(transport string) error
 }
 
 // NewVersionControl check if the received config is the same as we already
@@ -40,6 +53,7 @@ func NewVersionControl(configDir string) (VersionControl, error) {
 	return &versionControl{
 		dir:                configDir,
 		wasmFilesAvailable: wasmFilesAvailable,
+		historyMutex:       &sync.Mutex{},
 	}, nil
 }
 
@@ -71,9 +85,6 @@ func loadWASMFilesAvailable(dir string) (map[string]wasmInfo, error) {
 		if filepath.Ext(filename) != ".wasm" {
 			return nil
 		}
-
-		// wasm filenames look like transport.version.wasm, we need to extract those vars
-		// and create a map with the transport as key and the version as value
 
 		splitFilename := strings.Split(filename, ".")
 		if len(splitFilename) < 3 {
@@ -115,10 +126,117 @@ func (vc *versionControl) GetWASM(ctx context.Context, transport string, urls []
 		return nil, log.Errorf("failed to open file %s: %w", info.path, err)
 	}
 
-	// TODO: after the file loaded correctly we need to store the last time it was loaded
-	// so we can check if it's outdated and after a week delete old WASM file.
-
 	return f, nil
+}
+
+// Commit will update the history of the last time the WASM file was loaded
+// and delete the outdated WASM files
+func (vc *versionControl) Commit(transport string) error {
+	vc.historyMutex.Lock()
+	defer vc.historyMutex.Unlock()
+	if err := vc.loadHistory(); err != nil {
+		return log.Errorf("failed to load history: %w", err)
+	}
+
+	if err := vc.updateLastTimeLoaded(transport); err != nil {
+		return log.Errorf("failed to update last time loaded: %w", err)
+	}
+
+	if err := vc.deleteOutdatedWASMFiles(); err != nil {
+		return log.Errorf("failed to delete outdated WASM files: %w", err)
+	}
+	return nil
+}
+
+func (vc *versionControl) updateLastTimeLoaded(transport string) error {
+	for i, h := range vc.history {
+		if h.Transport == transport {
+			vc.history[i].LastTimeLoaded = time.Now()
+			if err := vc.storeHistory(); err != nil {
+				return log.Errorf("failed to store history: %w", err)
+			}
+			return nil
+		}
+	}
+
+	vc.history = append(vc.history, history{
+		Transport:      transport,
+		LastTimeLoaded: time.Now(),
+	})
+	if err := vc.storeHistory(); err != nil {
+		return log.Errorf("failed to store history: %w", err)
+	}
+	return nil
+}
+
+func (vc *versionControl) loadHistory() error {
+	historyCSV := filepath.Join(vc.dir, "history.csv")
+
+	// if there's no history available, just initialize history
+	if _, err := os.Stat(historyCSV); os.IsNotExist(err) {
+		vc.history = []history{}
+		return nil
+	}
+
+	f, err := os.Open(historyCSV)
+	if err != nil {
+		return log.Errorf("failed to open file %s: %w", historyCSV, err)
+	}
+	defer f.Close()
+
+	history := []history{}
+	if err := gocsv.UnmarshalFile(f, &history); err != nil {
+		return log.Errorf("failed to unmarshal file %s: %w", historyCSV, err)
+	}
+
+	vc.history = history
+	return nil
+}
+
+func (vc *versionControl) deleteOutdatedWASMFiles() error {
+	affectedTransports := make([]string, 0)
+	for _, h := range vc.history {
+		// check if the file is outdated
+		sevenDaysAgo := time.Now().AddDate(0, 0, -7)
+		if h.LastTimeLoaded.Before(sevenDaysAgo) {
+			// delete the file
+			info := vc.wasmFilesAvailable[h.Transport]
+			if err := os.Remove(info.path); err != nil {
+				return log.Errorf("failed to delete file %s: %w", h.Transport, err)
+			}
+			delete(vc.wasmFilesAvailable, h.Transport)
+			affectedTransports = append(affectedTransports, h.Transport)
+		}
+	}
+
+	// remove the affected transports from the history
+	newHistory := make([]history, 0)
+	for _, h := range vc.history {
+		if !slices.Contains(affectedTransports, h.Transport) {
+			newHistory = append(newHistory, h)
+		}
+	}
+	vc.history = newHistory
+
+	if err := vc.storeHistory(); err != nil {
+		return log.Errorf("failed to store history: %w", err)
+	}
+	return nil
+}
+
+func (vc *versionControl) storeHistory() error {
+	historyCSV := filepath.Join(vc.dir, "history.csv")
+	f, err := os.Create(historyCSV)
+	if err != nil {
+		return log.Errorf("failed to create file %s: %w", historyCSV, err)
+	}
+	defer f.Close()
+
+	if err := gocsv.MarshalFile(&vc.history, f); err != nil {
+		return log.Errorf("failed to marshal file %s: %w", historyCSV, err)
+	}
+
+	return nil
 }
 
 func (vc *versionControl) downloadWASM(ctx context.Context, transport string, urls []string) (wasmInfo, error) {

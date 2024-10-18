@@ -3,8 +3,11 @@ package chained
 import (
 	"os"
 	"path"
+	"path/filepath"
 	"testing"
+	"time"
 
+	"github.com/gocarina/gocsv"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -63,6 +66,127 @@ func TestNewVersionControl(t *testing.T) {
 			}
 			vc, err := NewVersionControl(tt.givenConfigDir)
 			tt.assert(t, vc, err)
+		})
+	}
+}
+
+func TestCommit(t *testing.T) {
+
+	var tests = []struct {
+		name           string
+		givenTransport string
+		setup          func(t *testing.T, configDir string)
+		assert         func(t *testing.T, configDir string, err error)
+	}{
+		{
+			name:           "it should add one register to the history",
+			givenTransport: "plain.v1.tinygo.wasm",
+			assert: func(t *testing.T, configDir string, err error) {
+				assert.NoError(t, err)
+				historyCSV := filepath.Join(configDir, "history.csv")
+				assert.FileExists(t, historyCSV)
+
+				f, err := os.Open(historyCSV)
+				require.NoError(t, err)
+				defer f.Close()
+
+				history := []history{}
+				require.NoError(t, gocsv.UnmarshalFile(f, &history))
+				assert.Len(t, history, 1)
+				assert.Equal(t, "plain.v1.tinygo.wasm", history[0].Transport)
+				assert.NotEmpty(t, history[0].LastTimeLoaded)
+			},
+		},
+		{
+			name:           "it should update the last time loaded of the transport",
+			givenTransport: "plain.v1.tinygo.wasm",
+			setup: func(t *testing.T, configDir string) {
+				historyCSV := filepath.Join(configDir, "history.csv")
+				history := []history{
+					{
+						Transport:      "plain.v1.tinygo.wasm",
+						LastTimeLoaded: time.Now().Add(-1 * time.Hour),
+					},
+				}
+
+				f, err := os.Create(historyCSV)
+				require.NoError(t, err)
+				defer f.Close()
+
+				require.NoError(t, gocsv.MarshalFile(&history, f))
+			},
+			assert: func(t *testing.T, configDir string, err error) {
+				assert.NoError(t, err)
+				historyCSV := filepath.Join(configDir, "history.csv")
+				assert.FileExists(t, historyCSV)
+
+				f, err := os.Open(historyCSV)
+				require.NoError(t, err)
+				defer f.Close()
+
+				history := []history{}
+				require.NoError(t, gocsv.UnmarshalFile(f, &history))
+				assert.Len(t, history, 1)
+				assert.Equal(t, "plain.v1.tinygo.wasm", history[0].Transport)
+				assert.NotEmpty(t, history[0].LastTimeLoaded)
+				assert.True(t, history[0].LastTimeLoaded.After(time.Now().Add(-1*time.Minute)))
+			},
+		},
+		{
+			name:           "it should delete the outdated wasm files",
+			givenTransport: "plain.v2.tinygo.wasm",
+			setup: func(t *testing.T, configDir string) {
+				historyCSV := filepath.Join(configDir, "history.csv")
+				history := []history{
+					{
+						Transport:      "plain.v1.tinygo.wasm",
+						LastTimeLoaded: time.Now().Add(-8 * 24 * time.Hour),
+					},
+				}
+
+				f, err := os.Create(historyCSV)
+				require.NoError(t, err)
+				defer f.Close()
+
+				require.NoError(t, gocsv.MarshalFile(&history, f))
+
+				_, err = os.Create(path.Join(configDir, "plain.v1.tinygo.wasm"))
+				require.NoError(t, err)
+			},
+			assert: func(t *testing.T, configDir string, err error) {
+				assert.NoError(t, err)
+				historyCSV := filepath.Join(configDir, "history.csv")
+				assert.FileExists(t, historyCSV)
+
+				f, err := os.Open(historyCSV)
+				require.NoError(t, err)
+				defer f.Close()
+
+				history := []history{}
+				require.NoError(t, gocsv.UnmarshalFile(f, &history))
+				assert.Len(t, history, 1)
+				assert.Equal(t, "plain.v2.tinygo.wasm", history[0].Transport)
+				assert.NotEmpty(t, history[0].LastTimeLoaded)
+
+				assert.NoFileExists(t, path.Join(configDir, "plain.v1.tinygo.wasm"))
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			configDir, err := os.MkdirTemp("", "water")
+			require.NoError(t, err)
+			defer os.RemoveAll(configDir)
+
+			if tt.setup != nil {
+				tt.setup(t, configDir)
+			}
+
+			vc, err := NewVersionControl(configDir)
+			require.NoError(t, err)
+
+			err = vc.Commit(tt.givenTransport)
+			tt.assert(t, configDir, err)
 		})
 	}
 }
