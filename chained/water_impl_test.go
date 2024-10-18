@@ -103,6 +103,7 @@ func TestNewWaterImpl(t *testing.T) {
 			assert: func(t *testing.T, actual *waterImpl, err error) {
 				require.NoError(t, err)
 				require.NotNil(t, actual)
+				actual.wgDownload.Wait()
 				require.NotNil(t, actual.dialer)
 				assert.NotNil(t, actual.reportDialCore)
 			},
