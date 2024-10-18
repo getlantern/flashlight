@@ -199,9 +199,10 @@ func (o *BanditDialer) chooseDialerForDomain(network, addr string) (Dialer, int)
 	// Loop through the number of dialers we have and select the one that is best
 	// for the given domain.
 	chosenArm := o.bandit.SelectArm(rand.Float64())
+	var dialer Dialer
 	notAllFailing := hasNotFailing(o.dialers)
 	for i := 0; i < (len(o.dialers) * 2); i++ {
-		dialer := o.dialers[chosenArm]
+		dialer = o.dialers[chosenArm]
 		if (dialer.ConsecFailures() > 0 && notAllFailing) || !dialer.SupportsAddr(network, addr) {
 			// If the chosen dialer has consecutive failures and there are other
 			// dialers that are succeeding, we should choose a different dialer.
@@ -209,11 +210,11 @@ func (o *BanditDialer) chooseDialerForDomain(network, addr string) (Dialer, int)
 			// If the chosen dialer does not support the address, we should also
 			// choose a different dialer.
 			chosenArm = differentArm(chosenArm, len(o.dialers))
-		} else {
-			break
+			continue
 		}
+		break
 	}
-	return o.dialers[chosenArm], chosenArm
+	return dialer, chosenArm
 }
 
 // Choose a different arm than the one we already have, if possible.

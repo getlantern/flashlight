@@ -11,6 +11,7 @@ import (
 
 	bandit "github.com/alextanhongpin/go-bandit"
 	"github.com/getlantern/flashlight/v7/stats"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -69,16 +70,12 @@ func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
 				Dialers: tt.fields.dialers,
 			}
 			o, err := New(opts)
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 			got, got1 := o.chooseDialerForDomain(tt.args.network, tt.args.addr)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("BanditDialer.chooseDialerForDomain() got = %v, want %v", got, tt.want)
 			}
-			if got1 != tt.want1 {
-				t.Errorf("BanditDialer.chooseDialerForDomain() got1 = %v, want %v", got1, tt.want1)
-			}
+			assert.Equal(t, tt.want1, got1, "BanditDialer.chooseDialerForDomain() got1 = %v, want %v", got1, tt.want1)
 		})
 	}
 }
