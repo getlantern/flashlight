@@ -101,45 +101,56 @@ func loadWASMFilesAvailable(dir string) (map[string]wasmInfo, error) {
 func (vc *versionControl) GetWASM(ctx context.Context, transport string, urls []string) (io.ReadCloser, error) {
 	info, ok := vc.wasmFilesAvailable[transport]
 	if !ok {
-		outputPath := filepath.Join(vc.dir, transport)
-		f, err := os.Create(outputPath)
+		var err error
+		info, err = vc.downloadWASM(ctx, transport, urls)
 		if err != nil {
-			return nil, log.Errorf("failed to create file %s: %v", transport, err)
+			return nil, log.Errorf("failed to download WASM file: %w", err)
 		}
 
-		cli := httpClient
-		if cli == nil {
-			cli = proxied.ChainedThenDirectThenFrontedClient(1*time.Minute, "")
-		}
-
-		d, err := NewWASMDownloader(urls, cli)
-		if err != nil {
-			return nil, log.Errorf("failed to create wasm downloader: %s", err.Error())
-		}
-		if err = d.DownloadWASM(ctx, f); err != nil {
-			return nil, log.Errorf("failed to download wasm: %s", err.Error())
-		}
-		f.Close()
-
-		splitFilename := strings.Split(transport, ".")
-		if len(splitFilename) < 3 {
-			return nil, log.Errorf("invalid transport: %s", transport)
-		}
-
-		vc.wasmFilesAvailable[transport] = wasmInfo{
-			version:   splitFilename[0],
-			protocol:  splitFilename[1],
-			builtWith: splitFilename[2],
-			path:      outputPath,
-		}
-
-		info = vc.wasmFilesAvailable[transport]
+		vc.wasmFilesAvailable[transport] = info
 	}
 
 	f, err := os.Open(info.path)
 	if err != nil {
-		return nil, log.Errorf("failed to open file %s: %v", info.path, err)
+		return nil, log.Errorf("failed to open file %s: %w", info.path, err)
 	}
 
+	// TODO: after the file loaded correctly we need to store the last time it was loaded
+	// so we can check if it's outdated and after a week delete old WASM file.
+
 	return f, nil
+}
+
+func (vc *versionControl) downloadWASM(ctx context.Context, transport string, urls []string) (wasmInfo, error) {
+	splitFilename := strings.Split(transport, ".")
+	if len(splitFilename) < 3 {
+		return wasmInfo{}, log.Errorf("invalid transport: %s", transport)
+	}
+
+	outputPath := filepath.Join(vc.dir, transport)
+	f, err := os.Create(outputPath)
+	if err != nil {
+		return wasmInfo{}, log.Errorf("failed to create file %s: %w", transport, err)
+	}
+	defer f.Close()
+
+	cli := httpClient
+	if cli == nil {
+		cli = proxied.ChainedThenDirectThenFrontedClient(1*time.Minute, "")
+	}
+
+	d, err := NewWASMDownloader(urls, cli)
+	if err != nil {
+		return wasmInfo{}, log.Errorf("failed to create wasm downloader: %w", err)
+	}
+	if err = d.DownloadWASM(ctx, f); err != nil {
+		return wasmInfo{}, log.Errorf("failed to download wasm: %w", err)
+	}
+
+	return wasmInfo{
+		version:   splitFilename[0],
+		protocol:  splitFilename[1],
+		builtWith: splitFilename[2],
+		path:      outputPath,
+	}, nil
 }
