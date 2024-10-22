@@ -1,14 +1,19 @@
 package chained
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"fmt"
 	"log/slog"
 	"net"
+	"net/http"
+	"strings"
+	"time"
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/v7/ops"
+	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/refraction-networking/water"
 	_ "github.com/refraction-networking/water/transport/v1"
 )
@@ -20,11 +25,46 @@ type waterImpl struct {
 	nopCloser
 }
 
+var httpClient *http.Client
+
 func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (*waterImpl, error) {
+	var wasm []byte
+
 	b64WASM := ptSetting(pc, "water_wasm")
-	wasm, err := base64.StdEncoding.DecodeString(b64WASM)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode water wasm: %w", err)
+	if b64WASM != "" {
+		var err error
+		wasm, err = base64.StdEncoding.DecodeString(b64WASM)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode water wasm: %w", err)
+		}
+	}
+
+	wasmAvailableAt := ptSetting(pc, "water_available_at")
+	if wasm == nil && wasmAvailableAt != "" {
+		urls := strings.Split(wasmAvailableAt, ",")
+		b := new(bytes.Buffer)
+		cli := httpClient
+		if cli == nil {
+			downloadTimeout := ptSetting(pc, "water_download_timeout")
+			timeout := 10 * time.Minute
+			if downloadTimeout != "" {
+				var err error
+				timeout, err = time.ParseDuration(downloadTimeout)
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse download timeout: %w", err)
+				}
+			}
+
+			cli = proxied.ChainedThenDirectThenFrontedClient(timeout, "")
+		}
+		d, err := NewWASMDownloader(urls, cli)
+		if err != nil {
+			return nil, log.Errorf("failed to create wasm downloader: %s", err.Error())
+		}
+		if err = d.DownloadWASM(context.Background(), b); err != nil {
+			return nil, log.Errorf("failed to download wasm: %s", err.Error())
+		}
+		wasm = b.Bytes()
 	}
 
 	cfg := &water.Config{
