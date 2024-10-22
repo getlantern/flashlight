@@ -45,7 +45,17 @@ func newWaterImpl(addr string, pc *config.ProxyConfig, reportDialCore reportDial
 		b := new(bytes.Buffer)
 		cli := httpClient
 		if cli == nil {
-			cli = proxied.ChainedThenDirectThenFrontedClient(1*time.Minute, "")
+			downloadTimeout := ptSetting(pc, "water_download_timeout")
+			timeout := 10 * time.Minute
+			if downloadTimeout != "" {
+				var err error
+				timeout, err = time.ParseDuration(downloadTimeout)
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse download timeout: %w", err)
+				}
+			}
+
+			cli = proxied.ChainedThenDirectThenFrontedClient(timeout, "")
 		}
 		d, err := NewWASMDownloader(urls, cli)
 		if err != nil {
