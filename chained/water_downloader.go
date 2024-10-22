@@ -51,6 +51,7 @@ func (d *downloader) DownloadWASM(ctx context.Context, w io.Writer) error {
 			joinedErrs = errors.Join(joinedErrs, err)
 			continue
 		}
+
 		return nil
 	}
 	return joinedErrs
