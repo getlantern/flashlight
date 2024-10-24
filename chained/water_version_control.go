@@ -37,14 +37,9 @@ type wasmInfo struct {
 	path      string
 }
 
-type VersionControl interface {
-	GetWASM(ctx context.Context, transport string, urls []string) (io.ReadCloser, error)
-	Commit(transport string) error
-}
-
 // NewVersionControl check if the received config is the same as we already
 // have and if not, it'll try to fetch the newest WASM available.
-func NewVersionControl(configDir string) (VersionControl, error) {
+func NewVersionControl(configDir string) (*waterVersionControl, error) {
 	wasmFilesAvailable, err := loadWASMFilesAvailable(configDir)
 	if err != nil {
 		return nil, log.Errorf("failed to load wasm files available: %v", err)

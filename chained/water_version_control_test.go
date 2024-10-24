@@ -21,13 +21,13 @@ func TestNewVersionControl(t *testing.T) {
 	var tests = []struct {
 		name           string
 		givenConfigDir string
-		assert         func(t *testing.T, vc VersionControl, err error)
+		assert         func(t *testing.T, vc *waterVersionControl, err error)
 		setup          func()
 	}{
 		{
 			name:           "it should return a new versionControl successfully when receiving a configDir and it should create the directory if it doesn't exist",
 			givenConfigDir: inexistentPath,
-			assert: func(t *testing.T, vc VersionControl, err error) {
+			assert: func(t *testing.T, vc *waterVersionControl, err error) {
 				assert.NoError(t, err)
 				assert.NotNil(t, vc)
 				assert.DirExists(t, inexistentPath)
@@ -36,7 +36,7 @@ func TestNewVersionControl(t *testing.T) {
 		{
 			name:           "it should return a error if the directory contains a file with invalid wasm name",
 			givenConfigDir: configDir,
-			assert: func(t *testing.T, vc VersionControl, err error) {
+			assert: func(t *testing.T, vc *waterVersionControl, err error) {
 				assert.Error(t, err)
 				assert.Nil(t, vc)
 				os.Remove(path.Join(configDir, "aaaaa.wasm"))
@@ -49,7 +49,7 @@ func TestNewVersionControl(t *testing.T) {
 		{
 			name:           "it should return a versionControl with the wasm files available",
 			givenConfigDir: configDir,
-			assert: func(t *testing.T, vc VersionControl, err error) {
+			assert: func(t *testing.T, vc *waterVersionControl, err error) {
 				assert.NoError(t, err)
 				assert.NotNil(t, vc)
 			},
