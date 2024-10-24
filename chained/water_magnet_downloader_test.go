@@ -26,8 +26,8 @@ func TestMagnetDownloadWASM(t *testing.T) {
 			name: "should return success when download is successful",
 			setup: func(ctrl *gomock.Controller, downloader *waterMagnetDownloader) waterWASMDownloader {
 				downloader.Close()
-				torrentClient := NewMockTorrentClient(ctrl)
-				torrentInfo := NewMockTorrentInfo(ctrl)
+				torrentClient := NewMocktorrentClient(ctrl)
+				torrentInfo := NewMocktorrentInfo(ctrl)
 
 				torrentReader := NewMockReader(ctrl)
 				// torrent reader receive Read calls from io.Copy, it should be able to store the message hello world

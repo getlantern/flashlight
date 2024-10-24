@@ -77,7 +77,7 @@ func TestDownloadWASM(t *testing.T) {
 				"http://example.com",
 			},
 			setupHTTPDownloader: func(ctrl *gomock.Controller) waterWASMDownloader {
-				httpDownloader := NewMockWASMDownloader(ctrl)
+				httpDownloader := NewMockwaterWASMDownloader(ctrl)
 				httpDownloader.EXPECT().DownloadWASM(ctx, gomock.Any()).Return(assert.AnError)
 				return httpDownloader
 			},
@@ -96,7 +96,7 @@ func TestDownloadWASM(t *testing.T) {
 				"http://example.com",
 			},
 			setupHTTPDownloader: func(ctrl *gomock.Controller) waterWASMDownloader {
-				httpDownloader := NewMockWASMDownloader(ctrl)
+				httpDownloader := NewMockwaterWASMDownloader(ctrl)
 				httpDownloader.EXPECT().DownloadWASM(ctx, gomock.Any()).DoAndReturn(
 					func(ctx context.Context, w io.Writer) error {
 						_, err := w.Write([]byte(contentMessage))
