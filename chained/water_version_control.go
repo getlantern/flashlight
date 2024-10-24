@@ -191,12 +191,14 @@ func (vc *waterVersionControl) loadHistory() error {
 	return nil
 }
 
+// unusedWASMsDeletedAfter is the time after which the WASM files are considered outdated
+const unusedWASMsDeletedAfter = 7 * 24 * time.Hour
+
 func (vc *waterVersionControl) deleteOutdatedWASMFiles() error {
 	affectedTransports := make([]string, 0)
 	for _, h := range vc.history {
 		// check if the file is outdated
-		sevenDaysAgo := time.Now().AddDate(0, 0, -7)
-		if h.LastTimeLoaded.Before(sevenDaysAgo) {
+		if h.LastTimeLoaded.Before(time.Now().Add(-unusedWASMsDeletedAfter)) {
 			// delete the file
 			info := vc.wasmFilesAvailable[h.Transport]
 			if err := os.Remove(info.path); err != nil {
