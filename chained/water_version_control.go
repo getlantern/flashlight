@@ -121,6 +121,10 @@ func (vc *waterVersionControl) GetWASM(ctx context.Context, transport string, ur
 		return nil, log.Errorf("failed to open file %s: %w", info.path, err)
 	}
 
+	if err = vc.Commit(transport); err != nil {
+		return nil, log.Errorf("failed to update WASM history: %w", err)
+	}
+
 	return f, nil
 }
 

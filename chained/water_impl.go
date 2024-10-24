@@ -63,10 +63,6 @@ func newWaterImpl(configDir, addr string, pc *config.ProxyConfig, reportDialCore
 			return nil, log.Errorf("received empty wasm")
 		}
 
-		if err = vc.Commit(transport); err != nil {
-			return nil, log.Errorf("failed to update WASM history: %w", err)
-		}
-
 		wasm = b
 	}
 
