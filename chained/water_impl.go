@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -44,8 +43,7 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 	wasmAvailableAt := ptSetting(pc, "water_available_at")
 	transport := ptSetting(pc, "water_transport")
 	if wasm == nil && wasmAvailableAt != "" {
-		waterDir := filepath.Join(dir, "water")
-		vc, err := newWaterVersionControl(waterDir)
+		vc, err := newWaterVersionControl(dir)
 		if err != nil {
 			return nil, log.Errorf("failed to create version control: %w", err.Error())
 		}
