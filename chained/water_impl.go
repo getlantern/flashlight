@@ -28,7 +28,7 @@ type waterImpl struct {
 
 var httpClient *http.Client
 
-func newWaterImpl(configDir, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (*waterImpl, error) {
+func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (*waterImpl, error) {
 	var wasm []byte
 
 	b64WASM := ptSetting(pc, "water_wasm")
@@ -44,7 +44,7 @@ func newWaterImpl(configDir, addr string, pc *config.ProxyConfig, reportDialCore
 	wasmAvailableAt := ptSetting(pc, "water_available_at")
 	transport := ptSetting(pc, "water_transport")
 	if wasm == nil && wasmAvailableAt != "" {
-		waterDir := filepath.Join(configDir, "water")
+		waterDir := filepath.Join(dir, "water")
 		vc, err := newWaterVersionControl(waterDir)
 		if err != nil {
 			return nil, log.Errorf("failed to create version control: %w", err.Error())

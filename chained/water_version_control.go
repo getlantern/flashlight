@@ -38,14 +38,14 @@ type wasmInfo struct {
 
 // newWaterVersionControl check if the received config is the same as we already
 // have and if not, it'll try to fetch the newest WASM available.
-func newWaterVersionControl(configDir string) (*waterVersionControl, error) {
-	wasmFilesAvailable, err := loadWASMFilesAvailable(configDir)
+func newWaterVersionControl(dir string) (*waterVersionControl, error) {
+	wasmFilesAvailable, err := loadWASMFilesAvailable(dir)
 	if err != nil {
 		return nil, log.Errorf("failed to load wasm files available: %v", err)
 	}
 
 	return &waterVersionControl{
-		dir:                configDir,
+		dir:                dir,
 		wasmFilesAvailable: wasmFilesAvailable,
 		historyMutex:       &sync.Mutex{},
 	}, nil
