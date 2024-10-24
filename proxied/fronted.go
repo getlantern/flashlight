@@ -25,7 +25,7 @@ type frontedRoundTripper struct {
 	masqueradeTimeout time.Duration
 }
 
-// Use a wrapper for fronted.NewDirect to avoid blocking
+// Use a wrapper for fronted.NewFronted to avoid blocking
 // `dualFetcher.RoundTrip` when fronted is not yet available, especially when
 // the application is starting up
 func (f frontedRoundTripper) RoundTrip(
