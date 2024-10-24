@@ -11,13 +11,13 @@ import (
 	"github.com/anacrolix/torrent"
 )
 
-type magnetDownloader struct {
+type waterMagnetDownloader struct {
 	magnetURL string
-	client    TorrentClient
+	client    torrentClient
 }
 
-// NewMagnetDownloader creates a new WASMDownloader instance.
-func NewMagnetDownloader(ctx context.Context, magnetURL string) (WASMDownloader, error) {
+// newWaterMagnetDownloader creates a new WASMDownloader instance.
+func newWaterMagnetDownloader(ctx context.Context, magnetURL string) (waterWASMDownloader, error) {
 	cfg, err := generateTorrentClientConfig(ctx)
 	if err != nil {
 		return nil, err
@@ -27,13 +27,13 @@ func NewMagnetDownloader(ctx context.Context, magnetURL string) (WASMDownloader,
 	if err != nil {
 		return nil, log.Errorf("failed to create torrent client: %w", err)
 	}
-	return &magnetDownloader{
+	return &waterMagnetDownloader{
 		magnetURL: magnetURL,
 		client:    newTorrentCliWrapper(client),
 	}, nil
 }
 
-func (d *magnetDownloader) Close() error {
+func (d *waterMagnetDownloader) Close() error {
 	errs := d.client.Close()
 	closeErr := errors.New("failed to close torrent client")
 	allErrs := make([]error, len(errs)+1)
@@ -55,7 +55,7 @@ func newTorrentCliWrapper(client *torrent.Client) *torrentCliWrapper {
 	}
 }
 
-func (t *torrentCliWrapper) AddMagnet(magnetURL string) (TorrentInfo, error) {
+func (t *torrentCliWrapper) AddMagnet(magnetURL string) (torrentInfo, error) {
 	return t.client.AddMagnet(magnetURL)
 }
 
@@ -63,12 +63,12 @@ func (t *torrentCliWrapper) Close() []error {
 	return t.client.Close()
 }
 
-type TorrentClient interface {
-	AddMagnet(string) (TorrentInfo, error)
+type torrentClient interface {
+	AddMagnet(string) (torrentInfo, error)
 	Close() []error
 }
 
-type TorrentInfo interface {
+type torrentInfo interface {
 	GotInfo() events.Done
 	NewReader() torrent.Reader
 }
@@ -95,7 +95,7 @@ func generateTorrentClientConfig(ctx context.Context) (*torrent.ClientConfig, er
 }
 
 // DownloadWASM downloads the WASM file from the given URL.
-func (d *magnetDownloader) DownloadWASM(ctx context.Context, w io.Writer) error {
+func (d *waterMagnetDownloader) DownloadWASM(ctx context.Context, w io.Writer) error {
 	t, err := d.client.AddMagnet(d.magnetURL)
 	if err != nil {
 		return log.Errorf("failed to add magnet: %w", err)

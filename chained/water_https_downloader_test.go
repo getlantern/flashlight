@@ -75,7 +75,7 @@ func TestHTTPSDownloadWASM(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			b := new(bytes.Buffer)
-			err := NewHTTPSDownloader(tt.givenHTTPClient, tt.givenURL).DownloadWASM(ctx, b)
+			err := newWaterHTTPSDownloader(tt.givenHTTPClient, tt.givenURL).DownloadWASM(ctx, b)
 			tt.assert(t, b, err)
 		})
 	}

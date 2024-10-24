@@ -17,17 +17,17 @@ func TestMagnetDownloadWASM(t *testing.T) {
 	ctx := context.Background()
 	var tests = []struct {
 		name           string
-		setup          func(ctrl *gomock.Controller, downloader *magnetDownloader) WASMDownloader
+		setup          func(ctrl *gomock.Controller, downloader *waterMagnetDownloader) waterWASMDownloader
 		givenCtx       context.Context
 		givenMagnetURL string
 		assert         func(t *testing.T, r io.Reader, err error)
 	}{
 		{
 			name: "should return success when download is successful",
-			setup: func(ctrl *gomock.Controller, downloader *magnetDownloader) WASMDownloader {
+			setup: func(ctrl *gomock.Controller, downloader *waterMagnetDownloader) waterWASMDownloader {
 				downloader.Close()
-				torrentClient := NewMockTorrentClient(ctrl)
-				torrentInfo := NewMockTorrentInfo(ctrl)
+				torrentClient := NewMocktorrentClient(ctrl)
+				torrentInfo := NewMocktorrentInfo(ctrl)
 
 				torrentReader := NewMockReader(ctrl)
 				// torrent reader receive Read calls from io.Copy, it should be able to store the message hello world
@@ -60,14 +60,14 @@ func TestMagnetDownloadWASM(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			downloader, err := NewMagnetDownloader(tt.givenCtx, tt.givenMagnetURL)
+			downloader, err := newWaterMagnetDownloader(tt.givenCtx, tt.givenMagnetURL)
 			require.NoError(t, err)
 			defer downloader.Close()
 			if tt.setup != nil {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
 
-				tt.setup(ctrl, downloader.(*magnetDownloader))
+				tt.setup(ctrl, downloader.(*waterMagnetDownloader))
 			}
 
 			b := new(bytes.Buffer)
