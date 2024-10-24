@@ -23,6 +23,7 @@ import (
 type MockWASMDownloader struct {
 	ctrl     *gomock.Controller
 	recorder *MockWASMDownloaderMockRecorder
+	isgomock struct{}
 }
 
 // MockWASMDownloaderMockRecorder is the mock recorder for MockWASMDownloader.
@@ -74,6 +75,7 @@ func (mr *MockWASMDownloaderMockRecorder) DownloadWASM(arg0, arg1 any) *gomock.C
 type MockTorrentClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockTorrentClientMockRecorder
+	isgomock struct{}
 }
 
 // MockTorrentClientMockRecorder is the mock recorder for MockTorrentClient.
@@ -126,6 +128,7 @@ func (mr *MockTorrentClientMockRecorder) Close() *gomock.Call {
 type MockTorrentInfo struct {
 	ctrl     *gomock.Controller
 	recorder *MockTorrentInfoMockRecorder
+	isgomock struct{}
 }
 
 // MockTorrentInfoMockRecorder is the mock recorder for MockTorrentInfo.
