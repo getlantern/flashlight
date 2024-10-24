@@ -10,9 +10,11 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/v7/ops"
+	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/refraction-networking/water"
 	_ "github.com/refraction-networking/water/transport/v1"
 )
@@ -48,7 +50,16 @@ func newWaterImpl(configDir, addr string, pc *config.ProxyConfig, reportDialCore
 			return nil, log.Errorf("failed to create version control: %w", err.Error())
 		}
 
-		r, err := vc.GetWASM(ctx, transport, strings.Split(wasmAvailableAt, ","))
+		cli := httpClient
+		if cli == nil {
+			cli = proxied.ChainedThenDirectThenFrontedClient(1*time.Minute, "")
+		}
+		downloader, err := NewWASMDownloader(strings.Split(wasmAvailableAt, ","), cli)
+		if err != nil {
+			return nil, log.Errorf("failed to create wasm downloader: %w", err)
+		}
+
+		r, err := vc.GetWASM(ctx, transport, downloader)
 		if err != nil {
 			return nil, log.Errorf("failed to get wasm: %w", err)
 		}

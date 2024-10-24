@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/gocarina/gocsv"
 )
 
@@ -104,11 +103,11 @@ func loadWASMFilesAvailable(dir string) (map[string]wasmInfo, error) {
 
 // GetWASM returns the WASM file for the given transport
 // Remember to Close the io.ReadCloser after using it
-func (vc *waterVersionControl) GetWASM(ctx context.Context, transport string, urls []string) (io.ReadCloser, error) {
+func (vc *waterVersionControl) GetWASM(ctx context.Context, transport string, downloader WASMDownloader) (io.ReadCloser, error) {
 	info, ok := vc.wasmFilesAvailable[transport]
 	if !ok {
 		var err error
-		info, err = vc.downloadWASM(ctx, transport, urls)
+		info, err = vc.downloadWASM(ctx, transport, downloader)
 		if err != nil {
 			return nil, log.Errorf("failed to download WASM file: %w", err)
 		}
@@ -238,7 +237,7 @@ func (vc *waterVersionControl) storeHistory() error {
 	return nil
 }
 
-func (vc *waterVersionControl) downloadWASM(ctx context.Context, transport string, urls []string) (wasmInfo, error) {
+func (vc *waterVersionControl) downloadWASM(ctx context.Context, transport string, downloader WASMDownloader) (wasmInfo, error) {
 	splitFilename := strings.Split(transport, ".")
 	if len(splitFilename) < 3 {
 		return wasmInfo{}, log.Errorf("invalid transport: %s", transport)
@@ -251,16 +250,7 @@ func (vc *waterVersionControl) downloadWASM(ctx context.Context, transport strin
 	}
 	defer f.Close()
 
-	cli := httpClient
-	if cli == nil {
-		cli = proxied.ChainedThenDirectThenFrontedClient(1*time.Minute, "")
-	}
-
-	d, err := NewWASMDownloader(urls, cli)
-	if err != nil {
-		return wasmInfo{}, log.Errorf("failed to create wasm downloader: %w", err)
-	}
-	if err = d.DownloadWASM(ctx, f); err != nil {
+	if err = downloader.DownloadWASM(ctx, f); err != nil {
 		return wasmInfo{}, log.Errorf("failed to download wasm: %w", err)
 	}
 
