@@ -14,7 +14,7 @@ import (
 	"github.com/gocarina/gocsv"
 )
 
-type versionControl struct {
+type waterVersionControl struct {
 	// contain all wasm files available locally
 	// key is something like: protocol.version
 	wasmFilesAvailable map[string]wasmInfo
@@ -50,7 +50,7 @@ func NewVersionControl(configDir string) (VersionControl, error) {
 		return nil, log.Errorf("failed to load wasm files available: %v", err)
 	}
 
-	return &versionControl{
+	return &waterVersionControl{
 		dir:                configDir,
 		wasmFilesAvailable: wasmFilesAvailable,
 		historyMutex:       &sync.Mutex{},
@@ -109,7 +109,7 @@ func loadWASMFilesAvailable(dir string) (map[string]wasmInfo, error) {
 
 // GetWASM returns the WASM file for the given transport
 // Remember to Close the io.ReadCloser after using it
-func (vc *versionControl) GetWASM(ctx context.Context, transport string, urls []string) (io.ReadCloser, error) {
+func (vc *waterVersionControl) GetWASM(ctx context.Context, transport string, urls []string) (io.ReadCloser, error) {
 	info, ok := vc.wasmFilesAvailable[transport]
 	if !ok {
 		var err error
@@ -131,7 +131,7 @@ func (vc *versionControl) GetWASM(ctx context.Context, transport string, urls []
 
 // Commit will update the history of the last time the WASM file was loaded
 // and delete the outdated WASM files
-func (vc *versionControl) Commit(transport string) error {
+func (vc *waterVersionControl) Commit(transport string) error {
 	vc.historyMutex.Lock()
 	defer vc.historyMutex.Unlock()
 	if err := vc.loadHistory(); err != nil {
@@ -148,7 +148,7 @@ func (vc *versionControl) Commit(transport string) error {
 	return nil
 }
 
-func (vc *versionControl) updateLastTimeLoaded(transport string) error {
+func (vc *waterVersionControl) updateLastTimeLoaded(transport string) error {
 	for i, h := range vc.history {
 		if h.Transport == transport {
 			vc.history[i].LastTimeLoaded = time.Now()
@@ -169,7 +169,7 @@ func (vc *versionControl) updateLastTimeLoaded(transport string) error {
 	return nil
 }
 
-func (vc *versionControl) loadHistory() error {
+func (vc *waterVersionControl) loadHistory() error {
 	historyCSV := filepath.Join(vc.dir, "history.csv")
 
 	// if there's no history available, just initialize history
@@ -193,7 +193,7 @@ func (vc *versionControl) loadHistory() error {
 	return nil
 }
 
-func (vc *versionControl) deleteOutdatedWASMFiles() error {
+func (vc *waterVersionControl) deleteOutdatedWASMFiles() error {
 	affectedTransports := make([]string, 0)
 	for _, h := range vc.history {
 		// check if the file is outdated
@@ -224,7 +224,7 @@ func (vc *versionControl) deleteOutdatedWASMFiles() error {
 	return nil
 }
 
-func (vc *versionControl) storeHistory() error {
+func (vc *waterVersionControl) storeHistory() error {
 	historyCSV := filepath.Join(vc.dir, "history.csv")
 	f, err := os.Create(historyCSV)
 	if err != nil {
@@ -239,7 +239,7 @@ func (vc *versionControl) storeHistory() error {
 	return nil
 }
 
-func (vc *versionControl) downloadWASM(ctx context.Context, transport string, urls []string) (wasmInfo, error) {
+func (vc *waterVersionControl) downloadWASM(ctx context.Context, transport string, urls []string) (wasmInfo, error) {
 	splitFilename := strings.Split(transport, ".")
 	if len(splitFilename) < 3 {
 		return wasmInfo{}, log.Errorf("invalid transport: %s", transport)
