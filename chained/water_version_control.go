@@ -36,9 +36,9 @@ type wasmInfo struct {
 	path      string
 }
 
-// NewVersionControl check if the received config is the same as we already
+// newWaterVersionControl check if the received config is the same as we already
 // have and if not, it'll try to fetch the newest WASM available.
-func NewVersionControl(configDir string) (*waterVersionControl, error) {
+func newWaterVersionControl(configDir string) (*waterVersionControl, error) {
 	wasmFilesAvailable, err := loadWASMFilesAvailable(configDir)
 	if err != nil {
 		return nil, log.Errorf("failed to load wasm files available: %v", err)
@@ -103,7 +103,7 @@ func loadWASMFilesAvailable(dir string) (map[string]wasmInfo, error) {
 
 // GetWASM returns the WASM file for the given transport
 // Remember to Close the io.ReadCloser after using it
-func (vc *waterVersionControl) GetWASM(ctx context.Context, transport string, downloader WASMDownloader) (io.ReadCloser, error) {
+func (vc *waterVersionControl) GetWASM(ctx context.Context, transport string, downloader waterWASMDownloader) (io.ReadCloser, error) {
 	info, ok := vc.wasmFilesAvailable[transport]
 	if !ok {
 		var err error
@@ -237,7 +237,7 @@ func (vc *waterVersionControl) storeHistory() error {
 	return nil
 }
 
-func (vc *waterVersionControl) downloadWASM(ctx context.Context, transport string, downloader WASMDownloader) (wasmInfo, error) {
+func (vc *waterVersionControl) downloadWASM(ctx context.Context, transport string, downloader waterWASMDownloader) (wasmInfo, error) {
 	splitFilename := strings.Split(transport, ".")
 	if len(splitFilename) < 3 {
 		return wasmInfo{}, log.Errorf("invalid transport: %s", transport)

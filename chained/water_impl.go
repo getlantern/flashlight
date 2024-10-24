@@ -45,7 +45,7 @@ func newWaterImpl(configDir, addr string, pc *config.ProxyConfig, reportDialCore
 	transport := ptSetting(pc, "water_transport")
 	if wasm == nil && wasmAvailableAt != "" {
 		waterDir := filepath.Join(configDir, "water")
-		vc, err := NewVersionControl(waterDir)
+		vc, err := newWaterVersionControl(waterDir)
 		if err != nil {
 			return nil, log.Errorf("failed to create version control: %w", err.Error())
 		}
@@ -54,7 +54,7 @@ func newWaterImpl(configDir, addr string, pc *config.ProxyConfig, reportDialCore
 		if cli == nil {
 			cli = proxied.ChainedThenDirectThenFrontedClient(1*time.Minute, "")
 		}
-		downloader, err := NewWASMDownloader(strings.Split(wasmAvailableAt, ","), cli)
+		downloader, err := newWaterWASMDownloader(strings.Split(wasmAvailableAt, ","), cli)
 		if err != nil {
 			return nil, log.Errorf("failed to create wasm downloader: %w", err)
 		}

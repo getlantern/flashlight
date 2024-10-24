@@ -12,7 +12,7 @@ type httpsDownloader struct {
 	url string
 }
 
-func NewHTTPSDownloader(client *http.Client, url string) WASMDownloader {
+func newWaterHTTPSDownloader(client *http.Client, url string) waterWASMDownloader {
 	return &httpsDownloader{cli: client, url: url}
 }
 

@@ -64,7 +64,7 @@ func TestNewVersionControl(t *testing.T) {
 			if tt.setup != nil {
 				tt.setup()
 			}
-			vc, err := NewVersionControl(tt.givenConfigDir)
+			vc, err := newWaterVersionControl(tt.givenConfigDir)
 			tt.assert(t, vc, err)
 		})
 	}
@@ -182,7 +182,7 @@ func TestCommit(t *testing.T) {
 				tt.setup(t, configDir)
 			}
 
-			vc, err := NewVersionControl(configDir)
+			vc, err := newWaterVersionControl(configDir)
 			require.NoError(t, err)
 
 			err = vc.Commit(tt.givenTransport)
