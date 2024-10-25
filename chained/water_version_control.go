@@ -75,6 +75,7 @@ const unusedWASMsDeletedAfter = 7 * 24 * time.Hour
 
 func (vc *waterVersionControl) cleanOutdated() error {
 	wg := new(sync.WaitGroup)
+	filesToBeDeleted := make([]string, 0)
 	// walk through dir, load last-loaded and delete if older than unusedWASMsDeletedAfter
 	err := filepath.Walk(vc.dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -99,22 +100,25 @@ func (vc *waterVersionControl) cleanOutdated() error {
 		}
 		lastLoadedTime := time.Unix(i, 0)
 		if time.Since(lastLoadedTime) > unusedWASMsDeletedAfter {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				transport := strings.TrimSuffix(filepath.Base(path), ".last-loaded")
-				if err = os.Remove(filepath.Join(vc.dir, transport+".wasm")); err != nil {
-					log.Errorf("failed to remove wasm file %s: %w", transport+".wasm", err)
-					return
-				}
-				if err = os.Remove(path); err != nil {
-					log.Errorf("failed to remove last-loaded file %s: %w", path, err)
-					return
-				}
-			}()
+			filesToBeDeleted = append(filesToBeDeleted, path)
 		}
 		return nil
 	})
+	for _, path := range filesToBeDeleted {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			transport := strings.TrimSuffix(filepath.Base(path), ".last-loaded")
+			if err = os.Remove(filepath.Join(vc.dir, transport+".wasm")); err != nil {
+				log.Errorf("failed to remove wasm file %s: %w", transport+".wasm", err)
+				return
+			}
+			if err = os.Remove(path); err != nil {
+				log.Errorf("failed to remove last-loaded file %s: %w", path, err)
+				return
+			}
+		}()
+	}
 	wg.Wait()
 	return err
 }
