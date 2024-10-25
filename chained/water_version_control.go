@@ -2,7 +2,9 @@ package chained
 
 import (
 	"context"
+	"errors"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -36,7 +38,7 @@ func (vc *waterVersionControl) GetWASM(ctx context.Context, transport string, do
 		return nil, log.Errorf("failed to open file %s: %w", path, err)
 	}
 
-	if os.IsNotExist(err) {
+	if errors.Is(err, fs.ErrNotExist) || f == nil {
 		f, err = vc.downloadWASM(ctx, transport, downloader)
 		if err != nil {
 			return nil, log.Errorf("failed to download WASM file: %w", err)
