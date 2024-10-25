@@ -2,10 +2,8 @@ package chained
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"math/rand"
 	"net"
 	"net/http"
@@ -217,7 +215,7 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 		impl, err = newAlgenevaImpl(addr, s, reportDialCore)
 	case "water":
 		waterDir := filepath.Join(configDir, "water")
-		if err := os.Mkdir(waterDir, 0755); err != nil && !errors.Is(err, fs.ErrExist) {
+		if err := os.MkdirAll(waterDir, 0755); err != nil {
 			return nil, fmt.Errorf("failed to create water directory: %w", err)
 		}
 		impl, err = newWaterImpl(waterDir, addr, s, reportDialCore)
