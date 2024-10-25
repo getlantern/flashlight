@@ -2,11 +2,15 @@ package chained
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"math/rand"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -18,7 +22,7 @@ import (
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/ema"
-	"github.com/getlantern/errors"
+	lerrors "github.com/getlantern/errors"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 
@@ -151,7 +155,7 @@ func extractParams(s *config.ProxyConfig) (addr, transport, network string, err 
 		forceProxy(s)
 	}
 	if s.Addr == "" {
-		err = errors.New("Empty addr")
+		err = lerrors.New("Empty addr")
 		return
 	}
 	addr = s.Addr
@@ -212,9 +216,13 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 	case "algeneva":
 		impl, err = newAlgenevaImpl(addr, s, reportDialCore)
 	case "water":
-		impl, err = newWaterImpl(configDir, addr, s, reportDialCore)
+		waterDir := filepath.Join(configDir, "water")
+		if err := os.Mkdir(waterDir, 0755); err != nil && !errors.Is(err, fs.ErrExist) {
+			return nil, fmt.Errorf("failed to create water directory: %w", err)
+		}
+		impl, err = newWaterImpl(waterDir, addr, s, reportDialCore)
 	default:
-		err = errors.New("Unknown transport: %v", transport).With("addr", addr).With("plugabble-transport", transport)
+		err = lerrors.New("Unknown transport: %v", transport).With("addr", addr).With("plugabble-transport", transport)
 	}
 	if err != nil {
 		return nil, err

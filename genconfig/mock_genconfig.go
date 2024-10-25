@@ -22,6 +22,7 @@ import (
 type Mockverifier struct {
 	ctrl     *gomock.Controller
 	recorder *MockverifierMockRecorder
+	isgomock struct{}
 }
 
 // MockverifierMockRecorder is the mock recorder for Mockverifier.
@@ -59,6 +60,7 @@ func (mr *MockverifierMockRecorder) Vet(m, pool, testURL any) *gomock.Call {
 type MockcertGrabber struct {
 	ctrl     *gomock.Controller
 	recorder *MockcertGrabberMockRecorder
+	isgomock struct{}
 }
 
 // MockcertGrabberMockRecorder is the mock recorder for MockcertGrabber.

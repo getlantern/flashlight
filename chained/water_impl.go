@@ -8,12 +8,13 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
-	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/v7/ops"
+	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/refraction-networking/water"
 	_ "github.com/refraction-networking/water/transport/v1"
 )
@@ -28,7 +29,7 @@ type waterImpl struct {
 
 var httpClient *http.Client
 
-func newWaterImpl(configDir, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (*waterImpl, error) {
+func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (*waterImpl, error) {
 	var wasm []byte
 
 	b64WASM := ptSetting(pc, "water_wasm")
@@ -58,32 +59,36 @@ func newWaterImpl(configDir, addr string, pc *config.ProxyConfig, reportDialCore
 	}
 
 	if wasm == nil && wasmAvailableAt != "" {
-		waterDir := filepath.Join(configDir, "water")
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			vc, err := NewVersionControl(waterDir)
+			vc := newWaterVersionControl(dir)
+			cli := httpClient
+			if cli == nil {
+				cli = proxied.ChainedThenDirectThenFrontedClient(1*time.Minute, "")
+			}
+			downloader, err := newWaterWASMDownloader(strings.Split(wasmAvailableAt, ","), cli)
 			if err != nil {
-				log.Errorf("failed to create version control: %w", err.Error())
+				log.Errorf("failed to create wasm downloader: %w", err)
+				return
 			}
 
-			r, err := vc.GetWASM(ctx, transport, strings.Split(wasmAvailableAt, ","))
+			r, err := vc.GetWASM(ctx, transport, downloader)
 			if err != nil {
 				log.Errorf("failed to get wasm: %w", err)
+				return
 			}
 			defer r.Close()
 
 			b, err := io.ReadAll(r)
 			if err != nil {
 				log.Errorf("failed to read wasm: %w", err)
+				return
 			}
 
 			if len(b) == 0 {
 				log.Errorf("received empty wasm")
-			}
-
-			if err = vc.Commit(transport); err != nil {
-				log.Errorf("failed to update WASM history: %w", err)
+				return
 			}
 
 			dialer, err := createDialer(ctx, b, transport)

@@ -1,192 +1,123 @@
 package chained
 
 import (
+	"context"
+	"io"
 	"os"
-	"path"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
 
-	"github.com/gocarina/gocsv"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	gomock "go.uber.org/mock/gomock"
 )
 
-func TestNewVersionControl(t *testing.T) {
-	configDir, err := os.MkdirTemp("", "water")
-	require.NoError(t, err)
-	defer os.RemoveAll(configDir)
-
-	inexistentPath := path.Join(configDir, "aaaa")
+func TestNewWaterVersionControl(t *testing.T) {
 	var tests = []struct {
-		name           string
-		givenConfigDir string
-		assert         func(t *testing.T, vc VersionControl, err error)
-		setup          func()
+		name   string
+		assert func(t *testing.T, dir string, r io.ReadCloser, err error)
+		setup  func(t *testing.T, ctrl *gomock.Controller, dir string) waterWASMDownloader
 	}{
 		{
-			name:           "it should return a new versionControl successfully when receiving a configDir and it should create the directory if it doesn't exist",
-			givenConfigDir: inexistentPath,
-			assert: func(t *testing.T, vc VersionControl, err error) {
+			name: "it should call downloadWASM when the file does not exist",
+			assert: func(t *testing.T, dir string, r io.ReadCloser, err error) {
 				assert.NoError(t, err)
-				assert.NotNil(t, vc)
-				assert.DirExists(t, inexistentPath)
+				assert.NotNil(t, r)
+				defer r.Close()
+
+				b, err := io.ReadAll(r)
+				require.NoError(t, err)
+				assert.Equal(t, "test", string(b))
+
+				_, err = os.Stat(filepath.Join(dir, "test.wasm"))
+				assert.NoError(t, err)
+
+				_, err = os.Stat(filepath.Join(dir, "test.last-loaded"))
+				assert.NoError(t, err)
+			},
+			setup: func(t *testing.T, ctrl *gomock.Controller, _ string) waterWASMDownloader {
+				downloader := NewMockwaterWASMDownloader(ctrl)
+				downloader.EXPECT().DownloadWASM(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, w io.Writer) error {
+					assert.NotNil(t, ctx)
+					assert.NotNil(t, w)
+					_, err := w.Write([]byte("test"))
+					require.NoError(t, err)
+					return nil
+				})
+				return downloader
 			},
 		},
 		{
-			name:           "it should return a error if the directory contains a file with invalid wasm name",
-			givenConfigDir: configDir,
-			assert: func(t *testing.T, vc VersionControl, err error) {
-				assert.Error(t, err)
-				assert.Nil(t, vc)
-				os.Remove(path.Join(configDir, "aaaaa.wasm"))
-			},
-			setup: func() {
-				_, err := os.Create(path.Join(configDir, "aaaaa.wasm"))
-				require.NoError(t, err)
-			},
-		},
-		{
-			name:           "it should return a versionControl with the wasm files available",
-			givenConfigDir: configDir,
-			assert: func(t *testing.T, vc VersionControl, err error) {
+			name: "it should delete outdated WASM files after marking it as used",
+			assert: func(t *testing.T, dir string, r io.ReadCloser, err error) {
 				assert.NoError(t, err)
-				assert.NotNil(t, vc)
-			},
-			setup: func() {
-				_, err := os.Create(path.Join(configDir, "plain.v1.tinygo.wasm"))
+				assert.NotNil(t, r)
+				defer r.Close()
+
+				b, err := io.ReadAll(r)
 				require.NoError(t, err)
+				assert.Equal(t, "test", string(b))
+
+				_, err = os.Stat(filepath.Join(dir, "test.wasm"))
+				assert.NoError(t, err)
+
+				_, err = os.Stat(filepath.Join(dir, "test.last-loaded"))
+				assert.NoError(t, err)
+
+				// assert old-test does not exist
+				_, err = os.Stat(filepath.Join(dir, "old-test.wasm"))
+				assert.Error(t, os.ErrNotExist, err)
+
+				_, err = os.Stat(filepath.Join(dir, "old-test.last-loaded"))
+				assert.Error(t, os.ErrNotExist, err)
+
+			},
+			setup: func(t *testing.T, ctrl *gomock.Controller, dir string) waterWASMDownloader {
+				// create test.wasm at dir
+				f, err := os.Create(filepath.Join(dir, "old-test.wasm"))
+				require.NoError(t, err)
+				_, err = f.WriteString("test")
+				require.NoError(t, err)
+				require.NoError(t, f.Close())
+
+				// create test.last-loaded at dir with time older than 7 days
+				f, err = os.Create(filepath.Join(dir, "old-test.last-loaded"))
+				require.NoError(t, err)
+				unixTime := time.Now().UTC().AddDate(0, 0, -8).Unix()
+				oldTime := strconv.FormatInt(unixTime, 10)
+				_, err = f.WriteString(oldTime)
+				require.NoError(t, err)
+				require.NoError(t, f.Close())
+
+				downloader := NewMockwaterWASMDownloader(ctrl)
+				downloader.EXPECT().DownloadWASM(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, w io.Writer) error {
+					assert.NotNil(t, ctx)
+					assert.NotNil(t, w)
+					_, err := w.Write([]byte("test"))
+					require.NoError(t, err)
+					return nil
+				})
+				return downloader
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.setup != nil {
-				tt.setup()
-			}
-			vc, err := NewVersionControl(tt.givenConfigDir)
-			tt.assert(t, vc, err)
-		})
-	}
-}
-
-func TestCommit(t *testing.T) {
-
-	var tests = []struct {
-		name           string
-		givenTransport string
-		setup          func(t *testing.T, configDir string)
-		assert         func(t *testing.T, configDir string, err error)
-	}{
-		{
-			name:           "it should add one register to the history",
-			givenTransport: "plain.v1.tinygo.wasm",
-			assert: func(t *testing.T, configDir string, err error) {
-				assert.NoError(t, err)
-				historyCSV := filepath.Join(configDir, "history.csv")
-				assert.FileExists(t, historyCSV)
-
-				f, err := os.Open(historyCSV)
-				require.NoError(t, err)
-				defer f.Close()
-
-				history := []history{}
-				require.NoError(t, gocsv.UnmarshalFile(f, &history))
-				assert.Len(t, history, 1)
-				assert.Equal(t, "plain.v1.tinygo.wasm", history[0].Transport)
-				assert.NotEmpty(t, history[0].LastTimeLoaded)
-			},
-		},
-		{
-			name:           "it should update the last time loaded of the transport",
-			givenTransport: "plain.v1.tinygo.wasm",
-			setup: func(t *testing.T, configDir string) {
-				historyCSV := filepath.Join(configDir, "history.csv")
-				history := []history{
-					{
-						Transport:      "plain.v1.tinygo.wasm",
-						LastTimeLoaded: time.Now().Add(-1 * time.Hour),
-					},
-				}
-
-				f, err := os.Create(historyCSV)
-				require.NoError(t, err)
-				defer f.Close()
-
-				require.NoError(t, gocsv.MarshalFile(&history, f))
-			},
-			assert: func(t *testing.T, configDir string, err error) {
-				assert.NoError(t, err)
-				historyCSV := filepath.Join(configDir, "history.csv")
-				assert.FileExists(t, historyCSV)
-
-				f, err := os.Open(historyCSV)
-				require.NoError(t, err)
-				defer f.Close()
-
-				history := []history{}
-				require.NoError(t, gocsv.UnmarshalFile(f, &history))
-				assert.Len(t, history, 1)
-				assert.Equal(t, "plain.v1.tinygo.wasm", history[0].Transport)
-				assert.NotEmpty(t, history[0].LastTimeLoaded)
-				assert.True(t, history[0].LastTimeLoaded.After(time.Now().Add(-1*time.Minute)))
-			},
-		},
-		{
-			name:           "it should delete the outdated wasm files",
-			givenTransport: "plain.v2.tinygo.wasm",
-			setup: func(t *testing.T, configDir string) {
-				historyCSV := filepath.Join(configDir, "history.csv")
-				history := []history{
-					{
-						Transport:      "plain.v1.tinygo.wasm",
-						LastTimeLoaded: time.Now().Add(-8 * 24 * time.Hour),
-					},
-				}
-
-				f, err := os.Create(historyCSV)
-				require.NoError(t, err)
-				defer f.Close()
-
-				require.NoError(t, gocsv.MarshalFile(&history, f))
-
-				_, err = os.Create(path.Join(configDir, "plain.v1.tinygo.wasm"))
-				require.NoError(t, err)
-			},
-			assert: func(t *testing.T, configDir string, err error) {
-				assert.NoError(t, err)
-				historyCSV := filepath.Join(configDir, "history.csv")
-				assert.FileExists(t, historyCSV)
-
-				f, err := os.Open(historyCSV)
-				require.NoError(t, err)
-				defer f.Close()
-
-				history := []history{}
-				require.NoError(t, gocsv.UnmarshalFile(f, &history))
-				assert.Len(t, history, 1)
-				assert.Equal(t, "plain.v2.tinygo.wasm", history[0].Transport)
-				assert.NotEmpty(t, history[0].LastTimeLoaded)
-
-				assert.NoFileExists(t, path.Join(configDir, "plain.v1.tinygo.wasm"))
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			configDir, err := os.MkdirTemp("", "water")
+			dir, err := os.MkdirTemp("", "water")
 			require.NoError(t, err)
-			defer os.RemoveAll(configDir)
+			defer os.RemoveAll(dir)
 
-			if tt.setup != nil {
-				tt.setup(t, configDir)
-			}
+			downloader := tt.setup(t, gomock.NewController(t), dir)
+			vc := newWaterVersionControl(dir)
+			require.NotNil(t, vc)
+			require.NotEmpty(t, vc.dir)
 
-			vc, err := NewVersionControl(configDir)
-			require.NoError(t, err)
+			ctx := context.Background()
+			r, err := vc.GetWASM(ctx, "test", downloader)
 
-			err = vc.Commit(tt.givenTransport)
-			tt.assert(t, configDir, err)
+			tt.assert(t, dir, r, err)
 		})
 	}
 }
