@@ -88,11 +88,12 @@ func New(opts Options) (*BanditDialer, error) {
 // as a means of seeding the bandit with initial data. This should
 // help weed out dialers/proxies censored users can't connect to at all.
 func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy) {
+	log.Debugf("Dialing all dialers in parallel %#v", dialers)
 	for index, d := range dialers {
 		// Note that the index of the dialer in our list is the index of the arm
 		// in the bandit and that the bandit is concurrent-safe.
 		go func(dialer Dialer, index int) {
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			start := time.Now()
 			conn, err := dialer.DialProxy(ctx)
@@ -102,7 +103,7 @@ func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy) {
 				}
 			}()
 			if err != nil {
-				log.Debugf("Dialer %v failed: %v", dialer.Name(), err)
+				log.Debugf("Dialer %v failed in %v with: %v", dialer.Name(), time.Since(start).Seconds(), err)
 				bandit.Update(index, 0)
 				return
 			}
