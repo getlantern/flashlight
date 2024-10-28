@@ -2,10 +2,8 @@ package chained
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"math/rand"
 	"net"
 	"net/http"
