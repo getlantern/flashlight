@@ -62,6 +62,7 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			log.Debugf("Loading WASM for %q. If not available, it should try to download from the following URLs: %+v. The file should be available here: %s", transport, strings.Split(wasmAvailableAt, ","), dir)
 			vc := newWaterVersionControl(dir)
 			cli := httpClient
 			if cli == nil {
