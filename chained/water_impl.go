@@ -24,6 +24,7 @@ type waterImpl struct {
 	reportDialCore reportDialCoreFn
 	dialer         water.Dialer
 	wgDownload     *sync.WaitGroup
+	downloadErr    error
 	nopCloser
 }
 
@@ -70,31 +71,31 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 			}
 			downloader, err := newWaterWASMDownloader(strings.Split(wasmAvailableAt, ","), cli)
 			if err != nil {
-				log.Errorf("failed to create wasm downloader: %w", err)
+				d.downloadErr = log.Errorf("failed to create wasm downloader: %w", err)
 				return
 			}
 
 			r, err := vc.GetWASM(ctx, transport, downloader)
 			if err != nil {
-				log.Errorf("failed to get wasm: %w", err)
+				d.downloadErr = log.Errorf("failed to get wasm: %w", err)
 				return
 			}
 			defer r.Close()
 
 			b, err := io.ReadAll(r)
 			if err != nil {
-				log.Errorf("failed to read wasm: %w", err)
+				d.downloadErr = log.Errorf("failed to read wasm: %w", err)
 				return
 			}
 
 			if len(b) == 0 {
-				log.Errorf("received empty wasm")
+				d.downloadErr = log.Errorf("received empty wasm")
 				return
 			}
 
 			dialer, err := createDialer(ctx, b, transport)
 			if err != nil {
-				log.Errorf("failed to create dialer: %w", err)
+				d.downloadErr = log.Errorf("failed to create dialer: %w", err)
 			}
 			d.dialer = dialer
 		}()
@@ -111,7 +112,7 @@ func createDialer(ctx context.Context, wasm []byte, transport string) (water.Dia
 
 	dialer, err := water.NewDialerWithContext(ctx, cfg)
 	if err != nil {
-		log.Errorf("failed to create dialer: %w", err)
+		return nil, log.Errorf("failed to create dialer: %w", err)
 	}
 	return dialer, nil
 }
@@ -121,7 +122,7 @@ func (d *waterImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error
 		// TODO check if this is the intended behavior or if we should just return an error
 		d.wgDownload.Wait()
 		if d.dialer == nil {
-			return nil, log.Errorf("dialer not available")
+			return nil, log.Errorf("dialer not available: %w", d.downloadErr)
 		}
 
 		// TODO: At water 0.7.0 (currently), the library is	hanging onto the dial context
