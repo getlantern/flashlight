@@ -31,17 +31,6 @@ type waterImpl struct {
 var httpClient *http.Client
 
 func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (*waterImpl, error) {
-	var wasm []byte
-
-	b64WASM := ptSetting(pc, "water_wasm")
-	if b64WASM != "" {
-		var err error
-		wasm, err = base64.StdEncoding.DecodeString(b64WASM)
-		if err != nil {
-			return nil, fmt.Errorf("failed to decode water wasm: %w", err)
-		}
-	}
-
 	ctx := context.Background()
 	wasmAvailableAt := ptSetting(pc, "water_available_at")
 	transport := ptSetting(pc, "water_transport")
@@ -51,15 +40,24 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 		reportDialCore: reportDialCore,
 		wgDownload:     wg,
 	}
-	if wasm != nil {
+
+	b64WASM := ptSetting(pc, "water_wasm")
+	if b64WASM != "" {
+		var err error
+		wasm, err := base64.StdEncoding.DecodeString(b64WASM)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode water wasm: %w", err)
+		}
+
 		dialer, err := createDialer(ctx, wasm, transport)
 		if err != nil {
 			return nil, log.Errorf("failed to create dialer: %w", err)
 		}
 		d.dialer = dialer
+		return d, nil
 	}
 
-	if wasm == nil && wasmAvailableAt != "" {
+	if wasmAvailableAt != "" {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
