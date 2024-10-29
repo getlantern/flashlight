@@ -104,7 +104,8 @@ func TestNewWaterImpl(t *testing.T) {
 				require.NoError(t, err)
 				require.NotNil(t, actual)
 				actual.wgDownload.Wait()
-				require.NotNil(t, actual.dialer)
+				assert.NoError(t, actual.downloadErr)
+				assert.NotNil(t, actual.dialer)
 				assert.NotNil(t, actual.reportDialCore)
 			},
 			setHTTPClient: func() {
