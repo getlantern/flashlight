@@ -31,7 +31,7 @@ type frontedRoundTripper struct {
 func (f frontedRoundTripper) RoundTrip(
 	req *http.Request,
 ) (*http.Response, error) {
-	rt, ok := fronted.NewDirect(f.masqueradeTimeout)
+	rt, ok := fronted.NewFronted(f.masqueradeTimeout)
 	if !ok {
 		return nil, errors.New("Unable to obtain direct fronter")
 	}

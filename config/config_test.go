@@ -108,8 +108,7 @@ func TestProductionGlobal(t *testing.T) {
 	testURL := common.GlobalURL // this should always point to the live production configuration (not staging etc)
 
 	expectedProviders := map[string]bool{
-		"cloudfront": true,
-		"akamai":     true,
+		"akamai": true,
 	}
 
 	f := newHttpFetcher(newTestUserConfig(), &http.Transport{}, testURL)

@@ -29,7 +29,7 @@ function gen-list-for-country() {
 
 [ -n "$MAXMIND_LICENSE_KEY" ] || die 'Missing envvar "MAXMIND_LICENSE_KEY".'
 mkdir -p resources
-curl "https://download.maxmind.com/app/geoip_download?license_key=$MAXMIND_LICENSE_KEY&edition_id=GeoLite2-Country-CSV&suffix=zip" > geoip2.zip
+curl -L "https://download.maxmind.com/app/geoip_download?license_key=$MAXMIND_LICENSE_KEY&edition_id=GeoLite2-Country-CSV&suffix=zip" > geoip2.zip
 unzip -j geoip2.zip
 # See resources/GeoLite2-Country-Locations-en.csv for the mapping of id to country code
 gen-list-for-country 1814991 cn

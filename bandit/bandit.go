@@ -89,11 +89,12 @@ func New(opts Options) (*BanditDialer, error) {
 // as a means of seeding the bandit with initial data. This should
 // help weed out dialers/proxies censored users can't connect to at all.
 func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy) {
+	log.Debugf("Dialing all dialers in parallel %#v", dialers)
 	for index, d := range dialers {
 		// Note that the index of the dialer in our list is the index of the arm
 		// in the bandit and that the bandit is concurrent-safe.
 		go func(dialer Dialer, index int) {
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			start := time.Now()
 			conn, err := dialer.DialProxy(ctx)
@@ -103,11 +104,11 @@ func parallelDial(dialers []Dialer, bandit *bandit.EpsilonGreedy) {
 				}
 			}()
 			if err != nil {
-				log.Debugf("Dialer %v failed: %v", dialer.Name(), err)
+				log.Debugf("Dialer %v failed in %v with: %v", dialer.Name(), time.Since(start).Seconds(), err)
 				bandit.Update(index, 0)
 				return
 			}
-			log.Debugf("Dialer %v succeeded in %v", dialer.Name(), time.Since(start))
+			log.Debugf("Dialer %v succeeded in %v seconds", dialer.Name(), time.Since(start).Seconds())
 			bandit.Update(index, 1)
 		}(d, index)
 	}
@@ -122,7 +123,7 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	}
 
 	start := time.Now()
-	dialer, chosenArm := o.chooseDialerForDomain(o.dialers, network, addr)
+	dialer, chosenArm := o.chooseDialerForDomain(network, addr)
 
 	// We have to be careful here about virtual, multiplexed connections, as the
 	// initial TCP dial will have different performance characteristics than the
@@ -135,7 +136,7 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 		o.onError(err, hasSucceeding)
 
 		if !failedUpstream {
-			log.Errorf("Dialer %v failed: %v", dialer.Name(), err)
+			log.Errorf("Dialer %v failed in %v seconds: %v", dialer.Name(), time.Since(start).Seconds(), err)
 			o.bandit.Update(chosenArm, 0)
 		} else {
 			log.Debugf("Dialer %v failed upstream...", dialer.Name())
@@ -179,21 +180,43 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 // hasSucceedingDialer checks whether or not any of the given dialers is able to successfully dial our proxies
 func hasSucceedingDialer(dialers []Dialer) bool {
 	for _, dialer := range dialers {
-		if dialer.Succeeding() {
+		if dialer.ConsecFailures() == 0 && dialer.Successes() > 0 {
 			return true
 		}
 	}
 	return false
 }
 
-func (o *BanditDialer) chooseDialerForDomain(dialers []Dialer, network, addr string) (Dialer, int) {
-	chosenArm := o.bandit.SelectArm(rand.Float64())
-	dialer := dialers[chosenArm]
-	if dialer.SupportsAddr(network, addr) {
-		return dialer, chosenArm
+// hasNotFailing checks whether or not any of the given dialers are not explicitly failing
+func hasNotFailing(dialers []Dialer) bool {
+	for _, dialer := range dialers {
+		if dialer.ConsecFailures() == 0 {
+			return true
+		}
 	}
-	chosenArm = differentArm(chosenArm, len(dialers))
-	return dialers[chosenArm], chosenArm
+	return false
+}
+
+func (o *BanditDialer) chooseDialerForDomain(network, addr string) (Dialer, int) {
+	// Loop through the number of dialers we have and select the one that is best
+	// for the given domain.
+	chosenArm := o.bandit.SelectArm(rand.Float64())
+	var dialer Dialer
+	notAllFailing := hasNotFailing(o.dialers)
+	for i := 0; i < (len(o.dialers) * 2); i++ {
+		dialer = o.dialers[chosenArm]
+		if (dialer.ConsecFailures() > 0 && notAllFailing) || !dialer.SupportsAddr(network, addr) {
+			// If the chosen dialer has consecutive failures and there are other
+			// dialers that are succeeding, we should choose a different dialer.
+			//
+			// If the chosen dialer does not support the address, we should also
+			// choose a different dialer.
+			chosenArm = differentArm(chosenArm, len(o.dialers))
+			continue
+		}
+		break
+	}
+	return dialer, chosenArm
 }
 
 // Choose a different arm than the one we already have, if possible.

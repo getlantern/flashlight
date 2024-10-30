@@ -11,14 +11,80 @@ import (
 
 	bandit "github.com/alextanhongpin/go-bandit"
 	"github.com/getlantern/flashlight/v7/stats"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
+	baseDialer := newTcpConnDialer()
+	type fields struct {
+		dialers []Dialer
+	}
+	type args struct {
+		network string
+		addr    string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   Dialer
+		want1  int
+	}{
+		{
+			name: "should return the first dialer if there's only one dialer",
+			fields: fields{
+				dialers: []Dialer{baseDialer},
+			},
+			args: args{
+				network: "tcp",
+				addr:    "localhost:8080",
+			},
+			want:  baseDialer,
+			want1: 0,
+		},
+		{
+			name: "choose the non-failing dialer if there are multiple dialers",
+			fields: fields{
+				dialers: []Dialer{
+					newFailingTcpConnDialer(),
+					newFailingTcpConnDialer(),
+					newFailingTcpConnDialer(),
+					newFailingTcpConnDialer(),
+					baseDialer,
+					newFailingTcpConnDialer(),
+					newFailingTcpConnDialer(),
+				},
+			},
+			args: args{
+				network: "tcp",
+				addr:    "localhost:8080",
+			},
+			want:  baseDialer,
+			want1: 4,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			opts := Options{
+				Dialers: tt.fields.dialers,
+			}
+			o, err := New(opts)
+			require.NoError(t, err)
+			got, got1 := o.chooseDialerForDomain(tt.args.network, tt.args.addr)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("BanditDialer.chooseDialerForDomain() got = %v, want %v", got, tt.want)
+			}
+			assert.Equal(t, tt.want1, got1, "BanditDialer.chooseDialerForDomain() got1 = %v, want %v", got1, tt.want1)
+		})
+	}
+}
+
 func TestParallelDial(t *testing.T) {
 	dialers := []Dialer{
-		&tcpConnDialer{shouldFail: true},
-		&tcpConnDialer{shouldFail: true},
-		&tcpConnDialer{shouldFail: true},
+		newFailingTcpConnDialer(),
+		newFailingTcpConnDialer(),
+		newFailingTcpConnDialer(),
 		newTcpConnDialer(),
 	}
 
@@ -255,6 +321,12 @@ func newTcpConnDialer() Dialer {
 	}
 }
 
+func newFailingTcpConnDialer() Dialer {
+	return &tcpConnDialer{
+		shouldFail: true,
+	}
+}
+
 type tcpConnDialer struct {
 	shouldFail bool
 	client     net.Conn
@@ -280,12 +352,18 @@ func (*tcpConnDialer) Attempts() int64 {
 }
 
 // ConsecFailures implements Dialer.
-func (*tcpConnDialer) ConsecFailures() int64 {
+func (t *tcpConnDialer) ConsecFailures() int64 {
+	if t.shouldFail {
+		return 1
+	}
 	return 0
 }
 
 // ConsecSuccesses implements Dialer.
-func (*tcpConnDialer) ConsecSuccesses() int64 {
+func (t *tcpConnDialer) ConsecSuccesses() int64 {
+	if !t.shouldFail {
+		return 1
+	}
 	return 0
 }
 
@@ -376,7 +454,10 @@ func (*tcpConnDialer) Succeeding() bool {
 }
 
 // Successes implements Dialer.
-func (*tcpConnDialer) Successes() int64 {
+func (t *tcpConnDialer) Successes() int64 {
+	if !t.shouldFail {
+		return 1
+	}
 	return 0
 }
 

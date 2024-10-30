@@ -600,6 +600,22 @@ func DirectThenFrontedClient(timeout time.Duration) *http.Client {
 	}
 }
 
+// ChainedThenDirectThenFrontedClient returns an http.Client that first attempts
+// to connect to a chained proxy, then falls back to connecting directly to the
+// origin, and finally falls back to using domain fronting.
+func ChainedThenDirectThenFrontedClient(timeout time.Duration, rootCA string) *http.Client {
+	chained := &chainedRoundTripper{rootCA: rootCA}
+	drt := &http.Transport{
+		TLSHandshakeTimeout:   10 * time.Second,
+		ResponseHeaderTimeout: 30 * time.Second,
+	}
+	frt := Fronted(10 * time.Second)
+	return &http.Client{
+		Timeout:   timeout * 2,
+		Transport: serialTransport{chained, drt, frt},
+	}
+}
+
 type serialTransport []http.RoundTripper
 
 func (tr serialTransport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
