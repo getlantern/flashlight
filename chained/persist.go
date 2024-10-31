@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/flashlight/v7/bandit"
+	"github.com/getlantern/flashlight/v7/dialer"
 )
 
 var (
-	statsTrackingDialers []bandit.Dialer
+	statsTrackingDialers []dialer.ProxyDialer
 
 	statsMx sync.Mutex
 
@@ -22,7 +22,7 @@ var (
 
 // TrackStatsFor enables periodic checkpointing of the given proxies' stats to
 // disk.
-func TrackStatsFor(dialers []bandit.Dialer, configDir string) {
+func TrackStatsFor(dialers []dialer.ProxyDialer, configDir string) {
 	statsMx.Lock()
 
 	statsFilePath := filepath.Join(configDir, "proxystats.csv")
@@ -37,8 +37,8 @@ func TrackStatsFor(dialers []bandit.Dialer, configDir string) {
 	})
 }
 
-func applyExistingStats(statsFile string, dialers []bandit.Dialer) {
-	dialersMap := make(map[string]bandit.Dialer, len(dialers))
+func applyExistingStats(statsFile string, dialers []dialer.ProxyDialer) {
+	dialersMap := make(map[string]dialer.ProxyDialer, len(dialers))
 	for _, d := range dialers {
 		dialersMap[d.Addr()] = d
 	}
@@ -135,7 +135,7 @@ func persistStats(statsFilePath string) {
 	for {
 		time.Sleep(15 * time.Second)
 		statsMx.Lock()
-		dialers := make([]bandit.Dialer, 0, len(statsTrackingDialers))
+		dialers := make([]dialer.ProxyDialer, 0, len(statsTrackingDialers))
 		for _, d := range statsTrackingDialers {
 			dialers = append(dialers, d)
 		}
@@ -144,7 +144,7 @@ func persistStats(statsFilePath string) {
 	}
 }
 
-func doPersistStats(statsFile string, dialers []bandit.Dialer) {
+func doPersistStats(statsFile string, dialers []dialer.ProxyDialer) {
 
 	out, err := os.OpenFile(fmt.Sprintf("%v.tmp", statsFile), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {

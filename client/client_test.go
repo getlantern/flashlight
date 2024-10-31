@@ -19,8 +19,8 @@ import (
 
 	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/detour"
-	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/dialer"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/golog"
@@ -72,11 +72,11 @@ func newTestUserConfig() *common.UserConfigData {
 	return common.NewUserConfigData(common.DefaultAppName, "device", 1234, "protoken", nil, "en-US")
 }
 
-func resetDialers(client *Client, dialer func(network, addr string) (net.Conn, error)) {
-	d, _ := bandit.New(bandit.Options{
-		Dialers: []bandit.Dialer{&testDialer{
+func resetDialers(client *Client, dial func(network, addr string) (net.Conn, error)) {
+	d, _ := dialer.New(&dialer.Options{
+		Dialers: []dialer.ProxyDialer{&testDialer{
 			name: "test-dialer",
-			dial: dialer,
+			dial: dial,
 		}},
 	})
 	client.dialer = d
@@ -415,7 +415,7 @@ func TestAccessingProxyPort(t *testing.T) {
 }
 
 // Assert that a testDialer is a bandit.Dialer
-var _ bandit.Dialer = &testDialer{}
+var _ dialer.ProxyDialer = &testDialer{}
 
 type testDialer struct {
 	name      string

@@ -30,9 +30,9 @@ import (
 	"github.com/getlantern/proxy/v3/filters"
 	"github.com/getlantern/shortcut"
 
-	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/dialer"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/stats"
@@ -105,7 +105,7 @@ type Client struct {
 	requestTimeout time.Duration
 
 	// Dialer that uses multi-armed bandit to select the best proxy to use.
-	dialer *bandit.BanditDialer
+	dialer dialer.Dialer
 
 	proxy proxy.Proxy
 
@@ -173,7 +173,9 @@ func NewClient(
 	if err != nil {
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
-	banditDialer, err := bandit.New(bandit.Options{})
+	banditDialer, err := dialer.NewConnectivityCheckDialer(&dialer.Options{}, func(*dialer.Options) (dialer.Dialer, error) {
+		return nil, nil
+	})
 	if err != nil {
 		return nil, errors.New("Unable to create bandit: %v", err)
 	}
@@ -354,7 +356,7 @@ func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reade
 // Configure updates the client's configuration. Configure can be called
 // before or after ListenAndServe, and can be called multiple times. If
 // no error occurred, then the new dialers are returned.
-func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []bandit.Dialer {
+func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []dialer.ProxyDialer {
 	log.Debug("Configure() called")
 	dialers, dialer, err := client.initDialers(proxies)
 	if err != nil {
@@ -449,7 +451,7 @@ func (client *Client) doDial(
 
 	dialProxied := func(ctx context.Context, _unused, addr string) (net.Conn, error) {
 		op.Set("remotely_proxied", true)
-		proto := bandit.NetworkPersistent
+		proto := dialer.NetworkPersistent
 		if isCONNECT {
 			// UGLY HACK ALERT! In this case, we know we need to send a CONNECT request
 			// to the chained server. We need to send that request from chained/dialer.go
@@ -458,7 +460,7 @@ func (client *Client) doDial(
 			// that is effectively always "tcp" in the end, but we look for this
 			// special "transport" in the dialer and send a CONNECT request in that
 			// case.
-			proto = bandit.NetworkConnect
+			proto = dialer.NetworkConnect
 		}
 		start := time.Now()
 		conn, err := client.dialer.DialContext(ctx, proto, addr)
@@ -706,17 +708,17 @@ func errorResponse(_ *filters.ConnectionState, req *http.Request, _ bool, err er
 
 // initDialers takes hosts from cfg.ChainedServers and it uses them to create a
 // new dialer. Returns the new dialers.
-func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) ([]bandit.Dialer, *bandit.BanditDialer, error) {
+func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) ([]dialer.ProxyDialer, dialer.Dialer, error) {
 	if len(proxies) == 0 {
 		return nil, nil, fmt.Errorf("no chained servers configured, not initializing dialers")
 	}
 	configDir := client.configDir
 	chained.PersistSessionStates(configDir)
 	dialers := chained.CreateDialers(configDir, proxies, client.user)
-	dialer, err := bandit.New(bandit.Options{
+	dialer, err := dialer.New(&dialer.Options{
 		Dialers: dialers,
 		OnError: client.onDialError,
-		OnSuccess: func(dialer bandit.Dialer) {
+		OnSuccess: func(dialer dialer.ProxyDialer) {
 			client.onSucceedingProxy()
 		},
 		StatsTracker: client.statsTracker,
