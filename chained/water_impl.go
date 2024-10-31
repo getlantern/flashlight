@@ -117,7 +117,6 @@ func createDialer(ctx context.Context, wasm []byte, transport string) (water.Dia
 
 func (d *waterImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return d.reportDialCore(op, func() (net.Conn, error) {
-		// TODO check if this is the intended behavior or if we should just return an error
 		d.wgDownload.Wait()
 		if d.dialer == nil {
 			return nil, log.Errorf("dialer not available: %w", d.downloadErr)
