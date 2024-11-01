@@ -173,7 +173,7 @@ func NewClient(
 	if err != nil {
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
-	banditDialer, err := dialer.NewConnectivityCheckDialer(&dialer.Options{}, func(*dialer.Options) (dialer.Dialer, error) {
+	banditDialer, err := dialer.NewFastConnectDialer(&dialer.Options{}, func(*dialer.Options) (dialer.Dialer, error) {
 		return nil, nil
 	})
 	if err != nil {

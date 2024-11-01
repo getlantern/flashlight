@@ -2,9 +2,7 @@ package dialer
 
 import (
 	"context"
-	"errors"
 	"io"
-	"math"
 	"net"
 	"time"
 
@@ -15,7 +13,7 @@ import (
 var log = golog.LoggerFor("dialer")
 
 func New(opts *Options) (Dialer, error) {
-	return NewConnectivityCheckDialer(opts, func(opts *Options) (Dialer, error) {
+	return NewFastConnectDialer(opts, func(opts *Options) (Dialer, error) {
 		return NewBandit(opts)
 	})
 }
@@ -169,169 +167,4 @@ type ProxyDialer interface {
 	Stop()
 
 	WriteStats(w io.Writer)
-}
-
-type waitForConnectionDialer struct {
-	connectedChan chan bool
-	next          ProxyDialer
-}
-
-func newWaitForConnectionDialer(connectedChan chan bool) *connectTimeProxyDialer {
-	return &connectTimeProxyDialer{
-		ProxyDialer: &waitForConnectionDialer{
-			connectedChan: connectedChan,
-		},
-		connectTime: time.Duration(math.MaxInt64),
-	}
-}
-
-func (n *waitForConnectionDialer) DialProxy(ctx context.Context) (net.Conn, error) {
-	return nil, errors.New("noOpDialer cannot dial proxy")
-}
-
-func (n *waitForConnectionDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
-	select {
-	// Exit if the context times out.
-	case <-ctx.Done():
-		return nil, false, ctx.Err()
-	case <-n.connectedChan:
-		return n.next.DialContext(ctx, network, addr)
-	}
-}
-
-func (n *waitForConnectionDialer) Name() string {
-	return "noop"
-}
-
-func (n *waitForConnectionDialer) Addr() string {
-	return "noop"
-}
-
-func (n *waitForConnectionDialer) Label() string {
-	return "noop"
-}
-
-func (n *waitForConnectionDialer) Attempts() int64 {
-	return 0
-}
-
-func (n *waitForConnectionDialer) ConsecFailures() int64 {
-	return 0
-}
-
-func (n *waitForConnectionDialer) ConsecSuccesses() int64 {
-	return 0
-}
-
-func (n *waitForConnectionDialer) DataRecv() uint64 {
-	return 0
-}
-
-func (n *waitForConnectionDialer) DataSent() uint64 {
-	return 0
-}
-
-func (n *waitForConnectionDialer) FormatStats() []string {
-	return nil
-}
-
-func (n *waitForConnectionDialer) DialProxyWithTimeout(ctx context.Context, timeout time.Duration) (net.Conn, error) {
-	return nil, nil
-}
-
-func (n *waitForConnectionDialer) DialProxyWithTimeoutAndAddr(ctx context.Context, timeout time.Duration, addr string) (net.Conn, error) {
-	return nil, nil
-}
-
-func (n *waitForConnectionDialer) DialProxyWithAddr(ctx context.Context, addr string) (net.Conn, error) {
-	return nil, nil
-}
-
-func (n *waitForConnectionDialer) DialProxyWithTimeoutAndNetwork(ctx context.Context, timeout time.Duration, network string) (net.Conn, error) {
-	return nil, nil
-}
-
-func (n *waitForConnectionDialer) DialProxyWithNetwork(ctx context.Context, network string) (net.Conn, error) {
-	return nil, nil
-}
-
-func (n *waitForConnectionDialer) DialProxyWithTimeoutNetworkAndAddr(ctx context.Context, timeout time.Duration, network, addr string) (net.Conn, error) {
-	return nil, nil
-}
-
-// EstBandwidth implements ProxyDialer.
-func (n *waitForConnectionDialer) EstBandwidth() float64 {
-	return 0
-}
-
-// EstRTT implements ProxyDialer.
-func (n *waitForConnectionDialer) EstRTT() time.Duration {
-	return 0
-}
-
-// EstSuccessRate implements ProxyDialer.
-func (n *waitForConnectionDialer) EstSuccessRate() float64 {
-	return 0
-}
-
-// Failures implements ProxyDialer.
-func (n *waitForConnectionDialer) Failures() int64 {
-	return 0
-}
-
-// JustifiedLabel implements ProxyDialer.
-func (n *waitForConnectionDialer) JustifiedLabel() string {
-	return ""
-}
-
-// Location implements ProxyDialer.
-func (n *waitForConnectionDialer) Location() (string, string, string) {
-	return "", "", ""
-}
-
-// MarkFailure implements ProxyDialer.
-func (n *waitForConnectionDialer) MarkFailure() {
-}
-
-// NumPreconnected implements ProxyDialer.
-func (n *waitForConnectionDialer) NumPreconnected() int {
-	return 0
-}
-
-// NumPreconnecting implements ProxyDialer.
-func (n *waitForConnectionDialer) NumPreconnecting() int {
-	return 0
-}
-
-// Protocol implements ProxyDialer.
-func (n *waitForConnectionDialer) Protocol() string {
-	return "noop"
-}
-
-// Stop implements ProxyDialer.
-func (n *waitForConnectionDialer) Stop() {
-}
-
-// Succeeding implements ProxyDialer.
-func (n *waitForConnectionDialer) Succeeding() bool {
-	return false
-}
-
-// Successes implements ProxyDialer.
-func (n *waitForConnectionDialer) Successes() int64 {
-	return 0
-}
-
-// SupportsAddr implements ProxyDialer.
-func (n *waitForConnectionDialer) SupportsAddr(network string, addr string) bool {
-	return false
-}
-
-// Trusted implements ProxyDialer.
-func (n *waitForConnectionDialer) Trusted() bool {
-	return false
-}
-
-// WriteStats implements ProxyDialer.
-func (n *waitForConnectionDialer) WriteStats(w io.Writer) {
 }

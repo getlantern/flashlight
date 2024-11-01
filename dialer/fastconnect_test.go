@@ -21,8 +21,9 @@ func TestConnectTimeProxyDialer(t *testing.T) {
 	ctd3 := connectTimeProxyDialer{
 		ProxyDialer: dialer, connectTime: 10 * time.Second,
 	}
+	connectedChan := make(chan int)
 
-	ctd4 := newWaitForConnectionDialer(make(chan bool))
+	ctd4 := newWaitForConnectionDialer(connectedChan)
 
 	dialers := dialersByConnectTime{*ctd4, ctd1, ctd2, ctd3}
 	sort.Sort(dialers)
