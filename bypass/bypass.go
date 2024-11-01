@@ -108,7 +108,7 @@ func (b *bypass) newProxy(name string, pc *commonconfig.ProxyConfig, configDir s
 		name:              name,
 		done:              make(chan bool),
 		toggle:            atomic.NewBool(mrand.Float32() < 0.5),
-		dfRoundTripper:    proxied.Fronted(0),
+		dfRoundTripper:    proxied.Fronted("bypass_fronted_roundtrip", 0),
 		userConfig:        userConfig,
 		proxyRoundTripper: proxyRoundTripper(name, pc, configDir, userConfig, dialer),
 	}

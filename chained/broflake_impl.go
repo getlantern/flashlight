@@ -140,7 +140,8 @@ func makeBroflakeOptions(pc *config.ProxyConfig) (
 	// Broflake's HTTP client isn't currently configurable via PluggableTransportSettings, and so
 	// we just give it this domain fronted client in all cases
 	wo.HttpClient = &http.Client{
-		Transport: proxied.Fronted(masqueradeTimeout),
+		Transport: proxied.Fronted("broflake_fronted_roundtrip", masqueradeTimeout),
+		Timeout:   60 * time.Second,
 	}
 
 	// Override QUICLayerOptions defaults as applicable
