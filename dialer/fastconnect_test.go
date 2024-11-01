@@ -22,10 +22,13 @@ func TestConnectTimeProxyDialer(t *testing.T) {
 		ProxyDialer: dialer, connectTime: 10 * time.Second,
 	}
 
-	dialers := dialersByConnectTime{ctd1, ctd2, ctd3}
+	ctd4 := newWaitForConnectionDialer(make(chan bool))
+
+	dialers := dialersByConnectTime{*ctd4, ctd1, ctd2, ctd3}
 	sort.Sort(dialers)
 
 	// Make sure the lowest connect time is first
 	require.True(t, dialers[0].connectTime < dialers[1].connectTime, "Expected dialer1 to have the lowest connect time")
 	require.True(t, dialers[1].connectTime < dialers[2].connectTime, "Expected dialer1 to have the lowest connect time")
+	require.Equal(t, *ctd4, dialers[3], "Expected dialer4 to be last")
 }

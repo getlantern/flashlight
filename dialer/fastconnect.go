@@ -182,6 +182,7 @@ func (ccd *ConnectivityCheckDialer) parallelDial() {
 	if err != nil {
 		log.Errorf("Could not create next dialer? ", err)
 	} else {
+		log.Debug("Switching to next dialer")
 		ccd.activeDialer.Store(nextDialer)
 	}
 }
