@@ -62,6 +62,26 @@ type Dialer interface {
 	DialContext(ctx context.Context, network, addr string) (net.Conn, error)
 }
 
+// hasSucceedingDialer checks whether or not any of the given dialers is able to successfully dial our proxies
+func hasSucceedingDialer(dialers []ProxyDialer) bool {
+	for _, d := range dialers {
+		if d.ConsecFailures() == 0 && d.Successes() > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// hasNotFailing checks whether or not any of the given dialers are not explicitly failing
+func hasNotFailing(dialers []ProxyDialer) bool {
+	for _, d := range dialers {
+		if d.ConsecFailures() == 0 {
+			return true
+		}
+	}
+	return false
+}
+
 // ProxyDialer provides the ability to dial a proxy and obtain information needed to
 // effectively load balance between dialers.
 type ProxyDialer interface {

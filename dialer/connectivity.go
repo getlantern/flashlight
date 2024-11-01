@@ -52,17 +52,17 @@ func (d dialersByConnectTime) Swap(i, j int) {
 }
 
 type connectTimeDialer struct {
-	topDialer     atomic.Value
+	topDialer     ProxyDialer
 	connectedChan chan bool
 	connected     dialersByConnectTime
 	// Lock for the slice of dialers.
-	*sync.RWMutex
+	sync.RWMutex
 }
 
-func (d connectTimeDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+func (ctd *connectTimeDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
 	// Use the dialer with the lowest connect time, waiting on early dials for any
 	// connections at all.
-	td := d.topDialer.Load().(ProxyDialer)
+	td := ctd.loadTopDialer()
 	conn, up, err := td.DialContext(ctx, network, addr)
 	//conn, up, err := td.DialContext(ctx, network, addr)
 	if err != nil {
@@ -82,7 +82,7 @@ func (d connectTimeDialer) DialContext(ctx context.Context, network, addr string
 }
 
 // Accessor for a copy of the ProxyDialer slice
-func (d connectTimeDialer) proxyDialers() []ProxyDialer {
+func (d *connectTimeDialer) proxyDialers() []ProxyDialer {
 	d.RLock()
 	defer d.RUnlock()
 	dialers := make([]ProxyDialer, len(d.connected))
@@ -103,12 +103,24 @@ func (ctd *connectTimeDialer) onConnected(pd ProxyDialer, connectTime time.Durat
 	sort.Sort(ctd.connected)
 
 	// Set top dialer if the fastest dialer changed.
-	td := ctd.topDialer.Load().(connectTimeProxyDialer)
+	td := ctd.loadTopDialer()
 	newTopDialer := ctd.connected[0].ProxyDialer
 	if td != newTopDialer {
-		ctd.topDialer.Store(newTopDialer)
+		ctd.storeTopDialer(newTopDialer)
 		ctd.connectedChan <- true
 	}
+}
+
+func (ctd *connectTimeDialer) loadTopDialer() ProxyDialer {
+	ctd.RLock()
+	defer ctd.RUnlock()
+	return ctd.topDialer
+}
+
+func (ctd *connectTimeDialer) storeTopDialer(pd ProxyDialer) {
+	ctd.Lock()
+	defer ctd.Unlock()
+	ctd.topDialer = pd
 }
 
 // NewConnectivityCheckDialer creates a new dialer for checking proxy connectivity.
@@ -129,7 +141,7 @@ func NewConnectivityCheckDialer(opts *Options, next func(opts *Options) (Dialer,
 		connected:     make(dialersByConnectTime, 0),
 		connectedChan: make(chan bool),
 	}
-	ctd.topDialer.Store(newWaitForConnectionDialer(ctd.connectedChan))
+	ctd.storeTopDialer(newWaitForConnectionDialer(ctd.connectedChan))
 
 	sd := &ConnectivityCheckDialer{
 		dialers:           opts.Dialers,
@@ -150,6 +162,10 @@ func NewConnectivityCheckDialer(opts *Options, next func(opts *Options) (Dialer,
 // parallelDial dials all the dialers in parallel to connect the user as quickly as
 // possible on startup.
 func (ccd *ConnectivityCheckDialer) parallelDial() {
+	if len(ccd.dialers) == 0 {
+		log.Errorf("No dialers to connect to")
+		return
+	}
 	log.Debugf("Dialing all dialers in parallel %#v", ccd.dialers)
 	// Loop until we're connected
 	for len(ccd.connectTimeDialer.connected) < 2 {
@@ -191,6 +207,7 @@ func (ccd *ConnectivityCheckDialer) connectAll() {
 			}
 
 			log.Debugf("Dialer %v succeeded in %v", pd.Name(), time.Since(start))
+			ccd.statsTracker.SetHasSucceedingProxy(true)
 			ccd.connectTimeDialer.onConnected(pd, time.Since(start))
 		}(d, index)
 	}

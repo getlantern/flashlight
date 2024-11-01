@@ -53,16 +53,16 @@ func NewBandit(opts *Options) (Dialer, error) {
 	return dialer, nil
 }
 
-func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
 	deadline, _ := ctx.Deadline()
 	log.Debugf("bandit::DialContext::time remaining: %v", time.Until(deadline))
 	// We can not create a multi-armed bandit with no arms.
-	if len(o.dialers) == 0 {
+	if len(bd.dialers) == 0 {
 		return nil, log.Error("Cannot dial with no dialers")
 	}
 
 	start := time.Now()
-	d, chosenArm := o.chooseDialerForDomain(network, addr)
+	d, chosenArm := bd.chooseDialerForDomain(network, addr)
 
 	// We have to be careful here about virtual, multiplexed connections, as the
 	// initial TCP dial will have different performance characteristics than the
@@ -70,20 +70,20 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	log.Debugf("bandit::dialer %d: %s at %v", chosenArm, d.Label(), d.Addr())
 	conn, failedUpstream, err := d.DialContext(ctx, network, addr)
 	if err != nil {
-		hasSucceeding := hasSucceedingDialer(o.dialers)
-		o.statsTracker.SetHasSucceedingProxy(hasSucceeding)
-		o.onError(err, hasSucceeding)
+		hasSucceeding := hasSucceedingDialer(bd.dialers)
+		bd.statsTracker.SetHasSucceedingProxy(hasSucceeding)
+		bd.onError(err, hasSucceeding)
 
 		if !failedUpstream {
 			log.Errorf("Dialer %v failed in %v seconds: %v", d.Name(), time.Since(start).Seconds(), err)
-			o.bandit.Update(chosenArm, 0)
+			bd.bandit.Update(chosenArm, 0)
 		} else {
 			log.Debugf("Dialer %v failed upstream...", d.Name())
 			// This can happen, for example, if the upstream server is down, or
 			// if the DNS resolves to localhost, for example. It is also possible
 			// that the proxy is blacklisted by upstream sites for some reason,
 			// so we have to choose some reasonable value.
-			o.bandit.Update(chosenArm, 0.00005)
+			bd.bandit.Update(chosenArm, 0.00005)
 		}
 		return nil, err
 	}
@@ -99,41 +99,21 @@ func (o *BanditDialer) DialContext(ctx context.Context, network, addr string) (n
 	time.AfterFunc(secondsForSample*time.Second, func() {
 		speed := normalizeReceiveSpeed(dataRecv.Load())
 		//log.Debugf("Dialer %v received %v bytes in %v seconds, normalized speed: %v", d.Name(), dt.dataRecv, secondsForSample, speed)
-		o.bandit.Update(chosenArm, speed)
+		bd.bandit.Update(chosenArm, speed)
 	})
 
 	countryCode, country, city := d.Location()
-	previousStats := o.statsTracker.Latest()
+	previousStats := bd.statsTracker.Latest()
 	if previousStats.CountryCode == "" || previousStats.CountryCode != countryCode {
-		o.statsTracker.SetActiveProxyLocation(
+		bd.statsTracker.SetActiveProxyLocation(
 			city,
 			country,
 			countryCode,
 		)
 	}
-	o.statsTracker.SetHasSucceedingProxy(true)
-	o.onSuccess(d)
+	bd.statsTracker.SetHasSucceedingProxy(true)
+	bd.onSuccess(d)
 	return dt, err
-}
-
-// hasSucceedingDialer checks whether or not any of the given dialers is able to successfully dial our proxies
-func hasSucceedingDialer(dialers []ProxyDialer) bool {
-	for _, d := range dialers {
-		if d.ConsecFailures() == 0 && d.Successes() > 0 {
-			return true
-		}
-	}
-	return false
-}
-
-// hasNotFailing checks whether or not any of the given dialers are not explicitly failing
-func hasNotFailing(dialers []ProxyDialer) bool {
-	for _, d := range dialers {
-		if d.ConsecFailures() == 0 {
-			return true
-		}
-	}
-	return false
 }
 
 func (o *BanditDialer) chooseDialerForDomain(network, addr string) (ProxyDialer, int) {
