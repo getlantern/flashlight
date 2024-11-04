@@ -1,3 +1,8 @@
+// Package dialer contains the interfaces for creating connections to proxies. It is designed
+// to first connect as quickly as possible, and then to optimize for bandwidth and latency
+// based on the proxies that are accessible. It does this by first using a connect-time based
+// strategy to quickly find a working proxy, and then by using a multi-armed bandit strategy
+// to optimize for bandwidth and latency amongst the proxies that are accessible.
 package dialer
 
 import (
@@ -81,7 +86,7 @@ func hasNotFailing(dialers []ProxyDialer) bool {
 }
 
 // ProxyDialer provides the ability to dial a proxy and obtain information needed to
-// effectively load balance between dialers.
+// record performance data about proxies.
 type ProxyDialer interface {
 
 	// DialProxy dials the proxy but does not yet dial the origin.
