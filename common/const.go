@@ -14,7 +14,7 @@ const (
 	// fronting through the local proxy for HTTP.
 
 	// ProxiesURL is the URL for fetching the per user proxy config.
-	ProxiesURL = "http://config.getiantem.org/proxies.yaml.gz"
+	ProxiesURL = "http://df.iantem.io/api/proxies.yaml.gz"
 
 	// ProxiesStagingURL is the URL for fetching the per user proxy config in a staging environment.
 	ProxiesStagingURL = "http://config-staging.getiantem.org/proxies.yaml.gz"
@@ -46,7 +46,8 @@ var (
 
 	Staging = false
 
-	ProAPIHost = "api.getiantem.org"
+	ProAPIHost = "df.iantem.io"
+	ProAPIPath = ProAPIHost + "/api/pro-server"
 
 	log = golog.LoggerFor("flashlight.common")
 
