@@ -101,9 +101,10 @@ func TestNewWaterImpl(t *testing.T) {
 				},
 			},
 			assert: func(t *testing.T, actual *waterImpl, err error) {
+				defer actual.close()
 				require.NoError(t, err)
 				require.NotNil(t, actual)
-				assert.NoError(t, actual.downloadErr)
+				assert.NoError(t, actual.errLoadingWASM)
 				select {
 				case <-actual.downloadFinished:
 					// waiting download to be finished
@@ -148,7 +149,10 @@ func TestWaterDialServer(t *testing.T) {
 
 	b64WASM := base64.StdEncoding.EncodeToString(wasm)
 
-	pc := &config.ProxyConfig{PluggableTransportSettings: map[string]string{"water_wasm": b64WASM}}
+	pc := &config.ProxyConfig{PluggableTransportSettings: map[string]string{
+		"water_wasm": b64WASM,
+	}}
+
 	testOp := ops.Begin("test")
 	defer testOp.End()
 
@@ -201,6 +205,7 @@ func TestWaterDialServer(t *testing.T) {
 			tt.setHTTPClient()
 			waterImpl, err := newWaterImpl(tt.givenConfigDir, tt.givenAddr, pc, tt.givenReportDialCore)
 			require.NoError(t, err)
+			defer waterImpl.close()
 			conn, err := waterImpl.dialServer(tt.givenOp, tt.givenCtx)
 			tt.assert(t, conn, err)
 		})
