@@ -93,6 +93,7 @@ func (b *bypass) OnProxies(infos map[string]*commonconfig.ProxyConfig, configDir
 
 		// if dialer is not ready, try again in 60s
 		if !dialer.IsReady() {
+			log.Debugf("dialer %q is not ready, starting in background", name)
 			go func() {
 				for {
 					time.Sleep(60 * time.Second)
@@ -102,6 +103,7 @@ func (b *bypass) OnProxies(infos map[string]*commonconfig.ProxyConfig, configDir
 					}
 				}
 			}()
+			continue
 		}
 
 		b.startProxy(name, config, configDir, userConfig, dialer)
