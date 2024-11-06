@@ -46,7 +46,6 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 	b64WASM := ptSetting(pc, "water_wasm")
 	if b64WASM != "" {
 		go func() {
-			var err error
 			wasm, err := base64.StdEncoding.DecodeString(b64WASM)
 			if err != nil {
 				d.errLoadingWASM = log.Errorf("failed to decode water wasm: %w", err)
