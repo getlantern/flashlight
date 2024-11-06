@@ -333,6 +333,10 @@ type tcpConnDialer struct {
 	server     net.Conn
 }
 
+func (*tcpConnDialer) IsReady() bool {
+	return true
+}
+
 // DialProxy implements Dialer.
 func (t *tcpConnDialer) DialProxy(ctx context.Context) (net.Conn, error) {
 	if t.shouldFail {
