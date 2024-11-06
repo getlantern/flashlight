@@ -51,6 +51,10 @@ func (impl *multiplexedImpl) dialServer(op *ops.Op, ctx context.Context) (net.Co
 	return impl.multiplexedDial(ctx, "", "")
 }
 
+func (impl *multiplexedImpl) isReady() bool {
+	return true
+}
+
 // createMultiplexedProtocol configures a cmux multiplexing protocol
 // according to settings.
 func createMultiplexedProtocol(s *config.ProxyConfig) (cmux.Protocol, error) {

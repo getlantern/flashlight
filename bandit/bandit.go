@@ -353,6 +353,9 @@ type Dialer interface {
 	// connections created via this dialer.
 	DataRecv() uint64
 
+	// IsReady indicates when the dialer is ready for dialing
+	IsReady() bool
+
 	// Stop stops background processing for this Dialer.
 	Stop()
 

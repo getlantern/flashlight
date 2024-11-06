@@ -49,6 +49,10 @@ func (impl *multipathImpl) FormatStats() []string {
 	return impl.dialer.(multipath.Stats).FormatStats()
 }
 
+func (*multipathImpl) isReady() bool {
+	return true
+}
+
 func CreateMPDialer(configDir, endpoint string, ss map[string]*config.ProxyConfig, uc common.UserConfig) (bandit.Dialer, error) {
 	if len(ss) < 1 {
 		return nil, errors.New("no dialers")

@@ -36,6 +36,7 @@ type shadowsocksImpl struct {
 	rng            *mrand.Rand
 	rngmx          sync.Mutex
 	tlsConfig      *tls.Config
+	nopCloser
 }
 
 type PrefixSaltGen struct {
@@ -125,9 +126,6 @@ func newShadowsocksImpl(name, addr string, pc *config.ProxyConfig, reportDialCor
 	}, nil
 }
 
-func (impl *shadowsocksImpl) close() {
-}
-
 func (impl *shadowsocksImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return impl.reportDialCore(op, func() (net.Conn, error) {
 		conn, err := impl.client.DialStream(ctx, impl.generateUpstream())
@@ -140,6 +138,10 @@ func (impl *shadowsocksImpl) dialServer(op *ops.Op, ctx context.Context) (net.Co
 		}
 		return &ssWrapConn{conn}, nil
 	})
+}
+
+func (*shadowsocksImpl) isReady() bool {
+	return true
 }
 
 // generateUpstream() creates a marker upstream address.  This isn't an

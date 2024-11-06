@@ -111,6 +111,10 @@ func newTLSMasqImpl(configDir, name, addr string, pc *config.ProxyConfig, uc com
 	}, nil
 }
 
+func (*tlsMasqImpl) isReady() bool {
+	return true
+}
+
 func decodeUint16(s string) (uint16, error) {
 	b, err := hex.DecodeString(strings.TrimPrefix(s, "0x"))
 	if err != nil {

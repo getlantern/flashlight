@@ -71,3 +71,7 @@ func (impl *quicImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, err
 		return conn, err
 	})
 }
+
+func (*quicImpl) isReady() bool {
+	return true
+}

@@ -20,11 +20,13 @@ import (
 )
 
 type waterImpl struct {
-	raddr          string
-	reportDialCore reportDialCoreFn
-	dialer         water.Dialer
-	wgDownload     *sync.WaitGroup
-	downloadErr    error
+	raddr            string
+	reportDialCore   reportDialCoreFn
+	dialer           water.Dialer
+	downloadErr      error
+	ready            bool
+	readyMutex       sync.Locker
+	downloadFinished chan struct{}
 	nopCloser
 }
 
@@ -36,9 +38,10 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 	transport := ptSetting(pc, "water_transport")
 	wg := new(sync.WaitGroup)
 	d := &waterImpl{
-		raddr:          addr,
-		reportDialCore: reportDialCore,
-		wgDownload:     wg,
+		raddr:            addr,
+		reportDialCore:   reportDialCore,
+		readyMutex:       new(sync.Mutex),
+		downloadFinished: make(chan struct{}),
 	}
 
 	b64WASM := ptSetting(pc, "water_wasm")
@@ -49,18 +52,23 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 			return nil, fmt.Errorf("failed to decode water wasm: %w", err)
 		}
 
-		dialer, err := createDialer(ctx, wasm, transport)
+		d.dialer, err = createDialer(ctx, wasm, transport)
 		if err != nil {
 			return nil, log.Errorf("failed to create dialer: %w", err)
 		}
-		d.dialer = dialer
+		d.readyMutex.Lock()
+		defer d.readyMutex.Unlock()
+		d.ready = true
 		return d, nil
 	}
 
 	if wasmAvailableAt != "" {
 		wg.Add(1)
 		go func() {
-			defer wg.Done()
+			defer func() {
+				d.downloadFinished <- struct{}{}
+				wg.Done()
+			}()
 			log.Debugf("Loading WASM for %q. If not available, it should try to download from the following URLs: %+v. The file should be available here: %s", transport, strings.Split(wasmAvailableAt, ","), dir)
 			vc := newWaterVersionControl(dir)
 			cli := httpClient
@@ -91,11 +99,14 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 				return
 			}
 
-			dialer, err := createDialer(ctx, b, transport)
+			d.dialer, err = createDialer(ctx, b, transport)
 			if err != nil {
 				d.downloadErr = log.Errorf("failed to create dialer: %w", err)
+				return
 			}
-			d.dialer = dialer
+			d.readyMutex.Lock()
+			defer d.readyMutex.Unlock()
+			d.ready = true
 		}()
 	}
 
@@ -115,10 +126,22 @@ func createDialer(ctx context.Context, wasm []byte, transport string) (water.Dia
 	return dialer, nil
 }
 
+func (d *waterImpl) isReady() bool {
+	d.readyMutex.Lock()
+	defer d.readyMutex.Unlock()
+	return d.ready
+}
+
 func (d *waterImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return d.reportDialCore(op, func() (net.Conn, error) {
-		d.wgDownload.Wait()
-		if d.dialer == nil {
+		select {
+		case <-d.downloadFinished:
+			// carry on with dial
+		case <-ctx.Done():
+			return nil, log.Errorf("context completed while waiting for WASM download: %w", ctx.Err())
+		}
+
+		if d.dialer == nil || d.downloadErr != nil {
 			return nil, log.Errorf("dialer not available: %w", d.downloadErr)
 		}
 
