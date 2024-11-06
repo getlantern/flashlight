@@ -69,6 +69,10 @@ func TestNewWaterImpl(t *testing.T) {
 			assert: func(t *testing.T, actual *waterImpl, err error) {
 				require.NoError(t, err)
 				require.NotNil(t, actual)
+				select {
+				case <-actual.dialerAvailable:
+					// waiting download to be finished
+				}
 				require.NotNil(t, actual.dialer)
 				assert.NotNil(t, actual.reportDialCore)
 			},
@@ -106,7 +110,7 @@ func TestNewWaterImpl(t *testing.T) {
 				require.NotNil(t, actual)
 				assert.NoError(t, actual.errLoadingWASM)
 				select {
-				case <-actual.downloadFinished:
+				case <-actual.dialerAvailable:
 					// waiting download to be finished
 				}
 				assert.NotNil(t, actual.dialer)

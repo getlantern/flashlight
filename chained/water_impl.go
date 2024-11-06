@@ -20,13 +20,13 @@ import (
 )
 
 type waterImpl struct {
-	raddr            string
-	reportDialCore   reportDialCoreFn
-	dialer           water.Dialer
-	errLoadingWASM   error
-	ready            bool
-	readyMutex       sync.Locker
-	downloadFinished chan struct{}
+	raddr           string
+	reportDialCore  reportDialCoreFn
+	dialer          water.Dialer
+	errLoadingWASM  error
+	ready           bool
+	readyMutex      sync.Locker
+	dialerAvailable chan struct{}
 }
 
 var httpClient *http.Client
@@ -37,10 +37,10 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 	transport := ptSetting(pc, "water_transport")
 	wg := new(sync.WaitGroup)
 	d := &waterImpl{
-		raddr:            addr,
-		reportDialCore:   reportDialCore,
-		readyMutex:       new(sync.Mutex),
-		downloadFinished: make(chan struct{}),
+		raddr:           addr,
+		reportDialCore:  reportDialCore,
+		readyMutex:      new(sync.Mutex),
+		dialerAvailable: make(chan struct{}),
 	}
 
 	b64WASM := ptSetting(pc, "water_wasm")
@@ -59,7 +59,7 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 			}
 			d.readyMutex.Lock()
 			defer d.readyMutex.Unlock()
-			d.downloadFinished <- struct{}{}
+			d.dialerAvailable <- struct{}{}
 			d.ready = true
 		}()
 		return d, nil
@@ -69,7 +69,7 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 		wg.Add(1)
 		go func() {
 			defer func() {
-				d.downloadFinished <- struct{}{}
+				d.dialerAvailable <- struct{}{}
 				wg.Done()
 			}()
 			log.Debugf("Loading WASM for %q. If not available, it should try to download from the following URLs: %+v. The file should be available here: %s", transport, strings.Split(wasmAvailableAt, ","), dir)
@@ -136,7 +136,7 @@ func (d *waterImpl) isReady() bool {
 }
 
 func (d *waterImpl) close() {
-	close(d.downloadFinished)
+	close(d.dialerAvailable)
 }
 
 func (d *waterImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
@@ -144,7 +144,7 @@ func (d *waterImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error
 		// if dialer is not ready, wait until WASM is downloaded or context timeout
 		if !d.isReady() {
 			select {
-			case <-d.downloadFinished:
+			case <-d.dialerAvailable:
 				log.Debug("download finished!")
 				// carry on with dial
 			case <-ctx.Done():
