@@ -84,22 +84,39 @@ func (b *bypass) OnProxies(infos map[string]*commonconfig.ProxyConfig, configDir
 	}
 
 	dialers := chained.CreateDialersMap(configDir, supportedInfos, userConfig)
-	for k, v := range supportedInfos {
-		dialer := dialers[k]
+	for name, config := range supportedInfos {
+		dialer := dialers[name]
 		if dialer == nil {
-			log.Errorf("No dialer for %v", k)
+			log.Errorf("No dialer for %v", name)
 			continue
 		}
 
-		pc := chained.CopyConfig(v)
-		// Set the name in the info since we know it here.
-		pc.Name = k
-		// Kill the cert to avoid it taking up unnecessary space.
-		pc.Cert = ""
-		p := b.newProxy(k, pc, configDir, userConfig, dialer)
-		b.proxies = append(b.proxies, p)
-		go p.start()
+		// if dialer is not ready, try again in 60s
+		if !dialer.IsReady() {
+			go func() {
+				for {
+					time.Sleep(60 * time.Second)
+					if dialer.IsReady() {
+						b.startProxy(name, config, configDir, userConfig, dialer)
+						break
+					}
+				}
+			}()
+		}
+
+		b.startProxy(name, config, configDir, userConfig, dialer)
 	}
+}
+
+func (b *bypass) startProxy(proxyName string, config *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer bandit.Dialer) {
+	pc := chained.CopyConfig(config)
+	// Set the name in the info since we know it here.
+	pc.Name = proxyName
+	// Kill the cert to avoid it taking up unnecessary space.
+	pc.Cert = ""
+	p := b.newProxy(proxyName, pc, configDir, userConfig, dialer)
+	b.proxies = append(b.proxies, p)
+	go p.start()
 }
 
 func (b *bypass) newProxy(name string, pc *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer bandit.Dialer) *proxy {
