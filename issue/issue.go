@@ -22,7 +22,7 @@ var (
 	maxLogSize = 10247680
 
 	client = &http.Client{
-		Transport: proxied.Fronted(0),
+		Transport: proxied.Fronted("issue_fronted_roundtrip", 0),
 	}
 )
 

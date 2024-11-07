@@ -33,6 +33,7 @@ func newWaterVersionControl(dir string) *waterVersionControl {
 func (vc *waterVersionControl) GetWASM(ctx context.Context, transport string, downloader waterWASMDownloader) (io.ReadCloser, error) {
 	path := filepath.Join(vc.dir, transport+".wasm")
 	var f io.ReadCloser
+	log.Debugf("trying to load file %q", path)
 	f, err := os.Open(path)
 	if err != nil && !os.IsNotExist(err) {
 		return nil, log.Errorf("failed to open file %s: %w", path, err)
@@ -48,6 +49,7 @@ func (vc *waterVersionControl) GetWASM(ctx context.Context, transport string, do
 	if err = vc.markUsed(transport); err != nil {
 		return nil, log.Errorf("failed to update WASM history: %w", err)
 	}
+	log.Debugf("WASM file loaded")
 
 	return f, nil
 }
@@ -105,6 +107,7 @@ func (vc *waterVersionControl) cleanOutdated() error {
 		return nil
 	})
 	for _, path := range filesToBeDeleted {
+		log.Debugf("deleting file: %q", path)
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -125,6 +128,7 @@ func (vc *waterVersionControl) cleanOutdated() error {
 
 func (vc *waterVersionControl) downloadWASM(ctx context.Context, transport string, downloader waterWASMDownloader) (io.ReadCloser, error) {
 	outputPath := filepath.Join(vc.dir, transport+".wasm")
+	log.Debugf("downloading WASM file and writing at %q", outputPath)
 	f, err := os.Create(outputPath)
 	if err != nil {
 		return nil, log.Errorf("failed to create file %s: %w", transport, err)
