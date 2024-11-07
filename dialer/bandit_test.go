@@ -68,7 +68,7 @@ func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
 			opts := &Options{
 				Dialers: tt.fields.dialers,
 			}
-			o, err := New(opts)
+			o, err := NewBandit(opts)
 			require.NoError(t, err)
 			got, got1 := o.(*BanditDialer).chooseDialerForDomain(tt.args.network, tt.args.addr)
 			if !reflect.DeepEqual(got, tt.want) {
