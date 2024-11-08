@@ -67,8 +67,8 @@ func newStarbridgeImpl(name, addr string, pc *config.ProxyConfig, reportDialCore
 	}, nil
 }
 
-func (*starbridge) isReady() bool {
-	return true
+func (*starbridge) isReady() (bool, error) {
+	return true, nil
 }
 
 // Adapted from https://github.com/OperatorFoundation/Starbridge-go/blob/v3.0.12/Starbridge/v3/starbridge.go#L237-L253

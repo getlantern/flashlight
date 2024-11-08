@@ -68,7 +68,7 @@ type proxyImpl interface {
 	// close releases the resources associated with the implementation, if any.
 	close()
 	// isReady returns if the implementation is ready to dial
-	isReady() bool
+	isReady() (bool, error)
 }
 
 // nopCloser is a mixin to implement a do-nothing close() method of proxyImpl.
@@ -586,6 +586,6 @@ func splitClientHello(hello []byte) [][]byte {
 	return splits
 }
 
-func (p *proxy) IsReady() bool {
+func (p *proxy) IsReady() (bool, error) {
 	return p.impl.isReady()
 }

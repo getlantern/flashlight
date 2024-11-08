@@ -51,8 +51,8 @@ func (impl *testImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, err
 	return impl.d(ctx)
 }
 
-func (*testImpl) isReady() bool {
-	return true
+func (*testImpl) isReady() (bool, error) {
+	return true, nil
 }
 
 func newDialer(dialServer func(ctx context.Context) (net.Conn, error)) (func(network, addr string) (net.Conn, error), error) {

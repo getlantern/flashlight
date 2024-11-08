@@ -20,13 +20,13 @@ import (
 )
 
 type waterImpl struct {
-	raddr           string
-	reportDialCore  reportDialCoreFn
-	dialer          water.Dialer
-	errLoadingWASM  error
-	ready           bool
-	readyMutex      sync.Locker
-	dialerAvailable chan struct{}
+	raddr            string
+	reportDialCore   reportDialCoreFn
+	dialer           water.Dialer
+	errLoadingWASM   error
+	ready            bool
+	loadingWASMMutex sync.Locker
+	finishedToLoad   chan struct{}
 }
 
 var httpClient *http.Client
@@ -35,17 +35,17 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 	ctx := context.Background()
 	wasmAvailableAt := ptSetting(pc, "water_available_at")
 	transport := ptSetting(pc, "water_transport")
-	wg := new(sync.WaitGroup)
 	d := &waterImpl{
-		raddr:           addr,
-		reportDialCore:  reportDialCore,
-		readyMutex:      new(sync.Mutex),
-		dialerAvailable: make(chan struct{}),
+		raddr:            addr,
+		reportDialCore:   reportDialCore,
+		loadingWASMMutex: new(sync.Mutex),
+		finishedToLoad:   make(chan struct{}),
 	}
 
 	b64WASM := ptSetting(pc, "water_wasm")
 	if b64WASM != "" {
 		go func() {
+			defer d.finishedLoading()
 			wasm, err := base64.StdEncoding.DecodeString(b64WASM)
 			if err != nil {
 				d.errLoadingWASM = log.Errorf("failed to decode water wasm: %w", err)
@@ -57,21 +57,14 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 				d.errLoadingWASM = log.Errorf("failed to create dialer: %w", err)
 				return
 			}
-			d.readyMutex.Lock()
-			defer d.readyMutex.Unlock()
-			d.dialerAvailable <- struct{}{}
-			d.ready = true
+			d.setReady()
 		}()
 		return d, nil
 	}
 
 	if wasmAvailableAt != "" {
-		wg.Add(1)
 		go func() {
-			defer func() {
-				d.dialerAvailable <- struct{}{}
-				wg.Done()
-			}()
+			defer d.finishedLoading()
 			log.Debugf("Loading WASM for %q. If not available, it should try to download from the following URLs: %+v. The file should be available here: %s", transport, strings.Split(wasmAvailableAt, ","), dir)
 			vc := newWaterVersionControl(dir)
 			cli := httpClient
@@ -107,13 +100,19 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 				d.errLoadingWASM = log.Errorf("failed to create dialer: %w", err)
 				return
 			}
-			d.readyMutex.Lock()
-			defer d.readyMutex.Unlock()
-			d.ready = true
+			d.setReady()
 		}()
 	}
 
 	return d, nil
+}
+
+func (d *waterImpl) finishedLoading() {
+	select {
+	case d.finishedToLoad <- struct{}{}:
+	default:
+		log.Error("Channel is closed")
+	}
 }
 
 func createDialer(ctx context.Context, wasm []byte, transport string) (water.Dialer, error) {
@@ -129,26 +128,41 @@ func createDialer(ctx context.Context, wasm []byte, transport string) (water.Dia
 	return dialer, nil
 }
 
-func (d *waterImpl) isReady() bool {
-	d.readyMutex.Lock()
-	defer d.readyMutex.Unlock()
-	return d.ready
+func (d *waterImpl) isReady() (bool, error) {
+	d.loadingWASMMutex.Lock()
+	defer d.loadingWASMMutex.Unlock()
+	return d.ready, d.errLoadingWASM
+}
+
+func (d *waterImpl) setReady() {
+	d.loadingWASMMutex.Lock()
+	defer d.loadingWASMMutex.Unlock()
+	d.ready = true
 }
 
 func (d *waterImpl) close() {
-	close(d.dialerAvailable)
+	close(d.finishedToLoad)
 }
 
 func (d *waterImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return d.reportDialCore(op, func() (net.Conn, error) {
 		// if dialer is not ready, wait until WASM is downloaded or context timeout
-		if !d.isReady() {
+		ready, err := d.isReady()
+		if err != nil {
+			return nil, log.Errorf("failed to load WASM for dialer: %w", err)
+		}
+
+		if !ready {
 			select {
-			case <-d.dialerAvailable:
+			case _, ok := <-d.finishedToLoad:
+				if !ok {
+					d.errLoadingWASM = log.Error("Channel closed")
+					return nil, d.errLoadingWASM
+				}
 				log.Debug("download finished!")
-				// carry on with dial
 			case <-ctx.Done():
-				return nil, log.Errorf("context completed while waiting for WASM download: %w", ctx.Err())
+				d.errLoadingWASM = log.Errorf("context completed while waiting for WASM download: %w", ctx.Err())
+				return nil, d.errLoadingWASM
 			}
 		}
 

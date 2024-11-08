@@ -106,8 +106,8 @@ func (impl *httpsImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, er
 	return result.Conn, nil
 }
 
-func (*httpsImpl) isReady() bool {
-	return true
+func (*httpsImpl) isReady() (bool, error) {
+	return true, nil
 }
 
 func timeoutFor(ctx context.Context) time.Duration {

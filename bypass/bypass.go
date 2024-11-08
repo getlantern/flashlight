@@ -92,12 +92,17 @@ func (b *bypass) OnProxies(infos map[string]*commonconfig.ProxyConfig, configDir
 		}
 
 		// if dialer is not ready, try again in 60s
-		if !dialer.IsReady() {
+		if ready, err := dialer.IsReady(); err == nil && !ready {
 			log.Debugf("dialer %q is not ready, starting in background", name)
 			go func() {
 				for {
 					time.Sleep(60 * time.Second)
-					if dialer.IsReady() {
+					ready, err := dialer.IsReady()
+					if err != nil {
+						log.Errorf("dialer isn't ready and returned an error: %w", err)
+						break
+					}
+					if !ready {
 						b.startProxy(name, config, configDir, userConfig, dialer)
 						break
 					}
