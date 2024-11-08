@@ -431,7 +431,8 @@ type testDialer struct {
 }
 
 func (d *testDialer) DialProxy(ctx context.Context) (net.Conn, error) {
-	return nil, fmt.Errorf("Not implemented")
+	//return nil, fmt.Errorf("Not implemented")
+	return &net.TCPConn{}, nil
 }
 
 // Name returns the name for this Dialer
