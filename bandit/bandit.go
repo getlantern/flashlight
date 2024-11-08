@@ -204,8 +204,15 @@ func (o *BanditDialer) chooseDialerForDomain(network, addr string) (Dialer, int)
 	notAllFailing := hasNotFailing(o.dialers)
 	for i := 0; i < (len(o.dialers) * 2); i++ {
 		dialer = o.dialers[chosenArm]
-		// independent if the dialer isn't ready with or without an error we should skip it
-		if ready, _ := dialer.IsReady(); (dialer.ConsecFailures() > 0 && notAllFailing) || !dialer.SupportsAddr(network, addr) || !ready {
+		ready, err := dialer.IsReady()
+		if err != nil {
+			// If the dialer won't be ready since it returned an error, we need to
+			// choose another dialer
+			chosenArm = differentArm(chosenArm, len(o.dialers))
+			continue
+		}
+
+		if (dialer.ConsecFailures() > 0 && notAllFailing) || !dialer.SupportsAddr(network, addr) || !ready {
 			// If the chosen dialer has consecutive failures and there are other
 			// dialers that are succeeding, we should choose a different dialer.
 			//
