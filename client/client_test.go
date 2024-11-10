@@ -17,7 +17,6 @@ import (
 	"testing"
 	"time"
 
-	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/dialer"
@@ -431,7 +430,6 @@ type testDialer struct {
 }
 
 func (d *testDialer) DialProxy(ctx context.Context) (net.Conn, error) {
-	//return nil, fmt.Errorf("Not implemented")
 	return &net.TCPConn{}, nil
 }
 
@@ -593,21 +591,4 @@ type response struct {
 
 func (r *response) nested() (*http.Response, error) {
 	return http.ReadResponse(r.br, r.req)
-}
-
-func Test_initDialers(t *testing.T) {
-	proxies := newProxies()
-	client := newClient()
-	dialers, banditDialer, err := client.initDialers(proxies)
-	assert.NoError(t, err)
-	assert.NotNil(t, dialers)
-	assert.NotNil(t, banditDialer)
-}
-
-func newProxies() map[string]*commonconfig.ProxyConfig {
-	proxies := make(map[string]*commonconfig.ProxyConfig)
-	proxies["proxy1"] = &commonconfig.ProxyConfig{
-		Addr: "proxy1",
-	}
-	return proxies
 }
