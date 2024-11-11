@@ -91,28 +91,47 @@ func (b *bypass) OnProxies(infos map[string]*commonconfig.ProxyConfig, configDir
 			continue
 		}
 
-		// if dialer is not ready, try again in 60s
+		// if dialer is not ready, try to load it async
 		if ready, err := dialer.IsReady(); err == nil && !ready {
 			log.Debugf("dialer %q is not ready, starting in background", name)
-			go func() {
-				for {
-					time.Sleep(60 * time.Second)
-					ready, err := dialer.IsReady()
-					if err != nil {
-						log.Errorf("dialer isn't ready and returned an error: %w", err)
-						break
-					}
-					if !ready {
-						b.startProxy(name, config, configDir, userConfig, dialer)
-						break
-					}
-				}
-			}()
+			go b.loadProxyAsync(name, config, configDir, userConfig, dialer)
 			continue
 		}
 
 		b.startProxy(name, config, configDir, userConfig, dialer)
 	}
+}
+
+func (b *bypass) loadProxyAsync(proxyName string, config *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer bandit.Dialer) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+	readyChan := make(chan struct{})
+	retry := atomic.NewBool(true)
+	go func() {
+		for retry.Load() {
+			time.Sleep(15 * time.Second)
+			ready, err := dialer.IsReady()
+			if err != nil {
+				log.Errorf("dialer isn't ready and returned an error: %w", err)
+				break
+			}
+			if !ready {
+				b.startProxy(proxyName, config, configDir, userConfig, dialer)
+				readyChan <- struct{}{}
+				break
+			}
+		}
+	}()
+	select {
+	case _, ok := <-readyChan:
+		if !ok {
+			log.Errorf("ready channel for proxy %q is closed", proxyName)
+		}
+	case <-ctx.Done():
+		log.Errorf("proxy %q took to long to get ready", proxyName)
+	}
+	retry.Store(false)
+	close(readyChan)
 }
 
 func (b *bypass) startProxy(proxyName string, config *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer bandit.Dialer) {
