@@ -32,7 +32,6 @@ func newWaterVersionControl(dir string) *waterVersionControl {
 // Remember to Close the io.ReadCloser after using it
 func (vc *waterVersionControl) GetWASM(ctx context.Context, transport string, downloader waterWASMDownloader) (io.ReadCloser, error) {
 	path := filepath.Join(vc.dir, transport+".wasm")
-	var f io.ReadCloser
 	log.Debugf("trying to load file %q", path)
 	f, err := os.Open(path)
 	if err != nil && !os.IsNotExist(err) {
@@ -40,16 +39,41 @@ func (vc *waterVersionControl) GetWASM(ctx context.Context, transport string, do
 	}
 
 	if errors.Is(err, fs.ErrNotExist) || f == nil {
-		f, err = vc.downloadWASM(ctx, transport, downloader)
+		if f != nil {
+			f.Close()
+		}
+		response, err := vc.downloadWASM(ctx, transport, downloader)
 		if err != nil {
 			return nil, log.Errorf("failed to download WASM file: %w", err)
 		}
+
+		return response, nil
+	}
+
+	fi, err := f.Stat()
+	if err != nil {
+		return nil, log.Errorf("failed loading file info")
+	}
+
+	if fi.Size() == 0 {
+		f.Close()
+		log.Debug("loaded empty WASM file, downloading again")
+		response, err := vc.downloadWASM(ctx, transport, downloader)
+		if err != nil {
+			return nil, log.Errorf("failed to download WASM file: %w", err)
+		}
+		return response, nil
+	}
+
+	_, err = f.Seek(0, 0)
+	if err != nil {
+		return nil, log.Errorf("failed to seek file at the beginning: %w", err)
 	}
 
 	if err = vc.markUsed(transport); err != nil {
 		return nil, log.Errorf("failed to update WASM history: %w", err)
 	}
-	log.Debugf("WASM file loaded")
+	log.Debugf("WASM file loaded, file size: %d", fi.Size())
 
 	return f, nil
 }
@@ -140,6 +164,10 @@ func (vc *waterVersionControl) downloadWASM(ctx context.Context, transport strin
 
 	if _, err = f.Seek(0, 0); err != nil {
 		return nil, log.Errorf("failed to seek to the beginning of the file: %w", err)
+	}
+
+	if err = vc.markUsed(transport); err != nil {
+		return nil, log.Errorf("failed to update WASM history: %w", err)
 	}
 
 	return f, nil

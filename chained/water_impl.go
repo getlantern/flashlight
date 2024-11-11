@@ -20,26 +20,30 @@ import (
 )
 
 type waterImpl struct {
-	raddr            string
-	reportDialCore   reportDialCoreFn
-	dialer           water.Dialer
-	errLoadingWASM   error
-	ready            bool
-	loadingWASMMutex sync.Locker
-	finishedToLoad   chan struct{}
+	raddr          string
+	reportDialCore reportDialCoreFn
+	dialer         water.Dialer
+	errLoadingWASM error
+	readyMutex     sync.Locker
+	ready          bool
+	finishedToLoad chan struct{}
 }
 
 var httpClient *http.Client
+
+// waterLoadingWASMMutex prevents the WATER implementation to download/load the
+// WASM file concurrently.
+var waterLoadingWASMMutex = &sync.Mutex{}
 
 func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (*waterImpl, error) {
 	ctx := context.Background()
 	wasmAvailableAt := ptSetting(pc, "water_available_at")
 	transport := ptSetting(pc, "water_transport")
 	d := &waterImpl{
-		raddr:            addr,
-		reportDialCore:   reportDialCore,
-		loadingWASMMutex: new(sync.Mutex),
-		finishedToLoad:   make(chan struct{}),
+		raddr:          addr,
+		reportDialCore: reportDialCore,
+		finishedToLoad: make(chan struct{}),
+		readyMutex:     new(sync.Mutex),
 	}
 
 	b64WASM := ptSetting(pc, "water_wasm")
@@ -65,35 +69,21 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 	if wasmAvailableAt != "" {
 		go func() {
 			defer d.finishedLoading()
-			log.Debugf("Loading WASM for %q. If not available, it should try to download from the following URLs: %+v. The file should be available here: %s", transport, strings.Split(wasmAvailableAt, ","), dir)
-			vc := newWaterVersionControl(dir)
-			cli := httpClient
-			if cli == nil {
-				cli = proxied.ChainedThenDirectThenFrontedClient(1*time.Minute, "")
-			}
-			downloader, err := newWaterWASMDownloader(strings.Split(wasmAvailableAt, ","), cli)
-			if err != nil {
-				d.errLoadingWASM = log.Errorf("failed to create wasm downloader: %w", err)
-				return
-			}
+			log.Debugf("Loading WASM for %q. If not available, it should try to download from the following URLs: %+v. The file should be available at: %q", transport, strings.Split(wasmAvailableAt, ","), dir)
 
-			r, err := vc.GetWASM(ctx, transport, downloader)
-			if err != nil {
-				d.errLoadingWASM = log.Errorf("failed to get wasm: %w", err)
-				return
-			}
-			defer r.Close()
-
-			b, err := io.ReadAll(r)
+			r, err := d.loadWASM(ctx, transport, dir, wasmAvailableAt)
 			if err != nil {
 				d.errLoadingWASM = log.Errorf("failed to read wasm: %w", err)
 				return
 			}
-
-			if len(b) == 0 {
-				d.errLoadingWASM = log.Errorf("received empty wasm")
+			defer r.Close()
+			b, err := io.ReadAll(r)
+			if err != nil {
+				d.errLoadingWASM = log.Errorf("failed to load wasm bytes: %w", err)
 				return
 			}
+
+			log.Debugf("received wasm with %d bytes", len(b))
 
 			d.dialer, err = createDialer(ctx, b, transport)
 			if err != nil {
@@ -107,11 +97,30 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 	return d, nil
 }
 
+func (d *waterImpl) loadWASM(ctx context.Context, transport string, dir string, wasmAvailableAt string) (io.ReadCloser, error) {
+	waterLoadingWASMMutex.Lock()
+	defer waterLoadingWASMMutex.Unlock()
+	vc := newWaterVersionControl(dir)
+	cli := httpClient
+	if cli == nil {
+		cli = proxied.ChainedThenDirectThenFrontedClient(1*time.Minute, "")
+	}
+	downloader, err := newWaterWASMDownloader(strings.Split(wasmAvailableAt, ","), cli)
+	if err != nil {
+		return nil, log.Errorf("failed to create wasm downloader: %w", err)
+	}
+	r, err := vc.GetWASM(ctx, transport, downloader)
+	if err != nil {
+		return nil, log.Errorf("failed to get wasm: %w", err)
+	}
+	return r, nil
+}
+
 func (d *waterImpl) finishedLoading() {
 	select {
 	case d.finishedToLoad <- struct{}{}:
 	default:
-		log.Error("Channel is closed")
+		log.Error("channel closed")
 	}
 }
 
@@ -129,14 +138,14 @@ func createDialer(ctx context.Context, wasm []byte, transport string) (water.Dia
 }
 
 func (d *waterImpl) isReady() (bool, error) {
-	d.loadingWASMMutex.Lock()
-	defer d.loadingWASMMutex.Unlock()
+	d.readyMutex.Lock()
+	defer d.readyMutex.Unlock()
 	return d.ready, d.errLoadingWASM
 }
 
 func (d *waterImpl) setReady() {
-	d.loadingWASMMutex.Lock()
-	defer d.loadingWASMMutex.Unlock()
+	d.readyMutex.Lock()
+	defer d.readyMutex.Unlock()
 	d.ready = true
 }
 
@@ -161,8 +170,7 @@ func (d *waterImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error
 				}
 				log.Debug("download finished!")
 			case <-ctx.Done():
-				d.errLoadingWASM = log.Errorf("context completed while waiting for WASM download: %w", ctx.Err())
-				return nil, d.errLoadingWASM
+				return nil, log.Errorf("context completed while waiting for WASM download: %w", ctx.Err())
 			}
 		}
 
