@@ -69,7 +69,13 @@ func (o *Options) Clone() *Options {
 	}
 }
 
+// Dialer is the interface for creating connections destination sites. This is sent over a proxy connection,
+// with the proxy handling the actual connection to the destination site. This represents a "Dialer" at the
+// highest level in the sense that a Dialer is not tied to any specific proxy, but rather represents a higher
+// level abstraction that can be used to dial any proxy depending on optimization strategies.
 type Dialer interface {
+
+	// DialContext dials out to the domain or IP address representing a destination site.
 	DialContext(ctx context.Context, network, addr string) (net.Conn, error)
 }
 
