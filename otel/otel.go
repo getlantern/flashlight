@@ -25,6 +25,8 @@ var (
 
 	stopper   func()
 	stopperMx sync.Mutex
+
+	stopReconfiguration bool
 )
 
 type Config struct {
@@ -34,7 +36,16 @@ type Config struct {
 	OpSampleRates map[string]uint32
 }
 
+// ConfigureOnce is used to prevent reinitialization of OpenTelemetry by later arriving configurations
+func ConfigureOnce(cfg *Config) {
+	Configure(cfg)
+	stopReconfiguration = true
+}
+
 func Configure(cfg *Config) {
+	if stopReconfiguration {
+		return
+	}
 	log.Debugf("Configuring OpenTelemetry with sample rate %d and op sample rates %v", cfg.SampleRate, cfg.OpSampleRates)
 	log.Debugf("Connecting to endpoint %v", cfg.Endpoint)
 	log.Debugf("Using headers %v", cfg.Headers)
