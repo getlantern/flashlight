@@ -56,6 +56,7 @@ type Options struct {
 	StatsTracker stats.Tracker
 }
 
+// Clone creates a deep copy of the Options object
 func (o *Options) Clone() *Options {
 	if o == nil {
 		return nil
