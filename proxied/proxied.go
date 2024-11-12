@@ -609,7 +609,7 @@ func ChainedThenDirectThenFrontedClient(timeout time.Duration, rootCA string) *h
 		TLSHandshakeTimeout:   10 * time.Second,
 		ResponseHeaderTimeout: 30 * time.Second,
 	}
-	frt := Fronted(10 * time.Second)
+	frt := Fronted("", 10*time.Second)
 	return &http.Client{
 		Timeout:   timeout * 2,
 		Transport: serialTransport{chained, drt, frt},

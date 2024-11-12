@@ -1,8 +1,8 @@
 module github.com/getlantern/flashlight/v7
 
-go 1.23
+go 1.22.3
 
-toolchain go1.23.2
+toolchain go1.22.8
 
 replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220805074304-4a43a9ed4ec6
 
@@ -43,7 +43,7 @@ require (
 	github.com/getlantern/event v0.0.0-20210901195647-a7e3145142e6
 	github.com/getlantern/eventual v1.0.0
 	github.com/getlantern/eventual/v2 v2.0.2
-	github.com/getlantern/fronted v0.0.0-20241028162429-6616677cce5d
+	github.com/getlantern/fronted v0.0.0-20241105203538-7cfdd7c24190
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
 	github.com/getlantern/golog v0.0.0-20230503153817-8e72de7e0a65
 	github.com/getlantern/hellosplitter v0.1.1

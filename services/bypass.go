@@ -167,7 +167,7 @@ func newProxy(
 		ProxyConfig:       pc,
 		name:              name,
 		proxyRoundTripper: newProxyRoundTripper(name, pc, userConfig, dialer),
-		dfRoundTripper:    proxied.Fronted(0),
+		dfRoundTripper:    proxied.Fronted("bypass_fronted_roundtrip", 0),
 		sender:            &sender{},
 		toggle:            atomic.NewBool(mrand.Float32() < 0.5),
 		userConfig:        userConfig,
