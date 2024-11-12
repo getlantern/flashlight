@@ -478,12 +478,6 @@ func (f *Flashlight) StartBackgroundServices() (func(), error) {
 }
 
 func (f *Flashlight) startConfigService() (services.StopFn, error) {
-	readable, _ := f.flagsAsMap["readableconfig"].(bool)
-	handler, err := userconfig.Init(f.configDir, !readable)
-	if err != nil {
-		return nil, err
-	}
-
 	fn := func(old, new *userconfig.UserConfig) {
 		var country string
 		if old != nil {
@@ -505,6 +499,13 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 		proxyMap := f.convertNewProxyConfToOld(pconfig.GetProxies())
 		f.notifyProxyListeners(proxyMap, config.Fetched)
 	}
+	userconfig.OnConfigChange(fn)
+
+	readable, _ := f.flagsAsMap["readableconfig"].(bool)
+	handler, err := userconfig.Init(f.configDir, !readable)
+	if err != nil {
+		return nil, err
+	}
 
 	// there might have been an existing config that was loaded before we start listening so we need
 	// to check for that and call the listener if there was
@@ -518,8 +519,6 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 		log.Debug("Sticky config set, not starting config service")
 		return func() {}, nil
 	}
-
-	userconfig.OnConfigChange(fn)
 
 	var url string
 	if cloudURL, _ := f.flagsAsMap["cloudconfig"].(string); cloudURL != "" {
