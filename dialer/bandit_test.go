@@ -79,7 +79,7 @@ func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
 	}
 }
 
-func TestNew(t *testing.T) {
+func TestNewBandit(t *testing.T) {
 	tests := []struct {
 		name    string
 		opts    *Options
@@ -109,7 +109,7 @@ func TestNew(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := NewBandit(tt.opts)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("NewBandit() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if tt.want != nil && !reflect.TypeOf(got).AssignableTo(reflect.TypeOf(tt.want)) {
@@ -154,7 +154,7 @@ func TestBanditDialer_DialContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			o, err := New(tt.opts)
+			o, err := NewBandit(tt.opts)
 			if err != nil {
 				t.Fatal(err)
 			}

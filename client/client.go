@@ -173,16 +173,10 @@ func NewClient(
 	if err != nil {
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
-	banditDialer, err := dialer.NewFastConnectDialer(&dialer.Options{}, func(*dialer.Options) (dialer.Dialer, error) {
-		return nil, nil
-	})
-	if err != nil {
-		return nil, errors.New("Unable to create bandit: %v", err)
-	}
 	client := &Client{
 		configDir:                              configDir,
 		requestTimeout:                         requestTimeout,
-		dialer:                                 banditDialer,
+		dialer:                                 dialer.New(&dialer.Options{}),
 		disconnected:                           disconnected,
 		proxyAll:                               proxyAll,
 		useShortcut:                            useShortcut,
@@ -715,7 +709,7 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 	configDir := client.configDir
 	chained.PersistSessionStates(configDir)
 	dialers := chained.CreateDialers(configDir, proxies, client.user)
-	dialer, err := dialer.New(&dialer.Options{
+	dialer := dialer.New(&dialer.Options{
 		Dialers: dialers,
 		OnError: client.onDialError,
 		OnSuccess: func(dialer dialer.ProxyDialer) {
@@ -723,7 +717,7 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 		},
 		StatsTracker: client.statsTracker,
 	})
-	return dialers, dialer, err
+	return dialers, dialer, nil
 }
 
 // Creates a local server to capture client hello messages from the browser and

@@ -72,7 +72,7 @@ func newTestUserConfig() *common.UserConfigData {
 }
 
 func resetDialers(client *Client, dial func(network, addr string) (net.Conn, error)) {
-	d, _ := dialer.New(&dialer.Options{
+	d := dialer.New(&dialer.Options{
 		Dialers: []dialer.ProxyDialer{&testDialer{
 			name: "test-dialer",
 			dial: dial,

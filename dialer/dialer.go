@@ -17,9 +17,16 @@ import (
 
 var log = golog.LoggerFor("dialer")
 
-func New(opts *Options) (Dialer, error) {
-	return NewFastConnectDialer(opts, func(opts *Options) (Dialer, error) {
-		return NewBandit(opts)
+// New creates a new dialer that first tries to connect as quickly as possilbe while also
+// optimizing for the fastest dialer.
+func New(opts *Options) Dialer {
+	return TwoPhaseDialer(opts, func(opts *Options, existing Dialer) Dialer {
+		bandit, err := NewBandit(opts)
+		if err != nil {
+			log.Errorf("Unable to create bandit: %v", err)
+			return existing
+		}
+		return bandit
 	})
 }
 
