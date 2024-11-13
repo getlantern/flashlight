@@ -12,10 +12,9 @@ import (
 
 // BanditDialer is responsible for continually choosing the optimized dialer.
 type BanditDialer struct {
-	dialers   []ProxyDialer
-	bandit    *bandit.EpsilonGreedy
-	onError   func(error, bool)
-	onSuccess func(ProxyDialer)
+	dialers []ProxyDialer
+	bandit  *bandit.EpsilonGreedy
+	opts    *Options
 }
 
 // NewBandit creates a new bandit given the available dialers and options with
@@ -38,10 +37,9 @@ func NewBandit(opts *Options) (Dialer, error) {
 
 	b.Init(len(dialers))
 	dialer := &BanditDialer{
-		dialers:   dialers,
-		bandit:    b,
-		onError:   opts.OnError,
-		onSuccess: opts.OnSuccess,
+		dialers: dialers,
+		bandit:  b,
+		opts:    opts,
 	}
 
 	return dialer, nil
@@ -65,7 +63,7 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 	conn, failedUpstream, err := d.DialContext(ctx, network, addr)
 	if err != nil {
 		hasSucceeding := hasSucceedingDialer(bd.dialers)
-		bd.onError(err, hasSucceeding)
+		bd.opts.OnError(err, hasSucceeding)
 
 		if !failedUpstream {
 			log.Errorf("Dialer %v failed in %v seconds: %v", d.Name(), time.Since(start).Seconds(), err)
@@ -95,7 +93,7 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 		bd.bandit.Update(chosenArm, speed)
 	})
 
-	bd.onSuccess(d)
+	bd.opts.OnSuccess(d)
 	return dt, err
 }
 

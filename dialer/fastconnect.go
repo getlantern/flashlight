@@ -41,9 +41,6 @@ type fastConnectDialer struct {
 
 	next func(*Options, Dialer) Dialer
 	opts *Options
-
-	onError   func(error, bool)
-	onSuccess func(ProxyDialer)
 }
 
 func newFastConnectDialer(opts *Options, next func(opts *Options, existing Dialer) Dialer) *fastConnectDialer {
@@ -58,8 +55,6 @@ func newFastConnectDialer(opts *Options, next func(opts *Options, existing Diale
 		connectedChan: make(chan int),
 		opts:          opts,
 		next:          next,
-		onError:       opts.OnError,
-		onSuccess:     opts.OnSuccess,
 	}
 }
 
@@ -73,7 +68,7 @@ func (fcd *fastConnectDialer) DialContext(ctx context.Context, network, addr str
 	conn, failedUpstream, err := td.DialContext(ctx, network, addr)
 	if err != nil {
 		hasSucceeding := len(fcd.connected) > 0
-		fcd.onError(err, hasSucceeding)
+		fcd.opts.OnError(err, hasSucceeding)
 		// Error connecting to the proxy or to the destination
 		if failedUpstream {
 			// Error connecting to the destination
@@ -84,23 +79,8 @@ func (fcd *fastConnectDialer) DialContext(ctx context.Context, network, addr str
 		}
 		return nil, err
 	}
-	fcd.onSuccess(td)
+	fcd.opts.OnSuccess(td)
 	return conn, err
-}
-
-// Accessor for a copy of the ProxyDialer slice
-func (fcd *fastConnectDialer) proxyDialers() []ProxyDialer {
-	fcd.connectedLock.RLock()
-	defer fcd.connectedLock.RUnlock()
-
-	dialers := make([]ProxyDialer, len(fcd.connected))
-
-	// Note that we manually copy here vs using copy because we need an array of
-	// ProxyDialers, not a dialersByConnectTime.
-	for i, ctd := range fcd.connected {
-		dialers[i] = ctd.ProxyDialer
-	}
-	return dialers
 }
 
 func (fcd *fastConnectDialer) onConnected(pd ProxyDialer, connectTime time.Duration) {
@@ -121,11 +101,11 @@ func (fcd *fastConnectDialer) onConnected(pd ProxyDialer, connectTime time.Durat
 		log.Debugf("Setting new top dialer to %v", newTopDialer.Name())
 		fcd.topDialer.set(newTopDialer)
 	}
-	fcd.onSuccess(fcd.topDialer.get())
+	fcd.opts.OnSuccess(fcd.topDialer.get())
 	log.Debug("Finished adding connected dialer")
 }
 
-// parallelDial dials all the dialers in parallel to connect the user as quickly as
+// connectAll dials all the dialers in parallel to connect the user as quickly as
 // possible on startup.
 func (fcd *fastConnectDialer) connectAll(dialers []ProxyDialer) {
 	if len(dialers) == 0 {
@@ -176,6 +156,21 @@ func (fcd *fastConnectDialer) parallelDial(dialers []ProxyDialer) {
 		}(d, index)
 	}
 	wg.Wait()
+}
+
+// Accessor for a copy of the ProxyDialer slice
+func (fcd *fastConnectDialer) proxyDialers() []ProxyDialer {
+	fcd.connectedLock.RLock()
+	defer fcd.connectedLock.RUnlock()
+
+	dialers := make([]ProxyDialer, len(fcd.connected))
+
+	// Note that we manually copy here vs using copy because we need an array of
+	// ProxyDialers, not a dialersByConnectTime.
+	for i, ctd := range fcd.connected {
+		dialers[i] = ctd.ProxyDialer
+	}
+	return dialers
 }
 
 // protectedDialer protects a dialer.Dialer with a RWMutex. We can't use an atomic.Value here
