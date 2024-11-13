@@ -91,7 +91,7 @@ func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, err
 
 	u, err := url.Parse(opts.OriginURL)
 	if err != nil {
-		logger.Errorf("Unable to parse chained cloud config URL: %v", err)
+		logger.Errorf("configservice: Unable to parse chained cloud config URL: %v", err)
 	}
 
 	detour.ForceWhitelist(u.Host)
@@ -172,11 +172,24 @@ func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
 		return nil, 0, err
 	}
 
-	logger.Debugf("configservice: fetching config from %v", req.URL)
-
-	resp, sleep, err := cs.sender.post(req, cs.opts.RoundTripper)
-	if err != nil {
-		return nil, 0, fmt.Errorf("config request failed: %w", err)
+	var (
+		resp  *http.Response
+		sleep int64
+	)
+	for {
+		logger.Debugf("configservice: fetching config from %v", req.URL)
+		resp, sleep, err = cs.sender.post(req, cs.opts.RoundTripper)
+		if err == nil {
+			break
+		}
+		logger.Errorf("configservice: Failed to fetch config: %v", err)
+		retryWait := time.Duration(sleep) * time.Second
+		logger.Debugf("configservice: Retrying in %v", retryWait)
+		select {
+		case <-time.After(retryWait):
+		case <-cs.done:
+			return nil, 0, errors.New("configservice: fetch cancelled")
+		}
 	}
 
 	if resp.StatusCode == http.StatusNoContent {
