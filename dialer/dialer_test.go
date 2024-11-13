@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,7 +23,6 @@ func TestClone(t *testing.T) {
 		OnSuccess: func(dialer ProxyDialer) {
 			// Sample success handler
 		},
-		StatsTracker: stats.NewTracker(),
 	}
 
 	// Clone the original Options object
@@ -38,7 +36,6 @@ func TestClone(t *testing.T) {
 
 	// Verify that the fields are correctly cloned
 	assert.Equal(t, original.Dialers, cloned.Dialers)
-	assert.Equal(t, original.StatsTracker, cloned.StatsTracker)
 }
 
 // mockProxyDialer is a mock implementation of the ProxyDialer interface for testing purposes

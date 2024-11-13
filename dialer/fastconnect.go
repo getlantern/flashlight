@@ -56,9 +56,6 @@ func newFastConnectDialer(opts *Options, next func(opts *Options, existing Diale
 	if opts.OnSuccess == nil {
 		opts.OnSuccess = func(ProxyDialer) {}
 	}
-	if opts.StatsTracker == nil {
-		opts.StatsTracker = stats.NewNoop()
-	}
 	return &fastConnectDialer{
 		connected:     make(dialersByConnectTime, 0),
 		connectedChan: make(chan int),
@@ -66,7 +63,6 @@ func newFastConnectDialer(opts *Options, next func(opts *Options, existing Diale
 		next:          next,
 		onError:       opts.OnError,
 		onSuccess:     opts.OnSuccess,
-		statsTracker:  opts.StatsTracker,
 	}
 }
 

@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -89,8 +88,7 @@ func TestNewBandit(t *testing.T) {
 		{
 			name: "should still succeed even if there are no dialers",
 			opts: &Options{
-				Dialers:      nil,
-				StatsTracker: stats.NewNoop(),
+				Dialers: nil,
 			},
 			want:    nil,
 			wantErr: false,
@@ -98,8 +96,7 @@ func TestNewBandit(t *testing.T) {
 		{
 			name: "should return a BanditDialer if there's only one dialer",
 			opts: &Options{
-				Dialers:      []ProxyDialer{newTcpConnDialer()},
-				StatsTracker: stats.NewNoop(),
+				Dialers: []ProxyDialer{newTcpConnDialer()},
 			},
 			want:    &BanditDialer{},
 			wantErr: false,

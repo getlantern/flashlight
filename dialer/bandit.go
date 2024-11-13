@@ -8,16 +8,14 @@ import (
 	"time"
 
 	bandit "github.com/alextanhongpin/go-bandit"
-	"github.com/getlantern/flashlight/v7/stats"
 )
 
 // BanditDialer is responsible for continually choosing the optimized dialer.
 type BanditDialer struct {
-	dialers      []ProxyDialer
-	bandit       *bandit.EpsilonGreedy
-	onError      func(error, bool)
-	onSuccess    func(ProxyDialer)
-	statsTracker stats.Tracker
+	dialers   []ProxyDialer
+	bandit    *bandit.EpsilonGreedy
+	onError   func(error, bool)
+	onSuccess func(ProxyDialer)
 }
 
 // NewBandit creates a new bandit given the available dialers and options with
@@ -28,9 +26,6 @@ func NewBandit(opts *Options) (Dialer, error) {
 	}
 	if opts.OnSuccess == nil {
 		opts.OnSuccess = func(ProxyDialer) {}
-	}
-	if opts.StatsTracker == nil {
-		opts.StatsTracker = stats.NewNoop()
 	}
 
 	dialers := opts.Dialers
@@ -43,11 +38,10 @@ func NewBandit(opts *Options) (Dialer, error) {
 
 	b.Init(len(dialers))
 	dialer := &BanditDialer{
-		dialers:      dialers,
-		bandit:       b,
-		onError:      opts.OnError,
-		onSuccess:    opts.OnSuccess,
-		statsTracker: opts.StatsTracker,
+		dialers:   dialers,
+		bandit:    b,
+		onError:   opts.OnError,
+		onSuccess: opts.OnSuccess,
 	}
 
 	return dialer, nil
@@ -71,7 +65,6 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 	conn, failedUpstream, err := d.DialContext(ctx, network, addr)
 	if err != nil {
 		hasSucceeding := hasSucceedingDialer(bd.dialers)
-		bd.statsTracker.SetHasSucceedingProxy(hasSucceeding)
 		bd.onError(err, hasSucceeding)
 
 		if !failedUpstream {
@@ -102,16 +95,6 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 		bd.bandit.Update(chosenArm, speed)
 	})
 
-	countryCode, country, city := d.Location()
-	previousStats := bd.statsTracker.Latest()
-	if previousStats.CountryCode == "" || previousStats.CountryCode != countryCode {
-		bd.statsTracker.SetActiveProxyLocation(
-			city,
-			country,
-			countryCode,
-		)
-	}
-	bd.statsTracker.SetHasSucceedingProxy(true)
 	bd.onSuccess(d)
 	return dt, err
 }

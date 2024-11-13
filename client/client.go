@@ -687,10 +687,19 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 	dialer := dialer.New(&dialer.Options{
 		Dialers: dialers,
 		OnError: client.onDialError,
-		OnSuccess: func(dialer dialer.ProxyDialer) {
+		OnSuccess: func(d dialer.ProxyDialer) {
 			client.onSucceedingProxy()
+			client.statsTracker.SetHasSucceedingProxy(true)
+			countryCode, country, city := d.Location()
+			previousStats := client.statsTracker.Latest()
+			if previousStats.CountryCode == "" || previousStats.CountryCode != countryCode {
+				client.statsTracker.SetActiveProxyLocation(
+					city,
+					country,
+					countryCode,
+				)
+			}
 		},
-		StatsTracker: client.statsTracker,
 	})
 	return dialers, dialer, nil
 }

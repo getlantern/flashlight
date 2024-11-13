@@ -13,7 +13,6 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/golog"
 )
 
@@ -56,18 +55,14 @@ const (
 
 // Options are the options used to create a new bandit
 type Options struct {
-	// The available dialers to use when creating a new bandit
+	// The available dialers to use when creating a new dialer
 	Dialers []ProxyDialer
 
-	// OnError is the onError callback that is called when bandit encounters a dial error
+	// OnError is the onError callback that is called when the dialer encounters a dial error
 	OnError func(error, bool)
 
-	// OnSuccess is the callback that is called by bandit after a successful dial.
+	// OnSuccess is the callback that is called by dialer after a successful dial.
 	OnSuccess func(ProxyDialer)
-
-	// StatsTracker is a stats.Tracker bandit should be configured to use (a callback that is called
-	// when a dialer is selected)
-	StatsTracker stats.Tracker
 }
 
 // Clone creates a deep copy of the Options object
@@ -76,10 +71,9 @@ func (o *Options) Clone() *Options {
 		return nil
 	}
 	return &Options{
-		Dialers:      o.Dialers,
-		OnError:      o.OnError,
-		OnSuccess:    o.OnSuccess,
-		StatsTracker: o.StatsTracker,
+		Dialers:   o.Dialers,
+		OnError:   o.OnError,
+		OnSuccess: o.OnSuccess,
 	}
 }
 
