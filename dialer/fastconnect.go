@@ -8,8 +8,6 @@ import (
 	"sort"
 	"sync"
 	"time"
-
-	"github.com/getlantern/flashlight/v7/stats"
 )
 
 type connectTimeProxyDialer struct {
@@ -44,9 +42,8 @@ type fastConnectDialer struct {
 	next func(*Options, Dialer) Dialer
 	opts *Options
 
-	onError      func(error, bool)
-	onSuccess    func(ProxyDialer)
-	statsTracker stats.Tracker
+	onError   func(error, bool)
+	onSuccess func(ProxyDialer)
 }
 
 func newFastConnectDialer(opts *Options, next func(opts *Options, existing Dialer) Dialer) *fastConnectDialer {
@@ -76,7 +73,6 @@ func (fcd *fastConnectDialer) DialContext(ctx context.Context, network, addr str
 	conn, failedUpstream, err := td.DialContext(ctx, network, addr)
 	if err != nil {
 		hasSucceeding := len(fcd.connected) > 0
-		fcd.statsTracker.SetHasSucceedingProxy(hasSucceeding)
 		fcd.onError(err, hasSucceeding)
 		// Error connecting to the proxy or to the destination
 		if failedUpstream {
@@ -88,7 +84,6 @@ func (fcd *fastConnectDialer) DialContext(ctx context.Context, network, addr str
 		}
 		return nil, err
 	}
-	fcd.statsTracker.SetHasSucceedingProxy(true)
 	fcd.onSuccess(td)
 	return conn, err
 }
@@ -126,7 +121,6 @@ func (fcd *fastConnectDialer) onConnected(pd ProxyDialer, connectTime time.Durat
 		log.Debugf("Setting new top dialer to %v", newTopDialer.Name())
 		fcd.topDialer.set(newTopDialer)
 	}
-	fcd.statsTracker.SetHasSucceedingProxy(true)
 	fcd.onSuccess(td)
 	log.Debug("Finished adding connected dialer")
 }
