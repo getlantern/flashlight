@@ -121,7 +121,7 @@ func (fcd *fastConnectDialer) onConnected(pd ProxyDialer, connectTime time.Durat
 		log.Debugf("Setting new top dialer to %v", newTopDialer.Name())
 		fcd.topDialer.set(newTopDialer)
 	}
-	fcd.onSuccess(td)
+	fcd.onSuccess(fcd.topDialer.get())
 	log.Debug("Finished adding connected dialer")
 }
 

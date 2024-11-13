@@ -18,7 +18,7 @@ type twoPhaseDialer struct {
 
 // NewTwoPhaseDialer creates a new dialer for checking proxy connectivity.
 func NewTwoPhaseDialer(opts *Options, next func(opts *Options, existing Dialer) Dialer) Dialer {
-	log.Debugf("Creating new fast dialer with %d dialers", len(opts.Dialers))
+	log.Debugf("Creating new two phase dialer with %d dialers", len(opts.Dialers))
 
 	tpd := &twoPhaseDialer{}
 
