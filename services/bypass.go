@@ -180,7 +180,7 @@ func (p *proxy) start(done <-chan struct{}) {
 		wait, _ := p.sendToBypass()
 		return wait
 	}
-	callRandomly(fn, bypassSendInterval, done)
+	callRandomly("bypass", fn, bypassSendInterval, done)
 }
 
 func (p *proxy) sendToBypass() (int64, error) {

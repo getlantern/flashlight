@@ -116,7 +116,7 @@ func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, err
 		sleep, _ := _configService.fetchConfig()
 		return sleep
 	}
-	go callRandomly(fn, opts.PollInterval, _configService.done)
+	go callRandomly("configservice", fn, opts.PollInterval, _configService.done)
 
 	return _configService.Stop, nil
 }

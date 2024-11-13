@@ -22,7 +22,7 @@ func TestCallRandomlyInitialCall(t *testing.T) {
 	done := make(chan struct{})
 	go func() {
 		started <- struct{}{}
-		callRandomlyWithJitter(fn, interval, 0, done)
+		callRandomlyWithJitter("test inital call", fn, interval, 0, done)
 	}()
 
 	// wait for the goroutine to start
@@ -50,7 +50,7 @@ func TestCallRandomlyJitter(t *testing.T) {
 	done := make(chan struct{})
 	defer close(done)
 
-	go callRandomlyWithJitter(fn, interval, jitter, done)
+	go callRandomlyWithJitter("test jitter", fn, interval, jitter, done)
 
 	// add some extra time to account for scheduling
 	timeout := interval + jitter + 100*time.Millisecond
@@ -97,7 +97,7 @@ func TestCallRandomlyExtraDelay(t *testing.T) {
 	defer close(done)
 
 	go func() {
-		callRandomlyWithJitter(fn, interval, 0, done)
+		callRandomlyWithJitter("test extra delay", fn, interval, 0, done)
 	}()
 
 	var lastCall time.Time

@@ -20,11 +20,12 @@ type StopFn func()
 
 // callRandomly continuously calls fn randomly between interval-jitter and interval+jitter, with
 // the initial call being made immediately. fn can return a positive value to extend the wait time.
-func callRandomly(fn func() int64, interval time.Duration, done <-chan struct{}) {
-	callRandomlyWithJitter(fn, interval, jitter, done)
+func callRandomly(name string, fn func() int64, interval time.Duration, done <-chan struct{}) {
+	callRandomlyWithJitter(name, fn, interval, jitter, done)
 }
 
 func callRandomlyWithJitter(
+	name string,
 	fn func() int64,
 	interval time.Duration,
 	jitter time.Duration,
@@ -41,7 +42,7 @@ func callRandomlyWithJitter(
 		}
 
 		delayDuration := time.Duration(delay)*time.Millisecond + extraDelay
-		logger.Debugf("Next run in %v", delayDuration)
+		logger.Debugf("%s - next run in %v", name, delayDuration)
 		return time.After(delayDuration)
 	}
 
