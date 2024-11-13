@@ -63,7 +63,7 @@ featuresenabled:
   tapsellads:
   - label: show-tapsell-ads
     geocountries: ir
-    platforms: android 
+    platforms: android
   otel:
     - label: opentelemetry
   noborda:
