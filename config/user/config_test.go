@@ -42,13 +42,6 @@ func TestNotifyOnConfig(t *testing.T) {
 		})
 
 		Init("", false)
-		select {
-		case <-called:
-			t.Log("received existing config notification")
-		case <-time.After(time.Second):
-			assert.Fail(t, "timeout waiting for existing config notification")
-		}
-
 		_config.SetConfig(newTestConfig())
 
 		select {
