@@ -339,6 +339,7 @@ func New(
 	f.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
 		log.Debug("Applying proxy config with proxies")
 		dialers := f.client.Configure(chained.CopyConfigs(proxies))
+		log.Debugf("Got %v dialers", len(dialers))
 		if dialers != nil {
 			f.callbacks.onProxiesUpdate(dialers, src)
 		}
@@ -478,6 +479,12 @@ func (f *Flashlight) StartBackgroundServices() (func(), error) {
 }
 
 func (f *Flashlight) startConfigService() (services.StopFn, error) {
+	readable, _ := f.flagsAsMap["readableconfig"].(bool)
+	handler, err := userconfig.Init(f.configDir, !readable)
+	if err != nil {
+		return nil, err
+	}
+
 	fn := func(old, new *userconfig.UserConfig) {
 		var country string
 		if old != nil {
@@ -499,13 +506,6 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 		proxyMap := f.convertNewProxyConfToOld(pconfig.GetProxies())
 		f.notifyProxyListeners(proxyMap, config.Fetched)
 	}
-	userconfig.OnConfigChange(fn)
-
-	readable, _ := f.flagsAsMap["readableconfig"].(bool)
-	handler, err := userconfig.Init(f.configDir, !readable)
-	if err != nil {
-		return nil, err
-	}
 
 	// there might have been an existing config that was loaded before we start listening so we need
 	// to check for that and call the listener if there was
@@ -513,6 +513,8 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 	if conf != nil {
 		fn(nil, conf)
 	}
+
+	userconfig.OnConfigChange(fn)
 
 	// we don't need to start the config service if sticky is set so just return
 	if sticky, _ := f.flagsAsMap["stickyconfig"].(bool); sticky {

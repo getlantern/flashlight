@@ -73,7 +73,6 @@ func Init(saveDir string, obfuscate bool) (*config, error) {
 
 	log.Debug("Loaded saved config")
 	_config.config.Set(saved)
-	notifyListeners(nil, saved)
 	return _config, nil
 }
 
@@ -137,6 +136,7 @@ func readExistingConfig(filePath string, obfuscate bool) (*UserConfig, error) {
 	}
 	defer infile.Close()
 
+	log.Debugf("Reading existing config from %v", filePath)
 	var in io.Reader = infile
 	if obfuscate {
 		in = rot13.NewReader(infile)
