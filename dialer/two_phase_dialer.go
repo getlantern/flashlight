@@ -11,14 +11,13 @@ import (
 // connect as quickly as possilbe to get the user online as soon as possible while also
 // determining which dialers are able to connect at all. It then switches to a
 // multi-armed bandit based dialer that tries to find the fastest dialer amongst all
-// the dialers that can connect at all.
+// the dialers that can connect.
 type twoPhaseDialer struct {
-	activeDialer     Dialer
-	activeDialerLock sync.RWMutex
+	activeDialer activeDialer
 }
 
-// TwoPhaseDialer creates a new dialer for checking proxy connectivity.
-func TwoPhaseDialer(opts *Options, next func(opts *Options, existing Dialer) Dialer) Dialer {
+// NewTwoPhaseDialer creates a new dialer for checking proxy connectivity.
+func NewTwoPhaseDialer(opts *Options, next func(opts *Options, existing Dialer) Dialer) Dialer {
 	log.Debugf("Creating new fast dialer with %d dialers", len(opts.Dialers))
 
 	tpd := &twoPhaseDialer{}
@@ -26,34 +25,43 @@ func TwoPhaseDialer(opts *Options, next func(opts *Options, existing Dialer) Dia
 	fcd := newFastConnectDialer(opts, func(dialerOpts *Options, existing Dialer) Dialer {
 		// This is where we move to the second dialer.
 		nextDialer := next(dialerOpts, existing)
-		tpd.storeActiveDialer(nextDialer)
+		tpd.activeDialer.set(nextDialer)
 		return nextDialer
 	})
 
-	tpd.storeActiveDialer(fcd)
+	tpd.activeDialer.set(fcd)
 
-	fcd.connectAll(opts.Dialers)
+	go fcd.connectAll(opts.Dialers)
 
 	return tpd
 }
 
 // DialContext implements Dialer.
 func (ccd *twoPhaseDialer) DialContext(ctx context.Context, network string, addr string) (net.Conn, error) {
-	td := ccd.loadActiveDialer()
+	td := ccd.activeDialer.get()
 	if td == nil {
 		return nil, errors.New("no active dialer")
 	}
 	return td.DialContext(ctx, network, addr)
 }
 
-func (fcd *twoPhaseDialer) storeActiveDialer(active Dialer) {
-	fcd.activeDialerLock.Lock()
-	defer fcd.activeDialerLock.Unlock()
-	fcd.activeDialer = active
+// protectedDialer protects a dialer.Dialer with a RWMutex. We can't use an atomic.Value here
+// because Dialer is an interface.
+type activeDialer struct {
+	sync.RWMutex
+	dialer Dialer
 }
 
-func (fcd *twoPhaseDialer) loadActiveDialer() Dialer {
-	fcd.activeDialerLock.RLock()
-	defer fcd.activeDialerLock.RUnlock()
-	return fcd.activeDialer
+// set sets the dialer in the activeDialer
+func (ad *activeDialer) set(dialer Dialer) {
+	ad.Lock()
+	defer ad.Unlock()
+	ad.dialer = dialer
+}
+
+// get gets the dialer from the activeDialer
+func (ad *activeDialer) get() Dialer {
+	ad.RLock()
+	defer ad.RUnlock()
+	return ad.dialer
 }

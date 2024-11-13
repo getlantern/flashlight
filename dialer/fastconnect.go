@@ -2,7 +2,7 @@ package dialer
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"math/rand"
 	"net"
 	"sort"
@@ -35,8 +35,7 @@ func (d dialersByConnectTime) Swap(i, j int) {
 // fastConnectDialer stores the time it took to connect to each dialer and uses
 // that information to select the fastest dialer to use.
 type fastConnectDialer struct {
-	topDialer     ProxyDialer
-	topDialerLock sync.RWMutex
+	topDialer     protectedDialer
 	connected     dialersByConnectTime
 	connectedChan chan int
 	// Lock for the slice of dialers.
@@ -74,10 +73,9 @@ func newFastConnectDialer(opts *Options, next func(opts *Options, existing Diale
 func (fcd *fastConnectDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
 	// Use the dialer with the lowest connect time, waiting on early dials for any
 	// connections at all.
-	td := fcd.loadTopDialer()
+	td := fcd.topDialer.get()
 	if td == nil {
-		log.Debug("No top dialer")
-		return nil, errors.New("no top dialer")
+		return nil, fmt.Errorf("no top dialer")
 	}
 	conn, failedUpstream, err := td.DialContext(ctx, network, addr)
 	if err != nil {
@@ -126,11 +124,14 @@ func (fcd *fastConnectDialer) onConnected(pd ProxyDialer, connectTime time.Durat
 	sort.Sort(fcd.connected)
 
 	// Set top dialer if the fastest dialer changed.
-	td := fcd.loadTopDialer()
+	td := fcd.topDialer.get()
 	newTopDialer := fcd.connected[0].ProxyDialer
 	if td != newTopDialer {
-		fcd.storeTopDialer(newTopDialer)
+		log.Debugf("Setting new top dialer to %v", newTopDialer.Name())
+		fcd.topDialer.set(newTopDialer)
 	}
+	fcd.statsTracker.SetHasSucceedingProxy(true)
+	fcd.onSuccess(td)
 	log.Debug("Finished adding connected dialer")
 }
 
@@ -181,21 +182,29 @@ func (fcd *fastConnectDialer) parallelDial(dialers []ProxyDialer) {
 			}
 
 			log.Debugf("Dialer %v succeeded in %v", pd.Name(), time.Since(start))
-			fcd.statsTracker.SetHasSucceedingProxy(true)
 			fcd.onConnected(pd, time.Since(start))
 		}(d, index)
 	}
 	wg.Wait()
 }
 
-func (fcd *fastConnectDialer) loadTopDialer() ProxyDialer {
-	fcd.topDialerLock.RLock()
-	defer fcd.topDialerLock.RUnlock()
-	return fcd.topDialer
+// protectedDialer protects a dialer.Dialer with a RWMutex. We can't use an atomic.Value here
+// because ProxyDialer is an interface.
+type protectedDialer struct {
+	sync.RWMutex
+	dialer ProxyDialer
 }
 
-func (fcd *fastConnectDialer) storeTopDialer(pd ProxyDialer) {
-	fcd.topDialerLock.Lock()
-	defer fcd.topDialerLock.Unlock()
-	fcd.topDialer = pd
+// set sets the dialer in the protectedDialer
+func (pd *protectedDialer) set(dialer ProxyDialer) {
+	pd.Lock()
+	defer pd.Unlock()
+	pd.dialer = dialer
+}
+
+// get gets the dialer from the protectedDialer
+func (pd *protectedDialer) get() ProxyDialer {
+	pd.RLock()
+	defer pd.RUnlock()
+	return pd.dialer
 }

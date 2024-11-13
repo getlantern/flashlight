@@ -105,7 +105,7 @@ type Client struct {
 	requestTimeout time.Duration
 
 	// Dialer that uses multi-armed bandit to select the best proxy to use.
-	dialer dialer.Dialer
+	dialer *protectedDialer
 
 	proxy proxy.Proxy
 
@@ -173,10 +173,13 @@ func NewClient(
 	if err != nil {
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
+
 	client := &Client{
-		configDir:                              configDir,
-		requestTimeout:                         requestTimeout,
-		dialer:                                 dialer.New(&dialer.Options{}),
+		configDir:      configDir,
+		requestTimeout: requestTimeout,
+		dialer: &protectedDialer{
+			dialer: dialer.NoDialer(),
+		},
 		disconnected:                           disconnected,
 		proxyAll:                               proxyAll,
 		useShortcut:                            useShortcut,
@@ -357,7 +360,8 @@ func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []
 		log.Error(err)
 		return nil
 	}
-	client.dialer = dialer
+	client.dialer.set(dialer)
+	log.Debug("Reset dialer")
 	chained.PersistSessionStates(client.configDir)
 	chained.TrackStatsFor(dialers, client.configDir)
 	return dialers
@@ -392,11 +396,6 @@ func (client *Client) Stop() error {
 var TimeoutWaitingForDNSResolutionMap = 5 * time.Second
 
 func (client *Client) dial(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {
-	op := ops.Begin("proxied_dialer")
-	op.Set("local_proxy_type", "http")
-	op.OriginPort(addr, "")
-	defer op.End()
-
 	// Fetch DNS resolution map, if any
 	// XXX <01-04-2022, soltzen> Do this fetch now, so it won't be affected by
 	// the context timeout of client.doDial()
@@ -414,7 +413,7 @@ func (client *Client) dial(ctx context.Context, isConnect bool, network, addr st
 
 	ctx2, cancel2 := context.WithTimeout(ctx, client.requestTimeout)
 	defer cancel2()
-	return client.doDial(op, ctx2, isConnect, addr, dnsResolutionMapForDirectDials)
+	return client.doDial(ctx2, isConnect, addr, dnsResolutionMapForDirectDials)
 }
 
 // doDial is the ultimate place to dial an origin site. It takes following steps:
@@ -423,28 +422,19 @@ func (client *Client) dial(ctx context.Context, isConnect bool, network, addr st
 // * If the host or port is configured not proxyable, dial directly.
 // * If the site is allowed by shortcut, dial directly. If it failed before the deadline, try proxying.
 // * Try dial the site directly with 1/5th of the requestTimeout, then try proxying.
-func (client *Client) doDial(
-	op *ops.Op,
-	ctx context.Context,
-	isCONNECT bool,
-	addr string,
+func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string,
 	dnsResolutionMapForDirectDials map[string]string) (net.Conn, error) {
 
 	dialDirect := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		if v, ok := dnsResolutionMapForDirectDials[addr]; ok {
 			log.Debugf("Bypassed DNS resolution: dialing %v as %v", addr, v)
-			conn, err := netx.DialContext(ctx, network, v)
-			op.FailIf(err)
-			return conn, err
+			return netx.DialContext(ctx, network, v)
 		} else {
-			conn, err := netx.DialContext(ctx, network, addr)
-			op.FailIf(err)
-			return conn, err
+			return netx.DialContext(ctx, network, addr)
 		}
 	}
 
 	dialProxied := func(ctx context.Context, _unused, addr string) (net.Conn, error) {
-		op.Set("remotely_proxied", true)
 		proto := dialer.NetworkPersistent
 		if isCONNECT {
 			// UGLY HACK ALERT! In this case, we know we need to send a CONNECT request
@@ -456,11 +446,10 @@ func (client *Client) doDial(
 			// case.
 			proto = dialer.NetworkConnect
 		}
-		start := time.Now()
-		conn, err := client.dialer.DialContext(ctx, proto, addr)
-		if log.IsTraceEnabled() {
-			log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)
-		}
+		defer func(start time.Time) {
+			log.Debugf("Dialing via the proxy takes %v for %s", time.Since(start), addr)
+		}(time.Now())
+		conn, err := client.dialer.get().DialContext(ctx, proto, addr)
 		if conn != nil {
 			conn = &proxiedConn{conn}
 		}
@@ -476,57 +465,40 @@ func (client *Client) doDial(
 
 	if routingRuleForDomain == domainrouting.MustDirect {
 		log.Debugf("Forcing direct to %v per domain routing rules (MustDirect)", host)
-		op.Set("force_direct", true)
-		op.Set("force_direct_reason", "routingrule")
 		return dialDirect(ctx, "tcp", addr)
 	}
 
 	if shouldForceProxying() {
 		log.Tracef("Proxying to %v because everything is forced to be proxied", addr)
-		op.Set("force_proxied", true)
-		op.Set("force_proxied_reason", "forceproxying")
 		return dialProxied(ctx, "whatever", addr)
 	}
 
 	if routingRuleForDomain == domainrouting.MustProxy {
 		log.Tracef("Proxying to %v per domain routing rules (MustProxy)", addr)
-		op.Set("force_proxied", true)
-		op.Set("force_proxied_reason", "routingrule")
 		return dialProxied(ctx, "whatever", addr)
 	}
 
 	if err := client.allowSendingToProxy(addr); err != nil {
 		log.Debugf("%v, sending directly to %v", err, addr)
-		op.Set("force_direct", true)
-		op.Set("force_direct_reason", err.Error())
 		return dialDirect(ctx, "tcp", addr)
 	}
 
 	if client.proxyAll() {
 		log.Tracef("Proxying to %v because proxyall is enabled", addr)
-		op.Set("force_proxied", true)
-		op.Set("force_proxied_reason", "proxyall")
 		return dialProxied(ctx, "whatever", addr)
 	}
 
 	dialDirectForShortcut := func(ctx context.Context, network, addr string, ip net.IP) (net.Conn, error) {
 		log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
-		op.Set("shortcut_direct", true)
-		op.Set("shortcut_direct_ip", ip)
-		op.Set("shortcut_origin", addr)
 		return dialDirect(ctx, "tcp", addr)
 	}
 
 	switch domainrouting.RuleFor(host) {
 	case domainrouting.Direct:
 		log.Tracef("Directly dialing %v per domain routing rules (Direct)", addr)
-		op.Set("force_direct", true)
-		op.Set("force_direct_reason", "routingrule")
 		return dialDirect(ctx, "tcp", addr)
 	case domainrouting.Proxy:
 		log.Tracef("Proxying to %v per domain routing rules (Proxy)", addr)
-		op.Set("force_proxied", true)
-		op.Set("force_proxied_reason", "routingrule")
 		return dialProxied(ctx, "whatever", addr)
 	}
 
@@ -557,7 +529,6 @@ func (client *Client) doDial(
 
 	var dialer func(ctx context.Context, network, addr string) (net.Conn, error)
 	if client.useDetour() {
-		op.Set("detour", true)
 		dialer = detour.Dialer(dialDirectForDetour, dialProxied)
 	} else if !client.useShortcut() {
 		dialer = func(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -706,6 +677,10 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 	if len(proxies) == 0 {
 		return nil, nil, fmt.Errorf("no chained servers configured, not initializing dialers")
 	}
+	log.Debug("initDialers called")
+	defer func(start time.Time) {
+		log.Debugf("initDialers took %v", time.Since(start))
+	}(time.Now())
 	configDir := client.configDir
 	chained.PersistSessionStates(configDir)
 	dialers := chained.CreateDialers(configDir, proxies, client.user)
@@ -727,4 +702,23 @@ func (client *Client) cacheClientHellos() {
 	defer cancel()
 	// Try to snag a hello from the browser.
 	chained.ActivelyObtainBrowserHello(ctx, client.configDir)
+}
+
+// protectedDialer protects a dialer.Dialer with a RWMutex. We can't use an atomic.Value here
+// because dialer.Dialer is an interface.
+type protectedDialer struct {
+	sync.RWMutex
+	dialer dialer.Dialer
+}
+
+func (pd *protectedDialer) get() dialer.Dialer {
+	pd.RLock()
+	defer pd.RUnlock()
+	return pd.dialer
+}
+
+func (pd *protectedDialer) set(dialer dialer.Dialer) {
+	pd.Lock()
+	defer pd.Unlock()
+	pd.dialer = dialer
 }

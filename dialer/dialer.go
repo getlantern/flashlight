@@ -7,8 +7,10 @@ package dialer
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net"
+	"runtime/debug"
 	"time"
 
 	"github.com/getlantern/flashlight/v7/stats"
@@ -20,7 +22,7 @@ var log = golog.LoggerFor("dialer")
 // New creates a new dialer that first tries to connect as quickly as possilbe while also
 // optimizing for the fastest dialer.
 func New(opts *Options) Dialer {
-	return TwoPhaseDialer(opts, func(opts *Options, existing Dialer) Dialer {
+	return NewTwoPhaseDialer(opts, func(opts *Options, existing Dialer) Dialer {
 		bandit, err := NewBandit(opts)
 		if err != nil {
 			log.Errorf("Unable to create bandit: %v", err)
@@ -28,6 +30,18 @@ func New(opts *Options) Dialer {
 		}
 		return bandit
 	})
+}
+
+func NoDialer() Dialer {
+	return &noDialer{}
+}
+
+type noDialer struct{}
+
+func (d *noDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	// Print the goroutine stack to help debug why we're here
+	log.Errorf("No dialer available -- should not be called, stack: %s", debug.Stack())
+	return nil, errors.New("no dialer available")
 }
 
 const (

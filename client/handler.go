@@ -72,17 +72,6 @@ func (client *Client) filter(cs *filters.ConnectionState, req *http.Request, nex
 		op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
 	}
 
-	// Disable Ad swapping for now given that Ad blocking is completely
-	// removed.  A limited form of Ad blocking should be re-introduced before
-	// enabling it again.
-	//
-	// adSwapURL := client.adSwapURL(req)
-	// if !exoclick && adSwapURL != "" {
-	// // Don't record this as proxying
-	// 	op.Cancel()
-	// 	return client.redirectAdSwap(ctx, req, adSwapURL, op)
-	// }
-
 	isConnect := req.Method == http.MethodConnect
 	if isConnect || cs.IsMITMing() {
 		// CONNECT requests are often used for HTTPS requests. If we're MITMing the

@@ -78,7 +78,7 @@ func resetDialers(client *Client, dial func(network, addr string) (net.Conn, err
 			dial: dial,
 		}},
 	})
-	client.dialer = d
+	client.dialer.set(d)
 }
 
 func newClient() *Client {
