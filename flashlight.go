@@ -298,6 +298,10 @@ func New(
 	common.CompileTimeApplicationVersion = appVersion
 	deviceID := userConfig.GetDeviceID()
 	log.Debugf("You can query for this device's activity under device id: %v", deviceID)
+	fops.InitGlobalContext(
+		appName, appVersion, revisionDate, deviceID, isPro, func() string {
+			return geolookup.GetCountry(0)
+		})
 	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 
 	f := &Flashlight{
@@ -330,11 +334,6 @@ func New(
 		},
 		proxyListeners: make([]func(map[string]*commonconfig.ProxyConfig, config.Source), 0),
 	}
-
-	fops.InitGlobalContext(
-		appName, appVersion, revisionDate, deviceID, isPro, func() string {
-			return geolookup.GetCountry(0)
-		})
 
 	f.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
 		log.Debug("Applying proxy config with proxies")

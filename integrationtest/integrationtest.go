@@ -163,9 +163,6 @@ func NewHelper(t *testing.T, basePort int) (*Helper, error) {
 	return helper, nil
 }
 
-func addDeprecatedFields(helper *Helper) {
-}
-
 func (helper *Helper) SetProtocol(protocol string) {
 	helper.protocol.Store(protocol)
 }
@@ -225,10 +222,11 @@ func (helper *Helper) startProxyServer() error {
 
 	s1 := &hproxy.Proxy{
 		TestingLocal:             true,
-		HTTPMultiplexAddr:        toListenAddr(helper.HTTPSProxyServerPort),
+		HTTPAddr:                 toListenAddr(helper.HTTPSProxyServerPort),
+		HTTPMultiplexAddr:        toListenAddr(helper.HTTPSSmuxProxyServerPort),
 		TLSMasqAddr:              toListenAddr(helper.TLSMasqProxyServerPort),
 		ShadowsocksAddr:          toListenAddr(helper.ShadowsocksProxyServerPort),
-		ShadowsocksMultiplexAddr: toListenAddr(helper.ShadowsocksProxyServerPort),
+		ShadowsocksMultiplexAddr: toListenAddr(helper.ShadowsocksmuxProxyServerPort),
 		ShadowsocksSecret:        shadowsocksSecret,
 
 		TLSMasqSecret:     tlsmasqServerSecret,
@@ -269,11 +267,7 @@ func (helper *Helper) startProxyServer() error {
 			time.Sleep(25 * time.Millisecond)
 		}
 	}
-	if statErr != nil {
-		return statErr
-	}
-
-	return nil
+	return statErr
 }
 
 func (helper *Helper) startConfigServer() error {
@@ -446,7 +440,8 @@ func (helper *Helper) buildProxy(proto string) (*apipb.ProxyConnectConfig, error
 
 	switch proto {
 	case "https":
-		conf.Port = helper.HTTPSProxyServerPort
+		// use multiplex server port since we multiplex all https connections
+		conf.Port = helper.HTTPSSmuxProxyServerPort
 		conf.ProtocolConfig = &apipb.ProxyConnectConfig_ConnectCfgTls{
 			ConnectCfgTls: &apipb.ProxyConnectConfig_TLSConfig{
 				SessionState: &apipb.ProxyConnectConfig_TLSConfig_SessionState{},
@@ -466,7 +461,8 @@ func (helper *Helper) buildProxy(proto string) (*apipb.ProxyConnectConfig, error
 		// 	"tlsmasq_sni":           tlsmasqSNI,
 		// }
 	case "shadowsocks":
-		conf.Port = helper.ShadowsocksProxyServerPort
+		// use multiplex server port since we multiplex all shadowsocks connections
+		conf.Port = helper.ShadowsocksmuxProxyServerPort
 		conf.ProtocolConfig = &apipb.ProxyConnectConfig_ConnectCfgShadowsocks{
 			ConnectCfgShadowsocks: &apipb.ProxyConnectConfig_ShadowsocksConfig{
 				Secret: shadowsocksSecret,
