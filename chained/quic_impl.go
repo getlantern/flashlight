@@ -27,7 +27,7 @@ func newQUICImpl(name, addr string, pc *config.ProxyConfig, reportDialCore repor
 	}
 
 	disablePathMTUDiscovery := true
-	if ptSettingBool(pc, "path_mtu_discovery") == true {
+	if ptSettingBool(pc, "path_mtu_discovery") {
 		disablePathMTUDiscovery = false
 	}
 
