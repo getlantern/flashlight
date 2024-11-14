@@ -1,4 +1,4 @@
-package bandit
+package dialer
 
 import (
 	"context"
@@ -9,8 +9,6 @@ import (
 	"testing"
 	"time"
 
-	bandit "github.com/alextanhongpin/go-bandit"
-	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -18,7 +16,7 @@ import (
 func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
 	baseDialer := newTcpConnDialer()
 	type fields struct {
-		dialers []Dialer
+		dialers []ProxyDialer
 	}
 	type args struct {
 		network string
@@ -28,13 +26,13 @@ func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   Dialer
+		want   ProxyDialer
 		want1  int
 	}{
 		{
 			name: "should return the first dialer if there's only one dialer",
 			fields: fields{
-				dialers: []Dialer{baseDialer},
+				dialers: []ProxyDialer{baseDialer},
 			},
 			args: args{
 				network: "tcp",
@@ -46,7 +44,7 @@ func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
 		{
 			name: "choose the non-failing dialer if there are multiple dialers",
 			fields: fields{
-				dialers: []Dialer{
+				dialers: []ProxyDialer{
 					newFailingTcpConnDialer(),
 					newFailingTcpConnDialer(),
 					newFailingTcpConnDialer(),
@@ -66,12 +64,12 @@ func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			opts := Options{
+			opts := &Options{
 				Dialers: tt.fields.dialers,
 			}
-			o, err := New(opts)
+			o, err := NewBandit(opts)
 			require.NoError(t, err)
-			got, got1 := o.chooseDialerForDomain(tt.args.network, tt.args.addr)
+			got, got1 := o.(*BanditDialer).chooseDialerForDomain(tt.args.network, tt.args.addr)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("BanditDialer.chooseDialerForDomain() got = %v, want %v", got, tt.want)
 			}
@@ -80,59 +78,25 @@ func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
 	}
 }
 
-func TestParallelDial(t *testing.T) {
-	dialers := []Dialer{
-		newFailingTcpConnDialer(),
-		newFailingTcpConnDialer(),
-		newFailingTcpConnDialer(),
-		newTcpConnDialer(),
-	}
-
-	b, err := bandit.NewEpsilonGreedy(0.001, nil, nil)
-	require.NoError(t, err)
-
-	err = b.Init(len(dialers))
-	require.NoError(t, err)
-
-	parallelDial(dialers, b)
-	require.Eventually(t, func() bool {
-		counts := b.GetCounts()
-		for _, count := range counts {
-			if count < 1 {
-				return false
-			}
-		}
-		return true
-	}, 5*time.Second, 100*time.Millisecond)
-
-	// Select the arm with with a probability above epsilon
-	// to ensure getting the best performing arm for testing
-	// purposes.
-	arm := b.SelectArm(0.5)
-	require.Equal(t, 3, arm)
-}
-
-func TestNew(t *testing.T) {
+func TestNewBandit(t *testing.T) {
 	tests := []struct {
 		name    string
-		opts    Options
+		opts    *Options
 		want    *BanditDialer
 		wantErr bool
 	}{
 		{
-			name: "should still succeed even if there are no dialers",
-			opts: Options{
-				Dialers:      nil,
-				StatsTracker: stats.NewNoop(),
+			name: "should fail if there are no dialers",
+			opts: &Options{
+				Dialers: nil,
 			},
 			want:    nil,
-			wantErr: false,
+			wantErr: true,
 		},
 		{
 			name: "should return a BanditDialer if there's only one dialer",
-			opts: Options{
-				Dialers:      []Dialer{newTcpConnDialer()},
-				StatsTracker: stats.NewNoop(),
+			opts: &Options{
+				Dialers: []ProxyDialer{newTcpConnDialer()},
 			},
 			want:    &BanditDialer{},
 			wantErr: false,
@@ -140,9 +104,9 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.opts)
+			got, err := NewBandit(tt.opts)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("NewBandit() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if tt.want != nil && !reflect.TypeOf(got).AssignableTo(reflect.TypeOf(tt.want)) {
@@ -156,13 +120,13 @@ func TestBanditDialer_DialContext(t *testing.T) {
 	expectedConn := &dataTrackingConn{}
 	tests := []struct {
 		name    string
-		opts    Options
+		opts    *Options
 		want    net.Conn
 		wantErr bool
 	}{
 		{
 			name: "should return an error if there are no dialers",
-			opts: Options{
+			opts: &Options{
 				Dialers: nil,
 			},
 			want:    nil,
@@ -170,16 +134,16 @@ func TestBanditDialer_DialContext(t *testing.T) {
 		},
 		{
 			name: "should return a connection if there's only one dialer",
-			opts: Options{
-				Dialers: []Dialer{newTcpConnDialer()},
+			opts: &Options{
+				Dialers: []ProxyDialer{newTcpConnDialer()},
 			},
 			want:    expectedConn,
 			wantErr: false,
 		},
 		{
 			name: "should return a connection if there are lots of dialers",
-			opts: Options{
-				Dialers: []Dialer{newTcpConnDialer(), newTcpConnDialer(), newTcpConnDialer()},
+			opts: &Options{
+				Dialers: []ProxyDialer{newTcpConnDialer(), newTcpConnDialer(), newTcpConnDialer()},
 			},
 			want:    expectedConn,
 			wantErr: false,
@@ -187,9 +151,13 @@ func TestBanditDialer_DialContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			o, err := New(tt.opts)
+			o, err := NewBandit(tt.opts)
 			if err != nil {
+				if tt.wantErr {
+					return
+				}
 				t.Fatal(err)
+				return
 			}
 
 			got, err := o.DialContext(context.Background(), "tcp", "localhost:8080")
@@ -313,7 +281,7 @@ func Test_differentArm(t *testing.T) {
 	}
 }
 
-func newTcpConnDialer() Dialer {
+func newTcpConnDialer() ProxyDialer {
 	client, server := net.Pipe()
 	return &tcpConnDialer{
 		client: client,
@@ -321,7 +289,7 @@ func newTcpConnDialer() Dialer {
 	}
 }
 
-func newFailingTcpConnDialer() Dialer {
+func newFailingTcpConnDialer() ProxyDialer {
 	return &tcpConnDialer{
 		shouldFail: true,
 	}

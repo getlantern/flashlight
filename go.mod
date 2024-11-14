@@ -43,7 +43,7 @@ require (
 	github.com/getlantern/event v0.0.0-20210901195647-a7e3145142e6
 	github.com/getlantern/eventual v1.0.0
 	github.com/getlantern/eventual/v2 v2.0.2
-	github.com/getlantern/fronted v0.0.0-20241105203538-7cfdd7c24190
+	github.com/getlantern/fronted v0.0.0-20241106204211-209e8131cbd8
 	github.com/getlantern/geolookup v0.0.0-20230327091034-aebe73c6eef4
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
 	github.com/getlantern/golog v0.0.0-20230503153817-8e72de7e0a65

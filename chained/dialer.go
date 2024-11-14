@@ -20,9 +20,9 @@ import (
 	"github.com/getlantern/idletiming"
 	gp "github.com/getlantern/proxy/v3"
 
-	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/bandwidth"
 	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/dialer"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/ops"
 )
@@ -144,7 +144,7 @@ func (p *proxy) DialContext(ctx context.Context, network, addr string) (conn net
 		return nil, err == errUpstream, err
 	}
 
-	if network == bandit.NetworkConnect {
+	if network == dialer.NetworkConnect {
 		// only mark success if we did a CONNECT request because that involves a
 		// full round-trip to/from the proxy
 		p.markSuccess()
@@ -189,12 +189,12 @@ func dialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string)
 	// that we should send a CONNECT request and tunnel all traffic through
 	// that.
 	switch network {
-	case bandit.NetworkConnect:
+	case dialer.NetworkConnect:
 		log.Trace("Sending CONNECT request")
 		bconn := bufconn.Wrap(conn)
 		conn = bconn
 		err = p.sendCONNECT(op, addr, bconn)
-	case bandit.NetworkPersistent:
+	case dialer.NetworkPersistent:
 		log.Trace("Sending GET request to establish persistent HTTP connection")
 		err = p.initPersistentConnection(addr, conn)
 	}

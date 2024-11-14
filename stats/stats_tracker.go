@@ -224,6 +224,7 @@ func (t *tracker) ClearAlert(alertType AlertType) {
 
 func (t *tracker) update(update func(stats Stats) Stats) {
 	t.mx.Lock()
+	defer t.mx.Unlock()
 	stats := update(t.stats)
 	if !reflect.DeepEqual(stats, t.stats) {
 		if stats.Disconnected {
@@ -239,7 +240,6 @@ func (t *tracker) update(update func(stats Stats) Stats) {
 		copy(t.stats.Alerts, stats.Alerts)
 		t.dispatcher.Dispatch(stats)
 	}
-	t.mx.Unlock()
 }
 
 // Make sure that Noop implements Tracker
