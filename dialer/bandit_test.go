@@ -86,12 +86,12 @@ func TestNewBandit(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "should still succeed even if there are no dialers",
+			name: "should fail if there are no dialers",
 			opts: &Options{
 				Dialers: nil,
 			},
 			want:    nil,
-			wantErr: false,
+			wantErr: true,
 		},
 		{
 			name: "should return a BanditDialer if there's only one dialer",
