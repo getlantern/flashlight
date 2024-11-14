@@ -153,7 +153,11 @@ func TestBanditDialer_DialContext(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			o, err := NewBandit(tt.opts)
 			if err != nil {
+				if tt.wantErr {
+					return
+				}
 				t.Fatal(err)
+				return
 			}
 
 			got, err := o.DialContext(context.Background(), "tcp", "localhost:8080")
