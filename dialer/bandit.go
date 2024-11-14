@@ -35,7 +35,10 @@ func NewBandit(opts *Options) (Dialer, error) {
 		return nil, err
 	}
 
-	b.Init(len(dialers))
+	if err := b.Init(len(dialers)); err != nil {
+		log.Errorf("unable to initialize bandit: %v", err)
+		return nil, err
+	}
 	dialer := &BanditDialer{
 		dialers: dialers,
 		bandit:  b,
@@ -67,14 +70,18 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 
 		if !failedUpstream {
 			log.Errorf("Dialer %v failed in %v seconds: %v", d.Name(), time.Since(start).Seconds(), err)
-			bd.bandit.Update(chosenArm, 0)
+			if err := bd.bandit.Update(chosenArm, 0); err != nil {
+				log.Errorf("unable to update bandit: %v", err)
+			}
 		} else {
 			log.Debugf("Dialer %v failed upstream...", d.Name())
 			// This can happen, for example, if the upstream server is down, or
 			// if the DNS resolves to localhost, for example. It is also possible
 			// that the proxy is blacklisted by upstream sites for some reason,
 			// so we have to choose some reasonable value.
-			bd.bandit.Update(chosenArm, 0.00005)
+			if err := bd.bandit.Update(chosenArm, 0.00005); err != nil {
+				log.Errorf("unable to update bandit: %v", err)
+			}
 		}
 		return nil, err
 	}
@@ -90,7 +97,9 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 	time.AfterFunc(secondsForSample*time.Second, func() {
 		speed := normalizeReceiveSpeed(dataRecv.Load())
 		//log.Debugf("Dialer %v received %v bytes in %v seconds, normalized speed: %v", d.Name(), dt.dataRecv, secondsForSample, speed)
-		bd.bandit.Update(chosenArm, speed)
+		if err := bd.bandit.Update(chosenArm, speed); err != nil {
+			log.Errorf("unable to update bandit: %v", err)
+		}
 	})
 
 	bd.opts.OnSuccess(d)

@@ -31,6 +31,8 @@ func New(opts *Options) Dialer {
 	})
 }
 
+// NoDialer returns a dialer that does nothing. This is useful during startup
+// until a real dialer is available.
 func NoDialer() Dialer {
 	return &noDialer{}
 }
@@ -38,6 +40,9 @@ func NoDialer() Dialer {
 type noDialer struct{}
 
 func (d *noDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	// This ideally shouldn't be called, as it indicates we're attempting to send
+	// traffic through proxies before we actually have proxies. It's not a fatal
+	// error, but it's a sign that we should look into why we're here.
 	// Print the goroutine stack to help debug why we're here
 	log.Errorf("No dialer available -- should not be called, stack: %s", debug.Stack())
 	return nil, errors.New("no dialer available")

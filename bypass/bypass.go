@@ -58,7 +58,6 @@ type bypass struct {
 // Start sends periodic traffic to the bypass server. The client periodically sends traffic to the server both via
 // domain fronting and proxying to determine if proxies are blocked.
 func Start(listen func(func(map[string]*commonconfig.ProxyConfig, config.Source)), configDir string, userConfig common.UserConfig) func() {
-	mrand.Seed(time.Now().UnixNano())
 	b := &bypass{
 		infos:   make(map[string]*commonconfig.ProxyConfig),
 		proxies: make([]*proxy, 0),
@@ -173,14 +172,14 @@ func (p *proxy) sendToBypass() int64 {
 	}
 	defer func() {
 		if resp.Body != nil {
-			if closeerr := resp.Body.Close(); closeerr != nil {
-				log.Errorf("Error closing response body: %v", closeerr)
+			if _, err := io.Copy(io.Discard, resp.Body); err != nil {
+				log.Errorf("Error reading response body: %v", err)
+			}
+			if err := resp.Body.Close(); err != nil {
+				log.Errorf("Error closing response body: %v", err)
 			}
 		}
 	}()
-	if resp.Body != nil {
-		io.Copy(io.Discard, resp.Body)
-	}
 
 	var sleepTime int64
 	sleepVal := resp.Header.Get(common.SleepHeader)

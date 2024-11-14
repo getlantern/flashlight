@@ -16,28 +16,16 @@ type connectTimeProxyDialer struct {
 	connectTime time.Duration
 }
 
-type dialersByConnectTime []connectTimeProxyDialer
-
-func (d dialersByConnectTime) Len() int {
-	return len(d)
-}
-
-func (d dialersByConnectTime) Less(i, j int) bool {
-	return d[i].connectTime < d[j].connectTime
-}
-
-func (d dialersByConnectTime) Swap(i, j int) {
-	d[i], d[j] = d[j], d[i]
+type connectedDialers struct {
+	dialers []connectTimeProxyDialer
+	sync.RWMutex
 }
 
 // fastConnectDialer stores the time it took to connect to each dialer and uses
 // that information to select the fastest dialer to use.
 type fastConnectDialer struct {
-	topDialer     protectedDialer
-	connected     dialersByConnectTime
-	connectedChan chan int
-	// Lock for the slice of dialers.
-	connectedLock sync.RWMutex
+	topDialer protectedDialer
+	connected connectedDialers
 
 	next func(*Options, Dialer) Dialer
 	opts *Options
@@ -51,10 +39,12 @@ func newFastConnectDialer(opts *Options, next func(opts *Options, existing Diale
 		opts.OnSuccess = func(ProxyDialer) {}
 	}
 	return &fastConnectDialer{
-		connected:     make(dialersByConnectTime, 0),
-		connectedChan: make(chan int),
-		opts:          opts,
-		next:          next,
+		connected: connectedDialers{
+			dialers: make([]connectTimeProxyDialer, 0),
+		},
+		opts:      opts,
+		next:      next,
+		topDialer: protectedDialer{},
 	}
 }
 
@@ -70,7 +60,7 @@ func (fcd *fastConnectDialer) DialContext(ctx context.Context, network, addr str
 	// the domain here.
 	conn, failedUpstream, err := td.DialContext(ctx, network, addr)
 	if err != nil {
-		hasSucceeding := len(fcd.connected) > 0
+		hasSucceeding := len(fcd.connected.dialers) > 0
 		fcd.opts.OnError(err, hasSucceeding)
 		// Error connecting to the proxy or to the destination
 		if failedUpstream {
@@ -88,18 +78,11 @@ func (fcd *fastConnectDialer) DialContext(ctx context.Context, network, addr str
 
 func (fcd *fastConnectDialer) onConnected(pd ProxyDialer, connectTime time.Duration) {
 	log.Debugf("Connected to %v", pd.Name())
-	fcd.connectedLock.Lock()
-	defer fcd.connectedLock.Unlock()
 
-	fcd.connected = append(fcd.connected, connectTimeProxyDialer{
-		ProxyDialer: pd,
-		connectTime: connectTime,
-	})
-	sort.Sort(fcd.connected)
+	newTopDialer := fcd.connected.onConnected(pd, connectTime)
 
 	// Set top dialer if the fastest dialer changed.
 	td := fcd.topDialer.get()
-	newTopDialer := fcd.connected[0].ProxyDialer
 	if td != newTopDialer {
 		log.Debugf("Setting new top dialer to %v", newTopDialer.Name())
 		fcd.topDialer.set(newTopDialer)
@@ -117,7 +100,7 @@ func (fcd *fastConnectDialer) connectAll(dialers []ProxyDialer) {
 	}
 	log.Debugf("Dialing all dialers in parallel %#v", dialers)
 	// Loop until we're connected
-	for len(fcd.connected) < 2 {
+	for len(fcd.connected.dialers) < 2 {
 		fcd.parallelDial(dialers)
 		// Add jitter to avoid thundering herd
 		time.Sleep(time.Duration(rand.Intn(4000)) * time.Millisecond)
@@ -129,7 +112,7 @@ func (fcd *fastConnectDialer) connectAll(dialers []ProxyDialer) {
 	// If we've connected to more than one dialer after trying all of them,
 	// switch to the next dialer that's optimized for multiple connections.
 	nextOpts := fcd.opts.Clone()
-	nextOpts.Dialers = fcd.proxyDialers()
+	nextOpts.Dialers = fcd.connected.proxyDialers()
 	fcd.next(nextOpts, fcd)
 }
 
@@ -162,18 +145,34 @@ func (fcd *fastConnectDialer) parallelDial(dialers []ProxyDialer) {
 }
 
 // Accessor for a copy of the ProxyDialer slice
-func (fcd *fastConnectDialer) proxyDialers() []ProxyDialer {
-	fcd.connectedLock.RLock()
-	defer fcd.connectedLock.RUnlock()
+func (cd *connectedDialers) proxyDialers() []ProxyDialer {
+	cd.RLock()
+	defer cd.RUnlock()
 
-	dialers := make([]ProxyDialer, len(fcd.connected))
+	dialers := make([]ProxyDialer, len(cd.dialers))
 
 	// Note that we manually copy here vs using copy because we need an array of
 	// ProxyDialers, not a dialersByConnectTime.
-	for i, ctd := range fcd.connected {
+	for i, ctd := range cd.dialers {
 		dialers[i] = ctd.ProxyDialer
 	}
 	return dialers
+}
+
+// onConnected adds a connected dialer to the list of connected dialers and returns
+// the fastest dialer.
+func (cd *connectedDialers) onConnected(pd ProxyDialer, connectTime time.Duration) ProxyDialer {
+	cd.Lock()
+	defer cd.Unlock()
+
+	cd.dialers = append(cd.dialers, connectTimeProxyDialer{
+		ProxyDialer: pd,
+		connectTime: connectTime,
+	})
+	sort.Slice(cd.dialers, func(i, j int) bool {
+		return cd.dialers[i].connectTime < cd.dialers[j].connectTime
+	})
+	return cd.dialers[0].ProxyDialer
 }
 
 // protectedDialer protects a dialer.Dialer with a RWMutex. We can't use an atomic.Value here

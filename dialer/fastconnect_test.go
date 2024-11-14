@@ -2,30 +2,76 @@
 package dialer
 
 import (
-	"sort"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestConnectTimeProxyDialer(t *testing.T) {
-	//dialer := newMockProxyDialer("dialer1", false)
-	dialer := newTcpConnDialer()
-	ctd1 := connectTimeProxyDialer{
-		ProxyDialer: dialer, connectTime: 1 * time.Second,
-	}
-	ctd2 := connectTimeProxyDialer{
-		ProxyDialer: dialer, connectTime: 100 * time.Second,
-	}
-	ctd3 := connectTimeProxyDialer{
-		ProxyDialer: dialer, connectTime: 10 * time.Second,
+func TestOnConnected(t *testing.T) {
+	mockDialer1 := new(mockProxyDialer)
+	mockDialer2 := new(mockProxyDialer)
+	mockDialer3 := new(mockProxyDialer)
+
+	opts := &Options{
+		OnError:   func(err error, hasSucceeding bool) {},
+		OnSuccess: func(pd ProxyDialer) {},
 	}
 
-	dialers := dialersByConnectTime{ctd1, ctd2, ctd3}
-	sort.Sort(dialers)
+	fcd := newFastConnectDialer(opts, nil)
 
-	// Make sure the lowest connect time is first
-	require.True(t, dialers[0].connectTime < dialers[1].connectTime, "Expected dialers to be ordered by connect time")
-	require.True(t, dialers[1].connectTime < dialers[2].connectTime, "Expected dialers to be ordered by connect time")
+	// Test adding the first dialer
+	fcd.onConnected(mockDialer1, 100*time.Millisecond)
+	assert.Equal(t, 1, len(fcd.connected.dialers))
+	assert.Equal(t, mockDialer1, fcd.topDialer.get())
+
+	// Test adding a faster dialer
+	fcd.onConnected(mockDialer2, 50*time.Millisecond)
+	assert.Equal(t, 2, len(fcd.connected.dialers))
+	assert.Equal(t, mockDialer2, fcd.topDialer.get())
+
+	// Test adding a slower dialer
+	fcd.onConnected(mockDialer1, 150*time.Millisecond)
+	assert.Equal(t, 3, len(fcd.connected.dialers))
+	assert.Equal(t, mockDialer2, fcd.topDialer.get())
+
+	// Test adding a new fastest dialer
+	fcd.onConnected(mockDialer3, 10*time.Millisecond)
+	assert.Equal(t, 4, len(fcd.connected.dialers))
+	assert.Equal(t, mockDialer3, fcd.topDialer.get())
+}
+func TestConnectAll(t *testing.T) {
+	mockDialer1 := new(mockProxyDialer)
+	mockDialer2 := new(mockProxyDialer)
+	mockDialer3 := new(mockProxyDialer)
+
+	opts := &Options{
+		OnError:   func(err error, hasSucceeding bool) {},
+		OnSuccess: func(pd ProxyDialer) {},
+	}
+
+	fcd := newFastConnectDialer(opts, func(opts *Options, existing Dialer) Dialer {
+		return nil
+	})
+
+	dialers := []ProxyDialer{mockDialer1, mockDialer2, mockDialer3}
+
+	// Test connecting with multiple dialers
+	fcd.connectAll(dialers)
+
+	// Sleep for a bit to allow the goroutines to finish while checking for
+	// the connected dialers
+	tries := 0
+	for len(fcd.connected.dialers) < 3 && tries < 100 {
+		time.Sleep(10 * time.Millisecond)
+		tries++
+	}
+	assert.Equal(t, 3, len(fcd.connected.dialers))
+	assert.NotNil(t, fcd.topDialer.get())
+
+	// Test with no dialers
+	fcd = newFastConnectDialer(opts, nil)
+	fcd.connectAll([]ProxyDialer{})
+	assert.Equal(t, 0, len(fcd.connected.dialers))
+	assert.Nil(t, fcd.topDialer.get())
 }
