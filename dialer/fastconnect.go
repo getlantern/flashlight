@@ -65,6 +65,9 @@ func (fcd *fastConnectDialer) DialContext(ctx context.Context, network, addr str
 	if td == nil {
 		return nil, fmt.Errorf("no top dialer")
 	}
+
+	// Note that we don't currently check if the dialer supports
+	// the domain here.
 	conn, failedUpstream, err := td.DialContext(ctx, network, addr)
 	if err != nil {
 		hasSucceeding := len(fcd.connected) > 0
