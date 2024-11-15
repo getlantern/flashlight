@@ -18,10 +18,10 @@ import (
 	commonconfig "github.com/getlantern/common/config"
 
 	"github.com/getlantern/flashlight/v7/apipb"
-	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/config"
+	"github.com/getlantern/flashlight/v7/dialer"
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/proxied"
 )
@@ -161,7 +161,7 @@ func newProxy(
 	pc *commonconfig.ProxyConfig,
 	configDir string,
 	userConfig common.UserConfig,
-	dialer bandit.Dialer,
+	dialer dialer.ProxyDialer,
 ) *proxy {
 	return &proxy{
 		ProxyConfig:       pc,
@@ -221,8 +221,10 @@ func (p *proxy) sendToBypass() (int64, error) {
 		return 0, err
 	}
 
-	io.Copy(io.Discard, resp.Body)
-	resp.Body.Close()
+	if resp.Body != nil {
+		io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
+	}
 	return sleep, nil
 }
 
@@ -271,13 +273,13 @@ func newProxyRoundTripper(
 	name string,
 	info *commonconfig.ProxyConfig,
 	userConfig common.UserConfig,
-	dialer bandit.Dialer,
+	d dialer.ProxyDialer,
 ) http.RoundTripper {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.Proxy = nil
 	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 		logger.Debugf("bypass: Dialing chained server at: %s", addr)
-		pc, _, err := dialer.DialContext(ctx, bandit.NetworkConnect, addr)
+		pc, _, err := d.DialContext(ctx, dialer.NetworkConnect, addr)
 		if err != nil {
 			logger.Errorf("bypass: Unable to dial chained server: %v", err)
 		} else {

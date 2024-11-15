@@ -17,10 +17,9 @@ import (
 	"testing"
 	"time"
 
-	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/detour"
-	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/dialer"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/golog"
@@ -72,14 +71,14 @@ func newTestUserConfig() *common.UserConfigData {
 	return common.NewUserConfigData(common.DefaultAppName, "device", 1234, "protoken", nil, "en-US")
 }
 
-func resetDialers(client *Client, dialer func(network, addr string) (net.Conn, error)) {
-	d, _ := bandit.New(bandit.Options{
-		Dialers: []bandit.Dialer{&testDialer{
+func resetDialers(client *Client, dial func(network, addr string) (net.Conn, error)) {
+	d := dialer.New(&dialer.Options{
+		Dialers: []dialer.ProxyDialer{&testDialer{
 			name: "test-dialer",
-			dial: dialer,
+			dial: dial,
 		}},
 	})
-	client.dialer = d
+	client.dialer.set(d)
 }
 
 func newClient() *Client {
@@ -415,7 +414,7 @@ func TestAccessingProxyPort(t *testing.T) {
 }
 
 // Assert that a testDialer is a bandit.Dialer
-var _ bandit.Dialer = &testDialer{}
+var _ dialer.ProxyDialer = &testDialer{}
 
 type testDialer struct {
 	name      string
@@ -431,7 +430,7 @@ type testDialer struct {
 }
 
 func (d *testDialer) DialProxy(ctx context.Context) (net.Conn, error) {
-	return nil, fmt.Errorf("Not implemented")
+	return &net.TCPConn{}, nil
 }
 
 // Name returns the name for this Dialer
@@ -592,21 +591,4 @@ type response struct {
 
 func (r *response) nested() (*http.Response, error) {
 	return http.ReadResponse(r.br, r.req)
-}
-
-func Test_initDialers(t *testing.T) {
-	proxies := newProxies()
-	client := newClient()
-	dialers, banditDialer, err := client.initDialers(proxies)
-	assert.NoError(t, err)
-	assert.NotNil(t, dialers)
-	assert.NotNil(t, banditDialer)
-}
-
-func newProxies() map[string]*commonconfig.ProxyConfig {
-	proxies := make(map[string]*commonconfig.ProxyConfig)
-	proxies["proxy1"] = &commonconfig.ProxyConfig{
-		Addr: "proxy1",
-	}
-	return proxies
 }

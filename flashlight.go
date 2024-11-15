@@ -18,12 +18,12 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/getlantern/flashlight/v7/apipb"
-	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/client"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/config"
 	userconfig "github.com/getlantern/flashlight/v7/config/user"
+	"github.com/getlantern/flashlight/v7/dialer"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/email"
 	"github.com/getlantern/flashlight/v7/geolookup"
@@ -101,7 +101,7 @@ type Flashlight struct {
 // clientCallbacks are callbacks the client is configured with
 type clientCallbacks struct {
 	onInit            func()
-	onProxiesUpdate   func([]bandit.Dialer, config.Source)
+	onProxiesUpdate   func([]dialer.ProxyDialer, config.Source)
 	onConfigUpdate    func(*config.Global, config.Source)
 	onDialError       func(error, bool)
 	onSucceedingProxy func()
@@ -312,7 +312,7 @@ func New(
 			onInit: func() {
 				log.Debug("[Startup] onInit called")
 			},
-			onProxiesUpdate: func(_ []bandit.Dialer, src config.Source) {
+			onProxiesUpdate: func(_ []dialer.ProxyDialer, src config.Source) {
 				log.Debugf("[Startup] onProxiesUpdate called from %v", src)
 			},
 			onDialError: func(err error, hasSucceeding bool) {
