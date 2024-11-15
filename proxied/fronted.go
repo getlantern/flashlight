@@ -30,9 +30,7 @@ type frontedRoundTripper struct {
 // Use a wrapper for fronted.NewDirect to avoid blocking
 // `dualFetcher.RoundTrip` when fronted is not yet available, especially when
 // the application is starting up
-func (f frontedRoundTripper) RoundTrip(
-	req *http.Request,
-) (*http.Response, error) {
+func (f frontedRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	if f.opName != "" {
 		op := ops.Begin(f.opName)
 		defer op.End()
