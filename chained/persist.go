@@ -136,9 +136,7 @@ func persistStats(statsFilePath string) {
 		time.Sleep(15 * time.Second)
 		statsMx.Lock()
 		dialers := make([]dialer.ProxyDialer, 0, len(statsTrackingDialers))
-		for _, d := range statsTrackingDialers {
-			dialers = append(dialers, d)
-		}
+		copy(dialers, statsTrackingDialers)
 		statsMx.Unlock()
 		doPersistStats(statsFilePath, dialers)
 	}
