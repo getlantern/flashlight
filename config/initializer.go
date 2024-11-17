@@ -126,6 +126,7 @@ func InitWithURLs(
 		},
 		sticky: isSticky(flags),
 		rt:     rt,
+		opName: "fetch_proxies",
 		// Proxies are not provided over the DHT (yet! ᕕ( ᐛ )ᕗ), so dhtupContext is not passed.
 	}
 
@@ -150,6 +151,7 @@ func InitWithURLs(
 		},
 		sticky: isSticky(flags),
 		rt:     rt,
+		opName: "fetch_global",
 	}
 
 	stopGlobal := pipeConfig(globalOptions)
