@@ -175,7 +175,7 @@ func TestPollProxies(t *testing.T) {
 		dispatch := func(cfg interface{}) {
 			proxyChan <- cfg
 		}
-		go cfg.configFetcher(nil, dispatch, fetcher, func() time.Duration { return 1 * time.Hour }, log)
+		go cfg.configFetcher("testOpName", nil, dispatch, fetcher, func() time.Duration { return 1 * time.Hour }, log)
 		proxies := (<-proxyChan).(map[string]*commonconfig.ProxyConfig)
 
 		assert.True(t, len(proxies) > 0)
@@ -214,7 +214,7 @@ func TestProductionGlobal(t *testing.T) {
 
 	f := newHttpFetcher(newTestUserConfig(), &http.Transport{}, testURL)
 
-	cfgBytes, _, err := f.fetch()
+	cfgBytes, _, err := f.fetch("testOpName")
 	if !assert.NoError(t, err, "Error fetching global config from %s", testURL) {
 		return
 	}
@@ -285,7 +285,7 @@ func TestPollIntervals(t *testing.T) {
 		dispatch := func(cfg interface{}) {}
 
 		stopChan := make(chan bool)
-		go cfg.configFetcher(stopChan, dispatch, fetcher, func() time.Duration { return pollInterval }, log)
+		go cfg.configFetcher("testOpName", stopChan, dispatch, fetcher, func() time.Duration { return pollInterval }, log)
 		time.Sleep(waitTime)
 		close(stopChan)
 

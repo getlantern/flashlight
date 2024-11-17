@@ -69,6 +69,7 @@ func Start(listen func(func(map[string]*commonconfig.ProxyConfig, config.Source)
 }
 
 func (b *bypass) OnProxies(infos map[string]*commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig) {
+	log.Debugf("Received new proxies: %v", infos)
 	b.mxProxies.Lock()
 	defer b.mxProxies.Unlock()
 	b.reset()
