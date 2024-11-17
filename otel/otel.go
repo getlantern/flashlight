@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"math"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -26,7 +27,7 @@ var (
 	stopper   func()
 	stopperMx sync.Mutex
 
-	stopReconfiguration bool
+	stopReconfiguration atomic.Bool
 )
 
 type Config struct {
@@ -39,11 +40,11 @@ type Config struct {
 // ConfigureOnce is used to prevent reinitialization of OpenTelemetry by later arriving configurations
 func ConfigureOnce(cfg *Config) {
 	Configure(cfg)
-	stopReconfiguration = true
+	stopReconfiguration.Store(true)
 }
 
 func Configure(cfg *Config) {
-	if stopReconfiguration {
+	if stopReconfiguration.Load() {
 		return
 	}
 	log.Debugf("Configuring OpenTelemetry with sample rate %d and op sample rates %v", cfg.SampleRate, cfg.OpSampleRates)
