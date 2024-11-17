@@ -28,6 +28,7 @@ var (
 	stopperMx sync.Mutex
 
 	stopReconfiguration atomic.Bool
+	serviceName         atomic.Value
 )
 
 type Config struct {
@@ -38,9 +39,10 @@ type Config struct {
 }
 
 // ConfigureOnce is used to prevent reinitialization of OpenTelemetry by later arriving configurations
-func ConfigureOnce(cfg *Config) {
+func ConfigureOnce(cfg *Config, name string) {
 	Configure(cfg)
 	stopReconfiguration.Store(true)
+	serviceName.Store(name)
 }
 
 func Configure(cfg *Config) {
@@ -51,6 +53,7 @@ func Configure(cfg *Config) {
 	log.Debugf("Connecting to endpoint %v", cfg.Endpoint)
 	log.Debugf("Using headers %v", cfg.Headers)
 
+	serviceName.Store("flashlight")
 	if cfg.SampleRate < 1 {
 		cfg.SampleRate = 1
 	}
@@ -71,8 +74,9 @@ func Configure(cfg *Config) {
 	} else {
 		log.Debug("Will report traces to OpenTelemetry")
 		// Create a TracerProvider that uses the above exporter
+		var name string = serviceName.Load().(string)
 		attributes := []attribute.KeyValue{
-			semconv.ServiceNameKey.String("flashlight"),
+			semconv.ServiceNameKey.String(name),
 		}
 		// Copy global attributes from ops
 		globalAttributesFromOps := ops.AsMap(nil, true)
