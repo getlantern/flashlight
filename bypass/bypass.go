@@ -111,20 +111,24 @@ func (b *bypass) loadProxyAsync(proxyName string, config *commonconfig.ProxyConf
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 	readyChan := make(chan struct{})
-	retry := atomic.NewBool(true)
 	go func() {
-		for retry.Load() {
-			time.Sleep(15 * time.Second)
-			ready, err := dialer.IsReady()
-			if err != nil {
-				log.Errorf("dialer %q isn't ready and returned an error: %w", proxyName, err)
-				cancel()
-				break
-			}
-			if ready {
-				b.startProxy(proxyName, config, configDir, userConfig, dialer)
-				readyChan <- struct{}{}
-				break
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				time.Sleep(15 * time.Second)
+				ready, err := dialer.IsReady()
+				if err != nil {
+					log.Errorf("dialer %q isn't ready and returned an error: %w", proxyName, err)
+					cancel()
+					return
+				}
+				if ready {
+					b.startProxy(proxyName, config, configDir, userConfig, dialer)
+					readyChan <- struct{}{}
+					return
+				}
 			}
 		}
 	}()
@@ -136,7 +140,6 @@ func (b *bypass) loadProxyAsync(proxyName string, config *commonconfig.ProxyConf
 	case <-ctx.Done():
 		log.Errorf("proxy %q took to long to get ready", proxyName)
 	}
-	retry.Store(false)
 	close(readyChan)
 }
 
