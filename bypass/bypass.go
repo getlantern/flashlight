@@ -121,7 +121,7 @@ func (b *bypass) loadProxyAsync(proxyName string, config *commonconfig.ProxyConf
 				cancel()
 				break
 			}
-			if !ready {
+			if ready {
 				b.startProxy(proxyName, config, configDir, userConfig, dialer)
 				readyChan <- struct{}{}
 				break
