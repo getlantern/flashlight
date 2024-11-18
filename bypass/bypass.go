@@ -133,14 +133,11 @@ func (b *bypass) loadProxyAsync(proxyName string, config *commonconfig.ProxyConf
 		}
 	}()
 	select {
-	case _, ok := <-readyChan:
-		if !ok {
-			log.Errorf("ready channel for proxy %q is closed", proxyName)
-		}
+	case <-readyChan:
+		log.Debugf("proxy ready!")
 	case <-ctx.Done():
 		log.Errorf("proxy %q took to long to get ready", proxyName)
 	}
-	close(readyChan)
 }
 
 func (b *bypass) startProxy(proxyName string, config *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer bandit.Dialer) {
