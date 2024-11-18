@@ -40,9 +40,9 @@ type Config struct {
 
 // ConfigureOnce is used to prevent reinitialization of OpenTelemetry by later arriving configurations
 func ConfigureOnce(cfg *Config, name string) {
+	serviceName.Store(name)
 	Configure(cfg)
 	stopReconfiguration.Store(true)
-	serviceName.Store(name)
 }
 
 func Configure(cfg *Config) {
@@ -53,7 +53,9 @@ func Configure(cfg *Config) {
 	log.Debugf("Connecting to endpoint %v", cfg.Endpoint)
 	log.Debugf("Using headers %v", cfg.Headers)
 
-	serviceName.Store("flashlight")
+	if serviceName.Load() == nil {
+		serviceName.Store("flashlight")
+	}
 	if cfg.SampleRate < 1 {
 		cfg.SampleRate = 1
 	}
