@@ -137,7 +137,7 @@ func (cs *configService) Stop() {
 // has occurred. It returns the extra sleep time received from the server response and any error that
 // occurred.
 func (cs *configService) fetchConfig() (int64, error) {
-	op := ops.Begin("Fetching config")
+	op := ops.Begin("Fetching_userconfig")
 	defer op.End()
 
 	newConf, sleep, err := cs.fetch()

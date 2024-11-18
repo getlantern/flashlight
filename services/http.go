@@ -29,25 +29,25 @@ type sender struct {
 // body to completion and close it.
 func (s *sender) post(req *http.Request, rt http.RoundTripper) (*http.Response, int64, error) {
 	resp, err := s.doPost(req, rt)
-	if err == nil {
-		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-			err = fmt.Errorf("bad response code: %v", resp.StatusCode)
-			return nil, s.backoff(), err
-		}
-
-		s.failCount = 0
-
-		var sleepTime int64
-		if sleepVal := resp.Header.Get(common.SleepHeader); sleepVal != "" {
-			if sleepTime, err = strconv.ParseInt(sleepVal, 10, 64); err != nil {
-				logger.Errorf("Could not parse sleep val: %v", err)
-			}
-		}
-
-		return resp, sleepTime, nil
+	if err != nil {
+		return resp, s.backoff(), err
 	}
 
-	return nil, s.backoff(), err
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		err = fmt.Errorf("bad response code: %v", resp.StatusCode)
+		return nil, s.backoff(), err
+	}
+
+	s.failCount = 0
+
+	var sleepTime int64
+	if sleepVal := resp.Header.Get(common.SleepHeader); sleepVal != "" {
+		if sleepTime, err = strconv.ParseInt(sleepVal, 10, 64); err != nil {
+			logger.Errorf("Could not parse sleep val: %v", err)
+		}
+	}
+
+	return resp, sleepTime, nil
 }
 
 func (s *sender) doPost(req *http.Request, rt http.RoundTripper) (*http.Response, error) {

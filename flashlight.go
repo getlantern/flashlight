@@ -335,14 +335,11 @@ func New(
 		proxyListeners: make([]func(map[string]*commonconfig.ProxyConfig, config.Source), 0),
 	}
 
-	f.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
-		log.Debug("Applying proxy config with proxies")
-		dialers := f.client.Configure(chained.CopyConfigs(proxies))
-		log.Debugf("Got %v dialers", len(dialers))
-		if dialers != nil {
-			f.callbacks.onProxiesUpdate(dialers, src)
-		}
-	})
+	readable, _ := f.flagsAsMap["readableconfig"].(bool)
+	_, err := userconfig.Init(f.configDir, !readable)
+	if err != nil {
+		log.Errorf("user config: %v", err)
+	}
 
 	var grabber dnsgrab.Server
 	var grabberErr error
@@ -428,61 +425,15 @@ func New(
 	}
 
 	f.client = cl
-	return f, nil
-}
 
-// Run starts background services and runs the client proxy. It blocks as long as
-// the proxy is running.
-func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
-	afterStart func(cl *client.Client),
-	onError func(err error),
-) {
-	// Until we know our country, default to IR which has all detection rules
-	log.Debug("Defaulting detour country to IR until real country is known")
-	detour.SetCountry("IR")
-
-	stop, err := f.StartBackgroundServices()
-	if err != nil {
-		log.Error(err)
-	}
-	defer stop()
-
-	f.RunClientListeners(httpProxyAddr, socksProxyAddr, afterStart, onError)
-}
-
-// StartBackgroundServices starts the goroutine monitoring, bypass, and config fetching background
-// services and returns a function that can be called to stop them.
-func (f *Flashlight) StartBackgroundServices() (func(), error) {
-	log.Debug("Starting background services")
-	// check # of goroutines every minute, print the top 5 stacks with most
-	// goroutines if the # exceeds 800 and is increasing.
-	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
-	stopGlobalConfigFetch := f.startGlobalConfigFetch()
-
-	stopBypass := services.StartBypassService(f.addProxyListener, f.configDir, f.userConfig)
-	stopConfigService, err := f.startConfigService()
-	if err != nil {
-		return func() {
-			stopMonitor()
-			stopBypass()
-			stopGlobalConfigFetch()
-		}, fmt.Errorf("Unable to start config service: %w", err)
-	}
-
-	return func() {
-		stopMonitor()
-		stopBypass()
-		stopGlobalConfigFetch()
-		stopConfigService()
-	}, nil
-}
-
-func (f *Flashlight) startConfigService() (services.StopFn, error) {
-	readable, _ := f.flagsAsMap["readableconfig"].(bool)
-	handler, err := userconfig.Init(f.configDir, !readable)
-	if err != nil {
-		return nil, err
-	}
+	f.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
+		log.Debug("Applying proxy config with proxies")
+		dialers := f.client.Configure(chained.CopyConfigs(proxies))
+		log.Debugf("Got %v dialers", len(dialers))
+		if dialers != nil {
+			f.callbacks.onProxiesUpdate(dialers, src)
+		}
+	})
 
 	fn := func(old, new *userconfig.UserConfig) {
 		var country string
@@ -515,10 +466,72 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 
 	userconfig.OnConfigChange(fn)
 
-	// we don't need to start the config service if sticky is set so just return
+	return f, nil
+}
+
+// Run starts background services and runs the client proxy. It blocks as long as
+// the proxy is running.
+func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
+	afterStart func(cl *client.Client),
+	onError func(err error),
+) {
+	if country := geolookup.GetCountry(0); country == "" {
+		// Until we know our country, default to IR which has all detection rules
+		log.Debug("Defaulting detour country to IR until real country is known")
+		detour.SetCountry("IR")
+	}
+
+	stop, err := f.StartBackgroundServices()
+	if err != nil {
+		log.Error(err)
+	}
+	defer stop()
+
+	f.RunClientListeners(httpProxyAddr, socksProxyAddr, afterStart, onError)
+}
+
+// StartBackgroundServices starts the goroutine monitoring, bypass, and config fetching background
+// services and returns a function that can be called to stop them.
+func (f *Flashlight) StartBackgroundServices() (func(), error) {
+	log.Debug("Starting background services")
+	// check # of goroutines every minute, print the top 5 stacks with most
+	// goroutines if the # exceeds 800 and is increasing.
+	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
+	stopGlobalConfigFetch := f.startGlobalConfigFetch()
+
+	stopBypass := services.StartBypassService(f.addProxyListener, f.configDir, f.userConfig)
+
+	// we don't need to start the config service if sticky is set
 	if sticky, _ := f.flagsAsMap["stickyconfig"].(bool); sticky {
 		log.Debug("Sticky config set, not starting config service")
-		return func() {}, nil
+		return func() {
+			stopMonitor()
+			stopBypass()
+			stopGlobalConfigFetch()
+		}, nil
+	}
+	stopConfigService, err := f.startConfigService()
+	if err != nil {
+		return func() {
+			stopMonitor()
+			stopBypass()
+			stopGlobalConfigFetch()
+		}, fmt.Errorf("Unable to start config service: %w", err)
+	}
+
+	return func() {
+		stopMonitor()
+		stopBypass()
+		stopGlobalConfigFetch()
+		stopConfigService()
+	}, nil
+}
+
+func (f *Flashlight) startConfigService() (services.StopFn, error) {
+	readable, _ := f.flagsAsMap["readableconfig"].(bool)
+	handler, err := userconfig.Init(f.configDir, !readable)
+	if err != nil {
+		return nil, err
 	}
 
 	var url string

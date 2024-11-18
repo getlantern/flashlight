@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 
 	"github.com/getlantern/eventual/v2"
 	"github.com/getlantern/golog"
@@ -29,14 +30,14 @@ const (
 type UserConfig = apipb.ConfigResponse
 
 var (
-	_config = &config{
+	_config = &Config{
 		config: eventual.NewValue(),
 	}
-
-	log = golog.LoggerFor("userconfig")
+	initCalled = atomic.Bool{}
+	log        = golog.LoggerFor("userconfig")
 )
 
-type config struct {
+type Config struct {
 	// config is the current client config as a *UserConfig.
 	config eventual.Value
 
@@ -50,7 +51,11 @@ type config struct {
 	mu        sync.Mutex
 }
 
-func Init(saveDir string, obfuscate bool) (*config, error) {
+func Init(saveDir string, obfuscate bool) (*Config, error) {
+	if !initCalled.CompareAndSwap(false, true) {
+		return _config, nil
+	}
+
 	if saveDir == "" {
 		saveDir = DefaultConfigSaveDir
 	}
@@ -73,23 +78,25 @@ func Init(saveDir string, obfuscate bool) (*config, error) {
 
 	log.Debug("Loaded saved config")
 	_config.config.Set(saved)
+	notifyListeners(nil, saved)
 	return _config, nil
 }
 
 // GetConfig implements services.ConfigHandler
-func (c *config) GetConfig() *UserConfig {
+func (c *Config) GetConfig() *UserConfig {
 	v, _ := c.config.Get(eventual.DontWait)
 	conf, _ := v.(*UserConfig)
 	return conf
 }
 
 // SetConfig implements services.ConfigHandler
-func (c *config) SetConfig(new *UserConfig) {
+func (c *Config) SetConfig(new *UserConfig) {
+	log.Debug("Setting client config")
 	old := c.GetConfig()
 	updated := new
 	if old != nil {
 		updated = proto.Clone(old).(*UserConfig)
-		if new.Proxy != nil && len(new.Proxy.Proxies) > 0 {
+		if len(new.Proxy.Proxies) > 0 {
 			// We will always recieve the full list of proxy configs from the server if there are any
 			// changes since we don't currently have a way to inform clients to delete an individual
 			// proxy config. So we want to overwrite the existing proxy configs with the new ones.
@@ -98,6 +105,8 @@ func (c *config) SetConfig(new *UserConfig) {
 
 		proto.Merge(updated, new)
 	}
+
+	log.Tracef("Config changed:\nold:\n%+v\nnew:\n%+v", old, new)
 
 	c.config.Set(updated)
 	if err := saveConfig(c.filePath, updated, c.obfuscate); err != nil {
@@ -199,6 +208,8 @@ func OnConfigChange(fn func(old, new *UserConfig)) {
 }
 
 func notifyListeners(old, new *UserConfig) {
+	log.Trace("Notifying listeners")
+
 	_config.mu.Lock()
 	new = proto.Clone(new).(*UserConfig)
 	if old != nil {
