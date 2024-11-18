@@ -92,7 +92,12 @@ func (b *bypass) OnProxies(infos map[string]*commonconfig.ProxyConfig, configDir
 		}
 
 		// if dialer is not ready, try to load it async
-		if ready, err := dialer.IsReady(); err == nil && !ready {
+		ready, err := dialer.IsReady()
+		if err != nil {
+			log.Errorf("dialer %q isn't ready and returned an error: %w", name, err)
+			continue
+		}
+		if !ready {
 			log.Debugf("dialer %q is not ready, starting in background", name)
 			go b.loadProxyAsync(name, config, configDir, userConfig, dialer)
 			continue
@@ -112,7 +117,7 @@ func (b *bypass) loadProxyAsync(proxyName string, config *commonconfig.ProxyConf
 			time.Sleep(15 * time.Second)
 			ready, err := dialer.IsReady()
 			if err != nil {
-				log.Errorf("dialer isn't ready and returned an error: %w", err)
+				log.Errorf("dialer %q isn't ready and returned an error: %w", proxyName, err)
 				break
 			}
 			if !ready {
