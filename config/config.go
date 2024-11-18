@@ -144,7 +144,7 @@ func pipeConfig(opts *options) (stop func()) {
 		if reflect.DeepEqual(a, b) {
 			log.Debug("Config unchanged, ignoring")
 		} else {
-			log.Debug("Dispatching updated config")
+			log.Debugf("Dispatching updated config from %v", src)
 			opts.dispatch(cfg, src)
 			lastCfg = b
 		}

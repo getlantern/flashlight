@@ -108,7 +108,7 @@ func Configure(cfg *Config) {
 
 		// Configure OTEL tracing to use the above TracerProvider
 		otel.SetTracerProvider(tp)
-		ops.EnableOpenTelemetry("flashlight")
+		ops.EnableOpenTelemetry(name)
 
 		stopperMx.Lock()
 		if stopper != nil {
