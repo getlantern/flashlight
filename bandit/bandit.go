@@ -219,7 +219,7 @@ func (o *BanditDialer) chooseDialerForDomain(network, addr string) (Dialer, int)
 			// If the chosen dialer does not support the address, we should also
 			// choose a different dialer.
 			//
-			// If the dialer isn't ready we should also choose a another dialer.
+			// If the dialer isn't ready we should also choose another dialer.
 			chosenArm = differentArm(chosenArm, len(o.dialers))
 			continue
 		}
