@@ -118,6 +118,7 @@ func (b *bypass) loadProxyAsync(proxyName string, config *commonconfig.ProxyConf
 			ready, err := dialer.IsReady()
 			if err != nil {
 				log.Errorf("dialer %q isn't ready and returned an error: %w", proxyName, err)
+				cancel()
 				break
 			}
 			if !ready {
