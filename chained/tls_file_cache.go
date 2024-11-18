@@ -3,7 +3,7 @@ package chained
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -65,7 +65,7 @@ func PersistSessionStates(configDir string) {
 func persistSessionStates(configDir string, saveInterval time.Duration) {
 	filename := filepath.Join(configDir, "tls_session_states")
 
-	existing, err := ioutil.ReadFile(filename)
+	existing, err := os.ReadFile(filename)
 	if err == nil {
 		log.Debugf("Initializing current session states from %v", filename)
 		rows := strings.Split(string(existing), "\n")
@@ -107,7 +107,7 @@ func maintainSessionStates(filename string, saveInterval time.Duration) {
 					serialized, rowDelim, server, state.timestamp.Unix(), serializedState)
 				rowDelim = "\n" // after first row, include a delimiter
 			}
-			err := ioutil.WriteFile(filename, []byte(serialized), 0644)
+			err := os.WriteFile(filename, []byte(serialized), 0644)
 			if err != nil {
 				log.Errorf("unable to update session states in %v: %v", filename, err)
 				return
