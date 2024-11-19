@@ -23,8 +23,6 @@ type waterImpl struct {
 	raddr          string
 	reportDialCore reportDialCoreFn
 	dialer         water.Dialer
-	errLoadingWASM error
-	readyMutex     sync.Locker
 	readyChan      chan error
 }
 
@@ -42,7 +40,6 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 		raddr:          addr,
 		reportDialCore: reportDialCore,
 		readyChan:      make(chan error),
-		readyMutex:     new(sync.Mutex),
 	}
 
 	b64WASM := ptSetting(pc, "water_wasm")
@@ -50,15 +47,13 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 		go func() {
 			wasm, err := base64.StdEncoding.DecodeString(b64WASM)
 			if err != nil {
-				d.errLoadingWASM = log.Errorf("failed to decode water wasm: %w", err)
-				d.readyChan <- d.errLoadingWASM
+				d.readyChan <- log.Errorf("failed to decode water wasm: %w", err)
 				return
 			}
 
 			d.dialer, err = createDialer(ctx, wasm, transport)
 			if err != nil {
-				d.errLoadingWASM = log.Errorf("failed to create dialer: %w", err)
-				d.readyChan <- d.errLoadingWASM
+				d.readyChan <- log.Errorf("failed to create dialer: %w", err)
 				return
 			}
 			d.readyChan <- nil
@@ -72,15 +67,13 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 
 			r, err := d.loadWASM(ctx, transport, dir, wasmAvailableAt)
 			if err != nil {
-				d.errLoadingWASM = log.Errorf("failed to read wasm: %w", err)
-				d.readyChan <- d.errLoadingWASM
+				d.readyChan <- log.Errorf("failed to read wasm: %w", err)
 				return
 			}
 			defer r.Close()
 			b, err := io.ReadAll(r)
 			if err != nil {
-				d.errLoadingWASM = log.Errorf("failed to load wasm bytes: %w", err)
-				d.readyChan <- d.errLoadingWASM
+				d.readyChan <- log.Errorf("failed to load wasm bytes: %w", err)
 				return
 			}
 
@@ -88,8 +81,7 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 
 			d.dialer, err = createDialer(ctx, b, transport)
 			if err != nil {
-				d.errLoadingWASM = log.Errorf("failed to create dialer: %w", err)
-				d.readyChan <- d.errLoadingWASM
+				d.readyChan <- log.Errorf("failed to create dialer: %w", err)
 				return
 			}
 			d.readyChan <- nil

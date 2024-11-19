@@ -105,7 +105,6 @@ func TestNewWaterImpl(t *testing.T) {
 				defer actual.close()
 				require.NoError(t, err)
 				require.NotNil(t, actual)
-				assert.NoError(t, actual.errLoadingWASM)
 				<-actual.readyChan
 				assert.NotNil(t, actual.dialer)
 				assert.NotNil(t, actual.reportDialCore)
