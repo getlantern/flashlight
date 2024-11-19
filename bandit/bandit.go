@@ -202,21 +202,24 @@ func (o *BanditDialer) chooseDialerForDomain(network, addr string) (Dialer, int)
 	chosenArm := o.bandit.SelectArm(rand.Float64())
 	var dialer Dialer
 	notAllFailing := hasNotFailing(o.dialers)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	for i := 0; i < (len(o.dialers) * 2); i++ {
 		dialer = o.dialers[chosenArm]
-		select {
-		case err := <-dialer.Ready():
-			if err != nil {
-				log.Errorf("dialer %q initialization failed: %w", dialer.Name(), err)
+		readyChan := dialer.Ready()
+		if readyChan != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			select {
+			case err := <-readyChan:
+				if err != nil {
+					log.Errorf("dialer %q initialization failed: %w", dialer.Name(), err)
+					chosenArm = differentArm(chosenArm, len(o.dialers))
+					continue
+				}
+			case <-ctx.Done():
+				log.Errorf("dialer %q initialization timed out", dialer.Name())
 				chosenArm = differentArm(chosenArm, len(o.dialers))
 				continue
 			}
-		case <-ctx.Done():
-			log.Errorf("dialer %q initialization timed out", dialer.Name())
-			chosenArm = differentArm(chosenArm, len(o.dialers))
-			continue
 		}
 
 		if (dialer.ConsecFailures() > 0 && notAllFailing) || !dialer.SupportsAddr(network, addr) {
