@@ -119,8 +119,6 @@ func (d *waterImpl) loadWASM(ctx context.Context, transport string, dir string, 
 func (d *waterImpl) finishedLoading() {
 	select {
 	case d.finishedToLoad <- struct{}{}:
-	default:
-		log.Error("channel closed")
 	}
 }
 
@@ -140,7 +138,7 @@ func createDialer(ctx context.Context, wasm []byte, transport string) (water.Dia
 func (d *waterImpl) isReady() (bool, error) {
 	d.readyMutex.Lock()
 	defer d.readyMutex.Unlock()
-	return d.ready, d.errLoadingWASM
+	return d.ready && d.dialer != nil, d.errLoadingWASM
 }
 
 func (d *waterImpl) setReady() {
@@ -165,17 +163,12 @@ func (d *waterImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error
 			select {
 			case _, ok := <-d.finishedToLoad:
 				if !ok {
-					d.errLoadingWASM = log.Error("Channel closed")
-					return nil, d.errLoadingWASM
+					return nil, log.Error("dialer closed")
 				}
 				log.Debug("download finished!")
 			case <-ctx.Done():
 				return nil, log.Errorf("context completed while waiting for WASM download: %w", ctx.Err())
 			}
-		}
-
-		if d.dialer == nil || d.errLoadingWASM != nil {
-			return nil, log.Errorf("dialer not available: %w", d.errLoadingWASM)
 		}
 
 		// TODO: At water 0.7.0 (currently), the library is	hanging onto the dial context
