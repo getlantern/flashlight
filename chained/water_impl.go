@@ -33,7 +33,7 @@ var httpClient *http.Client
 
 // waterLoadingWASMMutex prevents the WATER implementation to download/load the
 // WASM file concurrently.
-var waterLoadingWASMMutex = &sync.Mutex{}
+var waterTransportLocker sync.Map
 
 func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (*waterImpl, error) {
 	ctx := context.Background()
@@ -98,8 +98,14 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 }
 
 func (d *waterImpl) loadWASM(ctx context.Context, transport string, dir string, wasmAvailableAt string) (io.ReadCloser, error) {
-	waterLoadingWASMMutex.Lock()
-	defer waterLoadingWASMMutex.Unlock()
+	locker, ok := waterTransportLocker.Load(transport)
+	if !ok {
+		waterTransportLocker.Store(transport, new(sync.Mutex))
+		locker, _ = waterTransportLocker.Load(transport)
+	}
+
+	locker.(sync.Locker).Lock()
+	defer locker.(sync.Locker).Unlock()
 	vc := newWaterVersionControl(dir)
 	cli := httpClient
 	if cli == nil {
