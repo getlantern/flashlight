@@ -72,13 +72,22 @@ func newTestUserConfig() *common.UserConfigData {
 }
 
 func resetDialers(client *Client, dial func(network, addr string) (net.Conn, error)) {
+	rdyC := make(chan struct{}, 1)
 	d := dialer.New(&dialer.Options{
 		Dialers: []dialer.ProxyDialer{&testDialer{
 			name: "test-dialer",
 			dial: dial,
 		}},
+		OnSuccess: func(dialer dialer.ProxyDialer) {
+			select {
+			case rdyC <- struct{}{}:
+			default:
+			}
+		},
 	})
 	client.dialer.set(d)
+	// Wait for the dialer to be ready
+	<-rdyC
 }
 
 func newClient() *Client {
