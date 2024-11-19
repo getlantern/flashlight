@@ -23,6 +23,6 @@ func (impl *httpImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, err
 	return impl.dialCore(op, ctx, impl.addr)
 }
 
-func (*httpImpl) isReady() (bool, error) {
-	return true, nil
+func (*httpImpl) ready() <-chan error {
+	return nil
 }

@@ -73,8 +73,8 @@ func (pd *preconnectingDialer) dialServer(op *ops.Op, ctx context.Context) (conn
 	}
 }
 
-func (*preconnectingDialer) isReady() (bool, error) {
-	return true, nil
+func (*preconnectingDialer) ready() <-chan error {
+	return nil
 }
 
 func (pd *preconnectingDialer) preconnectIfNecessary(op *ops.Op) {

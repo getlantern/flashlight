@@ -140,8 +140,8 @@ func (impl *shadowsocksImpl) dialServer(op *ops.Op, ctx context.Context) (net.Co
 	})
 }
 
-func (*shadowsocksImpl) isReady() (bool, error) {
-	return true, nil
+func (*shadowsocksImpl) ready() <-chan error {
+	return nil
 }
 
 // generateUpstream() creates a marker upstream address.  This isn't an

@@ -63,8 +63,8 @@ func (impl *wssImpl) close() {
 	impl.dialer.Close()
 }
 
-func (*wssImpl) isReady() (bool, error) {
-	return true, nil
+func (*wssImpl) ready() <-chan error {
+	return nil
 }
 
 func (impl *wssImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {

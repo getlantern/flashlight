@@ -69,7 +69,7 @@ func TestNewWaterImpl(t *testing.T) {
 			assert: func(t *testing.T, actual *waterImpl, err error) {
 				require.NoError(t, err)
 				require.NotNil(t, actual)
-				<-actual.finishedToLoad
+				<-actual.readyChan
 				require.NotNil(t, actual.dialer)
 				assert.NotNil(t, actual.reportDialCore)
 			},
@@ -106,7 +106,7 @@ func TestNewWaterImpl(t *testing.T) {
 				require.NoError(t, err)
 				require.NotNil(t, actual)
 				assert.NoError(t, actual.errLoadingWASM)
-				<-actual.finishedToLoad
+				<-actual.readyChan
 				assert.NotNil(t, actual.dialer)
 				assert.NotNil(t, actual.reportDialCore)
 			},

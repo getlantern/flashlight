@@ -51,8 +51,8 @@ func (impl *multiplexedImpl) dialServer(op *ops.Op, ctx context.Context) (net.Co
 	return impl.multiplexedDial(ctx, "", "")
 }
 
-func (impl *multiplexedImpl) isReady() (bool, error) {
-	return true, nil
+func (impl *multiplexedImpl) ready() <-chan error {
+	return nil
 }
 
 // createMultiplexedProtocol configures a cmux multiplexing protocol

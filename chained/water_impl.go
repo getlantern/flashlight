@@ -25,8 +25,7 @@ type waterImpl struct {
 	dialer         water.Dialer
 	errLoadingWASM error
 	readyMutex     sync.Locker
-	ready          bool
-	finishedToLoad chan struct{}
+	readyChan      chan error
 }
 
 var httpClient *http.Client
@@ -42,44 +41,46 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 	d := &waterImpl{
 		raddr:          addr,
 		reportDialCore: reportDialCore,
-		finishedToLoad: make(chan struct{}),
+		readyChan:      make(chan error),
 		readyMutex:     new(sync.Mutex),
 	}
 
 	b64WASM := ptSetting(pc, "water_wasm")
 	if b64WASM != "" {
 		go func() {
-			defer d.finishedLoading()
 			wasm, err := base64.StdEncoding.DecodeString(b64WASM)
 			if err != nil {
 				d.errLoadingWASM = log.Errorf("failed to decode water wasm: %w", err)
+				d.readyChan <- d.errLoadingWASM
 				return
 			}
 
 			d.dialer, err = createDialer(ctx, wasm, transport)
 			if err != nil {
 				d.errLoadingWASM = log.Errorf("failed to create dialer: %w", err)
+				d.readyChan <- d.errLoadingWASM
 				return
 			}
-			d.setReady()
+			d.readyChan <- nil
 		}()
 		return d, nil
 	}
 
 	if wasmAvailableAt != "" {
 		go func() {
-			defer d.finishedLoading()
 			log.Debugf("Loading WASM for %q. If not available, it should try to download from the following URLs: %+v. The file should be available at: %q", transport, strings.Split(wasmAvailableAt, ","), dir)
 
 			r, err := d.loadWASM(ctx, transport, dir, wasmAvailableAt)
 			if err != nil {
 				d.errLoadingWASM = log.Errorf("failed to read wasm: %w", err)
+				d.readyChan <- d.errLoadingWASM
 				return
 			}
 			defer r.Close()
 			b, err := io.ReadAll(r)
 			if err != nil {
 				d.errLoadingWASM = log.Errorf("failed to load wasm bytes: %w", err)
+				d.readyChan <- d.errLoadingWASM
 				return
 			}
 
@@ -88,9 +89,10 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 			d.dialer, err = createDialer(ctx, b, transport)
 			if err != nil {
 				d.errLoadingWASM = log.Errorf("failed to create dialer: %w", err)
+				d.readyChan <- d.errLoadingWASM
 				return
 			}
-			d.setReady()
+			d.readyChan <- nil
 		}()
 	}
 
@@ -122,12 +124,6 @@ func (d *waterImpl) loadWASM(ctx context.Context, transport string, dir string, 
 	return r, nil
 }
 
-func (d *waterImpl) finishedLoading() {
-	select {
-	case d.finishedToLoad <- struct{}{}:
-	}
-}
-
 func createDialer(ctx context.Context, wasm []byte, transport string) (water.Dialer, error) {
 	cfg := &water.Config{
 		TransportModuleBin: wasm,
@@ -141,40 +137,29 @@ func createDialer(ctx context.Context, wasm []byte, transport string) (water.Dia
 	return dialer, nil
 }
 
-func (d *waterImpl) isReady() (bool, error) {
-	d.readyMutex.Lock()
-	defer d.readyMutex.Unlock()
-	return d.ready && d.dialer != nil, d.errLoadingWASM
-}
-
-func (d *waterImpl) setReady() {
-	d.readyMutex.Lock()
-	defer d.readyMutex.Unlock()
-	d.ready = true
-}
-
 func (d *waterImpl) close() {
-	close(d.finishedToLoad)
+	close(d.readyChan)
+}
+
+func (d *waterImpl) ready() <-chan error {
+	return d.readyChan
 }
 
 func (d *waterImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return d.reportDialCore(op, func() (net.Conn, error) {
 		// if dialer is not ready, wait until WASM is downloaded or context timeout
-		ready, err := d.isReady()
-		if err != nil {
-			return nil, log.Errorf("failed to load WASM for dialer: %w", err)
-		}
-
-		if !ready {
-			select {
-			case _, ok := <-d.finishedToLoad:
-				if !ok {
-					return nil, log.Error("dialer closed")
-				}
-				log.Debug("download finished!")
-			case <-ctx.Done():
-				return nil, log.Errorf("context completed while waiting for WASM download: %w", ctx.Err())
+		select {
+		case err, ok := <-d.readyChan:
+			if !ok {
+				return nil, log.Error("dialer closed")
 			}
+			if err != nil {
+				return nil, log.Errorf("failed to load dialer: %w", err)
+			}
+
+			log.Debug("dialer ready!")
+		case <-ctx.Done():
+			return nil, log.Errorf("context completed while waiting for WASM download: %w", ctx.Err())
 		}
 
 		// TODO: At water 0.7.0 (currently), the library is	hanging onto the dial context

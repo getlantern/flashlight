@@ -333,8 +333,8 @@ type tcpConnDialer struct {
 	server     net.Conn
 }
 
-func (*tcpConnDialer) IsReady() (bool, error) {
-	return true, nil
+func (*tcpConnDialer) Ready() <-chan error {
+	return nil
 }
 
 // DialProxy implements Dialer.

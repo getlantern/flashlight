@@ -55,8 +55,8 @@ func newBroflakeImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (p
 	}, nil
 }
 
-func (*broflakeImpl) isReady() (bool, error) {
-	return true, nil
+func (*broflakeImpl) ready() <-chan error {
+	return nil
 }
 
 func (b *broflakeImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {

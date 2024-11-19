@@ -58,7 +58,6 @@ type bypass struct {
 // Start sends periodic traffic to the bypass server. The client periodically sends traffic to the server both via
 // domain fronting and proxying to determine if proxies are blocked.
 func Start(listen func(func(map[string]*commonconfig.ProxyConfig, config.Source)), configDir string, userConfig common.UserConfig) func() {
-	mrand.Seed(time.Now().UnixNano())
 	b := &bypass{
 		infos:   make(map[string]*commonconfig.ProxyConfig),
 		proxies: make([]*proxy, 0),
@@ -70,8 +69,6 @@ func Start(listen func(func(map[string]*commonconfig.ProxyConfig, config.Source)
 }
 
 func (b *bypass) OnProxies(infos map[string]*commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig) {
-	b.mxProxies.Lock()
-	defer b.mxProxies.Unlock()
 	b.reset()
 
 	// Some pluggable transports don't support bypass, filter these out here.
@@ -91,18 +88,11 @@ func (b *bypass) OnProxies(infos map[string]*commonconfig.ProxyConfig, configDir
 			continue
 		}
 
-		// if dialer is not ready, try to load it async
-		ready, err := dialer.IsReady()
-		if err != nil {
-			log.Errorf("dialer %q isn't ready and returned an error: %w", name, err)
-			continue
-		}
-		if !ready {
-			log.Debugf("dialer %q is not ready, starting in background", name)
+		readyCh := dialer.Ready()
+		if readyCh != nil {
 			go b.loadProxyAsync(name, config, configDir, userConfig, dialer)
 			continue
 		}
-
 		b.startProxy(name, config, configDir, userConfig, dialer)
 	}
 }
@@ -112,35 +102,32 @@ func (b *bypass) loadProxyAsync(proxyName string, config *commonconfig.ProxyConf
 	defer cancel()
 	readyChan := make(chan struct{})
 	go func() {
-		for {
-			select {
-			case <-ctx.Done():
+		select {
+		case err := <-dialer.Ready():
+			if err != nil {
+				log.Errorf("dialer %q initialization failed: %w", proxyName, err)
+				cancel()
 				return
-			default:
-				time.Sleep(15 * time.Second)
-				ready, err := dialer.IsReady()
-				if err != nil {
-					log.Errorf("dialer %q isn't ready and returned an error: %w", proxyName, err)
-					cancel()
-					return
-				}
-				if ready {
-					b.startProxy(proxyName, config, configDir, userConfig, dialer)
-					readyChan <- struct{}{}
-					return
-				}
 			}
+			b.startProxy(proxyName, config, configDir, userConfig, dialer)
+			readyChan <- struct{}{}
+			return
+		case <-ctx.Done():
+			log.Errorf("proxy %q took to long to start: %w", proxyName, ctx.Err())
+			return
 		}
 	}()
 	select {
 	case <-readyChan:
 		log.Debugf("proxy ready!")
 	case <-ctx.Done():
-		log.Errorf("proxy %q took to long to get ready", proxyName)
+		log.Errorf("proxy %q took to long to start: %w", proxyName, ctx.Err())
 	}
 }
 
 func (b *bypass) startProxy(proxyName string, config *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer bandit.Dialer) {
+	b.mxProxies.Lock()
+	defer b.mxProxies.Unlock()
 	pc := chained.CopyConfig(config)
 	// Set the name in the info since we know it here.
 	pc.Name = proxyName
@@ -164,6 +151,8 @@ func (b *bypass) newProxy(name string, pc *commonconfig.ProxyConfig, configDir s
 }
 
 func (b *bypass) reset() {
+	b.mxProxies.Lock()
+	defer b.mxProxies.Unlock()
 	for _, v := range b.proxies {
 		v.stop()
 	}

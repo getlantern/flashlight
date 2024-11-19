@@ -434,8 +434,8 @@ func (d *testDialer) DialProxy(ctx context.Context) (net.Conn, error) {
 	return nil, fmt.Errorf("Not implemented")
 }
 
-func (d *testDialer) IsReady() (bool, error) {
-	return true, nil
+func (d *testDialer) Ready() <-chan error {
+	return nil
 }
 
 // Name returns the name for this Dialer
