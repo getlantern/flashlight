@@ -149,6 +149,7 @@ func (cs *configService) fetchConfig() (int64, error) {
 	cs.lastFetched = time.Now()
 
 	logger.Debug("configservice: Received config")
+	logger.Tracef("configservice: new config:\n%v", newConf.String())
 	if newConf == nil {
 		op.Set("config_changed", false)
 		logger.Debug("configservice: Config is unchanged")
@@ -157,30 +158,42 @@ func (cs *configService) fetchConfig() (int64, error) {
 
 	op.Set("config_changed", true)
 
-	cs.clientInfo.ProToken = newConf.ProToken
-	cs.clientInfo.Country = newConf.Country
-	cs.clientInfo.Ip = newConf.Ip
-
+	if newConf.ProToken != "" {
+		cs.clientInfo.ProToken = newConf.ProToken
+	}
+	if newConf.Country != "" {
+		cs.clientInfo.Country = newConf.Country
+	}
+	if newConf.Ip != "" {
+		cs.clientInfo.Ip = newConf.Ip
+	}
 	cs.configHandler.SetConfig(newConf)
-
 	return sleep, nil
 }
 
 func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
-	req, err := cs.newRequest()
-	if err != nil {
-		return nil, 0, err
-	}
-
 	var (
 		resp  *http.Response
 		sleep int64
 	)
 	for {
+		req, err := cs.newRequest()
+		if err != nil {
+			return nil, 0, err
+		}
+
 		logger.Debugf("configservice: fetching config from %v", req.URL)
 		resp, sleep, err = cs.sender.post(req, cs.opts.RoundTripper)
 		if err == nil {
 			break
+		}
+		if resp != nil {
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				logger.Errorf("configservice: could not read failed response body: %v", err)
+			} else {
+				logger.Errorf("configservice: failed response body: %s", body)
+			}
 		}
 		logger.Errorf("configservice: Failed to fetch config: %v", err)
 		retryWait := time.Duration(sleep) * time.Second
@@ -246,5 +259,11 @@ func (cs *configService) newRequest() (*http.Request, error) {
 	req.Header.Set("Content-Type", "application/x-protobuf")
 	// Prevents intermediate nodes (domain-fronters) from caching the content
 	req.Header.Set("Cache-Control", "no-cache")
+
+	var headers string
+	for k, v := range req.Header {
+		headers += fmt.Sprintf("%s: %s\n", k, v)
+	}
+	logger.Tracef("configservice: Request:\n%v%v", headers, confReq.String())
 	return req, nil
 }
