@@ -97,6 +97,7 @@ func InitWithURLs(
 		},
 		sticky: isSticky(flags),
 		rt:     rt,
+		opName: "fetch_global",
 	}
 
 	stopGlobal := pipeConfig(globalOptions)

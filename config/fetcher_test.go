@@ -21,7 +21,7 @@ func TestFetcher(t *testing.T) {
 	rt := &http.Transport{}
 	configFetcher := newHttpFetcher(newTestUserConfig(), rt, common.GlobalURL)
 
-	bytes, _, err := configFetcher.fetch()
+	bytes, _, err := configFetcher.fetch("testOpName")
 	assert.Nil(t, err)
 	assert.True(t, len(bytes) > 200)
 }

@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"math"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -25,6 +26,9 @@ var (
 
 	stopper   func()
 	stopperMx sync.Mutex
+
+	stopReconfiguration atomic.Bool
+	serviceName         atomic.Value
 )
 
 type Config struct {
@@ -34,11 +38,24 @@ type Config struct {
 	OpSampleRates map[string]uint32
 }
 
+// ConfigureOnce is used to prevent reinitialization of OpenTelemetry by later arriving configurations
+func ConfigureOnce(cfg *Config, name string) {
+	serviceName.Store(name)
+	Configure(cfg)
+	stopReconfiguration.Store(true)
+}
+
 func Configure(cfg *Config) {
+	if stopReconfiguration.Load() {
+		return
+	}
 	log.Debugf("Configuring OpenTelemetry with sample rate %d and op sample rates %v", cfg.SampleRate, cfg.OpSampleRates)
 	log.Debugf("Connecting to endpoint %v", cfg.Endpoint)
 	log.Debugf("Using headers %v", cfg.Headers)
 
+	if serviceName.Load() == nil {
+		serviceName.Store("flashlight")
+	}
 	if cfg.SampleRate < 1 {
 		cfg.SampleRate = 1
 	}
@@ -59,8 +76,9 @@ func Configure(cfg *Config) {
 	} else {
 		log.Debug("Will report traces to OpenTelemetry")
 		// Create a TracerProvider that uses the above exporter
+		var name string = serviceName.Load().(string)
 		attributes := []attribute.KeyValue{
-			semconv.ServiceNameKey.String("flashlight"),
+			semconv.ServiceNameKey.String(name),
 		}
 		// Copy global attributes from ops
 		globalAttributesFromOps := ops.AsMap(nil, true)
@@ -90,7 +108,7 @@ func Configure(cfg *Config) {
 
 		// Configure OTEL tracing to use the above TracerProvider
 		otel.SetTracerProvider(tp)
-		ops.EnableOpenTelemetry("flashlight")
+		ops.EnableOpenTelemetry(name)
 
 		stopperMx.Lock()
 		if stopper != nil {
