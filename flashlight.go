@@ -546,7 +546,7 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 	configOpts := &services.ConfigOptions{
 		OriginURL:    url,
 		UserConfig:   f.userConfig,
-		RoundTripper: proxied.ChainedThenFronted(),
+		RoundTripper: proxied.Fronted("", 0),
 	}
 	return services.StartConfigService(handler, configOpts)
 }
