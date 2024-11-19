@@ -91,12 +91,12 @@ func (c *Config) GetConfig() *UserConfig {
 
 // SetConfig implements services.ConfigHandler
 func (c *Config) SetConfig(new *UserConfig) {
-	log.Debug("Setting client config")
+	log.Debug("Setting user config")
 	old := c.GetConfig()
 	updated := new
 	if old != nil {
 		updated = proto.Clone(old).(*UserConfig)
-		if len(new.Proxy.Proxies) > 0 {
+		if new.GetProxy() != nil && len(new.GetProxy().GetProxies()) > 0 {
 			// We will always recieve the full list of proxy configs from the server if there are any
 			// changes since we don't currently have a way to inform clients to delete an individual
 			// proxy config. So we want to overwrite the existing proxy configs with the new ones.
@@ -106,7 +106,7 @@ func (c *Config) SetConfig(new *UserConfig) {
 		proto.Merge(updated, new)
 	}
 
-	log.Tracef("Config changed:\nold:\n%+v\nnew:\n%+v", old, new)
+	log.Tracef("Config changed:\nold:\n%+v\nnew:\n%+v\nmerged:\n%v", old, new, updated)
 
 	c.config.Set(updated)
 	if err := saveConfig(c.filePath, updated, c.obfuscate); err != nil {

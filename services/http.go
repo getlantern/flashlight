@@ -35,7 +35,7 @@ func (s *sender) post(req *http.Request, rt http.RoundTripper) (*http.Response, 
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 		err = fmt.Errorf("bad response code: %v", resp.StatusCode)
-		return nil, s.backoff(), err
+		return resp, s.backoff(), err
 	}
 
 	s.failCount = 0
@@ -60,7 +60,7 @@ func (s *sender) doPost(req *http.Request, rt http.RoundTripper) (*http.Response
 		return nil, fmt.Errorf("request to failed: %w", err)
 	}
 
-	logger.Debugf("Response headers:\n%v", resp.Header)
+	logger.Debugf("Response status: %v headers:\n%v", resp.Status, resp.Header)
 	return resp, nil
 }
 
