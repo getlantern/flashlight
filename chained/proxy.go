@@ -24,8 +24,8 @@ import (
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 
-	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/dialer"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/ops"
 )
@@ -77,12 +77,12 @@ type nopCloser struct{}
 func (c nopCloser) close() {}
 
 // CreateDialers creates a list of Proxies (bandit.Dialer) with supplied server info.
-func CreateDialers(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) []bandit.Dialer {
+func CreateDialers(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) []dialer.ProxyDialer {
 	return lo.Values(CreateDialersMap(configDir, proxies, uc))
 }
 
 // CreateDialersMap creates a map of Proxies (bandit.Dialer) with supplied server info.
-func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) map[string]bandit.Dialer {
+func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) map[string]dialer.ProxyDialer {
 	groups := groupByMultipathEndpoint(proxies)
 
 	// We parallelize the creation of the dialers because some of them may take
@@ -122,9 +122,9 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 		}
 	}
 	wg.Wait()
-	mappedDialers := make(map[string]bandit.Dialer)
+	mappedDialers := make(map[string]dialer.ProxyDialer)
 	m.Range(func(k, v interface{}) bool {
-		mappedDialers[k.(string)] = v.(bandit.Dialer)
+		mappedDialers[k.(string)] = v.(dialer.ProxyDialer)
 		return true
 	})
 
@@ -132,7 +132,7 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 }
 
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
-func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserConfig) (bandit.Dialer, error) {
+func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserConfig) (dialer.ProxyDialer, error) {
 	addr, transport, network, err := extractParams(s)
 	if err != nil {
 		return nil, err

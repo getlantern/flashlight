@@ -7,8 +7,8 @@ import (
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/dialer"
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/multipath"
 )
@@ -53,7 +53,7 @@ func (*multipathImpl) ready() <-chan error {
 	return nil
 }
 
-func CreateMPDialer(configDir, endpoint string, ss map[string]*config.ProxyConfig, uc common.UserConfig) (bandit.Dialer, error) {
+func CreateMPDialer(configDir, endpoint string, ss map[string]*config.ProxyConfig, uc common.UserConfig) (dialer.ProxyDialer, error) {
 	if len(ss) < 1 {
 		return nil, errors.New("no dialers")
 	}

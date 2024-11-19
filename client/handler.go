@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -72,17 +71,6 @@ func (client *Client) filter(cs *filters.ConnectionState, req *http.Request, nex
 		op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
 	}
 
-	// Disable Ad swapping for now given that Ad blocking is completely
-	// removed.  A limited form of Ad blocking should be re-introduced before
-	// enabling it again.
-	//
-	// adSwapURL := client.adSwapURL(req)
-	// if !exoclick && adSwapURL != "" {
-	// // Don't record this as proxying
-	// 	op.Cancel()
-	// 	return client.redirectAdSwap(ctx, req, adSwapURL, op)
-	// }
-
 	isConnect := req.Method == http.MethodConnect
 	if isConnect || cs.IsMITMing() {
 		// CONNECT requests are often used for HTTPS requests. If we're MITMing the
@@ -113,16 +101,6 @@ func (client *Client) filter(cs *filters.ConnectionState, req *http.Request, nex
 	}
 
 	return next(cs, req)
-}
-
-// getBaseUrl returns the URL for the base domain of an ad without the full path, query string,
-// etc.
-func (client *Client) getBaseUrl(originalUrl string) string {
-	url, err := url.Parse(originalUrl)
-	if err != nil {
-		return originalUrl
-	}
-	return url.Scheme + "://" + url.Host
 }
 
 func (client *Client) isHTTPProxyPort(r *http.Request) bool {
@@ -170,16 +148,6 @@ func (client *Client) interceptProRequest(cs *filters.ConnectionState, r *http.R
 		}
 	}
 	return filters.ShortCircuit(cs, r, resp)
-}
-
-func (client *Client) easyblock(cs *filters.ConnectionState, req *http.Request) (*http.Response, *filters.ConnectionState, error) {
-	log.Debugf("Blocking %v on %v", req.URL, req.Host)
-	client.statsTracker.IncAdsBlocked()
-	resp := &http.Response{
-		StatusCode: http.StatusForbidden,
-		Close:      true,
-	}
-	return filters.ShortCircuit(cs, req, resp)
 }
 
 func (client *Client) redirectHTTPS(cs *filters.ConnectionState, req *http.Request, httpsURL string, op *ops.Op) (*http.Response, *filters.ConnectionState, error) {

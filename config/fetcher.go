@@ -33,7 +33,7 @@ func ForceCountry(countryCode string) {
 
 // Fetcher is an interface for fetching config updates.
 type Fetcher interface {
-	fetch() ([]byte, time.Duration, error)
+	fetch(string) ([]byte, time.Duration, error)
 }
 
 // fetcher periodically fetches the latest cloud configuration.
@@ -66,8 +66,8 @@ func newHttpFetcher(conf common.UserConfig, rt http.RoundTripper, originURL stri
 	}
 }
 
-func (cf *fetcher) fetch() ([]byte, time.Duration, error) {
-	op := ops.Begin("fetch_config")
+func (cf *fetcher) fetch(opName string) ([]byte, time.Duration, error) {
+	op := ops.Begin(opName)
 	defer op.End()
 	result, sleep, err := cf.doFetch(context.Background(), op)
 	return result, sleep, op.FailIf(err)

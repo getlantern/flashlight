@@ -106,6 +106,9 @@ type options struct {
 	// dictate whether the fetcher will use dual fetching (from fronted and
 	// chained URLs) or not.
 	rt http.RoundTripper
+
+	// opName is the operation name to use for ops.Begin when fetching configs.
+	opName string
 }
 
 // pipeConfig creates a new config pipeline for reading a specified type of
@@ -123,7 +126,7 @@ func pipeConfig(opts *options) (stop func()) {
 
 	// lastCfg is accessed by both the current goroutine when dispatching
 	// saved or embedded configs, and in a separate goroutine for polling
-	// for remote configs.  There should never be mutual access by these
+	// for remote configs. There should never be mutual access by these
 	// goroutines, however, since the polling routine is started after the prior
 	// calls to dispatch return.
 	var (
@@ -141,7 +144,7 @@ func pipeConfig(opts *options) (stop func()) {
 		if reflect.DeepEqual(a, b) {
 			log.Debug("Config unchanged, ignoring")
 		} else {
-			log.Debug("Dispatching updated config")
+			log.Debugf("Dispatching updated config from %v", src)
 			opts.dispatch(cfg, src)
 			lastCfg = b
 		}
@@ -187,7 +190,7 @@ func pipeConfig(opts *options) (stop func()) {
 	// Now continually poll for new configs and pipe them back to the dispatch function.
 	if !opts.sticky {
 		fetcher := newHttpFetcher(opts.userConfig, opts.rt, opts.originURL)
-		go conf.configFetcher(stopCh,
+		go conf.configFetcher(opts.opName, stopCh,
 			func(cfg interface{}) {
 				dispatch(cfg, Fetched)
 			}, fetcher, opts.sleep,
@@ -305,9 +308,9 @@ func (conf *config) embedded(data []byte) (interface{}, error) {
 	return conf.unmarshaler(data)
 }
 
-func (conf *config) configFetcher(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, defaultSleep func() time.Duration, log golog.Logger) {
+func (conf *config) configFetcher(opName string, stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, defaultSleep func() time.Duration, log golog.Logger) {
 	for {
-		sleepDuration := conf.fetchConfig(stopCh, dispatch, fetcher, log)
+		sleepDuration := conf.fetchConfig(opName, stopCh, dispatch, fetcher, log)
 		if sleepDuration == noSleep {
 			sleepDuration = defaultSleep()
 		}
@@ -321,8 +324,8 @@ func (conf *config) configFetcher(stopCh chan bool, dispatch func(interface{}), 
 	}
 }
 
-func (conf *config) fetchConfig(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, log golog.Logger) time.Duration {
-	if bytes, sleepTime, err := fetcher.fetch(); err != nil {
+func (conf *config) fetchConfig(opName string, stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, log golog.Logger) time.Duration {
+	if bytes, sleepTime, err := fetcher.fetch(opName); err != nil {
 		log.Errorf("Error fetching config: %v", err)
 		return sleepTime
 	} else if bytes == nil {

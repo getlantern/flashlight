@@ -20,10 +20,10 @@ import (
 
 	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/v7/apipb"
-	"github.com/getlantern/flashlight/v7/bandit"
 	"github.com/getlantern/flashlight/v7/chained"
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/config"
+	"github.com/getlantern/flashlight/v7/dialer"
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/golog"
@@ -97,7 +97,7 @@ func (b *bypass) OnProxies(infos map[string]*commonconfig.ProxyConfig, configDir
 	}
 }
 
-func (b *bypass) loadProxyAsync(proxyName string, config *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer bandit.Dialer) {
+func (b *bypass) loadProxyAsync(proxyName string, config *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer dialer.ProxyDialer) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 	readyChan := make(chan struct{})
@@ -125,7 +125,7 @@ func (b *bypass) loadProxyAsync(proxyName string, config *commonconfig.ProxyConf
 	}
 }
 
-func (b *bypass) startProxy(proxyName string, config *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer bandit.Dialer) {
+func (b *bypass) startProxy(proxyName string, config *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer dialer.ProxyDialer) {
 	b.mxProxies.Lock()
 	defer b.mxProxies.Unlock()
 	pc := chained.CopyConfig(config)
@@ -138,7 +138,7 @@ func (b *bypass) startProxy(proxyName string, config *commonconfig.ProxyConfig, 
 	go p.start()
 }
 
-func (b *bypass) newProxy(name string, pc *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer bandit.Dialer) *proxy {
+func (b *bypass) newProxy(name string, pc *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer dialer.ProxyDialer) *proxy {
 	return &proxy{
 		ProxyConfig:       pc,
 		name:              name,
@@ -211,14 +211,14 @@ func (p *proxy) sendToBypass() int64 {
 	}
 	defer func() {
 		if resp.Body != nil {
-			if closeerr := resp.Body.Close(); closeerr != nil {
-				log.Errorf("Error closing response body: %v", closeerr)
+			if _, err := io.Copy(io.Discard, resp.Body); err != nil {
+				log.Errorf("Error reading response body: %v", err)
+			}
+			if err := resp.Body.Close(); err != nil {
+				log.Errorf("Error closing response body: %v", err)
 			}
 		}
 	}()
-	if resp.Body != nil {
-		io.Copy(io.Discard, resp.Body)
-	}
 
 	var sleepTime int64
 	sleepVal := resp.Header.Get(common.SleepHeader)
@@ -236,12 +236,12 @@ func (p *proxy) sendToBypass() int64 {
 	return sleepTime
 }
 
-func proxyRoundTripper(name string, info *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer bandit.Dialer) http.RoundTripper {
+func proxyRoundTripper(name string, info *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, d dialer.ProxyDialer) http.RoundTripper {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.Proxy = nil
 	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 		log.Debugf("Dialing chained server at: %s", addr)
-		pc, _, err := dialer.DialContext(ctx, bandit.NetworkConnect, addr)
+		pc, _, err := d.DialContext(ctx, dialer.NetworkConnect, addr)
 		if err != nil {
 			log.Errorf("Unable to dial chained server: %v", err)
 		} else {
