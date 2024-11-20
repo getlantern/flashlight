@@ -29,7 +29,13 @@ type fastConnectDialer struct {
 
 	next func(*Options, Dialer) Dialer
 	opts *Options
+
+	// Create a channel for stopping connections to dialers
+	stopCh chan struct{}
 }
+
+// Make sure fastConnectDialer implements Dialer
+var _ Dialer = (*fastConnectDialer)(nil)
 
 func newFastConnectDialer(opts *Options, next func(opts *Options, existing Dialer) Dialer) *fastConnectDialer {
 	if opts.OnError == nil {
@@ -45,6 +51,7 @@ func newFastConnectDialer(opts *Options, next func(opts *Options, existing Diale
 		opts:      opts,
 		next:      next,
 		topDialer: protectedDialer{},
+		stopCh:    make(chan struct{}),
 	}
 }
 
@@ -76,6 +83,13 @@ func (fcd *fastConnectDialer) DialContext(ctx context.Context, network, addr str
 	return conn, err
 }
 
+func (fcd *fastConnectDialer) Close() {
+	// We don't call Stop on the Dialers themselves here because they are likely
+	// in use by other Dialers, such as the BanditDialer.
+	// Stop all dialing
+	fcd.stopCh <- struct{}{}
+}
+
 func (fcd *fastConnectDialer) onConnected(pd ProxyDialer, connectTime time.Duration) {
 	log.Debugf("Connected to %v", pd.Name())
 
@@ -99,13 +113,23 @@ func (fcd *fastConnectDialer) connectAll(dialers []ProxyDialer) {
 		return
 	}
 	log.Debugf("Dialing all dialers in parallel %#v", dialers)
-	// Loop until we're connected
-	for len(fcd.connected.dialers) < 2 {
-		fcd.parallelDial(dialers)
-		// Add jitter to avoid thundering herd
-		time.Sleep(time.Duration(rand.Intn(4000)) * time.Millisecond)
+outerLoop:
+	for {
+		select {
+		case <-fcd.stopCh:
+			log.Debug("Stopping parallel dialing")
+			return
+		default:
+			// Loop until we're connected
+			if len(fcd.connected.dialers) < 2 {
+				fcd.parallelDial(dialers)
+				// Add jitter to avoid thundering herd
+				time.Sleep(time.Duration(rand.Intn(4000)) * time.Millisecond)
+			} else {
+				break outerLoop
+			}
+		}
 	}
-
 	// At this point, we've tried all of the dialers, and they've all either
 	// succeeded or failed.
 
@@ -114,6 +138,7 @@ func (fcd *fastConnectDialer) connectAll(dialers []ProxyDialer) {
 	nextOpts := fcd.opts.Clone()
 	nextOpts.Dialers = fcd.connected.proxyDialers()
 	fcd.next(nextOpts, fcd)
+
 }
 
 func (fcd *fastConnectDialer) parallelDial(dialers []ProxyDialer) {
