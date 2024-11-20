@@ -41,7 +41,7 @@ func New(opts *Options) Dialer {
 }
 
 // NoDialer returns a dialer that does nothing. This is useful during startup
-// until a real dialer is available.
+// when we don't yet have proxies to dial through.
 func NoDialer() Dialer {
 	return &noDialer{}
 }
@@ -58,6 +58,9 @@ func (d *noDialer) DialContext(ctx context.Context, network, addr string) (net.C
 }
 
 func (d *noDialer) Close() {}
+
+// Make sure noDialer implements Dialer
+var _ Dialer = (*noDialer)(nil)
 
 const (
 	// NetworkConnect is a pseudo network name to instruct the dialer to establish
