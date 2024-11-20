@@ -16,6 +16,9 @@ type twoPhaseDialer struct {
 	activeDialer activeDialer
 }
 
+// Make sure twoPhaseDialer implements Dialer
+var _ Dialer = (*twoPhaseDialer)(nil)
+
 // NewTwoPhaseDialer creates a new dialer for checking proxy connectivity.
 func NewTwoPhaseDialer(opts *Options, next func(opts *Options, existing Dialer) Dialer) Dialer {
 	log.Debugf("Creating new two phase dialer with %d dialers", len(opts.Dialers))
@@ -26,6 +29,7 @@ func NewTwoPhaseDialer(opts *Options, next func(opts *Options, existing Dialer) 
 		// This is where we move to the second dialer.
 		nextDialer := next(dialerOpts, existing)
 		tpd.activeDialer.set(nextDialer)
+		existing.Close()
 		return nextDialer
 	})
 
@@ -43,6 +47,14 @@ func (ccd *twoPhaseDialer) DialContext(ctx context.Context, network string, addr
 		return nil, errors.New("no active dialer")
 	}
 	return td.DialContext(ctx, network, addr)
+}
+
+// Close implements Dialer.
+func (ccd *twoPhaseDialer) Close() {
+	td := ccd.activeDialer.get()
+	if td != nil {
+		td.Close()
+	}
 }
 
 // protectedDialer protects a dialer.Dialer with a RWMutex. We can't use an atomic.Value here
