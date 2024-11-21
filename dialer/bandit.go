@@ -39,8 +39,9 @@ func NewBandit(opts *Options) (Dialer, error) {
 		counts := make([]int, len(dialers))
 		rewards := make([]float64, len(dialers))
 		for arm, dialer := range dialers {
-			if weight, ok := dialerWeights[dialer.Name()]; ok {
-				rewards[arm] = weight
+			if banditMetrics, ok := dialerWeights[dialer.Name()]; ok {
+				rewards[arm] = banditMetrics.Reward
+				counts[arm] = banditMetrics.Count
 			}
 		}
 		b, err = bandit.NewEpsilonGreedy(0.1, counts, rewards)

@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -81,51 +82,59 @@ func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
 func TestNewBandit(t *testing.T) {
 	oldDialer := newTcpConnDialer()
 	tests := []struct {
-		name    string
-		opts    *Options
-		want    *BanditDialer
-		wantErr bool
+		name   string
+		opts   *Options
+		assert func(t *testing.T, got Dialer, err error)
 	}{
 		{
 			name: "should fail if there are no dialers",
 			opts: &Options{
 				Dialers: nil,
 			},
-			want:    nil,
-			wantErr: true,
+			assert: func(t *testing.T, got Dialer, err error) {
+				assert.Nil(t, got)
+				assert.Error(t, err)
+			},
 		},
 		{
 			name: "should return a BanditDialer if there's only one dialer",
 			opts: &Options{
 				Dialers: []ProxyDialer{newTcpConnDialer()},
 			},
-			want:    &BanditDialer{},
-			wantErr: false,
+			assert: func(t *testing.T, got Dialer, err error) {
+				assert.NotNil(t, got)
+				assert.NoError(t, err)
+				assert.IsType(t, &BanditDialer{}, got)
+			},
 		},
 		{
 			name: "should load the last bandit rewards if they exist",
 			opts: &Options{
-				Dialers: []ProxyDialer{oldDialer},
-				LoadLastBanditRewards: func() map[string]float64 {
-					return map[string]float64{
-						oldDialer.Name(): 0.5,
+				Dialers: []ProxyDialer{oldDialer, newTcpConnDialer()},
+				LoadLastBanditRewards: func() map[string]BanditMetrics {
+					return map[string]BanditMetrics{
+						oldDialer.Name(): {
+							Reward: 0.7,
+							Count:  10,
+						},
 					}
 				},
 			},
-			want:    &BanditDialer{},
-			wantErr: false,
+			assert: func(t *testing.T, got Dialer, err error) {
+				assert.NotNil(t, got)
+				assert.NoError(t, err)
+				assert.IsType(t, &BanditDialer{}, got)
+				assert.Equal(t, 0.7, got.(*BanditDialer).bandit.Rewards[0])
+				assert.Equal(t, 10, got.(*BanditDialer).bandit.Counts[0])
+				assert.Equal(t, float64(0), got.(*BanditDialer).bandit.Rewards[1])
+				assert.Equal(t, 0, got.(*BanditDialer).bandit.Counts[1])
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := NewBandit(tt.opts)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("NewBandit() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if tt.want != nil && !reflect.TypeOf(got).AssignableTo(reflect.TypeOf(tt.want)) {
-				t.Errorf("BanditDialer.DialContext() = %v, want %v", got, tt.want)
-			}
+			tt.assert(t, got, err)
 		})
 	}
 }
@@ -300,6 +309,7 @@ func newTcpConnDialer() ProxyDialer {
 	return &tcpConnDialer{
 		client: client,
 		server: server,
+		name:   uuid.New().String(),
 	}
 }
 
@@ -313,6 +323,7 @@ type tcpConnDialer struct {
 	shouldFail bool
 	client     net.Conn
 	server     net.Conn
+	name       string
 }
 
 // DialProxy implements Dialer.
@@ -407,8 +418,8 @@ func (*tcpConnDialer) MarkFailure() {
 }
 
 // Name implements Dialer.
-func (*tcpConnDialer) Name() string {
-	return "tcpConnDialer"
+func (t *tcpConnDialer) Name() string {
+	return t.name
 }
 
 // NumPreconnected implements Dialer.

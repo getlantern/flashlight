@@ -71,9 +71,13 @@ type Options struct {
 
 	// LoadLastBanditRewards is a function that returns the last bandit rewards
 	// for each dialer. If this is set, the bandit will be initialized with the
-	// last rewards. The key must be the dialer name and the value must be the
-	// reward.
-	LoadLastBanditRewards func() map[string]float64
+	// last metrics.
+	LoadLastBanditRewards func() map[string]BanditMetrics
+}
+
+type BanditMetrics struct {
+	Reward float64
+	Count  int
 }
 
 // Clone creates a deep copy of the Options object
