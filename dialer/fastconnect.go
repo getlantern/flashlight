@@ -51,7 +51,7 @@ func newFastConnectDialer(opts *Options, next func(opts *Options, existing Diale
 		opts:      opts,
 		next:      next,
 		topDialer: protectedDialer{},
-		stopCh:    make(chan struct{}),
+		stopCh:    make(chan struct{}, 10),
 	}
 }
 
@@ -113,21 +113,21 @@ func (fcd *fastConnectDialer) connectAll(dialers []ProxyDialer) {
 		return
 	}
 	log.Debugf("Dialing all dialers in parallel %#v", dialers)
-outerLoop:
 	for {
+		// Loop until we're connected
+		if len(fcd.connected.dialers) < 2 {
+			fcd.parallelDial(dialers)
+			// Add jitter to avoid thundering herd
+			time.Sleep(time.Duration(rand.Intn(4000)) * time.Millisecond)
+		} else {
+			break
+		}
 		select {
 		case <-fcd.stopCh:
 			log.Debug("Stopping parallel dialing")
 			return
 		default:
-			// Loop until we're connected
-			if len(fcd.connected.dialers) < 2 {
-				fcd.parallelDial(dialers)
-				// Add jitter to avoid thundering herd
-				time.Sleep(time.Duration(rand.Intn(4000)) * time.Millisecond)
-			} else {
-				break outerLoop
-			}
+
 		}
 	}
 	// At this point, we've tried all of the dialers, and they've all either
@@ -138,7 +138,6 @@ outerLoop:
 	nextOpts := fcd.opts.Clone()
 	nextOpts.Dialers = fcd.connected.proxyDialers()
 	fcd.next(nextOpts, fcd)
-
 }
 
 func (fcd *fastConnectDialer) parallelDial(dialers []ProxyDialer) {

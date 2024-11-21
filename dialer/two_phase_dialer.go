@@ -29,7 +29,6 @@ func NewTwoPhaseDialer(opts *Options, next func(opts *Options, existing Dialer) 
 		// This is where we move to the second dialer.
 		nextDialer := next(dialerOpts, existing)
 		tpd.activeDialer.set(nextDialer)
-		existing.Close()
 		return nextDialer
 	})
 
