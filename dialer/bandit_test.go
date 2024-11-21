@@ -79,6 +79,7 @@ func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
 }
 
 func TestNewBandit(t *testing.T) {
+	oldDialer := newTcpConnDialer()
 	tests := []struct {
 		name    string
 		opts    *Options
@@ -97,6 +98,19 @@ func TestNewBandit(t *testing.T) {
 			name: "should return a BanditDialer if there's only one dialer",
 			opts: &Options{
 				Dialers: []ProxyDialer{newTcpConnDialer()},
+			},
+			want:    &BanditDialer{},
+			wantErr: false,
+		},
+		{
+			name: "should load the last bandit rewards if they exist",
+			opts: &Options{
+				Dialers: []ProxyDialer{oldDialer},
+				LoadLastBanditRewards: func() map[string]float64 {
+					return map[string]float64{
+						oldDialer.Name(): 0.5,
+					}
+				},
 			},
 			want:    &BanditDialer{},
 			wantErr: false,

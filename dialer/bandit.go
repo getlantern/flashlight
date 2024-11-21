@@ -29,16 +29,37 @@ func NewBandit(opts *Options) (Dialer, error) {
 
 	dialers := opts.Dialers
 	log.Debugf("Creating bandit with %d dialers", len(dialers))
-	b, err := bandit.NewEpsilonGreedy(0.1, nil, nil)
-	if err != nil {
-		log.Errorf("unable to create bandit: %v", err)
-		return nil, err
+
+	var b *bandit.EpsilonGreedy
+	var err error
+	if opts.LoadLastBanditRewards != nil {
+		log.Debugf("Loading bandit weights from %s", opts.LoadLastBanditRewards)
+		// TODO: Load the weights from the file.
+		dialerWeights := opts.LoadLastBanditRewards()
+		counts := make([]int, len(dialers))
+		rewards := make([]float64, len(dialers))
+		for arm, dialer := range dialers {
+			if weight, ok := dialerWeights[dialer.Name()]; ok {
+				rewards[arm] = weight
+			}
+		}
+		b, err = bandit.NewEpsilonGreedy(0.1, counts, rewards)
+		if err != nil {
+			log.Errorf("unable to create weighted bandit: %w", err)
+			return nil, err
+		}
+	} else {
+		b, err = bandit.NewEpsilonGreedy(0.1, nil, nil)
+		if err != nil {
+			log.Errorf("unable to create bandit: %v", err)
+			return nil, err
+		}
+		if err := b.Init(len(dialers)); err != nil {
+			log.Errorf("unable to initialize bandit: %v", err)
+			return nil, err
+		}
 	}
 
-	if err := b.Init(len(dialers)); err != nil {
-		log.Errorf("unable to initialize bandit: %v", err)
-		return nil, err
-	}
 	dialer := &BanditDialer{
 		dialers: dialers,
 		bandit:  b,
@@ -70,7 +91,7 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 
 		if !failedUpstream {
 			log.Errorf("Dialer %v failed in %v seconds: %v", d.Name(), time.Since(start).Seconds(), err)
-			if err := bd.bandit.Update(chosenArm, 0); err != nil {
+			if err = bd.bandit.Update(chosenArm, 0); err != nil {
 				log.Errorf("unable to update bandit: %v", err)
 			}
 		} else {
@@ -79,7 +100,7 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 			// if the DNS resolves to localhost, for example. It is also possible
 			// that the proxy is blacklisted by upstream sites for some reason,
 			// so we have to choose some reasonable value.
-			if err := bd.bandit.Update(chosenArm, 0.00005); err != nil {
+			if err = bd.bandit.Update(chosenArm, 0.00005); err != nil {
 				log.Errorf("unable to update bandit: %v", err)
 			}
 		}
@@ -97,7 +118,7 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 	time.AfterFunc(secondsForSample*time.Second, func() {
 		speed := normalizeReceiveSpeed(dataRecv.Load())
 		//log.Debugf("Dialer %v received %v bytes in %v seconds, normalized speed: %v", d.Name(), dt.dataRecv, secondsForSample, speed)
-		if err := bd.bandit.Update(chosenArm, speed); err != nil {
+		if err = bd.bandit.Update(chosenArm, speed); err != nil {
 			log.Errorf("unable to update bandit: %v", err)
 		}
 	})

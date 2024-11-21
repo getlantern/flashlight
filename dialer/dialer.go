@@ -68,6 +68,12 @@ type Options struct {
 
 	// OnSuccess is the callback that is called by dialer after a successful dial.
 	OnSuccess func(ProxyDialer)
+
+	// LoadLastBanditRewards is a function that returns the last bandit rewards
+	// for each dialer. If this is set, the bandit will be initialized with the
+	// last rewards. The key must be the dialer name and the value must be the
+	// reward.
+	LoadLastBanditRewards func() map[string]float64
 }
 
 // Clone creates a deep copy of the Options object
