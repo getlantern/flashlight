@@ -76,6 +76,13 @@ func (fcd *fastConnectDialer) DialContext(ctx context.Context, network, addr str
 	return conn, err
 }
 
+func (fcd *fastConnectDialer) Close() error {
+	for _, d := range fcd.connected.dialers {
+		d.Stop()
+	}
+	return nil
+}
+
 func (fcd *fastConnectDialer) onConnected(pd ProxyDialer, connectTime time.Duration) {
 	log.Debugf("Connected to %v", pd.Name())
 

@@ -45,6 +45,10 @@ func (ccd *twoPhaseDialer) DialContext(ctx context.Context, network string, addr
 	return td.DialContext(ctx, network, addr)
 }
 
+func (ccd *twoPhaseDialer) Close() error {
+	return ccd.activeDialer.get().Close()
+}
+
 // protectedDialer protects a dialer.Dialer with a RWMutex. We can't use an atomic.Value here
 // because Dialer is an interface.
 type activeDialer struct {

@@ -48,6 +48,10 @@ func (d *noDialer) DialContext(ctx context.Context, network, addr string) (net.C
 	return nil, errors.New("no dialer available")
 }
 
+func (d *noDialer) Close() error {
+	return nil
+}
+
 const (
 	// NetworkConnect is a pseudo network name to instruct the dialer to establish
 	// a CONNECT tunnel to the proxy.
@@ -100,6 +104,9 @@ type Dialer interface {
 
 	// DialContext dials out to the domain or IP address representing a destination site.
 	DialContext(ctx context.Context, network, addr string) (net.Conn, error)
+
+	// Close closes the dialer and any resources it may have opened.
+	Close() error
 }
 
 // hasSucceedingDialer checks whether or not any of the given dialers is able to successfully dial our proxies
