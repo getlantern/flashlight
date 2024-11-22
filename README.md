@@ -125,7 +125,7 @@ Library Version - this is the version of the flashlight library and is based on 
 Application Version - this is like the original Version that's baked in at application build time. It is still used for displaying the version in the UI, checking enabled features, and auto-updates. This version is NOT compiled into the flashlight library but is handled by the applications themselves and passed to flashlight when necessary (for example when checking enabled features).
 
 ### When and how to update Library Version
-Whenever we release a new version of the flashlight library, we tag it using standard [Go module version numbering], for example `git tag v7.5.3`. Then, we update lantern-desktop and android-lantern to use that version of the flashlight library. That's it.
+Whenever we release a new version of the flashlight library, we tag it using standard [Go module version numbering], for example `git tag v7.5.3`. Then, we update lantern to use that version of the flashlight library. That's it.
 
 #### What about major version changes
 When changing major versions, for example v7 to v8, we need to udpate the package name as usual with Go. That means:
