@@ -12,10 +12,9 @@ import (
 
 // BanditDialer is responsible for continually choosing the optimized dialer.
 type BanditDialer struct {
-	dialers       []ProxyDialer
-	bandit        bandit.Bandit
-	opts          *Options
-	dialerWeights map[string]BanditMetrics
+	dialers []ProxyDialer
+	bandit  bandit.Bandit
+	opts    *Options
 }
 
 // NewBandit creates a new bandit given the available dialers and options with
@@ -41,7 +40,6 @@ func NewBandit(opts *Options) (Dialer, error) {
 		log.Debugf("Loading bandit weights from %s", opts.LoadLastBanditRewards)
 		// TODO: Load the weights from the file.
 		dialerWeights := opts.LoadLastBanditRewards()
-		dialer.dialerWeights = dialerWeights
 		counts := make([]int, len(dialers))
 		rewards := make([]float64, len(dialers))
 		for arm, dialer := range dialers {
