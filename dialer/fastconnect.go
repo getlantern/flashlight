@@ -117,8 +117,6 @@ func (fcd *fastConnectDialer) connectAll(dialers []ProxyDialer) {
 		// Loop until we're connected
 		if len(fcd.connected.dialers) < 2 {
 			fcd.parallelDial(dialers)
-			// Add jitter to avoid thundering herd
-			time.Sleep(time.Duration(rand.Intn(4000)) * time.Millisecond)
 		} else {
 			break
 		}
@@ -126,8 +124,7 @@ func (fcd *fastConnectDialer) connectAll(dialers []ProxyDialer) {
 		case <-fcd.stopCh:
 			log.Debug("Stopping parallel dialing")
 			return
-		default:
-
+		case <-time.After(time.Duration(rand.Intn(4000)) * time.Millisecond):
 		}
 	}
 	// At this point, we've tried all of the dialers, and they've all either
