@@ -124,10 +124,12 @@ func TestNewBandit(t *testing.T) {
 				assert.NotNil(t, got)
 				assert.NoError(t, err)
 				assert.IsType(t, &BanditDialer{}, got)
-				assert.Equal(t, 0.7, got.(*BanditDialer).bandit.Rewards[0])
-				assert.Equal(t, 10, got.(*BanditDialer).bandit.Counts[0])
-				assert.Equal(t, float64(0), got.(*BanditDialer).bandit.Rewards[1])
-				assert.Equal(t, 0, got.(*BanditDialer).bandit.Counts[1])
+				rewards := got.(*BanditDialer).bandit.GetRewards()
+				counts := got.(*BanditDialer).bandit.GetCounts()
+				assert.Equal(t, 0.7, rewards[0])
+				assert.Equal(t, 10, counts[0])
+				assert.Equal(t, float64(0), rewards[1])
+				assert.Equal(t, 0, counts[1])
 			},
 		},
 	}
