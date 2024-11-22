@@ -192,12 +192,11 @@ func normalizeReceiveSpeed(dataRecv uint64) float64 {
 	return (float64(dataRecv) / secondsForSample) / topExpectedBps
 }
 
-func (o *BanditDialer) Close() error {
+func (o *BanditDialer) Close() {
 	log.Debug("Closing all dialers")
 	for _, d := range o.dialers {
 		d.Stop()
 	}
-	return nil
 }
 
 func newDataTrackingConn(conn net.Conn, dataRecv *atomic.Uint64) *dataTrackingConn {
