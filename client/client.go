@@ -7,6 +7,8 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -739,6 +741,53 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 					countryCode,
 				)
 			}
+		},
+		SaveBanditRewards: func(metrics map[string]dialer.BanditMetrics) {
+			// check if file exists
+			dir := filepath.Join(configDir, "bandit")
+			if err := os.MkdirAll(dir, 0644); err != nil {
+				log.Errorf("Unable to create bandit directory: %v", err)
+				return
+			}
+			file := filepath.Join(dir, "rewards.csv")
+			csv := new(strings.Builder)
+			csv.WriteString("dialerName,reward,count\n")
+			for dialerName, metric := range metrics {
+				csv.WriteString(fmt.Sprintf("%s,%f,%d\n", dialerName, metric.Reward, metric.Count))
+			}
+			if err := os.WriteFile(file, []byte(csv.String()), 0644); err != nil {
+				log.Errorf("Unable to write bandit rewards to file: %v", err)
+			}
+		},
+		LoadLastBanditRewards: func() map[string]dialer.BanditMetrics {
+			dir := filepath.Join(configDir, "bandit")
+			file := filepath.Join(dir, "rewards.csv")
+			if _, err := os.Stat(file); os.IsNotExist(err) {
+				return nil
+			}
+			data, err := os.ReadFile(file)
+			if err != nil {
+				log.Errorf("Unable to read bandit rewards from file: %v", err)
+				return nil
+			}
+			lines := strings.Split(string(data), "\n")
+			metrics := make(map[string]dialer.BanditMetrics)
+			for i, line := range lines {
+				if i == 0 {
+					continue
+				}
+				parts := strings.Split(line, ",")
+				if len(parts) != 3 {
+					continue
+				}
+				reward, _ := strconv.ParseFloat(parts[1], 64)
+				count, _ := strconv.Atoi(parts[2])
+				metrics[parts[0]] = dialer.BanditMetrics{
+					Reward: reward,
+					Count:  count,
+				}
+			}
+			return metrics
 		},
 	})
 	return dialers, dialer, nil
