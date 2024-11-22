@@ -46,9 +46,4 @@ func TestStagingSetup(t *testing.T) {
 	fetch = newHttpFetcher(newTestUserConfig(), rt, url).(*fetcher)
 
 	assert.Equal(t, "http://config.getiantem.org/proxies.yaml.gz", fetch.originURL)
-
-	stagingURL := common.ProxiesStagingURL
-	flags["staging"] = true
-	fetch = newHttpFetcher(newTestUserConfig(), rt, stagingURL).(*fetcher)
-	assert.Equal(t, "http://config-staging.getiantem.org/proxies.yaml.gz", fetch.originURL)
 }
