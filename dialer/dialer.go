@@ -77,6 +77,8 @@ type Options struct {
 	// for each dialer. If this is set, the bandit will be initialized with the
 	// last metrics.
 	LoadLastBanditRewards func() map[string]BanditMetrics
+
+	SaveBanditRewards func(map[string]BanditMetrics)
 }
 
 type BanditMetrics struct {
