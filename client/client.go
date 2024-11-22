@@ -379,11 +379,6 @@ func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []
 // Stop is called when the client is no longer needed. It closes the
 // client listener and underlying dialer connection pool
 func (client *Client) Stop() error {
-	err := client.dialer.get().Close()
-	if err != nil {
-		log.Errorf("failed to close dialer: %w", err)
-	}
-
 	httpListener, _ := client.httpListener.Get(eventual.DontWait)
 	socksListener, _ := client.socksListener.Get(eventual.DontWait)
 
