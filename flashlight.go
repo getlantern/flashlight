@@ -442,7 +442,7 @@ func New(
 		}
 
 		// update the country if it has changed
-		if nc := new.GetCountry(); nc != country {
+		if nc := new.GetCountry(); nc != country && nc != "" {
 			log.Debugf("Setting detour country to %v", nc)
 			detour.SetCountry(nc)
 		}
@@ -546,7 +546,7 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 	configOpts := &services.ConfigOptions{
 		OriginURL:    url,
 		UserConfig:   f.userConfig,
-		RoundTripper: proxied.Fronted("", 0),
+		RoundTripper: proxied.ChainedThenFronted(),
 	}
 	return services.StartConfigService(handler, configOpts)
 }

@@ -10,7 +10,7 @@ import (
 
 const (
 	// UserConfigURL is the URL for fetching the per user proxy config.
-	UserConfigURL = "https://df.iantem.io/api/v1/config"
+	UserConfigURL = "http://df.iantem.io/api/v1/config"
 
 	// UserConfigStagingURL is the URL for fetching the per user proxy config in a staging environment.
 	UserConfigStagingURL = "https://api-staging.iantem.io/config"
