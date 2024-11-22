@@ -38,7 +38,6 @@ func NewBandit(opts *Options) (Dialer, error) {
 	}
 	if opts.LoadLastBanditRewards != nil {
 		log.Debugf("Loading bandit weights from %s", opts.LoadLastBanditRewards)
-		// TODO: Load the weights from the file.
 		dialerWeights := opts.LoadLastBanditRewards()
 		counts := make([]int, len(dialers))
 		rewards := make([]float64, len(dialers))
@@ -198,7 +197,6 @@ func (o *BanditDialer) Close() error {
 	for _, d := range o.dialers {
 		d.Stop()
 	}
-	// TODO: Save the bandit weights to a file.
 	return nil
 }
 
