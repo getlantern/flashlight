@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/eventual"
+
 	"github.com/getlantern/flashlight/v7/common"
 )
 
@@ -27,18 +27,13 @@ func TestInit(t *testing.T) {
 
 	// Note these dispatch functions will receive multiple configs -- local ones,
 	// embedded ones, and remote ones.
-	proxiesDispatch := func(cfg interface{}, src Source) {
-		proxies := cfg.(map[string]*commonconfig.ProxyConfig)
-		assert.True(t, len(proxies) > 0)
-		gotProxies.Set(true)
-	}
 	globalDispatch := func(cfg interface{}, src Source) {
 		global := cfg.(*Global)
 		assert.True(t, len(global.Client.MasqueradeSets) > 1)
 		gotGlobal.Set(true)
 	}
 	stop := Init(
-		".", flags, newTestUserConfig(), proxiesDispatch, nil, globalDispatch, nil, &http.Transport{
+		".", flags, newTestUserConfig(), globalDispatch, nil, &http.Transport{
 			Proxy: func(req *http.Request) (*url.URL, error) {
 				// the same token should also be configured on staging
 				// config-server, staging proxies and staging DDF distributions.
@@ -59,7 +54,6 @@ func TestInit(t *testing.T) {
 func TestInitWithURLs(t *testing.T) {
 	withTempDir(t, func(inTempDir func(string) string) {
 		globalConfig := newGlobalConfig(t)
-		proxiesConfig := newProxiesConfig(t)
 
 		globalConfig.GlobalConfigPollInterval = 3 * time.Second
 		globalConfig.ProxyConfigPollInterval = 1 * time.Second
@@ -75,20 +69,15 @@ func TestInitWithURLs(t *testing.T) {
 		// set up servers to serve global config and count number of requests
 		globalConfigURL, globalReqCount := startConfigServer(t, globalConfig)
 
-		// set up servers to serve global config and count number of requests
-		proxyConfigURL, proxyReqCount := startConfigServer(t, proxiesConfig)
-
 		// set up and call InitWithURLs
 		flags := make(map[string]interface{})
 		flags["staging"] = true
 
-		proxiesDispatch := func(interface{}, Source) {}
 		globalDispatch := func(interface{}, Source) {}
 		stop := InitWithURLs(
 			inTempDir("."), flags, newTestUserConfig(),
-			proxiesDispatch, nil,
 			globalDispatch, nil,
-			proxyConfigURL, globalConfigURL, &http.Transport{})
+			globalConfigURL, &http.Transport{})
 		defer stop()
 
 		// sleep some amount
@@ -100,7 +89,6 @@ func TestInitWithURLs(t *testing.T) {
 
 		// test that proxy & config servers were called the correct number of times
 		assert.GreaterOrEqual(t, 3, int(globalReqCount()), "should have fetched global config every %v", globalConfig.GlobalConfigPollInterval)
-		assert.GreaterOrEqual(t, 7, int(proxyReqCount()), "should have fetched proxy config every %v", globalConfig.ProxyConfigPollInterval)
 	})
 }
 
