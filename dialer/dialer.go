@@ -11,6 +11,7 @@ import (
 	"io"
 	"net"
 	"runtime/debug"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/golog"
@@ -18,10 +19,16 @@ import (
 
 var log = golog.LoggerFor("dialer")
 
+var currentDialer atomic.Value
+
 // New creates a new dialer that first tries to connect as quickly as possilbe while also
 // optimizing for the fastest dialer.
 func New(opts *Options) Dialer {
-	return NewTwoPhaseDialer(opts, func(opts *Options, existing Dialer) Dialer {
+	if currentDialer.Load() != nil {
+		log.Debug("Closing existing dialer")
+		currentDialer.Load().(Dialer).Close()
+	}
+	d := NewTwoPhaseDialer(opts, func(opts *Options, existing Dialer) Dialer {
 		bandit, err := NewBandit(opts)
 		if err != nil {
 			log.Errorf("Unable to create bandit: %v", err)
@@ -29,10 +36,12 @@ func New(opts *Options) Dialer {
 		}
 		return bandit
 	})
+	currentDialer.Store(d)
+	return d
 }
 
 // NoDialer returns a dialer that does nothing. This is useful during startup
-// until a real dialer is available.
+// when we don't yet have proxies to dial through.
 func NoDialer() Dialer {
 	return &noDialer{}
 }
@@ -48,9 +57,10 @@ func (d *noDialer) DialContext(ctx context.Context, network, addr string) (net.C
 	return nil, errors.New("no dialer available")
 }
 
-func (d *noDialer) Close() error {
-	return nil
-}
+func (d *noDialer) Close() {}
+
+// Make sure noDialer implements Dialer
+var _ Dialer = (*noDialer)(nil)
 
 const (
 	// NetworkConnect is a pseudo network name to instruct the dialer to establish
@@ -107,8 +117,8 @@ type Dialer interface {
 	// DialContext dials out to the domain or IP address representing a destination site.
 	DialContext(ctx context.Context, network, addr string) (net.Conn, error)
 
-	// Close closes the dialer and any resources it may have opened.
-	Close() error
+	// Close closes the dialer and cleans up any resources
+	Close()
 }
 
 // hasSucceedingDialer checks whether or not any of the given dialers is able to successfully dial our proxies
