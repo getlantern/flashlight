@@ -4,6 +4,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"strconv"
 	"testing"
 	"time"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/getlantern/broflake/clientcore"
 	"github.com/getlantern/common/config"
+	"github.com/getlantern/fronted"
 )
 
 func TestMakeBroflakeOptions(t *testing.T) {
@@ -50,7 +52,7 @@ func TestMakeBroflakeOptions(t *testing.T) {
 	}
 
 	// Ensure that supplied values make their way into the correct options structs
-	bo, wo, qo := makeBroflakeOptions(pc)
+	bo, wo, qo := makeBroflakeOptions(pc, mockFronting{})
 
 	assert.Equal(t, "desktop", bo.ClientType)
 	ctablesize, err := strconv.Atoi(pc.PluggableTransportSettings["broflake_ctablesize"])
@@ -170,7 +172,7 @@ func TestMakeBroflakeOptions(t *testing.T) {
 
 	// Ensure that unsupplied values result in options structs with default values
 	dpc := &config.ProxyConfig{}
-	bo, wo, qo = makeBroflakeOptions(dpc)
+	bo, wo, qo = makeBroflakeOptions(dpc, mockFronting{})
 
 	assert.Equal(t, bo.ClientType, dbo.ClientType)
 	assert.Equal(t, bo.CTableSize, dbo.CTableSize)
@@ -191,6 +193,20 @@ func TestMakeBroflakeOptions(t *testing.T) {
 	// Supports our test by contradiction, establishing the function pointer for the default STUNBatch function
 	assert.Equal(t, fmt.Sprintf("%p", wo.STUNBatch), fmt.Sprintf("%p", clientcore.DefaultSTUNBatchFunc))
 }
+
+type mockFronting struct{}
+
+func (m mockFronting) NewRoundTripper(masqueradeTimeout time.Duration) (http.RoundTripper, error) {
+	return nil, nil
+}
+
+func (m mockFronting) UpdateConfig(pool *x509.CertPool, providers map[string]*fronted.Provider, defaultProviderID string) {
+}
+
+func (m mockFronting) Close() {}
+
+// Make sure mockFronting implements the Fronting interface
+var _ fronted.Fronting = mockFronting{}
 
 func TestGetRandomSubset(t *testing.T) {
 	listSize := 100

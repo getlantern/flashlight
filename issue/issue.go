@@ -14,16 +14,13 @@ import (
 	"github.com/getlantern/flashlight/v7/logging"
 	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/flashlight/v7/util"
+	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 )
 
 var (
 	log        = golog.LoggerFor("flashlight.issue")
 	maxLogSize = 10247680
-
-	client = &http.Client{
-		Transport: proxied.Fronted("issue_fronted_roundtrip", 0),
-	}
 )
 
 const (
@@ -35,8 +32,8 @@ type Attachment struct {
 	Data []byte
 }
 
-// Sends an issue report to lantern-cloud/issue, which is then forwarded to ticket system via API
-func SendReport(
+// sendReport sends an issue report to lantern-cloud/issue, which is then forwarded to ticket system via API
+func sendReport(
 	userConfig common.UserConfig,
 	issueType int,
 	description string,
@@ -47,8 +44,9 @@ func SendReport(
 	model string, // alphanumeric name
 	osVersion string,
 	attachments []*Attachment,
+	fronted fronted.Fronting,
 ) (err error) {
-	return sendReport(
+	return doSendReport(
 		userConfig.GetDeviceID(),
 		strconv.Itoa(int(userConfig.GetUserID())),
 		userConfig.GetToken(),
@@ -62,10 +60,11 @@ func SendReport(
 		model,
 		osVersion,
 		attachments,
+		fronted,
 	)
 }
 
-func sendReport(
+func doSendReport(
 	deviceID string,
 	userID string,
 	proToken string,
@@ -78,7 +77,9 @@ func sendReport(
 	device string,
 	model string,
 	osVersion string,
-	attachments []*Attachment) error {
+	attachments []*Attachment,
+	fronted fronted.Fronting,
+) error {
 	r := &Request{}
 
 	r.Type = Request_ISSUE_TYPE(issueType)
@@ -137,6 +138,9 @@ func sendReport(
 	}
 	req.Header.Set("content-type", "application/x-protobuf")
 
+	client := &http.Client{
+		Transport: proxied.Fronted("issue_fronted_roundtrip", 0, fronted),
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return log.Errorf("unable to send issue report: %v", err)

@@ -5,17 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
-	"net/http"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/getlantern/eventual/v2"
+	"github.com/getlantern/fronted"
 	geo "github.com/getlantern/geolookup"
 	"github.com/getlantern/golog"
 
 	"github.com/getlantern/flashlight/v7/ops"
-	"github.com/getlantern/flashlight/v7/proxied"
 )
 
 var (
@@ -26,7 +25,6 @@ var (
 	watchers       []chan bool
 	persistToFile  string
 	mx             sync.Mutex
-	roundTripper   http.RoundTripper
 )
 
 const (
@@ -39,10 +37,6 @@ type GeoInfo struct {
 	IP       string
 	City     *geo.City
 	FromDisk bool
-}
-
-func init() {
-	SetDefaultRoundTripper()
 }
 
 // GetIP gets the IP. If the IP hasn't been determined yet, waits up to the
@@ -147,13 +141,9 @@ func OnRefresh() <-chan bool {
 	return ch
 }
 
-func init() {
-	go run()
-}
-
-func run() {
+func Run(fronter fronted.Fronting) {
 	for range refreshRequest {
-		geoInfo := lookup()
+		geoInfo := lookup(fronter)
 
 		// Check if the IP has changed and if the old IP is simply cached from
 		// disk. If it is cached, we should still notify anyone looking for
@@ -214,11 +204,11 @@ func setGeoInfo(gi *GeoInfo, persist bool) {
 	}
 }
 
-func lookup() *GeoInfo {
+func lookup(fronter fronted.Fronting) *GeoInfo {
 	consecutiveFailures := 0
 
 	for {
-		gi, err := doLookup()
+		gi, err := doLookup(fronter)
 		if err != nil {
 			log.Debugf("Unable to get current location: %s", err)
 			wait := time.Duration(
@@ -241,9 +231,14 @@ func lookup() *GeoInfo {
 	}
 }
 
-func doLookup() (*GeoInfo, error) {
+func doLookup(fronter fronted.Fronting) (*GeoInfo, error) {
 	op := ops.Begin("geolookup")
 	defer op.End()
+	roundTripper, err := fronter.NewRoundTripper(20 * time.Second)
+	if err != nil {
+		log.Errorf("Could not create roundTripper %v", err)
+		return nil, op.FailIf(err)
+	}
 	city, ip, err := geo.LookupIP("", roundTripper)
 
 	if err != nil {
@@ -255,8 +250,4 @@ func doLookup() (*GeoInfo, error) {
 			City:     city,
 			FromDisk: false},
 		nil
-}
-
-func SetDefaultRoundTripper() {
-	roundTripper = proxied.ParallelPreferChained()
 }

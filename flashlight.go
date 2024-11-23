@@ -93,6 +93,7 @@ type Flashlight struct {
 	errorHandler     func(HandledErrorType, error)
 	mxProxyListeners sync.RWMutex
 	proxyListeners   []func(map[string]*commonconfig.ProxyConfig, config.Source)
+	fronting         fronted.Fronting
 }
 
 // clientCallbacks are callbacks the client is configured with
@@ -104,13 +105,269 @@ type clientCallbacks struct {
 	onSucceedingProxy func()
 }
 
+// New creates a client proxy.
+func New(
+	appName string,
+	appVersion string,
+	revisionDate string,
+	configDir string,
+	enableVPN bool,
+	disconnected func() bool,
+	_proxyAll func() bool,
+	allowPrivateHosts func() bool,
+	autoReport func() bool,
+	flagsAsMap map[string]interface{},
+	userConfig common.UserConfig,
+	statsTracker stats.Tracker,
+	isPro func() bool,
+	lang func() string,
+	reverseDNS func(host string) (string, error),
+	eventWithLabel func(category, action, label string),
+	options ...Option,
+) (*Flashlight, error) {
+	log.Debugf("Running in app: %v", appName)
+	log.Debugf("Using configdir: %v", configDir)
+	displayVersion(appVersion, revisionDate)
+	common.CompileTimeApplicationVersion = appVersion
+	deviceID := userConfig.GetDeviceID()
+	log.Debugf("You can query for this device's activity under device id: %v", deviceID)
+	fops.InitGlobalContext(appName, appVersion, revisionDate, deviceID, isPro, func() string { return geolookup.GetCountry(0) })
+	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
+
+	f := &Flashlight{
+		callbacks: clientCallbacks{
+			onConfigUpdate: func(*config.Global, config.Source) {
+				log.Debug("[Startup] client config updated")
+			},
+			onInit: func() {
+				log.Debug("[Startup] onInit called")
+			},
+			onProxiesUpdate: func(_ []dialer.ProxyDialer, src config.Source) {
+				log.Debugf("[Startup] onProxiesUpdate called from %v", src)
+			},
+			onDialError: func(err error, hasSucceeding bool) {
+
+			},
+			onSucceedingProxy: func() {
+				log.Debug("[Startup] onSucceedingProxy called")
+			},
+		},
+		configDir:  configDir,
+		flagsAsMap: flagsAsMap,
+		userConfig: userConfig,
+		isPro:      isPro,
+		autoReport: autoReport,
+		op:         fops.Begin("client_started"),
+		errorHandler: func(t HandledErrorType, err error) {
+			log.Errorf("%v: %v", t, err)
+		},
+		proxyListeners: make([]func(map[string]*commonconfig.ProxyConfig, config.Source), 0),
+	}
+
+	globalConfig, err := config.GlobalConfig(configDir, flagsAsMap)
+	if err != nil {
+		panic(log.Errorf("unable to load global config: %v", err))
+	}
+	f.global = globalConfig
+	certs, err := globalConfig.TrustedCACerts()
+	if err != nil {
+		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
+	}
+
+	f.fronting, err = fronted.NewFronter(certs, globalConfig.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(configDir, "masquerade_cache"))
+	if err != nil {
+		log.Errorf("Unable to configure fronted: %v", err)
+	}
+	geolookup.Run(f.fronting)
+
+	f.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
+		log.Debug("Applying proxy config with proxies")
+		dialers := f.client.Configure(chained.CopyConfigs(proxies))
+		if dialers != nil {
+			f.callbacks.onProxiesUpdate(dialers, src)
+		}
+	})
+
+	var grabber dnsgrab.Server
+	var grabberErr error
+	if enableVPN {
+		grabber, grabberErr = dnsgrab.Listen(50000,
+			"127.0.0.1:53",
+			func() string { return "8.8.8.8" })
+		if grabberErr != nil {
+			log.Errorf("dnsgrab unable to listen: %v", grabberErr)
+		}
+
+		go func() {
+			if err := grabber.Serve(); err != nil {
+				log.Errorf("dnsgrab stopped serving: %v", err)
+			}
+		}()
+
+		reverseDNS = func(addr string) (string, error) {
+			host, port, splitErr := net.SplitHostPort(addr)
+			if splitErr != nil {
+				host = addr
+			}
+			ip := net.ParseIP(host)
+			if ip == nil {
+				log.Debugf("Unable to parse IP %v, passing through address as is", host)
+				return addr, nil
+			}
+			updatedHost, ok := grabber.ReverseLookup(ip)
+			if !ok {
+				// This means that the IP is one of our fake IPs (like 240.0.0.5) but dnsgrab doesn't know it. We cache dnsgrab entries
+				// on disk for 24 hours, so this should almost never happen.
+				return "", errors.New("Invalid IP address")
+			}
+			if splitErr != nil {
+				return updatedHost, nil
+			}
+			return fmt.Sprintf("%v:%v", updatedHost, port), nil
+		}
+	}
+
+	useShortcut := func() bool {
+		return !_proxyAll() && f.featureEnabled(config.FeatureShortcut) && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
+	}
+
+	useDetour := func() bool {
+		return !_proxyAll() && f.featureEnabled(config.FeatureDetour) && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
+	}
+
+	proxyAll := func() bool {
+		useShortcutOrDetour := useShortcut() || useDetour()
+		return !useShortcutOrDetour && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
+	}
+
+	for _, option := range options {
+		option(f)
+	}
+
+	cl, err := client.NewClient(
+		f.configDir,
+		disconnected,
+		proxyAll,
+		useShortcut,
+		shortcut.Allow,
+		useDetour,
+		func() bool {
+			return !f.featureEnabled(config.FeatureNoHTTPSEverywhere)
+		},
+		userConfig,
+		statsTracker,
+		allowPrivateHosts,
+		lang,
+		reverseDNS,
+		eventWithLabel,
+		f.callbacks.onDialError,
+		f.callbacks.onSucceedingProxy,
+	)
+	if err != nil {
+		fatalErr := fmt.Errorf("unable to initialize client: %v", err)
+		f.op.FailIf(fatalErr)
+		f.op.End()
+		return nil, fatalErr
+	}
+	f.client = cl
+	return f, nil
+}
+
+// Run starts background services and runs the client proxy. It blocks as long as
+// the proxy is running.
+func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
+	afterStart func(cl *client.Client),
+	onError func(err error),
+) {
+	stop := f.StartBackgroundServices()
+	defer stop()
+
+	f.RunClientListeners(httpProxyAddr, socksProxyAddr, afterStart, onError)
+}
+
+// Starts background services like config fetching
+func (f *Flashlight) StartBackgroundServices() func() {
+	log.Debug("Starting client proxy background services")
+	// check # of goroutines every minute, print the top 5 stacks with most
+	// goroutines if the # exceeds 800 and is increasing.
+	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
+
+	stopBypass := bypass.Start(f.addProxyListener, f.configDir, f.userConfig, f.fronting)
+
+	stopConfigFetch := f.startConfigFetch()
+	geolookup.EnablePersistence(filepath.Join(f.configDir, "latestgeoinfo.json"))
+	geolookup.Refresh()
+
+	return func() {
+		stopConfigFetch()
+		stopMonitor()
+		stopBypass()
+	}
+}
+
+// Runs client listeners, blocking as long as the proxy is running.
+func (f *Flashlight) RunClientListeners(httpProxyAddr, socksProxyAddr string,
+	afterStart func(cl *client.Client),
+	onError func(err error),
+) {
+	// Until we know our country, default to IR which has all detection rules
+	log.Debug("Defaulting detour country to IR until real country is known")
+	detour.SetCountry("IR")
+	go func() {
+		country := geolookup.GetCountry(eventual.Forever)
+		log.Debugf("Setting detour country to %v", country)
+		detour.SetCountry(country)
+	}()
+
+	if socksProxyAddr != "" {
+		go func() {
+			log.Debug("Starting client SOCKS5 proxy")
+			err := f.client.ListenAndServeSOCKS5(socksProxyAddr)
+			if err != nil {
+				log.Errorf("Unable to start SOCKS5 proxy: %v", err)
+			}
+		}()
+	}
+
+	if onError == nil {
+		onError = func(_ error) {}
+	}
+	onGeo := geolookup.OnRefresh()
+
+	log.Debug("Starting client HTTP proxy")
+	err := f.client.ListenAndServeHTTP(httpProxyAddr, func() {
+		log.Debug("Started client HTTP proxy")
+		proxied.SetProxyAddr(f.client.Addr)
+		email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
+
+		ops.Go(func() {
+			// wait for geo info before reporting so that we know the client ip and
+			// country
+			select {
+			case <-onGeo:
+			case <-time.After(5 * time.Minute):
+				log.Debug("failed to get geolocation info within 5 minutes, just record end of startup anyway")
+			}
+			f.op.End()
+		})
+
+		if afterStart != nil {
+			afterStart(f.client)
+		}
+	})
+	if err != nil {
+		log.Errorf("Error running client proxy: %v", err)
+		onError(err)
+	}
+}
+
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	log.Debugf("Got global config from %v", src)
 	f.mxGlobal.Lock()
 	f.global = cfg
 	f.mxGlobal.Unlock()
 	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
-	f.applyClientConfig(cfg)
+	f.applyGlobalConfig(cfg)
 	f.applyOtel(cfg)
 	f.callbacks.onConfigUpdate(cfg, src)
 	f.callbacks.onInit()
@@ -253,9 +510,15 @@ func (f *Flashlight) startConfigFetch() func() {
 	globalDispatch := func(conf interface{}, src config.Source) {
 		cfg := conf.(*config.Global)
 		log.Debugf("Applying global config")
+		certs, err := cfg.TrustedCACerts()
+		if err != nil {
+			log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
+			return
+		}
+		f.fronting.UpdateConfig(certs, cfg.Client.FrontedProviders(), config.DefaultFrontedProviderID)
 		f.onGlobalConfig(cfg, src)
 	}
-	rt := proxied.ParallelPreferChained()
+	rt := proxied.ParallelPreferChained(f.fronting)
 
 	onProxiesSaveError := func(err error) {
 		f.errorHandler(ErrorTypeProxySaveFailure, err)
@@ -277,247 +540,6 @@ func (f *Flashlight) applyOtel(cfg *config.Global) {
 	}
 }
 
-// New creates a client proxy.
-func New(
-	appName string,
-	appVersion string,
-	revisionDate string,
-	configDir string,
-	enableVPN bool,
-	disconnected func() bool,
-	_proxyAll func() bool,
-	allowPrivateHosts func() bool,
-	autoReport func() bool,
-	flagsAsMap map[string]interface{},
-	userConfig common.UserConfig,
-	statsTracker stats.Tracker,
-	isPro func() bool,
-	lang func() string,
-	reverseDNS func(host string) (string, error),
-	eventWithLabel func(category, action, label string),
-	options ...Option,
-) (*Flashlight, error) {
-	log.Debugf("Running in app: %v", appName)
-	log.Debugf("Using configdir: %v", configDir)
-	displayVersion(appVersion, revisionDate)
-	common.CompileTimeApplicationVersion = appVersion
-	deviceID := userConfig.GetDeviceID()
-	log.Debugf("You can query for this device's activity under device id: %v", deviceID)
-	fops.InitGlobalContext(appName, appVersion, revisionDate, deviceID, isPro, func() string { return geolookup.GetCountry(0) })
-	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
-
-	f := &Flashlight{
-		callbacks: clientCallbacks{
-			onConfigUpdate: func(*config.Global, config.Source) {
-				log.Debug("[Startup] client config updated")
-			},
-			onInit: func() {
-				log.Debug("[Startup] onInit called")
-			},
-			onProxiesUpdate: func(_ []dialer.ProxyDialer, src config.Source) {
-				log.Debugf("[Startup] onProxiesUpdate called from %v", src)
-			},
-			onDialError: func(err error, hasSucceeding bool) {
-
-			},
-			onSucceedingProxy: func() {
-				log.Debug("[Startup] onSucceedingProxy called")
-			},
-		},
-		configDir:  configDir,
-		flagsAsMap: flagsAsMap,
-		userConfig: userConfig,
-		isPro:      isPro,
-		global:     nil,
-		autoReport: autoReport,
-		op:         fops.Begin("client_started"),
-		errorHandler: func(t HandledErrorType, err error) {
-			log.Errorf("%v: %v", t, err)
-		},
-		proxyListeners: make([]func(map[string]*commonconfig.ProxyConfig, config.Source), 0),
-	}
-
-	f.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
-		log.Debug("Applying proxy config with proxies")
-		dialers := f.client.Configure(chained.CopyConfigs(proxies))
-		if dialers != nil {
-			f.callbacks.onProxiesUpdate(dialers, src)
-		}
-	})
-
-	var grabber dnsgrab.Server
-	var grabberErr error
-	if enableVPN {
-		grabber, grabberErr = dnsgrab.Listen(50000,
-			"127.0.0.1:53",
-			func() string { return "8.8.8.8" })
-		if grabberErr != nil {
-			log.Errorf("dnsgrab unable to listen: %v", grabberErr)
-		}
-
-		go func() {
-			if err := grabber.Serve(); err != nil {
-				log.Errorf("dnsgrab stopped serving: %v", err)
-			}
-		}()
-
-		reverseDNS = func(addr string) (string, error) {
-			host, port, splitErr := net.SplitHostPort(addr)
-			if splitErr != nil {
-				host = addr
-			}
-			ip := net.ParseIP(host)
-			if ip == nil {
-				log.Debugf("Unable to parse IP %v, passing through address as is", host)
-				return addr, nil
-			}
-			updatedHost, ok := grabber.ReverseLookup(ip)
-			if !ok {
-				// This means that the IP is one of our fake IPs (like 240.0.0.5) but dnsgrab doesn't know it. We cache dnsgrab entries
-				// on disk for 24 hours, so this should almost never happen.
-				return "", errors.New("Invalid IP address")
-			}
-			if splitErr != nil {
-				return updatedHost, nil
-			}
-			return fmt.Sprintf("%v:%v", updatedHost, port), nil
-		}
-	}
-
-	useShortcut := func() bool {
-		return !_proxyAll() && f.featureEnabled(config.FeatureShortcut) && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
-	}
-
-	useDetour := func() bool {
-		return !_proxyAll() && f.featureEnabled(config.FeatureDetour) && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
-	}
-
-	proxyAll := func() bool {
-		useShortcutOrDetour := useShortcut() || useDetour()
-		return !useShortcutOrDetour && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
-	}
-
-	for _, option := range options {
-		option(f)
-	}
-
-	cl, err := client.NewClient(
-		f.configDir,
-		disconnected,
-		proxyAll,
-		useShortcut,
-		shortcut.Allow,
-		useDetour,
-		func() bool {
-			return !f.featureEnabled(config.FeatureNoHTTPSEverywhere)
-		},
-		userConfig,
-		statsTracker,
-		allowPrivateHosts,
-		lang,
-		reverseDNS,
-		eventWithLabel,
-		f.callbacks.onDialError,
-		f.callbacks.onSucceedingProxy,
-	)
-	if err != nil {
-		fatalErr := fmt.Errorf("unable to initialize client: %v", err)
-		f.op.FailIf(fatalErr)
-		f.op.End()
-		return nil, fatalErr
-	}
-	f.client = cl
-	return f, nil
-}
-
-// Run starts background services and runs the client proxy. It blocks as long as
-// the proxy is running.
-func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
-	afterStart func(cl *client.Client),
-	onError func(err error),
-) {
-	stop := f.StartBackgroundServices()
-	defer stop()
-
-	f.RunClientListeners(httpProxyAddr, socksProxyAddr, afterStart, onError)
-}
-
-// Starts background services like config fetching
-func (f *Flashlight) StartBackgroundServices() func() {
-	log.Debug("Starting client proxy background services")
-	// check # of goroutines every minute, print the top 5 stacks with most
-	// goroutines if the # exceeds 800 and is increasing.
-	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
-
-	stopBypass := bypass.Start(f.addProxyListener, f.configDir, f.userConfig)
-
-	stopConfigFetch := f.startConfigFetch()
-	geolookup.EnablePersistence(filepath.Join(f.configDir, "latestgeoinfo.json"))
-	geolookup.Refresh()
-
-	return func() {
-		stopConfigFetch()
-		stopMonitor()
-		stopBypass()
-	}
-}
-
-// Runs client listeners, blocking as long as the proxy is running.
-func (f *Flashlight) RunClientListeners(httpProxyAddr, socksProxyAddr string,
-	afterStart func(cl *client.Client),
-	onError func(err error),
-) {
-	// Until we know our country, default to IR which has all detection rules
-	log.Debug("Defaulting detour country to IR until real country is known")
-	detour.SetCountry("IR")
-	go func() {
-		country := geolookup.GetCountry(eventual.Forever)
-		log.Debugf("Setting detour country to %v", country)
-		detour.SetCountry(country)
-	}()
-
-	if socksProxyAddr != "" {
-		go func() {
-			log.Debug("Starting client SOCKS5 proxy")
-			err := f.client.ListenAndServeSOCKS5(socksProxyAddr)
-			if err != nil {
-				log.Errorf("Unable to start SOCKS5 proxy: %v", err)
-			}
-		}()
-	}
-
-	if onError == nil {
-		onError = func(_ error) {}
-	}
-	onGeo := geolookup.OnRefresh()
-
-	log.Debug("Starting client HTTP proxy")
-	err := f.client.ListenAndServeHTTP(httpProxyAddr, func() {
-		log.Debug("Started client HTTP proxy")
-		proxied.SetProxyAddr(f.client.Addr)
-		email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
-
-		ops.Go(func() {
-			// wait for geo info before reporting so that we know the client ip and
-			// country
-			select {
-			case <-onGeo:
-			case <-time.After(5 * time.Minute):
-				log.Debug("failed to get geolocation info within 5 minutes, just record end of startup anyway")
-			}
-			f.op.End()
-		})
-
-		if afterStart != nil {
-			afterStart(f.client)
-		}
-	})
-	if err != nil {
-		log.Errorf("Error running client proxy: %v", err)
-		onError(err)
-	}
-}
-
 // SetErrorHandler configures error handling. All errors provided to the handler are significant,
 // but not enough to stop operation of the Flashlight instance. This method must be called before
 // calling Run. All errors provided to the handler will be of a HandledErrorType defined in this
@@ -536,13 +558,13 @@ func (f *Flashlight) Stop() error {
 	return f.client.Stop()
 }
 
-func (f *Flashlight) applyClientConfig(cfg *config.Global) {
+func (f *Flashlight) applyGlobalConfig(cfg *config.Global) {
 	f.client.DNSResolutionMapForDirectDialsEventual.Set(cfg.Client.DNSResolutionMapForDirectDials)
 	certs, err := cfg.TrustedCACerts()
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
 	} else if cfg.Client != nil && cfg.Client.Fronted != nil {
-		fronted.Configure(certs, cfg.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(f.configDir, "masquerade_cache"))
+		f.fronting.UpdateConfig(certs, cfg.Client.FrontedProviders(), config.DefaultFrontedProviderID)
 	} else {
 		log.Errorf("Unable to configured fronted (no config)")
 	}

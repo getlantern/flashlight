@@ -1,10 +1,10 @@
 package proxied
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/fronted"
 )
@@ -15,16 +15,22 @@ const DefaultMasqueradeTimeout = 5 * time.Minute
 // fronting.
 //
 // Leave masqueradeTimeout as 0 to use a default value.
-func Fronted(opName string, masqueradeTimeout time.Duration) http.RoundTripper {
+func Fronted(opName string, masqueradeTimeout time.Duration,
+	fronted fronted.Fronting) http.RoundTripper {
 	if masqueradeTimeout == 0 {
 		masqueradeTimeout = DefaultMasqueradeTimeout
 	}
-	return frontedRoundTripper{masqueradeTimeout: masqueradeTimeout, opName: opName}
+	return frontedRoundTripper{
+		masqueradeTimeout: masqueradeTimeout,
+		opName:            opName,
+		fronted:           fronted,
+	}
 }
 
 type frontedRoundTripper struct {
 	masqueradeTimeout time.Duration
 	opName            string
+	fronted           fronted.Fronting
 }
 
 // Use a wrapper for fronted.NewDirect to avoid blocking
@@ -35,9 +41,9 @@ func (f frontedRoundTripper) RoundTrip(req *http.Request) (*http.Response, error
 		op := ops.Begin(f.opName)
 		defer op.End()
 	}
-	rt, ok := fronted.NewFronted(f.masqueradeTimeout)
-	if !ok {
-		return nil, errors.New("Unable to obtain direct fronter")
+	rt, err := f.fronted.NewRoundTripper(f.masqueradeTimeout)
+	if err != nil {
+		return nil, fmt.Errorf("unable to obtain direct fronter %v", err)
 	}
 	changeUserAgent(req)
 	return rt.RoundTrip(req)

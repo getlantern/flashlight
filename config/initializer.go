@@ -11,7 +11,6 @@ import (
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/v7/common"
-	"github.com/getlantern/flashlight/v7/embeddedconfig"
 )
 
 const packageLogPrefix = "flashlight.config"
@@ -109,16 +108,14 @@ func InitWithURLs(
 
 	// These are the options for fetching the per-user proxy config.
 	proxyOptions := &options{
-		saveDir:          configDir,
-		onSaveError:      onProxiesSaveError,
-		obfuscate:        obfuscate(flags),
-		name:             "proxies.yaml",
-		originURL:        proxyURL,
-		userConfig:       userConfig,
-		unmarshaler:      newProxiesUnmarshaler(),
-		dispatch:         proxiesDispatch,
-		embeddedData:     embeddedconfig.Proxies,
-		embeddedRequired: false,
+		saveDir:     configDir,
+		onSaveError: onProxiesSaveError,
+		obfuscate:   obfuscate(flags),
+		name:        "proxies.yaml",
+		originURL:   proxyURL,
+		userConfig:  userConfig,
+		unmarshaler: newProxiesUnmarshaler(),
+		dispatch:    proxiesDispatch,
 		sleep: func() time.Duration {
 			mx.RLock()
 			defer mx.RUnlock()
@@ -134,24 +131,23 @@ func InitWithURLs(
 
 	// These are the options for fetching the global config.
 	globalOptions := &options{
-		saveDir:          configDir,
-		onSaveError:      onGlobalSaveError,
-		obfuscate:        obfuscate(flags),
-		name:             "global.yaml",
-		originURL:        globalURL,
-		userConfig:       userConfig,
-		unmarshaler:      newGlobalUnmarshaler(flags),
-		dispatch:         globalDispatch,
-		embeddedData:     embeddedconfig.Global,
-		embeddedRequired: true,
+		saveDir:     configDir,
+		onSaveError: onGlobalSaveError,
+		obfuscate:   obfuscate(flags),
+		name:        "global.yaml",
+		originURL:   globalURL,
+		userConfig:  userConfig,
+		unmarshaler: newGlobalUnmarshaler(flags),
+		dispatch:    globalDispatch,
 		sleep: func() time.Duration {
 			mx.RLock()
 			defer mx.RUnlock()
 			return globalConfigPollInterval
 		},
-		sticky: isSticky(flags),
-		rt:     rt,
-		opName: "fetch_global",
+		sticky:      isSticky(flags),
+		rt:          rt,
+		opName:      "fetch_global",
+		ignoreSaved: true,
 	}
 
 	stopGlobal := pipeConfig(globalOptions)
@@ -170,7 +166,7 @@ func newGlobalUnmarshaler(flags map[string]interface{}) func(bytes []byte) (inte
 		if err := yaml.Unmarshal(bytes, gl); err != nil {
 			return nil, err
 		}
-		if err := gl.validate(); err != nil {
+		if err := gl.Validate(); err != nil {
 			return nil, err
 		}
 		return gl, nil

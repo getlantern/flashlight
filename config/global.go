@@ -131,15 +131,11 @@ func (cfg *Global) applyFlags(flags map[string]interface{}) {
 		switch key {
 		case "cloudconfigca":
 			cfg.CloudConfigCA = value.(string)
-		case "borda-report-interval":
-			cfg.BordaReportInterval = value.(time.Duration)
-		case "borda-sample-percentage":
-			cfg.BordaSamplePercentage = value.(float64)
 		}
 	}
 }
 
-func (cfg *Global) validate() error {
+func (cfg *Global) Validate() error {
 	err := cfg.Client.Validate()
 	if err != nil {
 		return err

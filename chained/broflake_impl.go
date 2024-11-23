@@ -13,6 +13,7 @@ import (
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/proxied"
+	"github.com/getlantern/fronted"
 )
 
 func init() {
@@ -30,10 +31,11 @@ type broflakeImpl struct {
 	ui             *clientcore.UIImpl
 }
 
-func newBroflakeImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newBroflakeImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn,
+	fronting fronted.Fronting) (proxyImpl, error) {
 	// TODO: I don't know what the reportDialCoreFn is, and I'm not sure if I need to know. I'm
 	// just imitating the function signature and approach of other impls...
-	bo, wo, qo := makeBroflakeOptions(pc)
+	bo, wo, qo := makeBroflakeOptions(pc, fronting)
 
 	// Construct, init, and start a Broflake client!
 	bfconn, ui, err := clientcore.NewBroflake(bo, wo, nil)
@@ -67,7 +69,7 @@ func (b *broflakeImpl) close() {
 
 // makeBroflakeOptions constructs the options structs required by the Broflake client constructor,
 // overriding fields with values supplied in a ProxyConfig as applicable
-func makeBroflakeOptions(pc *config.ProxyConfig) (
+func makeBroflakeOptions(pc *config.ProxyConfig, fronting fronted.Fronting) (
 	*clientcore.BroflakeOptions,
 	*clientcore.WebRTCOptions,
 	*clientcore.QUICLayerOptions,
@@ -140,8 +142,9 @@ func makeBroflakeOptions(pc *config.ProxyConfig) (
 	// Broflake's HTTP client isn't currently configurable via PluggableTransportSettings, and so
 	// we just give it this domain fronted client in all cases
 	wo.HttpClient = &http.Client{
-		Transport: proxied.Fronted("broflake_fronted_roundtrip", masqueradeTimeout),
-		Timeout:   60 * time.Second,
+		Transport: proxied.Fronted("broflake_fronted_roundtrip",
+			masqueradeTimeout, fronting),
+		Timeout: 60 * time.Second,
 	}
 
 	// Override QUICLayerOptions defaults as applicable

@@ -26,6 +26,7 @@ import (
 	"github.com/getlantern/flashlight/v7/dialer"
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/proxied"
+	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 )
 
@@ -53,14 +54,16 @@ type bypass struct {
 	infos     map[string]*commonconfig.ProxyConfig
 	proxies   []*proxy
 	mxProxies sync.Mutex
+	fronter   fronted.Fronting
 }
 
 // Start sends periodic traffic to the bypass server. The client periodically sends traffic to the server both via
 // domain fronting and proxying to determine if proxies are blocked.
-func Start(listen func(func(map[string]*commonconfig.ProxyConfig, config.Source)), configDir string, userConfig common.UserConfig) func() {
+func Start(listen func(func(map[string]*commonconfig.ProxyConfig, config.Source)), configDir string, userConfig common.UserConfig, fronter fronted.Fronting) func() {
 	b := &bypass{
 		infos:   make(map[string]*commonconfig.ProxyConfig),
 		proxies: make([]*proxy, 0),
+		fronter: fronter,
 	}
 	listen(func(infos map[string]*commonconfig.ProxyConfig, src config.Source) {
 		b.OnProxies(infos, configDir, userConfig)
@@ -83,7 +86,7 @@ func (b *bypass) OnProxies(infos map[string]*commonconfig.ProxyConfig, configDir
 		}
 	}
 
-	dialers := chained.CreateDialersMap(configDir, supportedInfos, userConfig)
+	dialers := chained.CreateDialersMap(configDir, supportedInfos, userConfig, b.fronter)
 	for k, v := range supportedInfos {
 		dialer := dialers[k]
 		if dialer == nil {
@@ -108,7 +111,7 @@ func (b *bypass) newProxy(name string, pc *commonconfig.ProxyConfig, configDir s
 		name:              name,
 		done:              make(chan bool),
 		toggle:            atomic.NewBool(mrand.Float32() < 0.5),
-		dfRoundTripper:    proxied.Fronted("bypass_fronted_roundtrip", 0),
+		dfRoundTripper:    proxied.Fronted("bypass_fronted_roundtrip", 0, b.fronter),
 		userConfig:        userConfig,
 		proxyRoundTripper: proxyRoundTripper(name, pc, configDir, userConfig, dialer),
 	}

@@ -1,7 +1,6 @@
 package issue
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -23,7 +22,7 @@ func TestMain(m *testing.M) {
 	defer os.RemoveAll(tempConfigDir)
 
 	// Init domain-fronting
-	global, err := ioutil.ReadFile("../embeddedconfig/global.yaml")
+	global, err := os.ReadFile("../embeddedconfig/global.yaml")
 	if err != nil {
 		log.Errorf("Unable to load embedded global config: %v", err)
 		os.Exit(1)
@@ -39,7 +38,7 @@ func TestMain(m *testing.M) {
 		log.Errorf("Unable to read trusted certs: %v", err)
 	}
 	log.Debug(cfg.Client.FrontedProviders())
-	fronted.Configure(certs, cfg.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(tempConfigDir, "masquerade_cache"))
+	fronted.NewFronter(certs, cfg.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(tempConfigDir, "masquerade_cache"))
 
 	// Perform initial geolookup with a high timeout so that we don't later timeout when trying to
 	geolookup.Refresh()
