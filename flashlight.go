@@ -96,6 +96,7 @@ type Flashlight struct {
 	errorHandler     func(HandledErrorType, error)
 	mxProxyListeners sync.RWMutex
 	proxyListeners   []func(map[string]*commonconfig.ProxyConfig, config.Source)
+	fronted          fronted.Fronted
 }
 
 // clientCallbacks are callbacks the client is configured with
@@ -105,171 +106,6 @@ type clientCallbacks struct {
 	onConfigUpdate    func(*config.Global, config.Source)
 	onDialError       func(error, bool)
 	onSucceedingProxy func()
-}
-
-func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
-	log.Debugf("Got global config from %v", src)
-	f.mxGlobal.Lock()
-	f.global = cfg
-	f.mxGlobal.Unlock()
-	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
-	f.applyClientConfig(cfg)
-	f.applyOtel(cfg)
-	f.callbacks.onConfigUpdate(cfg, src)
-	f.callbacks.onInit()
-}
-
-// EnabledFeatures gets all features enabled based on current conditions
-func (f *Flashlight) EnabledFeatures() map[string]bool {
-	featuresEnabled := make(map[string]bool)
-	f.mxGlobal.RLock()
-	if f.global == nil {
-		f.mxGlobal.RUnlock()
-		return featuresEnabled
-	}
-	global := f.global
-	f.mxGlobal.RUnlock()
-	country := geolookup.GetCountry(0)
-	for feature := range global.FeaturesEnabled {
-		if f.calcFeature(global, country, "0.0.1", feature) {
-			featuresEnabled[feature] = true
-		}
-	}
-	return featuresEnabled
-}
-
-// EnableNamedDomainRules adds named domain rules specified as arguments to the domainrouting rules table
-func (f *Flashlight) EnableNamedDomainRules(names ...string) {
-	f.mxGlobal.RLock()
-	global := f.global
-	f.mxGlobal.RUnlock()
-	if global == nil {
-		return
-	}
-	for _, name := range names {
-		if v, ok := global.NamedDomainRoutingRules[name]; ok {
-			if err := domainrouting.AddRules(v); err != nil {
-				_ = log.Errorf("Unable to add named domain routing rules: %v", err)
-			}
-		} else {
-			log.Debugf("Named domain routing rule %s is not defined in global config", name)
-		}
-	}
-}
-
-// DisableNamedDomainRules removes named domain rules specified as arguments from the domainrouting rules table
-func (f *Flashlight) DisableNamedDomainRules(names ...string) {
-	f.mxGlobal.RLock()
-	global := f.global
-	f.mxGlobal.RUnlock()
-	if global == nil {
-		return
-	}
-	for _, name := range names {
-		if v, ok := global.NamedDomainRoutingRules[name]; !ok {
-			if err := domainrouting.RemoveRules(v); err != nil {
-				_ = log.Errorf("Unable to remove named domain routing rules: %v", err)
-			}
-		} else {
-			log.Debugf("Named domain routing rule %s is not defined in global config", name)
-		}
-	}
-}
-
-// featureEnabled returns true if the input feature is enabled for this flashlight instance. Feature
-// names are tracked in the config package.
-func (f *Flashlight) featureEnabled(feature string) bool {
-	// features internal to flashlight are not controllable by application version, since flashlight doesn't know the version, so we use a very low version number just to make sure it parses
-	return f.FeatureEnabled(feature, "0.0.1")
-}
-
-func (f *Flashlight) FeatureEnabled(feature, applicationVersion string) bool {
-	f.mxGlobal.RLock()
-	global := f.global
-	f.mxGlobal.RUnlock()
-	return f.calcFeature(global, geolookup.GetCountry(0), applicationVersion, feature)
-}
-
-func (f *Flashlight) calcFeature(global *config.Global, country, applicationVersion, feature string) bool {
-	// Special case: Use defaults for blocking related features until geolookup is finished
-	// to avoid accidentally generating traffic that could trigger blocking.
-	enabled, blockingRelated := blockingRelevantFeatures[feature]
-	if country == "" && blockingRelated {
-		enabledText := "disabled"
-		if enabled {
-			enabledText = "enabled"
-		}
-		log.Debugf("Blocking related feature %v %v because geolookup has not yet finished", feature, enabledText)
-		return enabled
-	}
-	if global == nil {
-		log.Error("No global configuration!")
-		return enabled
-	}
-	if blockingRelated {
-		log.Debugf("Checking blocking related feature %v with country set to %v", feature, country)
-	}
-	return global.FeatureEnabled(feature,
-		common.Platform,
-		f.userConfig.GetAppName(),
-		applicationVersion,
-		f.userConfig.GetUserID(),
-		f.isPro(),
-		country)
-}
-
-// FeatureOptions unmarshals options for the input feature. Feature names are tracked in the config
-// package.
-func (f *Flashlight) FeatureOptions(feature string, opts config.FeatureOptions) error {
-	f.mxGlobal.RLock()
-	global := f.global
-	f.mxGlobal.RUnlock()
-	if global == nil {
-		// just to be safe
-		return errors.New("No global configuration")
-	}
-	return global.UnmarshalFeatureOptions(feature, opts)
-}
-
-func (f *Flashlight) addProxyListener(listener func(proxies map[string]*commonconfig.ProxyConfig, src config.Source)) {
-	f.mxProxyListeners.Lock()
-	defer f.mxProxyListeners.Unlock()
-	f.proxyListeners = append(f.proxyListeners, listener)
-}
-
-func (f *Flashlight) notifyProxyListeners(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
-	f.mxProxyListeners.RLock()
-	defer f.mxProxyListeners.RUnlock()
-	for _, l := range f.proxyListeners {
-		// Make absolutely sure we don't hit data races with different go routines
-		// accessing shared data -- give each go routine it's own copy.
-		proxiesCopy := chained.CopyConfigs(proxies)
-		go l(proxiesCopy, src)
-	}
-}
-
-func (f *Flashlight) startGlobalConfigFetch() func() {
-	globalDispatch := func(conf interface{}, src config.Source) {
-		cfg := conf.(*config.Global)
-		log.Debugf("Applying global config")
-		f.onGlobalConfig(cfg, src)
-	}
-	rt := proxied.ParallelPreferChained()
-
-	onConfigSaveError := func(err error) {
-		f.errorHandler(ErrorTypeConfigSaveFailure, err)
-	}
-
-	stopConfig := config.Init(
-		f.configDir, f.flagsAsMap, f.userConfig,
-		globalDispatch, onConfigSaveError, rt)
-	return stopConfig
-}
-
-func (f *Flashlight) applyOtel(cfg *config.Global) {
-	if cfg.Otel != nil && f.featureEnabled(config.FeatureOtel) {
-		otel.Configure(cfg.Otel)
-	}
 }
 
 // New creates a client proxy.
@@ -339,6 +175,24 @@ func New(
 	_, err := userconfig.Init(f.configDir, !readable)
 	if err != nil {
 		log.Errorf("user config: %v", err)
+	}
+
+	globalConfig, err := config.NewGlobalOnDisk(f.configDir, f.flagsAsMap)
+	if err != nil {
+		fatalErr := fmt.Errorf("unable to initialize global config: %v", err)
+		f.op.FailIf(fatalErr)
+		f.op.End()
+		return nil, fatalErr
+	}
+
+	certs, err := globalConfig.TrustedCACerts()
+	if err != nil {
+		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
+	}
+
+	f.fronted, err = fronted.NewFronter(certs, globalConfig.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(configDir, "masquerade_cache"))
+	if err != nil {
+		log.Errorf("Unable to configure fronted: %v", err)
 	}
 
 	var grabber dnsgrab.Server
@@ -499,7 +353,7 @@ func (f *Flashlight) StartBackgroundServices() (func(), error) {
 	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
 	stopGlobalConfigFetch := f.startGlobalConfigFetch()
 
-	stopBypass := services.StartBypassService(f.addProxyListener, f.configDir, f.userConfig)
+	stopBypass := services.StartBypassService(f.addProxyListener, f.configDir, f.userConfig, f.fronted)
 
 	// we don't need to start the config service if sticky is set
 	if sticky, _ := f.flagsAsMap["stickyconfig"].(bool); sticky {
@@ -549,6 +403,171 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 		RoundTripper: proxied.ChainedThenFronted(),
 	}
 	return services.StartConfigService(handler, configOpts)
+}
+
+func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
+	log.Debugf("Got global config from %v", src)
+	f.mxGlobal.Lock()
+	f.global = cfg
+	f.mxGlobal.Unlock()
+	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
+	f.applyGlobalConfig(cfg)
+	f.applyOtel(cfg)
+	f.callbacks.onConfigUpdate(cfg, src)
+	f.callbacks.onInit()
+}
+
+// EnabledFeatures gets all features enabled based on current conditions
+func (f *Flashlight) EnabledFeatures() map[string]bool {
+	featuresEnabled := make(map[string]bool)
+	f.mxGlobal.RLock()
+	if f.global == nil {
+		f.mxGlobal.RUnlock()
+		return featuresEnabled
+	}
+	global := f.global
+	f.mxGlobal.RUnlock()
+	country := geolookup.GetCountry(0)
+	for feature := range global.FeaturesEnabled {
+		if f.calcFeature(global, country, "0.0.1", feature) {
+			featuresEnabled[feature] = true
+		}
+	}
+	return featuresEnabled
+}
+
+// EnableNamedDomainRules adds named domain rules specified as arguments to the domainrouting rules table
+func (f *Flashlight) EnableNamedDomainRules(names ...string) {
+	f.mxGlobal.RLock()
+	global := f.global
+	f.mxGlobal.RUnlock()
+	if global == nil {
+		return
+	}
+	for _, name := range names {
+		if v, ok := global.NamedDomainRoutingRules[name]; ok {
+			if err := domainrouting.AddRules(v); err != nil {
+				_ = log.Errorf("Unable to add named domain routing rules: %v", err)
+			}
+		} else {
+			log.Debugf("Named domain routing rule %s is not defined in global config", name)
+		}
+	}
+}
+
+// DisableNamedDomainRules removes named domain rules specified as arguments from the domainrouting rules table
+func (f *Flashlight) DisableNamedDomainRules(names ...string) {
+	f.mxGlobal.RLock()
+	global := f.global
+	f.mxGlobal.RUnlock()
+	if global == nil {
+		return
+	}
+	for _, name := range names {
+		if v, ok := global.NamedDomainRoutingRules[name]; !ok {
+			if err := domainrouting.RemoveRules(v); err != nil {
+				_ = log.Errorf("Unable to remove named domain routing rules: %v", err)
+			}
+		} else {
+			log.Debugf("Named domain routing rule %s is not defined in global config", name)
+		}
+	}
+}
+
+// featureEnabled returns true if the input feature is enabled for this flashlight instance. Feature
+// names are tracked in the config package.
+func (f *Flashlight) featureEnabled(feature string) bool {
+	// features internal to flashlight are not controllable by application version, since flashlight doesn't know the version, so we use a very low version number just to make sure it parses
+	return f.FeatureEnabled(feature, "0.0.1")
+}
+
+func (f *Flashlight) FeatureEnabled(feature, applicationVersion string) bool {
+	f.mxGlobal.RLock()
+	global := f.global
+	f.mxGlobal.RUnlock()
+	return f.calcFeature(global, geolookup.GetCountry(0), applicationVersion, feature)
+}
+
+func (f *Flashlight) calcFeature(global *config.Global, country, applicationVersion, feature string) bool {
+	// Special case: Use defaults for blocking related features until geolookup is finished
+	// to avoid accidentally generating traffic that could trigger blocking.
+	enabled, blockingRelated := blockingRelevantFeatures[feature]
+	if country == "" && blockingRelated {
+		enabledText := "disabled"
+		if enabled {
+			enabledText = "enabled"
+		}
+		log.Debugf("Blocking related feature %v %v because geolookup has not yet finished", feature, enabledText)
+		return enabled
+	}
+	if global == nil {
+		log.Error("No global configuration!")
+		return enabled
+	}
+	if blockingRelated {
+		log.Debugf("Checking blocking related feature %v with country set to %v", feature, country)
+	}
+	return global.FeatureEnabled(feature,
+		common.Platform,
+		f.userConfig.GetAppName(),
+		applicationVersion,
+		f.userConfig.GetUserID(),
+		f.isPro(),
+		country)
+}
+
+// FeatureOptions unmarshals options for the input feature. Feature names are tracked in the config
+// package.
+func (f *Flashlight) FeatureOptions(feature string, opts config.FeatureOptions) error {
+	f.mxGlobal.RLock()
+	global := f.global
+	f.mxGlobal.RUnlock()
+	if global == nil {
+		// just to be safe
+		return errors.New("No global configuration")
+	}
+	return global.UnmarshalFeatureOptions(feature, opts)
+}
+
+func (f *Flashlight) addProxyListener(listener func(proxies map[string]*commonconfig.ProxyConfig, src config.Source)) {
+	f.mxProxyListeners.Lock()
+	defer f.mxProxyListeners.Unlock()
+	f.proxyListeners = append(f.proxyListeners, listener)
+}
+
+func (f *Flashlight) notifyProxyListeners(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
+	f.mxProxyListeners.RLock()
+	defer f.mxProxyListeners.RUnlock()
+	for _, l := range f.proxyListeners {
+		// Make absolutely sure we don't hit data races with different go routines
+		// accessing shared data -- give each go routine it's own copy.
+		proxiesCopy := chained.CopyConfigs(proxies)
+		go l(proxiesCopy, src)
+	}
+}
+
+func (f *Flashlight) startGlobalConfigFetch() func() {
+	globalDispatch := func(conf interface{}, src config.Source) {
+		cfg := conf.(*config.Global)
+		log.Debugf("Applying global config")
+		f.onGlobalConfig(cfg, src)
+	}
+	rt := proxied.ParallelPreferChained()
+
+	onConfigSaveError := func(err error) {
+		f.errorHandler(ErrorTypeConfigSaveFailure, err)
+	}
+
+	stopConfig := config.Init(
+		f.configDir, f.flagsAsMap, f.userConfig,
+		globalDispatch, onConfigSaveError, rt)
+	return stopConfig
+}
+
+func (f *Flashlight) applyOtel(cfg *config.Global) {
+	if cfg.Otel != nil && f.featureEnabled(config.FeatureOtel) {
+		otel.Configure(cfg.Otel)
+	}
 }
 
 // convertNewProxyConfToOld converts the new ProxyConnectConfig format to the old ProxyConfig. This
@@ -633,13 +652,13 @@ func (f *Flashlight) Stop() error {
 	return f.client.Stop()
 }
 
-func (f *Flashlight) applyClientConfig(cfg *config.Global) {
+func (f *Flashlight) applyGlobalConfig(cfg *config.Global) {
 	f.client.DNSResolutionMapForDirectDialsEventual.Set(cfg.Client.DNSResolutionMapForDirectDials)
 	certs, err := cfg.TrustedCACerts()
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
 	} else if cfg.Client != nil && cfg.Client.Fronted != nil {
-		fronted.Configure(certs, cfg.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(f.configDir, "masquerade_cache"))
+		f.fronted.UpdateConfig(certs, cfg.Client.FrontedProviders(), config.DefaultFrontedProviderID)
 	} else {
 		log.Errorf("Unable to configured fronted (no config)")
 	}

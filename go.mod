@@ -12,7 +12,7 @@ replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-2022
 
 //replace github.com/getlantern/mandrill => /home/soltzen/dev/soltzen/mandrill
 
-//replace github.com/getlantern/proxy/v3 => ../proxy
+replace github.com/getlantern/fronted => ../fronted
 
 //replace github.com/getlantern/lantern-server => ../lantern-server
 

@@ -10,6 +10,7 @@ import (
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/dialer"
 	"github.com/getlantern/flashlight/v7/ops"
+	"github.com/getlantern/fronted"
 	"github.com/getlantern/multipath"
 )
 
@@ -49,7 +50,8 @@ func (impl *multipathImpl) FormatStats() []string {
 	return impl.dialer.(multipath.Stats).FormatStats()
 }
 
-func CreateMPDialer(configDir, endpoint string, ss map[string]*config.ProxyConfig, uc common.UserConfig) (dialer.ProxyDialer, error) {
+func CreateMPDialer(configDir, endpoint string, ss map[string]*config.ProxyConfig, uc common.UserConfig,
+	fronted fronted.Fronted) (dialer.ProxyDialer, error) {
 	if len(ss) < 1 {
 		return nil, errors.New("no dialers")
 	}
@@ -68,7 +70,7 @@ func CreateMPDialer(configDir, endpoint string, ss map[string]*config.ProxyConfi
 		if err != nil {
 			return nil, err
 		}
-		impl, err := createImpl(configDir, name, addr, transport, s, uc, p.reportDialCore)
+		impl, err := createImpl(configDir, name, addr, transport, s, uc, p.reportDialCore, fronted)
 		if err != nil {
 			log.Errorf("failed to add %v to %v, continuing: %v", s.Addr, name, err)
 			continue

@@ -14,16 +14,13 @@ import (
 	"github.com/getlantern/flashlight/v7/logging"
 	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/flashlight/v7/util"
+	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 )
 
 var (
 	log        = golog.LoggerFor("flashlight.issue")
 	maxLogSize = 10247680
-
-	client = &http.Client{
-		Transport: proxied.Fronted("issue_fronted_roundtrip", 0),
-	}
 )
 
 const (
@@ -47,6 +44,7 @@ func SendReport(
 	model string, // alphanumeric name
 	osVersion string,
 	attachments []*Attachment,
+	fronted fronted.Fronted,
 ) (err error) {
 	return sendReport(
 		userConfig.GetDeviceID(),
@@ -62,6 +60,7 @@ func SendReport(
 		model,
 		osVersion,
 		attachments,
+		fronted,
 	)
 }
 
@@ -78,7 +77,8 @@ func sendReport(
 	device string,
 	model string,
 	osVersion string,
-	attachments []*Attachment) error {
+	attachments []*Attachment,
+	fronted fronted.Fronted) error {
 	r := &Request{}
 
 	r.Type = Request_ISSUE_TYPE(issueType)
@@ -137,6 +137,9 @@ func sendReport(
 	}
 	req.Header.Set("content-type", "application/x-protobuf")
 
+	client := &http.Client{
+		Transport: proxied.Fronted("issue_fronted_roundtrip", 0, fronted),
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return log.Errorf("unable to send issue report: %v", err)

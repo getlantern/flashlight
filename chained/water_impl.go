@@ -15,6 +15,7 @@ import (
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/proxied"
+	"github.com/getlantern/fronted"
 	"github.com/refraction-networking/water"
 	_ "github.com/refraction-networking/water/transport/v1"
 )
@@ -30,7 +31,8 @@ type waterImpl struct {
 
 var httpClient *http.Client
 
-func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (*waterImpl, error) {
+func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn,
+	fronted fronted.Fronted) (*waterImpl, error) {
 	ctx := context.Background()
 	wasmAvailableAt := ptSetting(pc, "water_available_at")
 	transport := ptSetting(pc, "water_transport")
@@ -65,7 +67,7 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 			vc := newWaterVersionControl(dir)
 			cli := httpClient
 			if cli == nil {
-				cli = proxied.ChainedThenDirectThenFrontedClient(1*time.Minute, "")
+				cli = proxied.ChainedThenDirectThenFrontedClient(1*time.Minute, "", fronted)
 			}
 			downloader, err := newWaterWASMDownloader(strings.Split(wasmAvailableAt, ","), cli)
 			if err != nil {

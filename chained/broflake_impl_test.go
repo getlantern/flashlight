@@ -4,15 +4,23 @@ import (
 	"crypto/x509"
 	"fmt"
 	"math/rand"
+	"os"
+	"path/filepath"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 
 	"github.com/getlantern/broflake/clientcore"
 	"github.com/getlantern/common/config"
+	"github.com/getlantern/fronted"
+
+	flconfig "github.com/getlantern/flashlight/v7/config"
 )
+
+var fr = newFronted()
 
 func TestMakeBroflakeOptions(t *testing.T) {
 	pc := &config.ProxyConfig{
@@ -50,7 +58,7 @@ func TestMakeBroflakeOptions(t *testing.T) {
 	}
 
 	// Ensure that supplied values make their way into the correct options structs
-	bo, wo, qo := makeBroflakeOptions(pc)
+	bo, wo, qo := makeBroflakeOptions(pc, fr)
 
 	assert.Equal(t, "desktop", bo.ClientType)
 	ctablesize, err := strconv.Atoi(pc.PluggableTransportSettings["broflake_ctablesize"])
@@ -170,7 +178,7 @@ func TestMakeBroflakeOptions(t *testing.T) {
 
 	// Ensure that unsupplied values result in options structs with default values
 	dpc := &config.ProxyConfig{}
-	bo, wo, qo = makeBroflakeOptions(dpc)
+	bo, wo, qo = makeBroflakeOptions(dpc, fr)
 
 	assert.Equal(t, bo.ClientType, dbo.ClientType)
 	assert.Equal(t, bo.CTableSize, dbo.CTableSize)
@@ -220,4 +228,36 @@ func TestGetRandomSubset(t *testing.T) {
 	nullSet := []string{}
 	subset = getRandomSubset(uint32(100), rng, nullSet)
 	assert.Equal(t, len(subset), 0)
+}
+
+func newFronted() fronted.Fronted {
+	// Init domain-fronting
+	global, err := os.ReadFile("../embeddedconfig/global.yaml")
+	if err != nil {
+		log.Errorf("Unable to load embedded global config: %v", err)
+		os.Exit(1)
+	}
+	cfg := flconfig.NewGlobal()
+	err = yaml.Unmarshal(global, cfg)
+	if err != nil {
+		log.Errorf("Unable to unmarshal embedded global config: %v", err)
+		os.Exit(1)
+	}
+
+	certs, err := cfg.TrustedCACerts()
+	if err != nil {
+		log.Errorf("Unable to read trusted certs: %v", err)
+	}
+
+	tempConfigDir, err := os.MkdirTemp("", "issue_test")
+	if err != nil {
+		log.Errorf("Unable to create temp config dir: %v", err)
+		os.Exit(1)
+	}
+	defer os.RemoveAll(tempConfigDir)
+	fronted, err := fronted.NewFronted(certs, cfg.Client.FrontedProviders(), flconfig.DefaultFrontedProviderID, filepath.Join(tempConfigDir, "masquerade_cache"))
+	if err != nil {
+		log.Errorf("Unable to configure fronted: %v", err)
+	}
+	return fronted
 }
