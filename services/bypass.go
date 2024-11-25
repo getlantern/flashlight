@@ -13,7 +13,6 @@ import (
 	mrand "math/rand"
 
 	"go.uber.org/atomic"
-	"google.golang.org/appengine/log"
 	"google.golang.org/protobuf/proto"
 
 	commonconfig "github.com/getlantern/common/config"
@@ -106,7 +105,7 @@ func (b *bypassService) onProxies(
 	for name, config := range supportedInfos {
 		dialer := dialers[name]
 		if dialer == nil {
-			log.Errorf("No dialer for %v", name)
+			logger.Errorf("No dialer for %v", name)
 			continue
 		}
 
@@ -127,7 +126,7 @@ func (b *bypassService) loadProxyAsync(proxyName string, config *commonconfig.Pr
 		select {
 		case err := <-dialer.Ready():
 			if err != nil {
-				log.Errorf("dialer %q initialization failed: %w", proxyName, err)
+				logger.Errorf("dialer %q initialization failed: %w", proxyName, err)
 				cancel()
 				return
 			}
@@ -135,15 +134,15 @@ func (b *bypassService) loadProxyAsync(proxyName string, config *commonconfig.Pr
 			readyChan <- struct{}{}
 			return
 		case <-ctx.Done():
-			log.Errorf("proxy %q took to long to start: %w", proxyName, ctx.Err())
+			logger.Errorf("proxy %q took to long to start: %w", proxyName, ctx.Err())
 			return
 		}
 	}()
 	select {
 	case <-readyChan:
-		log.Debugf("proxy ready!")
+		logger.Debugf("proxy ready!")
 	case <-ctx.Done():
-		log.Errorf("proxy %q took to long to start: %w", proxyName, ctx.Err())
+		logger.Errorf("proxy %q took to long to start: %w", proxyName, ctx.Err())
 	}
 }
 
