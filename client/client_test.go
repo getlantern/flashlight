@@ -11,7 +11,9 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -420,6 +422,89 @@ func TestAccessingProxyPort(t *testing.T) {
 	}
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 	assert.Equal(t, "0", resp.Header.Get("Content-Length"))
+}
+
+func TestSaveBanditRewards(t *testing.T) {
+	var tests = []struct {
+		name   string
+		given  map[string]dialer.BanditMetrics
+		assert func(t *testing.T, dir string)
+	}{
+		{
+			name: "it should save the rewards",
+			given: map[string]dialer.BanditMetrics{
+				"test-dialer": {
+					Reward: 1.0,
+					Count:  1,
+				},
+			},
+			assert: func(t *testing.T, dir string) {
+				f, err := os.Open(filepath.Join(dir, "bandit", "rewards.csv"))
+				require.NoError(t, err)
+				defer f.Close()
+				b, err := io.ReadAll(f)
+				require.NoError(t, err)
+
+				lines := strings.Split(string(b), "\n")
+				// check if headers are there
+				assert.Contains(t, lines[0], "dialer,reward,count")
+				// check if the data is there
+				assert.Contains(t, lines[1], "test-dialer,1.000000,1")
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			tempDir, err := os.MkdirTemp("", "client_test")
+			require.NoError(t, err)
+			defer os.RemoveAll(tempDir)
+
+			f := saveBanditRewards(tempDir)
+			f(tt.given)
+			tt.assert(t, tempDir)
+		})
+	}
+}
+
+func TestLoadLastBanditRewards(t *testing.T) {
+	var tests = []struct {
+		name   string
+		given  string
+		assert func(t *testing.T, metrics map[string]dialer.BanditMetrics)
+	}{
+		{
+			name:  "it should load the rewards",
+			given: "dialer,reward,count\ntest-dialer,1.000000,1\n",
+			assert: func(t *testing.T, metrics map[string]dialer.BanditMetrics) {
+				assert.Contains(t, metrics, "test-dialer")
+				assert.Equal(t, 1.0, metrics["test-dialer"].Reward)
+				assert.Equal(t, 1, metrics["test-dialer"].Count)
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			tempDir, err := os.MkdirTemp("", "client_test")
+			require.NoError(t, err)
+			defer os.RemoveAll(tempDir)
+
+			if err := os.MkdirAll(filepath.Join(tempDir, "bandit"), 0755); err != nil {
+				log.Errorf("unable to create bandit directory: %v", err)
+				return
+			}
+
+			f, err := os.Create(filepath.Join(tempDir, "bandit", "rewards.csv"))
+			require.NoError(t, err)
+			defer f.Close()
+			_, err = f.WriteString(tt.given)
+			require.NoError(t, err)
+
+			metrics := loadLastBanditRewards(tempDir)()
+			tt.assert(t, metrics)
+		})
+	}
 }
 
 // Assert that a testDialer is a bandit.Dialer
