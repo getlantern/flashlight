@@ -6,6 +6,7 @@ package proxied
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
@@ -234,7 +235,7 @@ type chainedRoundTripper struct {
 
 // RoundTrip will attempt to execute the specified HTTP request using only a chained fetcher
 func (cf *chainedRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	log.Debugf("Using chained fetcher")
+	log.Debugf("Using chained fronter for request to: %#v", req.URL)
 	rt, err := ChainedNonPersistent(cf.rootCA)
 	if err != nil {
 		return nil, err
@@ -327,7 +328,7 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 	}
 	doFronted := func() {
 		op.ProxyType(ops.ProxyFronted)
-		log.Debugf("Sending DDF request. With body? %v", frontedReq.Body != nil)
+		log.Debugf("dualfetcher sending DDF request to %v. With body? %v", frontedReq.URL.String(), frontedReq.Body != nil)
 		start := time.Now()
 		if resp, err := request(!df.cf.parallel, ddfRT, frontedReq); err == nil {
 			elapsed := time.Since(start)
@@ -343,7 +344,7 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 
 	doChained := func() {
 		op.ProxyType(ops.ProxyChained)
-		log.Debugf("Sending chained request. With body? %v", req.Body != nil)
+		log.Debugf("dualfetcher sending chained request to %v. With body? %v", req.URL.String(), req.Body != nil)
 		start := time.Now()
 		if res, err := request(false, chainedRT, req); err == nil {
 			elapsed := time.Since(start)
@@ -539,11 +540,19 @@ func chained(rootCA string, persistent bool) (http.RoundTripper, error) {
 	}
 
 	tr.Proxy = func(req *http.Request) (*url.URL, error) {
+		log.Tracef("Using chained proxy for: %+v", req.URL)
 		proxyAddr, ok := getProxyAddr()
 		if !ok {
+			log.Errorf("Chained proxy unavailable")
 			return nil, errors.New(ErrChainedProxyUnavailable)
 		}
 		return url.Parse("http://" + proxyAddr)
+	}
+
+	tr.OnProxyConnectResponse = func(ctx context.Context, proxyURL *url.URL, connectReq *http.Request, connectRes *http.Response) error {
+		log.Tracef("Proxy connect request: %+v", connectReq)
+		log.Tracef("Proxy connect response: %+v", connectRes)
+		return nil
 	}
 
 	return AsRoundTripper(func(req *http.Request) (*http.Response, error) {

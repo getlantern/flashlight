@@ -1,12 +1,10 @@
 package config
 
 import (
-	"errors"
 	"net/http"
 	"sync"
 	"time"
 
-	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/yaml"
 
@@ -19,33 +17,24 @@ const packageLogPrefix = "flashlight.config"
 var (
 	log = golog.LoggerFor(packageLogPrefix)
 
-	// DefaultProxyConfigPollInterval determines how frequently to fetch proxies.yaml
-	DefaultProxyConfigPollInterval = 1 * time.Minute
-
-	// ForceProxyConfigPollInterval overrides how frequently to fetch proxies.yaml if set (does not honor values from global.yaml)
-	ForceProxyConfigPollInterval = 0 * time.Second
-
 	// DefaultGlobalConfigPollInterval determines how frequently to fetch global.yaml
 	DefaultGlobalConfigPollInterval = 1 * time.Hour
 )
 
-// Init determines the URLs at which to fetch proxy and global config and
-// passes those to InitWithURLs, which initializes the config setup for both
-// fetching per-user proxies as well as the global config. It returns a function
-// that can be used to stop the reading of configs.
+// Init determines the URLs at which to fetch global config and passes those to InitWithURLs, which
+// initializes the config setup for fetching the global config. It returns a function that can be
+// used to stop the reading of configs.
 func Init(
 	configDir string, flags map[string]interface{}, userConfig common.UserConfig,
-	proxiesDispatch func(interface{}, Source), onProxiesSaveError func(error),
 	origGlobalDispatch func(interface{}, Source), onGlobalSaveError func(error),
 	rt http.RoundTripper) (stop func()) {
 
 	staging := isStaging(flags)
-	proxyConfigURL := checkOverrides(flags, getProxyURL(staging), "proxies.yaml.gz")
 	globalConfigURL := checkOverrides(flags, getGlobalURL(staging), "global.yaml.gz")
 
 	return InitWithURLs(
-		configDir, flags, userConfig, proxiesDispatch, onProxiesSaveError,
-		origGlobalDispatch, onGlobalSaveError, proxyConfigURL, globalConfigURL, rt)
+		configDir, flags, userConfig,
+		origGlobalDispatch, onGlobalSaveError, globalConfigURL, rt)
 }
 
 type cfgWithSource struct {
@@ -53,33 +42,21 @@ type cfgWithSource struct {
 	src Source
 }
 
-// InitWithURLs initializes the config setup for both fetching per-user proxies
-// as well as the global config given a set of URLs for fetching proxy and
-// global config. It returns a function that can be used to stop the reading of
-// configs.
+// InitWithURLs initializes the config setup for fetching the global config from the given URL. It
+// returns a function that can be used to stop the reading of configs.
 func InitWithURLs(
 	configDir string, flags map[string]interface{}, userConfig common.UserConfig,
-	origProxiesDispatch func(interface{}, Source), onProxiesSaveError func(error),
 	origGlobalDispatch func(interface{}, Source), onGlobalSaveError func(error),
-	proxyURL string, globalURL string, rt http.RoundTripper) (stop func()) {
+	globalURL string, rt http.RoundTripper,
+) (stop func()) {
 
 	var mx sync.RWMutex
 	globalConfigPollInterval := DefaultGlobalConfigPollInterval
-	proxyConfigPollInterval := DefaultProxyConfigPollInterval
-	if ForceProxyConfigPollInterval > 0 {
-		proxyConfigPollInterval = ForceProxyConfigPollInterval
-	}
 
 	globalDispatchCh := make(chan cfgWithSource)
-	proxiesDispatchCh := make(chan cfgWithSource)
 	go func() {
 		for c := range globalDispatchCh {
 			origGlobalDispatch(c.cfg, c.src)
-		}
-	}()
-	go func() {
-		for c := range proxiesDispatchCh {
-			origProxiesDispatch(c.cfg, c.src)
 		}
 	}()
 
@@ -90,9 +67,7 @@ func InitWithURLs(
 			if globalConfig.GlobalConfigPollInterval > 0 {
 				globalConfigPollInterval = globalConfig.GlobalConfigPollInterval
 			}
-			if ForceProxyConfigPollInterval == 0 && globalConfig.ProxyConfigPollInterval > 0 {
-				proxyConfigPollInterval = globalConfig.ProxyConfigPollInterval
-			}
+
 			mx.Unlock()
 		}
 		// Rather than call `origGlobalDispatch` here, we are calling it in a
@@ -102,35 +77,6 @@ func InitWithURLs(
 		// config changes.
 		globalDispatchCh <- cfgWithSource{cfg, src}
 	}
-
-	proxiesDispatch := func(cfg interface{}, src Source) {
-		proxiesDispatchCh <- cfgWithSource{cfg, src}
-	}
-
-	// These are the options for fetching the per-user proxy config.
-	proxyOptions := &options{
-		saveDir:          configDir,
-		onSaveError:      onProxiesSaveError,
-		obfuscate:        obfuscate(flags),
-		name:             "proxies.yaml",
-		originURL:        proxyURL,
-		userConfig:       userConfig,
-		unmarshaler:      newProxiesUnmarshaler(),
-		dispatch:         proxiesDispatch,
-		embeddedData:     embeddedconfig.Proxies,
-		embeddedRequired: false,
-		sleep: func() time.Duration {
-			mx.RLock()
-			defer mx.RUnlock()
-			return proxyConfigPollInterval
-		},
-		sticky: isSticky(flags),
-		rt:     rt,
-		opName: "fetch_proxies",
-		// Proxies are not provided over the DHT (yet! ᕕ( ᐛ )ᕗ), so dhtupContext is not passed.
-	}
-
-	stopProxies := pipeConfig(proxyOptions)
 
 	// These are the options for fetching the global config.
 	globalOptions := &options{
@@ -158,7 +104,6 @@ func InitWithURLs(
 
 	return func() {
 		log.Debug("*************** Stopping Config")
-		stopProxies()
 		stopGlobal()
 	}
 }
@@ -174,19 +119,6 @@ func newGlobalUnmarshaler(flags map[string]interface{}) func(bytes []byte) (inte
 			return nil, err
 		}
 		return gl, nil
-	}
-}
-
-func newProxiesUnmarshaler() func(bytes []byte) (interface{}, error) {
-	return func(bytes []byte) (interface{}, error) {
-		servers := make(map[string]*commonconfig.ProxyConfig)
-		if err := yaml.Unmarshal(bytes, servers); err != nil {
-			return nil, err
-		}
-		if len(servers) == 0 {
-			return nil, errors.New("no chained server")
-		}
-		return servers, nil
 	}
 }
 
@@ -218,17 +150,6 @@ func checkOverrides(flags map[string]interface{},
 		}
 	}
 	return url
-}
-
-// getProxyURL returns the proxy URL to use depending on whether or not
-// we're in staging.
-func getProxyURL(staging bool) string {
-	if staging {
-		log.Debug("Will obtain proxies.yaml from staging service")
-		return common.ProxiesStagingURL
-	}
-	log.Debug("Will obtain proxies.yaml from production service")
-	return common.ProxiesURL
 }
 
 // getGlobalURL returns the global URL to use depending on whether or not

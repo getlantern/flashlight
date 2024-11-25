@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -212,6 +211,7 @@ func embeddedIsNewer(conf *config, opts *options) bool {
 		if opts.embeddedRequired {
 			sentry.CaptureException(log.Errorf("no embedded config for %v", opts.name))
 		}
+
 		return false
 	}
 
@@ -236,23 +236,25 @@ func yamlRoundTrip(o interface{}) interface{} {
 	if o == nil {
 		return nil
 	}
+
 	var or interface{}
-	t := reflect.TypeOf(o)
-	if t.Kind() == reflect.Ptr {
+	if t := reflect.TypeOf(o); t.Kind() == reflect.Ptr {
 		or = reflect.New(t.Elem()).Interface()
 	} else {
 		or = reflect.New(t).Interface()
 	}
+
 	b, err := yaml.Marshal(o)
 	if err != nil {
 		log.Errorf("Unable to yaml round trip (marshal): %v %v", o, err)
 		return o
 	}
-	err = yaml.Unmarshal(b, or)
-	if err != nil {
+
+	if err = yaml.Unmarshal(b, or); err != nil {
 		log.Errorf("Unable to yaml round trip (unmarshal): %v %v", o, err)
 		return o
 	}
+
 	return or
 }
 
@@ -290,12 +292,13 @@ func (conf *config) saved() (interface{}, error) {
 		in = rot13.NewReader(infile)
 	}
 
-	bytes, err := ioutil.ReadAll(in)
+	bytes, err := io.ReadAll(in)
 	if err != nil {
 		err = fmt.Errorf("error reading config from %v: %w", conf.filePath, err)
 		log.Error(err.Error())
 		return nil, err
 	}
+
 	if len(bytes) == 0 {
 		return nil, fmt.Errorf("config exists but is empty at %v", conf.filePath)
 	}
@@ -314,6 +317,7 @@ func (conf *config) configFetcher(opName string, stopCh chan bool, dispatch func
 		if sleepDuration == noSleep {
 			sleepDuration = defaultSleep()
 		}
+
 		select {
 		case <-stopCh:
 			log.Debug("Stopping polling")
@@ -373,10 +377,12 @@ func (conf *config) doSaveOne(in []byte) error {
 	if conf.obfuscate {
 		out = rot13.NewWriter(outfile)
 	}
+
 	_, err = out.Write(in)
 	if err != nil {
 		return fmt.Errorf("unable to write yaml to file %v: %w", conf.filePath, err)
 	}
+
 	log.Debugf("Wrote file at %v", conf.filePath)
 	return nil
 }

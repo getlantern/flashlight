@@ -1,9 +1,155 @@
-//
-// Copied from lantern-cloud at a2ebb22f252f078477ab4bd0458a661089f82fea. DO NOT EDIT.
-//
-
 syntax = "proto3";
-option go_package = "github.com/getlantern/lantern-cloud/cmd/api/apipb";
+import "google/protobuf/timestamp.proto";
+option go_package = "github.com/getlantern/flashlight/apipb";
+
+//
+// Copied from lantern-cloud: e57d588aa976ca9d1a8531c92972e20a7d1640f9
+// 
+// The following should be kept in sync with lantern-cloud
+// 
+
+// ConfigRequest is the request sent by the client that contains information about the client
+// and the config it currently has.
+message ConfigRequest {
+  ClientInfo client_info = 1;
+  Proxy proxy = 2;
+
+  message ClientInfo {
+    string flashlight_version = 1;
+    string client_version = 2;
+    string user_id = 3;
+    string pro_token = 4;
+    string country = 5; // country code
+    string ip  = 6; // clients ip address
+  }
+  message Proxy {
+    repeated string names = 1; // list of proxy ids
+    google.protobuf.Timestamp last_request = 2; // last time client requested proxy config
+  }
+}
+
+// ConfigResponse is the response sent by the server that contains the updated config for the
+// client.
+message ConfigResponse {
+  string pro_token = 1;
+  string country = 2; // country code
+  string ip = 3; // clients ip address
+  Proxy proxy = 4;
+  message Proxy {
+    repeated ProxyConnectConfig proxies = 1; // list of proxy configs
+  }
+}
+
+// ProxyConnectConfig contains all the data for connecting to a given proxy.
+// This message structure is used directly by clients, so any changes *must* be
+// backwards compatible.
+message ProxyConnectConfig {
+  message ProxyLocation {
+    string city = 1;
+    string country = 2;
+    string country_code = 3;
+    float latitude = 4;
+    float longitude = 5;
+  }
+
+  // addr is the proxy's public IP address.
+  string addr = 1;
+  string track = 2;
+  ProxyLocation location = 3;
+  string name = 4; // Used for logging.
+  int32 port = 5;
+
+  // General config.
+  bytes cert_pem = 10;
+  string auth_token = 11;
+
+  // Trusted indicates whether this proxy is "trusted". This term originates in Lantern's previous
+  // infrastructure in which proxy trust was based on cloud provider - some companies operate out
+  // of countries which are known to pressure or subvert domestic companies. With triangle routing,
+  // however, we do not run proxies on such providers - only on back-end, wholesale providers which
+  // we trust. Thus, "trust" is now based on protocol. If the proxy's protocol offers end-to-end
+  // security (encryption and authentication), we consider the proxy to be trusted.
+  //
+  // The value of this field only affects plain-text HTTP requests sent by the client; we do not
+  // send such requests through untrusted providers.
+  bool trusted = 12;
+
+  // TLSConfig is configuration for proxies running TLS as a transport.
+  message TLSConfig {
+
+    // SessionState represents a utls.ClientSessionState.
+    message SessionState {
+      bytes session_ticket = 1;
+      uint32 version = 2;      // actually a uint16
+      uint32 cipher_suite = 3; // actually a uint16
+      bytes master_secret = 4;
+    }
+
+    SessionState session_state = 1;
+    string tls_frag = 2;
+    string server_name_indicator = 3;
+  }
+
+  message TLSMasqConfig {
+    string origin_addr = 1;
+    bytes secret = 2;
+    // TLSMinVersion is the minimum version of TLS supported by the proxy
+    // server. This is represented as a hex-encoded string, like 0x0303.
+    string tls_min_version = 3;
+    repeated string tls_supported_cipher_suites = 4;
+    string tls_frag = 5;
+  }
+
+  message ShadowsocksConfig {
+    string secret = 1;
+    string cipher = 2;
+    string prefix_generator = 3;
+    bool with_tls = 4;
+  }
+
+  message BroflakeConfig {
+    int32 ctable_size = 1;
+    int32 ptable_size = 2;
+    int32 nat_fail_timeout = 3;
+    int32 ice_fail_timeout = 4;
+    string discovery_srv = 5;
+    string endpoint = 6;
+    string egress_server_name = 7;
+    bool egress_insecure_skip_verify = 8;
+    string egress_ca = 9;
+    int32 stun_batch_size = 10;
+    repeated string stun_servers = 11;
+  }
+
+  message StarbridgeConfig {
+    string public_key = 1;
+  }
+
+  message AlgenevaConfig {
+    string strategy = 1;
+  }
+
+  message WATERConfig {
+    bytes wasm = 1;
+    string transport = 2;
+  }
+
+  oneof protocol_config {
+    TLSConfig connect_cfg_tls = 20;
+    TLSMasqConfig connect_cfg_tlsmasq = 21;
+    ShadowsocksConfig connect_cfg_shadowsocks = 22;
+    BroflakeConfig connect_cfg_broflake = 23;
+    StarbridgeConfig connect_cfg_starbridge = 24;
+    AlgenevaConfig connect_cfg_algeneva = 25;
+    WATERConfig connect_cfg_water = 26;
+  }
+}
+
+//
+// The following was copied from lantern-cloud at a2ebb22f252f078477ab4bd0458a661089f82fea. 
+// 
+//		DO NOT EDIT.
+//
 
 // LegacyConnectConfig is the information required for a client to connect
 // to a proxy, for clients which get their config from config-server (it's

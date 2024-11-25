@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -18,15 +17,16 @@ import (
 	"time"
 
 	"github.com/getlantern/detour"
-	"github.com/getlantern/flashlight/v7/common"
-	"github.com/getlantern/flashlight/v7/dialer"
-	"github.com/getlantern/flashlight/v7/domainrouting"
-	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mockconn"
 	"github.com/getlantern/shortcut"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/dialer"
+	"github.com/getlantern/flashlight/v7/domainrouting"
+	"github.com/getlantern/flashlight/v7/stats"
 )
 
 var logger = golog.LoggerFor("client-test")
@@ -337,7 +337,7 @@ func TestLeakingDomainsRequiringProxy(t *testing.T) {
 
 	req, _ = http.NewRequest("GET", site.URL, nil)
 	res, _ = roundTrip(client, req)
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode, "should dial directly for random site if client is disconnected")
 	assert.Equal(t, "abc", string(body), "should dial directly for random site if client is disconnected")
@@ -356,7 +356,7 @@ func TestLeakingDomainsRequiringProxy(t *testing.T) {
 
 	req, _ = http.NewRequest("GET", site.URL, nil)
 	res, _ = roundTrip(client, req)
-	body, err = ioutil.ReadAll(res.Body)
+	body, err = io.ReadAll(res.Body)
 	require.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode, "should dial directly for domain with proxy domainrouting rule when client is disconnected")
 	assert.Equal(t, "abc", string(body), "should dial directly for domain with proxy domainrouting rule when client is disconnected")
