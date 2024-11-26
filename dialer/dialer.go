@@ -101,6 +101,7 @@ func (o *Options) Clone() *Options {
 		Dialers:   o.Dialers,
 		OnError:   o.OnError,
 		OnSuccess: o.OnSuccess,
+		BanditDir: o.BanditDir,
 	}
 }
 
