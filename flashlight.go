@@ -268,6 +268,7 @@ func New(
 		eventWithLabel,
 		f.callbacks.onDialError,
 		f.callbacks.onSucceedingProxy,
+		f.fronted,
 	)
 
 	if err != nil {

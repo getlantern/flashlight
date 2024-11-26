@@ -136,10 +136,11 @@ func (client *Client) isHTTPProxyPort(r *http.Request) bool {
 // requests (similar to desktop's APIHandler)
 func (client *Client) interceptProRequest(cs *filters.ConnectionState, r *http.Request) (*http.Response, *filters.ConnectionState, error) {
 	log.Debugf("Intercepting request to pro server: %v", r.URL.Path)
+	// Strip /pro from path.
 	r.URL.Path = r.URL.Path[4:]
 	pro.PrepareProRequest(r, client.user)
 	r.Header.Del("Origin")
-	resp, err := pro.GetHTTPClient().Do(r)
+	resp, err := client.proHttpClient.Do(r)
 	if err != nil {
 		log.Errorf("Error intercepting request to pro server: %v", err)
 		resp = &http.Response{

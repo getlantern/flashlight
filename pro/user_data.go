@@ -78,7 +78,7 @@ func (m *userMap) get(userID int64) (*client.User, bool) {
 
 // IsProUser indicates whether or not the user is pro, calling the Pro API if
 // necessary to determine the status.
-func IsProUser(uc common.UserConfig) (isPro bool, statusKnown bool) {
+func IsProUser(uc common.UserConfig, httpClient *http.Client) (isPro bool, statusKnown bool) {
 	user, found := GetUserDataFast(uc.GetUserID())
 	if !found {
 		var err error
@@ -112,12 +112,12 @@ func GetUserDataFast(userID int64) (*client.User, bool) {
 }
 
 // NewUser creates a new user via Pro API, and updates local cache.
-func NewUser(uc common.UserConfig) (*client.User, error) {
+func NewUser(uc common.UserConfig, httpClient *http.Client) (*client.User, error) {
 	return newUserWithClient(uc, httpClient)
 }
 
 // NewClient creates a new pro Client
-func NewClient() *client.Client {
+func NewClient(httpClient *http.Client) *client.Client {
 	return client.NewClient(httpClient, PrepareProRequestWithOptions)
 }
 
@@ -139,7 +139,7 @@ func newUserWithClient(uc common.UserConfig, hc *http.Client) (*client.User, err
 }
 
 // FetchUserData fetches user data from Pro API, and updates local cache.
-func FetchUserData(uc common.UserConfig) (*client.User, error) {
+func FetchUserData(uc common.UserConfig, httpClient *http.Client) (*client.User, error) {
 	return fetchUserDataWithClient(uc, httpClient)
 }
 

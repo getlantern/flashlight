@@ -21,7 +21,7 @@ var (
 )
 
 type proxyTransport struct {
-	// Satisfies http.RoundTripper
+	httpClient *http.Client
 }
 
 func (pt *proxyTransport) processOptions(req *http.Request) *http.Response {
@@ -31,7 +31,7 @@ func (pt *proxyTransport) processOptions(req *http.Request) *http.Response {
 			"Connection": {"keep-alive"},
 			"Via":        {"Lantern Client"},
 		},
-		Body: ioutil.NopCloser(strings.NewReader("preflight complete")),
+		Body: io.NopCloser(strings.NewReader("preflight complete")),
 	}
 	if !common.ProcessCORS(resp.Header, req) {
 		return &http.Response{
@@ -49,7 +49,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	origin := req.Header.Get("Origin")
 	// Workaround for https://github.com/getlantern/pro-server/issues/192
 	req.Header.Del("Origin")
-	resp, err = GetHTTPClient().Do(req)
+	resp, err = pt.httpClient.Do(req)
 	if err != nil {
 		log.Errorf("Could not issue HTTP request? %v", err)
 		return
@@ -77,7 +77,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 		log.Errorf("Error read response body: %v", readErr)
 		return
 	}
-	resp.Body = ioutil.NopCloser(bytes.NewReader(body))
+	resp.Body = io.NopCloser(bytes.NewReader(body))
 	encoding := resp.Header.Get("Content-Encoding")
 	var br io.Reader = bytes.NewReader(body)
 	switch encoding {
@@ -141,10 +141,12 @@ func prepareProRequest(r *http.Request, uc common.UserConfig, options bool) {
 
 // APIHandler returns an HTTP handler that specifically looks for and properly
 // handles pro server requests.
-func APIHandler(uc common.UserConfig) http.Handler {
+func APIHandler(uc common.UserConfig, httpClient *http.Client) http.Handler {
 	log.Debugf("Returning pro API handler hitting host: %v", common.ProAPIHost)
 	return &httputil.ReverseProxy{
-		Transport: &proxyTransport{},
+		Transport: &proxyTransport{
+			httpClient: httpClient,
+		},
 		Director: func(r *http.Request) {
 			// Strip /pro from path.
 			if strings.HasPrefix(r.URL.Path, "/pro/") {

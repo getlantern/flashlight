@@ -36,6 +36,7 @@ import (
 	"github.com/getlantern/flashlight/v7/dialer"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/ops"
+	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/flashlight/v7/status"
 )
@@ -147,6 +148,8 @@ type Client struct {
 	socksWg sync.WaitGroup
 
 	DNSResolutionMapForDirectDialsEventual eventual.Value
+	fronted                                fronted.Fronted
+	proHttpClient                          *http.Client
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -168,6 +171,7 @@ func NewClient(
 	eventWithLabel func(category, action, label string),
 	onDialError func(error, bool),
 	onSucceedingProxy func(),
+	fronted fronted.Fronted,
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
 	rewriteLRU, err := lru.New(100)
@@ -203,6 +207,8 @@ func NewClient(
 		httpListener:                           eventual.NewValue(),
 		socksListener:                          eventual.NewValue(),
 		DNSResolutionMapForDirectDialsEventual: eventual.NewValue(),
+		fronted:                                fronted,
+		proHttpClient:                          newHTTPClient(userConfig, fronted),
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -217,6 +223,17 @@ func NewClient(
 
 	go client.cacheClientHellos()
 	return client, nil
+}
+
+func newHTTPClient(uc common.UserConfig, fronted fronted.Fronted) *http.Client {
+	return &http.Client{
+		Transport: proxied.ParallelForIdempotent(fronted),
+		// Don't follow redirects
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+		Timeout: 30 * time.Second,
+	}
 }
 
 // Addr returns the address at which the client is listening with HTTP, blocking

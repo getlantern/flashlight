@@ -61,7 +61,7 @@ func TestSubmitIssue(t *testing.T) {
 	// example by setting its address to 0.0.0.0 in /etc/hosts.
 	if false {
 		fronted := newFronted()
-		SetHTTPClient(proxied.DirectThenFrontedClient(5 * time.Second))
+		SetHTTPClient(proxied.DirectThenFrontedClient(5*time.Second, fronted))
 		defer SetHTTPClient(&http.Client{})
 
 		msg := &Message{
@@ -98,7 +98,7 @@ func newFronted() fronted.Fronted {
 		os.Exit(1)
 	}
 	defer os.RemoveAll(tempConfigDir)
-	fronted, err := fronted.NewFronter(certs, cfg.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(tempConfigDir, "masquerade_cache"))
+	fronted, err := fronted.NewFronted(certs, cfg.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(tempConfigDir, "masquerade_cache"))
 	if err != nil {
 		log.Errorf("Unable to configure fronted: %v", err)
 	}

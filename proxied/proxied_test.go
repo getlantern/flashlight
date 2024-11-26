@@ -3,22 +3,30 @@ package proxied
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/vulcand/oxy/forward"
+	"gopkg.in/yaml.v2"
 
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
 
 	"github.com/stretchr/testify/assert"
+
+	flconfig "github.com/getlantern/flashlight/v7/config"
 )
+
+var fr = newFronted()
 
 type mockChainedRT struct {
 	req eventual.Value
@@ -80,7 +88,7 @@ func TestChainedAndFrontedHeaders(t *testing.T) {
 	req.Header.Set("X-Lantern-If-None-Match", etag)
 	req.Body = ioutil.NopCloser(bytes.NewBufferString("Hello"))
 
-	df := &dualFetcher{&chainedAndFronted{parallel: true}, "", 5 * time.Minute}
+	df := &dualFetcher{&chainedAndFronted{parallel: true}, "", 5 * time.Minute, fr}
 	crt := &mockChainedRT{req: eventual.NewValue(), sc: 503}
 	frt := &mockFrontedRT{req: eventual.NewValue()}
 	df.do(req, crt, frt)
@@ -115,7 +123,7 @@ func TestNonIdempotentRequest(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	df := ParallelPreferChained()
+	df := ParallelPreferChained(fr)
 	_, err = df.RoundTrip(req)
 	if assert.Error(t, err, "should not send non-idempotent method in parallel") {
 		assert.Contains(t, err.Error(), "attempted to use parallel round-tripper for non-idempotent method, please use ChainedThenFronted or some similar sequential round-tripper")
@@ -137,7 +145,7 @@ func TestSwitchingToChained(t *testing.T) {
 	fronted := &mockFrontedRT{req: eventual.NewValue()}
 	req, _ := http.NewRequest("GET", "http://chained", nil)
 
-	cf := ParallelPreferChained().(*chainedAndFronted)
+	cf := ParallelPreferChained(fr).(*chainedAndFronted)
 	cf.getFetcher().(*dualFetcher).do(req, chained, fronted)
 	time.Sleep(100 * time.Millisecond)
 	_, valid := cf.getFetcher().(*dualFetcher)
@@ -155,7 +163,7 @@ func TestSwitchingToChained(t *testing.T) {
 	assert.True(t, valid, "should switch to chained fetcher")
 }
 
-func doTestChainedAndFronted(t *testing.T, build func() RoundTripper) {
+func doTestChainedAndFronted(t *testing.T, build func(fronted.Fronted) http.RoundTripper) {
 	fwd, _ := forward.New()
 
 	sleep := 0 * time.Second
@@ -185,7 +193,7 @@ func doTestChainedAndFronted(t *testing.T, build func() RoundTripper) {
 
 	assert.NoError(t, err)
 
-	cf := build()
+	cf := build(fr)
 	resp, err := cf.RoundTrip(req)
 	assert.NoError(t, err)
 	body, err := ioutil.ReadAll(resp.Body)
@@ -205,7 +213,7 @@ func doTestChainedAndFronted(t *testing.T, build func() RoundTripper) {
 	req, err = http.NewRequest("GET", geo, nil)
 
 	assert.NoError(t, err)
-	cf = build()
+	cf = build(fr)
 	resp, err = cf.RoundTrip(req)
 	assert.NoError(t, err)
 	//log.Debugf("Got response in test")
@@ -222,11 +230,11 @@ func doTestChainedAndFronted(t *testing.T, build func() RoundTripper) {
 	fronted.ConfigureHostAlaisesForTest(t, map[string]string{badhost: goodhost})
 
 	assert.NoError(t, err)
-	cf = build()
+	cf = build(fr)
 	resp, err = cf.RoundTrip(req)
 	if assert.NoError(t, err) {
 		if assert.Equal(t, 200, resp.StatusCode) {
-			body, err = ioutil.ReadAll(resp.Body)
+			body, err = io.ReadAll(resp.Body)
 			if assert.NoError(t, err) {
 				assert.True(t, strings.Contains(string(body), "United States"), "Unexpected response "+string(body))
 			}
@@ -270,6 +278,38 @@ func TestCloneRequestForFronted(t *testing.T) {
 	assert.Equal(t, "chained.com", r.URL.Host)
 	assert.Equal(t, "/path1", r.URL.Path)
 	assert.Equal(t, req.ContentLength, r.ContentLength)
-	b, _ := ioutil.ReadAll(r.Body)
+	b, _ := io.ReadAll(r.Body)
 	assert.Equal(t, "abc", string(b), "should have body")
+}
+
+func newFronted() fronted.Fronted {
+	// Init domain-fronting
+	global, err := os.ReadFile("../embeddedconfig/global.yaml")
+	if err != nil {
+		log.Errorf("Unable to load embedded global config: %v", err)
+		os.Exit(1)
+	}
+	cfg := flconfig.NewGlobal()
+	err = yaml.Unmarshal(global, cfg)
+	if err != nil {
+		log.Errorf("Unable to unmarshal embedded global config: %v", err)
+		os.Exit(1)
+	}
+
+	certs, err := cfg.TrustedCACerts()
+	if err != nil {
+		log.Errorf("Unable to read trusted certs: %v", err)
+	}
+
+	tempConfigDir, err := os.MkdirTemp("", "issue_test")
+	if err != nil {
+		log.Errorf("Unable to create temp config dir: %v", err)
+		os.Exit(1)
+	}
+	defer os.RemoveAll(tempConfigDir)
+	fronted, err := fronted.NewFronted(certs, cfg.Client.FrontedProviders(), flconfig.DefaultFrontedProviderID, filepath.Join(tempConfigDir, "masquerade_cache"))
+	if err != nil {
+		log.Errorf("Unable to configure fronted: %v", err)
+	}
+	return fronted
 }
