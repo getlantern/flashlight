@@ -138,7 +138,6 @@ func New(
 		appName, appVersion, revisionDate, deviceID, isPro, func() string {
 			return geolookup.GetCountry(0)
 		})
-	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 
 	f := &Flashlight{
 		callbacks: clientCallbacks{
@@ -190,7 +189,7 @@ func New(
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
 	}
 
-	f.fronted, err = fronted.NewFronter(certs, globalConfig.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(configDir, "masquerade_cache"))
+	f.fronted, err = fronted.NewFronted(certs, globalConfig.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(configDir, "masquerade_cache"))
 	if err != nil {
 		log.Errorf("Unable to configure fronted: %v", err)
 	}
@@ -282,7 +281,7 @@ func New(
 
 	f.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
 		log.Debug("Applying proxy config with proxies")
-		dialers := f.client.Configure(chained.CopyConfigs(proxies))
+		dialers := f.client.Configure(chained.CopyConfigs(proxies), f.fronted)
 		log.Debugf("Got %v dialers", len(dialers))
 		if dialers != nil {
 			f.callbacks.onProxiesUpdate(dialers, src)
@@ -400,7 +399,7 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 	configOpts := &services.ConfigOptions{
 		OriginURL:    url,
 		UserConfig:   f.userConfig,
-		RoundTripper: proxied.ChainedThenFronted(),
+		RoundTripper: proxied.ChainedThenFronted(f.fronted),
 	}
 	return services.StartConfigService(handler, configOpts)
 }
@@ -552,7 +551,7 @@ func (f *Flashlight) startGlobalConfigFetch() func() {
 		log.Debugf("Applying global config")
 		f.onGlobalConfig(cfg, src)
 	}
-	rt := proxied.ParallelPreferChained()
+	rt := proxied.ParallelPreferChained(f.fronted)
 
 	onConfigSaveError := func(err error) {
 		f.errorHandler(ErrorTypeConfigSaveFailure, err)
@@ -622,7 +621,7 @@ func (f *Flashlight) RunClientListeners(httpProxyAddr, socksProxyAddr string,
 	err := f.client.ListenAndServeHTTP(httpProxyAddr, func() {
 		log.Debug("Started client HTTP proxy")
 		proxied.SetProxyAddr(f.client.Addr)
-		email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
+		email.SetHTTPClient(proxied.DirectThenFrontedClient(1*time.Minute, f.fronted))
 
 		if afterStart != nil {
 			afterStart(f.client)
