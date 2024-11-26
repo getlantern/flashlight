@@ -35,7 +35,7 @@ var (
 	// foo.wasm file or read the foo.wasm file on disk.
 	//
 	// Invariant: entries to this map are never overwritten.
-	waterWASMLocks map[string]*sync.Mutex
+	waterWASMLocks = make(map[string]*sync.Mutex)
 	// wlLock protects access to the waterWASMLocks map.
 	wlLock = new(sync.Mutex)
 )
