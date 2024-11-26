@@ -2,10 +2,14 @@ package dialer
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"math/rand"
 	"net"
+	"os"
+	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -81,17 +85,22 @@ func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
 
 func TestNewBandit(t *testing.T) {
 	oldDialer := newTcpConnDialer()
+	oldDialerMetric := banditMetrics{
+		Reward: 0.7,
+		Count:  10,
+	}
 	tests := []struct {
 		name   string
 		opts   *Options
-		assert func(t *testing.T, got Dialer, err error)
+		assert func(t *testing.T, got Dialer, err error, dir string)
+		setup  func() string
 	}{
 		{
 			name: "should fail if there are no dialers",
 			opts: &Options{
 				Dialers: nil,
 			},
-			assert: func(t *testing.T, got Dialer, err error) {
+			assert: func(t *testing.T, got Dialer, err error, _ string) {
 				assert.Nil(t, got)
 				assert.Error(t, err)
 			},
@@ -101,7 +110,7 @@ func TestNewBandit(t *testing.T) {
 			opts: &Options{
 				Dialers: []ProxyDialer{newTcpConnDialer()},
 			},
-			assert: func(t *testing.T, got Dialer, err error) {
+			assert: func(t *testing.T, got Dialer, err error, _ string) {
 				assert.NotNil(t, got)
 				assert.NoError(t, err)
 				assert.IsType(t, &BanditDialer{}, got)
@@ -111,23 +120,26 @@ func TestNewBandit(t *testing.T) {
 			name: "should load the last bandit rewards if they exist",
 			opts: &Options{
 				Dialers: []ProxyDialer{oldDialer, newTcpConnDialer()},
-				LoadLastBanditRewards: func() map[string]BanditMetrics {
-					return map[string]BanditMetrics{
-						oldDialer.Name(): {
-							Reward: 0.7,
-							Count:  10,
-						},
-					}
-				},
 			},
-			assert: func(t *testing.T, got Dialer, err error) {
+			setup: func() string {
+				tempDir, err := os.MkdirTemp("", "client_test")
+				require.NoError(t, err)
+
+				// create rewards.csv
+				err = os.WriteFile(filepath.Join(tempDir, "rewards.csv"), []byte(fmt.Sprintf("dialer,reward,count\n%s,%f,%d\n", oldDialer.Name(), oldDialerMetric.Reward, oldDialerMetric.Count)), 0644)
+				require.NoError(t, err)
+				return tempDir
+			},
+			assert: func(t *testing.T, got Dialer, err error, dir string) {
 				assert.NotNil(t, got)
 				assert.NoError(t, err)
 				assert.IsType(t, &BanditDialer{}, got)
 				rewards := got.(*BanditDialer).bandit.GetRewards()
 				counts := got.(*BanditDialer).bandit.GetCounts()
-				assert.Equal(t, 0.7, rewards[0])
-				assert.Equal(t, 10, counts[0])
+				// checking if the rewards are loaded correctly
+				assert.Equal(t, oldDialerMetric.Reward, rewards[0])
+				assert.Equal(t, oldDialerMetric.Count, counts[0])
+				// since there's no data for the second dialer, it should be 0
 				assert.Equal(t, float64(0), rewards[1])
 				assert.Equal(t, 0, counts[1])
 			},
@@ -135,8 +147,14 @@ func TestNewBandit(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			dir := ""
+			if tt.setup != nil {
+				dir = tt.setup()
+				defer os.RemoveAll(dir)
+				tt.opts.BanditDir = dir
+			}
 			got, err := NewBandit(tt.opts)
-			tt.assert(t, got, err)
+			tt.assert(t, got, err, dir)
 		})
 	}
 }
@@ -302,6 +320,94 @@ func Test_differentArm(t *testing.T) {
 			if got := differentArm(existingArm, tt.args.numDialers); tt.isError(existingArm, got) {
 				t.Errorf("differentArm() returned %v and existing is %v", got, existingArm)
 			}
+		})
+	}
+}
+
+func TestSaveBanditRewards(t *testing.T) {
+	var tests = []struct {
+		name   string
+		given  map[string]banditMetrics
+		assert func(t *testing.T, dir string, err error)
+	}{
+		{
+			name: "it should save the rewards",
+			given: map[string]banditMetrics{
+				"test-dialer": {
+					Reward: 1.0,
+					Count:  1,
+				},
+			},
+			assert: func(t *testing.T, dir string, err error) {
+				assert.NoError(t, err)
+				f, err := os.Open(filepath.Join(dir, "rewards.csv"))
+				require.NoError(t, err)
+				defer f.Close()
+				b, err := io.ReadAll(f)
+				require.NoError(t, err)
+
+				lines := strings.Split(string(b), "\n")
+				// check if headers are there
+				assert.Contains(t, lines[0], "dialer,reward,count")
+				// check if the data is there
+				assert.Contains(t, lines[1], "test-dialer,1.000000,1")
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tempDir, err := os.MkdirTemp("", "client_test")
+			require.NoError(t, err)
+			defer os.RemoveAll(tempDir)
+
+			banditDialer := &BanditDialer{
+				opts: &Options{
+					BanditDir: tempDir,
+				},
+			}
+			err = banditDialer.SaveBanditRewards(tt.given)
+			tt.assert(t, tempDir, err)
+		})
+	}
+}
+
+func TestLoadLastBanditRewards(t *testing.T) {
+	var tests = []struct {
+		name   string
+		given  string
+		assert func(t *testing.T, metrics map[string]banditMetrics, err error)
+	}{
+		{
+			name:  "it should load the rewards",
+			given: "dialer,reward,count\ntest-dialer,1.000000,1\n",
+			assert: func(t *testing.T, metrics map[string]banditMetrics, err error) {
+				assert.NoError(t, err)
+				assert.Contains(t, metrics, "test-dialer")
+				assert.Equal(t, 1.0, metrics["test-dialer"].Reward)
+				assert.Equal(t, 1, metrics["test-dialer"].Count)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tempDir, err := os.MkdirTemp("", "client_test")
+			require.NoError(t, err)
+			defer os.RemoveAll(tempDir)
+			require.NoError(t, os.MkdirAll(filepath.Join(tempDir, "bandit"), 0755), "unable to create bandit directory")
+
+			f, err := os.Create(filepath.Join(tempDir, "rewards.csv"))
+			require.NoError(t, err)
+			defer f.Close()
+			_, err = f.WriteString(tt.given)
+			require.NoError(t, err)
+
+			banditDialer := &BanditDialer{
+				opts: &Options{
+					BanditDir: tempDir,
+				},
+			}
+			metrics, err := banditDialer.LoadLastBanditRewards()
+			tt.assert(t, metrics, err)
 		})
 	}
 }

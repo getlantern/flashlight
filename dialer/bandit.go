@@ -2,8 +2,14 @@ package dialer
 
 import (
 	"context"
+	"encoding/csv"
+	"fmt"
+	"io"
 	"math/rand"
 	"net"
+	"os"
+	"path/filepath"
+	"strconv"
 	"sync/atomic"
 	"time"
 
@@ -36,15 +42,19 @@ func NewBandit(opts *Options) (Dialer, error) {
 		dialers: dialers,
 		opts:    opts,
 	}
-	if opts.LoadLastBanditRewards != nil {
-		log.Debugf("Loading bandit weights from %s", opts.LoadLastBanditRewards)
-		dialerWeights := opts.LoadLastBanditRewards()
+
+	dialerWeights, err := dialer.LoadLastBanditRewards()
+	if err != nil {
+		log.Errorf("unable to load bandit weights: %v", err)
+	}
+	if dialerWeights != nil {
+		log.Debugf("Loading bandit weights from %q", opts.BanditDir)
 		counts := make([]int, len(dialers))
 		rewards := make([]float64, len(dialers))
 		for arm, dialer := range dialers {
-			if banditMetrics, ok := dialerWeights[dialer.Name()]; ok {
-				rewards[arm] = banditMetrics.Reward
-				counts[arm] = banditMetrics.Count
+			if metrics, ok := dialerWeights[dialer.Name()]; ok {
+				rewards[arm] = metrics.Reward
+				counts[arm] = metrics.Count
 			}
 		}
 		b, err = bandit.NewEpsilonGreedy(0.1, counts, rewards)
@@ -52,16 +62,18 @@ func NewBandit(opts *Options) (Dialer, error) {
 			log.Errorf("unable to create weighted bandit: %w", err)
 			return nil, err
 		}
-	} else {
-		b, err = bandit.NewEpsilonGreedy(0.1, nil, nil)
-		if err != nil {
-			log.Errorf("unable to create bandit: %v", err)
-			return nil, err
-		}
-		if err := b.Init(len(dialers)); err != nil {
-			log.Errorf("unable to initialize bandit: %v", err)
-			return nil, err
-		}
+		dialer.bandit = b
+		return dialer, nil
+	}
+
+	b, err = bandit.NewEpsilonGreedy(0.1, nil, nil)
+	if err != nil {
+		log.Errorf("unable to create bandit: %v", err)
+		return nil, err
+	}
+	if err := b.Init(len(dialers)); err != nil {
+		log.Errorf("unable to initialize bandit: %v", err)
+		return nil, err
 	}
 	dialer.bandit = b
 
@@ -124,23 +136,113 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 
 	time.AfterFunc(30*time.Second, func() {
 		// Save the bandit weights
-		if bd.opts.SaveBanditRewards != nil {
-			metrics := make(map[string]BanditMetrics)
-			rewards := bd.bandit.GetRewards()
-			counts := bd.bandit.GetCounts()
-			for i, d := range bd.dialers {
-				metrics[d.Name()] = BanditMetrics{
-					Reward: rewards[i],
-					Count:  counts[i],
-				}
+		metrics := make(map[string]banditMetrics)
+		rewards := bd.bandit.GetRewards()
+		counts := bd.bandit.GetCounts()
+		for i, d := range bd.dialers {
+			metrics[d.Name()] = banditMetrics{
+				Reward: rewards[i],
+				Count:  counts[i],
 			}
+		}
 
-			bd.opts.SaveBanditRewards(metrics)
+		err = bd.SaveBanditRewards(metrics)
+		if err != nil {
+			log.Errorf("unable to save bandit weights: %v", err)
 		}
 	})
 
 	bd.opts.OnSuccess(d)
 	return dt, err
+}
+
+// LoadLastBanditRewards is a function that returns the last bandit rewards
+// for each dialer. If this is set, the bandit will be initialized with the
+// last metrics.
+func (o *BanditDialer) LoadLastBanditRewards() (map[string]banditMetrics, error) {
+	if o.opts.BanditDir == "" {
+		return nil, nil
+	}
+
+	file := filepath.Join(o.opts.BanditDir, "rewards.csv")
+	data, err := os.Open(file)
+	if err != nil && os.IsNotExist(err) {
+		return nil, log.Errorf("unable to read bandit rewards from file: %v", err)
+	}
+	reader := csv.NewReader(data)
+	_, err = reader.Read() // Skip the header
+	if err != nil {
+		return nil, log.Errorf("unable to skip headers from bandit rewards csv: %v", err)
+	}
+	metrics := make(map[string]banditMetrics)
+	for {
+		line, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, log.Errorf("unable to read line from bandit rewards csv: %v", err)
+		}
+
+		if len(line) != 3 {
+			return nil, log.Errorf("invalid line in bandit rewards csv: %v", line)
+		}
+		reward, err := strconv.ParseFloat(line[1], 64)
+		if err != nil {
+			return nil, log.Errorf("unable to parse reward from %s: %v", line[0], err)
+		}
+		count, err := strconv.Atoi(line[2])
+		if err != nil {
+			return nil, log.Errorf("unable to parse count from %s: %v", line[0], err)
+		}
+		metrics[line[0]] = banditMetrics{
+			Reward: reward,
+			Count:  count,
+		}
+	}
+	return metrics, nil
+}
+
+func (o *BanditDialer) SaveBanditRewards(metrics map[string]banditMetrics) error {
+	if o.opts.BanditDir == "" {
+		return log.Error("bandit directory is not set")
+	}
+
+	if err := os.MkdirAll(o.opts.BanditDir, 0755); err != nil {
+		return log.Errorf("unable to create bandit directory: %v", err)
+	}
+	file := filepath.Join(o.opts.BanditDir, "rewards.csv")
+
+	headers := []string{"dialer", "reward", "count"}
+	writeHeaders := false
+	if _, err := os.Stat(file); err != nil {
+		if !os.IsNotExist(err) {
+			return log.Errorf("unable to stat bandit rewards file: %v", err)
+		}
+		writeHeaders = true
+	}
+
+	f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return log.Errorf("unable to open bandit rewards file: %v", err)
+	}
+	defer f.Close()
+
+	w := csv.NewWriter(f)
+	defer w.Flush()
+	if writeHeaders {
+		if err = w.Write(headers); err != nil {
+			return log.Errorf("unable to write headers to bandit rewards file: %v", err)
+		}
+	}
+
+	for dialerName, metric := range metrics {
+		if err = w.Write([]string{dialerName, fmt.Sprintf("%f", metric.Reward), fmt.Sprintf("%d", metric.Count)}); err != nil {
+			return log.Errorf("unable to write bandit rewards to file: %v", err)
+		}
+	}
+
+	return nil
 }
 
 func (o *BanditDialer) chooseDialerForDomain(network, addr string) (ProxyDialer, int) {

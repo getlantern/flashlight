@@ -83,15 +83,11 @@ type Options struct {
 	// OnSuccess is the callback that is called by dialer after a successful dial.
 	OnSuccess func(ProxyDialer)
 
-	// LoadLastBanditRewards is a function that returns the last bandit rewards
-	// for each dialer. If this is set, the bandit will be initialized with the
-	// last metrics.
-	LoadLastBanditRewards func() map[string]BanditMetrics
-
-	SaveBanditRewards func(map[string]BanditMetrics)
+	// BanditDir is the directory where the bandit will store its data
+	BanditDir string
 }
 
-type BanditMetrics struct {
+type banditMetrics struct {
 	Reward float64
 	Count  int
 }
