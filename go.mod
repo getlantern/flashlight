@@ -75,6 +75,8 @@ require (
 	github.com/pborman/uuid v1.2.1
 	github.com/refraction-networking/utls v1.6.7
 	github.com/refraction-networking/water v0.7.0-alpha
+	github.com/sagernet/sing v0.5.1
+	github.com/sagernet/sing-vmess v0.1.12
 	github.com/samber/lo v1.38.1
 	github.com/shadowsocks/go-shadowsocks2 v0.1.5
 	github.com/stretchr/testify v1.9.0
@@ -108,6 +110,7 @@ require (
 	github.com/getlantern/withtimeout v0.0.0-20160829163843-511f017cd913 // indirect
 	github.com/getsentry/sentry-go v0.20.0 // indirect
 	github.com/go-llsqlite/crawshaw v0.5.1 // indirect
+	github.com/gofrs/uuid/v5 v5.2.0 // indirect
 	github.com/tetratelabs/wazero v1.7.1 // indirect
 	github.com/vishvananda/netns v0.0.1 // indirect
 	github.com/wlynxg/anet v0.0.3 // indirect

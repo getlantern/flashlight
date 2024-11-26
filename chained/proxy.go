@@ -214,6 +214,8 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 		impl, err = newBroflakeImpl(s, reportDialCore)
 	case "algeneva":
 		impl, err = newAlgenevaImpl(addr, s, reportDialCore)
+	case "vmess":
+		impl, err = newVmessImpl(name, addr, s, reportDialCore)
 	case "water":
 		waterDir := filepath.Join(configDir, "water")
 		if err := os.MkdirAll(waterDir, 0755); err != nil {
