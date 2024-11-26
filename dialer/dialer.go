@@ -214,7 +214,7 @@ type ProxyDialer interface {
 
 	// Ready returns a channel which will have a value on it only when initialization
 	// of the dialer is complete. If initialization failed, the channel will have a non-nil
-	// error value.
+	// error value. If initialization is not required, this will return nil channel value.
 	Ready() <-chan error
 
 	// Stop stops background processing for this Dialer.

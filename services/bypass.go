@@ -123,8 +123,14 @@ func (b *bypassService) loadProxyAsync(proxyName string, config *commonconfig.Pr
 	defer cancel()
 	readyChan := make(chan struct{})
 	go func() {
+		dialerReady := dialer.Ready()
+		if dialerReady == nil {
+			b.startProxy(proxyName, config, configDir, userConfig, dialer)
+			readyChan <- struct{}{}
+			return
+		}
 		select {
-		case err := <-dialer.Ready():
+		case err := <-dialerReady:
 			if err != nil {
 				logger.Errorf("dialer %q initialization failed: %w", proxyName, err)
 				cancel()
