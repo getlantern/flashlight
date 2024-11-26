@@ -74,7 +74,7 @@ func TestNewWaterImpl(t *testing.T) {
 				assert.NotNil(t, actual.reportDialCore)
 			},
 			setHTTPClient: func() {
-				httpClient = &http.Client{
+				waterHTTPClient = &http.Client{
 					Transport: &roundTripFunc{
 						f: func(req *http.Request) (*http.Response, error) {
 							return &http.Response{
@@ -110,7 +110,7 @@ func TestNewWaterImpl(t *testing.T) {
 				assert.NotNil(t, actual.reportDialCore)
 			},
 			setHTTPClient: func() {
-				httpClient = &http.Client{
+				waterHTTPClient = &http.Client{
 					Transport: &roundTripFunc{
 						f: func(req *http.Request) (*http.Response, error) {
 							return &http.Response{
@@ -184,7 +184,7 @@ func TestWaterDialServer(t *testing.T) {
 			},
 			givenAddr: "127.0.0.1:8080",
 			setHTTPClient: func() {
-				httpClient = &http.Client{
+				waterHTTPClient = &http.Client{
 					Transport: &roundTripFunc{
 						f: func(req *http.Request) (*http.Response, error) {
 							return &http.Response{

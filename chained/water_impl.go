@@ -26,11 +26,19 @@ type waterImpl struct {
 	readyChan      chan error
 }
 
-var httpClient *http.Client
+var (
+	// waterHTTPClient is a shared HTTP client for downloading WebAssembly modules.
+	waterHTTPClient *http.Client
 
-// waterLoadingWASMMutex prevents the WATER implementation to download/load the
-// WASM file concurrently.
-var waterTransportLocker sync.Map
+	// waterWASMLocks is a map of mutexes protecting RW access to the WebAssembly module files for each
+	// WATER transport. A goroutine must acquire the lock for transport "foo" in order to write the
+	// foo.wasm file or read the foo.wasm file on disk.
+	//
+	// Invariant: entries to this map are never overwritten.
+	waterWASMLocks map[string]*sync.Mutex
+	// wlLock protects access to the waterWASMLocks map.
+	wlLock = new(sync.Mutex)
+)
 
 func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (*waterImpl, error) {
 	ctx := context.Background()
@@ -92,16 +100,19 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 }
 
 func (d *waterImpl) loadWASM(ctx context.Context, transport string, dir string, wasmAvailableAt string) (io.ReadCloser, error) {
-	locker, ok := waterTransportLocker.Load(transport)
+	wlLock.Lock()
+	m, ok := waterWASMLocks[transport]
 	if !ok {
-		waterTransportLocker.Store(transport, new(sync.Mutex))
-		locker, _ = waterTransportLocker.Load(transport)
+		m = new(sync.Mutex)
+		waterWASMLocks[transport] = m
 	}
+	wlLock.Unlock()
 
-	locker.(sync.Locker).Lock()
-	defer locker.(sync.Locker).Unlock()
+	m.Lock()
+	defer m.Unlock()
+
 	vc := newWaterVersionControl(dir)
-	cli := httpClient
+	cli := waterHTTPClient
 	if cli == nil {
 		cli = proxied.ChainedThenDirectThenFrontedClient(1*time.Minute, "")
 	}
