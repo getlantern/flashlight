@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -18,9 +19,10 @@ import (
 
 // BanditDialer is responsible for continually choosing the optimized dialer.
 type BanditDialer struct {
-	dialers []ProxyDialer
-	bandit  bandit.Bandit
-	opts    *Options
+	dialers            []ProxyDialer
+	bandit             bandit.Bandit
+	opts               *Options
+	banditRewardsMutex *sync.Mutex
 }
 
 // NewBandit creates a new bandit given the available dialers and options with
@@ -39,8 +41,9 @@ func NewBandit(opts *Options) (Dialer, error) {
 	var b bandit.Bandit
 	var err error
 	dialer := &BanditDialer{
-		dialers: dialers,
-		opts:    opts,
+		dialers:            dialers,
+		opts:               opts,
+		banditRewardsMutex: &sync.Mutex{},
 	}
 
 	dialerWeights, err := dialer.LoadLastBanditRewards()
@@ -135,7 +138,7 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 	})
 
 	time.AfterFunc(30*time.Second, func() {
-		// Save the bandit weights
+		log.Debugf("saving bandit rewards")
 		metrics := make(map[string]banditMetrics)
 		rewards := bd.bandit.GetRewards()
 		counts := bd.bandit.GetCounts()
@@ -160,8 +163,10 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 // for each dialer. If this is set, the bandit will be initialized with the
 // last metrics.
 func (o *BanditDialer) LoadLastBanditRewards() (map[string]banditMetrics, error) {
+	o.banditRewardsMutex.Lock()
+	defer o.banditRewardsMutex.Unlock()
 	if o.opts.BanditDir == "" {
-		return nil, nil
+		return nil, log.Error("bandit directory is not set")
 	}
 
 	file := filepath.Join(o.opts.BanditDir, "rewards.csv")
@@ -204,6 +209,8 @@ func (o *BanditDialer) LoadLastBanditRewards() (map[string]banditMetrics, error)
 }
 
 func (o *BanditDialer) SaveBanditRewards(metrics map[string]banditMetrics) error {
+	o.banditRewardsMutex.Lock()
+	defer o.banditRewardsMutex.Unlock()
 	if o.opts.BanditDir == "" {
 		return log.Error("bandit directory is not set")
 	}
@@ -222,7 +229,7 @@ func (o *BanditDialer) SaveBanditRewards(metrics map[string]banditMetrics) error
 		writeHeaders = true
 	}
 
-	f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		return log.Errorf("unable to open bandit rewards file: %v", err)
 	}
