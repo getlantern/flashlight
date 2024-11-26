@@ -116,8 +116,6 @@ func (o *BanditDialer) chooseDialerForDomain(network, addr string) (ProxyDialer,
 		d = o.dialers[chosenArm]
 		readyChan := d.Ready()
 		if readyChan != nil {
-			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
 			select {
 			case err := <-readyChan:
 				if err != nil {
@@ -125,8 +123,8 @@ func (o *BanditDialer) chooseDialerForDomain(network, addr string) (ProxyDialer,
 					chosenArm = differentArm(chosenArm, len(o.dialers))
 					continue
 				}
-			case <-ctx.Done():
-				log.Errorf("dialer %q initialization timed out", d.Name())
+			default:
+				log.Debugf("dialer %q is not ready, chossing different arm", d.Name())
 				chosenArm = differentArm(chosenArm, len(o.dialers))
 				continue
 			}
