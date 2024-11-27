@@ -28,6 +28,7 @@ import (
 	"github.com/getlantern/flashlight/v7/email"
 	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/flashlight/v7/goroutines"
+	"github.com/getlantern/flashlight/v7/issue"
 	fops "github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/otel"
 	"github.com/getlantern/flashlight/v7/proxied"
@@ -193,6 +194,7 @@ func New(
 	if err != nil {
 		log.Errorf("Unable to configure fronted: %v", err)
 	}
+	issue.SetHTTPClient(proxied.DirectThenFrontedClient(30*time.Second, f.fronted))
 
 	var grabber dnsgrab.Server
 	var grabberErr error

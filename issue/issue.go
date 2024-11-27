@@ -12,9 +12,7 @@ import (
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/flashlight/v7/logging"
-	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/flashlight/v7/util"
-	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 )
 
@@ -26,6 +24,8 @@ var (
 const (
 	requestURL = "https://iantem.io/api/v1/issue"
 )
+
+var httpClient *http.Client
 
 type Attachment struct {
 	Name string
@@ -44,7 +44,6 @@ func SendReport(
 	model string, // alphanumeric name
 	osVersion string,
 	attachments []*Attachment,
-	fronted fronted.Fronted,
 ) (err error) {
 	return sendReport(
 		userConfig.GetDeviceID(),
@@ -60,7 +59,6 @@ func SendReport(
 		model,
 		osVersion,
 		attachments,
-		fronted,
 	)
 }
 
@@ -78,7 +76,11 @@ func sendReport(
 	model string,
 	osVersion string,
 	attachments []*Attachment,
-	fronted fronted.Fronted) error {
+) error {
+	if httpClient == nil {
+		log.Errorf("httpClient is nil, using default client")
+		httpClient = http.DefaultClient
+	}
 	r := &Request{}
 
 	r.Type = Request_ISSUE_TYPE(issueType)
@@ -137,10 +139,7 @@ func sendReport(
 	}
 	req.Header.Set("content-type", "application/x-protobuf")
 
-	client := &http.Client{
-		Transport: proxied.Fronted("issue_fronted_roundtrip", 0, fronted),
-	}
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return log.Errorf("unable to send issue report: %v", err)
 	}
@@ -156,4 +155,8 @@ func sendReport(
 
 	log.Debugf("issue report sent: %v", resp)
 	return nil
+}
+
+func SetHTTPClient(client *http.Client) {
+	httpClient = client
 }

@@ -58,7 +58,6 @@ func newFronted() fronted.Fronted {
 }
 
 func TestSendReport(t *testing.T) {
-	fronted := newFronted()
 	err := sendReport(
 		"34qsdf-24qsadf-32542q",
 		"1",
@@ -78,7 +77,6 @@ func TestSendReport(t *testing.T) {
 				Data: []byte("Hello World"),
 			},
 		},
-		fronted,
 	)
 	if err != nil {
 		t.Errorf("SendReport() error = %v", err)
