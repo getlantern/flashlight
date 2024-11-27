@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -324,14 +325,14 @@ func Test_differentArm(t *testing.T) {
 	}
 }
 
-func TestSaveBanditRewards(t *testing.T) {
+func TestUpdateBanditRewards(t *testing.T) {
 	var tests = []struct {
 		name   string
 		given  map[string]banditMetrics
 		assert func(t *testing.T, dir string, err error)
 	}{
 		{
-			name: "it should save the rewards",
+			name: "it should update rewards file",
 			given: map[string]banditMetrics{
 				"test-dialer": {
 					Reward: 1.0,
@@ -364,6 +365,7 @@ func TestSaveBanditRewards(t *testing.T) {
 				opts: &Options{
 					BanditDir: tempDir,
 				},
+				banditRewardsMutex: new(sync.Mutex),
 			}
 			err = banditDialer.UpdateBanditRewards(tt.given)
 			tt.assert(t, tempDir, err)
@@ -405,6 +407,7 @@ func TestLoadLastBanditRewards(t *testing.T) {
 				opts: &Options{
 					BanditDir: tempDir,
 				},
+				banditRewardsMutex: new(sync.Mutex),
 			}
 			metrics, err := banditDialer.LoadLastBanditRewards()
 			tt.assert(t, metrics, err)
