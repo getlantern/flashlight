@@ -88,8 +88,9 @@ type Options struct {
 }
 
 type banditMetrics struct {
-	Reward float64
-	Count  int
+	Reward    float64
+	Count     int
+	UpdatedAt int64
 }
 
 // Clone creates a deep copy of the Options object

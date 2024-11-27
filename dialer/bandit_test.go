@@ -349,7 +349,7 @@ func TestUpdateBanditRewards(t *testing.T) {
 
 				lines := strings.Split(string(b), "\n")
 				// check if headers are there
-				assert.Contains(t, lines[0], "dialer,reward,count")
+				assert.Contains(t, lines[0], "dialer,reward,count,updated at")
 				// check if the data is there
 				assert.Contains(t, lines[1], "test-dialer,1.000000,1")
 			},
@@ -374,6 +374,7 @@ func TestUpdateBanditRewards(t *testing.T) {
 }
 
 func TestLoadLastBanditRewards(t *testing.T) {
+	now := time.Now().UTC().Unix()
 	var tests = []struct {
 		name   string
 		given  string
@@ -381,12 +382,21 @@ func TestLoadLastBanditRewards(t *testing.T) {
 	}{
 		{
 			name:  "it should load the rewards",
-			given: "dialer,reward,count\ntest-dialer,1.000000,1\n",
+			given: fmt.Sprintf("dialer,reward,count,updated at\ntest-dialer,1.000000,1,%d\n", now),
 			assert: func(t *testing.T, metrics map[string]banditMetrics, err error) {
 				assert.NoError(t, err)
 				assert.Contains(t, metrics, "test-dialer")
 				assert.Equal(t, 1.0, metrics["test-dialer"].Reward)
 				assert.Equal(t, 1, metrics["test-dialer"].Count)
+				assert.Equal(t, now, metrics["test-dialer"].UpdatedAt)
+			},
+		},
+		{
+			name:  "it should ignore dialers with updated at greater than 7 days",
+			given: fmt.Sprintf("dialer,reward,count,updated at\ntest-dialer,1.000000,1,%d\n", now-60*60*24*8),
+			assert: func(t *testing.T, metrics map[string]banditMetrics, err error) {
+				assert.NoError(t, err)
+				assert.Empty(t, metrics)
 			},
 		},
 	}

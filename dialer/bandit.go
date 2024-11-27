@@ -144,8 +144,9 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 		counts := bd.bandit.GetCounts()
 		for i, d := range bd.dialers {
 			metrics[d.Name()] = banditMetrics{
-				Reward: rewards[i],
-				Count:  counts[i],
+				Reward:    rewards[i],
+				Count:     counts[i],
+				UpdatedAt: time.Now().UTC().Unix(),
 			}
 		}
 
@@ -158,6 +159,8 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 	bd.opts.OnSuccess(d)
 	return dt, err
 }
+
+const unusedBanditDialerIgnoredAfter = 7 * 24 * time.Hour
 
 // LoadLastBanditRewards is a function that returns the last bandit rewards
 // for each dialer. If this is set, the bandit will be initialized with the
@@ -178,7 +181,7 @@ func (o *BanditDialer) LoadLastBanditRewards() (map[string]banditMetrics, error)
 	reader := csv.NewReader(data)
 	_, err = reader.Read() // Skip the header
 	if err != nil {
-		return nil, log.Errorf("unable to skip headers from bandit rewards csv: %v", err)
+		return nil, log.Errorf("unable to skip headers from bandit rewards csv: %w", err)
 	}
 	metrics := make(map[string]banditMetrics)
 	for {
@@ -187,23 +190,34 @@ func (o *BanditDialer) LoadLastBanditRewards() (map[string]banditMetrics, error)
 			break
 		}
 		if err != nil {
-			return nil, log.Errorf("unable to read line from bandit rewards csv: %v", err)
+			return nil, log.Errorf("unable to read line from bandit rewards csv: %w", err)
 		}
 
-		if len(line) != 3 {
-			return nil, log.Errorf("invalid line in bandit rewards csv: %v", line)
+		if len(line) != 4 {
+			return nil, log.Errorf("invalid line in bandit rewards csv: %w", line)
+		}
+		// load updatedAt unix time and check if it's older than 7 days
+		updatedAt, err := strconv.ParseInt(line[3], 10, 64)
+		if err != nil {
+			return nil, log.Errorf("unable to parse updated at from %s: %w", line[0], err)
+		}
+		if time.Since(time.Unix(updatedAt, 0)) > unusedBanditDialerIgnoredAfter {
+			log.Debugf("Ignoring bandit dialer %s as it's older than 7 days", line[0])
+			continue
 		}
 		reward, err := strconv.ParseFloat(line[1], 64)
 		if err != nil {
-			return nil, log.Errorf("unable to parse reward from %s: %v", line[0], err)
+			return nil, log.Errorf("unable to parse reward from %s: %w", line[0], err)
 		}
 		count, err := strconv.Atoi(line[2])
 		if err != nil {
-			return nil, log.Errorf("unable to parse count from %s: %v", line[0], err)
+			return nil, log.Errorf("unable to parse count from %s: %w", line[0], err)
 		}
+
 		metrics[line[0]] = banditMetrics{
-			Reward: reward,
-			Count:  count,
+			Reward:    reward,
+			Count:     count,
+			UpdatedAt: updatedAt,
 		}
 	}
 	return metrics, nil
@@ -236,7 +250,7 @@ func (o *BanditDialer) UpdateBanditRewards(newRewards map[string]banditMetrics) 
 
 	file := filepath.Join(o.opts.BanditDir, "rewards.csv")
 
-	headers := []string{"dialer", "reward", "count"}
+	headers := []string{"dialer", "reward", "count", "updated at"}
 	f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return log.Errorf("unable to open bandit rewards file: %v", err)
@@ -251,7 +265,7 @@ func (o *BanditDialer) UpdateBanditRewards(newRewards map[string]banditMetrics) 
 	}
 
 	for dialerName, metric := range previousRewards {
-		if err = w.Write([]string{dialerName, fmt.Sprintf("%f", metric.Reward), fmt.Sprintf("%d", metric.Count)}); err != nil {
+		if err = w.Write([]string{dialerName, fmt.Sprintf("%f", metric.Reward), fmt.Sprintf("%d", metric.Count), fmt.Sprintf("%d", metric.UpdatedAt)}); err != nil {
 			return log.Errorf("unable to write bandit rewards to file: %v", err)
 		}
 	}
