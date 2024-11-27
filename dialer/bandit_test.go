@@ -365,7 +365,7 @@ func TestSaveBanditRewards(t *testing.T) {
 					BanditDir: tempDir,
 				},
 			}
-			err = banditDialer.SaveBanditRewards(tt.given)
+			err = banditDialer.UpdateBanditRewards(tt.given)
 			tt.assert(t, tempDir, err)
 		})
 	}
