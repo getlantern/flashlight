@@ -87,8 +87,9 @@ func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
 func TestNewBandit(t *testing.T) {
 	oldDialer := newTcpConnDialer()
 	oldDialerMetric := banditMetrics{
-		Reward: 0.7,
-		Count:  10,
+		Reward:    0.7,
+		Count:     10,
+		UpdatedAt: time.Now().UTC().Unix(),
 	}
 	tests := []struct {
 		name   string
@@ -127,7 +128,7 @@ func TestNewBandit(t *testing.T) {
 				require.NoError(t, err)
 
 				// create rewards.csv
-				err = os.WriteFile(filepath.Join(tempDir, "rewards.csv"), []byte(fmt.Sprintf("dialer,reward,count\n%s,%f,%d\n", oldDialer.Name(), oldDialerMetric.Reward, oldDialerMetric.Count)), 0644)
+				err = os.WriteFile(filepath.Join(tempDir, "rewards.csv"), []byte(fmt.Sprintf("dialer,reward,count,updated at\n%s,%f,%d,%d\n", oldDialer.Name(), oldDialerMetric.Reward, oldDialerMetric.Count, oldDialerMetric.UpdatedAt)), 0644)
 				require.NoError(t, err)
 				return tempDir
 			},
