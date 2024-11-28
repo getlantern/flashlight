@@ -69,7 +69,13 @@ func TestNewWaterImpl(t *testing.T) {
 			assert: func(t *testing.T, actual *waterImpl, err error) {
 				require.NoError(t, err)
 				require.NotNil(t, actual)
-				<-actual.readyChan
+				readyChan := actual.ready()
+				assert.NotNil(t, readyChan)
+				select {
+				case err, ok := <-readyChan:
+					assert.True(t, ok)
+					require.NoError(t, err)
+				}
 				require.NotNil(t, actual.dialer)
 				assert.NotNil(t, actual.reportDialCore)
 			},
@@ -105,7 +111,13 @@ func TestNewWaterImpl(t *testing.T) {
 				defer actual.close()
 				require.NoError(t, err)
 				require.NotNil(t, actual)
-				<-actual.readyChan
+				readyChan := actual.ready()
+				assert.NotNil(t, readyChan)
+				select {
+				case err, ok := <-readyChan:
+					assert.True(t, ok)
+					require.NoError(t, err)
+				}
 				assert.NotNil(t, actual.dialer)
 				assert.NotNil(t, actual.reportDialCore)
 			},

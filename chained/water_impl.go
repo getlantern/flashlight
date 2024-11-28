@@ -23,7 +23,13 @@ type waterImpl struct {
 	raddr          string
 	reportDialCore reportDialCoreFn
 	dialer         water.Dialer
-	readyChan      chan error
+	// readyChannels is a list of channels that are waiting for the dialer to be ready.
+	readyChannels []chan error
+	// readyChanLock protects access/modifications to readyChannels, finishedLoading flag and errLoadingWASM.
+	readyChanLock   sync.Locker
+	finishedLoading bool
+	errLoadingWASM  error
+	nopCloser
 }
 
 var (
@@ -47,7 +53,8 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 	d := &waterImpl{
 		raddr:          addr,
 		reportDialCore: reportDialCore,
-		readyChan:      make(chan error),
+		readyChannels:  make([]chan error, 0),
+		readyChanLock:  new(sync.Mutex),
 	}
 
 	b64WASM := ptSetting(pc, "water_wasm")
@@ -55,16 +62,16 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 		go func() {
 			wasm, err := base64.StdEncoding.DecodeString(b64WASM)
 			if err != nil {
-				d.readyChan <- log.Errorf("failed to decode water wasm: %w", err)
+				d.setErrLoadingWASM(log.Errorf("failed to decode water wasm: %w", err))
 				return
 			}
 
 			d.dialer, err = createDialer(ctx, wasm, transport)
 			if err != nil {
-				d.readyChan <- log.Errorf("failed to create dialer: %w", err)
+				d.setErrLoadingWASM(log.Errorf("failed to create dialer: %w", err))
 				return
 			}
-			d.readyChan <- nil
+			d.setFinishedLoadingSuccessfully()
 		}()
 		return d, nil
 	}
@@ -75,13 +82,13 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 
 			r, err := d.loadWASM(ctx, transport, dir, wasmAvailableAt)
 			if err != nil {
-				d.readyChan <- log.Errorf("failed to read wasm: %w", err)
+				d.setErrLoadingWASM(log.Errorf("failed to read wasm: %w", err))
 				return
 			}
 			defer r.Close()
 			b, err := io.ReadAll(r)
 			if err != nil {
-				d.readyChan <- log.Errorf("failed to load wasm bytes: %w", err)
+				d.setErrLoadingWASM(log.Errorf("failed to load wasm bytes: %w", err))
 				return
 			}
 
@@ -89,14 +96,79 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 
 			d.dialer, err = createDialer(ctx, b, transport)
 			if err != nil {
-				d.readyChan <- log.Errorf("failed to create dialer: %w", err)
+				d.setErrLoadingWASM(log.Errorf("failed to create dialer: %w", err))
 				return
 			}
-			d.readyChan <- nil
+			d.setFinishedLoadingSuccessfully()
 		}()
 	}
 
 	return d, nil
+}
+
+// ready returns a channel that will be closed when the dialer is ready to be used.
+// If the dialer is already ready, this will return nil.
+// If the dialer failed to load, this will return a channel that will return the error received while loading the WASM file and close immediately.
+// If the dialer is still loading, this will return a channel that will be closed when the dialer is ready or failed to load.
+func (d *waterImpl) ready() <-chan error {
+	d.readyChanLock.Lock()
+	defer d.readyChanLock.Unlock()
+
+	if d.finishedLoading {
+		return nil
+	}
+
+	if d.errLoadingWASM != nil {
+		tempChan := make(chan error)
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+			defer cancel()
+			select {
+			case tempChan <- d.errLoadingWASM:
+			case <-ctx.Done():
+			}
+			close(tempChan)
+		}()
+		return tempChan
+	}
+
+	readyChan := make(chan error)
+	d.readyChannels = append(d.readyChannels, readyChan)
+	return readyChan
+}
+
+func (d *waterImpl) setFinishedLoadingSuccessfully() {
+	d.readyChanLock.Lock()
+	defer d.readyChanLock.Unlock()
+	d.finishedLoading = true
+	d.broadcastReadyState(nil)
+}
+
+func (d *waterImpl) setErrLoadingWASM(err error) {
+	d.readyChanLock.Lock()
+	defer d.readyChanLock.Unlock()
+	d.errLoadingWASM = err
+	d.broadcastReadyState(d.errLoadingWASM)
+}
+
+func (d *waterImpl) broadcastReadyState(err error) {
+	wg := new(sync.WaitGroup)
+	for _, c := range d.readyChannels {
+		wg.Add(1)
+		go func(err error) {
+			defer wg.Done()
+			// if the channel is not being listened to, this will hold until the channel is read
+			// or the context times out
+			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+			defer cancel()
+			select {
+			case c <- err:
+			case <-ctx.Done():
+			}
+			close(c)
+		}(err)
+	}
+	wg.Wait()
 }
 
 func (d *waterImpl) loadWASM(ctx context.Context, transport string, dir string, wasmAvailableAt string) (io.ReadCloser, error) {
@@ -140,29 +212,21 @@ func createDialer(ctx context.Context, wasm []byte, transport string) (water.Dia
 	return dialer, nil
 }
 
-func (d *waterImpl) close() {
-	close(d.readyChan)
-}
-
-func (d *waterImpl) ready() <-chan error {
-	return d.readyChan
-}
-
 func (d *waterImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return d.reportDialCore(op, func() (net.Conn, error) {
 		// if dialer is not ready, wait until WASM is downloaded or context timeout
-		select {
-		case err, ok := <-d.readyChan:
-			if !ok {
-				return nil, log.Error("dialer closed")
-			}
-			if err != nil {
-				return nil, log.Errorf("failed to load dialer: %w", err)
-			}
+		isReady := d.ready()
+		if isReady != nil {
+			select {
+			case err := <-isReady:
+				if err != nil {
+					return nil, log.Errorf("failed to load dialer: %w", err)
+				}
 
-			log.Debug("dialer ready!")
-		case <-ctx.Done():
-			return nil, log.Errorf("context completed while waiting for WASM download: %w", ctx.Err())
+				log.Debug("dialer ready!")
+			case <-ctx.Done():
+				return nil, log.Errorf("context completed while waiting for WASM download: %w", ctx.Err())
+			}
 		}
 
 		// TODO: At water 0.7.0 (currently), the library is	hanging onto the dial context
