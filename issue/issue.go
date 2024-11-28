@@ -19,13 +19,12 @@ import (
 var (
 	log        = golog.LoggerFor("flashlight.issue")
 	maxLogSize = 10247680
+	httpClient *http.Client
 )
 
 const (
 	requestURL = "https://iantem.io/api/v1/issue"
 )
-
-var httpClient *http.Client
 
 type Attachment struct {
 	Name string
