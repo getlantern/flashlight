@@ -119,7 +119,7 @@ func (o *BanditDialer) chooseDialerForDomain(network, addr string) (ProxyDialer,
 			select {
 			case err := <-readyChan:
 				if err != nil {
-					log.Errorf("dialer %q initialization failed: %w", d.Name(), err)
+					log.Errorf("dialer %q failed to initialize with error %w, chossing different arm", d.Name(), err)
 					chosenArm = differentArm(chosenArm, len(o.dialers))
 					continue
 				}
