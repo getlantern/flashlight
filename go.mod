@@ -123,6 +123,7 @@ require (
 	github.com/go-llsqlite/crawshaw v0.5.1 // indirect
 	github.com/tetratelabs/wazero v1.7.1 // indirect
 	github.com/vishvananda/netns v0.0.1 // indirect
+	github.com/wlynxg/anet v0.0.3 // indirect
 	gitlab.com/yawning/edwards25519-extra.git v0.0.0-20211229043746-2f91fcc9fbdb // indirect
 	gitlab.com/yawning/obfs4.git v0.0.0-20220204003609-77af0cba934d // indirect
 )
