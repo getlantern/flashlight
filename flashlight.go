@@ -194,7 +194,8 @@ func New(
 	if err != nil {
 		log.Errorf("Unable to configure fronted: %v", err)
 	}
-	issue.SetHTTPClient(proxied.DirectThenFrontedClient(30*time.Second, f.fronted))
+	proxied.SetFronted(f.fronted)
+	issue.SetHTTPClient(proxied.DirectThenFrontedClient(30 * time.Second))
 
 	var grabber dnsgrab.Server
 	var grabberErr error
@@ -402,7 +403,7 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 	configOpts := &services.ConfigOptions{
 		OriginURL:    url,
 		UserConfig:   f.userConfig,
-		RoundTripper: proxied.ChainedThenFronted(f.fronted),
+		RoundTripper: proxied.ChainedThenFronted(),
 	}
 	return services.StartConfigService(handler, configOpts)
 }
@@ -554,7 +555,7 @@ func (f *Flashlight) startGlobalConfigFetch() func() {
 		log.Debugf("Applying global config")
 		f.onGlobalConfig(cfg, src)
 	}
-	rt := proxied.ParallelPreferChained(f.fronted)
+	rt := proxied.ParallelPreferChained()
 
 	onConfigSaveError := func(err error) {
 		f.errorHandler(ErrorTypeConfigSaveFailure, err)
@@ -624,7 +625,7 @@ func (f *Flashlight) RunClientListeners(httpProxyAddr, socksProxyAddr string,
 	err := f.client.ListenAndServeHTTP(httpProxyAddr, func() {
 		log.Debug("Started client HTTP proxy")
 		proxied.SetProxyAddr(f.client.Addr)
-		email.SetHTTPClient(proxied.DirectThenFrontedClient(1*time.Minute, f.fronted))
+		email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 
 		if afterStart != nil {
 			afterStart(f.client)

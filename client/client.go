@@ -148,7 +148,6 @@ type Client struct {
 	socksWg sync.WaitGroup
 
 	DNSResolutionMapForDirectDialsEventual eventual.Value
-	fronted                                fronted.Fronted
 	proHttpClient                          *http.Client
 }
 
@@ -207,8 +206,7 @@ func NewClient(
 		httpListener:                           eventual.NewValue(),
 		socksListener:                          eventual.NewValue(),
 		DNSResolutionMapForDirectDialsEventual: eventual.NewValue(),
-		fronted:                                fronted,
-		proHttpClient:                          newHTTPClient(userConfig, fronted),
+		proHttpClient:                          newHTTPClient(userConfig),
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -225,9 +223,9 @@ func NewClient(
 	return client, nil
 }
 
-func newHTTPClient(uc common.UserConfig, fronted fronted.Fronted) *http.Client {
+func newHTTPClient(uc common.UserConfig) *http.Client {
 	return &http.Client{
-		Transport: proxied.ParallelForIdempotent(fronted),
+		Transport: proxied.ParallelForIdempotent(),
 		// Don't follow redirects
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse

@@ -16,6 +16,9 @@ const DefaultMasqueradeTimeout = 5 * time.Minute
 //
 // Leave masqueradeTimeout as 0 to use a default value.
 func Fronted(opName string, masqueradeTimeout time.Duration, fronted fronted.Fronted) http.RoundTripper {
+	if fronted == nil {
+		panic("fronted is nil")
+	}
 	if masqueradeTimeout == 0 {
 		masqueradeTimeout = DefaultMasqueradeTimeout
 	}

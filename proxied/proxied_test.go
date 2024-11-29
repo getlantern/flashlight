@@ -46,7 +46,7 @@ func (rt *mockChainedRT) RoundTrip(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		Status:     fmt.Sprintf("%d OK", rt.statusCode()),
 		StatusCode: rt.statusCode(),
-		Body:       ioutil.NopCloser(bytes.NewBufferString("Chained")),
+		Body:       io.NopCloser(bytes.NewBufferString("Chained")),
 	}, nil
 }
 
@@ -59,7 +59,7 @@ func (rt *mockFrontedRT) RoundTrip(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		Status:     "200 OK",
 		StatusCode: 200,
-		Body:       ioutil.NopCloser(bytes.NewBufferString("Fronted")),
+		Body:       io.NopCloser(bytes.NewBufferString("Fronted")),
 	}, nil
 }
 
@@ -76,6 +76,7 @@ func (rt *delayedRT) RoundTrip(req *http.Request) (*http.Response, error) {
 // TestChainedAndFrontedHeaders tests to make sure headers are correctly
 // copied to the fronted request from the original chained request.
 func TestChainedAndFrontedHeaders(t *testing.T) {
+	SetFronted(fr)
 	directURL := "http://direct"
 	req, err := http.NewRequest("GET", directURL, nil)
 	if !assert.NoError(t, err) {
@@ -86,9 +87,9 @@ func TestChainedAndFrontedHeaders(t *testing.T) {
 	req.Header.Set("Cache-Control", "no-cache")
 	etag := "473892jdfda"
 	req.Header.Set("X-Lantern-If-None-Match", etag)
-	req.Body = ioutil.NopCloser(bytes.NewBufferString("Hello"))
+	req.Body = io.NopCloser(bytes.NewBufferString("Hello"))
 
-	df := &dualFetcher{&chainedAndFronted{parallel: true}, "", 5 * time.Minute, fr}
+	df := &dualFetcher{&chainedAndFronted{parallel: true}, "", 5 * time.Minute}
 	crt := &mockChainedRT{req: eventual.NewValue(), sc: 503}
 	frt := &mockFrontedRT{req: eventual.NewValue()}
 	df.do(req, crt, frt)
@@ -118,12 +119,13 @@ func checkRequest(t *testing.T, v eventual.Value, etag string, url string) {
 // TestNonIdempotentRequest tests to make sure ParallelPreferChained reject
 // non-idempotent requests.
 func TestNonIdempotentRequest(t *testing.T) {
+	SetFronted(fr)
 	directURL := "http://direct"
 	req, err := http.NewRequest("POST", directURL, nil)
 	if !assert.NoError(t, err) {
 		return
 	}
-	df := ParallelPreferChained(fr)
+	df := ParallelPreferChained()
 	_, err = df.RoundTrip(req)
 	if assert.Error(t, err, "should not send non-idempotent method in parallel") {
 		assert.Contains(t, err.Error(), "attempted to use parallel round-tripper for non-idempotent method, please use ChainedThenFronted or some similar sequential round-tripper")
@@ -141,11 +143,12 @@ func TestChainedThenFronted(t *testing.T) {
 }
 
 func TestSwitchingToChained(t *testing.T) {
+	SetFronted(fr)
 	chained := &mockChainedRT{req: eventual.NewValue(), sc: 503}
 	fronted := &mockFrontedRT{req: eventual.NewValue()}
 	req, _ := http.NewRequest("GET", "http://chained", nil)
 
-	cf := ParallelPreferChained(fr).(*chainedAndFronted)
+	cf := ParallelPreferChained().(*chainedAndFronted)
 	cf.getFetcher().(*dualFetcher).do(req, chained, fronted)
 	time.Sleep(100 * time.Millisecond)
 	_, valid := cf.getFetcher().(*dualFetcher)
@@ -163,7 +166,8 @@ func TestSwitchingToChained(t *testing.T) {
 	assert.True(t, valid, "should switch to chained fetcher")
 }
 
-func doTestChainedAndFronted(t *testing.T, build func(fronted.Fronted) http.RoundTripper) {
+func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
+	SetFronted(fr)
 	fwd, _ := forward.New()
 
 	sleep := 0 * time.Second
@@ -193,7 +197,7 @@ func doTestChainedAndFronted(t *testing.T, build func(fronted.Fronted) http.Roun
 
 	assert.NoError(t, err)
 
-	cf := build(fr)
+	cf := build()
 	resp, err := cf.RoundTrip(req)
 	assert.NoError(t, err)
 	body, err := ioutil.ReadAll(resp.Body)
@@ -213,11 +217,11 @@ func doTestChainedAndFronted(t *testing.T, build func(fronted.Fronted) http.Roun
 	req, err = http.NewRequest("GET", geo, nil)
 
 	assert.NoError(t, err)
-	cf = build(fr)
+	cf = build()
 	resp, err = cf.RoundTrip(req)
 	assert.NoError(t, err)
 	//log.Debugf("Got response in test")
-	body, err = ioutil.ReadAll(resp.Body)
+	body, err = io.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	assert.True(t, strings.Contains(string(body), "United States"), "Unexpected response ")
 	_ = resp.Body.Close()
@@ -230,7 +234,7 @@ func doTestChainedAndFronted(t *testing.T, build func(fronted.Fronted) http.Roun
 	fronted.ConfigureHostAlaisesForTest(t, map[string]string{badhost: goodhost})
 
 	assert.NoError(t, err)
-	cf = build(fr)
+	cf = build()
 	resp, err = cf.RoundTrip(req)
 	if assert.NoError(t, err) {
 		if assert.Equal(t, 200, resp.StatusCode) {

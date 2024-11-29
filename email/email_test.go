@@ -60,8 +60,8 @@ func TestSubmitIssue(t *testing.T) {
 	// test that domain-fronting is working, you can block mandrillapp.com, for
 	// example by setting its address to 0.0.0.0 in /etc/hosts.
 	if false {
-		fronted := newFronted()
-		SetHTTPClient(proxied.DirectThenFrontedClient(5*time.Second, fronted))
+		proxied.SetFronted(newFronted())
+		SetHTTPClient(proxied.DirectThenFrontedClient(5 * time.Second))
 		defer SetHTTPClient(&http.Client{})
 
 		msg := &Message{
