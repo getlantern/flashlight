@@ -119,20 +119,12 @@ func (d *waterImpl) ready() <-chan error {
 	}
 
 	if d.errLoadingWASM != nil {
-		tempChan := make(chan error)
-		go func() {
-			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-			defer cancel()
-			select {
-			case tempChan <- d.errLoadingWASM:
-			case <-ctx.Done():
-			}
-			close(tempChan)
-		}()
+		tempChan := make(chan error, 1)
+		tempChan <- d.errLoadingWASM
 		return tempChan
 	}
 
-	readyChan := make(chan error)
+	readyChan := make(chan error, 1)
 	d.readyChannels = append(d.readyChannels, readyChan)
 	return readyChan
 }
@@ -152,23 +144,10 @@ func (d *waterImpl) setErrLoadingWASM(err error) {
 }
 
 func (d *waterImpl) broadcastReadyState(err error) {
-	wg := new(sync.WaitGroup)
 	for _, c := range d.readyChannels {
-		wg.Add(1)
-		go func(err error) {
-			defer wg.Done()
-			// if the channel is not being listened to, this will hold until the channel is read
-			// or the context times out
-			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-			defer cancel()
-			select {
-			case c <- err:
-			case <-ctx.Done():
-			}
-			close(c)
-		}(err)
+		c <- err
+		close(c)
 	}
-	wg.Wait()
 }
 
 func (d *waterImpl) loadWASM(ctx context.Context, transport string, dir string, wasmAvailableAt string) (io.ReadCloser, error) {
