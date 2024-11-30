@@ -21,7 +21,6 @@ import (
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/ema"
 	lerrors "github.com/getlantern/errors"
-	"github.com/getlantern/fronted"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 
@@ -76,13 +75,12 @@ type nopCloser struct{}
 func (c nopCloser) close() {}
 
 // CreateDialers creates a list of Proxies (bandit.Dialer) with supplied server info.
-func CreateDialers(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig, fronted fronted.Fronted) []dialer.ProxyDialer {
-	return lo.Values(CreateDialersMap(configDir, proxies, uc, fronted))
+func CreateDialers(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) []dialer.ProxyDialer {
+	return lo.Values(CreateDialersMap(configDir, proxies, uc))
 }
 
 // CreateDialersMap creates a map of Proxies (bandit.Dialer) with supplied server info.
-func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig,
-	fronted fronted.Fronted) map[string]dialer.ProxyDialer {
+func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, uc common.UserConfig) map[string]dialer.ProxyDialer {
 	groups := groupByMultipathEndpoint(proxies)
 
 	// We parallelize the creation of the dialers because some of them may take
@@ -98,7 +96,7 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 				wg.Add(1)
 				go func(name string, s *config.ProxyConfig) {
 					defer wg.Done()
-					dialer, err := CreateDialer(configDir, name, s, uc, fronted)
+					dialer, err := CreateDialer(configDir, name, s, uc)
 					if err != nil {
 						log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
 						return
@@ -112,7 +110,7 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 			wg.Add(1)
 			go func(endpoint string, group map[string]*config.ProxyConfig) {
 				defer wg.Done()
-				dialer, err := CreateMPDialer(configDir, endpoint, group, uc, fronted)
+				dialer, err := CreateMPDialer(configDir, endpoint, group, uc)
 				if err != nil {
 					log.Errorf("Unable to configure multipath server to %v. Received error: %v", endpoint, err)
 					return
@@ -132,8 +130,7 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 }
 
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
-func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserConfig,
-	fronted fronted.Fronted) (dialer.ProxyDialer, error) {
+func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserConfig) (dialer.ProxyDialer, error) {
 	addr, transport, network, err := extractParams(s)
 	if err != nil {
 		return nil, err
@@ -143,7 +140,7 @@ func CreateDialer(configDir, name string, s *config.ProxyConfig, uc common.UserC
 		return nil, err
 	}
 	log.Debugf("AuthToken: %s", p.authToken)
-	p.impl, err = createImpl(configDir, name, addr, transport, s, uc, p.reportDialCore, fronted)
+	p.impl, err = createImpl(configDir, name, addr, transport, s, uc, p.reportDialCore)
 	if err != nil {
 		log.Debugf("Unable to create proxy implementation for %v: %v", name, err)
 		return nil, err
@@ -183,8 +180,7 @@ func extractParams(s *config.ProxyConfig) (addr, transport, network string, err 
 }
 
 func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, uc common.UserConfig,
-	reportDialCore reportDialCoreFn,
-	fronted fronted.Fronted) (proxyImpl, error) {
+	reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	coreDialer := func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error) {
 		return reportDialCore(op, func() (net.Conn, error) {
 			return netx.DialContext(ctx, "tcp", addr)
@@ -214,7 +210,7 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 	case "starbridge":
 		impl, err = newStarbridgeImpl(name, addr, s, reportDialCore)
 	case "broflake":
-		impl, err = newBroflakeImpl(s, reportDialCore, fronted)
+		impl, err = newBroflakeImpl(s, reportDialCore)
 	case "algeneva":
 		impl, err = newAlgenevaImpl(addr, s, reportDialCore)
 	case "water":
@@ -222,7 +218,7 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 		if err := os.MkdirAll(waterDir, 0755); err != nil {
 			return nil, fmt.Errorf("failed to create water directory: %w", err)
 		}
-		impl, err = newWaterImpl(waterDir, addr, s, reportDialCore, fronted)
+		impl, err = newWaterImpl(waterDir, addr, s, reportDialCore)
 	default:
 		err = lerrors.New("Unknown transport: %v", transport).With("addr", addr).With("plugabble-transport", transport)
 	}

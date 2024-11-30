@@ -20,7 +20,6 @@ import (
 	"github.com/getlantern/detour"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual/v2"
-	"github.com/getlantern/fronted"
 	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
@@ -170,7 +169,6 @@ func NewClient(
 	eventWithLabel func(category, action, label string),
 	onDialError func(error, bool),
 	onSucceedingProxy func(),
-	fronted fronted.Fronted,
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
 	rewriteLRU, err := lru.New(100)
@@ -376,10 +374,9 @@ func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reade
 // Configure updates the client's configuration. Configure can be called
 // before or after ListenAndServe, and can be called multiple times. If
 // no error occurred, then the new dialers are returned.
-func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig,
-	fronted fronted.Fronted) []dialer.ProxyDialer {
+func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []dialer.ProxyDialer {
 	log.Debug("Configure() called")
-	dialers, dialer, err := client.initDialers(proxies, fronted)
+	dialers, dialer, err := client.initDialers(proxies)
 	if err != nil {
 		log.Error(err)
 		return nil
@@ -725,7 +722,7 @@ func errorResponse(_ *filters.ConnectionState, req *http.Request, _ bool, err er
 
 // initDialers takes hosts from cfg.ChainedServers and it uses them to create a
 // new dialer. Returns the new dialers.
-func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig, fronted fronted.Fronted) ([]dialer.ProxyDialer, dialer.Dialer, error) {
+func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) ([]dialer.ProxyDialer, dialer.Dialer, error) {
 	if len(proxies) == 0 {
 		return nil, nil, fmt.Errorf("no chained servers configured, not initializing dialers")
 	}
@@ -735,7 +732,7 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig, 
 	}(time.Now())
 	configDir := client.configDir
 	chained.PersistSessionStates(configDir)
-	dialers := chained.CreateDialers(configDir, proxies, client.user, fronted)
+	dialers := chained.CreateDialers(configDir, proxies, client.user)
 	dialer := dialer.New(&dialer.Options{
 		Dialers: dialers,
 		OnError: client.onDialError,

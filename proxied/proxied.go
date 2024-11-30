@@ -247,7 +247,7 @@ func (df *dualFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, errors.Wrap(err).Op("DFCreateChainedClient")
 	}
-	frontedRT := Fronted("dual_fetcher_round_trip", df.masqueradeTimeout, fronter)
+	frontedRT := Fronted("dual_fetcher_round_trip", df.masqueradeTimeout)
 	return df.do(req, directRT, frontedRT)
 }
 
@@ -578,7 +578,7 @@ func DirectThenFrontedClient(timeout time.Duration) *http.Client {
 		TLSHandshakeTimeout:   timeout,
 		ResponseHeaderTimeout: timeout,
 	}
-	frt := Fronted("direct_then_fronted", 10*time.Second, fronter)
+	frt := Fronted("direct_then_fronted", 10*time.Second)
 	return &http.Client{
 		Timeout:   timeout * 2,
 		Transport: serialTransport{drt, frt},
@@ -588,13 +588,13 @@ func DirectThenFrontedClient(timeout time.Duration) *http.Client {
 // ChainedThenDirectThenFrontedClient returns an http.Client that first attempts
 // to connect to a chained proxy, then falls back to connecting directly to the
 // origin, and finally falls back to using domain fronting.
-func ChainedThenDirectThenFrontedClient(timeout time.Duration, rootCA string, fronting fronted.Fronted) *http.Client {
+func ChainedThenDirectThenFrontedClient(timeout time.Duration, rootCA string) *http.Client {
 	chained := &chainedRoundTripper{rootCA: rootCA}
 	drt := &http.Transport{
 		TLSHandshakeTimeout:   10 * time.Second,
 		ResponseHeaderTimeout: 30 * time.Second,
 	}
-	frt := Fronted("", 10*time.Second, fronting)
+	frt := Fronted("", 10*time.Second)
 	return &http.Client{
 		Timeout:   timeout * 2,
 		Transport: serialTransport{chained, drt, frt},

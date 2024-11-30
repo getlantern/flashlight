@@ -16,7 +16,6 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	commonconfig "github.com/getlantern/common/config"
-	"github.com/getlantern/fronted"
 
 	"github.com/getlantern/flashlight/v7/apipb"
 	"github.com/getlantern/flashlight/v7/chained"
@@ -69,7 +68,6 @@ func StartBypassService(
 	listen func(func(map[string]*commonconfig.ProxyConfig, config.Source)),
 	configDir string,
 	userConfig common.UserConfig,
-	fronted fronted.Fronted,
 ) StopFn {
 	b := &bypassService{
 		infos:   make(map[string]*commonconfig.ProxyConfig),
@@ -80,7 +78,7 @@ func StartBypassService(
 
 	logger.Debug("Starting bypass service")
 	listen(func(infos map[string]*commonconfig.ProxyConfig, src config.Source) {
-		b.onProxies(infos, configDir, userConfig, fronted)
+		b.onProxies(infos, configDir, userConfig)
 	})
 	return b.Stop
 }
@@ -89,7 +87,6 @@ func (b *bypassService) onProxies(
 	infos map[string]*commonconfig.ProxyConfig,
 	configDir string,
 	userConfig common.UserConfig,
-	fronted fronted.Fronted,
 ) {
 	if !b.Reset() {
 		return // bypassService was stopped
@@ -107,7 +104,7 @@ func (b *bypassService) onProxies(
 		}
 	}
 
-	dialers := chained.CreateDialersMap(configDir, supportedInfos, userConfig, fronted)
+	dialers := chained.CreateDialersMap(configDir, supportedInfos, userConfig)
 	for k, v := range supportedInfos {
 		dialer := dialers[k]
 		if dialer == nil {
@@ -120,7 +117,7 @@ func (b *bypassService) onProxies(
 		pc.Name = k
 		// Kill the cert to avoid it taking up unnecessary space.
 		pc.Cert = ""
-		p := newProxy(k, pc, configDir, userConfig, dialer, fronted)
+		p := newProxy(k, pc, configDir, userConfig, dialer)
 		b.proxies = append(b.proxies, p)
 		go p.start(b.done)
 	}
@@ -165,13 +162,12 @@ func newProxy(
 	configDir string,
 	userConfig common.UserConfig,
 	dialer dialer.ProxyDialer,
-	fronted fronted.Fronted,
 ) *proxy {
 	return &proxy{
 		ProxyConfig:       pc,
 		name:              name,
 		proxyRoundTripper: newProxyRoundTripper(name, pc, userConfig, dialer),
-		dfRoundTripper:    proxied.Fronted("bypass_fronted_roundtrip", 0, fronted),
+		dfRoundTripper:    proxied.Fronted("bypass_fronted_roundtrip", 0),
 		sender:            &sender{},
 		toggle:            atomic.NewBool(mrand.Float32() < 0.5),
 		userConfig:        userConfig,

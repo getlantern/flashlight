@@ -18,11 +18,13 @@ import (
 	"github.com/getlantern/fronted"
 
 	flconfig "github.com/getlantern/flashlight/v7/config"
+	"github.com/getlantern/flashlight/v7/proxied"
 )
 
 var fr = newFronted()
 
 func TestMakeBroflakeOptions(t *testing.T) {
+	proxied.SetFronted(fr)
 	pc := &config.ProxyConfig{
 		PluggableTransportSettings: map[string]string{
 			"broflake_ctablesize":                  "69",
@@ -58,7 +60,7 @@ func TestMakeBroflakeOptions(t *testing.T) {
 	}
 
 	// Ensure that supplied values make their way into the correct options structs
-	bo, wo, qo := makeBroflakeOptions(pc, fr)
+	bo, wo, qo := makeBroflakeOptions(pc)
 
 	assert.Equal(t, "desktop", bo.ClientType)
 	ctablesize, err := strconv.Atoi(pc.PluggableTransportSettings["broflake_ctablesize"])
@@ -178,7 +180,7 @@ func TestMakeBroflakeOptions(t *testing.T) {
 
 	// Ensure that unsupplied values result in options structs with default values
 	dpc := &config.ProxyConfig{}
-	bo, wo, qo = makeBroflakeOptions(dpc, fr)
+	bo, wo, qo = makeBroflakeOptions(dpc)
 
 	assert.Equal(t, bo.ClientType, dbo.ClientType)
 	assert.Equal(t, bo.CTableSize, dbo.CTableSize)
@@ -201,6 +203,7 @@ func TestMakeBroflakeOptions(t *testing.T) {
 }
 
 func TestGetRandomSubset(t *testing.T) {
+	proxied.SetFronted(fr)
 	listSize := 100
 	uniqueStrings := make([]string, 0, listSize)
 	for i := 0; i < listSize; i++ {

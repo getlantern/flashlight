@@ -46,7 +46,6 @@ func TestNewWaterImpl(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(configDir)
 
-	fronted := newFronted()
 	var tests = []struct {
 		name          string
 		givenParams   params
@@ -126,7 +125,7 @@ func TestNewWaterImpl(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setHTTPClient()
-			waterImpl, err := newWaterImpl(tt.givenParams.configDir, tt.givenParams.raddr, tt.givenParams.pc, tt.givenParams.reportDialCore, fronted)
+			waterImpl, err := newWaterImpl(tt.givenParams.configDir, tt.givenParams.raddr, tt.givenParams.pc, tt.givenParams.reportDialCore)
 			tt.assert(t, waterImpl, err)
 		})
 	}
@@ -154,7 +153,6 @@ func TestWaterDialServer(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(configDir)
 
-	fronted := newFronted()
 	var tests = []struct {
 		name                string
 		givenOp             *ops.Op
@@ -198,7 +196,7 @@ func TestWaterDialServer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setHTTPClient()
-			waterImpl, err := newWaterImpl(tt.givenConfigDir, tt.givenAddr, pc, tt.givenReportDialCore, fronted)
+			waterImpl, err := newWaterImpl(tt.givenConfigDir, tt.givenAddr, pc, tt.givenReportDialCore)
 			require.NoError(t, err)
 			conn, err := waterImpl.dialServer(tt.givenOp, tt.givenCtx)
 			tt.assert(t, conn, err)

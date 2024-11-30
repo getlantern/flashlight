@@ -17,7 +17,7 @@ func TestCreateDialersMap(t *testing.T) {
 			Addr: "2.2.2.2", AuthToken: "abcd", Cert: "", PluggableTransport: "https",
 		},
 	}
-	dialers := CreateDialers(tempConfigDir, proxies, newTestUserConfig(), newFronted())
+	dialers := CreateDialers(tempConfigDir, proxies, newTestUserConfig())
 	assert.Equal(t, 2, len(dialers))
 	for _, d := range dialers {
 		assert.NotNil(t, d)

@@ -271,7 +271,6 @@ func New(
 		eventWithLabel,
 		f.callbacks.onDialError,
 		f.callbacks.onSucceedingProxy,
-		f.fronted,
 	)
 
 	if err != nil {
@@ -285,7 +284,7 @@ func New(
 
 	f.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
 		log.Debug("Applying proxy config with proxies")
-		dialers := f.client.Configure(chained.CopyConfigs(proxies), f.fronted)
+		dialers := f.client.Configure(chained.CopyConfigs(proxies))
 		log.Debugf("Got %v dialers", len(dialers))
 		if dialers != nil {
 			f.callbacks.onProxiesUpdate(dialers, src)
@@ -356,7 +355,7 @@ func (f *Flashlight) StartBackgroundServices() (func(), error) {
 	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
 	stopGlobalConfigFetch := f.startGlobalConfigFetch()
 
-	stopBypass := services.StartBypassService(f.addProxyListener, f.configDir, f.userConfig, f.fronted)
+	stopBypass := services.StartBypassService(f.addProxyListener, f.configDir, f.userConfig)
 
 	// we don't need to start the config service if sticky is set
 	if sticky, _ := f.flagsAsMap["stickyconfig"].(bool); sticky {
