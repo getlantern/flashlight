@@ -184,6 +184,7 @@ func New(
 		f.op.End()
 		return nil, fatalErr
 	}
+	f.global = globalConfig
 
 	certs, err := globalConfig.TrustedCACerts()
 	if err != nil {
