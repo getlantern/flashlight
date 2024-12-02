@@ -58,6 +58,7 @@ message ProxyConnectConfig {
   ProxyLocation location = 3;
   string name = 4; // Used for logging.
   int32 port = 5;
+  string protocol = 6;
 
   // General config.
   bytes cert_pem = 10;
