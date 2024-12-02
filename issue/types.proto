@@ -1,5 +1,4 @@
 syntax = "proto3";
-package flashlight.issue;
 option go_package = "github.com/getlantern/flashlight/issue";
 
 message Response {
