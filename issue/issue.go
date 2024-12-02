@@ -12,6 +12,7 @@ import (
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/flashlight/v7/logging"
+	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/flashlight/v7/util"
 	"github.com/getlantern/golog"
 )
@@ -19,7 +20,6 @@ import (
 var (
 	log        = golog.LoggerFor("flashlight.issue")
 	maxLogSize = 10247680
-	httpClient *http.Client
 )
 
 const (
@@ -76,10 +76,7 @@ func sendReport(
 	osVersion string,
 	attachments []*Attachment,
 ) error {
-	if httpClient == nil {
-		log.Errorf("httpClient is nil, using default client")
-		httpClient = http.DefaultClient
-	}
+	httpClient := proxied.DirectThenFrontedClient(30 * time.Second)
 	r := &Request{}
 
 	r.Type = Request_ISSUE_TYPE(issueType)
@@ -154,8 +151,4 @@ func sendReport(
 
 	log.Debugf("issue report sent: %v", resp)
 	return nil
-}
-
-func SetHTTPClient(client *http.Client) {
-	httpClient = client
 }
