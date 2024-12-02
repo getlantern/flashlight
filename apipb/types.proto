@@ -3,7 +3,7 @@
 //
 
 syntax = "proto3";
-option go_package = "github.com/getlantern/lantern-cloud/cmd/api/apipb";
+option go_package = "github.com/getlantern/flashlight/apipb";
 
 // LegacyConnectConfig is the information required for a client to connect
 // to a proxy, for clients which get their config from config-server (it's
