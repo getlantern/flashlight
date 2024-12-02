@@ -33,7 +33,7 @@ type Flags struct {
 	ForceProxyAddr     string        `flag:"force-proxy-addr" help:"if specified, force chained proxying to use this address instead of the configured one, assuming an HTTP proxy"`
 	ForceAuthToken     string        `flag:"force-auth-token" help:"if specified, force chained proxying to use this auth token instead of the configured one"`
 	ForceConfigCountry string        `flag:"force-config-country" help:"if specified, force config fetches to pretend they're coming from this 2 letter country-code"`
-	ReadableConfig     bool          `flag:"readableconfig" help:"if specified, disables obfuscation of the config yaml so that it remains human readable"`
+	ReadableConfig     bool          `flag:"readableconfig" help:"if true, the config file will be saved in a human-readable format"`
 	Help               bool          `flag:"help" help:"Get usage help"`
 	NoUiHttpToken      bool          `flag:"no-ui-http-token" help:"don't require a HTTP token from the UI"`
 	Standalone         bool          `flag:"standalone" help:"run Lantern in its own browser window (doesn't rely on system browser)"`

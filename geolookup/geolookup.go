@@ -22,6 +22,10 @@ var (
 
 func init() {
 	userconfig.OnConfigChange(func(old, new *userconfig.UserConfig) {
+		if new.Country == "" && new.Ip == "" {
+			return
+		}
+
 		setInitialValues.CompareAndSwap(false, true)
 
 		// if the country or IP has changed, notify watchers

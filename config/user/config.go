@@ -5,7 +5,6 @@ package userconfig
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"sync"
@@ -13,7 +12,7 @@ import (
 
 	"github.com/getlantern/eventual/v2"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/rot13"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/getlantern/flashlight/v7/apipb"
@@ -43,15 +42,15 @@ type Config struct {
 
 	// filePath is where we should save new configs and look for existing saved configs.
 	filePath string
-	// obfuscate specifies whether or not to obfuscate the config on disk.
-	obfuscate bool
+	// readable specifies whether the config file should be saved in a human-readable format.
+	readable bool
 
 	// listeners is a list of functions to call when the config changes.
 	listeners []func(old, new *UserConfig)
 	mu        sync.Mutex
 }
 
-func Init(saveDir string, obfuscate bool) (*Config, error) {
+func Init(saveDir string, readable bool) (*Config, error) {
 	if !initCalled.CompareAndSwap(false, true) {
 		return _config, nil
 	}
@@ -60,12 +59,16 @@ func Init(saveDir string, obfuscate bool) (*Config, error) {
 		saveDir = DefaultConfigSaveDir
 	}
 
+	return initialize(saveDir, DefaultConfigFilename, readable)
+}
+
+func initialize(saveDir, filename string, readable bool) (*Config, error) {
 	_config.mu.Lock()
-	_config.filePath = filepath.Join(saveDir, DefaultConfigFilename)
-	_config.obfuscate = obfuscate
+	_config.filePath = filepath.Join(saveDir, filename)
+	_config.readable = readable
 	_config.mu.Unlock()
 
-	saved, err := readExistingConfig(_config.filePath, obfuscate)
+	saved, err := readExistingConfig(_config.filePath, readable)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -109,7 +112,7 @@ func (c *Config) SetConfig(new *UserConfig) {
 	log.Tracef("Config changed:\nold:\n%+v\nnew:\n%+v\nmerged:\n%v", old, new, updated)
 
 	c.config.Set(updated)
-	if err := saveConfig(c.filePath, updated, c.obfuscate); err != nil {
+	if err := saveConfig(c.filePath, updated, c.readable); err != nil {
 		log.Errorf("Failed to save client config: %v", err)
 	}
 
@@ -132,10 +135,11 @@ func GetConfig(ctx context.Context) (*UserConfig, error) {
 	return conf.(*UserConfig), nil
 }
 
-// readExistingConfig reads a config from a file at the specified path, filePath,
-// deobfuscating it if obfuscate is true.
-func readExistingConfig(filePath string, obfuscate bool) (*UserConfig, error) {
-	infile, err := os.Open(filePath)
+// readExistingConfig reads a config from a file at filePath. readable specifies whether the file
+// is in JSON format. A nil error is returned even if the file does not exist or is empty as these
+// are not considered errors.
+func readExistingConfig(filePath string, readable bool) (*UserConfig, error) {
+	bytes, err := os.ReadFile(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil // file does not exist
@@ -143,56 +147,44 @@ func readExistingConfig(filePath string, obfuscate bool) (*UserConfig, error) {
 
 		return nil, fmt.Errorf("unable to open config file %v for reading: %w", filePath, err)
 	}
-	defer infile.Close()
-
-	log.Debugf("Reading existing config from %v", filePath)
-	var in io.Reader = infile
-	if obfuscate {
-		in = rot13.NewReader(infile)
-	}
-
-	bytes, err := io.ReadAll(in)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read config from %v: %w", filePath, err)
-	}
 
 	if len(bytes) == 0 { // file is empty
-		// we treat an empty file as if it doesn't
+		// we treat an empty file as if it doesn't exist
 		return nil, nil
 	}
 
 	conf := &UserConfig{}
-	if err = proto.Unmarshal(bytes, conf); err != nil {
-		return nil, err
+	if readable {
+		err = protojson.Unmarshal(bytes, conf)
+	} else {
+		err = proto.Unmarshal(bytes, conf)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("unable to unmarshal config: %w", err)
 	}
 
 	return conf, nil
 }
 
-// saveConfig writes conf to a file at the specified path, filePath, obfuscating it if
-// obfuscate is true. If the file already exists, it will be overwritten.
-func saveConfig(filePath string, conf *UserConfig, obfuscate bool) error {
-	in, err := proto.Marshal(conf)
+// saveConfig writes conf to a file at filePath. If readable is true, the file will be written in
+// JSON format. Otherwise, it will be written in protobuf format. If the file already exists, it
+// will be overwritten.
+func saveConfig(filePath string, conf *UserConfig, readable bool) error {
+	var (
+		buf []byte
+		err error
+	)
+	if readable {
+		buf, err = protojson.Marshal(conf)
+	} else {
+		buf, err = proto.Marshal(conf)
+	}
+
 	if err != nil {
 		return fmt.Errorf("unable to marshal config: %w", err)
 	}
 
-	outfile, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		return fmt.Errorf("unable to open file %v for writing: %w", filePath, err)
-	}
-	defer outfile.Close()
-
-	var out io.Writer = outfile
-	if obfuscate {
-		out = rot13.NewWriter(outfile)
-	}
-
-	if _, err = out.Write(in); err != nil {
-		return fmt.Errorf("unable to write config to file %v: %w", filePath, err)
-	}
-
-	return nil
+	return os.WriteFile(filePath, buf, 0644)
 }
 
 // OnConfigChange registers a function to be called on config change. This allows callers to

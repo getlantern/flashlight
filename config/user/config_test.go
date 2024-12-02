@@ -2,17 +2,15 @@ package userconfig
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/getlantern/eventual/v2"
-	"github.com/getlantern/rot13"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/getlantern/flashlight/v7/apipb"
 )
@@ -21,108 +19,52 @@ func TestInitWithSavedConfig(t *testing.T) {
 	conf := newTestConfig()
 	defer resetConfig()
 
-	withTempConfigFile(t, conf, false, func(tmpfile *os.File) {
-		Init("", false)
-		existing, _ := GetConfig(eventual.DontWait)
+	filename, err := newTestConfigFile(conf)
+	require.NoError(t, err, "unable to create test config file")
+	defer os.Remove(filename)
 
-		want := fmt.Sprintf("%+v", conf)
-		got := fmt.Sprintf("%+v", existing)
-		assert.Equal(t, want, got, "failed to read existing config file")
-	})
+	initialize(DefaultConfigSaveDir, filename, true)
+	existing, _ := GetConfig(eventual.DontWait)
+
+	want := fmt.Sprintf("%+v", conf)
+	got := fmt.Sprintf("%+v", existing)
+	assert.Equal(t, want, got, "failed to read existing config file")
 }
 
 func TestNotifyOnConfig(t *testing.T) {
 	conf := newTestConfig()
 	defer resetConfig()
 
-	withTempConfigFile(t, conf, false, func(tmpfile *os.File) {
-		called := make(chan struct{}, 1)
-		OnConfigChange(func(old, new *UserConfig) {
-			called <- struct{}{}
-		})
+	filename, err := newTestConfigFile(conf)
+	require.NoError(t, err, "unable to create test config file")
+	defer os.Remove(filename)
 
-		Init("", false)
-		_config.SetConfig(newTestConfig())
-
-		select {
-		case <-called:
-			t.Log("recieved config change notification")
-		case <-time.After(time.Second):
-			assert.Fail(t, "timeout waiting for config change notification")
-		}
+	called := make(chan struct{}, 1)
+	OnConfigChange(func(old, new *UserConfig) {
+		called <- struct{}{}
 	})
+
+	initialize(DefaultConfigSaveDir, filename, true)
+	_config.SetConfig(newTestConfig())
+
+	select {
+	case <-called:
+		t.Log("recieved config change notification")
+	case <-time.After(time.Second):
+		assert.Fail(t, "timeout waiting for config change notification")
+	}
 }
 
 func TestInvalidFile(t *testing.T) {
-	withTempConfigFile(t, nil, false, func(tmpfile *os.File) {
-		tmpfile.WriteString("real-list-of-lantern-ips: https://youtu.be/dQw4w9WgXcQ?t=85")
-		tmpfile.Sync()
-
-		_, err := readExistingConfig(tmpfile.Name(), false)
-		assert.Error(t, err, "should get error if config file is invalid")
-	})
-}
-
-func TestReadObfuscatedConfig(t *testing.T) {
-	conf := newTestConfig()
-	withTempConfigFile(t, conf, true, func(tmpfile *os.File) {
-		fileConf, err := readExistingConfig(tmpfile.Name(), true)
-		assert.NoError(t, err, "unable to read obfuscated config file")
-
-		want := fmt.Sprintf("%+v", conf)
-		got := fmt.Sprintf("%+v", fileConf)
-		assert.Equal(t, want, got, "obfuscated config file doesn't match")
-	})
-}
-
-func TestSaveObfuscatedConfig(t *testing.T) {
-	withTempConfigFile(t, nil, false, func(tmpfile *os.File) {
-		tmpfile.Close()
-
-		conf := newTestConfig()
-		err := saveConfig(tmpfile.Name(), conf, true)
-		require.NoError(t, err, "unable to save obfuscated config file")
-
-		file, err := os.Open(tmpfile.Name())
-		require.NoError(t, err, "unable to open obfuscated config file")
-		defer file.Close()
-
-		reader := rot13.NewReader(file)
-		buf, err := io.ReadAll(reader)
-		require.NoError(t, err, "unable to read obfuscated config file")
-
-		fileConf := &UserConfig{}
-		assert.NoError(t, proto.Unmarshal(buf, fileConf), "unable to unmarshal obfuscated config file")
-
-		want := fmt.Sprintf("%+v", conf)
-		got := fmt.Sprintf("%+v", fileConf)
-		assert.Equal(t, want, got, "obfuscated config file doesn't match")
-	})
-}
-
-func withTempConfigFile(t *testing.T, conf *UserConfig, obfuscate bool, f func(*os.File)) {
-	tmpfile, err := os.OpenFile(DefaultConfigFilename, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0644)
+	tmpfile, err := os.CreateTemp("", DefaultConfigFilename)
 	require.NoError(t, err, "couldn't create temp file")
-	defer func() { // clean up
-		tmpfile.Close()
-		os.Remove(tmpfile.Name())
-	}()
+	tmpfile.WriteString("real-list-of-lantern-ips: https://youtu.be/dQw4w9WgXcQ?t=85")
+	tmpfile.Close()
 
-	if conf != nil {
-		buf, _ := proto.Marshal(conf)
+	_, err = readExistingConfig(tmpfile.Name(), true)
+	assert.Error(t, err, "should get error if config file is invalid")
 
-		var writer io.Writer = tmpfile
-		if obfuscate {
-			writer = rot13.NewWriter(tmpfile)
-		}
-
-		_, err := writer.Write(buf)
-		require.NoError(t, err, "unable to write to test config file")
-
-		tmpfile.Sync()
-	}
-
-	f(tmpfile)
+	os.Remove(tmpfile.Name())
 }
 
 const (
@@ -149,6 +91,26 @@ func newTestConfig() *UserConfig {
 		Ip:       "109.117.115.107",
 		Proxy:    &apipb.ConfigResponse_Proxy{Proxies: pCfg},
 	}
+}
+
+func newTestConfigFile(conf *UserConfig) (string, error) {
+	tmpfile, err := os.CreateTemp("", DefaultConfigFilename)
+	if err != nil {
+		return "", nil
+	}
+	buf, err := protojson.Marshal(conf)
+	if err != nil {
+		return "", err
+	}
+	_, err = tmpfile.Write(buf)
+	if err != nil {
+		tmpfile.Close()
+		os.Remove(tmpfile.Name())
+		return "", err
+	}
+	tmpfile.Sync()
+	tmpfile.Close()
+	return tmpfile.Name(), nil
 }
 
 func buildProxy(proto string) *apipb.ProxyConnectConfig {
@@ -187,7 +149,7 @@ func resetConfig() {
 	_config.mu.Lock()
 	_config.config.Reset()
 	_config.filePath = ""
-	_config.obfuscate = false
+	_config.readable = true
 	_config.listeners = nil
 	_config.mu.Unlock()
 }
