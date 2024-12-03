@@ -336,7 +336,8 @@ func New(
 	}
 
 	readable, _ := f.flagsAsMap["readableconfig"].(bool)
-	_, err := userconfig.Init(f.configDir, !readable)
+	sticky, _ := f.flagsAsMap["stickyconfig"].(bool)
+	_, err := userconfig.Init(f.configDir, readable || sticky)
 	if err != nil {
 		log.Errorf("user config: %v", err)
 	}
@@ -529,7 +530,8 @@ func (f *Flashlight) StartBackgroundServices() (func(), error) {
 
 func (f *Flashlight) startConfigService() (services.StopFn, error) {
 	readable, _ := f.flagsAsMap["readableconfig"].(bool)
-	handler, err := userconfig.Init(f.configDir, !readable)
+	// we don't need to also check for sticky here because this function is only called if sticky is not set
+	handler, err := userconfig.Init(f.configDir, readable)
 	if err != nil {
 		return nil, err
 	}
