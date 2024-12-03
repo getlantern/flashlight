@@ -99,8 +99,8 @@ func TestNewWaterImpl(t *testing.T) {
 				raddr:     "127.0.0.1",
 				pc: &config.ProxyConfig{
 					PluggableTransportSettings: map[string]string{
-						"water_available_at": "http://example.com/wasm.wasm,http://example2.com/wasm.wasm",
-						"water_transport":    "plain.v1.tinygo.wasm",
+						"wasm_available_at": "http://example.com/wasm.wasm,http://example2.com/wasm.wasm",
+						"water_transport":   "plain.v1.tinygo.wasm",
 					},
 				},
 				reportDialCore: func(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error) {
