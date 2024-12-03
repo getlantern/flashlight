@@ -19,6 +19,8 @@ import (
 
 	flconfig "github.com/getlantern/flashlight/v7/config"
 	"github.com/getlantern/flashlight/v7/proxied"
+
+	tls "github.com/refraction-networking/utls"
 )
 
 var fr = newFronted()
@@ -258,9 +260,10 @@ func newFronted() fronted.Fronted {
 		os.Exit(1)
 	}
 	defer os.RemoveAll(tempConfigDir)
-	fronted, err := fronted.NewFronted(certs, cfg.Client.FrontedProviders(), flconfig.DefaultFrontedProviderID, filepath.Join(tempConfigDir, "masquerade_cache"))
+	fronted, err := fronted.NewFronted(filepath.Join(tempConfigDir, "masquerade_cache"), tls.HelloChrome_100, flconfig.DefaultFrontedProviderID)
 	if err != nil {
 		log.Errorf("Unable to configure fronted: %v", err)
 	}
+	fronted.UpdateConfig(certs, cfg.Client.FrontedProviders())
 	return fronted
 }

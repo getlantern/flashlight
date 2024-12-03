@@ -608,11 +608,11 @@ func (r *response) nested() (*http.Response, error) {
 type testFronted struct {
 }
 
-func (f *testFronted) UpdateConfig(pool *x509.CertPool, providers map[string]*fronted.Provider, defaultProviderID string) {
+func (f *testFronted) UpdateConfig(pool *x509.CertPool, providers map[string]*fronted.Provider) {
 
 }
-func (f *testFronted) NewRoundTripper(time.Duration) (http.RoundTripper, error) {
-	return http.DefaultTransport, nil
+func (f *testFronted) RoundTrip(req *http.Request) (*http.Response, error) {
+	return nil, nil
 }
 
 func (f *testFronted) Close() {

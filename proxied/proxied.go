@@ -140,9 +140,8 @@ func ParallelForIdempotent() http.RoundTripper {
 // requests to both chained and fronted servers either in parallel or not.
 func dual(parallel bool, rootCA string) http.RoundTripper {
 	cf := &chainedAndFronted{
-		parallel:          parallel,
-		masqueradeTimeout: DefaultMasqueradeTimeout,
-		rootCA:            rootCA,
+		parallel: parallel,
+		rootCA:   rootCA,
 	}
 	cf.setFetcher(newDualFetcher(cf))
 	return cf
@@ -247,7 +246,7 @@ func (df *dualFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, errors.Wrap(err).Op("DFCreateChainedClient")
 	}
-	frontedRT := Fronted("dual_fetcher_round_trip", df.masqueradeTimeout)
+	frontedRT := Fronted("dual_fetcher_round_trip")
 	return df.do(req, directRT, frontedRT)
 }
 
@@ -578,7 +577,7 @@ func DirectThenFrontedClient(timeout time.Duration) *http.Client {
 		TLSHandshakeTimeout:   timeout,
 		ResponseHeaderTimeout: timeout,
 	}
-	frt := Fronted("direct_then_fronted", 10*time.Second)
+	frt := Fronted("direct_then_fronted")
 	return &http.Client{
 		Timeout:   timeout * 2,
 		Transport: serialTransport{drt, frt},
@@ -594,7 +593,7 @@ func ChainedThenDirectThenFrontedClient(timeout time.Duration, rootCA string) *h
 		TLSHandshakeTimeout:   10 * time.Second,
 		ResponseHeaderTimeout: 30 * time.Second,
 	}
-	frt := Fronted("", 10*time.Second)
+	frt := Fronted("chained_then_direct_then_fronted")
 	return &http.Client{
 		Timeout:   timeout * 2,
 		Transport: serialTransport{chained, drt, frt},

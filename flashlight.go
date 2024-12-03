@@ -15,6 +15,7 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/netx"
+	tls "github.com/refraction-networking/utls"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/getlantern/flashlight/v7/apipb"
@@ -183,14 +184,8 @@ func New(
 		f.op.End()
 		return nil, fatalErr
 	}
-	f.global = globalConfig
 
-	certs, err := globalConfig.TrustedCACerts()
-	if err != nil {
-		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
-	}
-
-	f.fronted, err = fronted.NewFronted(certs, globalConfig.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(configDir, "masquerade_cache"))
+	f.fronted, err = fronted.NewFronted(filepath.Join(configDir, "masquerade_cache"), tls.HelloChrome_102, config.DefaultFrontedProviderID)
 	if err != nil {
 		log.Errorf("Unable to configure fronted: %v", err)
 	}
@@ -280,6 +275,7 @@ func New(
 	}
 
 	f.client = cl
+	f.onGlobalConfig(globalConfig, config.Embedded)
 
 	f.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
 		log.Debug("Applying proxy config with proxies")
@@ -659,7 +655,7 @@ func (f *Flashlight) applyGlobalConfig(cfg *config.Global) {
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
 	} else if cfg.Client != nil && cfg.Client.Fronted != nil {
-		f.fronted.UpdateConfig(certs, cfg.Client.FrontedProviders(), config.DefaultFrontedProviderID)
+		f.fronted.UpdateConfig(certs, cfg.Client.FrontedProviders())
 	} else {
 		log.Errorf("Unable to configured fronted (no config)")
 	}
