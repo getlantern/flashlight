@@ -48,7 +48,7 @@ var (
 
 func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (*waterImpl, error) {
 	ctx := context.Background()
-	wasmAvailableAt := ptSetting(pc, "water_available_at")
+	wasmAvailableAt := ptSetting(pc, "wasm_available_at")
 	transport := ptSetting(pc, "water_transport")
 	d := &waterImpl{
 		raddr:          addr,
