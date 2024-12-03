@@ -13,11 +13,13 @@ import (
 
 	"github.com/getlantern/flashlight/v7/config"
 	"github.com/getlantern/flashlight/v7/geolookup"
+	"github.com/getlantern/flashlight/v7/proxied"
 )
 
 func TestMain(m *testing.M) {
 
-	newFronted()
+	fronted := newFronted()
+	proxied.SetFronted(fronted)
 
 	//log.Debug(cfg.Client.FrontedProviders())
 	//fronted.Configure(certs, cfg.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(tempConfigDir, "masquerade_cache"))
@@ -60,6 +62,8 @@ func newFronted() fronted.Fronted {
 }
 
 func TestSendReport(t *testing.T) {
+	fronted := newFronted()
+	proxied.SetFronted(fronted)
 	err := sendReport(
 		"34qsdf-24qsadf-32542q",
 		"1",
