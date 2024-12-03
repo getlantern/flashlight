@@ -192,7 +192,7 @@ func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
 
 	SetProxyAddr(eventual.DefaultGetter(l.Addr().String()))
 
-	fronted.ConfigureForTest(t)
+	SetFronted(fronted.ConfigureForTest(t))
 	geo := "http://d3u5fqukq7qrhd.cloudfront.net/lookup/198.199.72.101"
 	req, err := http.NewRequest("GET", geo, nil)
 
@@ -201,7 +201,7 @@ func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
 	cf := build()
 	resp, err := cf.RoundTrip(req)
 	assert.NoError(t, err)
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	//log.Debugf("Got body: %v", string(body))
 	assert.True(t, strings.Contains(string(body), "United States"), "Unexpected response ")
@@ -213,7 +213,7 @@ func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
 	// resolve and make sure even the delayed req server still gives us the result
 	goodhost := "d3u5fqukq7qrhd.cloudfront.net"
 	badhost := "48290.cloudfront.net"
-	fronted.ConfigureHostAlaisesForTest(t, map[string]string{goodhost: badhost})
+	SetFronted(fronted.ConfigureHostAlaisesForTest(t, map[string]string{goodhost: badhost}))
 
 	req, err = http.NewRequest("GET", geo, nil)
 
@@ -221,7 +221,7 @@ func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
 	cf = build()
 	resp, err = cf.RoundTrip(req)
 	assert.NoError(t, err)
-	//log.Debugf("Got response in test")
+	log.Debugf("Got response in test")
 	body, err = io.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	assert.True(t, strings.Contains(string(body), "United States"), "Unexpected response ")
@@ -229,10 +229,10 @@ func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
 
 	// Now give the bad url to the req server and make sure we still get the corret
 	// result from the fronted server.
-	//log.Debugf("Running test with bad URL in the req server")
+	log.Debugf("Running test with bad URL in the req server")
 	bad := "http://48290.cloudfront.net/lookup/198.199.72.101"
 	req, err = http.NewRequest("GET", bad, nil)
-	fronted.ConfigureHostAlaisesForTest(t, map[string]string{badhost: goodhost})
+	SetFronted(fronted.ConfigureHostAlaisesForTest(t, map[string]string{badhost: goodhost}))
 
 	assert.NoError(t, err)
 	cf = build()
@@ -306,7 +306,7 @@ func newFronted() fronted.Fronted {
 		log.Errorf("Unable to read trusted certs: %v", err)
 	}
 
-	tempConfigDir, err := os.MkdirTemp("", "issue_test")
+	tempConfigDir, err := os.MkdirTemp("", "proxied_test")
 	if err != nil {
 		log.Errorf("Unable to create temp config dir: %v", err)
 		os.Exit(1)
