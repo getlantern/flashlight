@@ -4,17 +4,29 @@ import (
 	"crypto/x509"
 	"fmt"
 	"math/rand"
+	"os"
+	"path/filepath"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 
 	"github.com/getlantern/broflake/clientcore"
 	"github.com/getlantern/common/config"
+	"github.com/getlantern/fronted"
+
+	flconfig "github.com/getlantern/flashlight/v7/config"
+	"github.com/getlantern/flashlight/v7/proxied"
+
+	tls "github.com/refraction-networking/utls"
 )
 
+var fr = newFronted()
+
 func TestMakeBroflakeOptions(t *testing.T) {
+	proxied.SetFronted(fr)
 	pc := &config.ProxyConfig{
 		PluggableTransportSettings: map[string]string{
 			"broflake_ctablesize":                  "69",
@@ -193,6 +205,7 @@ func TestMakeBroflakeOptions(t *testing.T) {
 }
 
 func TestGetRandomSubset(t *testing.T) {
+	proxied.SetFronted(fr)
 	listSize := 100
 	uniqueStrings := make([]string, 0, listSize)
 	for i := 0; i < listSize; i++ {
@@ -220,4 +233,37 @@ func TestGetRandomSubset(t *testing.T) {
 	nullSet := []string{}
 	subset = getRandomSubset(uint32(100), rng, nullSet)
 	assert.Equal(t, len(subset), 0)
+}
+
+func newFronted() fronted.Fronted {
+	// Init domain-fronting
+	global, err := os.ReadFile("../embeddedconfig/global.yaml")
+	if err != nil {
+		log.Errorf("Unable to load embedded global config: %v", err)
+		os.Exit(1)
+	}
+	cfg := flconfig.NewGlobal()
+	err = yaml.Unmarshal(global, cfg)
+	if err != nil {
+		log.Errorf("Unable to unmarshal embedded global config: %v", err)
+		os.Exit(1)
+	}
+
+	certs, err := cfg.TrustedCACerts()
+	if err != nil {
+		log.Errorf("Unable to read trusted certs: %v", err)
+	}
+
+	tempConfigDir, err := os.MkdirTemp("", "issue_test")
+	if err != nil {
+		log.Errorf("Unable to create temp config dir: %v", err)
+		os.Exit(1)
+	}
+	defer os.RemoveAll(tempConfigDir)
+	fronted, err := fronted.NewFronted(filepath.Join(tempConfigDir, "masquerade_cache"), tls.HelloChrome_100, flconfig.DefaultFrontedProviderID)
+	if err != nil {
+		log.Errorf("Unable to configure fronted: %v", err)
+	}
+	fronted.UpdateConfig(certs, cfg.Client.FrontedProviders())
+	return fronted
 }

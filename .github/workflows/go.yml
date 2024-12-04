@@ -3,6 +3,9 @@ name: Build and Test
 on:
   push:
 
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
 jobs:
 
   build:
@@ -15,24 +18,17 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version-file: "go.mod"
-    - name: Set up gotestfmt
-      uses: gotesttools/gotestfmt-action@v2
-      with:
-        # Optional: pass GITHUB_TOKEN to avoid rate limiting.
-        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Install go go-ctrf-json-reporter
+      run: go install github.com/ctrf-io/go-ctrf-json-reporter/cmd/go-ctrf-json-reporter@latest
     - name: Run tests
-      run: |
-        set -euo pipefail
-        go test -json -race -failfast -tags="headless" -coverprofile=profile.cov -v ./... 2>&1 | tee /tmp/gotest.log | gotestfmt -nofail
-
-      # Upload the original go test log as an artifact for later review.
-    - name: Upload test log
-      uses: actions/upload-artifact@v3
-      if: always()
+      run: go test -json -race -tags="headless" -coverprofile=profile.cov ./... | go-ctrf-json-reporter -output ctrf-report.json
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
       with:
-        name: test-log
-        path: /tmp/gotest.log
-        if-no-files-found: error
+        name: ctrf-report
+        path: ctrf-report.json
+    - name: Publish Test Summary Results
+      run: npx github-actions-ctrf ctrf-report.json
     - name: Install goveralls
       run: go install github.com/mattn/goveralls@latest
     - name: Send coverage

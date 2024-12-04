@@ -2,6 +2,7 @@ package services
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -233,8 +234,8 @@ func (cs *configService) newRequest() (*http.Request, error) {
 	}
 
 	names := make([]string, len(proxies))
-	for _, proxy := range proxies {
-		names = append(names, proxy.Name)
+	for i, proxy := range proxies {
+		names[i] = proxy.Name
 	}
 
 	confReq := &apipb.ConfigRequest{
@@ -250,7 +251,8 @@ func (cs *configService) newRequest() (*http.Request, error) {
 		return nil, fmt.Errorf("unable to marshal config request: %w", err)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, cs.opts.OriginURL, bytes.NewReader(buf))
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, cs.opts.OriginURL, bytes.NewReader(buf))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create request")
 	}

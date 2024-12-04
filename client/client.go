@@ -35,6 +35,7 @@ import (
 	"github.com/getlantern/flashlight/v7/dialer"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/ops"
+	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/flashlight/v7/status"
 )
@@ -146,6 +147,7 @@ type Client struct {
 	socksWg sync.WaitGroup
 
 	DNSResolutionMapForDirectDialsEventual eventual.Value
+	proHttpClient                          *http.Client
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -202,6 +204,7 @@ func NewClient(
 		httpListener:                           eventual.NewValue(),
 		socksListener:                          eventual.NewValue(),
 		DNSResolutionMapForDirectDialsEventual: eventual.NewValue(),
+		proHttpClient:                          newHTTPClient(userConfig),
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -216,6 +219,17 @@ func NewClient(
 
 	go client.cacheClientHellos()
 	return client, nil
+}
+
+func newHTTPClient(uc common.UserConfig) *http.Client {
+	return &http.Client{
+		Transport: proxied.ParallelForIdempotent(),
+		// Don't follow redirects
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+		Timeout: 30 * time.Second,
+	}
 }
 
 // Addr returns the address at which the client is listening with HTTP, blocking

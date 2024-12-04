@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/x509"
 	"fmt"
 	"io"
 	"net"
@@ -17,6 +18,7 @@ import (
 	"time"
 
 	"github.com/getlantern/detour"
+	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mockconn"
 	"github.com/getlantern/shortcut"
@@ -601,3 +603,20 @@ type response struct {
 func (r *response) nested() (*http.Response, error) {
 	return http.ReadResponse(r.br, r.req)
 }
+
+// testFronted implements fronted.Fronted for testing.
+type testFronted struct {
+}
+
+func (f *testFronted) UpdateConfig(pool *x509.CertPool, providers map[string]*fronted.Provider) {
+
+}
+func (f *testFronted) RoundTrip(req *http.Request) (*http.Response, error) {
+	return nil, nil
+}
+
+func (f *testFronted) Close() {
+}
+
+// Make sure testFronted implements fronted.Fronted
+var _ fronted.Fronted = &testFronted{}

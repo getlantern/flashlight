@@ -36,18 +36,13 @@ func TestEmbeddedIsNewer(t *testing.T) {
 		configPath := inTempDir(opts.name)
 		conf := newConfig(configPath, opts)
 
-		// No embedded config.
-		assert.False(t, embeddedIsNewer(conf, opts))
-
-		opts.embeddedData = []byte("test")
-
 		// No proxies on disk.
-		assert.True(t, embeddedIsNewer(conf, opts))
+		assert.True(t, embeddedIsNewer(conf.filePath))
 
-		conf.doSaveOne(opts.embeddedData)
+		conf.doSaveOne([]byte("test"))
 
 		// Saved new proxies file -- make sure we use that.
-		assert.False(t, embeddedIsNewer(conf, opts))
+		assert.False(t, embeddedIsNewer(conf.filePath))
 	})
 }
 

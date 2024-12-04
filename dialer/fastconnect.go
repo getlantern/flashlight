@@ -102,7 +102,6 @@ func (fcd *fastConnectDialer) onConnected(pd ProxyDialer, connectTime time.Durat
 		fcd.topDialer.set(newTopDialer)
 	}
 	fcd.opts.OnSuccess(fcd.topDialer.get())
-	log.Debug("Finished adding connected dialer")
 }
 
 // connectAll dials all the dialers in parallel to connect the user as quickly as

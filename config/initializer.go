@@ -9,7 +9,6 @@ import (
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/v7/common"
-	"github.com/getlantern/flashlight/v7/embeddedconfig"
 )
 
 const packageLogPrefix = "flashlight.config"
@@ -80,24 +79,23 @@ func InitWithURLs(
 
 	// These are the options for fetching the global config.
 	globalOptions := &options{
-		saveDir:          configDir,
-		onSaveError:      onGlobalSaveError,
-		obfuscate:        obfuscate(flags),
-		name:             "global.yaml",
-		originURL:        globalURL,
-		userConfig:       userConfig,
-		unmarshaler:      newGlobalUnmarshaler(flags),
-		dispatch:         globalDispatch,
-		embeddedData:     embeddedconfig.Global,
-		embeddedRequired: true,
+		saveDir:     configDir,
+		onSaveError: onGlobalSaveError,
+		obfuscate:   obfuscate(flags),
+		name:        "global.yaml",
+		originURL:   globalURL,
+		userConfig:  userConfig,
+		unmarshaler: newGlobalUnmarshaler(flags),
+		dispatch:    globalDispatch,
 		sleep: func() time.Duration {
 			mx.RLock()
 			defer mx.RUnlock()
 			return globalConfigPollInterval
 		},
-		sticky: isSticky(flags),
-		rt:     rt,
-		opName: "fetch_global",
+		sticky:      isSticky(flags),
+		rt:          rt,
+		opName:      "fetch_global",
+		ignoreSaved: true,
 	}
 
 	stopGlobal := pipeConfig(globalOptions)
