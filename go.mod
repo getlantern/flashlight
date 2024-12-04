@@ -1,8 +1,8 @@
 module github.com/getlantern/flashlight/v7
 
-go 1.22.3
+go 1.22.6
 
-toolchain go1.22.8
+toolchain go1.23.3
 
 replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220805074304-4a43a9ed4ec6
 
@@ -43,7 +43,7 @@ require (
 	github.com/getlantern/event v0.0.0-20210901195647-a7e3145142e6
 	github.com/getlantern/eventual v1.0.0
 	github.com/getlantern/eventual/v2 v2.0.2
-	github.com/getlantern/fronted v0.0.0-20241120203013-eedcd71609d2
+	github.com/getlantern/fronted v0.0.0-20241203140224-a556be12abc5
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
 	github.com/getlantern/golog v0.0.0-20230503153817-8e72de7e0a65
 	github.com/getlantern/hellosplitter v0.1.1
@@ -59,8 +59,8 @@ require (
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20230510135141-717ed305ef50
-	github.com/getlantern/netx v0.0.0-20211206143627-7ccfeb739cbd
-	github.com/getlantern/ops v0.0.0-20230519221840-1283e026181c
+	github.com/getlantern/netx v0.0.0-20240814210628-0984f52e2d18
+	github.com/getlantern/ops v0.0.0-20231025133620-f368ab734534
 	github.com/getlantern/osversion v0.0.0-20230401075644-c2a30e73c451
 	github.com/getlantern/proxy/v3 v3.0.0-20240328103708-9185589b6a99
 	github.com/getlantern/psmux v1.5.15
@@ -72,9 +72,9 @@ require (
 	github.com/getlantern/timezone v0.0.0-20210901200113-3f9de9d360c9
 	github.com/getlantern/tinywss v0.0.0-20211216020538-c10008a7d461
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
-	github.com/getlantern/tlsdialer/v3 v3.0.3
+	github.com/getlantern/tlsdialer/v3 v3.0.4
 	github.com/getlantern/tlsmasq v0.4.7-0.20230302000139-6e479a593298
-	github.com/getlantern/tlsresumption v0.0.0-20211216020551-6a3f901d86b9
+	github.com/getlantern/tlsresumption v0.0.0-20241203054031-f3e4eec291ad
 	github.com/getlantern/tlsutil v0.5.3
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
@@ -88,7 +88,7 @@ require (
 	github.com/mitchellh/go-server-timing v1.0.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pborman/uuid v1.2.1
-	github.com/refraction-networking/utls v1.3.3
+	github.com/refraction-networking/utls v1.6.7
 	github.com/refraction-networking/water v0.7.0-alpha
 	github.com/samber/lo v1.38.1
 	github.com/shadowsocks/go-shadowsocks2 v0.1.5
@@ -101,7 +101,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.19.0
 	go.opentelemetry.io/otel/trace v1.19.0
 	go.uber.org/atomic v1.10.0
-	golang.org/x/sys v0.23.0
+	golang.org/x/sys v0.26.0
 	google.golang.org/protobuf v1.33.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -113,9 +113,9 @@ require (
 	github.com/Jigsaw-Code/outline-ss-server v1.5.0 // indirect
 	github.com/anacrolix/dht/v2 v2.20.0 // indirect
 	github.com/blang/vfs v1.0.0 // indirect
+	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/coder/websocket v1.8.12 // indirect
 	github.com/dchest/siphash v1.2.3 // indirect
-	github.com/gaukas/godicttls v0.0.4 // indirect
 	github.com/gaukas/wazerofs v0.1.0 // indirect
 	github.com/getlantern/algeneva v0.0.0-20240222191137-2b4e88234f59 // indirect
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a // indirect
@@ -203,7 +203,7 @@ require (
 	github.com/getlantern/telemetry v0.0.0-20230523155019-be7c1d8cd8cb // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-llsqlite/adapter v0.0.0-20230927005056-7f5ce7f0c916 // indirect
-	github.com/go-logr/logr v1.3.0 // indirect
+	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
@@ -293,14 +293,14 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.19.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
 	go.uber.org/mock v0.4.0
-	go.uber.org/multierr v1.8.0 // indirect
-	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/crypto v0.26.0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
+	go.uber.org/zap v1.26.0 // indirect
+	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948 // indirect
 	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/text v0.19.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.24.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231002182017-d307bd883b97 // indirect
