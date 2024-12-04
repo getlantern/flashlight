@@ -48,7 +48,7 @@ require (
 	github.com/getlantern/golog v0.0.0-20230503153817-8e72de7e0a65
 	github.com/getlantern/hellosplitter v0.1.1
 	github.com/getlantern/hidden v0.0.0-20220104173330-f221c5a24770
-	github.com/getlantern/http-proxy-lantern/v2 v2.10.1-0.20240614175233-0df4a97b806e
+	github.com/getlantern/http-proxy-lantern/v2 v2.10.1
 	github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca
 	github.com/getlantern/idletiming v0.0.0-20201229174729-33d04d220c4e
 	github.com/getlantern/iptool v0.0.0-20230112135223-c00e863b2696
@@ -187,7 +187,7 @@ require (
 	github.com/getlantern/fdcount v0.0.0-20210503151800-5decd65b3731 // indirect
 	github.com/getlantern/filepersist v0.0.0-20210901195658-ed29a1cb0b7c // indirect
 	github.com/getlantern/framed v0.0.0-20190601192238-ceb6431eeede // indirect
-	github.com/getlantern/geo v0.0.0-20240108161311-50692a1b69a9 // indirect
+	github.com/getlantern/geo v0.0.0-20241129152027-2fc88c10f91e // indirect
 	github.com/getlantern/gonat v0.0.0-20201001145726-634575ba87fb // indirect
 	github.com/getlantern/grtrack v0.0.0-20231025115619-bfbfadb228f3 // indirect
 	github.com/getlantern/hex v0.0.0-20220104173244-ad7e4b9194dc // indirect
