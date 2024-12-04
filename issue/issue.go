@@ -7,14 +7,13 @@ import (
 	"strconv"
 	"time"
 
-	proto "github.com/golang/protobuf/proto"
-
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/flashlight/v7/logging"
 	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/flashlight/v7/util"
 	"github.com/getlantern/golog"
+	"google.golang.org/protobuf/proto"
 )
 
 var (

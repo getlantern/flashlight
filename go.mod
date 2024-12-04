@@ -34,7 +34,7 @@ require (
 	github.com/getlantern/golog v0.0.0-20230503153817-8e72de7e0a65
 	github.com/getlantern/hellosplitter v0.1.1
 	github.com/getlantern/hidden v0.0.0-20220104173330-f221c5a24770
-	github.com/getlantern/http-proxy-lantern/v2 v2.10.1-0.20240614175233-0df4a97b806e
+	github.com/getlantern/http-proxy-lantern/v2 v2.10.1
 	github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca
 	github.com/getlantern/idletiming v0.0.0-20201229174729-33d04d220c4e
 	github.com/getlantern/iptool v0.0.0-20230112135223-c00e863b2696
@@ -65,7 +65,6 @@ require (
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/golang/protobuf v1.5.3
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/jaffee/commandeer v0.6.0
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
@@ -87,7 +86,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.19.0
 	go.uber.org/atomic v1.10.0
 	golang.org/x/sys v0.26.0
-	google.golang.org/protobuf v1.33.0
+	google.golang.org/protobuf v1.35.2
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.0
@@ -107,6 +106,7 @@ require (
 	github.com/getlantern/withtimeout v0.0.0-20160829163843-511f017cd913 // indirect
 	github.com/getsentry/sentry-go v0.20.0 // indirect
 	github.com/go-llsqlite/crawshaw v0.5.1 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/tetratelabs/wazero v1.7.1 // indirect
 	github.com/vishvananda/netns v0.0.1 // indirect
 	gitlab.com/yawning/edwards25519-extra.git v0.0.0-20211229043746-2f91fcc9fbdb // indirect
@@ -172,7 +172,7 @@ require (
 	github.com/getlantern/fdcount v0.0.0-20210503151800-5decd65b3731 // indirect
 	github.com/getlantern/filepersist v0.0.0-20210901195658-ed29a1cb0b7c // indirect
 	github.com/getlantern/framed v0.0.0-20190601192238-ceb6431eeede // indirect
-	github.com/getlantern/geo v0.0.0-20240108161311-50692a1b69a9 // indirect
+	github.com/getlantern/geo v0.0.0-20241129152027-2fc88c10f91e // indirect
 	github.com/getlantern/gonat v0.0.0-20201001145726-634575ba87fb // indirect
 	github.com/getlantern/grtrack v0.0.0-20231025115619-bfbfadb228f3 // indirect
 	github.com/getlantern/hex v0.0.0-20220104173244-ad7e4b9194dc // indirect
