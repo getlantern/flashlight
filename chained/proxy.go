@@ -249,7 +249,8 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 func isAMultiplexedTransport(transport string) bool {
 	return transport == "tlsmasq" ||
 		transport == "starbridge" ||
-		transport == "algeneva"
+		transport == "algeneva" ||
+		transport == "water"
 }
 
 // ForceProxy forces everything through the HTTP proxy at forceAddr using
@@ -338,7 +339,7 @@ func newProxy(name, addr, protocol, network string, s *config.ProxyConfig, uc co
 		name:             name,
 		protocol:         protocol,
 		network:          network,
-		multiplexed:      s.MultiplexedAddr != "",
+		multiplexed:      s.MultiplexedAddr != "" || isAMultiplexedTransport(name),
 		addr:             addr,
 		authToken:        s.AuthToken,
 		user:             uc,

@@ -27,6 +27,7 @@ import (
 	hproxy "github.com/getlantern/http-proxy-lantern/v2"
 	"github.com/getlantern/tlsdefaults"
 	"github.com/getlantern/waitforserver"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/getlantern/flashlight/v7/apipb"
@@ -395,7 +396,7 @@ func (helper *Helper) writeUserConfigFile() error {
 		return err
 	}
 
-	out, err := proto.Marshal(cfg)
+	out, err := protojson.Marshal(cfg)
 	if err != nil {
 		return err
 	}
