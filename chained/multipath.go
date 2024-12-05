@@ -49,6 +49,10 @@ func (impl *multipathImpl) FormatStats() []string {
 	return impl.dialer.(multipath.Stats).FormatStats()
 }
 
+func (*multipathImpl) ready() <-chan error {
+	return nil
+}
+
 func CreateMPDialer(configDir, endpoint string, ss map[string]*config.ProxyConfig, uc common.UserConfig) (dialer.ProxyDialer, error) {
 	if len(ss) < 1 {
 		return nil, errors.New("no dialers")

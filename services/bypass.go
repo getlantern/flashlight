@@ -92,9 +92,6 @@ func (b *bypassService) onProxies(
 		return // bypassService was stopped
 	}
 
-	b.mxProxies.Lock()
-	defer b.mxProxies.Unlock()
-
 	// Some pluggable transports don't support bypass, filter these out here.
 	supportedInfos := make(map[string]*commonconfig.ProxyConfig, len(infos))
 
@@ -105,21 +102,78 @@ func (b *bypassService) onProxies(
 	}
 
 	dialers := chained.CreateDialersMap(configDir, supportedInfos, userConfig)
-	for k, v := range supportedInfos {
-		dialer := dialers[k]
+	for name, config := range supportedInfos {
+		dialer := dialers[name]
 		if dialer == nil {
-			logger.Errorf("bypass: no dialer for %v", k)
+			logger.Errorf("No dialer for %v", name)
 			continue
 		}
 
-		pc := chained.CopyConfig(v)
-		// Set the name in the info since we know it here.
-		pc.Name = k
-		// Kill the cert to avoid it taking up unnecessary space.
-		pc.Cert = ""
-		p := newProxy(k, pc, configDir, userConfig, dialer)
-		b.proxies = append(b.proxies, p)
-		go p.start(b.done)
+		readyCh := dialer.Ready()
+		if readyCh != nil {
+			go b.loadProxyAsync(name, config, configDir, userConfig, dialer)
+			continue
+		}
+		b.startProxy(name, config, configDir, userConfig, dialer)
+	}
+}
+
+func (b *bypassService) loadProxyAsync(proxyName string, config *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer dialer.ProxyDialer) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+	readyChan := make(chan struct{})
+	go func() {
+		dialerReady := dialer.Ready()
+		if dialerReady == nil {
+			b.startProxy(proxyName, config, configDir, userConfig, dialer)
+			readyChan <- struct{}{}
+			return
+		}
+		select {
+		case err := <-dialerReady:
+			if err != nil {
+				logger.Errorf("dialer %q initialization failed: %w", proxyName, err)
+				cancel()
+				return
+			}
+			b.startProxy(proxyName, config, configDir, userConfig, dialer)
+			readyChan <- struct{}{}
+			return
+		case <-ctx.Done():
+			logger.Errorf("proxy %q took to long to start: %w", proxyName, ctx.Err())
+			return
+		}
+	}()
+	select {
+	case <-readyChan:
+		logger.Debugf("proxy ready!")
+	case <-ctx.Done():
+		logger.Errorf("proxy %q took to long to start: %w", proxyName, ctx.Err())
+	}
+}
+
+func (b *bypassService) startProxy(proxyName string, config *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer dialer.ProxyDialer) {
+	b.mxProxies.Lock()
+	defer b.mxProxies.Unlock()
+	pc := chained.CopyConfig(config)
+	// Set the name in the info since we know it here.
+	pc.Name = proxyName
+	// Kill the cert to avoid it taking up unnecessary space.
+	pc.Cert = ""
+	p := b.newProxy(proxyName, pc, configDir, userConfig, dialer)
+	b.proxies = append(b.proxies, p)
+	go p.start(b.done)
+}
+
+func (b *bypassService) newProxy(name string, pc *commonconfig.ProxyConfig, configDir string, userConfig common.UserConfig, dialer dialer.ProxyDialer) *proxy {
+	return &proxy{
+		ProxyConfig:       pc,
+		name:              name,
+		proxyRoundTripper: newProxyRoundTripper(name, pc, userConfig, dialer),
+		dfRoundTripper:    proxied.Fronted("bypass_fronted_roundtrip", 0),
+		sender:            &sender{},
+		toggle:            atomic.NewBool(mrand.Float32() < 0.5),
+		userConfig:        userConfig,
 	}
 }
 

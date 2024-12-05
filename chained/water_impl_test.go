@@ -69,11 +69,18 @@ func TestNewWaterImpl(t *testing.T) {
 			assert: func(t *testing.T, actual *waterImpl, err error) {
 				require.NoError(t, err)
 				require.NotNil(t, actual)
+				readyChan := actual.ready()
+				assert.NotNil(t, readyChan)
+				select {
+				case err, ok := <-readyChan:
+					assert.True(t, ok)
+					require.NoError(t, err)
+				}
 				require.NotNil(t, actual.dialer)
 				assert.NotNil(t, actual.reportDialCore)
 			},
 			setHTTPClient: func() {
-				httpClient = &http.Client{
+				waterHTTPClient = &http.Client{
 					Transport: &roundTripFunc{
 						f: func(req *http.Request) (*http.Response, error) {
 							return &http.Response{
@@ -92,8 +99,8 @@ func TestNewWaterImpl(t *testing.T) {
 				raddr:     "127.0.0.1",
 				pc: &config.ProxyConfig{
 					PluggableTransportSettings: map[string]string{
-						"water_available_at": "http://example.com/wasm.wasm,http://example2.com/wasm.wasm",
-						"water_transport":    "plain.v1.tinygo.wasm",
+						"wasm_available_at": "http://example.com/wasm.wasm,http://example2.com/wasm.wasm",
+						"water_transport":   "plain.v1.tinygo.wasm",
 					},
 				},
 				reportDialCore: func(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error) {
@@ -101,15 +108,21 @@ func TestNewWaterImpl(t *testing.T) {
 				},
 			},
 			assert: func(t *testing.T, actual *waterImpl, err error) {
+				defer actual.close()
 				require.NoError(t, err)
 				require.NotNil(t, actual)
-				actual.wgDownload.Wait()
-				assert.NoError(t, actual.downloadErr)
+				readyChan := actual.ready()
+				assert.NotNil(t, readyChan)
+				select {
+				case err, ok := <-readyChan:
+					assert.True(t, ok)
+					require.NoError(t, err)
+				}
 				assert.NotNil(t, actual.dialer)
 				assert.NotNil(t, actual.reportDialCore)
 			},
 			setHTTPClient: func() {
-				httpClient = &http.Client{
+				waterHTTPClient = &http.Client{
 					Transport: &roundTripFunc{
 						f: func(req *http.Request) (*http.Response, error) {
 							return &http.Response{
@@ -145,7 +158,10 @@ func TestWaterDialServer(t *testing.T) {
 
 	b64WASM := base64.StdEncoding.EncodeToString(wasm)
 
-	pc := &config.ProxyConfig{PluggableTransportSettings: map[string]string{"water_wasm": b64WASM}}
+	pc := &config.ProxyConfig{PluggableTransportSettings: map[string]string{
+		"water_wasm": b64WASM,
+	}}
+
 	testOp := ops.Begin("test")
 	defer testOp.End()
 
@@ -180,7 +196,7 @@ func TestWaterDialServer(t *testing.T) {
 			},
 			givenAddr: "127.0.0.1:8080",
 			setHTTPClient: func() {
-				httpClient = &http.Client{
+				waterHTTPClient = &http.Client{
 					Transport: &roundTripFunc{
 						f: func(req *http.Request) (*http.Response, error) {
 							return &http.Response{
@@ -198,6 +214,7 @@ func TestWaterDialServer(t *testing.T) {
 			tt.setHTTPClient()
 			waterImpl, err := newWaterImpl(tt.givenConfigDir, tt.givenAddr, pc, tt.givenReportDialCore)
 			require.NoError(t, err)
+			defer waterImpl.close()
 			conn, err := waterImpl.dialServer(tt.givenOp, tt.givenCtx)
 			tt.assert(t, conn, err)
 		})

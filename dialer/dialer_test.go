@@ -137,6 +137,10 @@ func (m *mockProxyDialer) DataRecv() uint64 {
 	return 0
 }
 
+func (m *mockProxyDialer) Ready() <-chan error {
+	return nil
+}
+
 func (m *mockProxyDialer) Stop() {}
 
 func (m *mockProxyDialer) WriteStats(w io.Writer) {}

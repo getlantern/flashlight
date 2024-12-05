@@ -442,6 +442,10 @@ func (d *testDialer) DialProxy(ctx context.Context) (net.Conn, error) {
 	return &net.TCPConn{}, nil
 }
 
+func (d *testDialer) Ready() <-chan error {
+	return nil
+}
+
 // Name returns the name for this Dialer
 func (d *testDialer) Name() string {
 	return d.name

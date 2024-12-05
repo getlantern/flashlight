@@ -114,6 +114,21 @@ func (o *BanditDialer) chooseDialerForDomain(network, addr string) (ProxyDialer,
 	notAllFailing := hasNotFailing(o.dialers)
 	for i := 0; i < (len(o.dialers) * 2); i++ {
 		d = o.dialers[chosenArm]
+		readyChan := d.Ready()
+		if readyChan != nil {
+			select {
+			case err := <-readyChan:
+				if err != nil {
+					log.Errorf("dialer %q failed to initialize with error %w, chossing different arm", d.Name(), err)
+					chosenArm = differentArm(chosenArm, len(o.dialers))
+					continue
+				}
+			default:
+				log.Debugf("dialer %q is not ready, chossing different arm", d.Name())
+				chosenArm = differentArm(chosenArm, len(o.dialers))
+				continue
+			}
+		}
 		if (d.ConsecFailures() > 0 && notAllFailing) || !d.SupportsAddr(network, addr) {
 			// If the chosen dialer has consecutive failures and there are other
 			// dialers that are succeeding, we should choose a different dialer.

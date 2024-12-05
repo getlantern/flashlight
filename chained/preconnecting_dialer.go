@@ -73,6 +73,10 @@ func (pd *preconnectingDialer) dialServer(op *ops.Op, ctx context.Context) (conn
 	}
 }
 
+func (*preconnectingDialer) ready() <-chan error {
+	return nil
+}
+
 func (pd *preconnectingDialer) preconnectIfNecessary(op *ops.Op) {
 	pd.statsMutex.Lock()
 	defer pd.statsMutex.Unlock()

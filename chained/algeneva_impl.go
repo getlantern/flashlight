@@ -73,6 +73,10 @@ func (a *algenevaImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, er
 	return conn, nil
 }
 
+func (*algenevaImpl) ready() <-chan error {
+	return nil
+}
+
 // algenevaDialer is a algeneva.Dialer wrapper around a reportDialCore. algeneva accepts an optional
 // Dialer interface which it will use to dial the server and then wrap the resulting connection.
 type algenevaDialer struct {
