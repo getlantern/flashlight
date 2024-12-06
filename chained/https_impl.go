@@ -98,7 +98,7 @@ func (impl *httpsImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, er
 	result, err := d.DialForTimings("tcp", impl.addr)
 	if err != nil {
 		if isHelloErr(err) {
-			log.Debugf("got error likely related to bad hello; advancing roller: %v", err)
+			log.Debugf("https_impl got error likely related to bad hello; advancing roller: %v", err)
 			r.advance()
 		}
 		return nil, err
