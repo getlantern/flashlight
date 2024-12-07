@@ -181,6 +181,12 @@ func ProxyToLegacyConfig(cfg *ProxyConnectConfig) (*commonconfig.ProxyConfig, er
 			"water_wasm":      base64.StdEncoding.EncodeToString(pCfg.ConnectCfgWater.Wasm),
 			"water_transport": pCfg.ConnectCfgWater.Transport,
 		}
+	case *ProxyConnectConfig_ConnectCfgVmess:
+		legacy.PluggableTransport = "vmess"
+		legacy.PluggableTransportSettings = map[string]string{
+			"uuid":     pCfg.ConnectCfgVmess.Uuid,
+			"security": pCfg.ConnectCfgVmess.Security,
+		}
 
 	default:
 		return nil, fmt.Errorf("unsupported protocol config: %T", cfg.ProtocolConfig)
