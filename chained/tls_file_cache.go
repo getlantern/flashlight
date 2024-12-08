@@ -69,6 +69,7 @@ func persistSessionStates(configDir string, saveInterval time.Duration) {
 	if err == nil {
 		log.Debugf("Initializing current session states from %v", filename)
 		rows := strings.Split(string(existing), "\n")
+		atLeastOneStateParsedSuccessfully := false
 		for _, row := range rows {
 			state, err := parsePersistedState(row)
 			if err != nil {
@@ -76,6 +77,14 @@ func persistSessionStates(configDir string, saveInterval time.Duration) {
 				continue
 			}
 			currentSessionStates[state.server] = *state
+			atLeastOneStateParsedSuccessfully = true
+		}
+		// Delete the state file if none of the states were parsed successfully. This could happen if state struct is upgraded.
+		if !atLeastOneStateParsedSuccessfully {
+			log.Errorf("No valid session states found, deleting %v", filename)
+			if err := os.Remove(filename); err != nil {
+				log.Errorf("Failed to delete %v: %v", filename, err)
+			}
 		}
 	}
 
