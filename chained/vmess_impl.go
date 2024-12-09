@@ -7,10 +7,10 @@ import (
 
 	"github.com/getlantern/common/config"
 	"github.com/getlantern/errors"
-	vmess "github.com/sagernet/sing-vmess"
+	vmess "github.com/getlantern/sing-vmess"
+	N "github.com/getlantern/sing-vmess/network"
 	"github.com/sagernet/sing/common"
 	"github.com/sagernet/sing/common/metadata"
-	N "github.com/sagernet/sing/common/network"
 
 	"github.com/getlantern/flashlight/v7/ops"
 )
