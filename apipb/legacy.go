@@ -14,6 +14,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 
 	commonconfig "github.com/getlantern/common/config"
 )
@@ -177,9 +178,15 @@ func ProxyToLegacyConfig(cfg *ProxyConnectConfig) (*commonconfig.ProxyConfig, er
 		}
 	case *ProxyConnectConfig_ConnectCfgWater:
 		legacy.PluggableTransport = "water"
+		duration, err := time.ParseDuration(pCfg.ConnectCfgWater.DownloadTimeout.String())
+		if err != nil {
+			duration = 5 * time.Minute
+		}
 		legacy.PluggableTransportSettings = map[string]string{
-			"water_wasm":      base64.StdEncoding.EncodeToString(pCfg.ConnectCfgWater.Wasm),
-			"water_transport": pCfg.ConnectCfgWater.Transport,
+			"water_wasm":        base64.StdEncoding.EncodeToString(pCfg.ConnectCfgWater.Wasm),
+			"water_transport":   pCfg.ConnectCfgWater.Transport,
+			"wasm_available_at": strings.Join(pCfg.ConnectCfgWater.WasmAvailableAt, ","),
+			"download_timeout":  duration.String(),
 		}
 
 	default:
@@ -198,6 +205,7 @@ func serializeTLSSessionState(ss *ProxyConnectConfig_TLSConfig_SessionState) (st
 		Vers          uint16
 		CipherSuite   uint16
 		MasterSecret  []byte
+		SessionState  []byte
 	}
 
 	if ss.Version > math.MaxUint16 {
@@ -211,6 +219,7 @@ func serializeTLSSessionState(ss *ProxyConnectConfig_TLSConfig_SessionState) (st
 		Vers:          uint16(ss.Version),
 		CipherSuite:   uint16(ss.CipherSuite),
 		MasterSecret:  ss.MasterSecret,
+		SessionState:  ss.SessionState,
 	})
 	if err != nil {
 		return "", fmt.Errorf("marshal error: %w", err)

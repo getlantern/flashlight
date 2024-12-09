@@ -1,5 +1,6 @@
 syntax = "proto3";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 option go_package = "github.com/getlantern/flashlight/apipb";
 
 //
@@ -84,6 +85,9 @@ message ProxyConnectConfig {
       uint32 version = 2;      // actually a uint16
       uint32 cipher_suite = 3; // actually a uint16
       bytes master_secret = 4;
+      // Newer utls version (e.g. v1.6.7) or go >1.21 has build-in serialization for SessionState. 
+      // It's either field 1,5(newer version) or field 1,2,3,4(older version) that are used for serialization.
+      bytes session_state = 5;
     }
 
     SessionState session_state = 1;
@@ -131,8 +135,14 @@ message ProxyConnectConfig {
   }
 
   message WATERConfig {
-    bytes wasm = 1;
+    // deprecated: use wasm_available_at instead
+    bytes wasm = 1 [deprecated = true];
     string transport = 2;
+    // wasm_available_at provide a list of URLs that can be used for fetching the WASM module
+    // with different methods like a direct URL, a magnet link, etc.
+    repeated string wasm_available_at = 3;
+    // download_timeout specifies the time the HTTP client should wait to retrieve the WASM binary
+    google.protobuf.Duration download_timeout = 4;
   }
 
   oneof protocol_config {

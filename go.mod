@@ -34,7 +34,7 @@ require (
 	github.com/getlantern/golog v0.0.0-20230503153817-8e72de7e0a65
 	github.com/getlantern/hellosplitter v0.1.1
 	github.com/getlantern/hidden v0.0.0-20220104173330-f221c5a24770
-	github.com/getlantern/http-proxy-lantern/v2 v2.10.1-0.20240614175233-0df4a97b806e
+	github.com/getlantern/http-proxy-lantern/v2 v2.10.1
 	github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca
 	github.com/getlantern/idletiming v0.0.0-20201229174729-33d04d220c4e
 	github.com/getlantern/iptool v0.0.0-20230112135223-c00e863b2696
@@ -58,9 +58,9 @@ require (
 	github.com/getlantern/timezone v0.0.0-20210901200113-3f9de9d360c9
 	github.com/getlantern/tinywss v0.0.0-20211216020538-c10008a7d461
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
-	github.com/getlantern/tlsdialer/v3 v3.0.3
+	github.com/getlantern/tlsdialer/v3 v3.0.4
 	github.com/getlantern/tlsmasq v0.4.7-0.20230302000139-6e479a593298
-	github.com/getlantern/tlsresumption v0.0.0-20211216020551-6a3f901d86b9
+	github.com/getlantern/tlsresumption v0.0.0-20241203054031-f3e4eec291ad
 	github.com/getlantern/tlsutil v0.5.3
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
@@ -72,7 +72,7 @@ require (
 	github.com/mitchellh/go-server-timing v1.0.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pborman/uuid v1.2.1
-	github.com/refraction-networking/utls v1.3.3
+	github.com/refraction-networking/utls v1.6.7
 	github.com/refraction-networking/water v0.7.0-alpha
 	github.com/samber/lo v1.38.1
 	github.com/shadowsocks/go-shadowsocks2 v0.1.5
@@ -98,9 +98,9 @@ require (
 	github.com/alitto/pond/v2 v2.1.5 // indirect
 	github.com/anacrolix/dht/v2 v2.20.0 // indirect
 	github.com/blang/vfs v1.0.0 // indirect
+	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/coder/websocket v1.8.12 // indirect
 	github.com/dchest/siphash v1.2.3 // indirect
-	github.com/gaukas/godicttls v0.0.4 // indirect
 	github.com/gaukas/wazerofs v0.1.0 // indirect
 	github.com/getlantern/algeneva v0.0.0-20240222191137-2b4e88234f59 // indirect
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a // indirect

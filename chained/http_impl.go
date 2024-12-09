@@ -22,3 +22,7 @@ func newHTTPImpl(addr string, dialCore coreDialer) proxyImpl {
 func (impl *httpImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return impl.dialCore(op, ctx, impl.addr)
 }
+
+func (*httpImpl) ready() <-chan error {
+	return nil
+}

@@ -51,6 +51,10 @@ func (impl *testImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, err
 	return impl.d(ctx)
 }
 
+func (*testImpl) ready() <-chan error {
+	return nil
+}
+
 func newDialer(dialServer func(ctx context.Context) (net.Conn, error)) (func(network, addr string) (net.Conn, error), error) {
 	p, err := newProxy("test", "addr:567", "proto", "netw", &config.ProxyConfig{
 		AuthToken: "token",
@@ -288,5 +292,5 @@ func TestCiphersFromNames(t *testing.T) {
 	assert.Nil(t, ciphersFromNames(nil))
 	assert.Nil(t, ciphersFromNames([]string{}))
 	assert.Nil(t, ciphersFromNames([]string{"UNKNOWN"}))
-	assert.EqualValues(t, []uint16{0x0035, 0x003c}, ciphersFromNames([]string{"TLS_RSA_WITH_AES_256_CBC_SHA", "UNKNOWN", "TLS_RSA_WITH_AES_128_CBC_SHA256"}))
+	assert.EqualValues(t, []uint16{0xc02f, 0xc013}, ciphersFromNames([]string{"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", "UNKNOWN", "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA"}))
 }
