@@ -63,6 +63,10 @@ func (impl *wssImpl) close() {
 	impl.dialer.Close()
 }
 
+func (*wssImpl) ready() <-chan error {
+	return nil
+}
+
 func (impl *wssImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return impl.reportDialCore(op, func() (net.Conn, error) {
 		return impl.dialer.DialContext(ctx)

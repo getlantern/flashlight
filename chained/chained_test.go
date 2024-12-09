@@ -51,6 +51,10 @@ func (impl *testImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, err
 	return impl.d(ctx)
 }
 
+func (*testImpl) ready() <-chan error {
+	return nil
+}
+
 func newDialer(dialServer func(ctx context.Context) (net.Conn, error)) (func(network, addr string) (net.Conn, error), error) {
 	p, err := newProxy("test", "addr:567", "proto", "netw", &config.ProxyConfig{
 		AuthToken: "token",

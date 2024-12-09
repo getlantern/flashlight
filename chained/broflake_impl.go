@@ -55,6 +55,10 @@ func newBroflakeImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (p
 	}, nil
 }
 
+func (*broflakeImpl) ready() <-chan error {
+	return nil
+}
+
 func (b *broflakeImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	// TODO: I don't know what to do with 'op'
 	return b.QUICLayer.DialContext(ctx)
