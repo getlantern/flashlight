@@ -338,7 +338,6 @@ github.com/getlantern/multipath v0.0.0-20230510135141-717ed305ef50/go.mod h1:uzx
 github.com/getlantern/nettest v1.0.0 h1:xg8vq9JrGzrFGFkFGwZwIJ5+kwtvyqNDIADwrANvhQg=
 github.com/getlantern/nettest v1.0.0/go.mod h1:8wY0QwrdpkayCBQXjhZoJuwu2IHfp4UErrxgwaJ2UM4=
 github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd/go.mod h1:wKdY0ikOgzrWSeB9UyBVKPRhjXQ+vTb+BPeJuypUuNE=
-github.com/getlantern/netx v0.0.0-20211206143627-7ccfeb739cbd/go.mod h1:WEXF4pfIfnHBUAKwLa4DW7kcEINtG6wjUkbL2btwXZQ=
 github.com/getlantern/netx v0.0.0-20240814210628-0984f52e2d18 h1:I5xFq/HkvWGUPysqC8LQH9oks1WaM9BpcB+fjmvMRic=
 github.com/getlantern/netx v0.0.0-20240814210628-0984f52e2d18/go.mod h1:4WkWbHy7Mqri9lxpLFN6dOU5nUy3kyNCpHxSRQZocv0=
 github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=

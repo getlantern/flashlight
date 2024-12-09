@@ -170,7 +170,7 @@ func (b *bypassService) newProxy(name string, pc *commonconfig.ProxyConfig, conf
 		ProxyConfig:       pc,
 		name:              name,
 		proxyRoundTripper: newProxyRoundTripper(name, pc, userConfig, dialer),
-		dfRoundTripper:    proxied.Fronted("bypass_fronted_roundtrip", 0),
+		dfRoundTripper:    proxied.Fronted("bypass_fronted_roundtrip"),
 		sender:            &sender{},
 		toggle:            atomic.NewBool(mrand.Float32() < 0.5),
 		userConfig:        userConfig,

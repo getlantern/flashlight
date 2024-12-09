@@ -52,6 +52,8 @@ var (
 	fronterMu sync.RWMutex
 )
 
+// SetFronted sets the fronted.Fronted to use for domain fronting. This is a bit hacky but otherwise would
+// require a significant refactor of the proxied package.
 func SetFronted(f fronted.Fronted) {
 	fronterMu.Lock()
 	fronter = f
