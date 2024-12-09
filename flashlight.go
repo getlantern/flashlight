@@ -26,7 +26,6 @@ import (
 	userconfig "github.com/getlantern/flashlight/v7/config/user"
 	"github.com/getlantern/flashlight/v7/dialer"
 	"github.com/getlantern/flashlight/v7/domainrouting"
-	"github.com/getlantern/flashlight/v7/email"
 	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/flashlight/v7/goroutines"
 	fops "github.com/getlantern/flashlight/v7/ops"
@@ -621,7 +620,6 @@ func (f *Flashlight) RunClientListeners(httpProxyAddr, socksProxyAddr string,
 	err := f.client.ListenAndServeHTTP(httpProxyAddr, func() {
 		log.Debug("Started client HTTP proxy")
 		proxied.SetProxyAddr(f.client.Addr)
-		email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 
 		if afterStart != nil {
 			afterStart(f.client)

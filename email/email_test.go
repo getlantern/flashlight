@@ -3,11 +3,9 @@ package email
 import (
 	"context"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/keighl/mandrill"
 	tls "github.com/refraction-networking/utls"
@@ -62,8 +60,6 @@ func TestSubmitIssue(t *testing.T) {
 	// example by setting its address to 0.0.0.0 in /etc/hosts.
 	if false {
 		proxied.SetFronted(newFronted())
-		SetHTTPClient(proxied.DirectThenFrontedClient(5 * time.Second))
-		defer SetHTTPClient(&http.Client{})
 
 		msg := &Message{
 			To:       "ox+unittest@getlantern.org",
