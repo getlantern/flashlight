@@ -205,6 +205,7 @@ func serializeTLSSessionState(ss *ProxyConnectConfig_TLSConfig_SessionState) (st
 		Vers          uint16
 		CipherSuite   uint16
 		MasterSecret  []byte
+		SessionState  []byte
 	}
 
 	if ss.Version > math.MaxUint16 {
@@ -218,6 +219,7 @@ func serializeTLSSessionState(ss *ProxyConnectConfig_TLSConfig_SessionState) (st
 		Vers:          uint16(ss.Version),
 		CipherSuite:   uint16(ss.CipherSuite),
 		MasterSecret:  ss.MasterSecret,
+		SessionState:  ss.SessionState,
 	})
 	if err != nil {
 		return "", fmt.Errorf("marshal error: %w", err)

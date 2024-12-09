@@ -85,6 +85,9 @@ message ProxyConnectConfig {
       uint32 version = 2;      // actually a uint16
       uint32 cipher_suite = 3; // actually a uint16
       bytes master_secret = 4;
+      // Newer utls version (e.g. v1.6.7) or go >1.21 has build-in serialization for SessionState. 
+      // It's either field 1,5(newer version) or field 1,2,3,4(older version) that are used for serialization.
+      bytes session_state = 5;
     }
 
     SessionState session_state = 1;

@@ -1,7 +1,6 @@
 package chained
 
 import (
-	"io/ioutil"
 	"net"
 	"os"
 	"testing"
@@ -14,7 +13,7 @@ import (
 )
 
 func TestPersistSessionStates(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "persistSessionStatesTest")
+	tmpDir, err := os.MkdirTemp("", "persistSessionStatesTest")
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -27,25 +26,26 @@ func TestPersistSessionStates(t *testing.T) {
 	currentSessionStatesMx.Unlock()
 
 	persistSessionStates(tmpDir, 250*time.Millisecond)
-
+	cache := tls.NewLRUClientSessionCache(10)
 	td := &tlsdialer.Dialer{
 		DoDial:         net.DialTimeout,
 		Timeout:        10 * time.Second,
 		SendServerName: true,
 		ClientHelloID:  tls.HelloChrome_Auto,
 		Config: &tls.Config{
-			ClientSessionCache: tls.NewLRUClientSessionCache(10),
+			ClientSessionCache: cache,
 		},
 	}
-
-	result, err := td.DialForTimings("tcp", "tls-v1-2.badssl.com:1012")
+	host, port := "tls-v1-2.badssl.com", "1012"
+	result, err := td.DialForTimings("tcp", net.JoinHostPort(host, port))
 	if !assert.NoError(t, err) {
 		return
 	}
 	defer result.Conn.Close()
 	log.Debug(result.Conn.RemoteAddr())
 
-	ss1 := result.UConn.HandshakeState.Session
+	ss1, ok := cache.Get(host)
+	assert.True(t, ok)
 	expectedTS := time.Now()
 	saveSessionState("myserver", ss1, expectedTS)
 	close(saveSessionStateCh)
