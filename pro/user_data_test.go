@@ -45,7 +45,7 @@ func TestUsers(t *testing.T) {
 		assert.NoError(t, err, "Unexpected error")
 		assert.NotNil(t, u, "Should have gotten a user")
 
-		pro, _ := IsProUser(uc, mockedHTTPClient)
+		pro, _ := IsProUser(uc)
 		assert.False(t, pro)
 		pro, _ = IsProUserFast(uc)
 		assert.False(t, pro)

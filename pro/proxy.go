@@ -5,14 +5,15 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/pro/client"
+	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/golog"
 )
 
@@ -20,9 +21,16 @@ var (
 	log = golog.LoggerFor("flashlight.pro")
 )
 
-type proxyTransport struct {
-	httpClient *http.Client
+var httpClient = &http.Client{
+	Transport: proxied.ParallelForIdempotent(),
+	// Don't follow redirects
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	},
+	Timeout: 30 * time.Second,
 }
+
+type proxyTransport struct{}
 
 func (pt *proxyTransport) processOptions(req *http.Request) *http.Response {
 	resp := &http.Response{
@@ -49,7 +57,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	origin := req.Header.Get("Origin")
 	// Workaround for https://github.com/getlantern/pro-server/issues/192
 	req.Header.Del("Origin")
-	resp, err = pt.httpClient.Do(req)
+	resp, err = httpClient.Do(req)
 	if err != nil {
 		log.Errorf("Could not issue HTTP request? %v", err)
 		return
@@ -72,7 +80,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 		log.Errorf("User ID %s is invalid", _userID)
 		return
 	}
-	body, readErr := ioutil.ReadAll(resp.Body)
+	body, readErr := io.ReadAll(resp.Body)
 	if readErr != nil {
 		log.Errorf("Error read response body: %v", readErr)
 		return
@@ -141,12 +149,10 @@ func prepareProRequest(r *http.Request, uc common.UserConfig, options bool) {
 
 // APIHandler returns an HTTP handler that specifically looks for and properly
 // handles pro server requests.
-func APIHandler(uc common.UserConfig, httpClient *http.Client) http.Handler {
+func APIHandler(uc common.UserConfig) http.Handler {
 	log.Debugf("Returning pro API handler hitting host: %v", common.ProAPIHost)
 	return &httputil.ReverseProxy{
-		Transport: &proxyTransport{
-			httpClient: httpClient,
-		},
+		Transport: &proxyTransport{},
 		Director: func(r *http.Request) {
 			// Strip /pro from path.
 			if strings.HasPrefix(r.URL.Path, "/pro/") {
