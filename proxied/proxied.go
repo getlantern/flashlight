@@ -151,20 +151,18 @@ func dual(parallel bool, rootCA string) http.RoundTripper {
 
 func newDualFetcher(cf *chainedAndFronted) http.RoundTripper {
 	return &dualFetcher{
-		cf:                cf,
-		rootCA:            cf.rootCA,
-		masqueradeTimeout: cf.masqueradeTimeout,
+		cf:     cf,
+		rootCA: cf.rootCA,
 	}
 }
 
 // chainedAndFronted fetches HTTP data in parallel using both chained and fronted
 // servers.
 type chainedAndFronted struct {
-	parallel          bool
-	_fetcher          http.RoundTripper
-	mu                sync.RWMutex
-	rootCA            string
-	masqueradeTimeout time.Duration
+	parallel bool
+	_fetcher http.RoundTripper
+	mu       sync.RWMutex
+	rootCA   string
 }
 
 func (cf *chainedAndFronted) getFetcher() http.RoundTripper {
@@ -228,9 +226,8 @@ func (cf *chainedRoundTripper) RoundTrip(req *http.Request) (*http.Response, err
 }
 
 type dualFetcher struct {
-	cf                *chainedAndFronted
-	rootCA            string
-	masqueradeTimeout time.Duration
+	cf     *chainedAndFronted
+	rootCA string
 }
 
 // RoundTrip will attempt to execute the specified HTTP request using both
@@ -511,9 +508,7 @@ func chained(rootCA string, persistent bool) (http.RoundTripper, error) {
 			// Cache TLS sessions for faster connection
 			ClientSessionCache: clientSessionCache,
 		},
-	}
-	if persistent {
-		tr.IdleConnTimeout = 30 * time.Second
+		IdleConnTimeout: 30 * time.Second,
 	}
 
 	if rootCA != "" {
