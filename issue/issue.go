@@ -75,7 +75,9 @@ func sendReport(
 	osVersion string,
 	attachments []*Attachment,
 ) error {
-	httpClient := proxied.DirectThenFrontedClient(30 * time.Second)
+	httpClient := &http.Client{
+		Transport: proxied.Fronted("issue_fronted_roundtrip"),
+	}
 	r := &Request{}
 
 	r.Type = Request_ISSUE_TYPE(issueType)
