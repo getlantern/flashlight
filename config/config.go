@@ -109,6 +109,8 @@ type options struct {
 	ignoreSaved bool
 }
 
+// NewGlobalOnDisk creates a new global config that is saved on disk either via
+// the embedded config or fetched from the network.
 func NewGlobalOnDisk(configDir string, flags map[string]interface{}) (*Global, error) {
 	configPath := filepath.Join(configDir, "global.yaml")
 	embedded := NewGlobal()
