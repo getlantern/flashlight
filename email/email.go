@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math"
-	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -24,6 +23,7 @@ import (
 	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/flashlight/v7/logging"
 	"github.com/getlantern/flashlight/v7/ops"
+	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/flashlight/v7/util"
 )
 
@@ -37,7 +37,6 @@ var (
 	// Limit text logtail to 1MB
 	maxLogTailSize   = 1024768
 	defaultRecipient string
-	httpClient       = &http.Client{}
 	mu               sync.RWMutex
 )
 
@@ -62,19 +61,6 @@ func getDefaultRecipient() string {
 	mu.RLock()
 	defer mu.RUnlock()
 	return defaultRecipient
-}
-
-// SetHTTPClient configures an alternate http.Client to use when sending emails
-func SetHTTPClient(client *http.Client) {
-	mu.Lock()
-	defer mu.Unlock()
-	httpClient = client
-}
-
-func getHTTPClient() *http.Client {
-	mu.RLock()
-	defer mu.RUnlock()
-	return httpClient
 }
 
 // Message is a templatized email message
@@ -141,7 +127,7 @@ func Send(ctx context.Context, msg *Message) error {
 
 func sendTemplate(ctx context.Context, msg *Message) error {
 	client := mandrill.ClientWithKey(Key)
-	client.HTTPClient = getHTTPClient()
+	client.HTTPClient = proxied.DirectThenFrontedClient(1 * time.Minute)
 	recipient := msg.To
 	if recipient == "" {
 		recipient = getDefaultRecipient()

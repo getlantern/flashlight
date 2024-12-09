@@ -5,14 +5,15 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/pro/client"
+	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/golog"
 )
 
@@ -20,9 +21,16 @@ var (
 	log = golog.LoggerFor("flashlight.pro")
 )
 
-type proxyTransport struct {
-	// Satisfies http.RoundTripper
+var HTTPClient = &http.Client{
+	Transport: proxied.ParallelForIdempotent(),
+	// Don't follow redirects
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	},
+	Timeout: 30 * time.Second,
 }
+
+type proxyTransport struct{}
 
 func (pt *proxyTransport) processOptions(req *http.Request) *http.Response {
 	resp := &http.Response{
@@ -31,7 +39,7 @@ func (pt *proxyTransport) processOptions(req *http.Request) *http.Response {
 			"Connection": {"keep-alive"},
 			"Via":        {"Lantern Client"},
 		},
-		Body: ioutil.NopCloser(strings.NewReader("preflight complete")),
+		Body: io.NopCloser(strings.NewReader("preflight complete")),
 	}
 	if !common.ProcessCORS(resp.Header, req) {
 		return &http.Response{
@@ -49,7 +57,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	origin := req.Header.Get("Origin")
 	// Workaround for https://github.com/getlantern/pro-server/issues/192
 	req.Header.Del("Origin")
-	resp, err = GetHTTPClient().Do(req)
+	resp, err = HTTPClient.Do(req)
 	if err != nil {
 		log.Errorf("Could not issue HTTP request? %v", err)
 		return
@@ -72,12 +80,12 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 		log.Errorf("User ID %s is invalid", _userID)
 		return
 	}
-	body, readErr := ioutil.ReadAll(resp.Body)
+	body, readErr := io.ReadAll(resp.Body)
 	if readErr != nil {
 		log.Errorf("Error read response body: %v", readErr)
 		return
 	}
-	resp.Body = ioutil.NopCloser(bytes.NewReader(body))
+	resp.Body = io.NopCloser(bytes.NewReader(body))
 	encoding := resp.Header.Get("Content-Encoding")
 	var br io.Reader = bytes.NewReader(body)
 	switch encoding {

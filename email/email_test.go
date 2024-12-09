@@ -3,21 +3,18 @@ package email
 import (
 	"context"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/keighl/mandrill"
+	tls "github.com/refraction-networking/utls"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/flashlight/v7/config"
-	"github.com/getlantern/flashlight/v7/embeddedconfig"
 	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/keyman"
 	"github.com/getlantern/yaml"
 )
 
@@ -62,24 +59,7 @@ func TestSubmitIssue(t *testing.T) {
 	// test that domain-fronting is working, you can block mandrillapp.com, for
 	// example by setting its address to 0.0.0.0 in /etc/hosts.
 	if false {
-		cfg := &config.Global{}
-		err := yaml.Unmarshal(embeddedconfig.Global, cfg)
-		if !assert.NoError(t, err) {
-			return
-		}
-
-		certs := make([]string, 0, len(cfg.TrustedCAs))
-		for _, ca := range cfg.TrustedCAs {
-			certs = append(certs, ca.Cert)
-		}
-		pool, err := keyman.PoolContainingCerts(certs...)
-		if !assert.NoError(t, err) {
-			return
-		}
-
-		fronted.Configure(pool, cfg.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(tempConfigDir, "masquerade_cache"))
-		SetHTTPClient(proxied.DirectThenFrontedClient(5 * time.Second))
-		defer SetHTTPClient(&http.Client{})
+		proxied.SetFronted(newFronted())
 
 		msg := &Message{
 			To:       "ox+unittest@getlantern.org",
@@ -88,4 +68,37 @@ func TestSubmitIssue(t *testing.T) {
 		}
 		assert.NoError(t, sendTemplate(context.Background(), msg), "Should be able to send email")
 	}
+}
+
+func newFronted() fronted.Fronted {
+	// Init domain-fronting
+	global, err := os.ReadFile("../embeddedconfig/global.yaml")
+	if err != nil {
+		log.Errorf("Unable to load embedded global config: %v", err)
+		os.Exit(1)
+	}
+	cfg := config.NewGlobal()
+	err = yaml.Unmarshal(global, cfg)
+	if err != nil {
+		log.Errorf("Unable to unmarshal embedded global config: %v", err)
+		os.Exit(1)
+	}
+
+	certs, err := cfg.TrustedCACerts()
+	if err != nil {
+		log.Errorf("Unable to read trusted certs: %v", err)
+	}
+
+	tempConfigDir, err := os.MkdirTemp("", "issue_test")
+	if err != nil {
+		log.Errorf("Unable to create temp config dir: %v", err)
+		os.Exit(1)
+	}
+	defer os.RemoveAll(tempConfigDir)
+	fronted, err := fronted.NewFronted(filepath.Join(tempConfigDir, "masquerade_cache"), tls.HelloChrome_100, config.DefaultFrontedProviderID)
+	if err != nil {
+		log.Errorf("Unable to configure fronted: %v", err)
+	}
+	fronted.UpdateConfig(certs, cfg.Client.FrontedProviders())
+	return fronted
 }

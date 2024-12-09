@@ -82,7 +82,7 @@ func IsProUser(uc common.UserConfig) (isPro bool, statusKnown bool) {
 	user, found := GetUserDataFast(uc.GetUserID())
 	if !found {
 		var err error
-		user, err = fetchUserDataWithClient(uc, httpClient)
+		user, err = fetchUserDataWithClient(uc, HTTPClient)
 		if err != nil {
 			logger.Debugf("Got error fetching pro user: %v", err)
 			return false, false
@@ -113,12 +113,12 @@ func GetUserDataFast(userID int64) (*client.User, bool) {
 
 // NewUser creates a new user via Pro API, and updates local cache.
 func NewUser(uc common.UserConfig) (*client.User, error) {
-	return newUserWithClient(uc, httpClient)
+	return newUserWithClient(uc, HTTPClient)
 }
 
 // NewClient creates a new pro Client
 func NewClient() *client.Client {
-	return client.NewClient(httpClient, PrepareProRequestWithOptions)
+	return client.NewClient(HTTPClient, PrepareProRequestWithOptions)
 }
 
 // newUserWithClient creates a new user via Pro API, and updates local cache
@@ -140,7 +140,7 @@ func newUserWithClient(uc common.UserConfig, hc *http.Client) (*client.User, err
 
 // FetchUserData fetches user data from Pro API, and updates local cache.
 func FetchUserData(uc common.UserConfig) (*client.User, error) {
-	return fetchUserDataWithClient(uc, httpClient)
+	return fetchUserDataWithClient(uc, HTTPClient)
 }
 
 func fetchUserDataWithClient(uc common.UserConfig, hc *http.Client) (*client.User, error) {

@@ -11,13 +11,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getsentry/sentry-go"
 	"gopkg.in/yaml.v3"
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/rot13"
 
 	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/embeddedconfig"
 	"github.com/getlantern/flashlight/v7/ops"
 )
 
@@ -88,12 +88,6 @@ type options struct {
 	// yaml configs.
 	dispatch func(cfg interface{}, src Source)
 
-	// embeddedData is the data for embedded configs, using tarfs.
-	embeddedData []byte
-
-	// whether or not embedded data is required.
-	embeddedRequired bool
-
 	// sleep the time to sleep between config fetches.
 	sleep func() time.Duration
 
@@ -108,6 +102,53 @@ type options struct {
 
 	// opName is the operation name to use for ops.Begin when fetching configs.
 	opName string
+
+	// ignoreSaved specifies whether or not to ignore saved config and only use
+	// configs fetched from the network (possibly because we previously snagged
+	// the saved config, for example).
+	ignoreSaved bool
+}
+
+// NewGlobalOnDisk creates a new global config that is saved on disk either via
+// the embedded config or fetched from the network.
+func NewGlobalOnDisk(configDir string, flags map[string]interface{}) (*Global, error) {
+	configPath := filepath.Join(configDir, "global.yaml")
+	embedded := NewGlobal()
+	if err := yaml.Unmarshal(embeddedconfig.Global, embedded); err != nil {
+		return nil, err
+	}
+	if err := embedded.validate(); err != nil {
+		return nil, err
+	}
+
+	saved, err := savedGlobal(configPath, obfuscate(flags))
+	if err != nil {
+		return embedded, nil
+	}
+
+	// The embedded config can be newer, for example, if the user has installed a new version of the app.
+	if embeddedIsNewer(configPath) {
+		return embedded, nil
+	} else {
+		return saved, nil
+	}
+}
+
+func savedGlobal(filePath string, obfuscate bool) (*Global, error) {
+	bytes, err := saved(filePath, obfuscate)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf("Returning saved global config at %v", filePath)
+	saved := NewGlobal()
+	if err := yaml.Unmarshal(bytes, saved); err != nil {
+		return nil, err
+	}
+	if err := saved.validate(); err != nil {
+		return nil, err
+	}
+	return saved, nil
 }
 
 // pipeConfig creates a new config pipeline for reading a specified type of
@@ -150,39 +191,16 @@ func pipeConfig(opts *options) (stop func()) {
 	}
 
 	configPath := filepath.Join(opts.saveDir, opts.name)
-
-	log.Tracef("Obfuscating %v", opts.obfuscate)
 	conf := newConfig(configPath, opts)
 
-	sendEmbedded := func() bool {
-		if embedded, err := conf.embedded(opts.embeddedData); err != nil {
-			log.Errorf("Could not load embedded config %v", err)
-			return false
-		} else {
-			log.Debugf("Sending embedded config for %v", opts.name)
-			dispatch(embedded, Embedded)
-			return true
-		}
-	}
-
-	sendSaved := func() bool {
-		if saved, err := conf.saved(); err != nil {
+	// We ignore the saved global config here because we need it so early in the
+	// initialization sequence that we've already grabbed it at this point.
+	if !opts.ignoreSaved {
+		if saved, err := saved(configPath, conf.obfuscate); err != nil {
 			log.Debugf("Could not load stored config %v", err)
-			return false
 		} else {
 			log.Debugf("Sending saved config for %v", opts.name)
 			dispatch(saved, Saved)
-			return true
-		}
-	}
-
-	if embeddedIsNewer(conf, opts) && !opts.sticky {
-		if !sendEmbedded() {
-			sendSaved()
-		}
-	} else {
-		if !sendSaved() {
-			sendEmbedded()
 		}
 	}
 
@@ -206,17 +224,10 @@ func pipeConfig(opts *options) (stop func()) {
 // Checks to see if our embedded config is newer than our saved config. If it is, use that. This could happen,
 // for example, if the user has successfully auto-updated or installed a new version by any means, but
 // where there's some blocking event or bug preventing new configs from being fetched.
-func embeddedIsNewer(conf *config, opts *options) bool {
-	if opts.embeddedData == nil {
-		if opts.embeddedRequired {
-			sentry.CaptureException(log.Errorf("no embedded config for %v", opts.name))
-		}
-
-		return false
-	}
-
-	saved, err := os.Stat(conf.filePath)
+func embeddedIsNewer(savedPath string) bool {
+	saved, err := os.Stat(savedPath)
 	if os.IsNotExist(err) {
+		log.Debug("No saved config found -- using embedded")
 		return true
 	}
 
@@ -230,6 +241,34 @@ func embeddedIsNewer(conf *config, opts *options) bool {
 	} else {
 		return saved.ModTime().Before(exe.ModTime())
 	}
+}
+
+func saved(filePath string, obfuscate bool) ([]byte, error) {
+	infile, err := os.Open(filePath)
+	if err != nil {
+		err = fmt.Errorf("unable to open config file %v for reading: %w", filePath, err)
+		log.Error(err.Error())
+		return nil, err
+	}
+	defer infile.Close()
+
+	var in io.Reader = infile
+	if obfuscate {
+		in = rot13.NewReader(infile)
+	}
+
+	bytes, err := io.ReadAll(in)
+	if err != nil {
+		err = fmt.Errorf("error reading config from %v: %w", filePath, err)
+		log.Error(err.Error())
+		return nil, err
+	}
+	if len(bytes) == 0 {
+		return nil, fmt.Errorf("config exists but is empty at %v", filePath)
+	}
+
+	log.Debugf("Returning saved config at %v", filePath)
+	return bytes, nil
 }
 
 func yamlRoundTrip(o interface{}) interface{} {

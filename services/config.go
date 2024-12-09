@@ -2,6 +2,7 @@ package services
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -176,8 +177,10 @@ func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
 		resp  *http.Response
 		sleep int64
 	)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
 	for {
-		req, err := cs.newRequest()
+		req, err := cs.newRequest(ctx)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -225,7 +228,7 @@ func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
 
 // newRequest returns a new ConfigRequest with the current client info, proxy ids, and the last
 // time the config was fetched.
-func (cs *configService) newRequest() (*http.Request, error) {
+func (cs *configService) newRequest(ctx context.Context) (*http.Request, error) {
 	conf := cs.configHandler.GetConfig()
 	proxies := []*apipb.ProxyConnectConfig{}
 	if conf != nil { // not the first request
@@ -233,8 +236,8 @@ func (cs *configService) newRequest() (*http.Request, error) {
 	}
 
 	names := make([]string, len(proxies))
-	for _, proxy := range proxies {
-		names = append(names, proxy.Name)
+	for i, proxy := range proxies {
+		names[i] = proxy.Name
 	}
 
 	confReq := &apipb.ConfigRequest{
@@ -250,7 +253,7 @@ func (cs *configService) newRequest() (*http.Request, error) {
 		return nil, fmt.Errorf("unable to marshal config request: %w", err)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, cs.opts.OriginURL, bytes.NewReader(buf))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, cs.opts.OriginURL, bytes.NewReader(buf))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create request")
 	}

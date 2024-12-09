@@ -199,7 +199,7 @@ func (h *utlsHandshaker) Handshake(conn net.Conn) (*ptlshs.HandshakeResult, erro
 	}
 	if err = uconn.Handshake(); err != nil {
 		if isHelloErr(err) {
-			log.Debugf("got error likely related to bad hello; advancing roller: %v", err)
+			log.Debugf("tlsmasq got error likely related to bad hello; advancing roller: %v", err)
 			r.advance()
 		}
 		return nil, err

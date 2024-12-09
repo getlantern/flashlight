@@ -2,25 +2,11 @@ module github.com/getlantern/flashlight/v7
 
 go 1.22.6
 
-toolchain go1.23.3
-
-replace github.com/elazarl/goproxy => github.com/getlantern/goproxy v0.0.0-20220805074304-4a43a9ed4ec6
-
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20221004112352-e7c04248adcb
 
-//replace github.com/getlantern/yinbi-server => ../yinbi-server
-
-//replace github.com/getlantern/mandrill => /home/soltzen/dev/soltzen/mandrill
-
-//replace github.com/getlantern/proxy/v3 => ../proxy
-
-//replace github.com/getlantern/lantern-server => ../lantern-server
+//replace github.com/getlantern/fronted => ../fronted
 
 replace github.com/eycorsican/go-tun2socks => github.com/getlantern/go-tun2socks v1.16.12-0.20201218023150-b68f09e5ae93
-
-// We use a fork of gomobile that allows reusing the cache directory for faster builds, based
-// on this unmerged PR against gomobile - https://github.com/golang/mobile/pull/58.
-replace golang.org/x/mobile => github.com/oxtoacart/mobile v0.0.0-20220116191336-0bdf708b6d0f
 
 replace github.com/tetratelabs/wazero => github.com/refraction-networking/wazero v1.7.1-w
 
@@ -43,7 +29,7 @@ require (
 	github.com/getlantern/event v0.0.0-20210901195647-a7e3145142e6
 	github.com/getlantern/eventual v1.0.0
 	github.com/getlantern/eventual/v2 v2.0.2
-	github.com/getlantern/fronted v0.0.0-20241203140224-a556be12abc5
+	github.com/getlantern/fronted v0.0.0-20241206211020-da8e3e9f49fd
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
 	github.com/getlantern/golog v0.0.0-20230503153817-8e72de7e0a65
 	github.com/getlantern/hellosplitter v0.1.1
@@ -79,7 +65,6 @@ require (
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getsentry/sentry-go v0.20.0
 	github.com/golang/protobuf v1.5.3
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/jaffee/commandeer v0.6.0
@@ -102,7 +87,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.19.0
 	go.uber.org/atomic v1.10.0
 	golang.org/x/sys v0.26.0
-	google.golang.org/protobuf v1.33.0
+	google.golang.org/protobuf v1.35.2
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.0
@@ -111,6 +96,7 @@ require (
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.2.0 // indirect
 	github.com/Jigsaw-Code/outline-ss-server v1.5.0 // indirect
+	github.com/alitto/pond/v2 v2.1.5 // indirect
 	github.com/anacrolix/dht/v2 v2.20.0 // indirect
 	github.com/blang/vfs v1.0.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
@@ -120,6 +106,7 @@ require (
 	github.com/getlantern/algeneva v0.0.0-20240222191137-2b4e88234f59 // indirect
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a // indirect
 	github.com/getlantern/withtimeout v0.0.0-20160829163843-511f017cd913 // indirect
+	github.com/getsentry/sentry-go v0.20.0 // indirect
 	github.com/go-llsqlite/crawshaw v0.5.1 // indirect
 	github.com/tetratelabs/wazero v1.7.1 // indirect
 	github.com/vishvananda/netns v0.0.1 // indirect
