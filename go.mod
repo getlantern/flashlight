@@ -29,7 +29,7 @@ require (
 	github.com/getlantern/event v0.0.0-20210901195647-a7e3145142e6
 	github.com/getlantern/eventual v1.0.0
 	github.com/getlantern/eventual/v2 v2.0.2
-	github.com/getlantern/fronted v0.0.0-20241206211020-da8e3e9f49fd
+	github.com/getlantern/fronted v0.0.0-20241210052825-e33e5ada5b94
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
 	github.com/getlantern/golog v0.0.0-20230503153817-8e72de7e0a65
 	github.com/getlantern/hellosplitter v0.1.1
@@ -60,7 +60,7 @@ require (
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
 	github.com/getlantern/tlsdialer/v3 v3.0.4
 	github.com/getlantern/tlsmasq v0.4.7-0.20230302000139-6e479a593298
-	github.com/getlantern/tlsresumption v0.0.0-20241203054031-f3e4eec291ad
+	github.com/getlantern/tlsresumption v0.0.0-20241210052744-a1c6aacc1d4d
 	github.com/getlantern/tlsutil v0.5.3
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1

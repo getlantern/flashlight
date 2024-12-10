@@ -267,8 +267,8 @@ github.com/getlantern/filepersist v0.0.0-20210901195658-ed29a1cb0b7c h1:mcz27xtA
 github.com/getlantern/filepersist v0.0.0-20210901195658-ed29a1cb0b7c/go.mod h1:8DGAx0LNUfXNnEH+fXI0s3OCBA/351kZCiz/8YSK3i8=
 github.com/getlantern/framed v0.0.0-20190601192238-ceb6431eeede h1:yrU6Px3ZkvCsDLPryPGi6FN+2iqFPq+JeCb7EFoDBhw=
 github.com/getlantern/framed v0.0.0-20190601192238-ceb6431eeede/go.mod h1:nhnoiS6DE6zfe+BaCMU4YI01UpsuiXnDqM5S8jxHuuI=
-github.com/getlantern/fronted v0.0.0-20241206211020-da8e3e9f49fd h1:eChZridlH747nYchEMeSzhBEUt2YKa4QtRiVqkF+ro0=
-github.com/getlantern/fronted v0.0.0-20241206211020-da8e3e9f49fd/go.mod h1:462pmX7a/aKl9RGC0dT8z/K19c7l1eWeAoOYEwUjg2s=
+github.com/getlantern/fronted v0.0.0-20241210052825-e33e5ada5b94 h1:SMzzR4R4UKXzoAIW3Wcw8rLQeOoN+VPyoIH2NUtIyns=
+github.com/getlantern/fronted v0.0.0-20241210052825-e33e5ada5b94/go.mod h1:UOynqDcVIlDMFk3sdUyHzNyY1cz4GHtJ+8qvWESHWhg=
 github.com/getlantern/geo v0.0.0-20241129152027-2fc88c10f91e h1:vpikNz6IzvEoqVYmiK5Uq+lE4TCzvMDqbZdxFbtGK1g=
 github.com/getlantern/geo v0.0.0-20241129152027-2fc88c10f91e/go.mod h1:RjQ0krF8NTCc5xo2Q1995/vZBnYg33h8svn15do7dLg=
 github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5 h1:RBKofGGMt2k6eGBwX8mky9qunjL+KnAp9JdzXjiRkRw=
@@ -389,8 +389,8 @@ github.com/getlantern/tlsdialer/v3 v3.0.4 h1:j9GHqtD2+cwGP/q+Rvr/wC43nPrRPk6YfEm
 github.com/getlantern/tlsdialer/v3 v3.0.4/go.mod h1:G0rWRzTX9WuQ0r31c/Zg9sfwTrMs82kyQCswlhwv/Us=
 github.com/getlantern/tlsmasq v0.4.7-0.20230302000139-6e479a593298 h1:GxhCQ6zLnIeaIw2gtZsM7hSlpXHdd8DoXSEPObSHMuk=
 github.com/getlantern/tlsmasq v0.4.7-0.20230302000139-6e479a593298/go.mod h1:vcDVZe3TGEqd0nD0tVvqKoyGHY+5bPxCa+IklxroKd0=
-github.com/getlantern/tlsresumption v0.0.0-20241203054031-f3e4eec291ad h1:RsOMhwKzMD0M7FrsqZ0fKwTblr6pNCYrzmtnbnVr3Cg=
-github.com/getlantern/tlsresumption v0.0.0-20241203054031-f3e4eec291ad/go.mod h1:lAlPJK1Y5nFlydkty/imyPFpLCi5V+hzQHXOqeoeXyk=
+github.com/getlantern/tlsresumption v0.0.0-20241210052744-a1c6aacc1d4d h1:CM+1DbLVMvsrf5cvQnPF2txKKRI1H2sDj0+WvDrZ6zU=
+github.com/getlantern/tlsresumption v0.0.0-20241210052744-a1c6aacc1d4d/go.mod h1:YaLhn/xKC6Z0FUizXdCcPuNn/ODQ9fibA7q33dtuH9g=
 github.com/getlantern/tlsutil v0.2.0/go.mod h1:Vxsyr9DVnYwsqHaEzMYkg9fT8aBrnO2eI+gdICMQbQU=
 github.com/getlantern/tlsutil v0.5.3 h1:g1FjuG4/OTZe8kkbEmpSxvT9rXzYOG9jO4jHiDeQIxM=
 github.com/getlantern/tlsutil v0.5.3/go.mod h1:lVgvr4nxuQ1ocOho90UB6LnHFlpP16TXAGpHR8Z0QnI=
