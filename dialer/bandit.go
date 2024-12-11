@@ -185,7 +185,8 @@ func (o *BanditDialer) loadLastBanditRewards() (map[string]banditMetrics, error)
 	}
 
 	reader := csv.NewReader(data)
-	_, err = reader.Read() // Skip the header
+	// Skip the header, but read it so the csv reader know the expected number of columns
+	_, err = reader.Read()
 	if err != nil {
 		return nil, log.Errorf("unable to skip headers from bandit rewards csv: %w", err)
 	}
@@ -199,9 +200,6 @@ func (o *BanditDialer) loadLastBanditRewards() (map[string]banditMetrics, error)
 			return nil, log.Errorf("unable to read line from bandit rewards csv: %w", err)
 		}
 
-		if len(line) != 4 {
-			return nil, log.Errorf("invalid line in bandit rewards csv: %w", line)
-		}
 		// load updatedAt unix time and check if it's older than 7 days
 		updatedAt, err := strconv.ParseInt(line[3], 10, 64)
 		if err != nil {
