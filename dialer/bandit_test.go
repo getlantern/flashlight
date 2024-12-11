@@ -368,7 +368,7 @@ func TestUpdateBanditRewards(t *testing.T) {
 				},
 				banditRewardsMutex: new(sync.Mutex),
 			}
-			err = banditDialer.UpdateBanditRewards(tt.given)
+			err = banditDialer.updateBanditRewards(tt.given)
 			tt.assert(t, tempDir, err)
 		})
 	}
@@ -420,7 +420,7 @@ func TestLoadLastBanditRewards(t *testing.T) {
 				},
 				banditRewardsMutex: new(sync.Mutex),
 			}
-			metrics, err := banditDialer.LoadLastBanditRewards()
+			metrics, err := banditDialer.loadLastBanditRewards()
 			tt.assert(t, metrics, err)
 		})
 	}

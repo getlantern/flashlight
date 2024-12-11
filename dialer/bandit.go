@@ -52,7 +52,7 @@ func NewBandit(opts *Options) (Dialer, error) {
 		banditRewardsMutex: &sync.Mutex{},
 	}
 
-	dialerWeights, err := dialer.LoadLastBanditRewards()
+	dialerWeights, err := dialer.loadLastBanditRewards()
 	if err != nil {
 		log.Errorf("unable to load bandit weights: %v", err)
 	}
@@ -156,7 +156,7 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 			}
 		}
 
-		err = bd.UpdateBanditRewards(metrics)
+		err = bd.updateBanditRewards(metrics)
 		if err != nil {
 			log.Errorf("unable to save bandit weights: %v", err)
 		}
@@ -168,10 +168,10 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 
 const unusedBanditDialerIgnoredAfter = 7 * 24 * time.Hour
 
-// LoadLastBanditRewards is a function that returns the last bandit rewards
+// loadLastBanditRewards is a function that returns the last bandit rewards
 // for each dialer. If this is set, the bandit will be initialized with the
 // last metrics.
-func (o *BanditDialer) LoadLastBanditRewards() (map[string]banditMetrics, error) {
+func (o *BanditDialer) loadLastBanditRewards() (map[string]banditMetrics, error) {
 	o.banditRewardsMutex.Lock()
 	defer o.banditRewardsMutex.Unlock()
 	if o.opts.BanditDir == "" {
@@ -229,12 +229,12 @@ func (o *BanditDialer) LoadLastBanditRewards() (map[string]banditMetrics, error)
 	return metrics, nil
 }
 
-func (o *BanditDialer) UpdateBanditRewards(newRewards map[string]banditMetrics) error {
+func (o *BanditDialer) updateBanditRewards(newRewards map[string]banditMetrics) error {
 	if err := os.MkdirAll(o.opts.BanditDir, 0755); err != nil {
 		return log.Errorf("unable to create bandit directory: %v", err)
 	}
 
-	previousRewards, err := o.LoadLastBanditRewards()
+	previousRewards, err := o.loadLastBanditRewards()
 	if err != nil && !os.IsNotExist(err) {
 		return log.Errorf("couldn't load previous bandit rewards: %w", err)
 	}
