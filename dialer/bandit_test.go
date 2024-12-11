@@ -350,9 +350,13 @@ func TestUpdateBanditRewards(t *testing.T) {
 
 				lines := strings.Split(string(b), "\n")
 				// check if headers are there
-				assert.Contains(t, lines[0], "dialer,reward,count,updated at")
+				assert.Equal(t, lines[0], "dialer,reward,count,updated at")
 				// check if the data is there
-				assert.Contains(t, lines[1], "test-dialer,1.000000,1")
+				cols := strings.Split(lines[1], ",")
+				assert.Equal(t, cols[dialerNameCSVHeader], "test-dialer")
+				assert.Equal(t, cols[rewardCSVHeader], "1.000000")
+				assert.Equal(t, cols[countCSVHeader], "1")
+				assert.NotEmpty(t, cols[updatedAtCSVHeader])
 			},
 		},
 	}
