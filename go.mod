@@ -58,7 +58,7 @@ require (
 	github.com/getlantern/timezone v0.0.0-20210901200113-3f9de9d360c9
 	github.com/getlantern/tinywss v0.0.0-20211216020538-c10008a7d461
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
-	github.com/getlantern/tlsdialer/v3 v3.0.4
+	github.com/getlantern/tlsdialer/v3 v3.0.5
 	github.com/getlantern/tlsmasq v0.4.7-0.20230302000139-6e479a593298
 	github.com/getlantern/tlsresumption v0.0.0-20241210052744-a1c6aacc1d4d
 	github.com/getlantern/tlsutil v0.5.3
