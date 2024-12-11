@@ -64,18 +64,14 @@ func PersistSessionStates(configDir string) {
 	})
 }
 
-func isSameLibraryVersion(rows []string) bool {
-	if len(rows) > 0 && strings.HasPrefix(rows[0], libraryVersionString) {
-		fileLibraryVersion := strings.TrimPrefix(rows[0], libraryVersionString)
-		log.Debugf("tls_session_states LibraryVersion %v", fileLibraryVersion)
-		log.Debugf("current LibraryVersion %v", common.LibraryVersion)
-		if fileLibraryVersion == common.LibraryVersion {
-			return true
-		}
-	} else {
+func isSameLibraryVersion(first_row string) bool {
+	if !strings.HasPrefix(first_row, libraryVersionString) {
 		log.Debugf("%v string not found in tls_session_states", libraryVersionString)
+		return false
 	}
-	return false
+	fileLibraryVersion := strings.TrimPrefix(first_row, libraryVersionString)
+	log.Debugf("tls_session_states file LibraryVersion %v, current LibraryVersion %v", fileLibraryVersion, common.LibraryVersion)
+	return fileLibraryVersion >= common.LibraryVersion
 }
 
 func persistSessionStates(configDir string, saveInterval time.Duration) {
@@ -85,7 +81,7 @@ func persistSessionStates(configDir string, saveInterval time.Duration) {
 	if err == nil {
 		log.Debugf("Initializing current session states from %v", filename)
 		rows := strings.Split(string(existing), "\n")
-		if isSameLibraryVersion(rows) {
+		if len(rows) > 0 && isSameLibraryVersion(rows[0]) { // the first row contains the LibraryVersion
 			rows = rows[1:] // Remove the first item containing the LibraryVersion
 			for _, row := range rows {
 				state, err := parsePersistedState(row)
