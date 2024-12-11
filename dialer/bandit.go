@@ -166,7 +166,14 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 	return dt, err
 }
 
-const unusedBanditDialerIgnoredAfter = 7 * 24 * time.Hour
+const (
+	dialerNameCSVHeader = iota
+	rewardCSVHeader
+	countCSVHeader
+	updatedAtCSVHeader
+
+	unusedBanditDialerIgnoredAfter = 7 * 24 * time.Hour
+)
 
 // loadLastBanditRewards is a function that returns the last bandit rewards
 // for each dialer. If this is set, the bandit will be initialized with the
@@ -201,7 +208,7 @@ func (o *BanditDialer) loadLastBanditRewards() (map[string]banditMetrics, error)
 		}
 
 		// load updatedAt unix time and check if it's older than 7 days
-		updatedAt, err := strconv.ParseInt(line[3], 10, 64)
+		updatedAt, err := strconv.ParseInt(line[updatedAtCSVHeader], 10, 64)
 		if err != nil {
 			return nil, log.Errorf("unable to parse updated at from %s: %w", line[0], err)
 		}
@@ -209,16 +216,16 @@ func (o *BanditDialer) loadLastBanditRewards() (map[string]banditMetrics, error)
 			log.Debugf("Ignoring bandit dialer %s as it's older than 7 days", line[0])
 			continue
 		}
-		reward, err := strconv.ParseFloat(line[1], 64)
+		reward, err := strconv.ParseFloat(line[rewardCSVHeader], 64)
 		if err != nil {
 			return nil, log.Errorf("unable to parse reward from %s: %w", line[0], err)
 		}
-		count, err := strconv.Atoi(line[2])
+		count, err := strconv.Atoi(line[countCSVHeader])
 		if err != nil {
 			return nil, log.Errorf("unable to parse count from %s: %w", line[0], err)
 		}
 
-		metrics[line[0]] = banditMetrics{
+		metrics[line[dialerNameCSVHeader]] = banditMetrics{
 			Reward:    reward,
 			Count:     count,
 			UpdatedAt: updatedAt,
