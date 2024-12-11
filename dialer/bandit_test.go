@@ -407,15 +407,11 @@ func TestLoadLastBanditRewards(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tempDir, err := os.MkdirTemp("", "client_test")
+			tempDir, err := os.MkdirTemp("", "bandit_test")
 			require.NoError(t, err)
 			defer os.RemoveAll(tempDir)
-			require.NoError(t, os.MkdirAll(filepath.Join(tempDir, "bandit"), 0755), "unable to create bandit directory")
 
-			f, err := os.Create(filepath.Join(tempDir, "rewards.csv"))
-			require.NoError(t, err)
-			defer f.Close()
-			_, err = f.WriteString(tt.given)
+			err = os.WriteFile(filepath.Join(tempDir, "rewards.csv"), []byte(tt.given), 0644)
 			require.NoError(t, err)
 
 			banditDialer := &BanditDialer{
