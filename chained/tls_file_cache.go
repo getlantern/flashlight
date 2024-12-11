@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/tlsresumption"
 	tls "github.com/refraction-networking/utls"
 )
@@ -25,6 +26,7 @@ var (
 	saveSessionStateCh     = make(chan sessionStateForServer, 100)
 	currentSessionStates   = make(map[string]sessionStateForServer)
 	currentSessionStatesMx sync.RWMutex
+	libraryVersionString   = "LibraryVersion: "
 
 	initOnce sync.Once
 )
@@ -62,6 +64,16 @@ func PersistSessionStates(configDir string) {
 	})
 }
 
+func isSameLibraryVersion(first_row string) bool {
+	if !strings.HasPrefix(first_row, libraryVersionString) {
+		log.Debugf("%v string not found in tls_session_states", libraryVersionString)
+		return false
+	}
+	fileLibraryVersion := strings.TrimPrefix(first_row, libraryVersionString)
+	log.Debugf("tls_session_states file LibraryVersion %v, current LibraryVersion %v", fileLibraryVersion, common.LibraryVersion)
+	return fileLibraryVersion >= common.LibraryVersion
+}
+
 func persistSessionStates(configDir string, saveInterval time.Duration) {
 	filename := filepath.Join(configDir, "tls_session_states")
 
@@ -69,13 +81,21 @@ func persistSessionStates(configDir string, saveInterval time.Duration) {
 	if err == nil {
 		log.Debugf("Initializing current session states from %v", filename)
 		rows := strings.Split(string(existing), "\n")
-		for _, row := range rows {
-			state, err := parsePersistedState(row)
-			if err != nil {
-				log.Errorf("unable to parse persisted session state from %v: %v", filename, err)
-				continue
+		if len(rows) > 0 && isSameLibraryVersion(rows[0]) { // the first row contains the LibraryVersion
+			rows = rows[1:] // Remove the first item containing the LibraryVersion
+			for _, row := range rows {
+				state, err := parsePersistedState(row)
+				if err != nil {
+					log.Errorf("unable to parse persisted session state from %v: %v", filename, err)
+					continue
+				}
+				currentSessionStates[state.server] = *state
 			}
-			currentSessionStates[state.server] = *state
+		} else {
+			log.Errorf("Different LibraryVersion found, deleting %v", filename)
+			if err := os.Remove(filename); err != nil {
+				log.Errorf("Failed to delete %v: %v", filename, err)
+			}
 		}
 	}
 
@@ -94,7 +114,9 @@ func maintainSessionStates(filename string, saveInterval time.Duration) {
 				states[server] = state
 			}
 			currentSessionStatesMx.RUnlock()
-			serialized := ""
+
+			// Add LibraryVersion to the first line of the file
+			serialized := fmt.Sprintf("%s%s\n", libraryVersionString, common.LibraryVersion)
 			rowDelim := "" // for first row, don't include a delimiter
 			for server, state := range states {
 				serializedState, err := tlsresumption.SerializeClientSessionState(state.state)
