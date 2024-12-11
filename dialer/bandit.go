@@ -25,6 +25,12 @@ type BanditDialer struct {
 	banditRewardsMutex *sync.Mutex
 }
 
+type banditMetrics struct {
+	Reward    float64
+	Count     int
+	UpdatedAt int64
+}
+
 // NewBandit creates a new bandit given the available dialers and options with
 // callbacks to be called when a dialer is selected, an error occurs, etc.
 func NewBandit(opts *Options) (Dialer, error) {

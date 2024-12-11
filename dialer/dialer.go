@@ -87,12 +87,6 @@ type Options struct {
 	BanditDir string
 }
 
-type banditMetrics struct {
-	Reward    float64
-	Count     int
-	UpdatedAt int64
-}
-
 // Clone creates a deep copy of the Options object
 func (o *Options) Clone() *Options {
 	if o == nil {
