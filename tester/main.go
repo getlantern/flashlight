@@ -3,9 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	flashlightOtel "github.com/getlantern/flashlight/v7/otel"
-	"github.com/getlantern/ops"
-	"github.com/google/uuid"
 	"io"
 	"net/http"
 	"net/url"
@@ -14,6 +11,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	flashlightOtel "github.com/getlantern/flashlight/v7/otel"
+	"github.com/getlantern/ops"
+	"github.com/google/uuid"
 
 	"github.com/getlantern/golog"
 	socksProxy "golang.org/x/net/proxy"
@@ -40,7 +41,7 @@ func configureOtel(country string) {
 	ops.SetGlobal("pinger-id", runId)
 }
 
-func performLanternPing(urlToHit string, runId string, deviceId string, userId int64, token string, outputDir string) error {
+func performLanternPing(urlToHit string, runId string, deviceId string, userId int64, token string, outputDir string, isSticky bool) error {
 	golog.SetPrepender(func(writer io.Writer) {
 		_, _ = writer.Write([]byte(fmt.Sprintf("%s: ", time.Now().Format("2006-01-02 15:04:05"))))
 	})
@@ -63,7 +64,7 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 		func() bool { return false },
 		map[string]interface{}{
 			"readableconfig": true,
-			//"stickyconfig":   true,
+			"stickyconfig":   isSticky,
 		},
 		settings,
 		statsTracker,
@@ -91,6 +92,7 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 	resultCh := make(chan error)
 	t1 := time.Now()
 	var t2, t3 time.Time
+	output := ""
 	go fc.Run("127.0.0.1:0", "127.0.0.1:0", func(cl *client.Client) {
 		go func() {
 			sa, ok := cl.Socks5Addr(5 * time.Second)
@@ -133,7 +135,7 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 				resultCh <- err
 				return
 			}
-			fmt.Printf("got body '%s'", string(body[:n]))
+			output = string(body[:n])
 			t3 = time.Now()
 			resultCh <- nil
 		}()
@@ -153,6 +155,8 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 		fmt.Println("lantern ping completed successfully")
 	}
 
+	_ = os.WriteFile(outputDir+"/output.txt", []byte(output), 0644)
+
 	return os.WriteFile(outputDir+"/timing.txt", []byte(fmt.Sprintf(`
 result: %v
 run-id: %s
@@ -171,6 +175,7 @@ func main() {
 	runId := os.Getenv("RUN_ID")
 	targetUrl := os.Getenv("TARGET_URL")
 	output := os.Getenv("OUTPUT")
+	isSticky := os.Getenv("STICKY") == "true"
 
 	if deviceId == "" || userId == "" || token == "" || runId == "" || targetUrl == "" || output == "" {
 		fmt.Println("missing required environment variable(s)")
@@ -184,7 +189,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if performLanternPing(targetUrl, runId, deviceId, uid, token, output) != nil {
+	if performLanternPing(targetUrl, runId, deviceId, uid, token, output, isSticky) != nil {
 		fmt.Println("failed to perform lantern ping")
 		os.Exit(1)
 	}

@@ -22,6 +22,9 @@ All of these are required.
 DEVICE_ID=1234 USER_ID=123 TOKEN=1234 RUN_ID=1234 TARGET_URL=https://example.com OUTPUT=./mydir ./flashlight-tester
 ```
 
+The tester will start flashlight, fetch the config & proxies and try to reach the target URL via the socks5 proxy that flashlight provides.
+Upoon success, it will write the output of that request to the `output.txt`.
+
 ## Docker usage
 
 On each new push to the repository, a new image of the tester is built and pushed to the registry.
@@ -38,3 +41,8 @@ docker run --rm -v ./mydir:/output \
     -e OUTPUT=/output \
    us-docker.pkg.dev/lantern-cloud/containers/flashlight-tester
 ```
+
+## Passing custom proxies.yaml
+
+If you want to use a custom proxies.yaml, you can place it in the output directory and it will be used instead of fetching it from the server.
+In order for flashlight to pick it up instead of using the fetched config, you need to specify another env variable: `STICKY=true`
