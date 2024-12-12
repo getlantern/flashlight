@@ -2,14 +2,10 @@ package issue
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
 	"gopkg.in/yaml.v2"
-
-	"github.com/getlantern/fronted"
-	tls "github.com/refraction-networking/utls"
 
 	"github.com/getlantern/flashlight/v7/config"
 	"github.com/getlantern/flashlight/v7/geolookup"
@@ -18,8 +14,7 @@ import (
 
 func TestMain(m *testing.M) {
 
-	fronted := newFronted()
-	proxied.SetFronted(fronted)
+	updateFronted()
 
 	//log.Debug(cfg.Client.FrontedProviders())
 	//fronted.Configure(certs, cfg.Client.FrontedProviders(), config.DefaultFrontedProviderID, filepath.Join(tempConfigDir, "masquerade_cache"))
@@ -28,7 +23,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func newFronted() fronted.Fronted {
+func updateFronted() {
 	// Init domain-fronting
 	global, err := os.ReadFile("../embeddedconfig/global.yaml")
 	if err != nil {
@@ -53,17 +48,11 @@ func newFronted() fronted.Fronted {
 		os.Exit(1)
 	}
 	defer os.RemoveAll(tempConfigDir)
-	fronted, err := fronted.NewFronted(filepath.Join(tempConfigDir, "masquerade_cache"), tls.HelloChrome_100, config.DefaultFrontedProviderID)
-	if err != nil {
-		log.Errorf("Unable to configure fronted: %v", err)
-	}
-	fronted.UpdateConfig(certs, cfg.Client.FrontedProviders())
-	return fronted
+	proxied.OnNewFronts(certs, cfg.Client.FrontedProviders())
 }
 
 func TestSendReport(t *testing.T) {
-	fronted := newFronted()
-	proxied.SetFronted(fronted)
+	updateFronted()
 	err := sendReport(
 		"34qsdf-24qsadf-32542q",
 		"1",

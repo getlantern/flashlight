@@ -4,16 +4,13 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/keighl/mandrill"
-	tls "github.com/refraction-networking/utls"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/flashlight/v7/config"
 	"github.com/getlantern/flashlight/v7/proxied"
-	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/yaml"
 )
@@ -59,7 +56,7 @@ func TestSubmitIssue(t *testing.T) {
 	// test that domain-fronting is working, you can block mandrillapp.com, for
 	// example by setting its address to 0.0.0.0 in /etc/hosts.
 	if false {
-		proxied.SetFronted(newFronted())
+		updateFronted()
 
 		msg := &Message{
 			To:       "ox+unittest@getlantern.org",
@@ -70,7 +67,7 @@ func TestSubmitIssue(t *testing.T) {
 	}
 }
 
-func newFronted() fronted.Fronted {
+func updateFronted() {
 	// Init domain-fronting
 	global, err := os.ReadFile("../embeddedconfig/global.yaml")
 	if err != nil {
@@ -95,10 +92,5 @@ func newFronted() fronted.Fronted {
 		os.Exit(1)
 	}
 	defer os.RemoveAll(tempConfigDir)
-	fronted, err := fronted.NewFronted(filepath.Join(tempConfigDir, "masquerade_cache"), tls.HelloChrome_100, config.DefaultFrontedProviderID)
-	if err != nil {
-		log.Errorf("Unable to configure fronted: %v", err)
-	}
-	fronted.UpdateConfig(certs, cfg.Client.FrontedProviders())
-	return fronted
+	proxied.OnNewFronts(certs, cfg.Client.FrontedProviders())
 }

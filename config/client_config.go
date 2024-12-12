@@ -8,12 +8,6 @@ import (
 	"github.com/getlantern/fronted"
 )
 
-const (
-	// for historical reasons, if a provider is unspecified in a masquerade, it
-	// is treated as a cloudfront masquerade (which was once the only provider)
-	DefaultFrontedProviderID = "cloudfront"
-)
-
 // ClientConfig captures configuration information for a Client
 type ClientConfig struct {
 	DumpHeaders bool // whether or not to dump headers of requests and responses

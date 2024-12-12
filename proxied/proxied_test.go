@@ -9,13 +9,11 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
-	tls "github.com/refraction-networking/utls"
 	"github.com/vulcand/oxy/forward"
 	"gopkg.in/yaml.v2"
 
@@ -26,8 +24,6 @@ import (
 
 	flconfig "github.com/getlantern/flashlight/v7/config"
 )
-
-var fr = newFronted()
 
 type mockChainedRT struct {
 	req eventual.Value
@@ -77,7 +73,7 @@ func (rt *delayedRT) RoundTrip(req *http.Request) (*http.Response, error) {
 // TestChainedAndFrontedHeaders tests to make sure headers are correctly
 // copied to the fronted request from the original chained request.
 func TestChainedAndFrontedHeaders(t *testing.T) {
-	SetFronted(fr)
+	updateFronted()
 	directURL := "http://direct"
 	req, err := http.NewRequest("GET", directURL, nil)
 	if !assert.NoError(t, err) {
@@ -120,7 +116,7 @@ func checkRequest(t *testing.T, v eventual.Value, etag string, url string) {
 // TestNonIdempotentRequest tests to make sure ParallelPreferChained reject
 // non-idempotent requests.
 func TestNonIdempotentRequest(t *testing.T) {
-	SetFronted(fr)
+	updateFronted()
 	directURL := "http://direct"
 	req, err := http.NewRequest("POST", directURL, nil)
 	if !assert.NoError(t, err) {
@@ -144,7 +140,7 @@ func TestChainedThenFronted(t *testing.T) {
 }
 
 func TestSwitchingToChained(t *testing.T) {
-	SetFronted(fr)
+	updateFronted()
 	chained := &mockChainedRT{req: eventual.NewValue(), sc: 503}
 	fronted := &mockFrontedRT{req: eventual.NewValue()}
 	req, _ := http.NewRequest("GET", "http://chained", nil)
@@ -168,7 +164,7 @@ func TestSwitchingToChained(t *testing.T) {
 }
 
 func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
-	SetFronted(fr)
+	updateFronted()
 	fwd, _ := forward.New()
 
 	sleep := 0 * time.Second
@@ -192,7 +188,7 @@ func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
 
 	SetProxyAddr(eventual.DefaultGetter(l.Addr().String()))
 
-	SetFronted(fronted.ConfigureForTest(t))
+	fronter = fronted.ConfigureForTest(t)
 	geo := "http://d3u5fqukq7qrhd.cloudfront.net/lookup/198.199.72.101"
 	req, err := http.NewRequest("GET", geo, nil)
 
@@ -213,7 +209,7 @@ func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
 	// resolve and make sure even the delayed req server still gives us the result
 	goodhost := "d3u5fqukq7qrhd.cloudfront.net"
 	badhost := "48290.cloudfront.net"
-	SetFronted(fronted.ConfigureHostAlaisesForTest(t, map[string]string{goodhost: badhost}))
+	fronter = fronted.ConfigureHostAlaisesForTest(t, map[string]string{goodhost: badhost})
 
 	req, err = http.NewRequest("GET", geo, nil)
 
@@ -232,7 +228,7 @@ func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
 	log.Debugf("Running test with bad URL in the req server")
 	bad := "http://48290.cloudfront.net/lookup/198.199.72.101"
 	req, err = http.NewRequest("GET", bad, nil)
-	SetFronted(fronted.ConfigureHostAlaisesForTest(t, map[string]string{badhost: goodhost}))
+	fronter = fronted.ConfigureHostAlaisesForTest(t, map[string]string{badhost: goodhost})
 
 	assert.NoError(t, err)
 	cf = build()
@@ -287,7 +283,7 @@ func TestCloneRequestForFronted(t *testing.T) {
 	assert.Equal(t, "abc", string(b), "should have body")
 }
 
-func newFronted() fronted.Fronted {
+func updateFronted() {
 	// Init domain-fronting
 	global, err := os.ReadFile("../embeddedconfig/global.yaml")
 	if err != nil {
@@ -312,10 +308,5 @@ func newFronted() fronted.Fronted {
 		os.Exit(1)
 	}
 	defer os.RemoveAll(tempConfigDir)
-	fronted, err := fronted.NewFronted(filepath.Join(tempConfigDir, "masquerade_cache"), tls.HelloChrome_100, flconfig.DefaultFrontedProviderID)
-	if err != nil {
-		log.Errorf("Unable to configure fronted: %v", err)
-	}
-	fronted.UpdateConfig(certs, cfg.Client.FrontedProviders())
-	return fronted
+	OnNewFronts(certs, cfg.Client.FrontedProviders())
 }
