@@ -164,7 +164,7 @@ func TestSwitchingToChained(t *testing.T) {
 }
 
 func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
-	updateFronted()
+	//updateFronted()
 	fwd, _ := forward.New()
 
 	sleep := 0 * time.Second
