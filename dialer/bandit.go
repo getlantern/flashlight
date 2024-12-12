@@ -134,9 +134,10 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 
 	// Tell the dialer to update the bandit with it's throughput after 5 seconds.
 	var dataRecv atomic.Uint64
-	dt := newDataTrackingConn(conn, &dataRecv)
+	var elapsedTimeReading atomic.Int64
+	dt := newDataTrackingConn(conn, &dataRecv, &elapsedTimeReading)
 	time.AfterFunc(secondsForSample*time.Second, func() {
-		speed := normalizeReceiveSpeed(dataRecv.Load())
+		speed := normalizeReceiveSpeed(dataRecv.Load(), elapsedTimeReading.Load())
 		//log.Debugf("Dialer %v received %v bytes in %v seconds, normalized speed: %v", d.Name(), dt.dataRecv, secondsForSample, speed)
 		if err = bd.bandit.Update(chosenArm, speed); err != nil {
 			log.Errorf("unable to update bandit: %v", err)
@@ -343,9 +344,9 @@ const secondsForSample = 6
 // Anything over this will be normalized to over 1.
 const topExpectedBps = 125000
 
-func normalizeReceiveSpeed(dataRecv uint64) float64 {
+func normalizeReceiveSpeed(dataRecv uint64, elapsedTimeReading int64) float64 {
 	// Record the bytes in relation to the top expected speed.
-	return (float64(dataRecv) / secondsForSample) / topExpectedBps
+	return (float64(dataRecv) / float64(elapsedTimeReading*1000)) / topExpectedBps
 }
 
 func (o *BanditDialer) Close() {
@@ -355,19 +356,25 @@ func (o *BanditDialer) Close() {
 	}
 }
 
-func newDataTrackingConn(conn net.Conn, dataRecv *atomic.Uint64) *dataTrackingConn {
+func newDataTrackingConn(conn net.Conn, dataRecv *atomic.Uint64, elapsedTimeReading *atomic.Int64) *dataTrackingConn {
 	return &dataTrackingConn{
-		Conn:     conn,
-		dataRecv: dataRecv,
+		Conn:               conn,
+		dataRecv:           dataRecv,
+		elapsedTimeReading: elapsedTimeReading,
 	}
 }
 
 type dataTrackingConn struct {
 	net.Conn
-	dataRecv *atomic.Uint64
+	dataRecv           *atomic.Uint64
+	elapsedTimeReading *atomic.Int64
 }
 
 func (c *dataTrackingConn) Read(b []byte) (int, error) {
+	startedReading := time.Now()
+	defer func() {
+		c.elapsedTimeReading.Add(time.Since(startedReading).Milliseconds())
+	}()
 	n, err := c.Conn.Read(b)
 	c.dataRecv.Add(uint64(n))
 	return n, err
