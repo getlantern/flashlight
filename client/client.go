@@ -7,7 +7,6 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -736,7 +735,6 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 				)
 			}
 		},
-		BanditDir: filepath.Join(configDir, "bandit"),
 	})
 	return dialers, dialer, nil
 }
