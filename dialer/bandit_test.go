@@ -658,4 +658,7 @@ func TestBanditDialerIntegration(t *testing.T) {
 	// since there's only one dialer and one Dial call, we're expecting one count
 	assert.Equal(t, 1, counts[0])
 	assert.Equal(t, normalizeReceiveSpeed(uint64(len(got)), connSleepTime.Milliseconds()), rewards[0])
+
+	// check if rewards.csv was written
+	assert.FileExists(t, filepath.Join(banditDir, "rewards.csv"))
 }
