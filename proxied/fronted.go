@@ -20,6 +20,18 @@ func newFronted() fronted.Fronted {
 		log.Errorf("Unable to get user config dir: %v", err)
 	} else {
 		cacheFile = filepath.Join(dir, common.DefaultAppName, "fronted_cache.json")
+		if err := os.MkdirAll(filepath.Dir(cacheFile), 0755); err != nil {
+			log.Errorf("Failed to create directory: %v", err)
+		}
+		_, error := os.Stat(cacheFile)
+		if error != nil {
+			log.Debugf("Cache file  not found at: %v", cacheFile)
+			_, err := os.Create(cacheFile)
+			log.Debugf("Cache file created at: %v", cacheFile)
+			if err != nil {
+				log.Errorf("Unable to create cache file: %v", err)
+			}
+		}
 	}
 	return fronted.NewFronted(cacheFile)
 }
