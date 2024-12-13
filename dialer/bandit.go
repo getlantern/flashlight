@@ -346,7 +346,7 @@ const topExpectedBps = 125000
 
 func normalizeReceiveSpeed(dataRecv uint64, elapsedTimeReading int64) float64 {
 	// Record the bytes in relation to the top expected speed.
-	return (float64(dataRecv) / float64(elapsedTimeReading*1000)) / topExpectedBps
+	return (float64(dataRecv) / (float64(elapsedTimeReading) / 1000)) / topExpectedBps
 }
 
 func (o *BanditDialer) Close() {
@@ -367,15 +367,13 @@ func newDataTrackingConn(conn net.Conn, dataRecv *atomic.Uint64, elapsedTimeRead
 type dataTrackingConn struct {
 	net.Conn
 	dataRecv           *atomic.Uint64
-	elapsedTimeReading *atomic.Int64
+	elapsedTimeReading *atomic.Int64 // elapsedTimeReading store in milliseconds the time the connection took to read data
 }
 
 func (c *dataTrackingConn) Read(b []byte) (int, error) {
 	startedReading := time.Now()
-	defer func() {
-		c.elapsedTimeReading.Add(time.Since(startedReading).Milliseconds())
-	}()
 	n, err := c.Conn.Read(b)
 	c.dataRecv.Add(uint64(n))
+	c.elapsedTimeReading.Add(time.Since(startedReading).Milliseconds())
 	return n, err
 }
