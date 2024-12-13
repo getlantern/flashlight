@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
@@ -261,7 +262,6 @@ func Test_normalizeReceiveSpeed(t *testing.T) {
 				return got > 1
 			},
 		},
-
 		{
 			name: "should return <1 if sorta fast",
 			args: args{
@@ -451,6 +451,7 @@ type tcpConnDialer struct {
 	client     net.Conn
 	server     net.Conn
 	name       string
+	dial       func() (net.Conn, bool, error)
 }
 
 func (*tcpConnDialer) Ready() <-chan error {
@@ -505,6 +506,10 @@ func (*tcpConnDialer) DataSent() uint64 {
 func (t *tcpConnDialer) DialContext(ctx context.Context, network string, addr string) (conn net.Conn, failedUpstream bool, err error) {
 	if t.shouldFail {
 		return nil, true, io.EOF
+	}
+
+	if t.dial != nil {
+		return t.dial()
 	}
 	return &net.TCPConn{}, false, nil
 }
@@ -597,4 +602,57 @@ func (*tcpConnDialer) Trusted() bool {
 
 // WriteStats implements Dialer.
 func (*tcpConnDialer) WriteStats(w io.Writer) {
+}
+
+//go:generate mockgen -package=dialer -destination=mocks_test.go net Conn
+
+func TestBanditDialerIntegration(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	baseDialer := newTcpConnDialer()
+	message := "hello"
+	connSleepTime := 200 * time.Millisecond
+
+	baseDialer.(*tcpConnDialer).dial = func() (net.Conn, bool, error) {
+		conn := NewMockConn(ctrl)
+		conn.EXPECT().Read(gomock.Any()).DoAndReturn(func(b []byte) (int, error) {
+			time.Sleep(connSleepTime)
+			copy(b, []byte(message))
+			return len(b), io.EOF
+		}).AnyTimes()
+		return conn, false, nil
+	}
+	banditDir, err := os.MkdirTemp("", "bandit_dial_test")
+	require.NoError(t, err)
+	opts := &Options{
+		Dialers:   []ProxyDialer{baseDialer},
+		BanditDir: banditDir,
+	}
+	bandit, err := NewBandit(opts)
+	require.NoError(t, err)
+	banditDialer := bandit.(*BanditDialer)
+	banditDialer.secondsUntilRewardSample = 1 * time.Second
+	banditDialer.secondsUntilSaveBanditRewards = 1200 * time.Millisecond
+
+	ctx := context.Background()
+	banditConn, err := banditDialer.DialContext(ctx, "tcp", "localhost:8080")
+	require.NoError(t, err)
+
+	got, err := io.ReadAll(banditConn)
+	assert.NoError(t, err)
+	assert.Equal(t, message, string(got[:len(message)]))
+
+	// waiting so reward is sampled and bandit rewards are stored
+	time.Sleep(1400 * time.Millisecond)
+
+	rewards := banditDialer.bandit.GetRewards()
+	counts := banditDialer.bandit.GetCounts()
+
+	// there's only one dialer
+	assert.Len(t, counts, 1)
+	assert.Len(t, rewards, 1)
+	// since there's only one dialer and one Dial call, we're expecting one count
+	assert.Equal(t, 1, counts[0])
+	assert.Equal(t, normalizeReceiveSpeed(uint64(len(got)), connSleepTime.Milliseconds()), rewards[0])
 }
