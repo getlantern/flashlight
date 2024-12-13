@@ -37,8 +37,6 @@ jobs:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          secrets: |
-            "github_token=${{ secrets.CI_PRIVATE_REPOS_GH_TOKEN }}"
           file: ./tester/Dockerfile
           tags: |
             us-docker.pkg.dev/lantern-cloud/containers/flashlight-tester:latest

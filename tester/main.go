@@ -1,28 +1,24 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
-	"net/http"
-	"net/url"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	flashlightOtel "github.com/getlantern/flashlight/v7/otel"
-	"github.com/getlantern/ops"
 	"github.com/google/uuid"
-
-	"github.com/getlantern/golog"
-	socksProxy "golang.org/x/net/proxy"
 
 	"github.com/getlantern/flashlight/v7"
 	"github.com/getlantern/flashlight/v7/client"
 	"github.com/getlantern/flashlight/v7/common"
+	flashlightOtel "github.com/getlantern/flashlight/v7/otel"
 	"github.com/getlantern/flashlight/v7/stats"
+	"github.com/getlantern/golog"
+	"github.com/getlantern/ops"
 )
 
 func configureOtel(country string) {
@@ -105,37 +101,21 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 				break
 			}
 
-			flashlightSocksAddress, _ := url.Parse("socks5://" + sa.(string))
 			t2 = time.Now()
-			fmt.Printf("lantern started correctly. urlToHit: %s\n", urlToHit)
+			flashlightProxy := fmt.Sprintf("socks5://%s", sa)
+			fmt.Printf("lantern started correctly. urlToHit: %s flashlight proxy: %s\n", urlToHit, flashlightProxy)
 
-			sdialer, err := socksProxy.FromURL(flashlightSocksAddress, socksProxy.Direct)
+			cmd := exec.Command("curl", "-x", flashlightProxy, "-s", urlToHit)
+
+			// Run the command and capture the output
+			outputB, err := cmd.Output()
 			if err != nil {
-				fmt.Printf("failed to create socks dialer: %v\n", err)
+				fmt.Println("Error executing command:", err)
 				resultCh <- err
 				return
 			}
 
-			httpClient := http.Client{Transport: &http.Transport{Dial: sdialer.Dial}}
-			resp, err := httpClient.Get(urlToHit)
-			if err != nil {
-				fmt.Printf("failed to hit url: %v\n", err)
-				resultCh <- err
-				return
-			}
-			if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
-				fmt.Printf("unexpected status code %d\n", resp.StatusCode)
-				resultCh <- fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-				return
-			}
-			body := make([]byte, 1024)
-			n, err := resp.Body.Read(body)
-			if err != nil && !errors.Is(err, io.EOF) {
-				fmt.Printf("failed to read body: %v\n", err)
-				resultCh <- err
-				return
-			}
-			output = string(body[:n])
+			output = string(outputB)
 			t3 = time.Now()
 			resultCh <- nil
 		}()
