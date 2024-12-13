@@ -82,9 +82,6 @@ type Options struct {
 
 	// OnSuccess is the callback that is called by dialer after a successful dial.
 	OnSuccess func(ProxyDialer)
-
-	// BanditDir is the directory where the bandit will store its data
-	BanditDir string
 }
 
 // Clone creates a deep copy of the Options object
@@ -96,7 +93,6 @@ func (o *Options) Clone() *Options {
 		Dialers:   o.Dialers,
 		OnError:   o.OnError,
 		OnSuccess: o.OnSuccess,
-		BanditDir: o.BanditDir,
 	}
 }
 
