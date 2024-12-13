@@ -19,10 +19,12 @@ import (
 
 // BanditDialer is responsible for continually choosing the optimized dialer.
 type BanditDialer struct {
-	dialers            []ProxyDialer
-	bandit             bandit.Bandit
-	opts               *Options
-	banditRewardsMutex *sync.Mutex
+	dialers                       []ProxyDialer
+	bandit                        bandit.Bandit
+	opts                          *Options
+	banditRewardsMutex            *sync.Mutex
+	secondsUntilRewardSample      time.Duration
+	secondsUntilSaveBanditRewards time.Duration
 }
 
 type banditMetrics struct {
@@ -47,9 +49,11 @@ func NewBandit(opts *Options) (Dialer, error) {
 	var b bandit.Bandit
 	var err error
 	dialer := &BanditDialer{
-		dialers:            dialers,
-		opts:               opts,
-		banditRewardsMutex: &sync.Mutex{},
+		dialers:                       dialers,
+		opts:                          opts,
+		banditRewardsMutex:            &sync.Mutex{},
+		secondsUntilRewardSample:      secondsForSample * time.Second,
+		secondsUntilSaveBanditRewards: saveBanditRewardsAfter,
 	}
 
 	dialerWeights, err := dialer.loadLastBanditRewards()
@@ -136,15 +140,15 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 	var dataRecv atomic.Uint64
 	var elapsedTimeReading atomic.Int64
 	dt := newDataTrackingConn(conn, &dataRecv, &elapsedTimeReading)
-	time.AfterFunc(secondsForSample*time.Second, func() {
+	time.AfterFunc(bd.secondsUntilRewardSample, func() {
 		speed := normalizeReceiveSpeed(dataRecv.Load(), elapsedTimeReading.Load())
-		//log.Debugf("Dialer %v received %v bytes in %v seconds, normalized speed: %v", d.Name(), dt.dataRecv, secondsForSample, speed)
+		// log.Debugf("Dialer %v received %v bytes in %v seconds, normalized speed: %v", d.Name(), dt.dataRecv, secondsForSample, speed)
 		if err = bd.bandit.Update(chosenArm, speed); err != nil {
 			log.Errorf("unable to update bandit: %v", err)
 		}
 	})
 
-	time.AfterFunc(30*time.Second, func() {
+	time.AfterFunc(bd.secondsUntilSaveBanditRewards, func() {
 		log.Debugf("saving bandit rewards")
 		metrics := make(map[string]banditMetrics)
 		rewards := bd.bandit.GetRewards()
@@ -339,6 +343,8 @@ func differentArm(existingArm, numDialers int) int {
 }
 
 const secondsForSample = 6
+
+const saveBanditRewardsAfter = 30 * time.Second
 
 // A reasonable upper bound for the top expected bytes to receive per second.
 // Anything over this will be normalized to over 1.
