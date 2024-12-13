@@ -618,8 +618,7 @@ func TestBanditDialerIntegration(t *testing.T) {
 		conn := NewMockConn(ctrl)
 		conn.EXPECT().Read(gomock.Any()).DoAndReturn(func(b []byte) (int, error) {
 			time.Sleep(connSleepTime)
-			copy(b, []byte(message))
-			return len(b), io.EOF
+			return copy(b, []byte(message)), io.EOF
 		}).AnyTimes()
 		return conn, false, nil
 	}
