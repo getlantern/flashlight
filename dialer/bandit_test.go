@@ -623,8 +623,11 @@ func TestBanditDialerIntegration(t *testing.T) {
 		}).AnyTimes()
 		return conn, false, nil
 	}
+
 	banditDir, err := os.MkdirTemp("", "bandit_dial_test")
 	require.NoError(t, err)
+	defer os.RemoveAll(banditDir)
+
 	opts := &Options{
 		Dialers:   []ProxyDialer{baseDialer},
 		BanditDir: banditDir,
