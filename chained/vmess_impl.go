@@ -55,6 +55,10 @@ func newVmessImpl(name, addr string, pc *config.ProxyConfig, reportDialCore repo
 func (impl *vmessImpl) close() {
 }
 
+func (impl *vmessImpl) ready() <-chan error {
+	return nil
+}
+
 func (impl *vmessImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return impl.reportDialCore(op, func() (net.Conn, error) {
 		target := metadata.ParseSocksaddrHostPort(impl.generateUpstream(), 443)
