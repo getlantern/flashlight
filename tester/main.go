@@ -37,7 +37,7 @@ func configureOtel(country string) {
 	ops.SetGlobal("pinger-id", runId)
 }
 
-func performLanternPing(urlToHit string, runId string, deviceId string, userId int64, token string, outputDir string, isSticky bool) error {
+func performLanternPing(urlToHit string, runId string, deviceId string, userId int64, token string, dataDir string, isSticky bool) error {
 	golog.SetPrepender(func(writer io.Writer) {
 		_, _ = writer.Write([]byte(fmt.Sprintf("%s: ", time.Now().Format("2006-01-02 15:04:05"))))
 	})
@@ -52,7 +52,7 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 		"pinger",
 		"999.999.999",
 		"10-10-2024",
-		outputDir,
+		dataDir,
 		false,
 		func() bool { return false },
 		func() bool { return false },
@@ -135,9 +135,9 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 		fmt.Println("lantern ping completed successfully")
 	}
 
-	_ = os.WriteFile(outputDir+"/output.txt", []byte(output), 0644)
+	_ = os.WriteFile(dataDir+"/output.txt", []byte(output), 0644)
 
-	return os.WriteFile(outputDir+"/timing.txt", []byte(fmt.Sprintf(`
+	return os.WriteFile(dataDir+"/timing.txt", []byte(fmt.Sprintf(`
 result: %v
 run-id: %s
 err: %v
@@ -154,12 +154,12 @@ func main() {
 	token := os.Getenv("TOKEN")
 	runId := os.Getenv("RUN_ID")
 	targetUrl := os.Getenv("TARGET_URL")
-	output := os.Getenv("OUTPUT")
+	data := os.Getenv("DATA")
 	isSticky := os.Getenv("STICKY") == "true"
 
-	if deviceId == "" || userId == "" || token == "" || runId == "" || targetUrl == "" || output == "" {
+	if deviceId == "" || userId == "" || token == "" || runId == "" || targetUrl == "" || data == "" {
 		fmt.Println("missing required environment variable(s)")
-		fmt.Println("Required environment variables: DEVICE_ID, USER_ID, TOKEN, RUN_ID, TARGET_URL, OUTPUT")
+		fmt.Println("Required environment variables: DEVICE_ID, USER_ID, TOKEN, RUN_ID, TARGET_URL, DATA")
 		os.Exit(1)
 	}
 
@@ -169,7 +169,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if performLanternPing(targetUrl, runId, deviceId, uid, token, output, isSticky) != nil {
+	if performLanternPing(targetUrl, runId, deviceId, uid, token, data, isSticky) != nil {
 		fmt.Println("failed to perform lantern ping")
 		os.Exit(1)
 	}

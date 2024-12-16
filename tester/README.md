@@ -12,14 +12,14 @@ It receives all it's arguments via environment variables.
 - `TOKEN`: The token to use.
 - `RUN_ID`: The run id to use. It will be added to honeycomb traces as value of attribute `pinger-id`. (you can use it for looking up traces for the specific run)
 - `TARGET_URL`: The target url to use. This is the url that will be pinged through flashlight.
-- `OUTPUT`: The output path to use. This is the path where the output will be written to (proxies.yaml, global.yaml, etc). You can place proxies.yaml there to use it instead of fetching.
+- `DATA`: The path to use for config files and for logs. This is the path where the output will be written to (proxies.yaml, global.yaml, etc). You can place proxies.yaml there to use it instead of fetching.
 
 All of these are required.
 
 ## CLI usage
 
 ```bash
-DEVICE_ID=1234 USER_ID=123 TOKEN=1234 RUN_ID=1234 TARGET_URL=https://example.com OUTPUT=./mydir ./flashlight-tester
+DEVICE_ID=1234 USER_ID=123 TOKEN=1234 RUN_ID=1234 TARGET_URL=https://example.com DATA=./mydir ./flashlight-tester
 ```
 
 The tester will start flashlight, fetch the config & proxies and try to reach the target URL via the socks5 proxy that flashlight provides.
@@ -38,7 +38,7 @@ docker run --rm -v ./mydir:/output \
     -e TOKEN=1234 \
     -e RUN_ID=1234 \
     -e TARGET_URL=https://example.com \
-    -e OUTPUT=/output \
+    -e DATA=/output \
    us-docker.pkg.dev/lantern-cloud/containers/flashlight-tester
 ```
 
