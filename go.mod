@@ -1,6 +1,6 @@
 module github.com/getlantern/flashlight/v7
 
-go 1.22.4
+go 1.22.9
 
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20221004112352-e7c04248adcb
 
@@ -42,6 +42,7 @@ require (
 	github.com/getlantern/kcpwrapper v0.0.0-20230327091313-c12d7c17c6de
 	github.com/getlantern/keyman v0.0.0-20230503155501-4e864ca2175b
 	github.com/getlantern/lantern-algeneva v0.0.0-20240930181006-6d3c00db1d5d
+	github.com/getlantern/lantern-water v0.0.0-20241213200445-0d434c979d15
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20230510135141-717ed305ef50
@@ -66,7 +67,6 @@ require (
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/golang/protobuf v1.5.3
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/jaffee/commandeer v0.6.0
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
@@ -79,7 +79,7 @@ require (
 	github.com/sagernet/sing v0.6.0-alpha.18
 	github.com/samber/lo v1.38.1
 	github.com/shadowsocks/go-shadowsocks2 v0.1.5
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/vulcand/oxy v1.4.2
 	github.com/xtaci/smux v1.5.24
 	go.opentelemetry.io/otel v1.19.0
@@ -111,6 +111,7 @@ require (
 	github.com/getsentry/sentry-go v0.20.0 // indirect
 	github.com/go-llsqlite/crawshaw v0.5.1 // indirect
 	github.com/gofrs/uuid/v5 v5.3.0 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/tetratelabs/wazero v1.7.1 // indirect
 	github.com/vishvananda/netns v0.0.1 // indirect
 	github.com/wlynxg/anet v0.0.3 // indirect
@@ -282,7 +283,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.19.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.19.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
-	go.uber.org/mock v0.4.0
+	go.uber.org/mock v0.5.0
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/crypto v0.29.0 // indirect

@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"log/slog"
 	"net"
 	"net/http"
 	"strings"
@@ -17,6 +16,10 @@ import (
 	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/refraction-networking/water"
 	_ "github.com/refraction-networking/water/transport/v1"
+
+	waterDialer "github.com/getlantern/lantern-water/dialer"
+	waterDownloader "github.com/getlantern/lantern-water/downloader"
+	waterVC "github.com/getlantern/lantern-water/version_control"
 )
 
 type waterImpl struct {
@@ -66,7 +69,11 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 				return
 			}
 
-			d.dialer, err = createDialer(ctx, wasm, transport)
+			d.dialer, err = waterDialer.NewDialer(ctx, waterDialer.DialerParameters{
+				Logger:    log,
+				Transport: transport,
+				WASM:      wasm,
+			})
 			if err != nil {
 				d.setErrLoadingWASM(log.Errorf("failed to create dialer: %w", err))
 				return
@@ -79,7 +86,6 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 	if wasmAvailableAt != "" {
 		go func() {
 			log.Debugf("Loading WASM for %q. If not available, it should try to download from the following URLs: %+v. The file should be available at: %q", transport, strings.Split(wasmAvailableAt, ","), dir)
-
 			r, err := d.loadWASM(ctx, transport, dir, wasmAvailableAt)
 			if err != nil {
 				d.setErrLoadingWASM(log.Errorf("failed to read wasm: %w", err))
@@ -94,7 +100,11 @@ func newWaterImpl(dir, addr string, pc *config.ProxyConfig, reportDialCore repor
 
 			log.Debugf("received wasm with %d bytes", len(b))
 
-			d.dialer, err = createDialer(ctx, b, transport)
+			d.dialer, err = waterDialer.NewDialer(ctx, waterDialer.DialerParameters{
+				Logger:    log,
+				Transport: transport,
+				WASM:      b,
+			})
 			if err != nil {
 				d.setErrLoadingWASM(log.Errorf("failed to create dialer: %w", err))
 				return
@@ -162,12 +172,12 @@ func (d *waterImpl) loadWASM(ctx context.Context, transport string, dir string, 
 	m.Lock()
 	defer m.Unlock()
 
-	vc := newWaterVersionControl(dir)
+	vc := waterVC.NewWaterVersionControl(dir, log)
 	cli := waterHTTPClient
 	if cli == nil {
 		cli = proxied.ChainedThenDirectThenFrontedClient(1*time.Minute, "")
 	}
-	downloader, err := newWaterWASMDownloader(strings.Split(wasmAvailableAt, ","), cli)
+	downloader, err := waterDownloader.NewWASMDownloader(strings.Split(wasmAvailableAt, ","), cli)
 	if err != nil {
 		return nil, log.Errorf("failed to create wasm downloader: %w", err)
 	}
@@ -176,19 +186,6 @@ func (d *waterImpl) loadWASM(ctx context.Context, transport string, dir string, 
 		return nil, log.Errorf("failed to get wasm: %w", err)
 	}
 	return r, nil
-}
-
-func createDialer(ctx context.Context, wasm []byte, transport string) (water.Dialer, error) {
-	cfg := &water.Config{
-		TransportModuleBin: wasm,
-		OverrideLogger:     slog.New(newLogHandler(log, transport)),
-	}
-
-	dialer, err := water.NewDialerWithContext(ctx, cfg)
-	if err != nil {
-		return nil, log.Errorf("failed to create dialer: %w", err)
-	}
-	return dialer, nil
 }
 
 func (d *waterImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
