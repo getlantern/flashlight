@@ -193,6 +193,14 @@ func TestBanditDialer_DialContext(t *testing.T) {
 			want:    expectedConn,
 			wantErr: false,
 		},
+		{
+			name: "should return an error if failed upstream",
+			opts: &Options{
+				Dialers: []ProxyDialer{newFailingTcpConnDialer()},
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -206,9 +214,9 @@ func TestBanditDialer_DialContext(t *testing.T) {
 			}
 
 			got, err := o.DialContext(context.Background(), "tcp", "localhost:8080")
-			if (err != nil) != tt.wantErr {
-				t.Errorf("BanditDialer.DialContext() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if tt.wantErr {
+				assert.NotNil(t, err)
+				assert.Error(t, err)
 			}
 			if tt.want == nil && got != nil {
 				t.Errorf("BanditDialer.DialContext() = %v, want %v", got, tt.want)

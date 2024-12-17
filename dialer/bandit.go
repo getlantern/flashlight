@@ -111,8 +111,8 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 
 		if !failedUpstream {
 			log.Errorf("Dialer %v failed in %v seconds: %v", d.Name(), time.Since(start).Seconds(), err)
-			if err = bd.bandit.Update(chosenArm, 0); err != nil {
-				log.Errorf("unable to update bandit: %v", err)
+			if errUpdatingBanditReward := bd.bandit.Update(chosenArm, 0); errUpdatingBanditReward != nil {
+				log.Errorf("unable to update bandit: %v", errUpdatingBanditReward)
 			}
 		} else {
 			log.Debugf("Dialer %v failed upstream...", d.Name())
@@ -120,8 +120,8 @@ func (bd *BanditDialer) DialContext(ctx context.Context, network, addr string) (
 			// if the DNS resolves to localhost, for example. It is also possible
 			// that the proxy is blacklisted by upstream sites for some reason,
 			// so we have to choose some reasonable value.
-			if err = bd.bandit.Update(chosenArm, 0.00005); err != nil {
-				log.Errorf("unable to update bandit: %v", err)
+			if errUpdatingBanditReward := bd.bandit.Update(chosenArm, 0.00005); errUpdatingBanditReward != nil {
+				log.Errorf("unable to update bandit: %v", errUpdatingBanditReward)
 			}
 		}
 		return nil, err
