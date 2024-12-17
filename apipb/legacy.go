@@ -188,6 +188,12 @@ func ProxyToLegacyConfig(cfg *ProxyConnectConfig) (*commonconfig.ProxyConfig, er
 			"wasm_available_at": strings.Join(pCfg.ConnectCfgWater.WasmAvailableAt, ","),
 			"download_timeout":  duration.String(),
 		}
+	case *ProxyConnectConfig_ConnectCfgVmess:
+		legacy.PluggableTransport = "vmess"
+		legacy.PluggableTransportSettings = map[string]string{
+			"uuid":     pCfg.ConnectCfgVmess.Uuid,
+			"security": pCfg.ConnectCfgVmess.Security,
+		}
 
 	default:
 		return nil, fmt.Errorf("unsupported protocol config: %T", cfg.ProtocolConfig)

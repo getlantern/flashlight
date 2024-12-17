@@ -3,7 +3,6 @@ package flashlight
 import (
 	"fmt"
 	"net"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -12,10 +11,8 @@ import (
 	"github.com/getlantern/dnsgrab"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual/v2"
-	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/netx"
-	tls "github.com/refraction-networking/utls"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/getlantern/flashlight/v7/apipb"
@@ -78,10 +75,6 @@ func (t HandledErrorType) String() string {
 	}
 }
 
-type ProxyListener interface {
-	OnProxies(map[string]*commonconfig.ProxyConfig)
-}
-
 type Flashlight struct {
 	configDir        string
 	flagsAsMap       map[string]interface{}
@@ -96,7 +89,6 @@ type Flashlight struct {
 	errorHandler     func(HandledErrorType, error)
 	mxProxyListeners sync.RWMutex
 	proxyListeners   []func(map[string]*commonconfig.ProxyConfig, config.Source)
-	fronted          fronted.Fronted
 }
 
 // clientCallbacks are callbacks the client is configured with
@@ -176,20 +168,6 @@ func New(
 	if err != nil {
 		log.Errorf("user config: %v", err)
 	}
-
-	globalConfig, err := config.NewGlobalOnDisk(f.configDir, f.flagsAsMap)
-	if err != nil {
-		fatalErr := fmt.Errorf("unable to initialize global config: %v", err)
-		f.op.FailIf(fatalErr)
-		f.op.End()
-		return nil, fatalErr
-	}
-
-	f.fronted, err = fronted.NewFronted(filepath.Join(configDir, "masquerade_cache"), tls.HelloChrome_102, config.DefaultFrontedProviderID)
-	if err != nil {
-		log.Errorf("Unable to configure fronted: %v", err)
-	}
-	proxied.SetFronted(f.fronted)
 
 	var grabber dnsgrab.Server
 	var grabberErr error
@@ -275,7 +253,15 @@ func New(
 	}
 
 	f.client = cl
-	f.onGlobalConfig(globalConfig, config.Embedded)
+	globalConfig, err := config.NewGlobalOnDisk(f.configDir, f.flagsAsMap)
+	if err != nil {
+		fatalErr := fmt.Errorf("unable to initialize global config: %v", err)
+		f.op.FailIf(fatalErr)
+		f.op.End()
+		return nil, fatalErr
+	} else {
+		f.onGlobalConfig(globalConfig, config.Embedded)
+	}
 
 	f.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
 		log.Debug("Applying proxy config with proxies")
@@ -367,7 +353,7 @@ func (f *Flashlight) StartBackgroundServices() (func(), error) {
 			stopMonitor()
 			stopBypass()
 			stopGlobalConfigFetch()
-		}, fmt.Errorf("Unable to start config service: %w", err)
+		}, fmt.Errorf("unable to start config service: %w", err)
 	}
 
 	return func() {
@@ -655,7 +641,7 @@ func (f *Flashlight) applyGlobalConfig(cfg *config.Global) {
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
 	} else if cfg.Client != nil && cfg.Client.Fronted != nil {
-		f.fronted.UpdateConfig(certs, cfg.Client.FrontedProviders())
+		proxied.OnNewFronts(certs, cfg.Client.FrontedProviders())
 	} else {
 		log.Errorf("Unable to configured fronted (no config)")
 	}

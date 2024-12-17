@@ -1,6 +1,3 @@
-//go:build !beam
-// +build !beam
-
 package common
 
 const (

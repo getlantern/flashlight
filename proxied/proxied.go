@@ -22,7 +22,6 @@ import (
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/netx"
@@ -47,18 +46,7 @@ var (
 
 	// Shared client session cache for all connections
 	clientSessionCache = tls.NewLRUClientSessionCache(1000)
-
-	fronter   fronted.Fronted
-	fronterMu sync.RWMutex
 )
-
-// SetFronted sets the fronted.Fronted to use for domain fronting. This is a bit hacky but otherwise would
-// require a significant refactor of the proxied package.
-func SetFronted(f fronted.Fronted) {
-	fronterMu.Lock()
-	fronter = f
-	fronterMu.Unlock()
-}
 
 func success(resp *http.Response) bool {
 	return (resp.StatusCode > 199 && resp.StatusCode < 400) || resp.StatusCode == http.StatusUpgradeRequired

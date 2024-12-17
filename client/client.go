@@ -569,7 +569,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 	} else if !client.useShortcut() {
 		dialer = func(ctx context.Context, network, addr string) (net.Conn, error) {
 			log.Tracef("Dialing %v directly because neither detour nor shortcut is enabled", addr)
-			return dialDirect(ctx, network, addr)
+			return dialProxied(ctx, network, addr)
 		}
 	} else {
 		dialer = func(ctx context.Context, network, addr string) (net.Conn, error) {

@@ -210,24 +210,6 @@ type proxy struct {
 	userConfig        common.UserConfig
 }
 
-func newProxy(
-	name string,
-	pc *commonconfig.ProxyConfig,
-	configDir string,
-	userConfig common.UserConfig,
-	dialer dialer.ProxyDialer,
-) *proxy {
-	return &proxy{
-		ProxyConfig:       pc,
-		name:              name,
-		proxyRoundTripper: newProxyRoundTripper(name, pc, userConfig, dialer),
-		dfRoundTripper:    proxied.Fronted("bypass_fronted_roundtrip"),
-		sender:            &sender{},
-		toggle:            atomic.NewBool(mrand.Float32() < 0.5),
-		userConfig:        userConfig,
-	}
-}
-
 func (p *proxy) start(done <-chan struct{}) {
 	logger.Debugf("Starting bypass for proxy %v", p.name)
 	fn := func() int64 {

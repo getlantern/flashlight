@@ -105,6 +105,11 @@ message ProxyConnectConfig {
     string tls_frag = 5;
   }
 
+  message VMessConfig {
+    string uuid = 1;
+    string security = 2;
+  }
+
   message ShadowsocksConfig {
     string secret = 1;
     string cipher = 2;
@@ -153,6 +158,7 @@ message ProxyConnectConfig {
     StarbridgeConfig connect_cfg_starbridge = 24;
     AlgenevaConfig connect_cfg_algeneva = 25;
     WATERConfig connect_cfg_water = 26;
+    VMessConfig connect_cfg_vmess = 27;
   }
 }
 

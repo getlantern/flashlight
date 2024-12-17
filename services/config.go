@@ -177,9 +177,9 @@ func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
 		resp  *http.Response
 		sleep int64
 	)
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-	defer cancel()
 	for {
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+		defer cancel()
 		req, err := cs.newRequest(ctx)
 		if err != nil {
 			return nil, 0, err
