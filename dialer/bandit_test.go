@@ -75,7 +75,7 @@ func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
 			}
 			o, err := NewBandit(opts)
 			require.NoError(t, err)
-			got, got1 := o.(*BanditDialer).chooseDialerForDomain(tt.args.network, tt.args.addr)
+			got, got1 := o.(*banditDialer).chooseDialerForDomain(tt.args.network, tt.args.addr)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("BanditDialer.chooseDialerForDomain() got = %v, want %v", got, tt.want)
 			}
@@ -115,7 +115,7 @@ func TestNewBandit(t *testing.T) {
 			assert: func(t *testing.T, got Dialer, err error, _ string) {
 				assert.NotNil(t, got)
 				assert.NoError(t, err)
-				assert.IsType(t, &BanditDialer{}, got)
+				assert.IsType(t, &banditDialer{}, got)
 			},
 		},
 		{
@@ -135,9 +135,9 @@ func TestNewBandit(t *testing.T) {
 			assert: func(t *testing.T, got Dialer, err error, dir string) {
 				assert.NotNil(t, got)
 				assert.NoError(t, err)
-				assert.IsType(t, &BanditDialer{}, got)
-				rewards := got.(*BanditDialer).bandit.GetRewards()
-				counts := got.(*BanditDialer).bandit.GetCounts()
+				assert.IsType(t, &banditDialer{}, got)
+				rewards := got.(*banditDialer).bandit.GetRewards()
+				counts := got.(*banditDialer).bandit.GetCounts()
 				// checking if the rewards are loaded correctly
 				assert.Equal(t, oldDialerMetric.Reward, rewards[0])
 				assert.Equal(t, oldDialerMetric.Count, counts[0])
@@ -373,7 +373,7 @@ func TestUpdateBanditRewards(t *testing.T) {
 			require.NoError(t, err)
 			defer os.RemoveAll(tempDir)
 
-			banditDialer := &BanditDialer{
+			banditDialer := &banditDialer{
 				opts: &Options{
 					BanditDir: tempDir,
 				},
@@ -421,7 +421,7 @@ func TestLoadLastBanditRewards(t *testing.T) {
 			err = os.WriteFile(filepath.Join(tempDir, "rewards.csv"), []byte(tt.given), 0644)
 			require.NoError(t, err)
 
-			banditDialer := &BanditDialer{
+			banditDialer := &banditDialer{
 				opts: &Options{
 					BanditDir: tempDir,
 				},
