@@ -319,8 +319,8 @@ github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a h1:z7G1v79GB1
 github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a/go.mod h1:cGOfTjvllC9bcwS7cVW6tGT6fXc8Dki384uFjm7XBnw=
 github.com/getlantern/lantern-algeneva v0.0.0-20240930181006-6d3c00db1d5d h1:ACBwPR4du54Qw+X5ajsbMqOFR8euGZRdMGkvTDS7I60=
 github.com/getlantern/lantern-algeneva v0.0.0-20240930181006-6d3c00db1d5d/go.mod h1:bDcK4RWBjBO+bBPLTCmaEyYK+n0/w0TrzvSCJOQmkgk=
-github.com/getlantern/lantern-water v0.0.0-20241213200445-0d434c979d15 h1:mo9WC1upm2ZlMzNiZ5DwOpgafyGlY1sFR2gneR597+M=
-github.com/getlantern/lantern-water v0.0.0-20241213200445-0d434c979d15/go.mod h1:x9/DBDfoFtVrbFsMuhDQ44kKZc9S4fF8s54IOpQC78A=
+github.com/getlantern/lantern-water v0.0.0-20241217184729-97b2bf6add4a h1:3i8teo3y32raoP3g0crSwEVjeZvCxjoEIGVbtBhttIw=
+github.com/getlantern/lantern-water v0.0.0-20241217184729-97b2bf6add4a/go.mod h1:x9/DBDfoFtVrbFsMuhDQ44kKZc9S4fF8s54IOpQC78A=
 github.com/getlantern/mandrill v0.0.0-20221004112352-e7c04248adcb h1:oyEMOT9jn4bzKyivF2sVBogsXyL8fBCK7HIT/P6h64Y=
 github.com/getlantern/mandrill v0.0.0-20221004112352-e7c04248adcb/go.mod h1:gz4iIB+vPk8hWxkAnnZSudQuIpBMnW7i89eHl9Fl+I8=
 github.com/getlantern/measured v0.0.0-20230919230611-3d9e3776a6cd h1:pDfqh9yd58OW9vQzv4U+q6G+LfbNXVhbWcBWmC5Dkm4=

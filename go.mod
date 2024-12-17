@@ -42,7 +42,7 @@ require (
 	github.com/getlantern/kcpwrapper v0.0.0-20230327091313-c12d7c17c6de
 	github.com/getlantern/keyman v0.0.0-20230503155501-4e864ca2175b
 	github.com/getlantern/lantern-algeneva v0.0.0-20240930181006-6d3c00db1d5d
-	github.com/getlantern/lantern-water v0.0.0-20241213200445-0d434c979d15
+	github.com/getlantern/lantern-water v0.0.0-20241217184729-97b2bf6add4a
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20230510135141-717ed305ef50
@@ -130,7 +130,7 @@ require (
 	github.com/ajwerner/btree v0.0.0-20211221152037-f427b3e689c0 // indirect
 	github.com/alecthomas/atomic v0.1.0-alpha2 // indirect
 	github.com/alextanhongpin/go-bandit v0.0.0-20191125130111-30de60d69bae
-	github.com/anacrolix/chansync v0.4.1-0.20240627045151-1aa1ac392fe8
+	github.com/anacrolix/chansync v0.4.1-0.20240627045151-1aa1ac392fe8 // indirect
 	github.com/anacrolix/confluence v1.15.0 // indirect
 	github.com/anacrolix/envpprof v1.3.0 // indirect
 	github.com/anacrolix/generics v0.0.3-0.20240902042256-7fb2702ef0ca // indirect
@@ -144,7 +144,7 @@ require (
 	github.com/anacrolix/squirrel v0.6.4 // indirect
 	github.com/anacrolix/stm v0.4.1-0.20221221005312-96d17df0e496 // indirect
 	github.com/anacrolix/sync v0.5.1 // indirect
-	github.com/anacrolix/torrent v1.53.3
+	github.com/anacrolix/torrent v1.53.3 // indirect
 	github.com/anacrolix/upnp v0.1.4 // indirect
 	github.com/anacrolix/utp v0.1.0 // indirect
 	github.com/andybalholm/brotli v1.0.6 // indirect
