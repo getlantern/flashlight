@@ -605,7 +605,6 @@ func (f *Flashlight) RunClientListeners(httpProxyAddr, socksProxyAddr string,
 	log.Debug("Starting client HTTP proxy")
 	err := f.client.ListenAndServeHTTP(httpProxyAddr, func() {
 		log.Debug("Started client HTTP proxy")
-		proxied.SetProxyAddr(f.client.Addr)
 
 		if afterStart != nil {
 			afterStart(f.client)

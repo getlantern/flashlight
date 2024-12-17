@@ -11,7 +11,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
 	"os"
 	"runtime"
 	"strconv"
@@ -21,7 +20,6 @@ import (
 	"time"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/eventual"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/netx"
@@ -37,9 +35,6 @@ const (
 var (
 	log = golog.LoggerFor("flashlight.proxied")
 
-	proxyAddrMutex sync.RWMutex
-	proxyAddr      = eventual.DefaultUnsetGetter()
-
 	// ErrChainedProxyUnavailable indicates that we weren't able to find a chained
 	// proxy.
 	ErrChainedProxyUnavailable = "chained proxy unavailable"
@@ -50,34 +45,6 @@ var (
 
 func success(resp *http.Response) bool {
 	return (resp.StatusCode > 199 && resp.StatusCode < 400) || resp.StatusCode == http.StatusUpgradeRequired
-}
-
-// changeUserAgent prepends library version and OSARCH to the User-Agent header
-// of req to facilitate debugging on server side.
-// NOTE: This doesn't appear to be used anywhere on the server side.
-func changeUserAgent(req *http.Request) {
-	secondary := req.Header.Get("User-Agent")
-	ua := strings.TrimSpace(fmt.Sprintf("%s/%s (%s/%s) %s",
-		common.DefaultAppName, common.LibraryVersion, common.Platform, runtime.GOARCH, secondary))
-	req.Header.Set("User-Agent", ua)
-}
-
-// SetProxyAddr sets the eventual.Getter that's used to determine the proxy's
-// address. This MUST be called before attempting to use the proxied package.
-func SetProxyAddr(addr eventual.Getter) {
-	proxyAddrMutex.Lock()
-	proxyAddr = addr
-	proxyAddrMutex.Unlock()
-}
-
-func getProxyAddr() (string, bool) {
-	proxyAddrMutex.RLock()
-	addr, ok := proxyAddr(1 * time.Minute)
-	proxyAddrMutex.RUnlock()
-	if !ok {
-		return "", false
-	}
-	return addr.(string), true
 }
 
 // ParallelPreferChained creates a new http.RoundTripper that attempts to send
@@ -206,7 +173,7 @@ type chainedRoundTripper struct {
 // RoundTrip will attempt to execute the specified HTTP request using only a chained fetcher
 func (cf *chainedRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	log.Debugf("Using chained fetcher")
-	rt, err := ChainedNonPersistent(cf.rootCA)
+	rt, err := chained(cf.rootCA, false)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +196,7 @@ func (df *dualFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 	if df.cf.parallel && !isIdempotentMethod(req) {
 		return nil, op.FailIf(errors.New("attempted to use parallel round-tripper for non-idempotent method, please use ChainedThenFronted or some similar sequential round-tripper"))
 	}
-	directRT, err := ChainedNonPersistent(df.rootCA)
+	directRT, err := chained(df.rootCA, false)
 	if err != nil {
 		return nil, errors.Wrap(err).Op("DFCreateChainedClient")
 	}
@@ -462,17 +429,20 @@ func readResponses(finalResponse chan *http.Response, responses chan *http.Respo
 // connections persists and proxies through chained servers. If rootCA is
 // specified, the RoundTripper will validate the server's certificate on TLS
 // connections against that RootCA.
+/*
 func ChainedPersistent(rootCA string) (http.RoundTripper, error) {
 	return chained(rootCA, true)
 }
 
-// ChainedNonPersistent creates an http.RoundTripper that proxies through
+
+// chainedNonPersistent creates an http.RoundTripper that proxies through
 // chained servers and does not use keepalive connections. If rootCA is
 // specified, the RoundTripper will validate the server's certificate on TLS
 // connections against that RootCA.
-func ChainedNonPersistent(rootCA string) (http.RoundTripper, error) {
+func chainedNonPersistent(rootCA string) (http.RoundTripper, error) {
 	return chained(rootCA, false)
 }
+*/
 
 // chained creates an http.RoundTripper. If rootCA is specified, the
 // RoundTripper will validate the server's certificate on TLS connections
@@ -507,13 +477,15 @@ func chained(rootCA string, persistent bool) (http.RoundTripper, error) {
 		tr.TLSClientConfig.RootCAs = caCert.PoolContainingCert()
 	}
 
-	tr.Proxy = func(req *http.Request) (*url.URL, error) {
-		proxyAddr, ok := getProxyAddr()
-		if !ok {
-			return nil, errors.New(ErrChainedProxyUnavailable)
+	/*
+		tr.Proxy = func(req *http.Request) (*url.URL, error) {
+			proxyAddr, ok := getProxyAddr()
+			if !ok {
+				return nil, errors.New(ErrChainedProxyUnavailable)
+			}
+			return url.Parse("http://" + proxyAddr)
 		}
-		return url.Parse("http://" + proxyAddr)
-	}
+	*/
 
 	return AsRoundTripper(func(req *http.Request) (*http.Response, error) {
 		changeUserAgent(req)
@@ -597,4 +569,14 @@ func (tr serialTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	}
 	log.Errorf("Unable to roundtrip request to %v, out of transports", req.URL)
 	return
+}
+
+// changeUserAgent prepends library version and OSARCH to the User-Agent header
+// of req to facilitate debugging on server side.
+// NOTE: This doesn't appear to be used anywhere on the server side.
+func changeUserAgent(req *http.Request) {
+	secondary := req.Header.Get("User-Agent")
+	ua := strings.TrimSpace(fmt.Sprintf("%s/%s (%s/%s) %s",
+		common.DefaultAppName, common.LibraryVersion, common.Platform, runtime.GOARCH, secondary))
+	req.Header.Set("User-Agent", ua)
 }
