@@ -215,7 +215,6 @@ func TestBanditDialer_DialContext(t *testing.T) {
 
 			got, err := o.DialContext(context.Background(), "tcp", "localhost:8080")
 			if tt.wantErr {
-				assert.NotNil(t, err)
 				assert.Error(t, err)
 			}
 			if tt.want == nil && got != nil {
