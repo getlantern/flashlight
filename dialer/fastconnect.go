@@ -139,9 +139,9 @@ func (fcd *fastConnectDialer) connectAll(dialers []ProxyDialer) {
 func (fcd *fastConnectDialer) parallelDial(dialers []ProxyDialer) {
 	log.Debug("Connecting to all dialers")
 	var wg sync.WaitGroup
-	for index, d := range dialers {
+	for _, d := range dialers {
 		wg.Add(1)
-		go func(pd ProxyDialer, index int) {
+		go func(pd ProxyDialer) {
 			defer wg.Done()
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
@@ -159,7 +159,7 @@ func (fcd *fastConnectDialer) parallelDial(dialers []ProxyDialer) {
 
 			log.Debugf("Dialer %v succeeded in %v", pd.Name(), time.Since(start))
 			fcd.onConnected(pd, time.Since(start))
-		}(d, index)
+		}(d)
 	}
 	wg.Wait()
 }
