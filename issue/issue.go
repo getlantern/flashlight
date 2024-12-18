@@ -42,6 +42,7 @@ func SendReport(
 	model string, // alphanumeric name
 	osVersion string,
 	attachments []*Attachment,
+	country string,
 ) (err error) {
 	return sendReport(
 		userConfig.GetDeviceID(),
@@ -57,6 +58,7 @@ func SendReport(
 		model,
 		osVersion,
 		attachments,
+		country,
 	)
 }
 
@@ -74,6 +76,7 @@ func sendReport(
 	model string,
 	osVersion string,
 	attachments []*Attachment,
+	country string,
 ) error {
 	httpClient := &http.Client{
 		Transport: proxied.Fronted("issue_fronted_roundtrip"),
@@ -81,7 +84,12 @@ func sendReport(
 	r := &Request{}
 
 	r.Type = Request_ISSUE_TYPE(issueType)
-	r.CountryCode = geolookup.GetCountry(5 * time.Second)
+	if country == "" {
+		r.CountryCode = geolookup.GetCountry(5 * time.Second)
+	} else {
+		// This is temp due to IOS still uses the old geolookup
+		r.CountryCode = country
+	}
 	r.AppVersion = appVersion
 	r.SubscriptionLevel = subscriptionLevel
 	r.Platform = common.Platform

@@ -72,6 +72,7 @@ func TestSendReport(t *testing.T) {
 				Data: []byte("Hello World"),
 			},
 		},
+		"US",
 	)
 	if err != nil {
 		t.Errorf("SendReport() error = %v", err)
