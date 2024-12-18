@@ -640,7 +640,7 @@ func TestBanditDialerIntegration(t *testing.T) {
 	}
 	bandit, err := NewBandit(opts)
 	require.NoError(t, err)
-	banditDialer := bandit.(*BanditDialer)
+	banditDialer := bandit.(*banditDialer)
 	banditDialer.secondsUntilRewardSample = 1 * time.Second
 	banditDialer.secondsUntilSaveBanditRewards = 1200 * time.Millisecond
 
