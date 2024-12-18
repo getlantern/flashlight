@@ -1,6 +1,6 @@
 module github.com/getlantern/flashlight/v7
 
-go 1.22.9
+go 1.22.4
 
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20221004112352-e7c04248adcb
 
@@ -42,7 +42,7 @@ require (
 	github.com/getlantern/kcpwrapper v0.0.0-20230327091313-c12d7c17c6de
 	github.com/getlantern/keyman v0.0.0-20230503155501-4e864ca2175b
 	github.com/getlantern/lantern-algeneva v0.0.0-20240930181006-6d3c00db1d5d
-	github.com/getlantern/lantern-water v0.0.0-20241217184729-97b2bf6add4a
+	github.com/getlantern/lantern-water v0.0.0-20241218135103-60224336cf1d
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20230510135141-717ed305ef50
