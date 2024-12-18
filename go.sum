@@ -269,6 +269,8 @@ github.com/getlantern/framed v0.0.0-20190601192238-ceb6431eeede h1:yrU6Px3ZkvCsD
 github.com/getlantern/framed v0.0.0-20190601192238-ceb6431eeede/go.mod h1:nhnoiS6DE6zfe+BaCMU4YI01UpsuiXnDqM5S8jxHuuI=
 github.com/getlantern/fronted v0.0.0-20241212194832-a55b6db2616e h1:qk62Xhg+ha1sW6FhOmGPGbd3xnCC5n9Mr87vDToE0cM=
 github.com/getlantern/fronted v0.0.0-20241212194832-a55b6db2616e/go.mod h1:UOynqDcVIlDMFk3sdUyHzNyY1cz4GHtJ+8qvWESHWhg=
+github.com/getlantern/fronted v0.0.0-20241218113928-4db253857875 h1:i87Jjwv5XdhTMWvkU3zZusp9A5NvSbX39x38UEuJ3cw=
+github.com/getlantern/fronted v0.0.0-20241218113928-4db253857875/go.mod h1:UOynqDcVIlDMFk3sdUyHzNyY1cz4GHtJ+8qvWESHWhg=
 github.com/getlantern/geo v0.0.0-20241129152027-2fc88c10f91e h1:vpikNz6IzvEoqVYmiK5Uq+lE4TCzvMDqbZdxFbtGK1g=
 github.com/getlantern/geo v0.0.0-20241129152027-2fc88c10f91e/go.mod h1:RjQ0krF8NTCc5xo2Q1995/vZBnYg33h8svn15do7dLg=
 github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5 h1:RBKofGGMt2k6eGBwX8mky9qunjL+KnAp9JdzXjiRkRw=
