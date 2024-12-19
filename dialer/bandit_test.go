@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
@@ -230,7 +231,8 @@ func TestBanditDialer_DialContext(t *testing.T) {
 
 func Test_normalizeReceiveSpeed(t *testing.T) {
 	type args struct {
-		dataRecv uint64
+		dataRecv           uint64
+		elapsedTimeReading int64
 	}
 	tests := []struct {
 		name string
@@ -240,7 +242,8 @@ func Test_normalizeReceiveSpeed(t *testing.T) {
 		{
 			name: "should return 0 if no data received",
 			args: args{
-				dataRecv: 0,
+				dataRecv:           0,
+				elapsedTimeReading: secondsForSample * 1000,
 			},
 			want: func(got float64) bool {
 				return got == 0
@@ -249,7 +252,8 @@ func Test_normalizeReceiveSpeed(t *testing.T) {
 		{
 			name: "should return 1 if pretty fast",
 			args: args{
-				dataRecv: topExpectedBps * secondsForSample,
+				dataRecv:           topExpectedBps * secondsForSample,
+				elapsedTimeReading: secondsForSample * 1000,
 			},
 			want: func(got float64) bool {
 				return got == 1
@@ -258,17 +262,18 @@ func Test_normalizeReceiveSpeed(t *testing.T) {
 		{
 			name: "should return 1 if super fast",
 			args: args{
-				dataRecv: topExpectedBps * 50,
+				dataRecv:           topExpectedBps * 50,
+				elapsedTimeReading: secondsForSample * 1000,
 			},
 			want: func(got float64) bool {
 				return got > 1
 			},
 		},
-
 		{
 			name: "should return <1 if sorta fast",
 			args: args{
-				dataRecv: 2000,
+				dataRecv:           2000,
+				elapsedTimeReading: secondsForSample * 1000,
 			},
 			want: func(got float64) bool {
 				return got > 0 && got < 1
@@ -277,7 +282,7 @@ func Test_normalizeReceiveSpeed(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := normalizeReceiveSpeed(tt.args.dataRecv); !tt.want(got) {
+			if got := normalizeReceiveSpeed(tt.args.dataRecv, tt.args.elapsedTimeReading); !assert.True(t, tt.want(got)) {
 				t.Errorf("unexpected normalizeReceiveSpeed() = %v", got)
 			}
 		})
@@ -453,6 +458,7 @@ type tcpConnDialer struct {
 	client     net.Conn
 	server     net.Conn
 	name       string
+	dial       func() (net.Conn, bool, error)
 }
 
 func (*tcpConnDialer) Ready() <-chan error {
@@ -507,6 +513,10 @@ func (*tcpConnDialer) DataSent() uint64 {
 func (t *tcpConnDialer) DialContext(ctx context.Context, network string, addr string) (conn net.Conn, failedUpstream bool, err error) {
 	if t.shouldFail {
 		return nil, true, io.EOF
+	}
+
+	if t.dial != nil {
+		return t.dial()
 	}
 	return &net.TCPConn{}, false, nil
 }
@@ -599,4 +609,62 @@ func (*tcpConnDialer) Trusted() bool {
 
 // WriteStats implements Dialer.
 func (*tcpConnDialer) WriteStats(w io.Writer) {
+}
+
+//go:generate mockgen -package=dialer -destination=mocks_test.go net Conn
+
+func TestBanditDialerIntegration(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	baseDialer := newTcpConnDialer()
+	message := "hello"
+	connSleepTime := 200 * time.Millisecond
+
+	baseDialer.(*tcpConnDialer).dial = func() (net.Conn, bool, error) {
+		conn := NewMockConn(ctrl)
+		conn.EXPECT().Read(gomock.Any()).DoAndReturn(func(b []byte) (int, error) {
+			time.Sleep(connSleepTime)
+			return copy(b, []byte(message)), io.EOF
+		}).AnyTimes()
+		return conn, false, nil
+	}
+
+	banditDir, err := os.MkdirTemp("", "bandit_dial_test")
+	require.NoError(t, err)
+	defer os.RemoveAll(banditDir)
+
+	opts := &Options{
+		Dialers:   []ProxyDialer{baseDialer},
+		BanditDir: banditDir,
+	}
+	bandit, err := NewBandit(opts)
+	require.NoError(t, err)
+	banditDialer := bandit.(*banditDialer)
+	banditDialer.secondsUntilRewardSample = 1 * time.Second
+	banditDialer.secondsUntilSaveBanditRewards = 1200 * time.Millisecond
+
+	ctx := context.Background()
+	banditConn, err := banditDialer.DialContext(ctx, "tcp", "localhost:8080")
+	require.NoError(t, err)
+
+	got, err := io.ReadAll(banditConn)
+	assert.NoError(t, err)
+	assert.Equal(t, message, string(got[:len(message)]))
+
+	// waiting so reward is sampled and bandit rewards are stored
+	time.Sleep(1400 * time.Millisecond)
+
+	rewards := banditDialer.bandit.GetRewards()
+	counts := banditDialer.bandit.GetCounts()
+
+	// there's only one dialer
+	assert.Len(t, counts, 1)
+	assert.Len(t, rewards, 1)
+	// since there's only one dialer and one Dial call, we're expecting one count
+	assert.Equal(t, 1, counts[0])
+	assert.InEpsilon(t, normalizeReceiveSpeed(uint64(len(got)), connSleepTime.Milliseconds()), rewards[0], 0.2)
+
+	// check if rewards.csv was written
+	assert.FileExists(t, filepath.Join(banditDir, "rewards.csv"))
 }

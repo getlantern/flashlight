@@ -19,10 +19,12 @@ import (
 
 // banditDialer is responsible for continually choosing the optimized dialer.
 type banditDialer struct {
-	dialers            []ProxyDialer
-	bandit             bandit.Bandit
-	opts               *Options
-	banditRewardsMutex *sync.Mutex
+	dialers                       []ProxyDialer
+	bandit                        bandit.Bandit
+	opts                          *Options
+	banditRewardsMutex            *sync.Mutex
+	secondsUntilRewardSample      time.Duration
+	secondsUntilSaveBanditRewards time.Duration
 }
 
 type banditMetrics struct {
@@ -47,9 +49,11 @@ func NewBandit(opts *Options) (Dialer, error) {
 	var b bandit.Bandit
 	var err error
 	dialer := &banditDialer{
-		dialers:            dialers,
-		opts:               opts,
-		banditRewardsMutex: &sync.Mutex{},
+		dialers:                       dialers,
+		opts:                          opts,
+		banditRewardsMutex:            &sync.Mutex{},
+		secondsUntilRewardSample:      secondsForSample * time.Second,
+		secondsUntilSaveBanditRewards: saveBanditRewardsAfter,
 	}
 
 	dialerWeights, err := dialer.loadLastBanditRewards()
@@ -134,16 +138,17 @@ func (bd *banditDialer) DialContext(ctx context.Context, network, addr string) (
 
 	// Tell the dialer to update the bandit with it's throughput after 5 seconds.
 	var dataRecv atomic.Uint64
-	dt := newDataTrackingConn(conn, &dataRecv)
-	time.AfterFunc(secondsForSample*time.Second, func() {
-		speed := normalizeReceiveSpeed(dataRecv.Load())
-		//log.Debugf("Dialer %v received %v bytes in %v seconds, normalized speed: %v", d.Name(), dt.dataRecv, secondsForSample, speed)
+	var elapsedTimeReading atomic.Int64
+	dt := newDataTrackingConn(conn, &dataRecv, &elapsedTimeReading)
+	time.AfterFunc(bd.secondsUntilRewardSample, func() {
+		speed := normalizeReceiveSpeed(dataRecv.Load(), elapsedTimeReading.Load())
+		// log.Debugf("Dialer %v received %v bytes in %v seconds, normalized speed: %v", d.Name(), dt.dataRecv, secondsForSample, speed)
 		if errUpdatingBanditReward := bd.bandit.Update(chosenArm, speed); errUpdatingBanditReward != nil {
-			log.Errorf("unable to update bandit: %v", errUpdatingBanditReward)
+			log.Errorf("unable to update bandit: %v", err)
 		}
 	})
 
-	time.AfterFunc(30*time.Second, func() {
+	time.AfterFunc(bd.secondsUntilSaveBanditRewards, func() {
 		log.Debugf("saving bandit rewards")
 		metrics := make(map[string]banditMetrics)
 		rewards := bd.bandit.GetRewards()
@@ -339,13 +344,15 @@ func differentArm(existingArm, numDialers int) int {
 
 const secondsForSample = 6
 
+const saveBanditRewardsAfter = 30 * time.Second
+
 // A reasonable upper bound for the top expected bytes to receive per second.
 // Anything over this will be normalized to over 1.
 const topExpectedBps = 125000
 
-func normalizeReceiveSpeed(dataRecv uint64) float64 {
+func normalizeReceiveSpeed(dataRecv uint64, elapsedTimeReading int64) float64 {
 	// Record the bytes in relation to the top expected speed.
-	return (float64(dataRecv) / secondsForSample) / topExpectedBps
+	return (float64(dataRecv) / (float64(elapsedTimeReading) / 1000)) / topExpectedBps
 }
 
 func (bd *banditDialer) Close() {
@@ -355,20 +362,24 @@ func (bd *banditDialer) Close() {
 	}
 }
 
-func newDataTrackingConn(conn net.Conn, dataRecv *atomic.Uint64) *dataTrackingConn {
+func newDataTrackingConn(conn net.Conn, dataRecv *atomic.Uint64, elapsedTimeReading *atomic.Int64) *dataTrackingConn {
 	return &dataTrackingConn{
-		Conn:     conn,
-		dataRecv: dataRecv,
+		Conn:               conn,
+		dataRecv:           dataRecv,
+		elapsedTimeReading: elapsedTimeReading,
 	}
 }
 
 type dataTrackingConn struct {
 	net.Conn
-	dataRecv *atomic.Uint64
+	dataRecv           *atomic.Uint64
+	elapsedTimeReading *atomic.Int64 // elapsedTimeReading store in milliseconds the time the connection took to read data
 }
 
 func (c *dataTrackingConn) Read(b []byte) (int, error) {
+	startedReading := time.Now()
 	n, err := c.Conn.Read(b)
 	c.dataRecv.Add(uint64(n))
+	c.elapsedTimeReading.Add(time.Since(startedReading).Milliseconds())
 	return n, err
 }
