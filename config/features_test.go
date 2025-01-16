@@ -193,18 +193,10 @@ func TestOtelEnabled(t *testing.T) {
 func TestInterstitialAdsEnabled(t *testing.T) {
 	gl := globalFromTemplate(t)
 	assert.True(t, gl.FeatureEnabled(FeatureInterstitialAds, "android", common.DefaultAppName, "7.0.0", 1, false, "in"), "Interstitial ads are enabled in India")
-	assert.False(t, gl.FeatureEnabled(FeatureInterstitialAds, "android", common.DefaultAppName, "7.0.0", 1, false, "cn"), "Interstitial ads are disabled in China")
+	assert.True(t, gl.FeatureEnabled(FeatureInterstitialAds, "android", common.DefaultAppName, "7.0.0", 1, false, "ru"), "Interstitial ads are enabled in Russia")
+	assert.False(t, gl.FeatureEnabled(FeatureInterstitialAds, "android", common.DefaultAppName, "7.0.0", 1, false, "ir"), "Interstitial ads are disabled in Iran")
 	assert.False(t, gl.FeatureEnabled(FeatureInterstitialAds, "windows", common.DefaultAppName, "7.0.0", 1, false, "in"), "Interstitial ads are disabled on Windows")
-	assert.True(t, gl.FeatureEnabled(FeatureInterstitialAds, "android", common.DefaultAppName, "7.0.0", 1, false, "ru"), "Interstitial ads are disabled in Russia")
 }
-
-// func TestCASInterstitialAdsEnabled(t *testing.T) {
-// 	gl := globalFromTemplate(t)
-// 	assert.False(t, gl.FeatureEnabled(FeatureCASInterstitialAds, "android", common.DefaultAppName, "7.0.0", 1, false, "in"), "CASInterstitial ads are disable in India")
-// 	assert.False(t, gl.FeatureEnabled(FeatureCASInterstitialAds, "android", common.DefaultAppName, "7.0.0", 1, false, "cn"), "CASInterstitial ads are disable in China")
-// 	assert.True(t, gl.FeatureEnabled(FeatureCASInterstitialAds, "android", common.DefaultAppName, "7.0.0", 1, false, "ru"), "CASInterstitial ads are enabled in Russia")
-// 	assert.False(t, gl.FeatureEnabled(FeatureCASInterstitialAds, "windows", common.DefaultAppName, "7.0.0", 1, false, "in"), "CASInterstitial ads are disabled on Windows")
-// }
 
 func requireGetReplicaOptionsRoot(t *testing.T) (fos replicaConfig.ReplicaOptionsRoot) {
 	return embeddedconfig.GlobalReplicaOptions
