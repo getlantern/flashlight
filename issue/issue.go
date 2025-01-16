@@ -45,6 +45,7 @@ func SendReport(
 	country string,
 ) (err error) {
 	return sendReport(
+		userConfig,
 		userConfig.GetDeviceID(),
 		strconv.Itoa(int(userConfig.GetUserID())),
 		userConfig.GetToken(),
@@ -63,6 +64,7 @@ func SendReport(
 }
 
 func sendReport(
+	userConfig common.UserConfig,
 	deviceID string,
 	userID string,
 	proToken string,
@@ -78,6 +80,7 @@ func sendReport(
 	attachments []*Attachment,
 	country string,
 ) error {
+	log.Debug("HERE")
 	httpClient := &http.Client{
 		Transport: proxied.Fronted("issue_fronted_roundtrip"),
 	}
@@ -143,6 +146,10 @@ func sendReport(
 		return log.Errorf("creating request: %w", err)
 	}
 	req.Header.Set("content-type", "application/x-protobuf")
+
+	common.AddCommonNonUserHeaders(userConfig, req)
+
+	log.Debugf("isssue sendReport X-lantern-version header: %v", req.Header.Get("X-Lantern-Version"))
 
 	resp, err := httpClient.Do(req)
 	if err != nil {

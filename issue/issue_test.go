@@ -7,6 +7,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/config"
 	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/flashlight/v7/proxied"
@@ -53,7 +54,9 @@ func updateFronted() {
 
 func TestSendReport(t *testing.T) {
 	updateFronted()
+	UserConfigData := common.UserConfigData{}
 	err := sendReport(
+		&UserConfigData,
 		"34qsdf-24qsadf-32542q",
 		"1",
 		"token",
