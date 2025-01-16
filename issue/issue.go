@@ -78,9 +78,18 @@ func sendReport(
 	attachments []*Attachment,
 	country string,
 ) error {
-	httpClient := &http.Client{
-		Transport: proxied.Fronted("issue_fronted_roundtrip"),
+	var httpClient *http.Client
+	if common.Platform == "ios" {
+		// IOS only supports Fronted at the moemnt
+		httpClient = &http.Client{
+			Transport: proxied.Fronted("issue_fronted_roundtrip"),
+		}
+	} else {
+		httpClient = &http.Client{
+			Transport: proxied.ChainedThenFronted(),
+		}
 	}
+
 	r := &Request{}
 
 	r.Type = Request_ISSUE_TYPE(issueType)
