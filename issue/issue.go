@@ -148,7 +148,7 @@ func sendReport(
 
 	common.AddCommonNonUserHeaders(userConfig, req)
 
-	log.Debugf("isssue sendReport X-lantern-version header: %v", req.Header.Get("X-Lantern-Version"))
+	log.Debugf("issue sendReport X-Lantern-Version header: %v", req.Header.Get("X-Lantern-Version"))
 
 	resp, err := httpClient.Do(req)
 	if err != nil {

@@ -54,6 +54,8 @@ func updateFronted() {
 
 func TestSendReport(t *testing.T) {
 	updateFronted()
+	//manually set library version since its only populated when run from a binary
+	common.LibraryVersion = "7.0.0"
 	UserConfigData := common.UserConfigData{}
 	err := sendReport(
 		&UserConfigData,
@@ -64,7 +66,7 @@ func TestSendReport(t *testing.T) {
 		int(Request_NO_ACCESS),
 		"Description placeholder",
 		"pro",
-		"jay+test@getlantern.org",
+		"thomas+test@getlantern.org",
 		"7.1.1",
 		"Samsung Galaxy S10",
 		"SM-G973F",
