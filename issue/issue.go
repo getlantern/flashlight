@@ -80,7 +80,6 @@ func sendReport(
 	attachments []*Attachment,
 	country string,
 ) error {
-	log.Debug("HERE")
 	httpClient := &http.Client{
 		Transport: proxied.Fronted("issue_fronted_roundtrip"),
 	}
