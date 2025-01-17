@@ -1,12 +1,7 @@
 package config
 
 import (
-	"crypto/x509"
-	"errors"
 	"time"
-
-	"github.com/getlantern/fronted"
-	"github.com/getlantern/keyman"
 
 	"github.com/getlantern/flashlight/v7/browsers/simbrowser"
 	"github.com/getlantern/flashlight/v7/domainrouting"
@@ -46,7 +41,7 @@ type Global struct {
 	NamedDomainRoutingRules map[string]domainrouting.RulesMap
 
 	// TrustedCAs are trusted CAs for domain fronting domains only.
-	TrustedCAs []*fronted.CA
+	//TrustedCAs []*fronted.CA
 
 	// GlobalConfigPollInterval sets interval at which to poll for global config
 	GlobalConfigPollInterval time.Duration
@@ -109,20 +104,6 @@ func (cfg *Global) UnmarshalFeatureOptions(feature string, opts FeatureOptions) 
 	return opts.FromMap(m)
 }
 
-// TrustedCACerts returns a certificate pool containing the TrustedCAs from this
-// config.
-func (cfg *Global) TrustedCACerts() (pool *x509.CertPool, err error) {
-	certs := make([]string, 0, len(cfg.TrustedCAs))
-	for _, ca := range cfg.TrustedCAs {
-		certs = append(certs, ca.Cert)
-	}
-	pool, err = keyman.PoolContainingCerts(certs...)
-	if err != nil {
-		log.Errorf("Could not create pool %v", err)
-	}
-	return
-}
-
 // applyFlags updates this config from any command-line flags that were passed
 // in.
 func (cfg *Global) applyFlags(flags map[string]interface{}) {
@@ -140,9 +121,6 @@ func (cfg *Global) applyFlags(flags map[string]interface{}) {
 }
 
 func (cfg *Global) validate() error {
-	if len(cfg.TrustedCAs) == 0 {
-		return errors.New("no trusted CAs")
-	}
 	for _, groups := range cfg.FeaturesEnabled {
 		for _, g := range groups {
 			if err := g.Validate(); err != nil {
