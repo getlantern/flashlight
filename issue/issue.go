@@ -45,6 +45,7 @@ func SendReport(
 	country string,
 ) (err error) {
 	return sendReport(
+		userConfig,
 		userConfig.GetDeviceID(),
 		strconv.Itoa(int(userConfig.GetUserID())),
 		userConfig.GetToken(),
@@ -63,6 +64,7 @@ func SendReport(
 }
 
 func sendReport(
+	userConfig common.UserConfig,
 	deviceID string,
 	userID string,
 	proToken string,
@@ -143,6 +145,10 @@ func sendReport(
 		return log.Errorf("creating request: %w", err)
 	}
 	req.Header.Set("content-type", "application/x-protobuf")
+
+	common.AddCommonNonUserHeaders(userConfig, req)
+
+	log.Debugf("issue sendReport X-Lantern-Version header: %v", req.Header.Get("X-Lantern-Version"))
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
