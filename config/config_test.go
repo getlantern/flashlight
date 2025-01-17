@@ -2,7 +2,6 @@ package config
 
 import (
 	"errors"
-	"net/http"
 	"os"
 	"testing"
 	"time"
@@ -107,7 +106,7 @@ func TestProductionGlobal(t *testing.T) {
 		"cloudfront": true,
 	}
 
-	f := newHttpFetcher(newTestUserConfig(), &http.Transport{}, testURL)
+	f := newHttpFetcher(newTestUserConfig(), testURL)
 
 	cfgBytes, _, err := f.fetch("testOpName")
 	if !assert.NoError(t, err, "Error fetching global config from %s", testURL) {
@@ -176,7 +175,7 @@ func TestPollIntervals(t *testing.T) {
 		pollInterval := 500 * time.Millisecond
 		waitTime := pollInterval*2 + (200 * time.Millisecond)
 
-		fetcher := newHttpFetcher(newTestUserConfig(), &http.Transport{}, configURLs)
+		fetcher := newHttpFetcher(newTestUserConfig(), configURLs)
 		dispatch := func(cfg interface{}) {}
 
 		stopChan := make(chan bool)

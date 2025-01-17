@@ -9,11 +9,10 @@ import (
 	"net/http"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/getlantern/common/config"
+	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/ops"
-	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/refraction-networking/water"
 	_ "github.com/refraction-networking/water/transport/v1"
 
@@ -175,7 +174,7 @@ func (d *waterImpl) loadWASM(ctx context.Context, transport string, dir string, 
 	vc := waterVC.NewWaterVersionControl(dir, log)
 	cli := waterHTTPClient
 	if cli == nil {
-		cli = proxied.ChainedThenDirectThenFrontedClient(1*time.Minute, "")
+		cli = common.GetHTTPClient()
 	}
 	downloader, err := waterDownloader.NewWASMDownloader(strings.Split(wasmAvailableAt, ","), cli)
 	if err != nil {

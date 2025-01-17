@@ -1,7 +1,6 @@
 package config
 
 import (
-	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,9 +16,7 @@ func newTestUserConfig() *common.UserConfigData {
 func TestFetcher(t *testing.T) {
 	defer deleteGlobalConfig()
 
-	// This will actually fetch the cloud config over the network.
-	rt := &http.Transport{}
-	configFetcher := newHttpFetcher(newTestUserConfig(), rt, common.GlobalURL)
+	configFetcher := newHttpFetcher(newTestUserConfig(), common.GlobalURL)
 
 	bytes, _, err := configFetcher.fetch("testOpName")
 	assert.Nil(t, err)

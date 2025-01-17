@@ -20,8 +20,8 @@ func TestUsers(t *testing.T) {
 	token := uuid.NewString()
 
 	t.Run("newUserWithClient should create a user with success", func(t *testing.T) {
-		mockedHTTPClient := createMockClient(newUserDataResponse(), nil)
-		u, err := newUserWithClient(common.NewUserConfigData(common.DefaultAppName, deviceID, 0, "", nil, "en-US"), mockedHTTPClient)
+		//mockedHTTPClient := createMockClient(newUserDataResponse(), nil)
+		u, err := newUserWithClient(common.NewUserConfigData(common.DefaultAppName, deviceID, 0, "", nil, "en-US"))
 		assert.NoError(t, err, "Unexpected error")
 		assert.NotNil(t, u, "Should have gotten a user")
 		t.Logf("user: %+v", u)
@@ -29,8 +29,8 @@ func TestUsers(t *testing.T) {
 
 	uc := common.NewUserConfigData(common.DefaultAppName, deviceID, userID, token, nil, "en-US")
 	t.Run("fetchUserDataWithClient should fetch a user with success", func(t *testing.T) {
-		mockedHTTPClient := createMockClient(newUserDataResponse(), nil)
-		u, err := fetchUserDataWithClient(uc, mockedHTTPClient)
+		//mockedHTTPClient := createMockClient(newUserDataResponse(), nil)
+		u, err := fetchUserDataWithClient(uc)
 		assert.NoError(t, err, "Unexpected error")
 		assert.NotNil(t, u, "Should have gotten a user")
 
@@ -38,8 +38,8 @@ func TestUsers(t *testing.T) {
 	})
 
 	t.Run("status change should update when user data updated", func(t *testing.T) {
-		mockedHTTPClient := createMockClient(newUserDataResponse(), nil)
-		u, err := fetchUserDataWithClient(uc, mockedHTTPClient)
+		//mockedHTTPClient := createMockClient(newUserDataResponse(), nil)
+		u, err := fetchUserDataWithClient(uc)
 		assert.NoError(t, err, "Unexpected error")
 		assert.NotNil(t, u, "Should have gotten a user")
 

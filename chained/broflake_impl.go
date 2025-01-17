@@ -5,14 +5,13 @@ import (
 	"crypto/x509"
 	"math/rand"
 	"net"
-	"net/http"
 	"time"
 
 	"github.com/getlantern/broflake/clientcore"
 	broflake_common "github.com/getlantern/broflake/common"
 	"github.com/getlantern/common/config"
+	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/ops"
-	"github.com/getlantern/flashlight/v7/proxied"
 )
 
 func init() {
@@ -138,10 +137,7 @@ func makeBroflakeOptions(pc *config.ProxyConfig) (
 
 	// Broflake's HTTP client isn't currently configurable via PluggableTransportSettings, and so
 	// we just give it this domain fronted client in all cases
-	wo.HttpClient = &http.Client{
-		Transport: proxied.Fronted("broflake_fronted_roundtrip"),
-		Timeout:   60 * time.Second,
-	}
+	wo.HttpClient = common.GetHTTPClient()
 
 	// Override QUICLayerOptions defaults as applicable
 	qo := &clientcore.QUICLayerOptions{}
