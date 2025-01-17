@@ -44,10 +44,6 @@ func (p *ProviderConfig) GetResponseValidator(providerID string) fronted.Respons
 	if p.Validator == nil {
 		return nil
 	}
-
-	if len(p.Validator.RejectStatus) > 0 {
-		return fronted.NewStatusCodeValidator(p.Validator.RejectStatus)
-	}
 	// ...
 
 	// unknown or empty
