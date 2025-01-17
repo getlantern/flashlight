@@ -140,10 +140,6 @@ func (cfg *Global) applyFlags(flags map[string]interface{}) {
 }
 
 func (cfg *Global) validate() error {
-	err := cfg.Client.Validate()
-	if err != nil {
-		return err
-	}
 	if len(cfg.TrustedCAs) == 0 {
 		return errors.New("no trusted CAs")
 	}

@@ -40,7 +40,6 @@ type Fetcher interface {
 type fetcher struct {
 	lastCloudConfigETag map[string]string
 	user                common.UserConfig
-	rt                  http.RoundTripper
 	originURL           string
 }
 
@@ -48,7 +47,7 @@ var noSleep = 0 * time.Second
 
 // newHttpFetcher creates a new configuration fetcher with the specified
 // interface for obtaining the user ID and token if those are populated.
-func newHttpFetcher(conf common.UserConfig, rt http.RoundTripper, originURL string) Fetcher {
+func newHttpFetcher(conf common.UserConfig, originURL string) Fetcher {
 	log.Debugf("Will poll for config at %v", originURL)
 
 	// Force detour to whitelist chained domain
@@ -61,7 +60,6 @@ func newHttpFetcher(conf common.UserConfig, rt http.RoundTripper, originURL stri
 	return &fetcher{
 		lastCloudConfigETag: map[string]string{},
 		user:                conf,
-		rt:                  rt,
 		originURL:           originURL,
 	}
 }
@@ -103,7 +101,7 @@ func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op) ([]byte, time.Durati
 	// this prevents the occasional EOFs errors we're seeing with
 	// successive requests
 	req.Close = true
-	resp, err := cf.rt.RoundTrip(req.WithContext(ctx))
+	resp, err := common.GetHTTPClient().Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, sleepTime, fmt.Errorf("unable to fetch cloud config at %s: %s", url, err)
 	}

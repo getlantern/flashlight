@@ -27,8 +27,8 @@ type sender struct {
 //
 // Note: if the request is successful, it is the responsibility of the caller to read the response
 // body to completion and close it.
-func (s *sender) post(req *http.Request, rt http.RoundTripper) (*http.Response, int64, error) {
-	resp, err := s.doPost(req, rt)
+func (s *sender) post(req *http.Request, httpClient *http.Client) (*http.Response, int64, error) {
+	resp, err := s.doPost(req, httpClient)
 	if err != nil {
 		return resp, s.backoff(), err
 	}
@@ -50,12 +50,12 @@ func (s *sender) post(req *http.Request, rt http.RoundTripper) (*http.Response, 
 	return resp, sleepTime, nil
 }
 
-func (s *sender) doPost(req *http.Request, rt http.RoundTripper) (*http.Response, error) {
+func (s *sender) doPost(req *http.Request, httpClient *http.Client) (*http.Response, error) {
 	// make sure to close the connection after reading the Body
 	// this prevents the occasional EOFs errors we're seeing with
 	// successive requests
 	req.Close = true
-	resp, err := rt.RoundTrip(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("request to failed: %w", err)
 	}
