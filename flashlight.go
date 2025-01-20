@@ -2,6 +2,7 @@ package flashlight
 
 import (
 	"fmt"
+	"github.com/getlantern/netx"
 	"net"
 	"sync"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual/v2"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/netx"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/getlantern/flashlight/v7/apipb"
@@ -48,12 +48,6 @@ var (
 		config.FeatureProxyWhitelistedOnly: true,
 	}
 )
-
-func init() {
-	if common.Platform != "ios" {
-		netx.EnableNAT64AutoDiscovery()
-	}
-}
 
 // HandledErrorType is used to differentiate error types to handlers configured via
 // Flashlight.SetErrorHandler.
@@ -120,10 +114,14 @@ func New(
 	eventWithLabel func(category, action, label string),
 	options ...Option,
 ) (*Flashlight, error) {
+	if common.Platform != "ios" {
+		netx.EnableNAT64AutoDiscovery()
+	}
 	log.Debugf("Running in app: %v", appName)
 	log.Debugf("Using configdir: %v", configDir)
 	displayVersion(appVersion, revisionDate)
-	common.CompileTimeApplicationVersion = appVersion
+	common.InitVersion(appVersion)
+	proxied.InitFronted()
 	deviceID := userConfig.GetDeviceID()
 	log.Debugf("You can query for this device's activity under device id: %v", deviceID)
 	fops.InitGlobalContext(
@@ -375,8 +373,6 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 	var url string
 	if cloudURL, _ := f.flagsAsMap["cloudconfig"].(string); cloudURL != "" {
 		url = cloudURL
-	} else if staging, _ := f.flagsAsMap["staging"].(bool); staging {
-		url = common.UserConfigStagingURL
 	} else {
 		url = common.UserConfigURL
 	}

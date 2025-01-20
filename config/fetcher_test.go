@@ -25,25 +25,3 @@ func TestFetcher(t *testing.T) {
 	assert.Nil(t, err)
 	assert.True(t, len(bytes) > 200)
 }
-
-// TestStagingSetup tests to make sure our staging config flag sets the
-// appropriate URLs for staging servers.
-func TestStagingSetup(t *testing.T) {
-	flags := make(map[string]interface{})
-	flags["staging"] = false
-
-	rt := &http.Transport{}
-
-	var fetch *fetcher
-	fetch = newHttpFetcher(newTestUserConfig(), rt, common.UserConfigURL).(*fetcher)
-	assert.Equal(t, common.UserConfigURL, fetch.originURL)
-
-	// Blank flags should mean we use the default
-	flags["cloudconfig"] = ""
-	fetch = newHttpFetcher(newTestUserConfig(), rt, common.UserConfigURL).(*fetcher)
-	assert.Equal(t, common.UserConfigURL, fetch.originURL)
-
-	flags["staging"] = true
-	fetch = newHttpFetcher(newTestUserConfig(), rt, common.UserConfigStagingURL).(*fetcher)
-	assert.Equal(t, common.UserConfigStagingURL, fetch.originURL)
-}

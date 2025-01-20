@@ -15,7 +15,8 @@ var (
 	LibraryVersion = ""
 )
 
-func init() {
+func InitVersion(compileTimeApplicationVersion string) {
+	CompileTimeApplicationVersion = compileTimeApplicationVersion
 	buildInfo, ok := debug.ReadBuildInfo()
 	if !ok {
 		panic("Unable to read build info")
