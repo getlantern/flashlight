@@ -28,8 +28,7 @@ func Init(
 	origGlobalDispatch func(interface{}, Source), onGlobalSaveError func(error),
 	rt http.RoundTripper) (stop func()) {
 
-	staging := isStaging(flags)
-	globalConfigURL := checkOverrides(flags, getGlobalURL(staging), "global.yaml.gz")
+	globalConfigURL := checkOverrides(flags, common.GlobalURL, "global.yaml.gz")
 
 	return InitWithURLs(
 		configDir, flags, userConfig,
@@ -124,10 +123,6 @@ func obfuscate(flags map[string]interface{}) bool {
 	return flags["readableconfig"] == nil || !flags["readableconfig"].(bool)
 }
 
-func isStaging(flags map[string]interface{}) bool {
-	return checkBool(flags, "staging")
-}
-
 func isSticky(flags map[string]interface{}) bool {
 	return checkBool(flags, "stickyconfig")
 }
@@ -148,15 +143,4 @@ func checkOverrides(flags map[string]interface{},
 		}
 	}
 	return url
-}
-
-// getGlobalURL returns the global URL to use depending on whether or not
-// we're in staging.
-func getGlobalURL(staging bool) string {
-	if staging {
-		log.Debug("Will obtain global.yaml from staging service")
-		return common.GlobalStagingURL
-	}
-	log.Debugf("Will obtain global.yaml from production service at %v", common.GlobalURL)
-	return common.GlobalURL
 }

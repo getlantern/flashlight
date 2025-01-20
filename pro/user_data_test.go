@@ -15,8 +15,6 @@ import (
 )
 
 func TestUsers(t *testing.T) {
-	common.ForceStaging()
-
 	deviceID := "77777777"
 	userID := int64(1000)
 	token := uuid.NewString()
