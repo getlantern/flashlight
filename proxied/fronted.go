@@ -21,7 +21,8 @@ func InitFronted() fronted.Fronted {
 	} else {
 		cacheFile = filepath.Join(dir, common.DefaultAppName, "fronted_cache.json")
 	}
-	return fronted.NewFronted(cacheFile)
+	fronter = fronted.NewFronted(cacheFile)
+	return fronter
 }
 
 // Fronted creates a http.RoundTripper that proxies request using domain
