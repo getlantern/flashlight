@@ -14,7 +14,6 @@ var mutex = &sync.Mutex{}
 var domains = []string{
 	"api.iantem.io",
 	"df.iantem.io",
-	"iantem.io",
 	"raw.githubusercontent.com",
 	"media.githubusercontent.com",
 	"objects.githubusercontent.com",
