@@ -17,6 +17,7 @@ message Request {
         CHAT_NOT_WORKING = 7;
         DISCOVER_NOT_WORKING = 8;
         OTHER = 9;
+	UPDATE_FAIL = 10;
     }
     
 	ISSUE_TYPE type = 1;
