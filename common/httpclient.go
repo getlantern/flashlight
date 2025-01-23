@@ -13,6 +13,9 @@ var mutex = &sync.Mutex{}
 // These are the domains we will access via kindling.
 var domains = []string{
 	"api.iantem.io",
+	"api.getiantem.org",    // Still used on iOS
+	"geo.getiantem.org",    // Still used on iOS
+	"config.getiantem.org", // Still used on iOS
 	"df.iantem.io",
 	"raw.githubusercontent.com",
 	"media.githubusercontent.com",
@@ -20,7 +23,6 @@ var domains = []string{
 	"replica-r2.lantern.io",
 	"replica-search.lantern.io",
 	"update.getlantern.org",
-	"config.getiantem.org",
 	"globalconfig.flashlightproxy.com",
 }
 
