@@ -40,7 +40,6 @@ type Flags struct {
 	Initialize         bool          `flag:"initialize" help:"silently initialize Lantern to a state of having working proxy and exit, typically during installation."`
 	Timeout            time.Duration `flag:"timeout" help:"force stop Lantern with an exit status of -1 after the timeout."`
 	ReplicaRustUrl     string        `flag:"replica-rust-url" help:"use the replica-rust service at the provided endpoint"`
-	Staging            bool          `flag:"-"`
 	Experiments        []string      `flag:"enabled-experiments" help:"comma separated list of experiments to enable"`
 }
 
