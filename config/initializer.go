@@ -1,7 +1,6 @@
 package config
 
 import (
-	"net/http"
 	"sync"
 	"time"
 
@@ -25,15 +24,14 @@ var (
 // used to stop the reading of configs.
 func Init(
 	configDir string, flags map[string]interface{}, userConfig common.UserConfig,
-	origGlobalDispatch func(interface{}, Source), onGlobalSaveError func(error),
-	rt http.RoundTripper) (stop func()) {
+	origGlobalDispatch func(interface{}, Source), onGlobalSaveError func(error)) (stop func()) {
 
 	staging := isStaging(flags)
 	globalConfigURL := checkOverrides(flags, getGlobalURL(staging), "global.yaml.gz")
 
 	return InitWithURLs(
 		configDir, flags, userConfig,
-		origGlobalDispatch, onGlobalSaveError, globalConfigURL, rt)
+		origGlobalDispatch, onGlobalSaveError, globalConfigURL)
 }
 
 type cfgWithSource struct {
@@ -46,8 +44,7 @@ type cfgWithSource struct {
 func InitWithURLs(
 	configDir string, flags map[string]interface{}, userConfig common.UserConfig,
 	origGlobalDispatch func(interface{}, Source), onGlobalSaveError func(error),
-	globalURL string, rt http.RoundTripper,
-) (stop func()) {
+	globalURL string) (stop func()) {
 
 	var mx sync.RWMutex
 	globalConfigPollInterval := DefaultGlobalConfigPollInterval
@@ -93,7 +90,6 @@ func InitWithURLs(
 			return globalConfigPollInterval
 		},
 		sticky:      isSticky(flags),
-		rt:          rt,
 		opName:      "fetch_global",
 		ignoreSaved: true,
 	}

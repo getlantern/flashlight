@@ -32,10 +32,6 @@ type ConfigOptions struct {
 	// servers in HTTP headers, such as the pro token and other options.
 	UserConfig common.UserConfig
 
-	// RoundTripper provides the http.RoundTripper the fetcher should use, which allows us to
-	// dictate whether the fetcher will use dual fetching (from fronted and chained URLs) or not.
-	RoundTripper http.RoundTripper
-
 	// PollInterval specifies how frequently to poll for new config.
 	PollInterval time.Duration
 }
@@ -80,8 +76,6 @@ func StartConfigService(handler ConfigHandler, opts *ConfigOptions) (StopFn, err
 		return nil, errors.New("ConfigHandler is required")
 	case opts == nil:
 		return nil, errors.New("ConfigOptions is required")
-	case opts.RoundTripper == nil:
-		return nil, errors.New("RoundTripper is required")
 	case opts.OriginURL == "":
 		return nil, errors.New("OriginURL is required")
 	}
@@ -186,7 +180,7 @@ func (cs *configService) fetch() (*apipb.ConfigResponse, int64, error) {
 		}
 
 		logger.Debugf("configservice: fetching config from %v", req.URL)
-		resp, sleep, err = cs.sender.post(req, cs.opts.RoundTripper)
+		resp, sleep, err = cs.sender.post(req, common.GetHTTPClient())
 		if err == nil {
 			break
 		}

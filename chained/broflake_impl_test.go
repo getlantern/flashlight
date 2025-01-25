@@ -4,23 +4,17 @@ import (
 	"crypto/x509"
 	"fmt"
 	"math/rand"
-	"os"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v2"
 
 	"github.com/getlantern/broflake/clientcore"
 	"github.com/getlantern/common/config"
-
-	flconfig "github.com/getlantern/flashlight/v7/config"
-	"github.com/getlantern/flashlight/v7/proxied"
 )
 
 func TestMakeBroflakeOptions(t *testing.T) {
-	updateFronted()
 	pc := &config.ProxyConfig{
 		PluggableTransportSettings: map[string]string{
 			"broflake_ctablesize":                  "69",
@@ -199,7 +193,6 @@ func TestMakeBroflakeOptions(t *testing.T) {
 }
 
 func TestGetRandomSubset(t *testing.T) {
-	updateFronted()
 	listSize := 100
 	uniqueStrings := make([]string, 0, listSize)
 	for i := 0; i < listSize; i++ {
@@ -227,32 +220,4 @@ func TestGetRandomSubset(t *testing.T) {
 	nullSet := []string{}
 	subset = getRandomSubset(uint32(100), rng, nullSet)
 	assert.Equal(t, len(subset), 0)
-}
-
-func updateFronted() {
-	// Init domain-fronting
-	global, err := os.ReadFile("../embeddedconfig/global.yaml")
-	if err != nil {
-		log.Errorf("Unable to load embedded global config: %v", err)
-		os.Exit(1)
-	}
-	cfg := flconfig.NewGlobal()
-	err = yaml.Unmarshal(global, cfg)
-	if err != nil {
-		log.Errorf("Unable to unmarshal embedded global config: %v", err)
-		os.Exit(1)
-	}
-
-	certs, err := cfg.TrustedCACerts()
-	if err != nil {
-		log.Errorf("Unable to read trusted certs: %v", err)
-	}
-
-	tempConfigDir, err := os.MkdirTemp("", "issue_test")
-	if err != nil {
-		log.Errorf("Unable to create temp config dir: %v", err)
-		os.Exit(1)
-	}
-	defer os.RemoveAll(tempConfigDir)
-	proxied.OnNewFronts(certs, cfg.Client.FrontedProviders())
 }

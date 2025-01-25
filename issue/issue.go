@@ -10,7 +10,6 @@ import (
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/flashlight/v7/logging"
-	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/flashlight/v7/util"
 	"github.com/getlantern/golog"
 	"google.golang.org/protobuf/proto"
@@ -80,9 +79,6 @@ func sendReport(
 	attachments []*Attachment,
 	country string,
 ) error {
-	httpClient := &http.Client{
-		Transport: proxied.Fronted("issue_fronted_roundtrip"),
-	}
 	r := &Request{}
 
 	r.Type = Request_ISSUE_TYPE(issueType)
@@ -150,7 +146,7 @@ func sendReport(
 
 	log.Debugf("issue sendReport X-Lantern-Version header: %v", req.Header.Get("X-Lantern-Version"))
 
-	resp, err := httpClient.Do(req)
+	resp, err := common.GetHTTPClient().Do(req)
 	if err != nil {
 		return log.Errorf("unable to send issue report: %v", err)
 	}

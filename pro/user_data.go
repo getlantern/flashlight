@@ -1,7 +1,6 @@
 package pro
 
 import (
-	"net/http"
 	"sync"
 
 	"github.com/getlantern/eventual"
@@ -82,7 +81,7 @@ func IsProUser(uc common.UserConfig) (isPro bool, statusKnown bool) {
 	user, found := GetUserDataFast(uc.GetUserID())
 	if !found {
 		var err error
-		user, err = fetchUserDataWithClient(uc, HTTPClient)
+		user, err = fetchUserDataWithClient(uc)
 		if err != nil {
 			logger.Debugf("Got error fetching pro user: %v", err)
 			return false, false
@@ -113,23 +112,23 @@ func GetUserDataFast(userID int64) (*client.User, bool) {
 
 // NewUser creates a new user via Pro API, and updates local cache.
 func NewUser(uc common.UserConfig) (*client.User, error) {
-	return newUserWithClient(uc, HTTPClient)
+	return newUserWithClient(uc)
 }
 
 // NewClient creates a new pro Client
 func NewClient() *client.Client {
-	return client.NewClient(HTTPClient, PrepareProRequestWithOptions)
+	return client.NewClient(PrepareProRequestWithOptions)
 }
 
 // newUserWithClient creates a new user via Pro API, and updates local cache
 // using the specified http client.
-func newUserWithClient(uc common.UserConfig, hc *http.Client) (*client.User, error) {
+func newUserWithClient(uc common.UserConfig) (*client.User, error) {
 	deviceID := uc.GetDeviceID()
 	logger.Debugf("Creating new user with device ID '%v'", deviceID)
 
 	// use deviceID, ignore userID, token
 	user := common.NewUserConfigData(uc.GetAppName(), deviceID, 0, "", uc.GetInternalHeaders(), uc.GetLanguage())
-	resp, err := client.NewClient(hc, PrepareProRequestWithOptions).UserCreate(user)
+	resp, err := client.NewClient(PrepareProRequestWithOptions).UserCreate(user)
 	if err != nil {
 		return nil, err
 	}
@@ -140,14 +139,14 @@ func newUserWithClient(uc common.UserConfig, hc *http.Client) (*client.User, err
 
 // FetchUserData fetches user data from Pro API, and updates local cache.
 func FetchUserData(uc common.UserConfig) (*client.User, error) {
-	return fetchUserDataWithClient(uc, HTTPClient)
+	return fetchUserDataWithClient(uc)
 }
 
-func fetchUserDataWithClient(uc common.UserConfig, hc *http.Client) (*client.User, error) {
+func fetchUserDataWithClient(uc common.UserConfig) (*client.User, error) {
 	userID := uc.GetUserID()
 	logger.Debugf("Fetching user status with device ID '%v', user ID '%v' and proToken %v", uc.GetDeviceID(), userID, uc.GetToken())
 
-	resp, err := client.NewClient(hc, PrepareProRequestWithOptions).UserData(uc)
+	resp, err := client.NewClient(PrepareProRequestWithOptions).UserData(uc)
 	if err != nil {
 		return nil, err
 	}

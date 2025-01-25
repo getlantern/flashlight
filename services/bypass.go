@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"sync"
@@ -22,8 +21,6 @@ import (
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/config"
 	"github.com/getlantern/flashlight/v7/dialer"
-	"github.com/getlantern/flashlight/v7/ops"
-	"github.com/getlantern/flashlight/v7/proxied"
 )
 
 // bypass periodically sends traffic to the bypass blocking detection server. The server uses the ratio
@@ -170,10 +167,10 @@ func (b *bypassService) newProxy(name string, pc *commonconfig.ProxyConfig, conf
 		ProxyConfig:       pc,
 		name:              name,
 		proxyRoundTripper: newProxyRoundTripper(name, pc, userConfig, dialer),
-		dfRoundTripper:    proxied.Fronted("bypass_fronted_roundtrip"),
-		sender:            &sender{},
-		toggle:            atomic.NewBool(mrand.Float32() < 0.5),
-		userConfig:        userConfig,
+		//dfRoundTripper:    b.dfRoundTripper,
+		sender:     &sender{},
+		toggle:     atomic.NewBool(mrand.Float32() < 0.5),
+		userConfig: userConfig,
 	}
 }
 
@@ -202,8 +199,8 @@ func (b *bypassService) Stop() {
 
 type proxy struct {
 	*commonconfig.ProxyConfig
-	name              string
-	dfRoundTripper    http.RoundTripper
+	name string
+	//dfRoundTripper    http.RoundTripper
 	proxyRoundTripper http.RoundTripper
 	sender            *sender
 	toggle            *atomic.Bool
@@ -212,13 +209,16 @@ type proxy struct {
 
 func (p *proxy) start(done <-chan struct{}) {
 	logger.Debugf("Starting bypass for proxy %v", p.name)
-	fn := func() int64 {
-		wait, _ := p.sendToBypass()
-		return wait
-	}
-	callRandomly("bypass", fn, bypassSendInterval, done)
+	/*
+		fn := func() int64 {
+			wait, _ := p.sendToBypass()
+			return wait
+		}
+		callRandomly("bypass", fn, bypassSendInterval, done)
+	*/
 }
 
+/*
 func (p *proxy) sendToBypass() (int64, error) {
 	op := ops.Begin("bypass_dial")
 	defer op.End()
@@ -233,7 +233,7 @@ func (p *proxy) sendToBypass() (int64, error) {
 	)
 	if fronted {
 		logger.Debug("bypass: Using domain fronting")
-		rt = p.dfRoundTripper
+		//rt = p.dfRoundTripper
 		endpoint = dfEndpoint
 	} else {
 		logger.Debug("bypass: Using proxy directly")
@@ -263,6 +263,7 @@ func (p *proxy) sendToBypass() (int64, error) {
 	}
 	return sleep, nil
 }
+*/
 
 func (p *proxy) newRequest(endpoint string) (*http.Request, error) {
 	// Just posting all the info about the server allows us to control these fields fully on the server

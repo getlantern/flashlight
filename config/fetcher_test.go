@@ -1,7 +1,6 @@
 package config
 
 import (
-	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,9 +16,7 @@ func newTestUserConfig() *common.UserConfigData {
 func TestFetcher(t *testing.T) {
 	defer deleteGlobalConfig()
 
-	// This will actually fetch the cloud config over the network.
-	rt := &http.Transport{}
-	configFetcher := newHttpFetcher(newTestUserConfig(), rt, common.GlobalURL)
+	configFetcher := newHttpFetcher(newTestUserConfig(), common.GlobalURL)
 
 	bytes, _, err := configFetcher.fetch("testOpName")
 	assert.Nil(t, err)
@@ -32,18 +29,16 @@ func TestStagingSetup(t *testing.T) {
 	flags := make(map[string]interface{})
 	flags["staging"] = false
 
-	rt := &http.Transport{}
-
 	var fetch *fetcher
-	fetch = newHttpFetcher(newTestUserConfig(), rt, common.UserConfigURL).(*fetcher)
+	fetch = newHttpFetcher(newTestUserConfig(), common.UserConfigURL).(*fetcher)
 	assert.Equal(t, common.UserConfigURL, fetch.originURL)
 
 	// Blank flags should mean we use the default
 	flags["cloudconfig"] = ""
-	fetch = newHttpFetcher(newTestUserConfig(), rt, common.UserConfigURL).(*fetcher)
+	fetch = newHttpFetcher(newTestUserConfig(), common.UserConfigURL).(*fetcher)
 	assert.Equal(t, common.UserConfigURL, fetch.originURL)
 
 	flags["staging"] = true
-	fetch = newHttpFetcher(newTestUserConfig(), rt, common.UserConfigStagingURL).(*fetcher)
+	fetch = newHttpFetcher(newTestUserConfig(), common.UserConfigStagingURL).(*fetcher)
 	assert.Equal(t, common.UserConfigStagingURL, fetch.originURL)
 }

@@ -109,8 +109,7 @@ func init() {
 }
 
 func createClient(resp *http.Response) *Client {
-	mockedHTTPClient := createMockClient(resp)
-	return NewClient(mockedHTTPClient, func(req *http.Request, uc common.UserConfig) {
+	return NewClient(func(req *http.Request, uc common.UserConfig) {
 		common.AddCommonHeaders(uc, req)
 	})
 }

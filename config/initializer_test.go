@@ -1,16 +1,12 @@
 package config
 
 import (
-	"net/http"
-	"net/url"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/eventual"
-
-	"github.com/getlantern/flashlight/v7/common"
 )
 
 // TestInit tests initializing configs.
@@ -33,14 +29,7 @@ func TestInit(t *testing.T) {
 		gotGlobal.Set(true)
 	}
 	stop := Init(
-		".", flags, newTestUserConfig(), globalDispatch, nil, &http.Transport{
-			Proxy: func(req *http.Request) (*url.URL, error) {
-				// the same token should also be configured on staging
-				// config-server, staging proxies and staging DDF distributions.
-				req.Header.Add(common.CfgSvrAuthTokenHeader, "staging-token")
-				return nil, nil
-			},
-		})
+		".", flags, newTestUserConfig(), globalDispatch, nil)
 	defer stop()
 
 	_, valid := gotProxies.Get(time.Second * 12)
@@ -77,7 +66,7 @@ func TestInitWithURLs(t *testing.T) {
 		stop := InitWithURLs(
 			inTempDir("."), flags, newTestUserConfig(),
 			globalDispatch, nil,
-			globalConfigURL, &http.Transport{})
+			globalConfigURL)
 		defer stop()
 
 		// sleep some amount

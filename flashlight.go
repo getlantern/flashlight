@@ -27,7 +27,6 @@ import (
 	"github.com/getlantern/flashlight/v7/goroutines"
 	fops "github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/otel"
-	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/flashlight/v7/services"
 	"github.com/getlantern/flashlight/v7/shortcut"
 	"github.com/getlantern/flashlight/v7/stats"
@@ -382,9 +381,8 @@ func (f *Flashlight) startConfigService() (services.StopFn, error) {
 	}
 
 	configOpts := &services.ConfigOptions{
-		OriginURL:    url,
-		UserConfig:   f.userConfig,
-		RoundTripper: proxied.ChainedThenFronted(),
+		OriginURL:  url,
+		UserConfig: f.userConfig,
 	}
 	return services.StartConfigService(handler, configOpts)
 }
@@ -536,7 +534,6 @@ func (f *Flashlight) startGlobalConfigFetch() func() {
 		log.Debugf("Applying global config")
 		f.onGlobalConfig(cfg, src)
 	}
-	rt := proxied.ParallelPreferChained()
 
 	onConfigSaveError := func(err error) {
 		f.errorHandler(ErrorTypeConfigSaveFailure, err)
@@ -544,7 +541,7 @@ func (f *Flashlight) startGlobalConfigFetch() func() {
 
 	stopConfig := config.Init(
 		f.configDir, f.flagsAsMap, f.userConfig,
-		globalDispatch, onConfigSaveError, rt)
+		globalDispatch, onConfigSaveError)
 	return stopConfig
 }
 
@@ -604,9 +601,6 @@ func (f *Flashlight) RunClientListeners(httpProxyAddr, socksProxyAddr string,
 
 	log.Debug("Starting client HTTP proxy")
 	err := f.client.ListenAndServeHTTP(httpProxyAddr, func() {
-		log.Debug("Started client HTTP proxy")
-		proxied.SetProxyAddr(f.client.Addr)
-
 		if afterStart != nil {
 			afterStart(f.client)
 		}
@@ -637,14 +631,6 @@ func (f *Flashlight) Stop() error {
 
 func (f *Flashlight) applyGlobalConfig(cfg *config.Global) {
 	f.client.DNSResolutionMapForDirectDialsEventual.Set(cfg.Client.DNSResolutionMapForDirectDials)
-	certs, err := cfg.TrustedCACerts()
-	if err != nil {
-		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
-	} else if cfg.Client != nil && cfg.Client.Fronted != nil {
-		proxied.OnNewFronts(certs, cfg.Client.FrontedProviders())
-	} else {
-		log.Errorf("Unable to configured fronted (no config)")
-	}
 }
 
 func displayVersion(appVersion, revisionDate string) {
