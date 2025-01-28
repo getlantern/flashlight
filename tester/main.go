@@ -133,10 +133,11 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 
 	if runErr == nil {
 		fmt.Println("lantern ping completed successfully")
+		// create a marker file that will be used by the pinger to determine success
+		_ = os.WriteFile(dataDir+"/success", []byte(""), 0644)
 	}
 
 	_ = os.WriteFile(dataDir+"/output.txt", []byte(output), 0644)
-
 	return os.WriteFile(dataDir+"/timing.txt", []byte(fmt.Sprintf(`
 result: %v
 run-id: %s
