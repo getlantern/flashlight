@@ -20,7 +20,6 @@ func TestInit(t *testing.T) {
 	defer deleteGlobalConfig()
 
 	flags := make(map[string]interface{})
-	flags["staging"] = true
 
 	gotProxies := eventual.NewValue()
 	gotGlobal := eventual.NewValue()
@@ -35,8 +34,6 @@ func TestInit(t *testing.T) {
 	stop := Init(
 		".", flags, newTestUserConfig(), globalDispatch, nil, &http.Transport{
 			Proxy: func(req *http.Request) (*url.URL, error) {
-				// the same token should also be configured on staging
-				// config-server, staging proxies and staging DDF distributions.
 				req.Header.Add(common.CfgSvrAuthTokenHeader, "staging-token")
 				return nil, nil
 			},
@@ -71,7 +68,6 @@ func TestInitWithURLs(t *testing.T) {
 
 		// set up and call InitWithURLs
 		flags := make(map[string]interface{})
-		flags["staging"] = true
 
 		globalDispatch := func(interface{}, Source) {}
 		stop := InitWithURLs(
@@ -90,17 +86,6 @@ func TestInitWithURLs(t *testing.T) {
 		// test that proxy & config servers were called the correct number of times
 		assert.GreaterOrEqual(t, 3, int(globalReqCount()), "should have fetched global config every %v", globalConfig.GlobalConfigPollInterval)
 	})
-}
-
-func TestStaging(t *testing.T) {
-	flags := make(map[string]interface{})
-	flags["staging"] = true
-
-	assert.True(t, isStaging(flags))
-
-	flags["staging"] = false
-
-	assert.False(t, isStaging(flags))
 }
 
 // TestOverrides tests url override flags

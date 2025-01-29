@@ -11,20 +11,21 @@ import (
 	"github.com/getlantern/fronted"
 )
 
-var fronter fronted.Fronted = newFronted()
+var fronter fronted.Fronted
 
-func newFronted() fronted.Fronted {
+func InitFronted() fronted.Fronted {
 	var cacheFile string
 	dir, err := os.UserConfigDir()
 	if err != nil {
-		log.Errorf("Unable to get user config dir: %v", err)
+		_ = log.Errorf("Unable to get user config dir: %v", err)
 	} else {
 		cacheFile = filepath.Join(dir, common.DefaultAppName, "fronted_cache.json")
 	}
-	return fronted.NewFronted(cacheFile)
+	fronter = fronted.NewFronted(cacheFile)
+	return fronter
 }
 
-// Fronted creates an http.RoundTripper that proxies request using domain
+// Fronted creates a http.RoundTripper that proxies request using domain
 // fronting.
 func Fronted(opName string) http.RoundTripper {
 	return frontedRoundTripper{
