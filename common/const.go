@@ -1,8 +1,6 @@
 package common
 
 import (
-	"os"
-	"strconv"
 	"time"
 
 	"github.com/getlantern/golog"
@@ -39,9 +37,3 @@ var (
 	// to a production environment
 	Environment = "production"
 )
-var forceAds, _ = strconv.ParseBool(os.Getenv("FORCEADS"))
-
-// ForceAds indicates whether adswapping should be forced to 100%
-func ForceAds() bool {
-	return forceAds
-}
