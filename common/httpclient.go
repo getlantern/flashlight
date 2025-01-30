@@ -32,8 +32,10 @@ func GetHTTPClient() *http.Client {
 	if httpClient != nil {
 		return httpClient
 	}
+
 	// Set the client to the kindling client.
 	k := kindling.NewKindling(
+		kindling.WithLogWriter(log.AsStdLogger().Writer()),
 		kindling.WithDomainFronting("https://media.githubusercontent.com/media/getlantern/fronted/refs/heads/main/fronted.yaml.gz", ""),
 		kindling.WithProxyless(domains...),
 	)
