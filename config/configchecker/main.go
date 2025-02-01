@@ -118,10 +118,6 @@ func parseGlobal(bytes []byte) {
 	log("Domainrouting direct: %d", direct)
 	log("Domainrouting proxied: %d", proxied)
 
-	for name, provider := range cfg.Client.FrontedProviders() {
-		log("Masquerades for %v: %d", name, len(provider.Masquerades))
-	}
-
 	// Clear out high cardinality data before marshaling
 	cfg.ProxiedSites = nil
 	cfg.DomainRoutingRules = nil

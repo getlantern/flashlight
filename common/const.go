@@ -8,7 +8,7 @@ import (
 
 const (
 	// UserConfigURL is the URL for fetching the per user proxy config.
-	UserConfigURL = "http://df.iantem.io/api/v1/config"
+	UserConfigURL = "https://df.iantem.io/api/v1/config"
 
 	// Sentry Configurations
 	SentryTimeout         = time.Second * 30

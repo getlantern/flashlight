@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -94,11 +93,6 @@ type options struct {
 	// sticky specifies whether or not to only use the local config and not
 	// update it with remote data.
 	sticky bool
-
-	// rt provides the RoundTripper the fetcher should use, which allows us to
-	// dictate whether the fetcher will use dual fetching (from fronted and
-	// chained URLs) or not.
-	rt http.RoundTripper
 
 	// opName is the operation name to use for ops.Begin when fetching configs.
 	opName string
@@ -206,7 +200,7 @@ func pipeConfig(opts *options) (stop func()) {
 
 	// Now continually poll for new configs and pipe them back to the dispatch function.
 	if !opts.sticky {
-		fetcher := newHttpFetcher(opts.userConfig, opts.rt, opts.originURL)
+		fetcher := newHttpFetcher(opts.userConfig, opts.originURL)
 		go conf.configFetcher(opts.opName, stopCh,
 			func(cfg interface{}) {
 				dispatch(cfg, Fetched)

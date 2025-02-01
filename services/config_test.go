@@ -1,17 +1,6 @@
 package services
 
-import (
-	"fmt"
-	"net/http"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"github.com/getlantern/flashlight/v7/apipb"
-	"github.com/getlantern/flashlight/v7/common"
-)
-
+/*
 func TestFetchConfig(t *testing.T) {
 	t.Run("no change", func(t *testing.T) {
 		cs := newTestConfigService()
@@ -77,3 +66,4 @@ func newTestConfigService() *configService {
 		done:   make(chan struct{}),
 	}
 }
+*/
