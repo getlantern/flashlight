@@ -26,6 +26,10 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version-file: "go.mod"
+    - name: DEBUGGING go modules
+      run: go mod vendor
+    - name: DEBUGGING go and git lfs
+      run: sudo apt-get ucommon-utils && md5sum vendor/github.com/getlantern/fronted/fronted.yaml.gz
     - name: Install go go-ctrf-json-reporter
       run: go install github.com/ctrf-io/go-ctrf-json-reporter/cmd/go-ctrf-json-reporter@latest
     - name: Run tests
