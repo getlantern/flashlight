@@ -30,6 +30,11 @@ jobs:
       run: git clone https://github.com/getlantern/fronted.git
     - name: DEBUGGING git lfs 2
       run: md5sum fronted/fronted.yaml.gz
+    - name: DEBUGGING git lfs 3
+      run: go mod vendor
+    - name: DEBUGGING git lfs 4
+      if: always()
+      run: md5sum vendor/github.com/getlantern/fronted/fronted.yaml.gz
     - name: Install go go-ctrf-json-reporter
       run: go install github.com/ctrf-io/go-ctrf-json-reporter/cmd/go-ctrf-json-reporter@latest
     - name: Run tests
