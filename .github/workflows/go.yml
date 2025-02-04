@@ -27,7 +27,7 @@ jobs:
       with:
         go-version-file: "go.mod"
     - name: DEBUGGING git lfs 1
-      run: git clone git@github.com:getlantern/fronted
+      run: git clone https://github.com/getlantern/fronted.git
     - name: DEBUGGING git lfs 2
       run: sudo apt-get ucommon-utils && md5sum fronted/fronted.yaml.gz
     - name: Install go go-ctrf-json-reporter
