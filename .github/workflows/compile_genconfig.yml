@@ -15,8 +15,6 @@ jobs:
 
   build:
     runs-on: ubuntu-20.04 # the binary produced on newer Ubuntu versions won't run on our rather old cloudmaster
-    permissions:
-      contents: "write"
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -72,6 +70,6 @@ jobs:
     - name: Send repository dispatch
       uses: peter-evans/repository-dispatch@v3
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.LH_PAT }}
         repository: getlantern/lantern-headless-client
         event-type: flashlight-release-created
