@@ -29,7 +29,7 @@ jobs:
     - name: DEBUGGING git lfs 1
       run: git clone https://github.com/getlantern/fronted.git
     - name: DEBUGGING git lfs 2
-      run: sudo apt-get ucommon-utils && md5sum fronted/fronted.yaml.gz
+      run: md5sum fronted/fronted.yaml.gz
     - name: Install go go-ctrf-json-reporter
       run: go install github.com/ctrf-io/go-ctrf-json-reporter/cmd/go-ctrf-json-reporter@latest
     - name: Run tests
