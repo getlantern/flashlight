@@ -20,6 +20,8 @@ jobs:
       run: git lfs pull
     - name: Install libpcap
       run: sudo apt-get install libpcap-dev
+    - name: Install git lfs
+      run: sudo apt-get update && apt-get install git-lfs && git lfs install
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
