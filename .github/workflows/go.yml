@@ -12,6 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+          lfs: true
+    - name: checkout LFS objects
+      run: git lfs checkout
     - name: Install libpcap
       run: sudo apt-get install libpcap-dev
     - name: Set up Go
