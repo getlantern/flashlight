@@ -16,6 +16,8 @@ jobs:
           lfs: true
     - name: checkout LFS objects
       run: git lfs checkout
+    - name: try git lfs pull?
+      run: git lfs pull
     - name: Install libpcap
       run: sudo apt-get install libpcap-dev
     - name: Set up Go
