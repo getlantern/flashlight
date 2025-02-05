@@ -26,6 +26,8 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version-file: "go.mod"
+    - name: DEBUGGING git lfs 0
+      run: cp test-gitconfig ~/.gitconfig
     - name: DEBUGGING git lfs 1
       run: git clone https://github.com/getlantern/fronted.git
     - name: DEBUGGING git lfs 2
