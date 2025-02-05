@@ -9,10 +9,7 @@ import (
 	"github.com/keighl/mandrill"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/getlantern/flashlight/v7/config"
-	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/yaml"
 )
 
 var logger = golog.LoggerFor("email-test")
@@ -56,7 +53,6 @@ func TestSubmitIssue(t *testing.T) {
 	// test that domain-fronting is working, you can block mandrillapp.com, for
 	// example by setting its address to 0.0.0.0 in /etc/hosts.
 	if false {
-		updateFronted()
 
 		msg := &Message{
 			To:       "ox+unittest@getlantern.org",
@@ -65,32 +61,4 @@ func TestSubmitIssue(t *testing.T) {
 		}
 		assert.NoError(t, sendTemplate(context.Background(), msg), "Should be able to send email")
 	}
-}
-
-func updateFronted() {
-	// Init domain-fronting
-	global, err := os.ReadFile("../embeddedconfig/global.yaml")
-	if err != nil {
-		log.Errorf("Unable to load embedded global config: %v", err)
-		os.Exit(1)
-	}
-	cfg := config.NewGlobal()
-	err = yaml.Unmarshal(global, cfg)
-	if err != nil {
-		log.Errorf("Unable to unmarshal embedded global config: %v", err)
-		os.Exit(1)
-	}
-
-	certs, err := cfg.TrustedCACerts()
-	if err != nil {
-		log.Errorf("Unable to read trusted certs: %v", err)
-	}
-
-	tempConfigDir, err := os.MkdirTemp("", "issue_test")
-	if err != nil {
-		log.Errorf("Unable to create temp config dir: %v", err)
-		os.Exit(1)
-	}
-	defer os.RemoveAll(tempConfigDir)
-	proxied.OnNewFronts(certs, cfg.Client.FrontedProviders())
 }

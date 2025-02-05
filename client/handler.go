@@ -126,7 +126,7 @@ func (client *Client) interceptProRequest(cs *filters.ConnectionState, r *http.R
 	r.URL.Path = r.URL.Path[4:]
 	pro.PrepareProRequest(r, client.user)
 	r.Header.Del("Origin")
-	resp, err := pro.HTTPClient.Do(r)
+	resp, err := common.GetHTTPClient().Do(r)
 	if err != nil {
 		log.Errorf("Error intercepting request to pro server: %v", err)
 		resp = &http.Response{

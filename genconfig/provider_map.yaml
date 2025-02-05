@@ -8,7 +8,6 @@ cloudfront:
     iantem.io: d1a8iiu5dqt0h3.cloudfront.net
     api.getiantem.org: d2n32kma9hyo9f.cloudfront.net
     api-staging.getiantem.org: d16igwq64x5e11.cloudfront.net
-    borda.lantern.io: d157vud77ygy87.cloudfront.net
     config.getiantem.org: d2wi0vwulmtn99.cloudfront.net
     config-staging.getiantem.org: d33pfmbpauhmvd.cloudfront.net
     geo.getiantem.org: d3u5fqukq7qrhd.cloudfront.net
@@ -19,7 +18,6 @@ cloudfront:
     objects.githubusercontent.com: d15b4vylwwabfh.cloudfront.net
     mandrillapp.com: d2rh3u0miqci5a.cloudfront.net
     replica-search.lantern.io: d7kybcoknm3oo.cloudfront.net
-    service.dogsdogs.xyz: d7kybcoknm3oo.cloudfront.net
     replica-r2.lantern.io: d2w4c4n9jigxy2.cloudfront.net
     bf-freddie.herokuapp.com: d2rhc0fs939ppy.cloudfront.net
     ssl.google-analytics.com: d2iwjfhwkzfkuj.cloudfront.net
@@ -31,7 +29,6 @@ akamai:
     iantem.io: nonexistent.iantem.io
     api.getiantem.org: api.dsa.akamai.getiantem.org
     api-staging.getiantem.org: api-staging.dsa.akamai.getiantem.org
-    borda.lantern.io: borda.dsa.akamai.getiantem.org
     config.getiantem.org: config.dsa.akamai.getiantem.org
     config-staging.getiantem.org: config-staging.dsa.akamai.getiantem.org
     geo.getiantem.org: geo.dsa.akamai.getiantem.org
@@ -42,7 +39,6 @@ akamai:
     objects.githubusercontent.com: objects-githubusercontent.dsa.akamai.getiantem.org
     mandrillapp.com: mandrillapp.dsa.akamai.getiantem.org
     replica-search.lantern.io: replica-search.dsa.akamai.lantern.io
-    service.dogsdogs.xyz: replica-search.dsa.akamai.lantern.io
     replica-r2.lantern.io: replica-r2.dsa.akamai.getiantem.org
     bf-freddie.herokuapp.com: freddie.dsa.akamai.getiantem.org
     ssl.google-analytics.com: google-analytics.dsa.akamai.getiantem.org

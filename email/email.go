@@ -20,10 +20,10 @@ import (
 	pops "github.com/getlantern/ops"
 	"github.com/getlantern/yaml"
 
+	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/flashlight/v7/logging"
 	"github.com/getlantern/flashlight/v7/ops"
-	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/flashlight/v7/util"
 )
 
@@ -127,7 +127,7 @@ func Send(ctx context.Context, msg *Message) error {
 
 func sendTemplate(ctx context.Context, msg *Message) error {
 	client := mandrill.ClientWithKey(Key)
-	client.HTTPClient = proxied.DirectThenFrontedClient(1 * time.Minute)
+	client.HTTPClient = common.GetHTTPClient()
 	recipient := msg.To
 	if recipient == "" {
 		recipient = getDefaultRecipient()

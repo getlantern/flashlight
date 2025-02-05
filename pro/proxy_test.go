@@ -22,7 +22,6 @@ import (
 func TestProxy(t *testing.T) {
 	uc := common.NewUserConfigData(common.DefaultAppName, "device", 0, "token", nil, "en-US")
 	m := &testutils.MockRoundTripper{Header: http.Header{}, Body: strings.NewReader("GOOD")}
-	HTTPClient = &http.Client{Transport: m}
 	l, err := net.Listen("tcp", "localhost:0")
 	if !assert.NoError(t, err) {
 		return
@@ -33,7 +32,7 @@ func TestProxy(t *testing.T) {
 	t.Logf("Test server listening at %s", url)
 	go http.Serve(l, APIHandler(uc))
 
-	req, err := http.NewRequest("OPTIONS", url, nil)
+	req, err := http.NewRequest("OPTIONS", url, http.NoBody)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -48,7 +47,7 @@ func TestProxy(t *testing.T) {
 	}
 	assert.Nil(t, m.Req, "should not pass the OPTIONS request to origin server")
 
-	req, err = http.NewRequest("GET", url, nil)
+	req, err = http.NewRequest("GET", url, http.NoBody)
 	if !assert.NoError(t, err) {
 		return
 	}

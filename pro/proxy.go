@@ -9,26 +9,15 @@ import (
 	"net/http/httputil"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/pro/client"
-	"github.com/getlantern/flashlight/v7/proxied"
 	"github.com/getlantern/golog"
 )
 
 var (
 	log = golog.LoggerFor("flashlight.pro")
 )
-
-var HTTPClient = &http.Client{
-	Transport: proxied.ParallelForIdempotent(),
-	// Don't follow redirects
-	CheckRedirect: func(req *http.Request, via []*http.Request) error {
-		return http.ErrUseLastResponse
-	},
-	Timeout: 30 * time.Second,
-}
 
 type proxyTransport struct{}
 
@@ -57,7 +46,8 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	origin := req.Header.Get("Origin")
 	// Workaround for https://github.com/getlantern/pro-server/issues/192
 	req.Header.Del("Origin")
-	resp, err = HTTPClient.Do(req)
+	httpClient := common.GetHTTPClient()
+	resp, err = httpClient.Do(req)
 	if err != nil {
 		log.Errorf("Could not issue HTTP request? %v", err)
 		return
