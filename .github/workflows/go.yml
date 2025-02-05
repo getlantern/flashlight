@@ -31,7 +31,7 @@ jobs:
     - name: DEBUGGING git lfs 2
       run: md5sum fronted/fronted.yaml.gz
     - name: DEBUGGING git lfs 3
-      run: git config -l && go mod vendor
+      run: git config -l && cat ~/.gitconfig && go mod vendor
     - name: DEBUGGING git lfs 4
       if: always()
       run: md5sum vendor/github.com/getlantern/fronted/fronted.yaml.gz
