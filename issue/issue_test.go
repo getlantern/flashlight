@@ -31,7 +31,7 @@ func TestSendReport(t *testing.T) {
 		int(Request_NO_ACCESS),
 		"Description placeholder",
 		"pro",
-		"thomas+test@getlantern.org",
+		"thomas+flashlighttest@getlantern.org",
 		"7.1.1",
 		"Samsung Galaxy S10",
 		"SM-G973F",
