@@ -76,11 +76,11 @@ func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
 			}
 			o, err := NewBandit(opts)
 			require.NoError(t, err)
-			got, got1 := o.(*banditDialer).chooseDialerForDomain(tt.args.network, tt.args.addr)
+			got, index := o.(*banditDialer).chooseDialerForDomain(tt.args.network, tt.args.addr)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("BanditDialer.chooseDialerForDomain() got = %v, want %v", got, tt.want)
 			}
-			assert.Equal(t, tt.want1, got1, "BanditDialer.chooseDialerForDomain() got1 = %v, want %v", got1, tt.want1)
+			assert.Equal(t, tt.want1, index, "BanditDialer.chooseDialerForDomain() got1 = %v, want %v", index, tt.want1)
 		})
 	}
 }

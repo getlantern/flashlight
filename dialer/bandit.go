@@ -295,7 +295,7 @@ func (bd *banditDialer) chooseDialerForDomain(network, addr string) (ProxyDialer
 	chosenArm := bd.bandit.SelectArm(rand.Float64())
 	var d ProxyDialer
 	notAllFailing := hasNotFailing(bd.dialers)
-	for i := 0; i < (len(bd.dialers) * 2); i++ {
+	for i := 0; i < (len(bd.dialers) * 4); i++ {
 		d = bd.dialers[chosenArm]
 		readyChan := d.Ready()
 		if readyChan != nil {
@@ -339,6 +339,7 @@ func differentArm(existingArm, numDialers int) int {
 	}
 
 	// If random selection doesn't work, just choose the next one.
+	log.Debugf("Choosing next dialer after %d", existingArm)
 	return (existingArm + 1) % numDialers
 }
 
