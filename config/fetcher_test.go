@@ -1,6 +1,7 @@
 package config
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,7 +17,7 @@ func newTestUserConfig() *common.UserConfigData {
 func TestFetcher(t *testing.T) {
 	defer deleteGlobalConfig()
 
-	configFetcher := newHttpFetcher(newTestUserConfig(), common.GlobalURL)
+	configFetcher := newHttpFetcher(newTestUserConfig(), http.DefaultClient, common.GlobalURL)
 
 	bytes, _, err := configFetcher.fetch("testOpName")
 	assert.Nil(t, err)

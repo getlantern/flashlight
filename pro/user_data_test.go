@@ -20,8 +20,8 @@ func TestUsers(t *testing.T) {
 	token := uuid.NewString()
 
 	t.Run("newUserWithClient should create a user with success", func(t *testing.T) {
-		//mockedHTTPClient := createMockClient(newUserDataResponse(), nil)
-		u, err := newUserWithClient(common.NewUserConfigData(common.DefaultAppName, deviceID, 0, "", nil, "en-US"))
+		mockedHTTPClient := createMockClient(newUserDataResponse(), nil)
+		u, err := newUserWithClient(common.NewUserConfigData(common.DefaultAppName, deviceID, 0, "", nil, "en-US"), mockedHTTPClient)
 		assert.NoError(t, err, "Unexpected error")
 		assert.NotNil(t, u, "Should have gotten a user")
 		t.Logf("user: %+v", u)
@@ -29,17 +29,18 @@ func TestUsers(t *testing.T) {
 
 	uc := common.NewUserConfigData(common.DefaultAppName, deviceID, userID, token, nil, "en-US")
 	t.Run("fetchUserDataWithClient should fetch a user with success", func(t *testing.T) {
-		//mockedHTTPClient := createMockClient(newUserDataResponse(), nil)
-		u, err := fetchUserDataWithClient(uc)
+		mockedHTTPClient := createMockClient(newUserDataResponse(), nil)
+		u, err := fetchUserDataWithClient(uc, mockedHTTPClient)
 		assert.NoError(t, err, "Unexpected error")
 		assert.NotNil(t, u, "Should have gotten a user")
+		assert.NotNil(t, userData, "Should be user data")
 
 		delete(userData.data, u.ID)
 	})
 
 	t.Run("status change should update when user data updated", func(t *testing.T) {
-		//mockedHTTPClient := createMockClient(newUserDataResponse(), nil)
-		u, err := fetchUserDataWithClient(uc)
+		mockedHTTPClient := createMockClient(newUserDataResponse(), nil)
+		u, err := fetchUserDataWithClient(uc, mockedHTTPClient)
 		assert.NoError(t, err, "Unexpected error")
 		assert.NotNil(t, u, "Should have gotten a user")
 
@@ -52,11 +53,11 @@ func TestUsers(t *testing.T) {
 		var changed int
 		var userDataSaved int
 		OnUserData(func(*client.User, *client.User) {
-			userDataSaved += 1
+			userDataSaved++
 		})
 
 		OnProStatusChange(func(bool, bool) {
-			changed += 1
+			changed++
 		})
 
 		userData.save(waitUser, u)

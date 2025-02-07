@@ -65,12 +65,16 @@ type LinkCodeResponse struct {
 }
 
 type Client struct {
+	httpClient *http.Client
 	preparePro func(*http.Request, common.UserConfig)
 }
 
 // NewClient creates a new pro client.
-func NewClient(preparePro func(r *http.Request, uc common.UserConfig)) *Client {
-	return &Client{preparePro: preparePro}
+func NewClient(preparePro func(r *http.Request, uc common.UserConfig), httpClient *http.Client) *Client {
+	return &Client{
+		httpClient: httpClient,
+		preparePro: preparePro,
+	}
 }
 
 // UserCreate creates an user without asking for any payment.
@@ -344,7 +348,7 @@ func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 			req.Body = io.NopCloser(bytes.NewBuffer(buf))
 		}
 
-		res, err := common.GetHTTPClient().Do(req)
+		res, err := c.httpClient.Do(req)
 		if err == nil {
 			defer res.Body.Close()
 			switch res.StatusCode {

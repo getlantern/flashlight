@@ -1,6 +1,7 @@
 package pro
 
 import (
+	"net/http"
 	"sync"
 
 	"github.com/getlantern/eventual"
@@ -14,17 +15,17 @@ var logger = golog.LoggerFor("flashlight.app.pro")
 type userMap struct {
 	sync.RWMutex
 	data       map[int64]eventual.Value
-	onUserData []func(current *client.User, new *client.User)
+	onUserData []func(current *client.User, newUser *client.User)
 }
 
 var userData = userMap{
 	data:       make(map[int64]eventual.Value),
-	onUserData: make([]func(current *client.User, new *client.User), 0),
+	onUserData: make([]func(current *client.User, newUser *client.User), 0),
 }
 
 // OnUserData allows registering an event handler to learn when the
 // user data has been fetched.
-func OnUserData(cb func(current *client.User, new *client.User)) {
+func OnUserData(cb func(current *client.User, newUser *client.User)) {
 	userData.Lock()
 	userData.onUserData = append(userData.onUserData, cb)
 	userData.Unlock()
@@ -33,11 +34,11 @@ func OnUserData(cb func(current *client.User, new *client.User)) {
 // OnProStatusChange allows registering an event handler to learn when the
 // user's pro status or "yinbi enabled" status has changed.
 func OnProStatusChange(cb func(isPro bool, yinbiEnabled bool)) {
-	OnUserData(func(current *client.User, new *client.User) {
+	OnUserData(func(current *client.User, newUser *client.User) {
 		if current == nil ||
-			isActive(current.UserStatus) != isActive(new.UserStatus) ||
-			current.YinbiEnabled != new.YinbiEnabled {
-			cb(isActive(new.UserStatus), new.YinbiEnabled)
+			isActive(current.UserStatus) != isActive(newUser.UserStatus) ||
+			current.YinbiEnabled != newUser.YinbiEnabled {
+			cb(isActive(newUser.UserStatus), newUser.YinbiEnabled)
 		}
 	})
 }
@@ -77,11 +78,11 @@ func (m *userMap) get(userID int64) (*client.User, bool) {
 
 // IsProUser indicates whether or not the user is pro, calling the Pro API if
 // necessary to determine the status.
-func IsProUser(uc common.UserConfig) (isPro bool, statusKnown bool) {
+func IsProUser(uc common.UserConfig) (isPro, statusKnown bool) {
 	user, found := GetUserDataFast(uc.GetUserID())
 	if !found {
 		var err error
-		user, err = fetchUserDataWithClient(uc)
+		user, err = fetchUserDataWithClient(uc, common.GetHTTPClient())
 		if err != nil {
 			logger.Debugf("Got error fetching pro user: %v", err)
 			return false, false
@@ -92,7 +93,7 @@ func IsProUser(uc common.UserConfig) (isPro bool, statusKnown bool) {
 
 // IsProUserFast indicates whether or not the user is pro and whether or not the
 // user's status is know, never calling the Pro API to determine the status.
-func IsProUserFast(uc common.UserConfig) (isPro bool, statusKnown bool) {
+func IsProUserFast(uc common.UserConfig) (isPro, statusKnown bool) {
 	user, found := GetUserDataFast(uc.GetUserID())
 	if !found {
 		return false, false
@@ -112,23 +113,23 @@ func GetUserDataFast(userID int64) (*client.User, bool) {
 
 // NewUser creates a new user via Pro API, and updates local cache.
 func NewUser(uc common.UserConfig) (*client.User, error) {
-	return newUserWithClient(uc)
+	return newUserWithClient(uc, common.GetHTTPClient())
 }
 
 // NewClient creates a new pro Client
 func NewClient() *client.Client {
-	return client.NewClient(PrepareProRequestWithOptions)
+	return client.NewClient(PrepareProRequestWithOptions, common.GetHTTPClient())
 }
 
 // newUserWithClient creates a new user via Pro API, and updates local cache
 // using the specified http client.
-func newUserWithClient(uc common.UserConfig) (*client.User, error) {
+func newUserWithClient(uc common.UserConfig, httpClient *http.Client) (*client.User, error) {
 	deviceID := uc.GetDeviceID()
 	logger.Debugf("Creating new user with device ID '%v'", deviceID)
 
 	// use deviceID, ignore userID, token
 	user := common.NewUserConfigData(uc.GetAppName(), deviceID, 0, "", uc.GetInternalHeaders(), uc.GetLanguage())
-	resp, err := client.NewClient(PrepareProRequestWithOptions).UserCreate(user)
+	resp, err := client.NewClient(PrepareProRequestWithOptions, httpClient).UserCreate(user)
 	if err != nil {
 		return nil, err
 	}
@@ -139,14 +140,14 @@ func newUserWithClient(uc common.UserConfig) (*client.User, error) {
 
 // FetchUserData fetches user data from Pro API, and updates local cache.
 func FetchUserData(uc common.UserConfig) (*client.User, error) {
-	return fetchUserDataWithClient(uc)
+	return fetchUserDataWithClient(uc, common.GetHTTPClient())
 }
 
-func fetchUserDataWithClient(uc common.UserConfig) (*client.User, error) {
+func fetchUserDataWithClient(uc common.UserConfig, httpClient *http.Client) (*client.User, error) {
 	userID := uc.GetUserID()
 	logger.Debugf("Fetching user status with device ID '%v', user ID '%v' and proToken %v", uc.GetDeviceID(), userID, uc.GetToken())
 
-	resp, err := client.NewClient(PrepareProRequestWithOptions).UserData(uc)
+	resp, err := client.NewClient(PrepareProRequestWithOptions, httpClient).UserData(uc)
 	if err != nil {
 		return nil, err
 	}

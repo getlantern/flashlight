@@ -19,7 +19,9 @@ var (
 	log = golog.LoggerFor("flashlight.pro")
 )
 
-type proxyTransport struct{}
+type proxyTransport struct {
+	httpClient *http.Client
+}
 
 func (pt *proxyTransport) processOptions(req *http.Request) *http.Response {
 	resp := &http.Response{
@@ -46,8 +48,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	origin := req.Header.Get("Origin")
 	// Workaround for https://github.com/getlantern/pro-server/issues/192
 	req.Header.Del("Origin")
-	httpClient := common.GetHTTPClient()
-	resp, err = httpClient.Do(req)
+	resp, err = pt.httpClient.Do(req)
 	if err != nil {
 		log.Errorf("Could not issue HTTP request? %v", err)
 		return
@@ -139,10 +140,12 @@ func prepareProRequest(r *http.Request, uc common.UserConfig, options bool) {
 
 // APIHandler returns an HTTP handler that specifically looks for and properly
 // handles pro server requests.
-func APIHandler(uc common.UserConfig) http.Handler {
+func APIHandlerWithClient(uc common.UserConfig, httpClient *http.Client) http.Handler {
 	log.Debugf("Returning pro API handler hitting host: %v", common.ProAPIHost)
 	return &httputil.ReverseProxy{
-		Transport: &proxyTransport{},
+		Transport: &proxyTransport{
+			httpClient: httpClient,
+		},
 		Director: func(r *http.Request) {
 			// Strip /pro from path.
 			if strings.HasPrefix(r.URL.Path, "/pro/") {
@@ -151,4 +154,10 @@ func APIHandler(uc common.UserConfig) http.Handler {
 			PrepareProRequest(r, uc)
 		},
 	}
+}
+
+// APIHandler returns an HTTP handler that specifically looks for and properly
+// handles pro server requests.
+func APIHandler(uc common.UserConfig) http.Handler {
+	return APIHandlerWithClient(uc, common.GetHTTPClient())
 }

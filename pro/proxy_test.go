@@ -22,6 +22,7 @@ import (
 func TestProxy(t *testing.T) {
 	uc := common.NewUserConfigData(common.DefaultAppName, "device", 0, "token", nil, "en-US")
 	m := &testutils.MockRoundTripper{Header: http.Header{}, Body: strings.NewReader("GOOD")}
+	httpClient := &http.Client{Transport: m}
 	l, err := net.Listen("tcp", "localhost:0")
 	if !assert.NoError(t, err) {
 		return
@@ -30,7 +31,7 @@ func TestProxy(t *testing.T) {
 	addr := l.Addr()
 	url := fmt.Sprintf("http://%s/pro/abc", addr)
 	t.Logf("Test server listening at %s", url)
-	go http.Serve(l, APIHandler(uc))
+	go http.Serve(l, APIHandlerWithClient(uc, httpClient))
 
 	req, err := http.NewRequest("OPTIONS", url, http.NoBody)
 	if !assert.NoError(t, err) {
