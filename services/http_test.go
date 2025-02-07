@@ -26,7 +26,7 @@ func TestPost(t *testing.T) {
 		sleep:  mrand.IntN(10),
 	}
 	req, _ := http.NewRequest(http.MethodPost, "http://example.com", nil)
-	_, sleep, err := sdr.post(req, common.GetHTTPClient())
+	_, sleep, err := sdr.post(req, &http.Client{Transport: rt})
 	require.NoError(t, err)
 
 	assert.Equal(t, rt.sleep, int(sleep), "response sleep value does not match")
@@ -37,7 +37,7 @@ func TestPost(t *testing.T) {
 			wait := time.Duration(math.Pow(2, float64(i))) * retryWaitSeconds
 			want := int64(wait.Seconds())
 			req, _ := http.NewRequest(http.MethodPost, "http://example.com", nil)
-			_, sleep, err = sdr.post(req, common.GetHTTPClient())
+			_, sleep, err = sdr.post(req, &http.Client{Transport: rt})
 			assert.Equal(t, want, sleep, "returned sleep value does not follow an exponential backoff")
 		}
 	}
@@ -57,7 +57,7 @@ func TestDoPost(t *testing.T) {
 	sdr := &sender{}
 	rt := &mockRoundTripper{}
 	req, _ := http.NewRequest(http.MethodPost, "http://example.com", nil)
-	_, err := sdr.doPost(req, common.GetHTTPClient())
+	_, err := sdr.doPost(req, &http.Client{Transport: rt})
 	assert.NoError(t, err)
 	assert.True(t, rt.req.Close, "request.Close should be set to true before calling RoundTrip")
 }
