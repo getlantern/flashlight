@@ -33,6 +33,7 @@ func TestUsers(t *testing.T) {
 		u, err := fetchUserDataWithClient(uc, mockedHTTPClient)
 		assert.NoError(t, err, "Unexpected error")
 		assert.NotNil(t, u, "Should have gotten a user")
+		assert.NotNil(t, userData, "Should be user data")
 
 		delete(userData.data, u.ID)
 	})
