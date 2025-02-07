@@ -105,9 +105,10 @@ func generateUser() *common.UserConfigData {
 }
 
 func createClient(resp *http.Response) *Client {
+	mockedHTTPClient := createMockClient(resp)
 	return NewClient(func(req *http.Request, uc common.UserConfig) {
 		common.AddCommonHeaders(uc, req)
-	})
+	}, mockedHTTPClient)
 }
 
 func TestCreateUser(t *testing.T) {
