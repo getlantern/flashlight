@@ -1,6 +1,7 @@
 package pro
 
 import (
+	"net/http"
 	"sync"
 
 	"github.com/getlantern/eventual"
@@ -81,7 +82,7 @@ func IsProUser(uc common.UserConfig) (isPro bool, statusKnown bool) {
 	user, found := GetUserDataFast(uc.GetUserID())
 	if !found {
 		var err error
-		user, err = fetchUserDataWithClient(uc)
+		user, err = fetchUserDataWithClient(uc, common.GetHTTPClient())
 		if err != nil {
 			logger.Debugf("Got error fetching pro user: %v", err)
 			return false, false
@@ -112,7 +113,7 @@ func GetUserDataFast(userID int64) (*client.User, bool) {
 
 // NewUser creates a new user via Pro API, and updates local cache.
 func NewUser(uc common.UserConfig) (*client.User, error) {
-	return newUserWithClient(uc)
+	return newUserWithClient(uc, common.GetHTTPClient())
 }
 
 // NewClient creates a new pro Client
@@ -122,7 +123,7 @@ func NewClient() *client.Client {
 
 // newUserWithClient creates a new user via Pro API, and updates local cache
 // using the specified http client.
-func newUserWithClient(uc common.UserConfig) (*client.User, error) {
+func newUserWithClient(uc common.UserConfig, httpClient *http.Client) (*client.User, error) {
 	deviceID := uc.GetDeviceID()
 	logger.Debugf("Creating new user with device ID '%v'", deviceID)
 
@@ -139,10 +140,10 @@ func newUserWithClient(uc common.UserConfig) (*client.User, error) {
 
 // FetchUserData fetches user data from Pro API, and updates local cache.
 func FetchUserData(uc common.UserConfig) (*client.User, error) {
-	return fetchUserDataWithClient(uc)
+	return fetchUserDataWithClient(uc, common.GetHTTPClient())
 }
 
-func fetchUserDataWithClient(uc common.UserConfig) (*client.User, error) {
+func fetchUserDataWithClient(uc common.UserConfig, httpClient *http.Client) (*client.User, error) {
 	userID := uc.GetUserID()
 	logger.Debugf("Fetching user status with device ID '%v', user ID '%v' and proToken %v", uc.GetDeviceID(), userID, uc.GetToken())
 
