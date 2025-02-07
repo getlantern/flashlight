@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"net/http"
 	"os"
 	"testing"
 	"time"
@@ -122,7 +123,7 @@ func TestPollIntervals(t *testing.T) {
 		pollInterval := 500 * time.Millisecond
 		waitTime := pollInterval*2 + (200 * time.Millisecond)
 
-		fetcher := newHttpFetcher(newTestUserConfig(), configURLs)
+		fetcher := newHttpFetcher(newTestUserConfig(), http.DefaultClient, configURLs)
 		dispatch := func(cfg interface{}) {}
 
 		stopChan := make(chan bool)
