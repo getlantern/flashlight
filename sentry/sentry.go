@@ -17,7 +17,7 @@ const (
 	SentryTimeout         = time.Second * 30
 	SentryMaxMessageChars = 8000
 	// SentryDSN is Sentry's project ID thing
-	SentryDSN = "https://f65aa492b9524df79b05333a0b0924c5@sentry.io/2222244"
+	SentryDSN = "https://f65aa492b9524df79b05333a0b0924c5@o75725.ingest.us.sentry.io/2222244"
 )
 
 func beforeSend(event *sentry.Event, _ *sentry.EventHint) *sentry.Event {
@@ -33,6 +33,7 @@ func beforeSend(event *sentry.Event, _ *sentry.EventHint) *sentry.Event {
 }
 
 func InitSentry(libraryVersion string) {
+	log.Debugf("Initializing Sentry with library version: %s", libraryVersion)
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn:              SentryDSN,
 		Release:          libraryVersion,
@@ -52,6 +53,13 @@ func InitSentry(libraryVersion string) {
 			scope.SetTag("os_version", os)
 		}
 	})
+	sentry.CaptureMessage("Sentry initialized")
+	if result := sentry.Flush(SentryTimeout); !result {
+		log.Error("Flushing to Sentry timed out")
+	} else {
+		log.Debug("Flushed to Sentry")
+	}
+	log.Debug("Sentry initialized")
 }
 
 func PanicListener(msg string) {
