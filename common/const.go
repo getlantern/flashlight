@@ -1,18 +1,12 @@
 package common
 
 import (
-	"time"
-
 	"github.com/getlantern/golog"
 )
 
 const (
 	// UserConfigURL is the URL for fetching the per user proxy config.
 	UserConfigURL = "https://df.iantem.io/api/v1/config"
-
-	// Sentry Configurations
-	SentryTimeout         = time.Second * 30
-	SentryMaxMessageChars = 8000
 
 	// UpdateServerURL is the URL of the update server. Different applications
 	// hit the server on separate paths "/update/<AppName>".

@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/getlantern/flashlight/v7/sentry"
 	"github.com/getlantern/kindling"
-	"github.com/getsentry/sentry-go"
 )
 
 var httpClient *http.Client
@@ -34,25 +34,14 @@ func GetHTTPClient() *http.Client {
 		return httpClient
 	}
 
+	sentry.InitSentry(LibraryVersion)
 	// Set the client to the kindling client.
 	k := kindling.NewKindling(
-		kindling.WithPanicListener(PanicListener),
+		kindling.WithPanicListener(sentry.PanicListener),
 		kindling.WithLogWriter(log.AsStdLogger().Writer()),
 		kindling.WithDomainFronting("https://raw.githubusercontent.com/getlantern/lantern-binaries/refs/heads/main/fronted.yaml.gz", ""),
 		kindling.WithProxyless(domains...),
 	)
 	httpClient = k.NewHTTPClient()
 	return httpClient
-}
-
-func PanicListener(msg string) {
-	log.Errorf("Panic in kindling: %v", msg)
-	sentry.ConfigureScope(func(scope *sentry.Scope) {
-		scope.SetLevel(sentry.LevelFatal)
-	})
-
-	sentry.CaptureMessage(msg)
-	if result := sentry.Flush(SentryTimeout); !result {
-		log.Error("Flushing to Sentry timed out")
-	}
 }
