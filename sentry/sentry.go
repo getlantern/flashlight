@@ -53,7 +53,6 @@ func InitSentry(libraryVersion string) {
 			scope.SetTag("os_version", os)
 		}
 	})
-	sentry.CaptureMessage("Sentry initialized")
 	if result := sentry.Flush(SentryTimeout); !result {
 		log.Error("Flushing to Sentry timed out")
 	} else {
