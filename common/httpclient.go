@@ -34,7 +34,6 @@ func GetHTTPClient() *http.Client {
 		return httpClient
 	}
 
-	sentry.InitSentry(LibraryVersion)
 	// Set the client to the kindling client.
 	k := kindling.NewKindling(
 		kindling.WithPanicListener(sentry.PanicListener),

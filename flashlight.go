@@ -2,10 +2,11 @@ package flashlight
 
 import (
 	"fmt"
-	"github.com/getlantern/netx"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/getlantern/netx"
 
 	commonconfig "github.com/getlantern/common/config"
 	"github.com/getlantern/detour"
@@ -27,6 +28,7 @@ import (
 	"github.com/getlantern/flashlight/v7/goroutines"
 	fops "github.com/getlantern/flashlight/v7/ops"
 	"github.com/getlantern/flashlight/v7/otel"
+	"github.com/getlantern/flashlight/v7/sentry"
 	"github.com/getlantern/flashlight/v7/services"
 	"github.com/getlantern/flashlight/v7/shortcut"
 	"github.com/getlantern/flashlight/v7/stats"
@@ -120,6 +122,7 @@ func New(
 	log.Debugf("Using configdir: %v", configDir)
 	displayVersion(appVersion, revisionDate)
 	common.InitVersion(appVersion)
+	sentry.InitSentry(common.LibraryVersion)
 	deviceID := userConfig.GetDeviceID()
 	log.Debugf("You can query for this device's activity under device id: %v", deviceID)
 	fops.InitGlobalContext(
