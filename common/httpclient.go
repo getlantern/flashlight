@@ -25,6 +25,8 @@ var domains = []string{
 	"replica-search.lantern.io",
 	"update.getlantern.org",
 	"globalconfig.flashlightproxy.com",
+	"dogsdogs.xyz",         // Used in replica
+	"service.dogsdogs.xyz", // Used in replica
 }
 
 func GetHTTPClient() *http.Client {
