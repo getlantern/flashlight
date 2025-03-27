@@ -51,19 +51,26 @@ func GetHTTPClient() *http.Client {
 		return httpClient
 	}
 
+	var k kindling.Kindling
 	ioWriter := log.AsStdLogger().Writer()
 	// Create new fronted instance.
 	f, err := newFronted(ioWriter, sentry.PanicListener)
 	if err != nil {
 		log.Errorf("Failed to create fronted instance: %v", err)
+		k = kindling.NewKindling(
+			kindling.WithPanicListener(sentry.PanicListener),
+			kindling.WithLogWriter(ioWriter),
+			kindling.WithProxyless(domains...),
+		)
+	} else {
+		// Set the client to the kindling client.
+		k = kindling.NewKindling(
+			kindling.WithPanicListener(sentry.PanicListener),
+			kindling.WithLogWriter(ioWriter),
+			kindling.WithDomainFronting(f),
+			kindling.WithProxyless(domains...),
+		)
 	}
-	// Set the client to the kindling client.
-	k := kindling.NewKindling(
-		kindling.WithPanicListener(sentry.PanicListener),
-		kindling.WithLogWriter(ioWriter),
-		kindling.WithDomainFronting(f),
-		kindling.WithProxyless(domains...),
-	)
 	httpClient = k.NewHTTPClient()
 	return httpClient
 }
