@@ -38,6 +38,8 @@ var domains = []string{
 
 var configDir atomic.Value
 
+// The config directory on some platforms, such as Android, can only be determined in native code, so we
+// need to set it externally.
 func SetConfigDir(dir string) {
 	configDir.Store(dir)
 }
@@ -86,7 +88,7 @@ func newFronted(logWriter io.Writer, panicListener func(string)) (fronted.Fronte
 		Transport: trans,
 	}
 	var cacheFile string
-	if configDir.Load() == nil {
+	if configDir.Load() != nil {
 		cacheFile = filepath.Join(configDir.Load().(string), "fronted_cache.json")
 	} else {
 		cacheFile = filepath.Join(os.TempDir(), "fronted_cache.json")
