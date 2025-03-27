@@ -1,10 +1,17 @@
 package common
 
 import (
+	"fmt"
+	"io"
 	"net/http"
+	"net/url"
+	"os"
+	"path/filepath"
 	"sync"
+	"sync/atomic"
 
 	"github.com/getlantern/flashlight/v7/sentry"
+	"github.com/getlantern/fronted"
 	"github.com/getlantern/kindling"
 )
 
@@ -29,6 +36,14 @@ var domains = []string{
 	"service.dogsdogs.xyz", // Used in replica
 }
 
+var configDir atomic.Value
+
+// The config directory on some platforms, such as Android, can only be determined in native code, so we
+// need to set it externally.
+func SetConfigDir(dir string) {
+	configDir.Store(dir)
+}
+
 func GetHTTPClient() *http.Client {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -36,13 +51,60 @@ func GetHTTPClient() *http.Client {
 		return httpClient
 	}
 
-	// Set the client to the kindling client.
-	k := kindling.NewKindling(
-		kindling.WithPanicListener(sentry.PanicListener),
-		kindling.WithLogWriter(log.AsStdLogger().Writer()),
-		kindling.WithDomainFronting("https://raw.githubusercontent.com/getlantern/lantern-binaries/refs/heads/main/fronted.yaml.gz", ""),
-		kindling.WithProxyless(domains...),
-	)
+	var k kindling.Kindling
+	ioWriter := log.AsStdLogger().Writer()
+	// Create new fronted instance.
+	f, err := newFronted(ioWriter, sentry.PanicListener)
+	if err != nil {
+		log.Errorf("Failed to create fronted instance: %v", err)
+		k = kindling.NewKindling(
+			kindling.WithPanicListener(sentry.PanicListener),
+			kindling.WithLogWriter(ioWriter),
+			kindling.WithProxyless(domains...),
+		)
+	} else {
+		// Set the client to the kindling client.
+		k = kindling.NewKindling(
+			kindling.WithPanicListener(sentry.PanicListener),
+			kindling.WithLogWriter(ioWriter),
+			kindling.WithDomainFronting(f),
+			kindling.WithProxyless(domains...),
+		)
+	}
 	httpClient = k.NewHTTPClient()
 	return httpClient
+}
+
+func newFronted(logWriter io.Writer, panicListener func(string)) (fronted.Fronted, error) {
+	// Parse the domain from the URL.
+	configURL := "https://raw.githubusercontent.com/getlantern/lantern-binaries/refs/heads/main/fronted.yaml.gz"
+	u, err := url.Parse(configURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse URL: %v", err)
+	}
+	// Extract the domain from the URL.
+	domain := u.Host
+
+	// First, download the file from the specified URL using the smart dialer.
+	// Then, create a new fronted instance with the downloaded file.
+	trans, err := kindling.NewSmartHTTPTransport(logWriter, domain)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create smart HTTP transport: %v", err)
+	}
+	httpClient := &http.Client{
+		Transport: trans,
+	}
+	var cacheFile string
+	configDirValue := configDir.Load()
+	if configDirValue != nil {
+		cacheFile = filepath.Join(configDirValue.(string), "fronted_cache.json")
+	} else {
+		cacheFile = filepath.Join(os.TempDir(), "fronted_cache.json")
+	}
+	return fronted.NewFronted(
+		fronted.WithPanicListener(panicListener),
+		fronted.WithCacheFile(cacheFile),
+		fronted.WithHTTPClient(httpClient),
+		fronted.WithConfigURL(configURL),
+	), nil
 }

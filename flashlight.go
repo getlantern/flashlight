@@ -123,6 +123,7 @@ func New(
 	displayVersion(appVersion, revisionDate)
 	common.InitVersion(appVersion)
 	sentry.InitSentry(appVersion)
+	common.SetConfigDir(configDir)
 	deviceID := userConfig.GetDeviceID()
 	log.Debugf("You can query for this device's activity under device id: %v", deviceID)
 	fops.InitGlobalContext(
