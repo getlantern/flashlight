@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"io"
 	"os"
 	"runtime"
@@ -95,7 +96,8 @@ func tlsConfigForProxy(ctx context.Context, configDir, proxyName string, pc *con
 			return errors.New("no peer certificate")
 		}
 		if !bytes.Equal(peerCerts[0], proxyCertDER) {
-			return errors.New("peer certificate does not match expected")
+			// Return an error that prints the two certs in hex for debugging.
+			return fmt.Errorf("peer certificate does not match expected:\n%x != \n%x", peerCerts[0], proxyCertDER)
 		}
 		return nil
 	}
