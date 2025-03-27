@@ -88,8 +88,9 @@ func newFronted(logWriter io.Writer, panicListener func(string)) (fronted.Fronte
 		Transport: trans,
 	}
 	var cacheFile string
-	if configDir.Load() != nil {
-		cacheFile = filepath.Join(configDir.Load().(string), "fronted_cache.json")
+	configDirValue := configDir.Load()
+	if configDirValue != nil {
+		cacheFile = filepath.Join(configDirValue.(string), "fronted_cache.json")
 	} else {
 		cacheFile = filepath.Join(os.TempDir(), "fronted_cache.json")
 	}
