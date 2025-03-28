@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/getlantern/fronted"
 	"time"
 
 	"github.com/getlantern/flashlight/v7/browsers/simbrowser"
@@ -41,7 +42,7 @@ type Global struct {
 	NamedDomainRoutingRules map[string]domainrouting.RulesMap
 
 	// TrustedCAs are trusted CAs for domain fronting domains only.
-	//TrustedCAs []*fronted.CA
+	TrustedCAs []*fronted.CA
 
 	// GlobalConfigPollInterval sets interval at which to poll for global config
 	GlobalConfigPollInterval time.Duration
