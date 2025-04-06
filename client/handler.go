@@ -5,16 +5,13 @@ import (
 	"errors"
 	"net"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/proxy/v3/filters"
 
 	"github.com/getlantern/flashlight/v7/chained"
-	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/ops"
-	"github.com/getlantern/flashlight/v7/pro"
 )
 
 func (client *Client) handle(conn net.Conn) error {
@@ -46,11 +43,6 @@ func (client *Client) filter(cs *filters.ConnectionState, req *http.Request, nex
 	// package and httputil.DumpRequest require the scheme to be present.
 	req.URL.Scheme = "http"
 	req.URL.Host = req.Host
-
-	if common.Platform == "android" && req.URL != nil && req.URL.Host == "localhost" &&
-		strings.HasPrefix(req.URL.Path, "/pro/") {
-		return client.interceptProRequest(cs, req)
-	}
 
 	op, ok := client.opsMap.get(cs.Downstream())
 	if ok {
@@ -116,25 +108,6 @@ func (client *Client) isHTTPProxyPort(r *http.Request) bool {
 		}
 	}
 	return false
-}
-
-// interceptProRequest specifically looks for and properly handles pro server
-// requests (similar to desktop's APIHandler)
-func (client *Client) interceptProRequest(cs *filters.ConnectionState, r *http.Request) (*http.Response, *filters.ConnectionState, error) {
-	log.Debugf("Intercepting request to pro server: %v", r.URL.Path)
-	// Strip /pro from path.
-	r.URL.Path = r.URL.Path[4:]
-	pro.PrepareProRequest(r, client.user)
-	r.Header.Del("Origin")
-	resp, err := common.GetHTTPClient().Do(r)
-	if err != nil {
-		log.Errorf("Error intercepting request to pro server: %v", err)
-		resp = &http.Response{
-			StatusCode: http.StatusInternalServerError,
-			Close:      true,
-		}
-	}
-	return filters.ShortCircuit(cs, r, resp)
 }
 
 func (client *Client) redirectHTTPS(cs *filters.ConnectionState, req *http.Request, httpsURL string, op *ops.Op) (*http.Response, *filters.ConnectionState, error) {
