@@ -28,6 +28,7 @@ func New(opts *Options) Dialer {
 		log.Debug("Closing existing dialer")
 		currentDialer.Load().(Dialer).Close()
 	}
+	opts.proxylessDialer = newProxylessDialer()
 	d := NewTwoPhaseDialer(opts, func(opts *Options, existing Dialer) Dialer {
 		bandit, err := NewBandit(opts)
 		if err != nil {
@@ -85,6 +86,8 @@ type Options struct {
 
 	// BanditDir is the directory where the bandit will store its data
 	BanditDir string
+
+	proxylessDialer Dialer
 }
 
 // Clone creates a deep copy of the Options object
@@ -93,10 +96,11 @@ func (o *Options) Clone() *Options {
 		return nil
 	}
 	return &Options{
-		Dialers:   o.Dialers,
-		OnError:   o.OnError,
-		OnSuccess: o.OnSuccess,
-		BanditDir: o.BanditDir,
+		Dialers:         o.Dialers,
+		OnError:         o.OnError,
+		OnSuccess:       o.OnSuccess,
+		BanditDir:       o.BanditDir,
+		proxylessDialer: o.proxylessDialer,
 	}
 }
 

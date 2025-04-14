@@ -56,6 +56,12 @@ func newFastConnectDialer(opts *Options, next func(opts *Options, existing Diale
 }
 
 func (fcd *fastConnectDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	// First try using a proxyless dialer.
+	conn, err := fcd.opts.proxylessDialer.DialContext(ctx, network, addr)
+	if err == nil {
+		log.Debugf("bandit::DialContext::proxyless dialer succeeded")
+		return conn, nil
+	}
 	// Use the dialer with the lowest connect time, waiting on early dials for any
 	// connections at all.
 	td := fcd.topDialer.get()

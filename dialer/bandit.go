@@ -25,7 +25,6 @@ type banditDialer struct {
 	banditRewardsMutex            *sync.Mutex
 	secondsUntilRewardSample      time.Duration
 	secondsUntilSaveBanditRewards time.Duration
-	proxylessDialer               Dialer
 }
 
 type banditMetrics struct {
@@ -55,7 +54,6 @@ func NewBandit(opts *Options) (Dialer, error) {
 		banditRewardsMutex:            &sync.Mutex{},
 		secondsUntilRewardSample:      secondsForSample * time.Second,
 		secondsUntilSaveBanditRewards: saveBanditRewardsAfter,
-		proxylessDialer:               newProxylessDialer(),
 	}
 
 	dialerWeights, err := dialer.loadLastBanditRewards()
@@ -99,7 +97,7 @@ func (bd *banditDialer) DialContext(ctx context.Context, network, addr string) (
 	deadline, _ := ctx.Deadline()
 	log.Debugf("bandit::DialContext::time remaining: %v", time.Until(deadline))
 	// First try using a proxyless dialer.
-	conn, err := bd.proxylessDialer.DialContext(ctx, network, addr)
+	conn, err := bd.opts.proxylessDialer.DialContext(ctx, network, addr)
 	if err == nil {
 		log.Debugf("bandit::DialContext::proxyless dialer succeeded")
 		return conn, nil
