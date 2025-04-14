@@ -12,6 +12,7 @@ replace github.com/tetratelabs/wazero => github.com/refraction-networking/wazero
 
 require (
 	github.com/Jigsaw-Code/outline-sdk v0.0.19
+	github.com/Jigsaw-Code/outline-sdk/x v0.0.2
 	github.com/OperatorFoundation/Replicant-go/Replicant/v3 v3.0.23
 	github.com/OperatorFoundation/Starbridge-go/Starbridge/v3 v3.0.17
 	github.com/blang/semver v3.5.1+incompatible
@@ -74,7 +75,6 @@ require (
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/go-server-timing v1.0.1
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/pborman/uuid v1.2.1
 	github.com/refraction-networking/utls v1.6.7
 	github.com/refraction-networking/water v0.7.0-alpha
 	github.com/sagernet/sing v0.6.0-alpha.18
@@ -97,7 +97,6 @@ require (
 
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.2.0 // indirect
-	github.com/Jigsaw-Code/outline-sdk/x v0.0.2 // indirect
 	github.com/Jigsaw-Code/outline-ss-server v1.5.0 // indirect
 	github.com/alitto/pond/v2 v2.1.5 // indirect
 	github.com/anacrolix/dht/v2 v2.20.0 // indirect
@@ -185,7 +184,7 @@ require (
 	github.com/getlantern/hex v0.0.0-20220104173244-ad7e4b9194dc // indirect
 	github.com/getlantern/kcp-go/v5 v5.0.0-20220503142114-f0c1cd6e1b54 // indirect
 	github.com/getlantern/keepcurrent v0.0.0-20240126172110-2e0264ca385d // indirect
-	github.com/getlantern/kindling v0.0.0-20250401200447-f536cbd057e6
+	github.com/getlantern/kindling v0.0.0-20250414175513-096bf30d7a31
 	github.com/getlantern/measured v0.0.0-20230919230611-3d9e3776a6cd // indirect
 	github.com/getlantern/meta-scrubber v0.0.1 // indirect
 	github.com/getlantern/packetforward v0.0.0-20201001150407-c68a447b0360 // indirect

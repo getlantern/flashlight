@@ -317,8 +317,8 @@ github.com/getlantern/keepcurrent v0.0.0-20240126172110-2e0264ca385d/go.mod h1:e
 github.com/getlantern/keyman v0.0.0-20180207174507-f55e7280e93a/go.mod h1:FMf0g72BHs14jVcD8i8ubEk4sMB6JdidBn67d44i3ws=
 github.com/getlantern/keyman v0.0.0-20230503155501-4e864ca2175b h1:iyEuk8ARQC9HfraqC4r3leBhU55R1TV7bAiyPYE54kA=
 github.com/getlantern/keyman v0.0.0-20230503155501-4e864ca2175b/go.mod h1:ZJ+yDaZkJ/JU9j7EQa3UUh6ouedrNDDLA5OiowS1Iuk=
-github.com/getlantern/kindling v0.0.0-20250401200447-f536cbd057e6 h1:XGMyQsQmKWGqTJWyC2JbRgKNaFZUpWjIEoPIVZC98bQ=
-github.com/getlantern/kindling v0.0.0-20250401200447-f536cbd057e6/go.mod h1:DT+qhZi7l4ji5FAXH3b4C5WYJmdBevQZUGT+KtS729A=
+github.com/getlantern/kindling v0.0.0-20250414175513-096bf30d7a31 h1:yLJIL8b8B/JdBhdcayqYgeMUfnQHnioKaHay2xftfHo=
+github.com/getlantern/kindling v0.0.0-20250414175513-096bf30d7a31/go.mod h1:DT+qhZi7l4ji5FAXH3b4C5WYJmdBevQZUGT+KtS729A=
 github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a h1:z7G1v79GB1qRrkcbzF0nrLzV/+dwdGmamEZAp0ff+z0=
 github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a/go.mod h1:cGOfTjvllC9bcwS7cVW6tGT6fXc8Dki384uFjm7XBnw=
 github.com/getlantern/lantern-algeneva v0.0.0-20240930181006-6d3c00db1d5d h1:ACBwPR4du54Qw+X5ajsbMqOFR8euGZRdMGkvTDS7I60=
@@ -503,7 +503,6 @@ github.com/google/gopacket v1.1.19 h1:ves8RnFZPGiFnTS0uPQStjwru6uO6h+nlr9j6fL7kF
 github.com/google/gopacket v1.1.19/go.mod h1:iJ8V8n6KS+z2U1A8pUwu8bW5SyEMkXJB8Yo/Vo+TKTo=
 github.com/google/pprof v0.0.0-20230821062121-407c9e7a662f h1:pDhu5sgp8yJlEF/g6osliIIpF9K4F5jvkULXa4daRDQ=
 github.com/google/pprof v0.0.0-20230821062121-407c9e7a662f/go.mod h1:czg5+yv1E0ZGTi6S6vVK1mke0fV+FaUhNGcd6VRS9Ik=
-github.com/google/uuid v1.0.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.3.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.4.0 h1:MtMxsa51/r9yyhkyLsVeVt0B+BGQZzpQiTQ4eHZ8bc4=
 github.com/google/uuid v1.4.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
@@ -640,8 +639,6 @@ github.com/oschwald/maxminddb-golang v1.11.0 h1:aSXMqYR/EPNjGE8epgqwDay+P30hCBZI
 github.com/oschwald/maxminddb-golang v1.11.0/go.mod h1:YmVI+H0zh3ySFR3w+oz8PCfglAFj3PuCmui13+P9zDg=
 github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c h1:rp5dCmg/yLR3mgFuSOe4oEnDDmGLROTvMragMUXpTQw=
 github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c/go.mod h1:X07ZCGwUbLaax7L0S3Tw4hpejzu63ZrrQiUe6W0hcy0=
-github.com/pborman/uuid v1.2.1 h1:+ZZIw58t/ozdjRaXh/3awHfmWRbzYxJoAdNJxe/3pvw=
-github.com/pborman/uuid v1.2.1/go.mod h1:X/NO0urCmaxf9VXbdlT7C2Yzkj2IKimNn4k+gtPdI/k=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
 github.com/philhofer/fwd v1.0.0/go.mod h1:gk3iGcWd9+svBvR0sR+KPcfE+RNWozjowpeBVG3ZVNU=
 github.com/pierrec/lz4 v2.0.5+incompatible/go.mod h1:pdkljMzZIN41W+lC3N2tnIh5sFi+IEE17M5jbnwPHcY=

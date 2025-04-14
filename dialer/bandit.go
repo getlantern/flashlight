@@ -25,6 +25,7 @@ type banditDialer struct {
 	banditRewardsMutex            *sync.Mutex
 	secondsUntilRewardSample      time.Duration
 	secondsUntilSaveBanditRewards time.Duration
+	proxylessDialer               Dialer
 }
 
 type banditMetrics struct {
@@ -54,6 +55,7 @@ func NewBandit(opts *Options) (Dialer, error) {
 		banditRewardsMutex:            &sync.Mutex{},
 		secondsUntilRewardSample:      secondsForSample * time.Second,
 		secondsUntilSaveBanditRewards: saveBanditRewardsAfter,
+		proxylessDialer:               newProxylessDialer(),
 	}
 
 	dialerWeights, err := dialer.loadLastBanditRewards()
@@ -96,6 +98,13 @@ func NewBandit(opts *Options) (Dialer, error) {
 func (bd *banditDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
 	deadline, _ := ctx.Deadline()
 	log.Debugf("bandit::DialContext::time remaining: %v", time.Until(deadline))
+	// First try using a proxyless dialer.
+	conn, err := bd.proxylessDialer.DialContext(ctx, network, addr)
+	if err == nil {
+		log.Debugf("bandit::DialContext::proxyless dialer succeeded")
+		return conn, nil
+	}
+
 	// We can not create a multi-armed bandit with no arms.
 	if len(bd.dialers) == 0 {
 		return nil, log.Error("Cannot dial with no dialers")
