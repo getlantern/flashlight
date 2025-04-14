@@ -50,7 +50,7 @@ func (d *proxylessDialer) DialContext(ctx context.Context, network, addr string)
 	}
 	dialer, err := d.strategyFinder.NewDialer(context.Background(), domains, configBytes)
 	if err != nil {
-		log.Errorf("Failed to create smart dialer %f", err)
+		log.Errorf("Failed to create smart dialer %v", err)
 		return nil, err
 	}
 	// Store the dialer in the map right away so that we can use it for future requests.
