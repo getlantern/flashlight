@@ -59,7 +59,7 @@ func (d *proxylessDialer) DialContext(ctx context.Context, network, addr string)
 
 	streamConn, err := dialer.DialStream(ctx, addr)
 	if err != nil {
-		d.dialers.Store(addr, newFailingDialer())
+		d.dialers.Store(addr, newFailingStreamDialer())
 		return nil, fmt.Errorf("failed to dial stream: %v", err)
 	}
 	return streamConn, nil
@@ -73,8 +73,12 @@ func (d *proxylessDialer) Close() {
 //go:embed smart_dialer_config.yml
 var embedFS embed.FS
 
-// newFailingDialer returns a dialer that always fails to connect
-func newFailingDialer() transport.StreamDialer {
+// newFailingStreamDialer returns a dialer that always fails to connect
+func newFailingStreamDialer() transport.StreamDialer {
+	return &failingDialer{}
+}
+
+func newFailingDialer() Dialer {
 	return &failingDialer{}
 }
 
@@ -82,4 +86,12 @@ type failingDialer struct{}
 
 func (d *failingDialer) DialStream(ctx context.Context, addr string) (transport.StreamConn, error) {
 	return nil, fmt.Errorf("failed to dial stream")
+}
+
+func (d *failingDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	return nil, fmt.Errorf("failed to dial context")
+}
+
+func (d *failingDialer) Close() {
+	// No resources to clean up
 }

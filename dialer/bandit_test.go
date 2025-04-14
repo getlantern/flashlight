@@ -72,7 +72,8 @@ func TestBanditDialer_chooseDialerForDomain(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			opts := &Options{
-				Dialers: tt.fields.dialers,
+				Dialers:         tt.fields.dialers,
+				proxylessDialer: newFailingDialer(),
 			}
 			o, err := NewBandit(opts)
 			require.NoError(t, err)
@@ -101,7 +102,8 @@ func TestNewBandit(t *testing.T) {
 		{
 			name: "should fail if there are no dialers",
 			opts: &Options{
-				Dialers: nil,
+				Dialers:         nil,
+				proxylessDialer: newFailingDialer(),
 			},
 			assert: func(t *testing.T, got Dialer, err error, _ string) {
 				assert.Nil(t, got)
@@ -111,7 +113,8 @@ func TestNewBandit(t *testing.T) {
 		{
 			name: "should return a BanditDialer if there's only one dialer",
 			opts: &Options{
-				Dialers: []ProxyDialer{newTcpConnDialer()},
+				Dialers:         []ProxyDialer{newTcpConnDialer()},
+				proxylessDialer: newFailingDialer(),
 			},
 			assert: func(t *testing.T, got Dialer, err error, _ string) {
 				assert.NotNil(t, got)
@@ -122,7 +125,8 @@ func TestNewBandit(t *testing.T) {
 		{
 			name: "should load the last bandit rewards if they exist",
 			opts: &Options{
-				Dialers: []ProxyDialer{oldDialer, newTcpConnDialer()},
+				Dialers:         []ProxyDialer{oldDialer, newTcpConnDialer()},
+				proxylessDialer: newFailingDialer(),
 			},
 			setup: func() string {
 				tempDir, err := os.MkdirTemp("", "client_test")
@@ -173,7 +177,8 @@ func TestBanditDialer_DialContext(t *testing.T) {
 		{
 			name: "should return an error if there are no dialers",
 			opts: &Options{
-				Dialers: nil,
+				Dialers:         nil,
+				proxylessDialer: newFailingDialer(),
 			},
 			want:    nil,
 			wantErr: true,
@@ -181,7 +186,8 @@ func TestBanditDialer_DialContext(t *testing.T) {
 		{
 			name: "should return a connection if there's only one dialer",
 			opts: &Options{
-				Dialers: []ProxyDialer{newTcpConnDialer()},
+				Dialers:         []ProxyDialer{newTcpConnDialer()},
+				proxylessDialer: newFailingDialer(),
 			},
 			want:    expectedConn,
 			wantErr: false,
@@ -189,7 +195,8 @@ func TestBanditDialer_DialContext(t *testing.T) {
 		{
 			name: "should return a connection if there are lots of dialers",
 			opts: &Options{
-				Dialers: []ProxyDialer{newTcpConnDialer(), newTcpConnDialer(), newTcpConnDialer()},
+				Dialers:         []ProxyDialer{newTcpConnDialer(), newTcpConnDialer(), newTcpConnDialer()},
+				proxylessDialer: newFailingDialer(),
 			},
 			want:    expectedConn,
 			wantErr: false,
@@ -197,7 +204,8 @@ func TestBanditDialer_DialContext(t *testing.T) {
 		{
 			name: "should return an error if failed upstream",
 			opts: &Options{
-				Dialers: []ProxyDialer{newFailingTcpConnDialer()},
+				Dialers:         []ProxyDialer{newFailingTcpConnDialer()},
+				proxylessDialer: newFailingDialer(),
 			},
 			want:    nil,
 			wantErr: true,
@@ -380,7 +388,8 @@ func TestUpdateBanditRewards(t *testing.T) {
 
 			banditDialer := &banditDialer{
 				opts: &Options{
-					BanditDir: tempDir,
+					BanditDir:       tempDir,
+					proxylessDialer: newFailingDialer(),
 				},
 				banditRewardsMutex: new(sync.Mutex),
 			}
@@ -428,7 +437,8 @@ func TestLoadLastBanditRewards(t *testing.T) {
 
 			banditDialer := &banditDialer{
 				opts: &Options{
-					BanditDir: tempDir,
+					BanditDir:       tempDir,
+					proxylessDialer: newFailingDialer(),
 				},
 				banditRewardsMutex: new(sync.Mutex),
 			}
@@ -635,8 +645,9 @@ func TestBanditDialerIntegration(t *testing.T) {
 	defer os.RemoveAll(banditDir)
 
 	opts := &Options{
-		Dialers:   []ProxyDialer{baseDialer},
-		BanditDir: banditDir,
+		Dialers:         []ProxyDialer{baseDialer},
+		BanditDir:       banditDir,
+		proxylessDialer: newFailingDialer(),
 	}
 	bandit, err := NewBandit(opts)
 	require.NoError(t, err)
