@@ -20,7 +20,6 @@ func newParallelPreferProxyless(proxyless proxyless, d Dialer) Dialer {
 }
 
 func (d *parallelDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	//log.Debugf("Dialing %s with proxyless dialer with remaining %v", addr, ctx.Deadline())
 	switch d.proxylessDialer.status(addr) {
 	case SUCCEEDED:
 		// If the proxyless dialer is succeeding, keep using it.

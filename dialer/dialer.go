@@ -51,8 +51,8 @@ func New(opts *Options) Dialer {
 	return pd
 }
 
-// NoDialer returns a dialer that does nothing. This is useful during startup
-// when we don't yet have proxies to dial through.
+// NoDialer returns a dialer that only uses the proxyless dialer and does not attempt to
+// connect to any proxies. This is the default state on startup for a first-time user.
 func NoDialer() Dialer {
 	return newParallelPreferProxyless(pdialer, &noDialer{})
 }
