@@ -96,7 +96,6 @@ func NewBandit(opts *Options) (Dialer, error) {
 func (bd *banditDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
 	deadline, _ := ctx.Deadline()
 	log.Debugf("bandit::DialContext::time remaining: %v", time.Until(deadline))
-
 	// We can not create a multi-armed bandit with no arms.
 	if len(bd.dialers) == 0 {
 		return nil, log.Error("Cannot dial with no dialers")

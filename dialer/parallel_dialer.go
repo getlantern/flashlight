@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"time"
 )
 
 type parallelDialer struct {
@@ -21,17 +20,6 @@ func newParallelPreferProxyless(proxyless proxyless, d Dialer) Dialer {
 }
 
 func (d *parallelDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	// log how much time is remaining in the context
-	deadline, _ := ctx.Deadline()
-	log.Debugf("parallelDialer::DialContext::time remaining: %v", time.Until(deadline))
-	/*
-		ctx, cancel := context.WithDeadline(ctx, deadline)
-		defer func() {
-			log.Debugf("parallelDialer::DialContext::canceling context for %s: %v", addr, ctx.Err())
-			cancel()
-		}()
-	*/
-
 	//log.Debugf("Dialing %s with proxyless dialer with remaining %v", addr, ctx.Deadline())
 	switch d.proxylessDialer.status(addr) {
 	case SUCCEEDED:
