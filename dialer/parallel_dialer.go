@@ -73,5 +73,5 @@ func (d *parallelDialer) DialContext(ctx context.Context, network, addr string) 
 }
 
 func (d *parallelDialer) Close() {
-
+	d.dialer.Close()
 }
