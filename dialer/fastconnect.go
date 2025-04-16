@@ -56,12 +56,6 @@ func newFastConnectDialer(opts *Options, next func(opts *Options, existing Diale
 }
 
 func (fcd *fastConnectDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	// First try using a proxyless dialer.
-	conn, err := fcd.opts.proxylessDialer.DialContext(ctx, network, addr)
-	if err == nil {
-		log.Debugf("bandit::DialContext::proxyless dialer succeeded")
-		return conn, nil
-	}
 	// Use the dialer with the lowest connect time, waiting on early dials for any
 	// connections at all.
 	td := fcd.topDialer.get()
@@ -150,7 +144,10 @@ func (fcd *fastConnectDialer) parallelDial(dialers []ProxyDialer) {
 		go func(pd ProxyDialer) {
 			defer wg.Done()
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
+			defer func() {
+				log.Debugf("fastConnectDialer::parallelDial::canceling context for %v", pd.Name())
+				cancel()
+			}()
 			start := time.Now()
 			conn, err := pd.DialProxy(ctx)
 			defer func() {

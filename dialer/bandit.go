@@ -96,12 +96,6 @@ func NewBandit(opts *Options) (Dialer, error) {
 func (bd *banditDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
 	deadline, _ := ctx.Deadline()
 	log.Debugf("bandit::DialContext::time remaining: %v", time.Until(deadline))
-	// First try using a proxyless dialer.
-	conn, err := bd.opts.proxylessDialer.DialContext(ctx, network, addr)
-	if err == nil {
-		log.Debugf("bandit::DialContext::proxyless dialer succeeded")
-		return conn, nil
-	}
 
 	// We can not create a multi-armed bandit with no arms.
 	if len(bd.dialers) == 0 {

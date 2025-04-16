@@ -21,6 +21,8 @@ var log = golog.LoggerFor("dialer")
 
 var currentDialer atomic.Value
 
+var pdialer = newProxylessDialer()
+
 // New creates a new dialer that first tries to connect as quickly as possilbe while also
 // optimizing for the fastest dialer.
 func New(opts *Options) Dialer {
@@ -28,23 +30,31 @@ func New(opts *Options) Dialer {
 		log.Debug("Closing existing dialer")
 		currentDialer.Load().(Dialer).Close()
 	}
-	opts.proxylessDialer = newProxylessDialer()
-	d := NewTwoPhaseDialer(opts, func(opts *Options, existing Dialer) Dialer {
-		bandit, err := NewBandit(opts)
+
+	fcd := newFastConnectDialer(opts, func(dialerOpts *Options, existing Dialer) Dialer {
+		var nextDialer Dialer
+		banditDialer, err := NewBandit(opts)
 		if err != nil {
 			log.Errorf("Unable to create bandit: %v", err)
-			return existing
+			nextDialer = existing
+		} else {
+			nextDialer = banditDialer
 		}
-		return bandit
+		nextDialer = newParallelPreferProxyless(pdialer, nextDialer)
+		currentDialer.Store(nextDialer)
+		return nextDialer
 	})
-	currentDialer.Store(d)
-	return d
+	go fcd.connectAll(opts.Dialers)
+
+	pd := newParallelPreferProxyless(pdialer, fcd)
+	currentDialer.Store(pd)
+	return pd
 }
 
 // NoDialer returns a dialer that does nothing. This is useful during startup
 // when we don't yet have proxies to dial through.
 func NoDialer() Dialer {
-	return &noDialer{}
+	return newParallelPreferProxyless(pdialer, &noDialer{})
 }
 
 type noDialer struct{}
@@ -86,8 +96,6 @@ type Options struct {
 
 	// BanditDir is the directory where the bandit will store its data
 	BanditDir string
-
-	proxylessDialer Dialer
 }
 
 // Clone creates a deep copy of the Options object
@@ -96,11 +104,10 @@ func (o *Options) Clone() *Options {
 		return nil
 	}
 	return &Options{
-		Dialers:         o.Dialers,
-		OnError:         o.OnError,
-		OnSuccess:       o.OnSuccess,
-		BanditDir:       o.BanditDir,
-		proxylessDialer: o.proxylessDialer,
+		Dialers:   o.Dialers,
+		OnError:   o.OnError,
+		OnSuccess: o.OnSuccess,
+		BanditDir: o.BanditDir,
 	}
 }
 

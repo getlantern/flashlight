@@ -415,7 +415,10 @@ func (client *Client) dial(ctx context.Context, isConnect bool, network, addr st
 	var dnsResolutionMapForDirectDials map[string]string
 
 	ctx1, cancel1 := context.WithTimeout(ctx, TimeoutWaitingForDNSResolutionMap)
-	defer cancel1()
+	defer func() {
+		log.Debugf("Canceling dnsResolutionMapEventual context for %s: %v", addr, ctx1.Err())
+		cancel1()
+	}()
 	tmp, err := client.DNSResolutionMapForDirectDialsEventual.Get(ctx1)
 	if err != nil {
 		log.Debugf("Timed out before waiting for dnsResolutionMapEventual to be set")
@@ -425,7 +428,10 @@ func (client *Client) dial(ctx context.Context, isConnect bool, network, addr st
 	}
 
 	ctx2, cancel2 := context.WithTimeout(ctx, client.requestTimeout)
-	defer cancel2()
+	defer func() {
+		log.Debugf("Canceling dial context for %s: %v", addr, ctx2.Err())
+		cancel2()
+	}()
 	return client.doDial(op, ctx2, isConnect, addr, dnsResolutionMapForDirectDials)
 }
 
@@ -543,7 +549,10 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 	// code which may have a shorter requestTimeout.
 	directTimeout := time.Until(dl) / 5
 	cappedCTX, cancel := context.WithTimeout(ctx, directTimeout)
-	defer cancel()
+	defer func() {
+		log.Debugf("Canceling dial context for %s: %v", addr, cappedCTX.Err())
+		cancel()
+	}()
 
 	dialDirectForDetour := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		if client.useShortcut() {
@@ -552,7 +561,11 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 			case shortcut.Direct:
 				// Arbitrarily have a larger timeout if the address is eligible for shortcut.
 				shortcutCTX, cancel := context.WithTimeout(ctx, directTimeout*2)
-				defer cancel()
+
+				defer func() {
+					log.Debugf("Canceling shortcut dial context for %s: %v", addr, shortcutCTX.Err())
+					cancel()
+				}()
 				return dialDirectForShortcut(shortcutCTX, network, addr, ip)
 			case shortcut.Proxy:
 				return dialProxied(ctx, "whatever", addr)
