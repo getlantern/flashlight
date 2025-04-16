@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net"
+	"sync"
 	"testing"
 
 	"github.com/Jigsaw-Code/outline-sdk/transport"
@@ -80,6 +81,8 @@ func TestGetOrCreateDialer_NewDialerFailure(t *testing.T) {
 	assert.EqualError(t, err, expectedErr.Error())
 }
 func TestDialContext_Success(t *testing.T) {
+	successfulDialers = sync.Map{}
+	failed = sync.Map{}
 	// Arrange
 	addr := "example.com:443"
 	mockConn := &net.TCPConn{}
@@ -103,6 +106,8 @@ func TestDialContext_Success(t *testing.T) {
 }
 
 func TestDialContext_CreateDialerError(t *testing.T) {
+	successfulDialers = sync.Map{}
+	failed = sync.Map{}
 	// Arrange
 	addr := "example.com:443"
 	expectedErr := errors.New("failed to create dialer")
@@ -122,6 +127,8 @@ func TestDialContext_CreateDialerError(t *testing.T) {
 }
 
 func TestDialContext_DialStreamError(t *testing.T) {
+	successfulDialers = sync.Map{}
+	failed = sync.Map{}
 	// Arrange
 	addr := "example.com:443"
 	expectedErr := errors.New("failed to dial stream")
