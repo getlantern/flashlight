@@ -18,7 +18,7 @@ jobs:
         with:
           go-version-file: "go.mod"
       - name: Run tests
-        run: go test -json -race -tags="headless" -coverprofile=profile.cov ./... 
+        run: go test -race -tags="headless" -coverprofile=profile.cov ./... 
       - name: Install goveralls
         run: go install github.com/mattn/goveralls@latest
       - name: Send coverage
