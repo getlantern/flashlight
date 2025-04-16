@@ -17,17 +17,8 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
-      - name: Install go go-ctrf-json-reporter
-        run: go install github.com/ctrf-io/go-ctrf-json-reporter/cmd/go-ctrf-json-reporter@latest
       - name: Run tests
-        run: go test -json -race -tags="headless" -coverprofile=profile.cov ./... | go-ctrf-json-reporter -output ctrf-report.json
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        with:
-          name: ctrf-report
-          path: ctrf-report.json
-      - name: Publish Test Summary Results
-        run: npx github-actions-ctrf --exit-on-fail ctrf-report.json
+        run: go test -json -race -tags="headless" -coverprofile=profile.cov ./... 
       - name: Install goveralls
         run: go install github.com/mattn/goveralls@latest
       - name: Send coverage
