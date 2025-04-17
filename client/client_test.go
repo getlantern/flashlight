@@ -150,7 +150,7 @@ func TestServeHTTPTimeout(t *testing.T) {
 	req, err := http.NewRequest("CONNECT", "https://a.com:443", nil)
 	require.NoError(t, err)
 	resp, err := roundTrip(client, req)
-	require.Contains(t, err.Error(), "any dialers")
+	require.Contains(t, err.Error(), "deadline")
 	require.Equal(t, http.StatusOK, resp.StatusCode, "CONNECT requests should always succeed")
 
 	req, err = http.NewRequest("GET", "http://b.com/action", nil)
