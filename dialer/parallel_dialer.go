@@ -56,7 +56,7 @@ func (d *parallelDialer) DialContext(ctx context.Context, network, addr string) 
 			// Return the first successful connection immediately.
 			return conn, nil
 		case err := <-errCh:
-			errs = errors.Join(err)
+			errs = errors.Join(errs, err)
 			numErrs++
 		case <-ctx.Done():
 			log.Debugf("parallelDialer::DialContext::context done: %v", ctx.Err())
