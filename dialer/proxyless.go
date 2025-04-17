@@ -200,7 +200,7 @@ func configBytes() ([]byte, error) {
 	if err != nil {
 		return nil, log.Errorf("Failed to read smart dialer config file: %v", err)
 	}
-	log.Debugf("Read smart dialer config file: %s", string(data))
+	log.Debug("Read smart dialer config file")
 	return data, nil
 }
 
