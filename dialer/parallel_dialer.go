@@ -3,7 +3,6 @@ package dialer
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net"
 )
 
@@ -51,26 +50,22 @@ func (d *parallelDialer) DialContext(ctx context.Context, network, addr string) 
 	}
 
 	numErrs := 0
-	select {
-	case conn := <-connCh:
-		return conn, nil
-	case err := <-errCh:
-		errs = errors.Join(err)
-		numErrs++
-		if numErrs == len(dialers) {
-			// If both dialers failed, it could be that we don't have a network
-			// connection, for example, so we reset the proxyless dialer to its
-			// state for this domain such that we will try it again.
-			d.proxylessDialer.reset(addr)
-			return nil, errs
+	for numErrs < len(dialers) {
+		select {
+		case conn := <-connCh:
+			// Return the first successful connection immediately.
+			return conn, nil
+		case err := <-errCh:
+			errs = errors.Join(err)
+			numErrs++
+		case <-ctx.Done():
+			log.Debugf("parallelDialer::DialContext::context done: %v", ctx.Err())
+			return nil, ctx.Err()
 		}
-	case <-ctx.Done():
-		log.Debugf("parallelDialer::DialContext::context done: %v", ctx.Err())
-		return nil, ctx.Err()
 	}
-
-	// Should not be reachable
-	return nil, fmt.Errorf("Could not dial any dialers")
+	// If all dialers failed, reset the proxyless dialer and return the aggregated error.
+	d.proxylessDialer.reset(addr)
+	return nil, errs
 }
 
 func (d *parallelDialer) Close() {
