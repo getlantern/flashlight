@@ -73,5 +73,5 @@ func (d *parallelDialer) Close() {
 }
 
 func (d *parallelDialer) OnOptions(opts *Options) Dialer {
-	return d.dialer.OnOptions(opts)
+	return d.proxylessDialer.OnOptions(opts)
 }
