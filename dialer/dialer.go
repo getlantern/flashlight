@@ -1,8 +1,12 @@
 // Package dialer contains the interfaces for creating connections to proxies. It is designed
 // to first connect as quickly as possible, and then to optimize for bandwidth and latency
-// based on the proxies that are accessible. It does this by first using a connect-time based
-// strategy to quickly find a working proxy, and then by using a multi-armed bandit strategy
-// to optimize for bandwidth and latency amongst the proxies that are accessible.
+// based on the proxies that are accessible. It does this by:
+//
+// 1) First connecting using proxyless strategies when we have no proxies
+// 2) As soon as we have proxies, using a combination of proxyless and proxied while testing
+// the proxies for connectivity and latency, using connection time as a proxy for latency.
+// 3) When we know what proxies are connecting, switching to a combination of proxyless and
+// proxies based on which proxies are performing best (multi-armed bandit)
 package dialer
 
 import (
@@ -10,7 +14,6 @@ import (
 	"errors"
 	"io"
 	"net"
-	"runtime/debug"
 	"sync/atomic"
 	"time"
 
@@ -19,59 +22,63 @@ import (
 
 var log = golog.LoggerFor("dialer")
 
-var currentDialer atomic.Value
+type dialer struct {
+	currentDialer   atomic.Value
+	proxylessDialer proxyless
+}
 
-var pdialer = newProxylessDialer()
+// Make sure dialer implements the Dialer interface
+var _ Dialer = (*dialer)(nil)
 
 // New creates a new dialer that first tries to connect as quickly as possilbe while also
 // optimizing for the fastest dialer.
-func New(opts *Options) Dialer {
-	if currentDialer.Load() != nil {
-		log.Debug("Closing existing dialer")
-		currentDialer.Load().(Dialer).Close()
+func New() Dialer {
+	d := &dialer{
+		proxylessDialer: newProxylessDialer(),
 	}
-
-	fcd := newFastConnectDialer(opts, func(dialerOpts *Options, existing Dialer) Dialer {
-		var nextDialer Dialer
-		banditDialer, err := NewBandit(opts)
-		if err != nil {
-			log.Errorf("Unable to create bandit: %v", err)
-			nextDialer = existing
-		} else {
-			nextDialer = banditDialer
-		}
-		nextDialer = newParallelPreferProxyless(pdialer, nextDialer)
-		currentDialer.Store(nextDialer)
-		return nextDialer
-	})
-	go fcd.connectAll(opts.Dialers)
-
-	pd := newParallelPreferProxyless(pdialer, fcd)
-	currentDialer.Store(pd)
-	return pd
+	d.currentDialer.Store(d.proxylessDialer)
+	return d
 }
 
-// NoDialer returns a dialer that only uses the proxyless dialer and does not attempt to
-// connect to any proxies. This is the default state on startup for a first-time user.
-func NoDialer() Dialer {
-	return newParallelPreferProxyless(pdialer, &noDialer{})
+func (d *dialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	dialer := d.currentDialer.Load()
+	if dialer == nil {
+		return nil, errors.New("dialer not initialized")
+	}
+	return dialer.(Dialer).DialContext(ctx, network, addr)
+}
+func (d *dialer) Close() {
+	dialer := d.currentDialer.Load()
+	if dialer == nil {
+		return
+	}
+	dialer.(Dialer).Close()
 }
 
-type noDialer struct{}
+func (d *dialer) OnOptions(opts *Options) Dialer {
+	if opts == nil {
+		log.Errorf("Options are nil -- should never happen")
+		return nil
+	}
+	opts.onNewDialer = d.onNewDialer
 
-func (d *noDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	// This ideally shouldn't be called, as it indicates we're attempting to send
-	// traffic through proxies before we actually have proxies. It's not a fatal
-	// error, but it's a sign that we should look into why we're here.
-	// Print the goroutine stack to help debug why we're here
-	log.Errorf("No dialer available -- should not be called, stack: %s", debug.Stack())
-	return nil, errors.New("no dialer available")
+	dialer := d.currentDialer.Load()
+	if dialer == nil {
+		log.Errorf("Dialer not initialized -- should never happen")
+		return nil
+	}
+	newDialer := dialer.(Dialer).OnOptions(opts)
+	if newDialer == nil {
+		log.Errorf("Did not successfully transition to a new dialer")
+		return dialer.(Dialer)
+	}
+	d.currentDialer.Store(newDialer)
+	return newDialer
 }
 
-func (d *noDialer) Close() {}
-
-// Make sure noDialer implements Dialer
-var _ Dialer = (*noDialer)(nil)
+func (d *dialer) onNewDialer(newDialer Dialer) {
+	d.currentDialer.Store(newDialer)
+}
 
 const (
 	// NetworkConnect is a pseudo network name to instruct the dialer to establish
@@ -96,6 +103,10 @@ type Options struct {
 
 	// BanditDir is the directory where the bandit will store its data
 	BanditDir string
+
+	proxylessDialer proxyless
+
+	onNewDialer func(Dialer)
 }
 
 // Clone creates a deep copy of the Options object
@@ -122,6 +133,9 @@ type Dialer interface {
 
 	// Close closes the dialer and cleans up any resources
 	Close()
+
+	// OnOptions notifies the dialer of new Options.
+	OnOptions(opts *Options) Dialer
 }
 
 // hasSucceedingDialer checks whether or not any of the given dialers is able to successfully dial our proxies

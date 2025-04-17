@@ -179,9 +179,10 @@ func NewClient(
 		configDir:      configDir,
 		requestTimeout: requestTimeout,
 		dialer: &protectedDialer{
-			// This is just a placeholder dialer until we're able to fetch the
-			// actual proxy dialers from the config.
-			dialer: dialer.NoDialer(),
+			// This starts out as a purely proxyless dialer until we have
+			// proxies to use (either loaded from disk or fetched from the
+			// server).
+			dialer: dialer.New(),
 		},
 		disconnected:                           disconnected,
 		proxyAll:                               proxyAll,
@@ -733,25 +734,27 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 	configDir := client.configDir
 	chained.PersistSessionStates(configDir)
 	dialers := chained.CreateDialers(configDir, proxies, client.user)
-	dialer := dialer.New(&dialer.Options{
-		Dialers: dialers,
-		OnError: client.onDialError,
-		OnSuccess: func(d dialer.ProxyDialer) {
-			client.onSucceedingProxy()
-			client.statsTracker.SetHasSucceedingProxy(true)
-			countryCode, country, city := d.Location()
-			previousStats := client.statsTracker.Latest()
-			if previousStats.CountryCode == "" || previousStats.CountryCode != countryCode {
-				client.statsTracker.SetActiveProxyLocation(
-					city,
-					country,
-					countryCode,
-				)
-			}
+	newDialer := client.dialer.get().OnOptions(
+		&dialer.Options{
+			Dialers: dialers,
+			OnError: client.onDialError,
+			OnSuccess: func(d dialer.ProxyDialer) {
+				client.onSucceedingProxy()
+				client.statsTracker.SetHasSucceedingProxy(true)
+				countryCode, country, city := d.Location()
+				previousStats := client.statsTracker.Latest()
+				if previousStats.CountryCode == "" || previousStats.CountryCode != countryCode {
+					client.statsTracker.SetActiveProxyLocation(
+						city,
+						country,
+						countryCode,
+					)
+				}
+			},
+			BanditDir: filepath.Join(configDir, "bandit"),
 		},
-		BanditDir: filepath.Join(configDir, "bandit"),
-	})
-	return dialers, dialer, nil
+	)
+	return dialers, newDialer, nil
 }
 
 // Creates a local server to capture client hello messages from the browser and

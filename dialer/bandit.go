@@ -27,6 +27,9 @@ type banditDialer struct {
 	secondsUntilSaveBanditRewards time.Duration
 }
 
+// Make sure banditDialer implements Dialer
+var _ Dialer = (*banditDialer)(nil)
+
 type banditMetrics struct {
 	Reward    float64
 	Count     int
@@ -169,6 +172,26 @@ func (bd *banditDialer) DialContext(ctx context.Context, network, addr string) (
 
 	bd.opts.OnSuccess(d)
 	return dt, err
+}
+
+// OnOptions loads new dialers and reverts to the fast connect dialer to test
+// the dialer's connectivity and latency.
+func (bd *banditDialer) OnOptions(opts *Options) Dialer {
+	if opts == nil {
+		return bd
+	}
+	if opts.Dialers == nil {
+		return bd
+	}
+	if len(opts.Dialers) == 0 {
+		return bd
+	}
+
+	// Close the existing bandit dialer.
+	bd.Close()
+
+	// Start back at the beginning with testing connectivity.
+	return opts.proxylessDialer.OnOptions(opts)
 }
 
 const (

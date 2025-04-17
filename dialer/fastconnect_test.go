@@ -18,7 +18,7 @@ func TestOnConnected(t *testing.T) {
 		OnSuccess: func(pd ProxyDialer) {},
 	}
 
-	fcd := newFastConnectDialer(opts, nil)
+	fcd := newFastConnectDialer(opts)
 
 	// Test adding the first dialer
 	fcd.onConnected(mockDialer1, 100*time.Millisecond)
@@ -50,9 +50,7 @@ func TestConnectAll(t *testing.T) {
 		OnSuccess: func(pd ProxyDialer) {},
 	}
 
-	fcd := newFastConnectDialer(opts, func(opts *Options, existing Dialer) Dialer {
-		return nil
-	})
+	fcd := newFastConnectDialer(opts)
 
 	dialers := []ProxyDialer{mockDialer1, mockDialer2, mockDialer3}
 
@@ -70,7 +68,7 @@ func TestConnectAll(t *testing.T) {
 	assert.NotNil(t, fcd.topDialer.get())
 
 	// Test with no dialers
-	fcd = newFastConnectDialer(opts, nil)
+	fcd = newFastConnectDialer(opts)
 	fcd.connectAll([]ProxyDialer{})
 	assert.Equal(t, 0, len(fcd.connected.dialers))
 	assert.Nil(t, fcd.topDialer.get())

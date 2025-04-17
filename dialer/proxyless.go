@@ -147,6 +147,13 @@ func (d *proxylessDialer) status(address string) int {
 	return UNKNOWN
 }
 
+// OnOptions for the state where we only have a proxyless dialer should transition to a state
+// of testing the available dialers.
+func (d *proxylessDialer) OnOptions(opts *Options) Dialer {
+	opts.proxylessDialer = d
+	return newParallelPreferProxyless(opts.proxylessDialer, newFastConnectDialer(opts))
+}
+
 // Close closes the dialer and cleans up any resources
 func (d *proxylessDialer) Close() {
 	// No resources to clean up
@@ -219,6 +226,11 @@ func (d *failingDialer) DialContext(ctx context.Context, network, addr string) (
 
 func (d *failingDialer) Close() {
 	// No resources to clean up
+}
+
+func (d *failingDialer) OnOptions(opts *Options) Dialer {
+	// No options to set
+	return d
 }
 
 func (d *failingDialer) reset(address string) {
