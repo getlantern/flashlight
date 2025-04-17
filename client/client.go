@@ -179,9 +179,10 @@ func NewClient(
 		configDir:      configDir,
 		requestTimeout: requestTimeout,
 		dialer: &protectedDialer{
-			// This is just a placeholder dialer until we're able to fetch the
-			// actual proxy dialers from the config.
-			dialer: dialer.NoDialer(),
+			// This starts out as a purely proxyless dialer until we have
+			// proxies to use (either loaded from disk or fetched from the
+			// server).
+			dialer: dialer.NewProxylessDialer(),
 		},
 		disconnected:                           disconnected,
 		proxyAll:                               proxyAll,
@@ -363,12 +364,11 @@ func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reade
 // no error occurred, then the new dialers are returned.
 func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []dialer.ProxyDialer {
 	log.Debug("Configure() called")
-	dialers, dialer, err := client.initDialers(proxies)
+	dialers, err := client.initDialers(proxies)
 	if err != nil {
 		log.Error(err)
 		return nil
 	}
-	client.dialer.set(dialer)
 	log.Debug("Reset dialer")
 	chained.PersistSessionStates(client.configDir)
 	chained.TrackStatsFor(dialers, client.configDir)
@@ -415,7 +415,10 @@ func (client *Client) dial(ctx context.Context, isConnect bool, network, addr st
 	var dnsResolutionMapForDirectDials map[string]string
 
 	ctx1, cancel1 := context.WithTimeout(ctx, TimeoutWaitingForDNSResolutionMap)
-	defer cancel1()
+	defer func() {
+		log.Debugf("Canceling dnsResolutionMapEventual context for %s: %v", addr, ctx1.Err())
+		cancel1()
+	}()
 	tmp, err := client.DNSResolutionMapForDirectDialsEventual.Get(ctx1)
 	if err != nil {
 		log.Debugf("Timed out before waiting for dnsResolutionMapEventual to be set")
@@ -425,7 +428,10 @@ func (client *Client) dial(ctx context.Context, isConnect bool, network, addr st
 	}
 
 	ctx2, cancel2 := context.WithTimeout(ctx, client.requestTimeout)
-	defer cancel2()
+	defer func() {
+		log.Debugf("Canceling dial context for %s: %v", addr, ctx2.Err())
+		cancel2()
+	}()
 	return client.doDial(op, ctx2, isConnect, addr, dnsResolutionMapForDirectDials)
 }
 
@@ -543,7 +549,10 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 	// code which may have a shorter requestTimeout.
 	directTimeout := time.Until(dl) / 5
 	cappedCTX, cancel := context.WithTimeout(ctx, directTimeout)
-	defer cancel()
+	defer func() {
+		log.Debugf("Canceling dial context for %s: %v", addr, cappedCTX.Err())
+		cancel()
+	}()
 
 	dialDirectForDetour := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		if client.useShortcut() {
@@ -552,7 +561,11 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 			case shortcut.Direct:
 				// Arbitrarily have a larger timeout if the address is eligible for shortcut.
 				shortcutCTX, cancel := context.WithTimeout(ctx, directTimeout*2)
-				defer cancel()
+
+				defer func() {
+					log.Debugf("Canceling shortcut dial context for %s: %v", addr, shortcutCTX.Err())
+					cancel()
+				}()
 				return dialDirectForShortcut(shortcutCTX, network, addr, ip)
 			case shortcut.Proxy:
 				return dialProxied(ctx, "whatever", addr)
@@ -709,9 +722,9 @@ func errorResponse(_ *filters.ConnectionState, req *http.Request, _ bool, err er
 
 // initDialers takes hosts from cfg.ChainedServers and it uses them to create a
 // new dialer. Returns the new dialers.
-func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) ([]dialer.ProxyDialer, dialer.Dialer, error) {
+func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) ([]dialer.ProxyDialer, error) {
 	if len(proxies) == 0 {
-		return nil, nil, fmt.Errorf("no chained servers configured, not initializing dialers")
+		return nil, fmt.Errorf("no chained servers configured, not initializing dialers")
 	}
 	log.Debug("initDialers called")
 	defer func(start time.Time) {
@@ -720,25 +733,31 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 	configDir := client.configDir
 	chained.PersistSessionStates(configDir)
 	dialers := chained.CreateDialers(configDir, proxies, client.user)
-	dialer := dialer.New(&dialer.Options{
-		Dialers: dialers,
-		OnError: client.onDialError,
-		OnSuccess: func(d dialer.ProxyDialer) {
-			client.onSucceedingProxy()
-			client.statsTracker.SetHasSucceedingProxy(true)
-			countryCode, country, city := d.Location()
-			previousStats := client.statsTracker.Latest()
-			if previousStats.CountryCode == "" || previousStats.CountryCode != countryCode {
-				client.statsTracker.SetActiveProxyLocation(
-					city,
-					country,
-					countryCode,
-				)
-			}
+	newDialer := client.dialer.get().OnOptions(
+		&dialer.Options{
+			Dialers: dialers,
+			OnError: client.onDialError,
+			OnSuccess: func(d dialer.ProxyDialer) {
+				client.onSucceedingProxy()
+				client.statsTracker.SetHasSucceedingProxy(true)
+				countryCode, country, city := d.Location()
+				previousStats := client.statsTracker.Latest()
+				if previousStats.CountryCode == "" || previousStats.CountryCode != countryCode {
+					client.statsTracker.SetActiveProxyLocation(
+						city,
+						country,
+						countryCode,
+					)
+				}
+			},
+			BanditDir: filepath.Join(configDir, "bandit"),
+			OnNewDialer: func(dialer dialer.Dialer) {
+				client.dialer.set(dialer)
+			},
 		},
-		BanditDir: filepath.Join(configDir, "bandit"),
-	})
-	return dialers, dialer, nil
+	)
+	client.dialer.set(newDialer)
+	return dialers, nil
 }
 
 // Creates a local server to capture client hello messages from the browser and
