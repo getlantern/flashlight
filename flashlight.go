@@ -266,7 +266,7 @@ func New(
 	f.addProxyListener(func(proxies map[string]*commonconfig.ProxyConfig, src config.Source) {
 		log.Debug("Applying proxy config with proxies")
 		dialers := f.client.Configure(chained.CopyConfigs(proxies))
-		log.Debugf("Got %v dialers", len(dialers))
+		log.Debugf("Got %v dialers from %v", len(dialers), src)
 		if dialers != nil {
 			f.callbacks.onProxiesUpdate(dialers, src)
 		}

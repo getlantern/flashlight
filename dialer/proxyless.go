@@ -151,6 +151,7 @@ func (d *proxylessDialer) status(address string) int {
 // OnOptions for the state where we only have a proxyless dialer should transition to a state
 // of testing the available dialers.
 func (d *proxylessDialer) OnOptions(opts *Options) Dialer {
+	log.Debugf("OnOptions called on proxylessDialer with %v dialers", len(opts.Dialers))
 	opts.proxylessDialer = d
 	return newParallelPreferProxyless(opts.proxylessDialer, newFastConnectDialer(opts))
 }

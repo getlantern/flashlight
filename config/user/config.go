@@ -200,7 +200,7 @@ func OnConfigChange(fn func(old, new *UserConfig)) {
 }
 
 func notifyListeners(old, new *UserConfig) {
-	log.Trace("Notifying listeners")
+	log.Debugf("Notifying %v config listeners", len(_config.listeners))
 
 	_config.mu.Lock()
 	new = proto.Clone(new).(*UserConfig)

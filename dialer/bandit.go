@@ -176,7 +176,13 @@ func (bd *banditDialer) DialContext(ctx context.Context, network, addr string) (
 
 // OnOptions loads new dialers and reverts to the fast connect dialer to test
 // the dialer's connectivity and latency.
+//
+// Note that in practice, at least as of this writing, this should never
+// be called because it should always be "shielded" by the proxyless dialer
+// within the parallel dialer, and the parallel dialer will be notified of
+// the new options.
 func (bd *banditDialer) OnOptions(opts *Options) Dialer {
+	log.Errorf("bandit::OnOptions called with %d dialers", len(opts.Dialers))
 	if opts == nil {
 		return bd
 	}

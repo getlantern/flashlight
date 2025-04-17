@@ -72,6 +72,14 @@ func (d *parallelDialer) Close() {
 	d.dialer.Close()
 }
 
+// OnOptions notifies the dialer of new Options.
+// This is called when the options change, and we need to stop all dialing
+// and restart from the initial state.
 func (d *parallelDialer) OnOptions(opts *Options) Dialer {
+	log.Debugf("OnOptions called on parallelDialer with %v dialers", len(opts.Dialers))
+	// Any time there are new options, we need to go back to the beginning and use
+	// whatever the proxyless dialer does when it gets new options. We also need
+	// to close the backup, non-proxyless dialer.
+	d.dialer.Close()
 	return d.proxylessDialer.OnOptions(opts)
 }

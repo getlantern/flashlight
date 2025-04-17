@@ -55,6 +55,7 @@ func newFastConnectDialer(opts *Options) *fastConnectDialer {
 				log.Errorf("Unable to create bandit: %v", err)
 			} else {
 				if opts.OnNewDialer != nil {
+					log.Debug("Switching to bandit dialer")
 					opts.OnNewDialer(newParallelPreferProxyless(opts.proxylessDialer, banditDialer))
 				} else {
 					log.Errorf("No onNewDialer function set -- should never happen")
@@ -103,12 +104,20 @@ func (fcd *fastConnectDialer) Close() {
 	fcd.stopCh <- struct{}{}
 }
 
+// OnOptions is called when the options change. We need to stop all dialing and restart
+// from the initial state.
+//
+// Note that in practice, at least as of this writing, this should never
+// be called because it should always be "shielded" by the proxyless dialer
+// within the parallel dialer, and the parallel dialer will be notified of
+// the new options.
 func (fcd *fastConnectDialer) OnOptions(opts *Options) Dialer {
+	log.Errorf("OnOptions called on fastConnectDialer -- should never happen")
 	// When we get new dialers, we need to:
 	// 1. Stop existing connectivity checks
 	// 2. Start new connectivity checks
 	fcd.Close()
-	return newParallelPreferProxyless(opts.proxylessDialer, newFastConnectDialer(opts))
+	return opts.proxylessDialer.OnOptions(opts)
 }
 
 func (fcd *fastConnectDialer) onConnected(pd ProxyDialer, connectTime time.Duration) {
