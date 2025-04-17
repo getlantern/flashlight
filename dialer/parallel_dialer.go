@@ -44,8 +44,9 @@ func (d *parallelDialer) DialContext(ctx context.Context, network, addr string) 
 			conn, err := d.DialContext(ctx, network, addr)
 			if err != nil {
 				errCh <- err
+			} else {
+				connCh <- conn
 			}
-			connCh <- conn
 		}(d)
 	}
 
