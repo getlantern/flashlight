@@ -11,74 +11,14 @@ package dialer
 
 import (
 	"context"
-	"errors"
 	"io"
 	"net"
-	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/golog"
 )
 
 var log = golog.LoggerFor("dialer")
-
-type dialer struct {
-	currentDialer   atomic.Value
-	proxylessDialer proxyless
-}
-
-// Make sure dialer implements the Dialer interface
-var _ Dialer = (*dialer)(nil)
-
-// New creates a new dialer that first tries to connect as quickly as possilbe while also
-// optimizing for the fastest dialer.
-func New() Dialer {
-	d := &dialer{
-		proxylessDialer: newProxylessDialer(),
-	}
-	d.currentDialer.Store(d.proxylessDialer)
-	return d
-}
-
-func (d *dialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	dialer := d.currentDialer.Load()
-	if dialer == nil {
-		return nil, errors.New("dialer not initialized")
-	}
-	return dialer.(Dialer).DialContext(ctx, network, addr)
-}
-func (d *dialer) Close() {
-	dialer := d.currentDialer.Load()
-	if dialer == nil {
-		return
-	}
-	dialer.(Dialer).Close()
-}
-
-func (d *dialer) OnOptions(opts *Options) Dialer {
-	if opts == nil {
-		log.Errorf("Options are nil -- should never happen")
-		return nil
-	}
-	opts.onNewDialer = d.onNewDialer
-
-	dialer := d.currentDialer.Load()
-	if dialer == nil {
-		log.Errorf("Dialer not initialized -- should never happen")
-		return nil
-	}
-	newDialer := dialer.(Dialer).OnOptions(opts)
-	if newDialer == nil {
-		log.Errorf("Did not successfully transition to a new dialer")
-		return dialer.(Dialer)
-	}
-	d.currentDialer.Store(newDialer)
-	return newDialer
-}
-
-func (d *dialer) onNewDialer(newDialer Dialer) {
-	d.currentDialer.Store(newDialer)
-}
 
 const (
 	// NetworkConnect is a pseudo network name to instruct the dialer to establish
@@ -106,7 +46,7 @@ type Options struct {
 
 	proxylessDialer proxyless
 
-	onNewDialer func(Dialer)
+	OnNewDialer func(Dialer)
 }
 
 // Clone creates a deep copy of the Options object
@@ -115,10 +55,12 @@ func (o *Options) Clone() *Options {
 		return nil
 	}
 	return &Options{
-		Dialers:   o.Dialers,
-		OnError:   o.OnError,
-		OnSuccess: o.OnSuccess,
-		BanditDir: o.BanditDir,
+		Dialers:         o.Dialers,
+		OnError:         o.OnError,
+		OnSuccess:       o.OnSuccess,
+		BanditDir:       o.BanditDir,
+		proxylessDialer: o.proxylessDialer,
+		OnNewDialer:     o.OnNewDialer,
 	}
 }
 

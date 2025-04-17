@@ -182,7 +182,7 @@ func NewClient(
 			// This starts out as a purely proxyless dialer until we have
 			// proxies to use (either loaded from disk or fetched from the
 			// server).
-			dialer: dialer.New(),
+			dialer: dialer.NewProxylessDialer(),
 		},
 		disconnected:                           disconnected,
 		proxyAll:                               proxyAll,
@@ -364,12 +364,11 @@ func (client *Client) Connect(dialCtx context.Context, downstreamReader io.Reade
 // no error occurred, then the new dialers are returned.
 func (client *Client) Configure(proxies map[string]*commonconfig.ProxyConfig) []dialer.ProxyDialer {
 	log.Debug("Configure() called")
-	dialers, dialer, err := client.initDialers(proxies)
+	dialers, err := client.initDialers(proxies)
 	if err != nil {
 		log.Error(err)
 		return nil
 	}
-	client.dialer.set(dialer)
 	log.Debug("Reset dialer")
 	chained.PersistSessionStates(client.configDir)
 	chained.TrackStatsFor(dialers, client.configDir)
@@ -723,9 +722,9 @@ func errorResponse(_ *filters.ConnectionState, req *http.Request, _ bool, err er
 
 // initDialers takes hosts from cfg.ChainedServers and it uses them to create a
 // new dialer. Returns the new dialers.
-func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) ([]dialer.ProxyDialer, dialer.Dialer, error) {
+func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) ([]dialer.ProxyDialer, error) {
 	if len(proxies) == 0 {
-		return nil, nil, fmt.Errorf("no chained servers configured, not initializing dialers")
+		return nil, fmt.Errorf("no chained servers configured, not initializing dialers")
 	}
 	log.Debug("initDialers called")
 	defer func(start time.Time) {
@@ -752,9 +751,13 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 				}
 			},
 			BanditDir: filepath.Join(configDir, "bandit"),
+			OnNewDialer: func(dialer dialer.Dialer) {
+				client.dialer.set(dialer)
+			},
 		},
 	)
-	return dialers, newDialer, nil
+	client.dialer.set(newDialer)
+	return dialers, nil
 }
 
 // Creates a local server to capture client hello messages from the browser and

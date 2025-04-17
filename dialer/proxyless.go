@@ -30,7 +30,8 @@ type proxylessDialer struct {
 	configBytes []byte
 }
 
-func newProxylessDialer() proxyless {
+// NewProxylessDialer creates a new proxyless dialer that uses the Outline smart dialer to dial with no proxy.
+func NewProxylessDialer() Dialer {
 	configBytes, err := configBytes()
 	if err != nil {
 		log.Errorf("Failed to read smart dialer config file: %v", err)

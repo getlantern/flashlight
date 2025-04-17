@@ -54,8 +54,8 @@ func newFastConnectDialer(opts *Options) *fastConnectDialer {
 			if err != nil {
 				log.Errorf("Unable to create bandit: %v", err)
 			} else {
-				if opts.onNewDialer != nil {
-					opts.onNewDialer(newParallelPreferProxyless(opts.proxylessDialer, banditDialer))
+				if opts.OnNewDialer != nil {
+					opts.OnNewDialer(newParallelPreferProxyless(opts.proxylessDialer, banditDialer))
 				} else {
 					log.Errorf("No onNewDialer function set -- should never happen")
 				}
