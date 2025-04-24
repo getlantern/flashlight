@@ -14,13 +14,13 @@ on:
 jobs:
 
   build:
-    runs-on: ubuntu-20.04 # the binary produced on newer Ubuntu versions won't run on our rather old cloudmaster
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v4
 
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version-file: "go.mod"
     - name: Granting private modules access
