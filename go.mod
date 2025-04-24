@@ -1,6 +1,6 @@
 module github.com/getlantern/flashlight/v7
 
-go 1.22.4
+go 1.24.1
 
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20221004112352-e7c04248adcb
 
@@ -49,7 +49,7 @@ require (
 	github.com/getlantern/multipath v0.0.0-20230510135141-717ed305ef50
 	github.com/getlantern/netx v0.0.0-20240814210628-0984f52e2d18
 	github.com/getlantern/ops v0.0.0-20231025133620-f368ab734534
-	github.com/getlantern/osversion v0.0.0-20230401075644-c2a30e73c451
+	github.com/getlantern/osversion v0.0.0-20250424174400-d834340603cf
 	github.com/getlantern/proxy/v3 v3.0.0-20240328103708-9185589b6a99
 	github.com/getlantern/psmux v1.5.15
 	github.com/getlantern/quicwrapper v0.0.0-20231117185542-d951689c4970
