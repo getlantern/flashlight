@@ -42,14 +42,14 @@ jobs:
       id: bump_tag
       uses: anothrNick/github-tag-action@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.CI_PRIVATE_REPOS_GH_TOKEN }}
         WITH_V: true
         DEFAULT_BUMP: patch
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.CI_PRIVATE_REPOS_GH_TOKEN }}
       with:
         tag_name: ${{ steps.bump_tag.outputs.tag }}
         release_name: genconfig release ${{ steps.bump_tag.outputs.tag }}
@@ -59,7 +59,7 @@ jobs:
       id: upload-release-asset
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.CI_PRIVATE_REPOS_GH_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
         asset_path: genconfig/genconfig
@@ -70,6 +70,6 @@ jobs:
     - name: Send repository dispatch
       uses: peter-evans/repository-dispatch@v3
       with:
-        token: ${{ secrets.LH_PAT }}
+        token: ${{ secrets.CI_PRIVATE_REPOS_GH_TOKEN }}
         repository: getlantern/lantern-headless-client
         event-type: flashlight-release-created
