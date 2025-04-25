@@ -754,6 +754,7 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 			OnNewDialer: func(dialer dialer.Dialer) {
 				client.dialer.set(dialer)
 			},
+			ProxyAll: client.proxyAll,
 		},
 	)
 	client.dialer.set(newDialer)

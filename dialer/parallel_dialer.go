@@ -9,16 +9,22 @@ import (
 type parallelDialer struct {
 	proxylessDialer proxyless
 	dialer          Dialer
+	opts            *Options
 }
 
-func newParallelPreferProxyless(proxyless proxyless, d Dialer) Dialer {
+func newParallelPreferProxyless(proxyless proxyless, d Dialer, opts *Options) Dialer {
 	return &parallelDialer{
 		proxylessDialer: proxyless,
 		dialer:          d,
+		opts:            opts,
 	}
 }
 
 func (d *parallelDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	if d.opts != nil && d.opts.ProxyAll != nil && d.opts.ProxyAll() {
+		// If the user has requested to proxy all traffic, we fall back to the default dialer.
+		return d.dialer.DialContext(ctx, network, addr)
+	}
 	switch d.proxylessDialer.status(addr) {
 	case SUCCEEDED:
 		// If the proxyless dialer is succeeding, keep using it.
