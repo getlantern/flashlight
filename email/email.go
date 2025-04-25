@@ -234,9 +234,9 @@ func readResponses(responses []*mandrill.Response) error {
 		case "sent", "queued", "scheduled":
 			return nil
 		case "rejected":
-			return errors.New("rejected: " + resp.RejectionReason)
+			return fmt.Errorf("rejected: %s", resp.RejectionReason)
 		default:
-			return errors.New(resp.Status)
+			return fmt.Errorf("%s", resp.Status)
 		}
 	}
 	return nil
