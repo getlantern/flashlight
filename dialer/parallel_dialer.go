@@ -21,7 +21,7 @@ func newParallelPreferProxyless(proxyless proxyless, d Dialer, opts *Options) Di
 }
 
 func (d *parallelDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	if d.opts.ProxyAll() {
+	if d.opts != nil && d.opts.ProxyAll() {
 		// If the user has requested to proxy all traffic, we fall back to the default dialer.
 		return d.dialer.DialContext(ctx, network, addr)
 	}
