@@ -38,12 +38,44 @@ func SendReport(
 	userEmail string,
 	appVersion string,
 	device string, // common name
-	model string, // alphanumeric name
+	model string,  // alphanumeric name
 	osVersion string,
 	attachments []*Attachment,
 	country string,
 ) (err error) {
 	return sendReport(
+		userConfig,
+		userConfig.GetDeviceID(),
+		strconv.Itoa(int(userConfig.GetUserID())),
+		userConfig.GetToken(),
+		userConfig.GetLanguage(),
+		issueType,
+		description,
+		subscriptionLevel,
+		userEmail,
+		appVersion,
+		device,
+		model,
+		osVersion,
+		attachments,
+		country,
+	)
+}
+
+func CollectReport(
+	userConfig common.UserConfig,
+	issueType int,
+	description string,
+	subscriptionLevel string,
+	userEmail string,
+	appVersion string,
+	device string, // common name
+	model string,  // alphanumeric name
+	osVersion string,
+	attachments []*Attachment,
+	country string,
+) ([]byte, error) {
+	return collectReport(
 		userConfig,
 		userConfig.GetDeviceID(),
 		strconv.Itoa(int(userConfig.GetUserID())),
@@ -79,6 +111,58 @@ func sendReport(
 	attachments []*Attachment,
 	country string,
 ) error {
+	out, err := collectReport(userConfig, deviceID, userID, proToken, language, issueType, description, subscriptionLevel, userEmail, appVersion, device, model, osVersion, attachments, country)
+	if err != nil {
+		log.Errorf("unable to marshal issue report: %v", err)
+		return err
+	}
+
+	// send message to lantern-cloud
+	req, err := http.NewRequest(http.MethodPost, requestURL, bytes.NewReader(out))
+	if err != nil {
+		return log.Errorf("creating request: %w", err)
+	}
+	req.Header.Set("content-type", "application/x-protobuf")
+
+	common.AddCommonNonUserHeaders(userConfig, req)
+
+	log.Debugf("issue sendReport X-Lantern-Version header: %v", req.Header.Get("X-Lantern-Version"))
+
+	resp, err := common.GetHTTPClient().Do(req)
+	if err != nil {
+		return log.Errorf("unable to send issue report: %v", err)
+	}
+
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		b, err := httputil.DumpResponse(resp, true)
+		if err != nil {
+			log.Debugf("Unable to get failed response body for [%s]", requestURL)
+		}
+		return log.Errorf("Bad response status: %d | response:\n%#v", resp.StatusCode, string(b))
+	}
+
+	log.Debugf("issue report sent: %v", resp)
+	return nil
+}
+
+func collectReport(
+	userConfig common.UserConfig,
+	deviceID string,
+	userID string,
+	proToken string,
+	language string,
+	issueType int,
+	description string,
+	subscriptionLevel string,
+	userEmail string,
+	appVersion string,
+	device string,
+	model string,
+	osVersion string,
+	attachments []*Attachment,
+	country string,
+) ([]byte, error) {
 	r := &Request{}
 
 	r.Type = Request_ISSUE_TYPE(issueType)
@@ -129,37 +213,5 @@ func sendReport(
 		}
 	}
 
-	// send message to lantern-cloud
-	out, err := proto.Marshal(r)
-	if err != nil {
-		log.Errorf("unable to marshal issue report: %v", err)
-		return err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, requestURL, bytes.NewReader(out))
-	if err != nil {
-		return log.Errorf("creating request: %w", err)
-	}
-	req.Header.Set("content-type", "application/x-protobuf")
-
-	common.AddCommonNonUserHeaders(userConfig, req)
-
-	log.Debugf("issue sendReport X-Lantern-Version header: %v", req.Header.Get("X-Lantern-Version"))
-
-	resp, err := common.GetHTTPClient().Do(req)
-	if err != nil {
-		return log.Errorf("unable to send issue report: %v", err)
-	}
-
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		b, err := httputil.DumpResponse(resp, true)
-		if err != nil {
-			log.Debugf("Unable to get failed response body for [%s]", requestURL)
-		}
-		return log.Errorf("Bad response status: %d | response:\n%#v", resp.StatusCode, string(b))
-	}
-
-	log.Debugf("issue report sent: %v", resp)
-	return nil
+	return proto.Marshal(r)
 }
