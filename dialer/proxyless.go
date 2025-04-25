@@ -153,7 +153,7 @@ func (d *proxylessDialer) status(address string) int {
 func (d *proxylessDialer) OnOptions(opts *Options) Dialer {
 	log.Debugf("OnOptions called on proxylessDialer with %v dialers", len(opts.Dialers))
 	opts.proxylessDialer = d
-	return newParallelPreferProxyless(opts.proxylessDialer, newFastConnectDialer(opts))
+	return newParallelPreferProxyless(opts.proxylessDialer, newFastConnectDialer(opts), opts)
 }
 
 // Close closes the dialer and cleans up any resources

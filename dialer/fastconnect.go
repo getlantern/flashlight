@@ -56,7 +56,7 @@ func newFastConnectDialer(opts *Options) *fastConnectDialer {
 			} else {
 				if opts.OnNewDialer != nil {
 					log.Debug("Switching to bandit dialer")
-					opts.OnNewDialer(newParallelPreferProxyless(opts.proxylessDialer, banditDialer))
+					opts.OnNewDialer(newParallelPreferProxyless(opts.proxylessDialer, banditDialer, opts))
 				} else {
 					log.Errorf("No onNewDialer function set -- should never happen")
 				}
