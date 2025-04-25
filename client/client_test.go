@@ -85,6 +85,9 @@ func resetDialers(client *Client, dial func(network, addr string) (net.Conn, err
 			default:
 			}
 		},
+		ProxyAll: func() bool {
+			return false
+		},
 	})
 	client.dialer.set(d)
 	// Wait for the dialer to be ready
