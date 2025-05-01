@@ -21,20 +21,19 @@ func newParallelPreferProxyless(proxyless proxyless, d Dialer, opts *Options) Di
 }
 
 func (d *parallelDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	if d.opts != nil && d.opts.ProxyAll != nil && d.opts.ProxyAll() {
-		// If the user has requested to proxy all traffic, we fall back to the default dialer.
-		return d.dialer.DialContext(ctx, network, addr)
-	}
 	switch d.proxylessDialer.status(addr) {
 	case SUCCEEDED:
+		log.Debugf("Proxyless dialer succeeded for %s, using it", addr)
 		// If the proxyless dialer is succeeding, keep using it.
 		return d.proxylessDialer.DialContext(ctx, network, addr)
 	case FAILED:
 		// If the proxyless dialer has failed, we fall back to the default dialer.
+		log.Debugf("Proxyless dialer failed for %s, falling back to default dialer", addr)
 		return d.dialer.DialContext(ctx, network, addr)
 	case UNKNOWN:
 		// Fallthrough
 	}
+	log.Debugf("Proxyless dialer status is unknown for %s, trying both dialers", addr)
 
 	// If we the status of the proxyless dialer is undetermined, we try both.
 	// This could be the case when we haven't tried the proxyless dialer yet,
