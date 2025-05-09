@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -116,14 +118,23 @@ func newGlobalUnmarshaler(flags map[string]interface{}) func(bytes []byte) (inte
 }
 
 func obfuscate(flags map[string]interface{}) bool {
-	return flags["readableconfig"] == nil || !flags["readableconfig"].(bool)
+	return checkBool(flags, "readableconfig", "READABLE_CONFIG")
 }
 
 func isSticky(flags map[string]interface{}) bool {
-	return checkBool(flags, "stickyconfig")
+	return checkBool(flags, "stickyconfig", "STICKY_CONFIG")
 }
 
-func checkBool(flags map[string]interface{}, key string) bool {
+func checkBool(flags map[string]interface{}, key, env string) bool {
+	envVar, ok := os.LookupEnv(env)
+	if ok {
+		trueFalse, err := strconv.ParseBool(envVar)
+		if err != nil {
+			log.Debugf("Could not parse env var: %v", err)
+		} else {
+			return trueFalse
+		}
+	}
 	if s, ok := flags[key].(bool); ok {
 		return s
 	}
