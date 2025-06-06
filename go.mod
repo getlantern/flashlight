@@ -1,6 +1,8 @@
 module github.com/getlantern/flashlight/v7
 
-go 1.24.1
+go 1.24.2
+
+toolchain go1.24.4
 
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20221004112352-e7c04248adcb
 
@@ -52,7 +54,7 @@ require (
 	github.com/getlantern/osversion v0.0.0-20250424174400-d834340603cf
 	github.com/getlantern/proxy/v3 v3.0.0-20240328103708-9185589b6a99
 	github.com/getlantern/psmux v1.5.15
-	github.com/getlantern/quicwrapper v0.0.0-20231117185542-d951689c4970
+	github.com/getlantern/quicwrapper v0.0.0-20250606185317-bfdf6ce90356
 	github.com/getlantern/replica v0.14.4
 	github.com/getlantern/rot13 v0.0.0-20220822172233-370767b2f782
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
@@ -261,7 +263,7 @@ require (
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.48.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
-	github.com/quic-go/quic-go v0.48.1 // indirect
+	github.com/quic-go/quic-go v0.52.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
 	github.com/rs/dnscache v0.0.0-20211102005908-e0241e321417 // indirect

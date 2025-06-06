@@ -378,8 +378,8 @@ github.com/getlantern/proxy/v3 v3.0.0-20240328103708-9185589b6a99/go.mod h1:I5Sv
 github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683/go.mod h1:GtXRvtMItoflWGLPE7GNq+AdL7BnmpaaNLtDQVD1XHU=
 github.com/getlantern/psmux v1.5.15 h1:VUCEk8MIsvAj90wNYRyY2fE9ZL4LIRhi1W5V9aycA9A=
 github.com/getlantern/psmux v1.5.15/go.mod h1:nyp/sr4uTbWpUh7Q2WovRb07LeLNUxDg8kAdS726FIw=
-github.com/getlantern/quicwrapper v0.0.0-20231117185542-d951689c4970 h1:ekTCi+m1TvUceBCT/6qz3/7fnljyytGW8waUW7dGQD4=
-github.com/getlantern/quicwrapper v0.0.0-20231117185542-d951689c4970/go.mod h1:PEDykM1SIU8PTVRrShJ9/WVb/uBpGyl4XBgT+LKw+X4=
+github.com/getlantern/quicwrapper v0.0.0-20250606185317-bfdf6ce90356 h1:MtlG2ZdDXDgPLKeBhc/SfVH2MF43E8bDxblLB4nqqKM=
+github.com/getlantern/quicwrapper v0.0.0-20250606185317-bfdf6ce90356/go.mod h1:GGvihiSjHgzXT5s6DvJgz87oDJdvKcPE2IWqXHUiY24=
 github.com/getlantern/ratelimit v0.0.0-20220926192648-933ab81a6fc7 h1:47FJ5kTeXc3I1VPpi2hWW9I16/Y3K0cpUq/B7oWJGF8=
 github.com/getlantern/ratelimit v0.0.0-20220926192648-933ab81a6fc7/go.mod h1:OOqKCIkspqXtIWEex4uhH1H9l7NGekT9i3Hs591ZDk4=
 github.com/getlantern/replica v0.14.4 h1:s7rxJHrOxWdw4iFILht0zIbub1pjn0sXx1eElDxICIA=
@@ -747,8 +747,8 @@ github.com/prometheus/procfs v0.0.11/go.mod h1:lV6e/gmhEcM9IjHGsFOCxxuZ+z1YqCvr4
 github.com/prometheus/procfs v0.12.0 h1:jluTpSng7V9hY0O2R9DzzJHYb2xULk9VTR1V1R/k6Bo=
 github.com/prometheus/procfs v0.12.0/go.mod h1:pcuDEFsWDnvcgNzo4EEweacyhjeA9Zk3cnaOZAZEfOo=
 github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
-github.com/quic-go/quic-go v0.48.1 h1:y/8xmfWI9qmGTc+lBr4jKRUWLGSlSigv847ULJ4hYXA=
-github.com/quic-go/quic-go v0.48.1/go.mod h1:yBgs3rWBOADpga7F+jJsb6Ybg1LSYiQvwWlLX+/6HMs=
+github.com/quic-go/quic-go v0.52.0 h1:/SlHrCRElyaU6MaEPKqKr9z83sBg2v4FLLvWM+Z47pA=
+github.com/quic-go/quic-go v0.52.0/go.mod h1:MFlGGpcpJqRAfmYi6NC2cptDPSxRWTOGNuP4wqrWmzQ=
 github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/refraction-networking/utls v1.7.1 h1:dxg+jla3uocgN8HtX+ccwDr68uCBBO3qLrkZUbqkcw0=
 github.com/refraction-networking/utls v1.7.1/go.mod h1:TUhh27RHMGtQvjQq+RyO11P6ZNQNBb3N0v7wsEjKAIQ=
