@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"strconv"
@@ -21,6 +22,8 @@ import (
 	"github.com/getlantern/ops"
 )
 
+var debug bool
+
 func configureOtel(country string) {
 	// Configure OpenTelemetry
 	const replacementText = "UUID-GOES-HERE"
@@ -37,7 +40,7 @@ func configureOtel(country string) {
 	ops.SetGlobal("pinger-id", runId)
 }
 
-func performLanternPing(urlToHit string, runId string, deviceId string, userId int64, token string, dataDir string, isSticky bool) error {
+func performLanternPing(urlToHit string, httpMethod string, runId string, deviceId string, userId int64, token string, dataDir string, isSticky bool) error {
 	golog.SetPrepender(func(writer io.Writer) {
 		_, _ = writer.Write([]byte(fmt.Sprintf("%s: ", time.Now().Format("2006-01-02 15:04:05"))))
 	})
@@ -105,10 +108,20 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 			flashlightProxy := fmt.Sprintf("socks5://%s", sa)
 			fmt.Printf("lantern started correctly. urlToHit: %s flashlight proxy: %s\n", urlToHit, flashlightProxy)
 
-			cmd := exec.Command("curl", "-x", flashlightProxy, "-s", urlToHit)
+			args := []string{"curl", "-x", flashlightProxy, "-X", httpMethod}
+
+			if debug {
+				args = append(args, "-v")
+			} else {
+				args = append(args, "-s")
+			}
+
+			args = append(args, urlToHit)
+
+			cmd := exec.Command(args[0], args[1:]...)
 
 			// Run the command and capture the output
-			outputB, err := cmd.Output()
+			outputB, err := cmd.CombinedOutput()
 			if err != nil {
 				fmt.Println("Error executing command:", err)
 				resultCh <- err
@@ -155,8 +168,10 @@ func main() {
 	token := os.Getenv("TOKEN")
 	runId := os.Getenv("RUN_ID")
 	targetUrl := os.Getenv("TARGET_URL")
+	httpMethod := os.Getenv("HTTP_METHOD")
 	data := os.Getenv("DATA")
 	isSticky := os.Getenv("STICKY") == "true"
+	_, debug = os.LookupEnv("DEBUG")
 
 	if deviceId == "" || userId == "" || token == "" || runId == "" || targetUrl == "" || data == "" {
 		fmt.Println("missing required environment variable(s)")
@@ -170,7 +185,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	if performLanternPing(targetUrl, runId, deviceId, uid, token, data, isSticky) != nil {
+	if httpMethod == "" {
+		httpMethod = http.MethodGet
+	}
+
+	if performLanternPing(targetUrl, httpMethod, runId, deviceId, uid, token, data, isSticky) != nil {
 		fmt.Println("failed to perform lantern ping")
 		os.Exit(1)
 	}
