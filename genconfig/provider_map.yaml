@@ -18,6 +18,7 @@ cloudfront:
     objects.githubusercontent.com: d15b4vylwwabfh.cloudfront.net
     mandrillapp.com: d2rh3u0miqci5a.cloudfront.net
     replica-search.lantern.io: d7kybcoknm3oo.cloudfront.net
+    service.dogsdogs.xyz: d7kybcoknm3oo.cloudfront.net
     replica-r2.lantern.io: d2w4c4n9jigxy2.cloudfront.net
     bf-freddie.herokuapp.com: d2rhc0fs939ppy.cloudfront.net
     ssl.google-analytics.com: d2iwjfhwkzfkuj.cloudfront.net
@@ -39,6 +40,7 @@ akamai:
     objects.githubusercontent.com: objects-githubusercontent.dsa.akamai.getiantem.org
     mandrillapp.com: mandrillapp.dsa.akamai.getiantem.org
     replica-search.lantern.io: replica-search.dsa.akamai.lantern.io
+    service.dogsdogs.xyz: replica-search.dsa.akamai.lantern.io
     replica-r2.lantern.io: replica-r2.dsa.akamai.getiantem.org
     bf-freddie.herokuapp.com: freddie.dsa.akamai.getiantem.org
     ssl.google-analytics.com: google-analytics.dsa.akamai.getiantem.org
