@@ -19,7 +19,7 @@ require (
 	github.com/OperatorFoundation/Starbridge-go/Starbridge/v3 v3.0.17
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/dustin/go-humanize v1.0.1
-	github.com/getlantern/broflake v0.0.0-20250610203950-589f1a2fd8c5
+	github.com/getlantern/broflake v0.0.0-20250515135912-b53a6690f363
 	github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493
 	github.com/getlantern/cmux/v2 v2.0.0-20230301223233-dac79088a4c0
 	github.com/getlantern/cmuxprivate v0.0.0-20211216020409-d29d0d38be54
@@ -54,7 +54,7 @@ require (
 	github.com/getlantern/osversion v0.0.0-20250424174400-d834340603cf
 	github.com/getlantern/proxy/v3 v3.0.0-20240328103708-9185589b6a99
 	github.com/getlantern/psmux v1.5.15
-	github.com/getlantern/quicwrapper v0.0.0-20250610202231-252f48357c93
+	github.com/getlantern/quicwrapper v0.0.0-20250417060014-acb01527c4c2
 	github.com/getlantern/replica v0.14.4
 	github.com/getlantern/rot13 v0.0.0-20220822172233-370767b2f782
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
