@@ -219,8 +219,8 @@ github.com/gaukas/wazerofs v0.1.0 h1:wIkW1bAxSnpaaVkQ5LOb1tm1BXdVap3eKjJpVWIqt2E
 github.com/gaukas/wazerofs v0.1.0/go.mod h1:+JECB9Fwt0taPqSgHckG9lmT3tcoVK+9VJozTsq9UlI=
 github.com/getlantern/algeneva v0.0.0-20240222191137-2b4e88234f59 h1:uWNy0b1Wtpsd4n64Kat+fRjvPCBwM2Nykwt71LupJAQ=
 github.com/getlantern/algeneva v0.0.0-20240222191137-2b4e88234f59/go.mod h1:PrNR8tMXO26YNs8K9653XCUH7u2Kv4OdfFC3Ke1GsX0=
-github.com/getlantern/broflake v0.0.0-20250610203950-589f1a2fd8c5 h1:0gYXgedKgGm18VzVu5Al0cXRTSyT8BMbnLSovgOffiw=
-github.com/getlantern/broflake v0.0.0-20250610203950-589f1a2fd8c5/go.mod h1:OwceDg/1vks4I9ErSWmBxNmVSn3M8YXLFtnCiYCltDI=
+github.com/getlantern/broflake v0.0.0-20250515135912-b53a6690f363 h1:eV+w/21j/e30LOkF9TIPF+/RjGjiTG3YyUTNqjGPxqA=
+github.com/getlantern/broflake v0.0.0-20250515135912-b53a6690f363/go.mod h1:pH4tcEWowrmYpjwMizoTy7ZerDyFsE8180xBWVF60QU=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
 github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493 h1:8WjDNmpDLFVsAfcnHxqF4pfVKkdAQxyJ9iCHB4LxSfc=
 github.com/getlantern/bufconn v0.0.0-20210901195825-fd7c0267b493/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
@@ -380,8 +380,8 @@ github.com/getlantern/proxy/v3 v3.0.0-20240328103708-9185589b6a99/go.mod h1:I5Sv
 github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683/go.mod h1:GtXRvtMItoflWGLPE7GNq+AdL7BnmpaaNLtDQVD1XHU=
 github.com/getlantern/psmux v1.5.15 h1:VUCEk8MIsvAj90wNYRyY2fE9ZL4LIRhi1W5V9aycA9A=
 github.com/getlantern/psmux v1.5.15/go.mod h1:nyp/sr4uTbWpUh7Q2WovRb07LeLNUxDg8kAdS726FIw=
-github.com/getlantern/quicwrapper v0.0.0-20250610202231-252f48357c93 h1:9jDA8Ojs4j/d4EBd2ap6r7YkGH/YFUccHuDU7DBIs+o=
-github.com/getlantern/quicwrapper v0.0.0-20250610202231-252f48357c93/go.mod h1:8JUff02h2OIo2TSuJDJmTVphoh3MzeE7V5gbjPa+r0w=
+github.com/getlantern/quicwrapper v0.0.0-20250417060014-acb01527c4c2 h1:4TMpZ++GTJtfBGx38IE8JRezp461s0CcWwPOGMyIfTU=
+github.com/getlantern/quicwrapper v0.0.0-20250417060014-acb01527c4c2/go.mod h1:8JUff02h2OIo2TSuJDJmTVphoh3MzeE7V5gbjPa+r0w=
 github.com/getlantern/ratelimit v0.0.0-20220926192648-933ab81a6fc7 h1:47FJ5kTeXc3I1VPpi2hWW9I16/Y3K0cpUq/B7oWJGF8=
 github.com/getlantern/ratelimit v0.0.0-20220926192648-933ab81a6fc7/go.mod h1:OOqKCIkspqXtIWEex4uhH1H9l7NGekT9i3Hs591ZDk4=
 github.com/getlantern/replica v0.14.4 h1:s7rxJHrOxWdw4iFILht0zIbub1pjn0sXx1eElDxICIA=
