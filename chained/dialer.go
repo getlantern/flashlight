@@ -248,7 +248,7 @@ func (p *proxy) buildCONNECTRequest(addr string) (*http.Request, error) {
 func (p *proxy) checkCONNECTResponse(op *ops.Op, r *bufio.Reader, req *http.Request, reqTime time.Time) error {
 	resp, err := http.ReadResponse(r, req)
 	if err != nil {
-		return errors.New("Error reading CONNECT response: %s", err)
+		return fmt.Errorf("Error reading CONNECT response: %w", err)
 	}
 	if !sameStatusCodeClass(http.StatusOK, resp.StatusCode) {
 		var body []byte
