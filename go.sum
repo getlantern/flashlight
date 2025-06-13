@@ -328,8 +328,8 @@ github.com/getlantern/keepcurrent v0.0.0-20240126172110-2e0264ca385d/go.mod h1:e
 github.com/getlantern/keyman v0.0.0-20180207174507-f55e7280e93a/go.mod h1:FMf0g72BHs14jVcD8i8ubEk4sMB6JdidBn67d44i3ws=
 github.com/getlantern/keyman v0.0.0-20230503155501-4e864ca2175b h1:iyEuk8ARQC9HfraqC4r3leBhU55R1TV7bAiyPYE54kA=
 github.com/getlantern/keyman v0.0.0-20230503155501-4e864ca2175b/go.mod h1:ZJ+yDaZkJ/JU9j7EQa3UUh6ouedrNDDLA5OiowS1Iuk=
-github.com/getlantern/kindling v0.0.0-20250613043843-39e9c56a78c4 h1:xC02Fb66P8bRUJpHUeoouF2QacaFNLGa+zDVaHt6XMg=
-github.com/getlantern/kindling v0.0.0-20250613043843-39e9c56a78c4/go.mod h1:HD0J725mTvBXeBTepQa9wwpPL5LYLqER7hsF8I9sXkE=
+github.com/getlantern/kindling v0.0.0-20250613201254-5ac7995a99b5 h1:YrTgokkxhLnSEmN5qJIJaU/GFEBvHD20EOQBeLsnaLM=
+github.com/getlantern/kindling v0.0.0-20250613201254-5ac7995a99b5/go.mod h1:HD0J725mTvBXeBTepQa9wwpPL5LYLqER7hsF8I9sXkE=
 github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a h1:z7G1v79GB1qRrkcbzF0nrLzV/+dwdGmamEZAp0ff+z0=
 github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a/go.mod h1:cGOfTjvllC9bcwS7cVW6tGT6fXc8Dki384uFjm7XBnw=
 github.com/getlantern/lantern-algeneva v0.0.0-20240930181006-6d3c00db1d5d h1:ACBwPR4du54Qw+X5ajsbMqOFR8euGZRdMGkvTDS7I60=
