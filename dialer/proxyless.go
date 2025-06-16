@@ -56,6 +56,7 @@ func NewProxylessDialer() Dialer {
 func (d *proxylessDialer) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
 	op := ops.Begin("proxyless_dialer")
 	defer op.End()
+	op.Set("address", address)
 	deadline, _ := ctx.Deadline()
 	log.Debugf("Time remaining: %v for ctx: %v", time.Until(deadline), ctx.Err())
 
