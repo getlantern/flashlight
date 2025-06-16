@@ -3,6 +3,7 @@ package chained
 import (
 	"context"
 	"crypto/x509"
+	"fmt"
 	"math/rand"
 	"net"
 	"time"
@@ -25,6 +26,8 @@ type broflakeImpl struct {
 }
 
 func newBroflakeImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+	op := ops.Begin("new_broflake")
+	defer op.End()
 	// TODO: I don't know what the reportDialCoreFn is, and I'm not sure if I need to know. I'm
 	// just imitating the function signature and approach of other impls...
 	bo, wo, qo := makeBroflakeOptions(pc)
@@ -32,12 +35,16 @@ func newBroflakeImpl(pc *config.ProxyConfig, reportDialCore reportDialCoreFn) (p
 	// Construct, init, and start a Broflake client!
 	bfconn, ui, err := clientcore.NewBroflake(bo, wo, nil)
 	if err != nil {
-		return nil, err
+		broErr := fmt.Errorf("Failed to create Broflake client: %w", err)
+		op.FailIf(broErr)
+		return nil, broErr
 	}
 
 	ql, err := clientcore.NewQUICLayer(bfconn, qo)
 	if err != nil {
-		return nil, err
+		broErr := fmt.Errorf("Failed to create QUIC layer: %w", err)
+		op.FailIf(broErr)
+		return nil, broErr
 	}
 
 	go ql.DialAndMaintainQUICConnection()
