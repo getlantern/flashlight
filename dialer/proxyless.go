@@ -10,6 +10,7 @@ import (
 
 	"github.com/Jigsaw-Code/outline-sdk/transport"
 	"github.com/Jigsaw-Code/outline-sdk/x/smart"
+	"github.com/getlantern/flashlight/v7/ops"
 )
 
 type proxyless interface {
@@ -53,6 +54,8 @@ func NewProxylessDialer() Dialer {
 
 // DialContext dials out to the domain or IP address representing a destination site.
 func (d *proxylessDialer) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
+	op := ops.Begin("proxyless_dialer")
+	defer op.End()
 	deadline, _ := ctx.Deadline()
 	log.Debugf("Time remaining: %v for ctx: %v", time.Until(deadline), ctx.Err())
 
@@ -67,25 +70,29 @@ func (d *proxylessDialer) DialContext(ctx context.Context, network, address stri
 	// The smart dialer requires the port to be specified, so we add it if it's
 	// missing. We can't do this in the dialer itself because the scheme
 	// is stripped by the time the dialer is called.
-	addr, host, err := normalizeAddrHost(address)
+	addr, domain, err := normalizeAddrHost(address)
 	if err != nil {
 		log.Errorf("Failed to normalize address: %v", err)
+		op.FailIf(err)
 		return nil, err
 	}
-	dialer, err := d.getOrCreateDialer(ctx, host, addr)
+	dialer, err := d.getOrCreateDialer(ctx, domain, op)
 	if err != nil {
-		d.onFailure(host, err)
+		d.onFailure(domain, err)
+		op.FailIf(err)
 		return nil, fmt.Errorf("failed to create smart dialer: %v", err)
 	}
 
 	// Store the dialer in the map right away so that we can use it for future requests.
 	// If the dialer fails, we'll store a failing dialer in the map.
-	d.onSuccess(host, dialer)
+	d.onSuccess(domain, dialer)
 	streamConn, err := dialer.DialStream(ctx, addr)
 	if err != nil {
 		log.Errorf("❌ Failed to dial stream for %s: %v", address, err)
-		d.onFailure(host, err)
-		return nil, fmt.Errorf("failed to dial stream with new dialer: %v", err)
+		dialErr := fmt.Errorf("failed to dial stream with proxyless dialer: %v", err)
+		d.onFailure(domain, dialErr)
+		op.FailIf(dialErr)
+		return nil, dialErr
 	}
 	log.Debugf("✅ Successfully dialed proxyless to %s", address)
 	return streamConn, nil
@@ -93,20 +100,21 @@ func (d *proxylessDialer) DialContext(ctx context.Context, network, address stri
 
 // getOrCreateDialer gets or creates a dialer for the given host.
 // If a dialer already exists, it returns the existing one.
-func (d *proxylessDialer) getOrCreateDialer(ctx context.Context, host, addr string) (transport.StreamDialer, error) {
+func (d *proxylessDialer) getOrCreateDialer(ctx context.Context, domain string, op *ops.Op) (transport.StreamDialer, error) {
 	// Check if we already have a dialer for this host
-	if dialer, ok := successfulDialers.Load(host); ok {
-		log.Debugf("Using existing dialer for host: %s", host)
+	if dialer, ok := successfulDialers.Load(domain); ok {
+		log.Debugf("Using existing dialer for host: %s", domain)
+		op.Set("status", "existing")
 		return dialer.(transport.StreamDialer), nil
 	}
 
-	// Create a new dialer
-	domains := []string{host}
-	dialer, err := d.newDialer(ctx, domains, d.configBytes)
+	op.Set("status", "new")
+	dialer, err := d.newDialer(ctx, []string{domain}, d.configBytes)
 	if err != nil {
-		log.Errorf("❌ Failed to create smart dialer for %v: %v", host, err)
+		log.Errorf("❌ Failed to create smart dialer for %v: %v", domain, err)
 		return nil, err
 	}
+	log.Debugf("✅ Successfully created smart dialer to %s", domain)
 	return dialer, nil
 }
 

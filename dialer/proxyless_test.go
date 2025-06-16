@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/Jigsaw-Code/outline-sdk/transport"
+	"github.com/getlantern/flashlight/v7/ops"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,7 +23,6 @@ func (m *mockStreamDialer) DialStream(ctx context.Context, addr string) (transpo
 func TestGetOrCreateDialer_ExistingDialer(t *testing.T) {
 	// Arrange
 	host := "example.com"
-	addr := "example.com:443"
 	mockDialer := &mockStreamDialer{
 		dialStreamFunc: func(ctx context.Context, addr string) (transport.StreamConn, error) {
 			return nil, nil
@@ -34,7 +34,7 @@ func TestGetOrCreateDialer_ExistingDialer(t *testing.T) {
 	d := &proxylessDialer{}
 
 	// Act
-	dialer, err := d.getOrCreateDialer(context.Background(), host, addr)
+	dialer, err := d.getOrCreateDialer(context.Background(), host, ops.Begin("test_op"))
 
 	// Assert
 	assert.NoError(t, err)
@@ -44,7 +44,6 @@ func TestGetOrCreateDialer_ExistingDialer(t *testing.T) {
 func TestGetOrCreateDialer_NewDialerSuccess(t *testing.T) {
 	// Arrange
 	host := "example.com"
-	addr := "example.com:443"
 	mockDialer := &mockStreamDialer{}
 	d := &proxylessDialer{
 		newDialer: func(ctx context.Context, testDomains []string, configBytes []byte) (transport.StreamDialer, error) {
@@ -54,7 +53,7 @@ func TestGetOrCreateDialer_NewDialerSuccess(t *testing.T) {
 	}
 
 	// Act
-	dialer, err := d.getOrCreateDialer(context.Background(), host, addr)
+	dialer, err := d.getOrCreateDialer(context.Background(), host, ops.Begin("test_op"))
 
 	// Assert
 	assert.NoError(t, err)
@@ -64,7 +63,6 @@ func TestGetOrCreateDialer_NewDialerSuccess(t *testing.T) {
 func TestGetOrCreateDialer_NewDialerFailure(t *testing.T) {
 	// Arrange
 	host := "example.com"
-	addr := "example.com:443"
 	expectedErr := errors.New("failed to create dialer")
 	d := &proxylessDialer{
 		newDialer: func(ctx context.Context, testDomains []string, configBytes []byte) (transport.StreamDialer, error) {
@@ -74,7 +72,7 @@ func TestGetOrCreateDialer_NewDialerFailure(t *testing.T) {
 	}
 
 	// Act
-	dialer, err := d.getOrCreateDialer(context.Background(), host, addr)
+	dialer, err := d.getOrCreateDialer(context.Background(), host, ops.Begin("test_op"))
 
 	// Assert
 	assert.Nil(t, dialer)
