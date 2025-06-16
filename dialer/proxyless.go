@@ -103,7 +103,7 @@ func (d *proxylessDialer) DialContext(ctx context.Context, network, address stri
 func (d *proxylessDialer) getOrCreateDialer(ctx context.Context, domain string, op *ops.Op) (transport.StreamDialer, error) {
 	// Check if we already have a dialer for this host
 	if dialer, ok := successfulDialers.Load(domain); ok {
-		log.Debugf("Using existing dialer for host: %s", domain)
+		log.Debugf("Using existing dialer for domain: %s", domain)
 		op.Set("status", "existing")
 		return dialer.(transport.StreamDialer), nil
 	}
