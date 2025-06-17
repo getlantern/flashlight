@@ -208,7 +208,12 @@ func normalizeAddrHost(address string) (string, string, error) {
 }
 
 func isIPAddress(ip string) bool {
-	parsedIP := net.ParseIP(ip)
+	// First split the IP address by host and port
+	host, _, err := net.SplitHostPort(ip)
+	if err != nil { // If there's no port, we assume it's just an IP address
+		host = ip
+	}
+	parsedIP := net.ParseIP(host)
 	return parsedIP != nil
 }
 
