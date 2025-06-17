@@ -142,6 +142,10 @@ func (d *proxylessDialer) onFailure(host string, err error) {
 // status checks the status of the dialer for the given address.
 // Returns SUCCEEDED, FAILED, or UNKNOWN.
 func (d *proxylessDialer) status(address string) int {
+	if isIPAddress(address) {
+		// If the address is an IP address, we can't use the proxyless dialer.
+		return FAILED
+	}
 	_, host, err := normalizeAddrHost(address)
 	if err != nil {
 		return FAILED
@@ -201,6 +205,11 @@ func normalizeAddrHost(address string) (string, string, error) {
 	}
 	addr := fmt.Sprintf("%s:%s", host, "443")
 	return addr, host, nil
+}
+
+func isIPAddress(ip string) bool {
+	parsedIP := net.ParseIP(ip)
+	return parsedIP != nil
 }
 
 // configBytes returns the configuration bytes for the smart dialer
