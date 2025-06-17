@@ -52,7 +52,7 @@ func GetHTTPClient() *http.Client {
 	}
 
 	var k kindling.Kindling
-	ioWriter := log.AsStdLogger().Writer()
+	ioWriter := log.AsDebugLogger().Writer()
 	// Create new fronted instance.
 	f, err := newFronted(ioWriter, sentry.PanicListener)
 	if err != nil {

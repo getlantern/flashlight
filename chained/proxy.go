@@ -98,6 +98,10 @@ func CreateDialersMap(configDir string, proxies map[string]*config.ProxyConfig, 
 				wg.Add(1)
 				go func(name string, s *config.ProxyConfig) {
 					defer wg.Done()
+					if !common.SupportsTransport(s.PluggableTransport) {
+						log.Debugf("Ignoring dialer for %v with transport %v not in %v", name, s.PluggableTransport, os.Getenv("LANTERN_TRANSPORTS"))
+						return
+					}
 					dialer, err := CreateDialer(configDir, name, s, uc)
 					if err != nil {
 						log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
