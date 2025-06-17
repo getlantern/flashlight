@@ -164,6 +164,7 @@ func TestIsIPAddress(t *testing.T) {
 		{"256.256.256.256", false},        // invalid IP
 		{"1234:5678:9abc:defg::1", false}, // invalid IPv6
 		{"127.0.0.1:8080", true},          // port included
+		{"[2001:db8::1]:8080", true},      // IPv6 with port
 	}
 
 	for _, tt := range tests {
