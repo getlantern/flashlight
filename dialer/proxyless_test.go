@@ -148,3 +148,29 @@ func TestDialContext_DialStreamError(t *testing.T) {
 	assert.Nil(t, conn)
 	assert.Error(t, err)
 }
+func TestIsIPAddress(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected bool
+	}{
+		{"127.0.0.1", true},
+		{"192.168.1.1", true},
+		{"192.168.1.1:90", true},
+		{"::1", true},
+		{"2001:db8::1", true},
+		{"example.com", false},
+		{"localhost", false},
+		{"", false},
+		{"256.256.256.256", false},        // invalid IP
+		{"1234:5678:9abc:defg::1", false}, // invalid IPv6
+		{"127.0.0.1:8080", true},          // port included
+		{"[2001:db8::1]:8080", true},      // IPv6 with port
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			result := isIPAddress(tt.input)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
