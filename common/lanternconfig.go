@@ -32,7 +32,7 @@ func loadTransports() []string {
 }
 
 // SupportsTransport reads the LANTERN_TRANSPORTS environment variable and returns whether or not the
-// specified transport is supported. If the there is no LANTERN_TRANSPORTS environment variable defined,
+// specified transport is supported. If there is no LANTERN_TRANSPORTS environment variable defined,
 // all transports are supported.
 func SupportsTransport(transport string) bool {
 	return len(transports) == 0 || slices.Contains(transports, transport)
