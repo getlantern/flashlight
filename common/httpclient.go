@@ -58,6 +58,7 @@ func GetHTTPClient() *http.Client {
 	if err != nil {
 		log.Errorf("Failed to create fronted instance: %v", err)
 		k = kindling.NewKindling(
+			"flashlight",
 			kindling.WithPanicListener(sentry.PanicListener),
 			kindling.WithLogWriter(ioWriter),
 			kindling.WithProxyless(domains...),
@@ -65,6 +66,7 @@ func GetHTTPClient() *http.Client {
 	} else {
 		// Set the client to the kindling client.
 		k = kindling.NewKindling(
+			"flashlight",
 			kindling.WithPanicListener(sentry.PanicListener),
 			kindling.WithLogWriter(ioWriter),
 			kindling.WithDomainFronting(f),
