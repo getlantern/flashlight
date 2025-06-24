@@ -410,10 +410,10 @@ replica:
   ReplicaRustEndpoint: *ReplicaRustEndpoint
 
 otel:
-  endpoint: api.honeycomb.io:443
+  endpoint: ingest.us.signoz.cloud:443
   headers:
     # Note - this key is only authorized to send events, nothing else
-    x-honeycomb-team: D7LRAYj3uCxrSb7WZjO24C
+    signoz-ingestion-key: oYRsGfPwBwtIteu4vi84DzSDKnxtStlEw7Bv
   samplerate: 8000
   opsamplerates:
     client_started: 1
