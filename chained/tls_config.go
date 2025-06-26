@@ -139,7 +139,6 @@ func getBrowserHello(ctx context.Context, configDir string, uc common.UserConfig
 	if err == nil {
 		return *hello
 	}
-	op.FailIf(err)
 	log.Debugf("failed to actively obtain browser hello: %v", err)
 
 	// Our last option is to simulate a browser choice for the user based on market share.

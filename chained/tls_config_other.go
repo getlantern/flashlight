@@ -21,7 +21,7 @@ func cachedHello(configDir string) (*helloSpec, error) {
 	if err == nil {
 		return &helloSpec{tls.HelloCustom, sample}, nil
 	}
-	return nil, fmt.Errorf("%w", err)
+	return nil, fmt.Errorf("Could not read hello cache file: %w", err)
 }
 
 // ActivelyObtainBrowserHello obtains a sample TLS ClientHello via listening
@@ -29,11 +29,11 @@ func cachedHello(configDir string) (*helloSpec, error) {
 func ActivelyObtainBrowserHello(ctx context.Context, configDir string) (*helloSpec, error) {
 	sample, err := hellocap.GetDefaultBrowserHello(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("%w", err)
+		return nil, fmt.Errorf("Could not get default browser hello: %w", err)
 	}
 	helloCacheFile := filepath.Join(configDir, helloCacheFilename)
 	if err := os.WriteFile(helloCacheFile, sample, 0644); err != nil {
-		log.Debugf("failed to write actively obtained hello to cache: %v", err)
+		return nil, fmt.Errorf("failed to write actively obtained hello to cache: %w", err)
 	} else {
 		log.Debugf("wrote actively obtained hello to cache")
 	}
