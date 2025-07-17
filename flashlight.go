@@ -396,6 +396,8 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	f.applyOtel(cfg)
 	f.callbacks.onConfigUpdate(cfg, src)
 	f.callbacks.onInit()
+
+	common.SetDNSTTConfig(cfg.DNSTTConfig)
 }
 
 // EnabledFeatures gets all features enabled based on current conditions
