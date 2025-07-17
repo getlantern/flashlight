@@ -382,17 +382,9 @@ func loadDNSTTConfig() error {
 	if err := yaml.Unmarshal(bytes, &cfg); err != nil {
 		return fmt.Errorf("Unable to parse dnstt file at %s: %s", *dnsttFile, err)
 	}
-
-	if cfg.PublicKey == "" {
-		return fmt.Errorf("dnstt publicKey is missing in %s", *dnsttFile)
+	if err := cfg.Validate(); err != nil {
+		return fmt.Errorf("Invalid DNSTT config: %s", err)
 	}
-	if cfg.Domain == "" {
-		return fmt.Errorf("dnstt domain is missing in %s", *dnsttFile)
-	}
-	if cfg.DoHResolver == "" && cfg.DoTResolver == "" {
-		return fmt.Errorf("at least one of DoHResolver or DoTResolver must be specified in %s", *dnsttFile)
-	}
-
 	dnsttCfg = &cfg
 	return nil
 }

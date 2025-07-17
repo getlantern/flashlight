@@ -141,13 +141,23 @@ func newFronted(logWriter io.Writer, panicListener func(string)) (fronted.Fronte
 	), nil
 }
 
+func (c *DNSTTConfig) Validate() error {
+	if c.PublicKey == "" {
+		return fmt.Errorf("publicKey is required")
+	}
+	if c.Domain == "" {
+		return fmt.Errorf("domain is required")
+	}
+	if c.DoHResolver == "" && c.DoTResolver == "" {
+		return fmt.Errorf("at least one of DoHResolver or DoTResolver must be specified")
+	}
+	return nil
+}
+
 func newDNSTT() (dnstt.DNSTT, error) {
 	cfg := dnsttConfig.Load().(*DNSTTConfig)
-	if cfg.PublicKey == "" {
-		return nil, fmt.Errorf("publicKey is missing")
-	}
-	if cfg.Domain == "" {
-		return nil, fmt.Errorf("domain is missing")
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid DNSTT configuration: %w", err)
 	}
 
 	options := []dnstt.Option{
@@ -155,8 +165,6 @@ func newDNSTT() (dnstt.DNSTT, error) {
 		dnstt.WithTunnelDomain(cfg.Domain),
 	}
 	switch {
-	case cfg.DoHResolver == "" && cfg.DoTResolver == "":
-		return nil, fmt.Errorf("at least one of DoHResolver or DoTResolver must be specified")
 	case cfg.DoHResolver != "":
 		options = append(options, dnstt.WithDoH(cfg.DoHResolver))
 	case cfg.DoTResolver != "":
