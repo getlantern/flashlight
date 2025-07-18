@@ -429,9 +429,11 @@ otel:
     broflake_fronted_roundtrip: 800000
     new_broflake: 1000
 
+{{with .dnstt}}
 dnsttconfig:
-  domain: "{{.dnstt.Domain}}"
-  publicKey: "{{.dnstt.PublicKey}}"
-  dohResolver: "{{.dnstt.DoHResolver}}"
-  dotResolver: "{{.dnstt.DoTResolver}}"
-  utlsDistribution: "{{.dnstt.UTLSDistribution}}"
+  domain: "{{.Domain}}"
+  publicKey: "{{.PublicKey}}"
+  dohResolver: "{{.DoHResolver}}"
+  dotResolver: "{{.DoTResolver}}"
+  utlsDistribution: "{{.UTLSDistribution}}"
+{{end}}

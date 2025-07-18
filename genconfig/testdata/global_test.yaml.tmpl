@@ -420,9 +420,11 @@ otel:
     autoupdate_install: 1
     check_update: 1
 
+{{with .dnstt}}
 dnsttconfig:
-  domain: "{{.dnstt.Domain}}"
-  publicKey: "{{.dnstt.PublicKey}}"
-  dohResolver: "{{.dnstt.DoHResolver}}"
-  dotResolver: "{{.dnstt.DoTResolver}}"
-  utlsDistribution: "{{.dnstt.UTLSDistribution}}"
+  domain: "{{.Domain}}"
+  publicKey: "{{.PublicKey}}"
+  dohResolver: "{{.DoHResolver}}"
+  dotResolver: "{{.DoTResolver}}"
+  utlsDistribution: "{{.UTLSDistribution}}"
+{{end}}

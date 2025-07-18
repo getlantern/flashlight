@@ -63,8 +63,6 @@ var (
 
 	blacklist    = make(filter)
 	proxiedSites = make(filter)
-
-	dnsttCfg *common.DNSTTConfig
 )
 
 type ConfigGenerator struct {
@@ -222,7 +220,7 @@ func (c *ConfigGenerator) GenerateConfig(
 		return nil, err
 	}
 
-	model, err := c.buildModel("cloud.yaml", cas)
+	model, err := c.buildModel("cloud.yaml", cas, dnsttConfig)
 	if err != nil {
 		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
@@ -256,7 +254,8 @@ func main() {
 	loadMasquerades()
 	loadProxiedSitesList()
 	loadBlacklist()
-	if err := loadDNSTTConfig(); err != nil {
+	dnsttCfg, err := loadDNSTTConfig()
+	if err != nil {
 		log.Errorf("Error loading DNSTT config: %s", err)
 	}
 
@@ -370,23 +369,22 @@ func loadBlacklist() {
 	}
 }
 
-func loadDNSTTConfig() error {
+func loadDNSTTConfig() (*common.DNSTTConfig, error) {
 	if *dnsttFile == "" {
-		return nil
+		return nil, nil
 	}
 	bytes, err := os.ReadFile(*dnsttFile)
 	if err != nil {
-		return fmt.Errorf("Unable to read dnstt file at %s: %s", *dnsttFile, err)
+		return nil, fmt.Errorf("Unable to read dnstt file at %s: %s", *dnsttFile, err)
 	}
 	var cfg common.DNSTTConfig
 	if err := yaml.Unmarshal(bytes, &cfg); err != nil {
-		return fmt.Errorf("Unable to parse dnstt file at %s: %s", *dnsttFile, err)
+		return nil, fmt.Errorf("Unable to parse dnstt file at %s: %s", *dnsttFile, err)
 	}
 	if err := cfg.Validate(); err != nil {
-		return fmt.Errorf("Invalid DNSTT config: %s", err)
+		return nil, fmt.Errorf("Invalid DNSTT config: %s", err)
 	}
-	dnsttCfg = &cfg
-	return nil
+	return &cfg, nil
 }
 
 func loadTemplate(name string) string {
@@ -604,7 +602,7 @@ func (c *ConfigGenerator) doVetMasquerades(certPool *x509.CertPool, inCh chan *m
 	c.wg.Done()
 }
 
-func (c *ConfigGenerator) buildModel(configName string, cas map[string]*castat) (map[string]interface{}, error) {
+func (c *ConfigGenerator) buildModel(configName string, cas map[string]*castat, dnsttCfg *common.DNSTTConfig) (map[string]interface{}, error) {
 	casList := make([]*castat, 0, len(cas))
 	for _, ca := range cas {
 		casList = append(casList, ca)
