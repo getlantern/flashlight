@@ -1,10 +1,12 @@
 package config
 
 import (
-	"github.com/getlantern/fronted"
 	"time"
 
+	"github.com/getlantern/fronted"
+
 	"github.com/getlantern/flashlight/v7/browsers/simbrowser"
+	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/flashlight/v7/embeddedconfig"
 	"github.com/getlantern/flashlight/v7/otel"
@@ -43,6 +45,9 @@ type Global struct {
 
 	// TrustedCAs are trusted CAs for domain fronting domains only.
 	TrustedCAs []*fronted.CA
+
+	// DNSTTConfig is the configuration for the DNS tunnel.
+	DNSTTConfig *common.DNSTTConfig
 
 	// GlobalConfigPollInterval sets interval at which to poll for global config
 	GlobalConfigPollInterval time.Duration

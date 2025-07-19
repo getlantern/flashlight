@@ -29,6 +29,7 @@ import (
 	"github.com/getlantern/tlsdialer/v3"
 	"github.com/getlantern/yaml"
 
+	"github.com/getlantern/flashlight/v7/common"
 	"github.com/getlantern/flashlight/v7/config"
 	"github.com/getlantern/flashlight/v7/embeddedconfig"
 
@@ -49,6 +50,7 @@ var (
 	proxiedSitesDir = flag.String("proxiedsites", "proxiedsites", "Path to directory containing proxied site lists, which will be combined and proxied by Lantern")
 	minFreq         = flag.Float64("minfreq", 3.0, "Minimum frequency (percentage) for including CA cert in list of trusted certs, defaults to 3.0%")
 	numberOfWorkers = flag.Int("numworkers", 50, "Number of worker threads")
+	dnsttFile       = flag.String("dnstt-file", "", "Path to yaml file containing DNSTT config")
 
 	enabledProviders   stringsFlag // --enable-provider in init()
 	masqueradesInFiles stringsFlag // --masquerades in init()
@@ -198,7 +200,16 @@ func (ss *stringsFlag) Set(value string) error {
 	return nil
 }
 
-func (c *ConfigGenerator) GenerateConfig(ctx context.Context, yamlTmpl string, masquerades []string, proxiedSites, blacklist filter, numberOfWorkers int, minFreq float64, minMasquerades, maxMasquerades int) ([]byte, error) {
+func (c *ConfigGenerator) GenerateConfig(
+	ctx context.Context,
+	yamlTmpl string,
+	masquerades []string,
+	proxiedSites, blacklist filter,
+	numberOfWorkers int,
+	minFreq float64,
+	minMasquerades, maxMasquerades int,
+	dnsttConfig *common.DNSTTConfig,
+) ([]byte, error) {
 	if err := c.loadFtVersion(); err != nil {
 		return nil, err
 	}
@@ -209,7 +220,7 @@ func (c *ConfigGenerator) GenerateConfig(ctx context.Context, yamlTmpl string, m
 		return nil, err
 	}
 
-	model, err := c.buildModel("cloud.yaml", cas)
+	model, err := c.buildModel("cloud.yaml", cas, dnsttConfig)
 	if err != nil {
 		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
@@ -243,9 +254,24 @@ func main() {
 	loadMasquerades()
 	loadProxiedSitesList()
 	loadBlacklist()
+	dnsttCfg, err := loadDNSTTConfig()
+	if err != nil {
+		log.Errorf("Error loading DNSTT config: %s", err)
+	}
 
 	yamlTmpl := string(embeddedconfig.GlobalTemplate)
-	template, err := generator.GenerateConfig(context.Background(), yamlTmpl, masquerades, proxiedSites, blacklist, *numberOfWorkers, *minFreq, *minMasquerades, *maxMasquerades)
+	template, err := generator.GenerateConfig(
+		context.Background(),
+		yamlTmpl,
+		masquerades,
+		proxiedSites,
+		blacklist,
+		*numberOfWorkers,
+		*minFreq,
+		*minMasquerades,
+		*maxMasquerades,
+		dnsttCfg,
+	)
 	if err != nil {
 		log.Fatalf("Error generating configuration: %s", err)
 	}
@@ -341,6 +367,24 @@ func loadBlacklist() {
 	for _, domain := range strings.Split(string(blacklistBytes), "\n") {
 		blacklist[domain] = true
 	}
+}
+
+func loadDNSTTConfig() (*common.DNSTTConfig, error) {
+	if *dnsttFile == "" {
+		return nil, nil
+	}
+	bytes, err := os.ReadFile(*dnsttFile)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to read dnstt file at %s: %s", *dnsttFile, err)
+	}
+	var cfg common.DNSTTConfig
+	if err := yaml.Unmarshal(bytes, &cfg); err != nil {
+		return nil, fmt.Errorf("Unable to parse dnstt file at %s: %s", *dnsttFile, err)
+	}
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("Invalid DNSTT config: %s", err)
+	}
+	return &cfg, nil
 }
 
 func loadTemplate(name string) string {
@@ -558,7 +602,7 @@ func (c *ConfigGenerator) doVetMasquerades(certPool *x509.CertPool, inCh chan *m
 	c.wg.Done()
 }
 
-func (c *ConfigGenerator) buildModel(configName string, cas map[string]*castat) (map[string]interface{}, error) {
+func (c *ConfigGenerator) buildModel(configName string, cas map[string]*castat, dnsttCfg *common.DNSTTConfig) (map[string]interface{}, error) {
 	casList := make([]*castat, 0, len(cas))
 	for _, ca := range cas {
 		casList = append(casList, ca)
@@ -607,6 +651,7 @@ func (c *ConfigGenerator) buildModel(configName string, cas map[string]*castat) 
 		"providers":             enabledProviders,
 		"proxiedsites":          ps,
 		"ftVersion":             c.ftVersion,
+		"dnstt":                 dnsttCfg,
 	}, nil
 }
 

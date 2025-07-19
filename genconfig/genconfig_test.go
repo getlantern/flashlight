@@ -8,13 +8,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/flashlight/v7/config"
-	"github.com/getlantern/flashlight/v7/domainrouting"
 	"github.com/getlantern/keyman"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"gopkg.in/yaml.v2"
+
+	"github.com/getlantern/flashlight/v7/common"
+	"github.com/getlantern/flashlight/v7/config"
+	"github.com/getlantern/flashlight/v7/domainrouting"
 )
 
 // This variable is only being used for test purposes!
@@ -45,6 +47,14 @@ func TestGenerateConfig(t *testing.T) {
 
 	loadFilterList(blacklistTest, &blacklist)
 
+	dnsttCfg := &common.DNSTTConfig{
+		Domain:           "t.iantem.io",
+		PublicKey:        "abcd1234",
+		DoHResolver:      "https://doh.example.com/dns-query",
+		DoTResolver:      "",
+		UTLSDistribution: "chrome",
+	}
+
 	var tests = []struct {
 		name                 string
 		givenContext         context.Context
@@ -56,6 +66,7 @@ func TestGenerateConfig(t *testing.T) {
 		givenMinFrequency    float64
 		givenMinMasquerades  int
 		givenMaxMasquerades  int
+		givenDNSTTConfig     *common.DNSTTConfig
 		assert               func(*testing.T, string, error)
 		setup                func(*gomock.Controller) *ConfigGenerator
 	}{
@@ -70,6 +81,7 @@ func TestGenerateConfig(t *testing.T) {
 			givenMinFrequency:    10,
 			givenMinMasquerades:  1,
 			givenMaxMasquerades:  10,
+			givenDNSTTConfig:     dnsttCfg,
 			assert: func(t *testing.T, cfg string, err error) {
 				require.NoError(t, err)
 				require.NotEmpty(t, cfg)
@@ -84,6 +96,9 @@ func TestGenerateConfig(t *testing.T) {
 				assert.Contains(t, globalConfig.Client.MasqueradeSets, "cloudfront")
 				assert.NotNil(t, globalConfig.Client.Fronted.Providers["akamai"].VerifyHostname)
 				assert.Equal(t, *globalConfig.Client.Fronted.Providers["akamai"].VerifyHostname, "akamai.com")
+
+				assert.NotNil(t, globalConfig.DNSTTConfig, "DNSTT config should not be nil")
+				assert.Equal(t, dnsttCfg, globalConfig.DNSTTConfig, "DNSTT config should match the provided configuration")
 			},
 			setup: func(ctrl *gomock.Controller) *ConfigGenerator {
 				generator := NewConfigGenerator()
@@ -126,6 +141,7 @@ func TestGenerateConfig(t *testing.T) {
 			givenMinFrequency:    10,
 			givenMinMasquerades:  1,
 			givenMaxMasquerades:  10,
+			givenDNSTTConfig:     dnsttCfg,
 			assert: func(t *testing.T, cfg string, err error) {
 				require.NoError(t, err)
 				require.NotEmpty(t, cfg)
@@ -142,6 +158,41 @@ func TestGenerateConfig(t *testing.T) {
 				assert.NotContains(t, globalConfig.Client.Fronted.Providers, "cloudfront")
 				assert.Contains(t, globalConfig.Client.Fronted.Providers, "akamai")
 				assert.NotNil(t, globalConfig.Client.Fronted.Providers["akamai"].VerifyHostname)
+			},
+		},
+		{
+			name: "nil DNSTT config",
+			setup: func(ctrl *gomock.Controller) *ConfigGenerator {
+				configGenerator := NewConfigGenerator()
+
+				verifier := NewMockverifier(ctrl)
+				verifier.EXPECT().Vet(gomock.Any(), gomock.Any(), gomock.Any()).Return(true).AnyTimes()
+				configGenerator.verifier = verifier
+
+				certGrabber := NewMockcertGrabber(ctrl)
+				certGrabber.EXPECT().GetCertificate(gomock.Any(), gomock.Any()).Return(cert, nil).AnyTimes()
+				configGenerator.certGrabber = certGrabber
+
+				return configGenerator
+			},
+			givenContext:         ctx,
+			givenTemplate:        globalTemplateTest,
+			givenMasquerades:     masquerades,
+			givenProxiedSites:    proxiedSites,
+			givenBlacklist:       blacklist,
+			givenNumberOfWorkers: 10,
+			givenMinFrequency:    10,
+			givenMinMasquerades:  1,
+			givenMaxMasquerades:  10,
+			assert: func(t *testing.T, cfg string, err error) {
+				require.NoError(t, err)
+				require.NotEmpty(t, cfg)
+				require.NoError(t, err)
+
+				globalConfig, err := parseGlobal(ctx, []byte(cfg))
+				require.NoError(t, err)
+				assert.NotNil(t, globalConfig)
+				assert.Nil(t, globalConfig.DNSTTConfig, "DNSTT config should be nil when not provided")
 			},
 		},
 	}
@@ -161,7 +212,9 @@ func TestGenerateConfig(t *testing.T) {
 				tt.givenNumberOfWorkers,
 				tt.givenMinFrequency,
 				tt.givenMinMasquerades,
-				tt.givenMaxMasquerades)
+				tt.givenMaxMasquerades,
+				tt.givenDNSTTConfig,
+			)
 			tt.assert(t, string(cfg), err)
 		})
 	}
