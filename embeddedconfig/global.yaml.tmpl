@@ -428,3 +428,12 @@ otel:
     check_update: 1
     broflake_fronted_roundtrip: 800000
     new_broflake: 1000
+
+{{with .dnstt}}
+dnsttconfig:
+  domain: "{{.Domain}}"
+  publicKey: "{{.PublicKey}}"
+  dohResolver: "{{.DoHResolver}}"
+  dotResolver: "{{.DoTResolver}}"
+  utlsDistribution: "{{.UTLSDistribution}}"
+{{end}}
