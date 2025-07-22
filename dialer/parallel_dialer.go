@@ -23,7 +23,7 @@ func newParallelPreferProxyless(proxyless proxyless, d Dialer, opts *Options) Di
 }
 
 func (d *parallelDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	if !common.SupportsTransport("proxyless") {
+	if !common.SupportsProxyless() {
 		log.Debugf("Proxyless transport not supported, falling back to default dialer for %s", addr)
 		// If the proxyless transport is not supported, we fall back to the default dialer.
 		return d.dialer.DialContext(ctx, network, addr)
