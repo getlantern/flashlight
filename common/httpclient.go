@@ -39,7 +39,29 @@ var (
 		"service.dogsdogs.xyz", // Used in replica
 	}
 
-	configDir   atomic.Value
+	configDir atomic.Value
+
+	dohResolvers = []string{
+		"https://dns.google/dns-query",
+		"https://cloudflare-dns.com/dns-query",
+		"https://dns.quad9.net/dns-query",
+		"https://doh.opendns.com/dns-query",
+		"https://doh.libredns.gr/dns-query",
+		"https://jp.tiar.app/dns-query",
+		"https://doh.dns.sb/dns-query",
+		"https://dns.pub/dns-query",
+		"https://resolver2.absolight.net/dns-query",
+		"https://dns.alidns.com/dns-query",
+	}
+	dotResolvers = []string{
+		"8888.google",
+		"dns.quad9.net",
+		"dns.sb",
+		"dns.alidns.com",
+		"dns.comss.one",
+		"dns.kernel-error.de",
+	}
+
 	dnsttConfig atomic.Value // Holds the DNSTTConfig
 
 	defaultDNSTTConfig = &DNSTTConfig{
@@ -97,10 +119,12 @@ func GetHTTPClient() *http.Client {
 	} else {
 		kOptions = append(kOptions, kindling.WithDomainFronting(f))
 	}
-	if d, err := newDNSTT(); err != nil {
+	if ds, err := newDNSTTs(); err != nil {
 		log.Errorf("Failed to create DNSTT: %v", err)
 	} else {
-		kOptions = append(kOptions, kindling.WithDNSTunnel(d))
+		for _, d := range ds {
+			kOptions = append(kOptions, kindling.WithDNSTunnel(d))
+		}
 	}
 	k = kindling.NewKindling("flashlight", kOptions...)
 	httpClient = k.NewHTTPClient()
@@ -154,7 +178,7 @@ func (c *DNSTTConfig) Validate() error {
 	return nil
 }
 
-func newDNSTT() (dnstt.DNSTT, error) {
+func newDNSTTs() ([]dnstt.DNSTT, error) {
 	cfg := dnsttConfig.Load().(*DNSTTConfig)
 	if err := cfg.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid DNSTT configuration: %w", err)
@@ -164,14 +188,25 @@ func newDNSTT() (dnstt.DNSTT, error) {
 		dnstt.WithPublicKey(cfg.PublicKey),
 		dnstt.WithTunnelDomain(cfg.Domain),
 	}
-	switch {
-	case cfg.DoHResolver != "":
-		options = append(options, dnstt.WithDoH(cfg.DoHResolver))
-	case cfg.DoTResolver != "":
-		options = append(options, dnstt.WithDoT(cfg.DoTResolver))
-	}
 	if cfg.UTLSDistribution != "" {
 		options = append(options, dnstt.WithUTLSDistribution(cfg.UTLSDistribution))
 	}
-	return dnstt.NewDNSTT(options...)
+	dnstts := make([]dnstt.DNSTT, 0, len(dotResolvers)+len(dohResolvers))
+	for _, resolver := range dohResolvers {
+		opts := append([]dnstt.Option{dnstt.WithDoH(resolver)}, options...)
+		d, err := dnstt.NewDNSTT(opts...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create DNSTT with DoH resolver %s: %w", resolver, err)
+		}
+		dnstts = append(dnstts, d)
+	}
+	for _, resolver := range dotResolvers {
+		opts := append([]dnstt.Option{dnstt.WithDoT(resolver)}, options...)
+		d, err := dnstt.NewDNSTT(opts...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create DNSTT with DoT resolver %s: %w", resolver, err)
+		}
+		dnstts = append(dnstts, d)
+	}
+	return dnstts, nil
 }
