@@ -2,12 +2,14 @@ package issue
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httputil"
 	"strconv"
 	"time"
 
 	"github.com/getlantern/flashlight/v7/common"
+	userconfig "github.com/getlantern/flashlight/v7/config/user"
 	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/flashlight/v7/logging"
 	"github.com/getlantern/flashlight/v7/util"
@@ -128,6 +130,18 @@ func sendReport(
 			}
 		}
 	}
+
+	// get which tracks the user was given in their config
+	userProxyConfig, err := userconfig.GetConfig(context.Background())
+	if err != nil {
+		log.Errorf("unable to get user config: %v", err)
+	}
+
+	tracks := []string{}
+	for _, proxy := range userProxyConfig.GetProxy().GetProxies() {
+		tracks = append(tracks, proxy.GetTrack())
+	}
+	r.Tracks = tracks
 
 	// send message to lantern-cloud
 	out, err := proto.Marshal(r)
