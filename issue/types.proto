@@ -41,4 +41,6 @@ message Request {
         string name = 2;
         bytes content = 3;
     }
+
+    repeated string tracks = 16;
 }
