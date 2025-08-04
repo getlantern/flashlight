@@ -131,17 +131,21 @@ func sendReport(
 		}
 	}
 
-	// get which tracks the user was given in their config
-	userProxyConfig, err := userconfig.GetConfig(context.Background())
+	// get which tracks the user was given in their config, if any are returned in less than 2 seconds
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(2*time.Second))
+	defer cancel()
+
+	userProxyConfig, err := userconfig.GetConfig(ctx)
 	if err != nil {
 		log.Errorf("unable to get user config: %v", err)
 	}
-
-	tracks := []string{}
-	for _, proxy := range userProxyConfig.GetProxy().GetProxies() {
-		tracks = append(tracks, proxy.GetTrack())
+	if userProxyConfig != nil {
+		tracks := []string{}
+		for _, proxy := range userProxyConfig.GetProxy().GetProxies() {
+			tracks = append(tracks, proxy.GetTrack())
+		}
+		r.Tracks = tracks
 	}
-	r.Tracks = tracks
 
 	// send message to lantern-cloud
 	out, err := proto.Marshal(r)
