@@ -131,8 +131,8 @@ func sendReport(
 		}
 	}
 
-	// get which tracks the user was given in their config, if any are returned in less than 2 seconds
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(2*time.Second))
+	// get which tracks the user was given in their config, if any are present
+	ctx, cancel := context.WithTimeout(context.Background(), -time.Second)
 	defer cancel()
 
 	userProxyConfig, err := userconfig.GetConfig(ctx)
