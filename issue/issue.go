@@ -2,12 +2,14 @@ package issue
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httputil"
 	"strconv"
 	"time"
 
 	"github.com/getlantern/flashlight/v7/common"
+	userconfig "github.com/getlantern/flashlight/v7/config/user"
 	"github.com/getlantern/flashlight/v7/geolookup"
 	"github.com/getlantern/flashlight/v7/logging"
 	"github.com/getlantern/flashlight/v7/util"
@@ -127,6 +129,22 @@ func sendReport(
 				log.Errorf("unable to zip log files: %v", err)
 			}
 		}
+	}
+
+	// get which tracks the user was given in their config, if any are present
+	ctx, cancel := context.WithTimeout(context.Background(), -time.Second)
+	defer cancel()
+
+	userProxyConfig, err := userconfig.GetConfig(ctx)
+	if err != nil {
+		log.Errorf("unable to get user config: %v", err)
+	}
+	if userProxyConfig != nil {
+		tracks := []string{}
+		for _, proxy := range userProxyConfig.GetProxy().GetProxies() {
+			tracks = append(tracks, proxy.GetTrack())
+		}
+		r.Tracks = tracks
 	}
 
 	// send message to lantern-cloud
