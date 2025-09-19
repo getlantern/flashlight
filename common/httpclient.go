@@ -104,6 +104,15 @@ func GetHTTPClient() *http.Client {
 		return httpClient
 	}
 
+	return NewHTTPClient()
+}
+
+// NewHTTPClient build a new http client and store it on the httpClient
+// package var. This function should be called when there's a configuration
+// update.
+func NewHTTPClient() *http.Client {
+	mutex.Lock()
+	defer mutex.Unlock()
 	var k kindling.Kindling
 	ioWriter := log.AsDebugLogger().Writer()
 	kOptions := []kindling.Option{
