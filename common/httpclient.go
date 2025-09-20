@@ -109,7 +109,7 @@ func GetHTTPClient() *http.Client {
 
 func newFronted(logWriter io.Writer, panicListener func(string)) (fronted.Fronted, error) {
 	// Parse the domain from the URL.
-	configURL := "https://raw.githubusercontent.com/getlantern/lantern-binaries/refs/heads/main/fronted.yaml.gz"
+	configURL := "https://raw.githubusercontent.com/getlantern/fronted/refs/heads/main/fronted.yaml.gz"
 	u, err := url.Parse(configURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse URL: %v", err)
