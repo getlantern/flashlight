@@ -1,8 +1,13 @@
 package common
 
 import (
+	"crypto/rsa"
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -10,6 +15,7 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/getlantern/amp"
 	"github.com/getlantern/dnstt"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/kindling"
@@ -39,8 +45,9 @@ var (
 		"service.dogsdogs.xyz", // Used in replica
 	}
 
-	configDir   atomic.Value
-	dnsttConfig atomic.Value // Holds the DNSTTConfig
+	configDir      atomic.Value
+	dnsttConfig    atomic.Value // Holds the DNSTTConfig
+	ampCacheConfig atomic.Value
 
 	defaultDNSTTConfig = &DNSTTConfig{
 		Domain:           "t.iantem.io",
@@ -59,11 +66,20 @@ type DNSTTConfig struct {
 	UTLSDistribution string `yaml:"utlsDistribution,omitempty"`
 }
 
+// AMPCacheConfig contain the properties required for starting the
+// amp cache fronting
+type AMPCacheConfig struct {
+	BrokerURL    string   `yaml:"broker_url"`
+	CacheURL     string   `yaml:"cache_url"`
+	PublicKeyPEM string   `yaml:"public_key"`
+	FrontDomains []string `yaml:"front_domains"`
+}
+
 func init() {
 	dnsttConfig.Store(defaultDNSTTConfig)
 }
 
-// The config directory on some platforms, such as Android, can only be determined in native code, so we
+// SetConfigDir set the config directory on some platforms, such as Android, can only be determined in native code, so we
 // need to set it externally.
 func SetConfigDir(dir string) {
 	configDir.Store(dir)
@@ -75,6 +91,12 @@ func SetDNSTTConfig(cfg *DNSTTConfig) {
 	}
 }
 
+func SetAMPCacheConfig(cfg *AMPCacheConfig) {
+	if cfg != nil {
+		ampCacheConfig.Store(cfg)
+	}
+}
+
 func GetHTTPClient() *http.Client {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -82,6 +104,15 @@ func GetHTTPClient() *http.Client {
 		return httpClient
 	}
 
+	return NewHTTPClient()
+}
+
+// NewHTTPClient build a new http client and store it on the httpClient
+// package var. This function should be called when there's a configuration
+// update.
+func NewHTTPClient() *http.Client {
+	mutex.Lock()
+	defer mutex.Unlock()
 	var k kindling.Kindling
 	ioWriter := log.AsDebugLogger().Writer()
 	kOptions := []kindling.Option{
@@ -101,6 +132,12 @@ func GetHTTPClient() *http.Client {
 		log.Errorf("Failed to create DNSTT: %v", err)
 	} else {
 		kOptions = append(kOptions, kindling.WithDNSTunnel(d))
+	}
+
+	if ampClient, err := newAMPCache(); err != nil {
+		log.Errorf("Failed to create AMP cache client: %v", err)
+	} else {
+		kOptions = append(kOptions, kindling.WithAMPCache(ampClient))
 	}
 	k = kindling.NewKindling("flashlight", kOptions...)
 	httpClient = k.NewHTTPClient()
@@ -154,6 +191,20 @@ func (c *DNSTTConfig) Validate() error {
 	return nil
 }
 
+func (c *AMPCacheConfig) Validate() error {
+	if c.BrokerURL == "" ||
+		c.CacheURL == "" ||
+		len(c.FrontDomains) == 0 ||
+		c.PublicKeyPEM == "" {
+		return fmt.Errorf(
+			`missing one or more mandatory arguments for running amp cache fronting.
+			Please review the provided parameter values, broker URL: %q, cache URL: %q, front domains: %q, public key: %q`,
+			c.BrokerURL, c.CacheURL, c.FrontDomains, c.PublicKeyPEM,
+		)
+	}
+	return nil
+}
+
 func newDNSTT() (dnstt.DNSTT, error) {
 	cfg := dnsttConfig.Load().(*DNSTTConfig)
 	if err := cfg.Validate(); err != nil {
@@ -174,4 +225,57 @@ func newDNSTT() (dnstt.DNSTT, error) {
 		options = append(options, dnstt.WithUTLSDistribution(cfg.UTLSDistribution))
 	}
 	return dnstt.NewDNSTT(options...)
+}
+
+func newAMPCache() (amp.Client, error) {
+	cfg := ampCacheConfig.Load()
+	if cfg == nil {
+		return nil, fmt.Errorf("amp cache config not available")
+	}
+
+	config, ok := cfg.(*AMPCacheConfig)
+	if !ok {
+		return nil, fmt.Errorf("invalid data stored in amp cache config")
+	}
+	if err := config.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid AMP cache configuration: %w", err)
+	}
+
+	brokerURL, err := url.Parse(config.BrokerURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid broker url: %w", err)
+	}
+
+	cacheURL, err := url.Parse(config.CacheURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid cache url: %w", err)
+	}
+
+	// parse rsa public key pem
+	pubKey, err := parsePublicKeyPEM(config.PublicKeyPEM)
+	if err != nil {
+		return nil, fmt.Errorf("invalid public key pem: %w", err)
+	}
+
+	return amp.NewClient(brokerURL, cacheURL, config.FrontDomains, nil, pubKey, func(network, address string) (net.Conn, error) {
+		return tls.Dial("tcp", fmt.Sprintf("%s:443", address), &tls.Config{
+			ServerName: address,
+		})
+	})
+}
+
+func parsePublicKeyPEM(pemStr string) (*rsa.PublicKey, error) {
+	block, _ := pem.Decode([]byte(pemStr))
+	if block == nil {
+		return nil, fmt.Errorf("failed to parse PEM block containing the public key")
+	}
+	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse DER encoded public key: %v", err)
+	}
+	key, ok := pub.(*rsa.PublicKey)
+	if !ok {
+		return nil, fmt.Errorf("not RSA public key")
+	}
+	return key, nil
 }
