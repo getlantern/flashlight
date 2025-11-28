@@ -2,7 +2,6 @@ package services
 
 import (
 	"fmt"
-	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -11,15 +10,15 @@ import (
 )
 
 const (
-	// retryWaitSeconds is the base wait time in seconds between retries
-	retryWaitSeconds = 5 * time.Second
-	maxRetryWait     = 10 * time.Minute
+	// minRetryWait is the base wait time between retries
+	minRetryWait = 5 * time.Second
+	maxRetryWait = 10 * time.Minute
 )
 
 // sender is a helper for sending post requests. If the request fails, sender calulates an
 // exponential backoff time using retryWaitSeconds and return it as the sleep time.
 type sender struct {
-	failCount int
+	nextWait time.Duration
 }
 
 // post posts data to the specified URL and returns the response, the sleep time in seconds, and any
@@ -38,7 +37,7 @@ func (s *sender) post(req *http.Request, httpClient *http.Client) (*http.Respons
 		return resp, s.backoff(), err
 	}
 
-	s.failCount = 0
+	s.nextWait = minRetryWait
 
 	var sleepTime int64
 	if sleepVal := resp.Header.Get(common.SleepHeader); sleepVal != "" {
@@ -66,11 +65,15 @@ func (s *sender) doPost(req *http.Request, httpClient *http.Client) (*http.Respo
 
 // backoff calculates the backoff time in seconds for the next retry.
 func (s *sender) backoff() int64 {
-	wait := time.Duration(math.Pow(2, float64(s.failCount))) * retryWaitSeconds
-	s.failCount++
+	if s.nextWait < minRetryWait {
+		s.nextWait = minRetryWait
+	}
 
-	if wait > maxRetryWait {
-		return int64(maxRetryWait.Seconds())
+	wait := s.nextWait
+
+	s.nextWait *= 2
+	if s.nextWait > maxRetryWait {
+		s.nextWait = maxRetryWait
 	}
 
 	return int64(wait.Seconds())
