@@ -16,7 +16,7 @@ const (
 )
 
 // sender is a helper for sending post requests. If the request fails, sender calculates an
-// exponential backoff time using retryWaitSeconds and return it as the sleep time.
+// exponential backoff time using minRetryWait and return it as the sleep time.
 type sender struct {
 	nextWait time.Duration
 }
