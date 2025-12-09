@@ -15,7 +15,7 @@ const (
 	maxRetryWait = 10 * time.Minute
 )
 
-// sender is a helper for sending post requests. If the request fails, sender calulates an
+// sender is a helper for sending post requests. If the request fails, sender calculates an
 // exponential backoff time using retryWaitSeconds and return it as the sleep time.
 type sender struct {
 	nextWait time.Duration
