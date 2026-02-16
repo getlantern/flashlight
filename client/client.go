@@ -147,6 +147,7 @@ type Client struct {
 	socksWg sync.WaitGroup
 
 	DNSResolutionMapForDirectDialsEventual eventual.Value
+	useProxyless                           func() bool
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -168,6 +169,7 @@ func NewClient(
 	eventWithLabel func(category, action, label string),
 	onDialError func(error, bool),
 	onSucceedingProxy func(),
+	useProxyless func() bool,
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
 	rewriteLRU, err := lru.New(100)
@@ -204,6 +206,7 @@ func NewClient(
 		httpListener:                           eventual.NewValue(),
 		socksListener:                          eventual.NewValue(),
 		DNSResolutionMapForDirectDialsEventual: eventual.NewValue(),
+		useProxyless:                           useProxyless,
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -754,7 +757,7 @@ func (client *Client) initDialers(proxies map[string]*commonconfig.ProxyConfig) 
 			OnNewDialer: func(dialer dialer.Dialer) {
 				client.dialer.set(dialer)
 			},
-			ProxyAll: client.proxyAll,
+			UseProxyless: client.useProxyless,
 		},
 	)
 	client.dialer.set(newDialer)
