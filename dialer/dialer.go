@@ -48,9 +48,9 @@ type Options struct {
 
 	OnNewDialer func(Dialer)
 
-	// Specifies whether or not to proxy all traffic. In this case, that means bypasses the proxyless
-	// dialer and uses the proxy dialers to connect to the destination site.
-	ProxyAll func() bool
+	// Specifies whether or not to enable proxyless dialing for all traffic. Proxyless is
+	// off when proxy all is on.
+	UseProxyless func() bool
 }
 
 // Clone creates a deep copy of the Options object
@@ -65,7 +65,7 @@ func (o *Options) Clone() *Options {
 		BanditDir:       o.BanditDir,
 		proxylessDialer: o.proxylessDialer,
 		OnNewDialer:     o.OnNewDialer,
-		ProxyAll:        o.ProxyAll,
+		UseProxyless:    o.UseProxyless,
 	}
 }
 
