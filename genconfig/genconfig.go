@@ -51,6 +51,7 @@ var (
 	minFreq         = flag.Float64("minfreq", 3.0, "Minimum frequency (percentage) for including CA cert in list of trusted certs, defaults to 3.0%")
 	numberOfWorkers = flag.Int("numworkers", 50, "Number of worker threads")
 	dnsttFile       = flag.String("dnstt-file", "", "Path to yaml file containing DNSTT config")
+	ampCacheFile    = flag.String("amp-cache-file", "", "Path to yaml file containing AMP cache config")
 
 	enabledProviders   stringsFlag // --enable-provider in init()
 	masqueradesInFiles stringsFlag // --masquerades in init()
@@ -209,6 +210,7 @@ func (c *ConfigGenerator) GenerateConfig(
 	minFreq float64,
 	minMasquerades, maxMasquerades int,
 	dnsttConfig *common.DNSTTConfig,
+	ampCacheConfig *common.AMPCacheConfig,
 ) ([]byte, error) {
 	if err := c.loadFtVersion(); err != nil {
 		return nil, err
@@ -220,7 +222,7 @@ func (c *ConfigGenerator) GenerateConfig(
 		return nil, err
 	}
 
-	model, err := c.buildModel("cloud.yaml", cas, dnsttConfig)
+	model, err := c.buildModel("cloud.yaml", cas, dnsttConfig, ampCacheConfig)
 	if err != nil {
 		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
@@ -259,6 +261,11 @@ func main() {
 		log.Errorf("Error loading DNSTT config: %s", err)
 	}
 
+	ampCacheConfig, err := loadAMPCacheConfig()
+	if err != nil {
+		log.Errorf("failed to load amp cache config: %w", err)
+	}
+
 	yamlTmpl := string(embeddedconfig.GlobalTemplate)
 	template, err := generator.GenerateConfig(
 		context.Background(),
@@ -271,6 +278,7 @@ func main() {
 		*minMasquerades,
 		*maxMasquerades,
 		dnsttCfg,
+		ampCacheConfig,
 	)
 	if err != nil {
 		log.Fatalf("Error generating configuration: %s", err)
@@ -383,6 +391,25 @@ func loadDNSTTConfig() (*common.DNSTTConfig, error) {
 	}
 	if err := cfg.Validate(); err != nil {
 		return nil, fmt.Errorf("Invalid DNSTT config: %s", err)
+	}
+	return &cfg, nil
+}
+
+func loadAMPCacheConfig() (*common.AMPCacheConfig, error) {
+	if *ampCacheFile == "" {
+		return nil, nil
+	}
+
+	bytes, err := os.ReadFile(*ampCacheFile)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read amp cache config file at %s: %s", *ampCacheFile, err)
+	}
+	var cfg common.AMPCacheConfig
+	if err := yaml.Unmarshal(bytes, &cfg); err != nil {
+		return nil, fmt.Errorf("unable to parse amp cache config file at %s: %s", *ampCacheFile, err)
+	}
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid amp cache config: %w", err)
 	}
 	return &cfg, nil
 }
@@ -602,7 +629,7 @@ func (c *ConfigGenerator) doVetMasquerades(certPool *x509.CertPool, inCh chan *m
 	c.wg.Done()
 }
 
-func (c *ConfigGenerator) buildModel(configName string, cas map[string]*castat, dnsttCfg *common.DNSTTConfig) (map[string]interface{}, error) {
+func (c *ConfigGenerator) buildModel(configName string, cas map[string]*castat, dnsttCfg *common.DNSTTConfig, ampCacheCfg *common.AMPCacheConfig) (map[string]interface{}, error) {
 	casList := make([]*castat, 0, len(cas))
 	for _, ca := range cas {
 		casList = append(casList, ca)
@@ -652,6 +679,7 @@ func (c *ConfigGenerator) buildModel(configName string, cas map[string]*castat, 
 		"proxiedsites":          ps,
 		"ftVersion":             c.ftVersion,
 		"dnstt":                 dnsttCfg,
+		"amp_cache":             ampCacheCfg,
 	}, nil
 }
 
