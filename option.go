@@ -42,3 +42,10 @@ func WithOnProxies(onProxiesUpdate func([]dialer.ProxyDialer, config.Source)) Op
 		client.callbacks.onProxiesUpdate = onProxiesUpdate
 	}
 }
+
+// WithUseProxyless sets the function to determine if proxyless dialing should be used.
+func WithUseProxyless(useProxyless func() bool) Option {
+	return func(client *Flashlight) {
+		client.useProxyless = useProxyless
+	}
+}

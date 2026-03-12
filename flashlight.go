@@ -84,6 +84,7 @@ type Flashlight struct {
 	errorHandler     func(HandledErrorType, error)
 	mxProxyListeners sync.RWMutex
 	proxyListeners   []func(map[string]*commonconfig.ProxyConfig, config.Source)
+	useProxyless     func() bool
 }
 
 // clientCallbacks are callbacks the client is configured with
@@ -215,7 +216,6 @@ func New(
 	useDetour := func() bool {
 		return !_proxyAll() && f.featureEnabled(config.FeatureDetour) && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
-
 	proxyAll := func() bool {
 		useShortcutOrDetour := useShortcut() || useDetour()
 		return !useShortcutOrDetour && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
@@ -243,6 +243,7 @@ func New(
 		eventWithLabel,
 		f.callbacks.onDialError,
 		f.callbacks.onSucceedingProxy,
+		f.useProxyless,
 	)
 
 	if err != nil {
