@@ -6,11 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
-
-	"github.com/google/uuid"
 
 	"github.com/getlantern/flashlight/v7"
 	"github.com/getlantern/flashlight/v7/client"
@@ -21,23 +18,19 @@ import (
 	"github.com/getlantern/ops"
 )
 
-func configureOtel(country string) {
-	// Configure OpenTelemetry
-	const replacementText = "UUID-GOES-HERE"
-	const honeycombQueryTemplate = `https://ui.honeycomb.io/lantern-bc/environments/prod/datasets/flashlight?query=%7B%22time_range%22%3A300%2C%22granularity%22%3A15%2C%22breakdowns%22%3A%5B%5D%2C%22calculations%22%3A%5B%7B%22op%22%3A%22COUNT%22%7D%5D%2C%22filters%22%3A%5B%7B%22column%22%3A%22pinger-id%22%2C%22op%22%3A%22%3D%22%2C%22value%22%3A%22UUID-GOES-HERE%22%7D%5D%2C%22filter_combination%22%3A%22AND%22%2C%22orders%22%3A%5B%5D%2C%22havings%22%3A%5B%5D%2C%22trace_joins%22%3A%5B%5D%2C%22limit%22%3A100%7D`
-	runId := uuid.NewString()
+func configureOtel(runId, country, signozKey string) {
 	fmt.Printf("performing lantern ping: url=%s\n", country)
-	fmt.Printf("lookup traces on Honeycomb with pinger-id: %s, link: %s\n", runId, strings.ReplaceAll(honeycombQueryTemplate, replacementText, runId))
+	fmt.Printf("lookup traces on SigNoz with pinger-id=%s\n  https://lantern.us.signoz.cloud/traces-explorer\n", runId)
+	ops.SetGlobal("pinger-id", runId)
 	flashlightOtel.ConfigureOnce(&flashlightOtel.Config{
-		Endpoint: "api.honeycomb.io:443",
+		Endpoint: "ingest.us.signoz.cloud:443",
 		Headers: map[string]string{
-			"x-honeycomb-team": "vuWkzaeefr2OcL1SfowtuG",
+			"signoz-ingestion-key": signozKey,
 		},
 	}, "pinger")
-	ops.SetGlobal("pinger-id", runId)
 }
 
-func performLanternPing(urlToHit string, runId string, deviceId string, userId int64, token string, dataDir string, isSticky bool) error {
+func performLanternPing(urlToHit string, runId string, deviceId string, userId int64, token string, dataDir string, isSticky bool, signozKey string) error {
 	golog.SetPrepender(func(writer io.Writer) {
 		_, _ = writer.Write([]byte(fmt.Sprintf("%s: ", time.Now().Format("2006-01-02 15:04:05"))))
 	})
@@ -46,7 +39,7 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 	statsTracker := stats.NewTracker()
 	var onOneProxy sync.Once
 	proxyReady := make(chan struct{})
-	configureOtel(urlToHit)
+	configureOtel(runId, urlToHit, signozKey)
 	common.LibraryVersion = "999.999.999"
 	fc, err := flashlight.New(
 		"pinger",
@@ -156,11 +149,12 @@ func main() {
 	runId := os.Getenv("RUN_ID")
 	targetUrl := os.Getenv("TARGET_URL")
 	data := os.Getenv("DATA")
+	signozKey := os.Getenv("SIGNOZ_INGESTION_KEY")
 	isSticky := os.Getenv("STICKY") == "true"
 
-	if deviceId == "" || userId == "" || token == "" || runId == "" || targetUrl == "" || data == "" {
+	if deviceId == "" || userId == "" || token == "" || runId == "" || targetUrl == "" || data == "" || signozKey == "" {
 		fmt.Println("missing required environment variable(s)")
-		fmt.Println("Required environment variables: DEVICE_ID, USER_ID, TOKEN, RUN_ID, TARGET_URL, DATA")
+		fmt.Println("Required environment variables: DEVICE_ID, USER_ID, TOKEN, RUN_ID, TARGET_URL, DATA, SIGNOZ_INGESTION_KEY")
 		os.Exit(1)
 	}
 
@@ -170,7 +164,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if performLanternPing(targetUrl, runId, deviceId, uid, token, data, isSticky) != nil {
+	if performLanternPing(targetUrl, runId, deviceId, uid, token, data, isSticky, signozKey) != nil {
 		fmt.Println("failed to perform lantern ping")
 		os.Exit(1)
 	}
