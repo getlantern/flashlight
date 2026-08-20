@@ -9,8 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/getlantern/flashlight/v7"
 	"github.com/getlantern/flashlight/v7/client"
 	"github.com/getlantern/flashlight/v7/common"
@@ -20,17 +18,16 @@ import (
 	"github.com/getlantern/ops"
 )
 
-func configureOtel(country, signozKey string) {
-	runId := uuid.NewString()
+func configureOtel(runId, country, signozKey string) {
 	fmt.Printf("performing lantern ping: url=%s\n", country)
 	fmt.Printf("lookup traces on SigNoz with pinger-id=%s\n  https://lantern.us.signoz.cloud/traces-explorer\n", runId)
+	ops.SetGlobal("pinger-id", runId)
 	flashlightOtel.ConfigureOnce(&flashlightOtel.Config{
 		Endpoint: "ingest.us.signoz.cloud:443",
 		Headers: map[string]string{
 			"signoz-ingestion-key": signozKey,
 		},
 	}, "pinger")
-	ops.SetGlobal("pinger-id", runId)
 }
 
 func performLanternPing(urlToHit string, runId string, deviceId string, userId int64, token string, dataDir string, isSticky bool, signozKey string) error {
@@ -42,7 +39,7 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 	statsTracker := stats.NewTracker()
 	var onOneProxy sync.Once
 	proxyReady := make(chan struct{})
-	configureOtel(urlToHit, signozKey)
+	configureOtel(runId, urlToHit, signozKey)
 	common.LibraryVersion = "999.999.999"
 	fc, err := flashlight.New(
 		"pinger",
