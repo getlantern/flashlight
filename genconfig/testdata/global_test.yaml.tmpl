@@ -428,3 +428,11 @@ dnsttconfig:
   dotResolver: "{{.DoTResolver}}"
   utlsDistribution: "{{.UTLSDistribution}}"
 {{end}}
+
+{{with .amp_cache}}
+amp_cache:
+  broker_url: "{{.BrokerURL}}"
+  cache_url: "{{.CacheURL}}"
+  publicKey: "{{.PublicKeyPEM }}"
+  front_domains: [{{range $i, $sni := .FrontDomains}}{{if $i}}, {{end}}{{$sni}}{{end}}]
+{{end}}

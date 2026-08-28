@@ -398,6 +398,9 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	f.callbacks.onInit()
 
 	common.SetDNSTTConfig(cfg.DNSTTConfig)
+	common.SetAMPCacheConfig(cfg.AMPCacheConfig)
+	// building fresh http client with new configuration
+	common.NewHTTPClient()
 }
 
 // EnabledFeatures gets all features enabled based on current conditions

@@ -49,6 +49,9 @@ type Global struct {
 	// DNSTTConfig is the configuration for the DNS tunnel.
 	DNSTTConfig *common.DNSTTConfig
 
+	// AMPCacheConfig contain the configuration for amp fronting
+	AMPCacheConfig *common.AMPCacheConfig
+
 	// GlobalConfigPollInterval sets interval at which to poll for global config
 	GlobalConfigPollInterval time.Duration
 
