@@ -3,8 +3,11 @@ package main
 import (
 	"fmt"
 	"io"
+	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -31,10 +34,43 @@ func configureOtel(runId, country, signozKey string) {
 }
 
 func performLanternPing(urlToHit string, runId string, deviceId string, userId int64, token string, dataDir string, isSticky bool, signozKey string) error {
+	seconds := 20
+	if value := os.Getenv("FETCH_TIMEOUT_SECONDS"); value != "" {
+		n, err := strconv.Atoi(value)
+		if err != nil || n <= 0 || n > 600 {
+			return fmt.Errorf("FETCH_TIMEOUT_SECONDS must be between 1 and 600")
+		}
+		seconds = n
+	}
+	for _, name := range []string{"success", "fetch.json", "connection.txt"} {
+		if err := os.Remove(filepath.Join(dataDir, name)); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+	}
 	golog.SetPrepender(func(writer io.Writer) {
 		_, _ = writer.Write([]byte(fmt.Sprintf("%s: ", time.Now().Format("2006-01-02 15:04:05"))))
 	})
 
+	target, err := url.Parse(urlToHit)
+	if err != nil || target.Scheme != "https" || target.Hostname() == "" {
+		return fmt.Errorf("target must be an HTTPS URL")
+	}
+	configURL := os.Getenv("CONFIG_URL")
+	if !isSticky {
+		expected := map[string]string{
+			"staging": "https://api.staging.iantem.io/v1/config",
+			"prod":    "https://api.iantem.io/v1/config",
+		}[os.Getenv("ENVIRONMENT")]
+		if expected == "" || configURL != expected {
+			return fmt.Errorf("explicit configuration URL must match ENVIRONMENT")
+		}
+	}
+	common.GetHTTPClient().CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		if len(via) >= 10 || req.URL.Scheme != "https" || req.URL.Host != via[0].URL.Host {
+			return fmt.Errorf("configuration redirect changes origin or exceeds limit")
+		}
+		return nil
+	}
 	settings := common.NewUserConfigData("lantern", deviceId, userId, token, nil, "en-US")
 	statsTracker := stats.NewTracker()
 	var onOneProxy sync.Once
@@ -54,6 +90,8 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 		map[string]interface{}{
 			"readableconfig": true,
 			"stickyconfig":   isSticky,
+			"cloudconfig":    configURL,
+			"globalconfig":   "https://globalconfig.flashlightproxy.com/global.yaml.gz",
 		},
 		settings,
 		statsTracker,
@@ -71,17 +109,20 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 		flashlight.WithOnSucceedingProxy(func() {
 			onOneProxy.Do(func() {
 				fmt.Printf("succeeding proxy\n")
-				proxyReady <- struct{}{}
+				close(proxyReady)
 			})
 		}),
 	)
 	if err != nil {
 		return err
 	}
-	resultCh := make(chan error)
+	resultCh := make(chan error, 1)
 	t1 := time.Now()
 	var t2, t3 time.Time
 	output := ""
+	if err := os.WriteFile(filepath.Join(dataDir, "connection.txt"), []byte("connecting"), 0o600); err != nil {
+		return err
+	}
 	go fc.Run("127.0.0.1:0", "127.0.0.1:0", func(cl *client.Client) {
 		go func() {
 			sa, ok := cl.Socks5Addr(5 * time.Second)
@@ -95,13 +136,21 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 			}
 
 			t2 = time.Now()
+			if err := os.WriteFile(filepath.Join(dataDir, "connection.txt"), []byte("connected"), 0o600); err != nil {
+				resultCh <- err
+				return
+			}
 			flashlightProxy := fmt.Sprintf("socks5://%s", sa)
 			fmt.Printf("lantern started correctly. urlToHit: %s flashlight proxy: %s\n", urlToHit, flashlightProxy)
 
-			cmd := exec.Command("curl", "-x", flashlightProxy, "-s", urlToHit)
+			cmd := exec.Command("curl", "--proxy", fmt.Sprintf("socks5h://%s", sa), "--silent", "--show-error",
+				"--location", "--max-redirs", "10", "--proto", "=https", "--proto-redir", "=https",
+				"--max-time", strconv.Itoa(seconds),
+				"--output", dataDir+"/output.txt", "--write-out", "%{json}", urlToHit)
 
 			// Run the command and capture the output
 			outputB, err := cmd.Output()
+			output = string(outputB)
 			if err != nil {
 				fmt.Println("Error executing command:", err)
 				resultCh <- err
@@ -130,8 +179,10 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 		_ = os.WriteFile(dataDir+"/success", []byte(""), 0644)
 	}
 
-	_ = os.WriteFile(dataDir+"/output.txt", []byte(output), 0644)
-	return os.WriteFile(dataDir+"/timing.txt", []byte(fmt.Sprintf(`
+	if err := os.WriteFile(dataDir+"/fetch.json", []byte(output), 0644); err != nil {
+		return fmt.Errorf("write fetch metadata: %w", err)
+	}
+	if err := os.WriteFile(dataDir+"/timing.txt", []byte(fmt.Sprintf(`
 result: %v
 run-id: %s
 err: %v
@@ -139,7 +190,10 @@ started: %s
 connected: %d
 fetched: %d
 url: %s`,
-		runErr == nil, runId, runErr, t1, int32(t2.Sub(t1).Milliseconds()), int32(t3.Sub(t1).Milliseconds()), urlToHit)), 0644)
+		runErr == nil, runId, runErr, t1, int32(t2.Sub(t1).Milliseconds()), int32(t3.Sub(t1).Milliseconds()), urlToHit)), 0644); err != nil {
+		return fmt.Errorf("write timing metadata: %w", err)
+	}
+	return runErr
 }
 
 func main() {
@@ -164,8 +218,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	if performLanternPing(targetUrl, runId, deviceId, uid, token, data, isSticky, signozKey) != nil {
-		fmt.Println("failed to perform lantern ping")
-		os.Exit(1)
+	seconds, _ := strconv.Atoi(os.Getenv("FETCH_TIMEOUT_SECONDS"))
+	if seconds <= 0 || seconds > 600 {
+		seconds = 20
 	}
+	done := make(chan error, 1)
+	go func() { done <- performLanternPing(targetUrl, runId, deviceId, uid, token, data, isSticky, signozKey) }()
+	select {
+	case err := <-done:
+		if err == nil {
+			return
+		}
+		fmt.Fprintln(os.Stderr, err)
+	case <-time.After(time.Duration(2*seconds+15) * time.Second):
+		fmt.Fprintln(os.Stderr, "tester deadline exceeded")
+	}
+	os.Exit(1)
 }

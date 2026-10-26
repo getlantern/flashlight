@@ -29,6 +29,9 @@ func Init(
 	origGlobalDispatch func(interface{}, Source), onGlobalSaveError func(error)) (stop func()) {
 
 	globalConfigURL := checkOverrides(flags, common.GlobalURL, "global.yaml.gz")
+	if explicit, ok := flags["globalconfig"].(string); ok && explicit != "" {
+		globalConfigURL = explicit
+	}
 
 	return InitWithURLs(
 		configDir, flags, userConfig,
