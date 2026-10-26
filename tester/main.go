@@ -34,6 +34,11 @@ func configureOtel(runId, country, signozKey string) {
 }
 
 func performLanternPing(urlToHit string, runId string, deviceId string, userId int64, token string, dataDir string, isSticky bool, signozKey string) error {
+	for _, name := range []string{"success", "fetch.json", "connection.txt", "output.txt", "timing.txt"} {
+		if err := os.Remove(filepath.Join(dataDir, name)); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+	}
 	seconds := 20
 	if value := os.Getenv("FETCH_TIMEOUT_SECONDS"); value != "" {
 		n, err := strconv.Atoi(value)
@@ -41,11 +46,6 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 			return fmt.Errorf("FETCH_TIMEOUT_SECONDS must be between 1 and 600")
 		}
 		seconds = n
-	}
-	for _, name := range []string{"success", "fetch.json", "connection.txt"} {
-		if err := os.Remove(filepath.Join(dataDir, name)); err != nil && !os.IsNotExist(err) {
-			return err
-		}
 	}
 	golog.SetPrepender(func(writer io.Writer) {
 		_, _ = writer.Write([]byte(fmt.Sprintf("%s: ", time.Now().Format("2006-01-02 15:04:05"))))
@@ -173,14 +173,10 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 	}
 	defer fc.Stop()
 
-	if runErr == nil {
-		fmt.Println("lantern ping completed successfully")
-		// create a marker file that will be used by the pinger to determine success
-		_ = os.WriteFile(dataDir+"/success", []byte(""), 0644)
-	}
-
-	if err := os.WriteFile(dataDir+"/fetch.json", []byte(output), 0644); err != nil {
-		return fmt.Errorf("write fetch metadata: %w", err)
+	if output != "" {
+		if err := os.WriteFile(dataDir+"/fetch.json", []byte(output), 0644); err != nil {
+			return fmt.Errorf("write fetch metadata: %w", err)
+		}
 	}
 	if err := os.WriteFile(dataDir+"/timing.txt", []byte(fmt.Sprintf(`
 result: %v
@@ -192,6 +188,11 @@ fetched: %d
 url: %s`,
 		runErr == nil, runId, runErr, t1, int32(t2.Sub(t1).Milliseconds()), int32(t3.Sub(t1).Milliseconds()), urlToHit)), 0644); err != nil {
 		return fmt.Errorf("write timing metadata: %w", err)
+	}
+	if runErr == nil {
+		if err := os.WriteFile(filepath.Join(dataDir, "success"), nil, 0o600); err != nil {
+			return fmt.Errorf("write success marker: %w", err)
+		}
 	}
 	return runErr
 }
