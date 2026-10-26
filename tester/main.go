@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -33,11 +34,18 @@ func configureOtel(runId, country, signozKey string) {
 	}, "pinger")
 }
 
-func performLanternPing(urlToHit string, runId string, deviceId string, userId int64, token string, dataDir string, isSticky bool, signozKey string) error {
+func clearPreviousResult(dataDir string) error {
 	for _, name := range []string{"success", "fetch.json", "connection.txt", "output.txt", "timing.txt"} {
 		if err := os.Remove(filepath.Join(dataDir, name)); err != nil && !os.IsNotExist(err) {
 			return err
 		}
+	}
+	return nil
+}
+
+func performLanternPing(urlToHit string, runId string, deviceId string, userId int64, token string, dataDir string, isSticky bool, signozKey string) error {
+	if err := clearPreviousResult(dataDir); err != nil {
+		return err
 	}
 	seconds := 20
 	if value := os.Getenv("FETCH_TIMEOUT_SECONDS"); value != "" {
@@ -77,6 +85,10 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 	proxyReady := make(chan struct{})
 	configureOtel(runId, urlToHit, signozKey)
 	common.LibraryVersion = "999.999.999"
+	runCtx, cancelRun := context.WithCancel(context.Background())
+	defer cancelRun()
+	startupCtx, cancelStartup := context.WithTimeout(runCtx, time.Duration(seconds)*time.Second)
+	defer cancelStartup()
 	fc, err := flashlight.New(
 		"pinger",
 		"999.999.999",
@@ -116,63 +128,58 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 	if err != nil {
 		return err
 	}
-	resultCh := make(chan error, 1)
+	type outcome struct {
+		err                    error
+		output                 string
+		connectedMS, fetchedMS int64
+	}
+	resultCh := make(chan outcome, 1)
+	complete := func(result outcome) {
+		select {
+		case resultCh <- result:
+		default:
+		}
+	}
 	t1 := time.Now()
-	var t2, t3 time.Time
-	output := ""
 	if err := os.WriteFile(filepath.Join(dataDir, "connection.txt"), []byte("connecting"), 0o600); err != nil {
 		return err
 	}
 	go fc.Run("127.0.0.1:0", "127.0.0.1:0", func(cl *client.Client) {
 		go func() {
-			sa, ok := cl.Socks5Addr(5 * time.Second)
+			sa, ok := cl.Socks5Addr(min(5*time.Second, time.Duration(seconds)*time.Second))
 			if !ok {
-				resultCh <- fmt.Errorf("failed to get socks5 address")
+				complete(outcome{err: fmt.Errorf("failed to get socks5 address")})
 				return
 			}
 			select {
 			case <-proxyReady:
-				break
+			case <-startupCtx.Done():
+				complete(outcome{err: fmt.Errorf("proxy startup: %w", startupCtx.Err())})
+				return
 			}
-
-			t2 = time.Now()
+			if err := startupCtx.Err(); err != nil {
+				complete(outcome{err: fmt.Errorf("proxy startup: %w", err)})
+				return
+			}
+			result := outcome{connectedMS: time.Since(t1).Milliseconds()}
 			if err := os.WriteFile(filepath.Join(dataDir, "connection.txt"), []byte("connected"), 0o600); err != nil {
-				resultCh <- err
+				complete(outcome{err: err})
 				return
 			}
-			flashlightProxy := fmt.Sprintf("socks5://%s", sa)
-			fmt.Printf("lantern started correctly. urlToHit: %s flashlight proxy: %s\n", urlToHit, flashlightProxy)
-
-			cmd := exec.Command("curl", "--proxy", fmt.Sprintf("socks5h://%s", sa), "--silent", "--show-error",
+			fetchCtx, cancelFetch := context.WithTimeout(runCtx, time.Duration(seconds+5)*time.Second)
+			defer cancelFetch()
+			cmd := exec.CommandContext(fetchCtx, "curl", "--proxy", fmt.Sprintf("socks5h://%s", sa), "--noproxy", "", "--silent", "--show-error",
 				"--location", "--max-redirs", "10", "--proto", "=https", "--proto-redir", "=https",
-				"--max-time", strconv.Itoa(seconds),
-				"--output", dataDir+"/output.txt", "--write-out", "%{json}", urlToHit)
-
-			// Run the command and capture the output
-			outputB, err := cmd.Output()
-			output = string(outputB)
-			if err != nil {
-				fmt.Println("Error executing command:", err)
-				resultCh <- err
-				return
-			}
-
-			output = string(outputB)
-			t3 = time.Now()
-			resultCh <- nil
+				"--max-time", strconv.Itoa(seconds), "--output", dataDir+"/output.txt", "--write-out", "%{json}", urlToHit)
+			output, err := cmd.Output()
+			result.output, result.err, result.fetchedMS = string(output), err, time.Since(t1).Milliseconds()
+			complete(result)
 		}()
-	}, func(err error) {
-		resultCh <- err
-	})
-
-	var runErr error
-	select {
-	case err := <-resultCh:
-		runErr = err
-		break
-	}
+	}, func(err error) { complete(outcome{err: err}) })
+	result := <-resultCh
+	cancelRun()
 	defer fc.Stop()
-
+	runErr, output := result.err, result.output
 	if output != "" {
 		if err := os.WriteFile(dataDir+"/fetch.json", []byte(output), 0644); err != nil {
 			return fmt.Errorf("write fetch metadata: %w", err)
@@ -186,7 +193,7 @@ started: %s
 connected: %d
 fetched: %d
 url: %s`,
-		runErr == nil, runId, runErr, t1, int32(t2.Sub(t1).Milliseconds()), int32(t3.Sub(t1).Milliseconds()), urlToHit)), 0644); err != nil {
+		runErr == nil, runId, runErr, t1, result.connectedMS, result.fetchedMS, urlToHit)), 0644); err != nil {
 		return fmt.Errorf("write timing metadata: %w", err)
 	}
 	if runErr == nil {
@@ -206,6 +213,12 @@ func main() {
 	data := os.Getenv("DATA")
 	signozKey := os.Getenv("SIGNOZ_INGESTION_KEY")
 	isSticky := os.Getenv("STICKY") == "true"
+	if data != "" {
+		if err := clearPreviousResult(data); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	}
 
 	if deviceId == "" || userId == "" || token == "" || runId == "" || targetUrl == "" || data == "" || signozKey == "" {
 		fmt.Println("missing required environment variable(s)")
