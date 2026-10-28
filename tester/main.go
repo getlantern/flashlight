@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -110,9 +111,6 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 	statsTracker := stats.NewTracker()
 	var onOneProxy sync.Once
 	proxyReady := make(chan struct{})
-	configureOtel(runId, urlToHit, signozKey)
-	op := ops.Begin("tester").Set("target_url", urlToHit).Set("sticky", isSticky)
-	defer op.End()
 	common.LibraryVersion = "999.999.999"
 	runCtx, cancelRun := context.WithCancel(context.Background())
 	defer cancelRun()
@@ -230,7 +228,7 @@ url: %s`,
 			return fmt.Errorf("write success marker: %w", err)
 		}
 	}
-	return op.FailIf(runErr)
+	return runErr
 }
 
 // flush exports the spans still buffered, giving up after flushGrace.
@@ -279,21 +277,27 @@ func main() {
 	if seconds <= 0 || seconds > 600 {
 		seconds = 20
 	}
+	configureOtel(runId, targetUrl, signozKey)
+	// The run is an op of its own, begun here so that it ends, with the
+	// failure or the deadline recorded, before the spans are flushed even
+	// when the run is still blocked.
+	op := ops.Begin("tester").Set("target_url", targetUrl).Set("sticky", isSticky)
 	done := make(chan error, 1)
-	go func() { done <- performLanternPing(targetUrl, runId, deviceId, uid, token, data, isSticky, signozKey) }()
-	failed := true
+	op.Go(func() { done <- performLanternPing(targetUrl, runId, deviceId, uid, token, data, isSticky, signozKey) })
+	var runErr error
 	select {
-	case err := <-done:
-		failed = err != nil
-		if failed {
-			fmt.Fprintln(os.Stderr, err)
-		}
+	case runErr = <-done:
 	// The pinger removes the container flushGrace after this deadline.
 	case <-time.After(time.Duration(2*seconds+10) * time.Second):
-		fmt.Fprintln(os.Stderr, "tester deadline exceeded")
+		runErr = errors.New("tester deadline exceeded")
 	}
+	if runErr != nil {
+		fmt.Fprintln(os.Stderr, runErr)
+	}
+	_ = op.FailIf(runErr)
+	op.End()
 	flush()
-	if failed {
+	if runErr != nil {
 		os.Exit(1)
 	}
 }

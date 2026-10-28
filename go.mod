@@ -50,7 +50,7 @@ require (
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20230510135141-717ed305ef50
 	github.com/getlantern/netx v0.0.0-20240814210628-0984f52e2d18
-	github.com/getlantern/ops v0.0.0-20261028162319-c3a493debffd
+	github.com/getlantern/ops v0.0.0-20261028163224-80abebeb6250
 	github.com/getlantern/osversion v0.0.0-20250424174400-d834340603cf
 	github.com/getlantern/proxy/v3 v3.0.0-20240328103708-9185589b6a99
 	github.com/getlantern/psmux v1.5.15
