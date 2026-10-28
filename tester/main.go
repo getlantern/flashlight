@@ -20,7 +20,28 @@ import (
 	"github.com/getlantern/flashlight/v7/stats"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/ops"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 )
+
+// flushGrace bounds the export of the spans still buffered when the tester
+// stops; the pinger removes the container shortly after its deadline.
+const flushGrace = 4 * time.Second
+
+// parentContext returns the W3C trace context in TRACEPARENT, so the
+// tester's spans join the trace of the run that started it, or nil when
+// there is none or it is invalid.
+func parentContext() context.Context {
+	tp := os.Getenv("TRACEPARENT")
+	if tp == "" {
+		return nil
+	}
+	ctx := propagation.TraceContext{}.Extract(context.Background(), propagation.MapCarrier{"traceparent": tp})
+	if !trace.SpanContextFromContext(ctx).IsValid() {
+		return nil
+	}
+	return ctx
+}
 
 func configureOtel(runId, country, signozKey string) {
 	fmt.Printf("performing lantern ping: url=%s\n", country)
@@ -32,6 +53,12 @@ func configureOtel(runId, country, signozKey string) {
 			"signoz-ingestion-key": signozKey,
 		},
 	}, "pinger")
+	// Flashlight begins its ops on goroutines of its own, which would each
+	// start a trace; with a parent set they all report under the pinger's
+	// span instead.
+	if parent := parentContext(); parent != nil {
+		ops.SetParentContext(parent)
+	}
 }
 
 func clearPreviousResult(dataDir string) error {
@@ -84,6 +111,8 @@ func performLanternPing(urlToHit string, runId string, deviceId string, userId i
 	var onOneProxy sync.Once
 	proxyReady := make(chan struct{})
 	configureOtel(runId, urlToHit, signozKey)
+	op := ops.Begin("tester").Set("target_url", urlToHit).Set("sticky", isSticky)
+	defer op.End()
 	common.LibraryVersion = "999.999.999"
 	runCtx, cancelRun := context.WithCancel(context.Background())
 	defer cancelRun()
@@ -201,7 +230,21 @@ url: %s`,
 			return fmt.Errorf("write success marker: %w", err)
 		}
 	}
-	return runErr
+	return op.FailIf(runErr)
+}
+
+// flush exports the spans still buffered, giving up after flushGrace.
+func flush() {
+	done := make(chan struct{})
+	go func() {
+		flashlightOtel.Stop()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(flushGrace):
+		fmt.Fprintln(os.Stderr, "trace export did not finish in time")
+	}
 }
 
 func main() {
@@ -238,14 +281,19 @@ func main() {
 	}
 	done := make(chan error, 1)
 	go func() { done <- performLanternPing(targetUrl, runId, deviceId, uid, token, data, isSticky, signozKey) }()
+	failed := true
 	select {
 	case err := <-done:
-		if err == nil {
-			return
+		failed = err != nil
+		if failed {
+			fmt.Fprintln(os.Stderr, err)
 		}
-		fmt.Fprintln(os.Stderr, err)
-	case <-time.After(time.Duration(2*seconds+15) * time.Second):
+	// The pinger removes the container flushGrace after this deadline.
+	case <-time.After(time.Duration(2*seconds+10) * time.Second):
 		fmt.Fprintln(os.Stderr, "tester deadline exceeded")
 	}
-	os.Exit(1)
+	flush()
+	if failed {
+		os.Exit(1)
+	}
 }
