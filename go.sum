@@ -366,6 +366,8 @@ github.com/getlantern/ops v0.0.0-20231025133620-f368ab734534 h1:3BwvWj0JZzFEvNNi
 github.com/getlantern/ops v0.0.0-20231025133620-f368ab734534/go.mod h1:ZsLfOY6gKQOTyEcPYNA9ws5/XHZQFroxqCOhHjGcs9Y=
 github.com/getlantern/ops v0.0.0-20261028162319-c3a493debffd h1:3iS7Neo2/vq11h+swVrPJRx0KjI1s0Lmbq9e+WoI34A=
 github.com/getlantern/ops v0.0.0-20261028162319-c3a493debffd/go.mod h1:yvCGQU7mI2e2OPDH01qk6cGQkw7Xz2IC0LR0u2swKVU=
+github.com/getlantern/ops v0.0.0-20261028163224-80abebeb6250 h1:qOsPGyrOYcn3ooRzcIL2OWMjr+B3fOsmzuv/dQaskss=
+github.com/getlantern/ops v0.0.0-20261028163224-80abebeb6250/go.mod h1:yvCGQU7mI2e2OPDH01qk6cGQkw7Xz2IC0LR0u2swKVU=
 github.com/getlantern/osversion v0.0.0-20250424174400-d834340603cf h1:dRZpE5VOptn2fLpPWwbLf7BLP+hwQ7pbIJL6UHdiR9A=
 github.com/getlantern/osversion v0.0.0-20250424174400-d834340603cf/go.mod h1:h3S9LBmmzN/xM+lwYZHE4abzTtCTtidKtG+nxZcCZX0=
 github.com/getlantern/packetforward v0.0.0-20201001150407-c68a447b0360 h1:pijUoofaQcAM/8zbDzZM2LQ90kGVbKfnSAkFnQwLZZU=
