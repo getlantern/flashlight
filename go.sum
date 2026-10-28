@@ -370,6 +370,8 @@ github.com/getlantern/ops v0.0.0-20261028163224-80abebeb6250 h1:qOsPGyrOYcn3ooRz
 github.com/getlantern/ops v0.0.0-20261028163224-80abebeb6250/go.mod h1:yvCGQU7mI2e2OPDH01qk6cGQkw7Xz2IC0LR0u2swKVU=
 github.com/getlantern/ops v0.0.0-20261028164319-8085b2070952 h1:uLp7vJmxAAVseso5Z96mOwKbKdm+NyFqsRzJwa+OoTU=
 github.com/getlantern/ops v0.0.0-20261028164319-8085b2070952/go.mod h1:yvCGQU7mI2e2OPDH01qk6cGQkw7Xz2IC0LR0u2swKVU=
+github.com/getlantern/ops v0.0.0-20261028165752-a48eabe17467 h1:vrKCiBTHr7cFv+VNCVhz8X78khRASVw//gX59Xc5vhk=
+github.com/getlantern/ops v0.0.0-20261028165752-a48eabe17467/go.mod h1:yvCGQU7mI2e2OPDH01qk6cGQkw7Xz2IC0LR0u2swKVU=
 github.com/getlantern/osversion v0.0.0-20250424174400-d834340603cf h1:dRZpE5VOptn2fLpPWwbLf7BLP+hwQ7pbIJL6UHdiR9A=
 github.com/getlantern/osversion v0.0.0-20250424174400-d834340603cf/go.mod h1:h3S9LBmmzN/xM+lwYZHE4abzTtCTtidKtG+nxZcCZX0=
 github.com/getlantern/packetforward v0.0.0-20201001150407-c68a447b0360 h1:pijUoofaQcAM/8zbDzZM2LQ90kGVbKfnSAkFnQwLZZU=
