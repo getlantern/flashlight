@@ -214,8 +214,6 @@ func createImpl(configDir, name, addr, transport string, s *config.ProxyConfig, 
 			wrapTLSFrag)
 	case "starbridge":
 		impl, err = newStarbridgeImpl(name, addr, s, reportDialCore)
-	case "broflake":
-		impl, err = newBroflakeImpl(s, reportDialCore)
 	case "algeneva":
 		impl, err = newAlgenevaImpl(addr, s, reportDialCore)
 	case "vmess":
@@ -367,7 +365,7 @@ func newProxy(name, addr, protocol, network string, s *config.ProxyConfig, uc co
 	}
 
 	if len(s.AllowedDomains) > 0 {
-		// Some proxies like Broflake only support a limited set of domains. This sets up domain routing
+		// Some proxies only support a limited set of domains. This sets up domain routing
 		// rules based on what was configured in the proxy config.
 		rulesMap := make(domainrouting.RulesMap)
 		for _, domain := range s.AllowedDomains {

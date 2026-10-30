@@ -132,38 +132,6 @@ func ProxyToLegacyConfig(cfg *ProxyConnectConfig) (*commonconfig.ProxyConfig, er
 			"shadowsocks_with_tls":         strconv.FormatBool(ssCfg.WithTls),
 		}
 
-	case *ProxyConnectConfig_ConnectCfgBroflake:
-		legacy.PluggableTransport = "broflake"
-		legacy.Addr = "broflake"
-
-		bbCfg := pCfg.ConnectCfgBroflake
-		legacy.StunServers = bbCfg.StunServers
-
-		legacy.PluggableTransportSettings = map[string]string{
-			"broflake_ctablesize":                  strconv.Itoa(int(bbCfg.CtableSize)),
-			"broflake_ptablesize":                  strconv.Itoa(int(bbCfg.PtableSize)),
-			"broflake_natfailtimeout":              strconv.Itoa(int(bbCfg.NatFailTimeout)),
-			"broflake_icefailtimeout":              strconv.Itoa(int(bbCfg.IceFailTimeout)),
-			"broflake_discoverysrv":                bbCfg.DiscoverySrv,
-			"broflake_endpoint":                    bbCfg.Endpoint,
-			"broflake_egress_server_name":          bbCfg.EgressServerName,
-			"broflake_egress_insecure_skip_verify": strconv.FormatBool(bbCfg.EgressInsecureSkipVerify),
-			"broflake_egress_ca":                   bbCfg.EgressCa,
-			"broflake_stunbatchsize":               strconv.Itoa(int(bbCfg.StunBatchSize)),
-		}
-
-		legacy.Bias = 10                  // bias clients toward broflake
-		legacy.AllowedDomains = []string{ // currently, we only send ad traffic through Broflake
-			"doubleclick.net",
-			"adservice.google.com",
-			"adservice.google.com.hk",
-			"adservice.google.co.jp",
-			"adservice.google.nl",
-			"googlesyndication.com",
-			"googletagservices.com",
-			"googleadservices.com",
-		}
-
 	case *ProxyConnectConfig_ConnectCfgStarbridge:
 		legacy.PluggableTransport = "starbridge"
 
