@@ -42,10 +42,8 @@ const (
 )
 
 var (
-	// some pluggable transports don't work with bypass
-	unsupportedTransports = map[string]bool{
-		"broflake": true,
-	}
+	// some pluggable transports don't work with bypass; none at present
+	unsupportedTransports = map[string]bool{}
 )
 
 type bypassService struct {
