@@ -55,6 +55,27 @@ func TestGenerateConfig(t *testing.T) {
 		UTLSDistribution: "chrome",
 	}
 
+	ampCacheConfig := &common.AMPCacheConfig{
+		BrokerURL:    "https://amp.broker.com",
+		CacheURL:     "https://amp.cache.com",
+		PublicKeyPEM: "pem",
+		FrontDomains: []string{"pudim.com.br"},
+	}
+
+	defaultSetup := func(ctrl *gomock.Controller) *ConfigGenerator {
+		configGenerator := NewConfigGenerator()
+
+		verifier := NewMockverifier(ctrl)
+		verifier.EXPECT().Vet(gomock.Any(), gomock.Any(), gomock.Any()).Return(true).AnyTimes()
+		configGenerator.verifier = verifier
+
+		certGrabber := NewMockcertGrabber(ctrl)
+		certGrabber.EXPECT().GetCertificate(gomock.Any(), gomock.Any()).Return(cert, nil).AnyTimes()
+		configGenerator.certGrabber = certGrabber
+
+		return configGenerator
+	}
+
 	var tests = []struct {
 		name                 string
 		givenContext         context.Context
@@ -67,6 +88,7 @@ func TestGenerateConfig(t *testing.T) {
 		givenMinMasquerades  int
 		givenMaxMasquerades  int
 		givenDNSTTConfig     *common.DNSTTConfig
+		givenAMPCacheConfig  *common.AMPCacheConfig
 		assert               func(*testing.T, string, error)
 		setup                func(*gomock.Controller) *ConfigGenerator
 	}{
@@ -82,6 +104,7 @@ func TestGenerateConfig(t *testing.T) {
 			givenMinMasquerades:  1,
 			givenMaxMasquerades:  10,
 			givenDNSTTConfig:     dnsttCfg,
+			givenAMPCacheConfig:  ampCacheConfig,
 			assert: func(t *testing.T, cfg string, err error) {
 				require.NoError(t, err)
 				require.NotEmpty(t, cfg)
@@ -161,20 +184,8 @@ func TestGenerateConfig(t *testing.T) {
 			},
 		},
 		{
-			name: "nil DNSTT config",
-			setup: func(ctrl *gomock.Controller) *ConfigGenerator {
-				configGenerator := NewConfigGenerator()
-
-				verifier := NewMockverifier(ctrl)
-				verifier.EXPECT().Vet(gomock.Any(), gomock.Any(), gomock.Any()).Return(true).AnyTimes()
-				configGenerator.verifier = verifier
-
-				certGrabber := NewMockcertGrabber(ctrl)
-				certGrabber.EXPECT().GetCertificate(gomock.Any(), gomock.Any()).Return(cert, nil).AnyTimes()
-				configGenerator.certGrabber = certGrabber
-
-				return configGenerator
-			},
+			name:                 "nil DNSTT config",
+			setup:                defaultSetup,
 			givenContext:         ctx,
 			givenTemplate:        globalTemplateTest,
 			givenMasquerades:     masquerades,
@@ -193,6 +204,29 @@ func TestGenerateConfig(t *testing.T) {
 				require.NoError(t, err)
 				assert.NotNil(t, globalConfig)
 				assert.Nil(t, globalConfig.DNSTTConfig, "DNSTT config should be nil when not provided")
+			},
+		},
+		{
+			name:                 "nil amp config",
+			setup:                defaultSetup,
+			givenContext:         ctx,
+			givenTemplate:        globalTemplateTest,
+			givenMasquerades:     masquerades,
+			givenProxiedSites:    proxiedSites,
+			givenBlacklist:       blacklist,
+			givenNumberOfWorkers: 10,
+			givenMinFrequency:    10,
+			givenMinMasquerades:  1,
+			givenMaxMasquerades:  10,
+			assert: func(t *testing.T, cfg string, err error) {
+				require.NoError(t, err)
+				require.NotEmpty(t, cfg)
+				require.NoError(t, err)
+
+				globalConfig, err := parseGlobal(ctx, []byte(cfg))
+				require.NoError(t, err)
+				assert.NotNil(t, globalConfig)
+				assert.Nil(t, globalConfig.AMPCacheConfig, "AMP cache config should be nil when not provided")
 			},
 		},
 	}
@@ -214,6 +248,7 @@ func TestGenerateConfig(t *testing.T) {
 				tt.givenMinMasquerades,
 				tt.givenMaxMasquerades,
 				tt.givenDNSTTConfig,
+				tt.givenAMPCacheConfig,
 			)
 			tt.assert(t, string(cfg), err)
 		})
