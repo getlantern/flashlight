@@ -1,8 +1,6 @@
 module github.com/getlantern/flashlight/v7
 
-go 1.24.2
-
-toolchain go1.24.4
+go 1.25.0
 
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20221004112352-e7c04248adcb
 
@@ -26,6 +24,7 @@ require (
 	github.com/getlantern/common v1.2.1-0.20230427204521-6ac18c21db39
 	github.com/getlantern/detour v0.0.0-20230503144615-d3106a68f79e
 	github.com/getlantern/dnsgrab v0.0.0-20211216020425-5d5e155a01a8
+	github.com/getlantern/dnstt v0.0.0-20250530230749-4d64f4edcf0f
 	github.com/getlantern/domains v0.0.0-20220311111720-94f59a903271
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
 	github.com/getlantern/errors v1.0.4
@@ -90,7 +89,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.35.0
 	go.opentelemetry.io/otel/trace v1.36.0
 	go.uber.org/atomic v1.10.0
-	golang.org/x/sys v0.32.0
+	golang.org/x/sys v0.45.0
 	google.golang.org/protobuf v1.36.5
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -109,7 +108,6 @@ require (
 	github.com/flynn/noise v1.0.0 // indirect
 	github.com/gaukas/wazerofs v0.1.0 // indirect
 	github.com/getlantern/algeneva v0.0.0-20240222191137-2b4e88234f59 // indirect
-	github.com/getlantern/dnstt v0.0.0-20250530230749-4d64f4edcf0f // indirect
 	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a // indirect
 	github.com/getlantern/withtimeout v0.0.0-20160829163843-511f017cd913 // indirect
 	github.com/go-llsqlite/crawshaw v0.5.1 // indirect
@@ -293,14 +291,14 @@ require (
 	go.uber.org/mock v0.5.0
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
+	golang.org/x/crypto v0.51.0 // indirect
 	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948 // indirect
-	golang.org/x/mod v0.20.0 // indirect
-	golang.org/x/net v0.39.0 // indirect
-	golang.org/x/sync v0.13.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
+	golang.org/x/mod v0.35.0 // indirect
+	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.24.0 // indirect
+	golang.org/x/tools v0.44.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250218202821-56aae31c358a // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250218202821-56aae31c358a // indirect
 	google.golang.org/grpc v1.71.0 // indirect
