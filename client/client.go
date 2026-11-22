@@ -331,7 +331,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 			op := ops.Begin("proxy")
 			defer op.End()
 
-			host := fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port)
+			host := net.JoinHostPort(req.DestAddr.IP.String(), strconv.Itoa(req.DestAddr.Port))
 			addr, err := client.reverseDNS(host)
 			if err != nil {
 				return op.FailIf(log.Errorf("Error performing reverseDNS for %v: %v", host, err))
